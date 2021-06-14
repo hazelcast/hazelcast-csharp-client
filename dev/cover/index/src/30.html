@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Transactions\TransactionTimedOutException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Transactions
+{
+    /// &lt;summary&gt;
+    /// Represents the exception that is thrown when a transaction times out.
+    /// &lt;/summary&gt;
+    [Serializable]
+    internal class TransactionTimedOutException : TransactionException
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionTimedOutException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public TransactionTimedOutException()
+            : base(ExceptionMessages.TransactionTimedOutException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionTimedOutException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public TransactionTimedOutException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionTimedOutException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public TransactionTimedOutException(Exception innerException)
+            : base(ExceptionMessages.TransactionTimedOutException, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionTimedOutException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public TransactionTimedOutException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionTimedOutException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        public TransactionTimedOutException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,15,31,67,0],[32,11,32,12,0],[39,15,39,28,0],[40,11,40,12,0],[49,15,49,83,0],[50,11,50,12,0],[60,15,60,44,0],[61,11,61,12,0],[71,15,71,34,0],[72,11,72,12,0]]);
+    </script>
+  </body>
+</html>

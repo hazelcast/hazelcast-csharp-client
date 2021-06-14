@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClient.Transactions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Transactions;
+
+namespace Hazelcast
+{
+    internal partial class HazelcastClient // Transactions
+    {
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;ITransactionContext&gt; BeginTransactionAsync()
+            =&gt; BeginTransactionAsync(new TransactionOptions());
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;ITransactionContext&gt; BeginTransactionAsync(TransactionOptions options)
+        {
+            options ??= new TransactionOptions();
+
+            var transactionContext = new TransactionContext(Cluster, options, SerializationService, _loggerFactory);
+            await transactionContext.BeginAsync().CfAwait();
+            return transactionContext;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,16,25,63,0],[30,13,30,50,0],[32,13,32,117,0],[33,13,33,61,0],[34,13,34,39,0],[35,9,35,10,0]]);
+    </script>
+  </body>
+</html>

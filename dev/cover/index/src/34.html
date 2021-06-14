@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ClassDefinitionBuilder.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// &lt;/remarks&gt;
+    /// &lt;seealso cref=&quot;IClassDefinition&quot;&gt;IClassDefinition&lt;/seealso&gt;
+    /// &lt;seealso cref=&quot;IPortable&quot;&gt;IPortable&lt;/seealso&gt;
+    /// &lt;seealso cref=&quot;SerializationOptions.AddClassDefinition(IClassDefinition)&quot;&gt;
+    ///     Hazelcast.Config.SerializationConfig.AddClassDefinition(IClassDefinition)
+    /// &lt;/seealso&gt;
+    public sealed class ClassDefinitionBuilder
+    {
+        private readonly int _classId;
+        private readonly int _factoryId;
+
+        private readonly IList&lt;FieldDefinition&gt; _fieldDefinitions = new List&lt;FieldDefinition&gt;();
+        private readonly int _version;
+
+        private bool _done;
+        private int _index;
+
+        public ClassDefinitionBuilder(int factoryId, int classId)
+        {
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = 0;
+        }
+
+        public ClassDefinitionBuilder(int factoryId, int classId, int version)
+        {
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = version;
+        }
+
+        public ClassDefinitionBuilder AddBooleanArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.BooleanArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddBooleanField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Boolean, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddByteArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ByteArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddByteField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Byte, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddCharArrayField(string
+            fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.CharArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddCharField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Char, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddDoubleArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.DoubleArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddDoubleField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Double, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddFloatArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.FloatArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddFloatField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Float, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddIntArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.IntArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddIntField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Int, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddLongArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.LongArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddLongField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Long, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddPortableArrayField(string fieldName, IClassDefinition def)
+        {
+            if (def == null) throw new ArgumentNullException(nameof(def));
+            Check();
+            if (def.ClassId == 0)
+            {
+                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
+            }
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.PortableArray, def.FactoryId,
+                def.ClassId, def.Version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
+        {
+            if (def == null) throw new ArgumentNullException(nameof(def));
+            Check();
+            if (def.ClassId == 0)
+            {
+                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
+            }
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Portable, def.FactoryId,
+                def.ClassId, def.Version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddShortArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ShortArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddShortField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Short, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddStringArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.UtfArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddStringField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Utf, _version));
+            return this;
+        }
+
+        public IClassDefinition Build()
+        {
+            _done = true;
+            var cd = new ClassDefinition(_factoryId, _classId, _version);
+            foreach (var fd in _fieldDefinitions)
+            {
+                cd.AddFieldDef(fd);
+            }
+            return cd;
+        }
+
+        public int ClassId =&gt; _classId;
+
+        public int FactoryId =&gt; _factoryId;
+
+        public int Version =&gt; _version;
+
+        internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
+        {
+            Check();
+            if (_index != fieldDefinition.Index)
+            {
+                throw new ArgumentException(&quot;Invalid field index&quot;);
+            }
+            _index++;
+            _fieldDefinitions.Add(fieldDefinition);
+            return this;
+        }
+
+        private void Check()
+        {
+            if (_done)
+            {
+                throw new SerializationException(&quot;ClassDefinition is already built for &quot; + _classId);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,9,36,97,0],[36,9,36,97,0],[42,9,42,66,0],[44,13,44,36,0],[45,13,45,32,0],[46,13,46,26,0],[47,9,47,10,0],[49,9,49,79,0],[51,13,51,36,0],[52,13,52,32,0],[53,13,53,32,0],[54,9,54,10,0],[58,13,58,21,0],[59,13,59,111,0],[60,13,60,25,0],[65,13,65,21,0],[66,13,66,106,0],[67,13,67,25,0],[72,13,72,21,0],[73,13,73,108,0],[74,13,74,25,0],[79,13,79,21,0],[80,13,80,103,0],[81,13,81,25,0],[87,13,87,21,0],[88,13,88,108,0],[89,13,89,25,0],[94,13,94,21,0],[95,13,95,103,0],[96,13,96,25,0],[101,13,101,21,0],[102,13,102,110,0],[103,13,103,25,0],[108,13,108,21,0],[109,13,109,105,0],[110,13,110,25,0],[115,13,115,21,0],[116,13,116,109,0],[117,13,117,25,0],[122,13,122,21,0],[123,13,123,104,0],[124,13,124,25,0],[129,13,129,21,0],[130,13,130,107,0],[131,13,131,25,0],[136,13,136,21,0],[137,13,137,102,0],[138,13,138,25,0],[143,13,143,21,0],[144,13,144,108,0],[145,13,145,25,0],[150,13,150,21,0],[151,13,151,103,0],[152,13,152,25,0],[157,13,157,29,0],[157,30,157,75,0],[158,13,158,21,0],[159,13,159,34,0],[161,17,161,82,0],[163,13,164,44,0],[165,13,165,25,0],[170,13,170,29,0],[170,30,170,75,0],[171,13,171,21,0],[172,13,172,34,0],[174,17,174,82,0],[176,13,177,44,0],[178,13,178,25,0],[183,13,183,21,0],[184,13,184,109,0],[185,13,185,25,0],[190,13,190,21,0],[191,13,191,104,0],[192,13,192,25,0],[197,13,197,21,0],[198,13,198,107,0],[199,13,199,25,0],[204,13,204,21,0],[205,13,205,102,0],[206,13,206,25,0],[211,13,211,26,0],[212,13,212,74,0],[213,22,213,28,0],[213,29,213,31,0],[213,32,213,49,0],[215,17,215,36,0],[217,13,217,23,0],[220,31,220,39,0],[222,33,222,43,0],[224,31,224,39,0],[228,13,228,21,0],[229,13,229,49,0],[231,17,231,68,0],[233,13,233,22,0],[234,13,234,52,0],[235,13,235,25,0],[240,13,240,23,0],[242,17,242,102,0],[244,9,244,10,0]]);
+    </script>
+  </body>
+</html>

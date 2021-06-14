@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializationOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Hazelcast.Configuration;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+
+// suppress warning about IPortableFactory not being disposed
+// TODO: should HazelcastOptions be IDisposable so in the end we dispose these factories?
+#pragma warning disable CA2000 // Dispose objects before losing scope
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    /// Contains the serialization options
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;see cref=&quot;IIdentifiedDataSerializable&quot;/&gt;, &lt;see cref=&quot;IPortable&quot;/&gt;, custom serializers, and global serializer can be configured using this config.
+    /// &lt;/remarks&gt;
+    public sealed class SerializationOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SerializationOptions()
+        {
+            PortableFactories = new List&lt;FactoryOptions&lt;IPortableFactory&gt;&gt;();
+            PortableFactoriesBinder = new CollectionBinder&lt;IdentifiedInjectionOptions&gt;(item =&gt;
+            {
+                PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt;
+                {
+                    Id = item.Id,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(item.TypeName, item.Args)
+                });
+            });
+
+            DataSerializableFactories = new List&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt;();
+            DataSerializableFactoriesBinder = new CollectionBinder&lt;IdentifiedInjectionOptions&gt;(item =&gt;
+            {
+                DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt;
+                {
+                    Id = item.Id,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(item.TypeName, item.Args)
+                });
+            });
+
+            Serializers = new List&lt;SerializerOptions&gt;();
+            SerializersBinder = new CollectionBinder&lt;SerializerInjectionOptions&gt;(item =&gt;
+            {
+                Serializers.Add(new SerializerOptions
+                {
+                    SerializedType = Type.GetType(item.SerializedTypeName) ?? throw new ConfigurationException($&quot;Unknown serialized type \&quot;{item.SerializedTypeName}\&quot;.&quot;),
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;ISerializer&gt;(item.TypeName, item.Args)
+                });
+            });
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private SerializationOptions(SerializationOptions other)
+        {
+            Endianness = other.Endianness;
+            ValidateClassDefinitions = other.ValidateClassDefinitions;
+            PortableVersion = other.PortableVersion;
+
+            ClassDefinitions = new HashSet&lt;IClassDefinition&gt;(other.ClassDefinitions);
+            PortableFactories = new List&lt;FactoryOptions&lt;IPortableFactory&gt;&gt;(other.PortableFactories);
+            DataSerializableFactories = new List&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt;(other.DataSerializableFactories);
+
+            GlobalSerializer = other.GlobalSerializer?.Clone();
+            Serializers = new List&lt;SerializerOptions&gt;(other.Serializers);
+        }
+
+
+        /// &lt;summary&gt;
+        /// Gets or sets the &lt;see cref=&quot;Endianness&quot;/&gt;. This value should match the server configuration.
+        /// &lt;/summary&gt;
+        public Endianness Endianness { get; set; } = Endianness.BigEndian;
+
+        /// &lt;summary&gt;
+        /// Whether to check for class definition errors at start,
+        /// and throw an Serialization Exception with error definition.
+        /// &lt;/summary&gt;
+        public bool ValidateClassDefinitions { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the portable version.
+        /// &lt;/summary&gt;
+        public int PortableVersion { get; set; }
+
+        #region Class Definitions
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;IClassDefinition&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This can only be done programmatically.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ICollection&lt;IClassDefinition&gt; ClassDefinitions { get; } = new HashSet&lt;IClassDefinition&gt;();
+
+        #endregion
+
+        #region Portable Factories
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;FactoryOptions{T}&quot;/&gt; of &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        [BinderIgnore]
+        public ICollection&lt;FactoryOptions&lt;IPortableFactory&gt;&gt; PortableFactories { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;portableFactories&quot;)]
+        private CollectionBinder&lt;IdentifiedInjectionOptions&gt; PortableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, IPortableFactory factory)
+        {
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; factory });
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryType&quot;&gt;The type of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, Type factoryType)
+        {
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(factoryType, null) });
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryTypeName&quot;&gt;The type name of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, string factoryTypeName)
+        {
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(factoryTypeName, null) });
+            return this;
+        }
+
+        #endregion
+
+        #region Data Serializable Factories
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;FactoryOptions{T}&quot;/&gt; of &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        [BinderIgnore]
+        public ICollection&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt; DataSerializableFactories { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;dataSerializableFactories&quot;)]
+        private CollectionBinder&lt;IdentifiedInjectionOptions&gt; DataSerializableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactory(int factoryId, IDataSerializableFactory factory)
+        {
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; factory });
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryTypeName&quot;&gt;The type name of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactoryClass(int factoryId, string factoryTypeName)
+        {
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(factoryTypeName, null) });
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryType&quot;&gt;The type of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactoryClass(int factoryId, Type factoryType)
+        {
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(factoryType, null) });
+            return this;
+        }
+
+        #endregion
+
+        #region Serializers
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;GlobalSerializerOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When defined in a configuration file, it is defined as an injected type, for instance:
+        /// &lt;code&gt;
+        /// &quot;globalSerializer&quot;:
+        /// {
+        ///   &quot;typeName&quot;: &quot;My.Serializer&quot;,
+        ///   &quot;args&quot;:
+        ///   {
+        ///     &quot;foo&quot;: 42
+        ///   },
+        ///   &quot;overrideClrSerialization&quot;: true
+        /// }
+        /// &lt;/code&gt;
+        /// with the additional &lt;c&gt;overrideClrSerialization&lt;/c&gt; property.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public GlobalSerializerOptions GlobalSerializer { get; set; } = new GlobalSerializerOptions();
+
+#pragma warning disable IDE0051 // Remove unused private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;globalSerializer&quot;)]
+        private GlobalSerializerInjectionOptions GlobalSerializerBinder
+        {
+            get =&gt; default;
+            set
+            {
+                GlobalSerializer = new GlobalSerializerOptions
+                {
+                    OverrideClrSerialization = value.OverrideClrSerialization,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;ISerializer&gt;(value.TypeName, value.Args)
+                };
+            }
+        }
+#pragma warning restore IDE0051 // Remove unused private members
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;SerializerOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public ICollection&lt;SerializerOptions&gt; Serializers { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;serializers&quot;)]
+        private CollectionBinder&lt;SerializerInjectionOptions&gt; SerializersBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        #endregion
+
+        internal class IdentifiedInjectionOptions : InjectionOptions
+        {
+            public int Id { get; set; }
+
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(&quot;, id: &quot;);
+                text.Append(Id);
+            }
+        }
+
+        internal class SerializerInjectionOptions : InjectionOptions
+        {
+            public string SerializedTypeName { get; set; }
+
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(&quot;, serializedTypeName: &#39;&quot;);
+                text.Append(SerializedTypeName ?? &quot;&lt;null&gt;&quot;);
+                text.Append(&#39;\&#39;&#39;);
+            }
+        }
+
+        internal class GlobalSerializerInjectionOptions : InjectionOptions
+        {
+            public bool OverrideClrSerialization { get; set; }
+
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(&quot;, overrideClr: &quot;);
+                text.Append(OverrideClrSerialization);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal SerializationOptions Clone() =&gt; new SerializationOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[39,9,39,38,0],[41,13,41,78,0],[42,13,44,17,0],[44,17,47,37,0],[47,37,47,110,0],[47,110,48,20,0],[48,20,49,13,0],[49,13,49,14,0],[49,14,49,16,0],[51,13,51,94,0],[52,13,54,17,0],[54,17,57,37,0],[57,37,57,118,0],[57,118,58,20,0],[58,20,59,13,0],[59,13,59,14,0],[59,14,59,16,0],[61,13,61,57,0],[62,13,64,17,0],[64,17,67,37,0],[67,37,67,105,0],[67,105,68,20,0],[68,20,69,13,0],[69,13,69,14,0],[69,14,69,16,0],[70,9,70,10,0],[75,9,75,65,0],[77,13,77,43,0],[78,13,78,71,0],[79,13,79,53,0],[81,13,81,86,0],[82,13,82,101,0],[83,13,83,125,0],[85,13,85,64,0],[86,13,86,74,0],[87,9,87,10,0],[93,40,93,44,0],[93,45,93,49,0],[99,48,99,52,0],[99,53,99,57,0],[99,62,99,66,0],[99,62,99,66,0],[104,38,104,42,0],[104,43,104,47,0],[114,65,114,69,0],[114,74,114,105,0],[114,74,114,105,0],[124,82,124,86,0],[129,88,129,92,0],[140,13,140,106,0],[140,106,140,113,0],[140,113,140,117,0],[141,13,141,25,0],[152,13,152,106,0],[152,106,152,172,0],[152,172,152,176,0],[153,13,153,25,0],[164,13,164,106,0],[164,106,164,176,0],[164,176,164,180,0],[165,13,165,25,0],[176,98,176,102,0],[181,96,181,100,0],[192,13,192,122,0],[192,122,192,129,0],[192,129,192,133,0],[193,13,193,25,0],[204,13,204,122,0],[204,122,204,200,0],[204,200,204,204,0],[205,13,205,25,0],[216,13,216,122,0],[216,122,216,196,0],[216,196,216,200,0],[217,13,217,25,0],[243,59,243,63,0],[243,64,243,68,0],[243,73,243,102,0],[243,73,243,102,0],[250,20,250,27,0],[253,17,256,37,0],[256,37,256,107,0],[256,107,257,19,0],[258,13,258,14,0],[269,61,269,65,0],[274,82,274,86,0],[281,29,281,33,0],[281,34,281,38,0],[285,17,285,37,0],[286,17,286,39,0],[287,17,287,33,0],[288,13,288,14,0],[293,48,293,52,0],[293,53,293,57,0],[297,17,297,37,0],[298,17,298,56,0],[299,17,299,61,0],[300,17,300,35,0],[301,13,301,14,0],[306,52,306,56,0],[306,57,306,61,0],[310,17,310,37,0],[311,17,311,48,0],[312,17,312,55,0],[313,13,313,14,0],[319,50,319,80,0]]);
+    </script>
+  </body>
+</html>

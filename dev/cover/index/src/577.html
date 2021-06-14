@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Attempt.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#nullable enable
+
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Creates instances of the &lt;see cref=&quot;Attempt{TResult}&quot;/&gt; struct.
+    /// &lt;/summary&gt;
+    internal readonly struct Attempt
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Attempt&quot;/&gt; struct.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;success&quot;&gt;Whether the attempt succeeded.&lt;/param&gt;
+        public Attempt(bool success)
+        {
+            Success = success;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a value indicating whether the attempt succeeded.
+        /// &lt;/summary&gt;
+        public bool Success { get; }
+
+        /// &lt;summary&gt;
+        /// Represents a failed attempt.
+        /// &lt;/summary&gt;
+        public static Attempt Failed =&gt; new Attempt(false); // no such thing as &#39;struct&#39; singletons!
+
+        /// &lt;summary&gt;
+        /// Creates a successful attempt with a result.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value of the result.&lt;/param&gt;
+        /// &lt;returns&gt;A successful attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; Succeed&lt;TResult&gt;(TResult value)
+            =&gt; new Attempt&lt;TResult&gt;(true, value);
+
+        /// &lt;summary&gt;
+        /// Creates a failed attempt.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value of the result.&lt;/param&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;An optional captured exception.&lt;/param&gt;
+        /// &lt;returns&gt;A failed attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; Fail&lt;TResult&gt;(TResult value, Exception? exception = default)
+            =&gt; new Attempt&lt;TResult&gt;(false, value, exception);
+
+        /// &lt;summary&gt;
+        /// Creates a failed attempt.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;A captured exception.&lt;/param&gt;
+        /// &lt;returns&gt;A failed attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; Fail&lt;TResult&gt;(Exception exception)
+            =&gt; new Attempt&lt;TResult&gt;(false, exception: exception);
+
+        /// &lt;summary&gt;
+        /// Creates a failed attempt.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;returns&gt;A failed attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; Fail&lt;TResult&gt;()
+            =&gt; Attempt&lt;TResult&gt;.Failed;
+
+        /// &lt;summary&gt;
+        /// Creates an attempt based on a condition.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;condition&quot;&gt;Whether the attempt is successful.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value of the result.&lt;/param&gt;
+        /// &lt;returns&gt;A successful attempt, if &lt;paramref name=&quot;condition&quot;/&gt; is &lt;c&gt;true&lt;/c&gt;; otherwise a failed attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; If&lt;TResult&gt;(bool condition, TResult value)
+            =&gt; condition ? new Attempt&lt;TResult&gt;(true, value) : Attempt&lt;TResult&gt;.Failed;
+
+        /// &lt;summary&gt;
+        /// Creates an attempt based on a condition.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;condition&quot;&gt;Whether the attempt is successful.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value of the result when the attempt is successful.&lt;/param&gt;
+        /// &lt;param name=&quot;failedValue&quot;&gt;The value of the result when the attempt failed.&lt;/param&gt;
+        /// &lt;returns&gt;A successful attempt, if &lt;paramref name=&quot;condition&quot;/&gt; is &lt;c&gt;true&lt;/c&gt;; otherwise a failed attempt.&lt;/returns&gt;
+        public static Attempt&lt;TResult&gt; If&lt;TResult&gt;(bool condition, TResult value, TResult failedValue)
+            =&gt; new Attempt&lt;TResult&gt;(condition, condition ? value : failedValue);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,13,32,31,0],[33,9,33,10,0],[38,31,38,35,0],[43,41,43,59,0],[52,16,52,49,0],[62,16,62,61,0],[71,16,71,65,0],[79,16,79,39,0],[89,16,89,87,0],[100,16,100,80,0]]);
+    </script>
+  </body>
+</html>

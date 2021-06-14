@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClient.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
+using Hazelcast.Events;
+using Hazelcast.Metrics;
+using Hazelcast.NearCaching;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+using MemberInfo = Hazelcast.Models.MemberInfo;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents the Hazelcast client.
+    /// &lt;/summary&gt;
+    internal partial class HazelcastClient : IHazelcastClient
+    {
+        private readonly HazelcastOptions _options;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
+
+        private readonly DistributedObjectFactory _distributedOjects;
+        private readonly NearCacheManager _nearCacheManager;
+        private readonly MetricsPublisher _metricsPublisher;
+
+        private int _disposed;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastClient&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;The client configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public HazelcastClient(HazelcastOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger&lt;IHazelcastClient&gt;();
+
+            _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
+            _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
+
+            if (options.Metrics.Enabled)
+            {
+                _metricsPublisher = new MetricsPublisher(cluster, options.Metrics, loggerFactory);
+                _metricsPublisher.AddSource(new ClientMetricSource(cluster, loggerFactory));
+                _metricsPublisher.AddSource(_nearCacheManager);
+            }
+
+            // wire components
+            WireComponents();
+        }
+
+        private void WireComponents()
+        {
+            // assigning multi-cast handlers *must* use +=
+
+            // when an object is created/destroyed, trigger the user-level events
+            Cluster.Events.ObjectCreated
+                += Trigger&lt;DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs&gt;;
+
+            Cluster.Events.ObjectDestroyed
+                += Trigger&lt;DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs&gt;;
+
+            // when client/cluster state changes, trigger user-level events
+            Cluster.State.StateChanged
+                += state =&gt; Trigger&lt;StateChangedEventHandler, StateChangedEventArgs&gt;(new StateChangedEventArgs(state));
+
+            // when partitions are updated, trigger the user-level event
+            Cluster.Events.PartitionsUpdated
+                += Trigger&lt;PartitionsUpdatedEventHandler&gt;;
+
+            // when a partition is lost, trigger the user-level event
+            Cluster.Events.PartitionLost
+                += Trigger&lt;PartitionLostEventHandler, PartitionLostEventArgs&gt;;
+
+            // when members are updated, trigger the user-level event
+            Cluster.Events.MembersUpdated
+                += Trigger&lt;MembersUpdatedEventHandler, MembersUpdatedEventArgs&gt;;
+
+            // when a connection is closed, trigger the user-level event
+            Cluster.Connections.ConnectionClosed
+                += conn =&gt; Trigger&lt;ConnectionClosedEventHandler, ConnectionClosedEventArgs&gt;(new ConnectionClosedEventArgs(conn));
+
+            // when a connection is opened, DistributedObjects.OnConnectionOpened checks
+            // whether it is the first connection to a new cluster, and then re-creates
+            // all the known distributed object so far on the new cluster.
+            Cluster.Connections.ConnectionOpened
+                += _distributedOjects.OnConnectionOpened;
+
+            // when a connection is opened, trigger the user-level event.
+            Cluster.Connections.ConnectionOpened
+                += (conn, isFirstEver, isFirst, isNewCluster) =&gt; Trigger&lt;ConnectionOpenedEventHandler, ConnectionOpenedEventArgs&gt;(new ConnectionOpenedEventArgs(conn, isNewCluster));
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;Cluster&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public Cluster Cluster { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public string Name =&gt; Cluster.ClientName;
+
+        /// &lt;inheritdoc /&gt;
+        public Guid Id =&gt; Cluster.ClientId;
+
+        /// &lt;inheritdoc /&gt;
+        public string ClusterName =&gt; Cluster.Name;
+
+        /// &lt;inheritdoc /&gt;
+        public IReadOnlyCollection&lt;MemberInfo&gt; Members =&gt; Cluster.Members.GetMembers().ToList();
+
+        /// &lt;inheritdoc /&gt;
+        public bool IsActive =&gt; Cluster.IsActive;
+
+        /// &lt;inheritdoc /&gt;
+        public bool IsConnected =&gt; Cluster.IsConnected;
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SerializationService&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public SerializationService SerializationService { get; }
+
+        /// &lt;summary&gt;
+        /// Starts the client by connecting to the remote cluster.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the client is connected.&lt;/returns&gt;
+        public async Task StartAsync(CancellationToken cancellationToken)
+        {
+            // before anything else, run all subscribers - we don&#39;t have connections yet
+            // but that does not matter, the subscriptions will be registered (for server-side
+            // events) and added when possible - for local (client) events such as &#39;member
+            // updated&#39;... no server interaction is required
+
+            // subscribe
+            foreach (var subscriber in _options.Subscribers)
+            {
+                // NOTE: consider storing the id for later removal?
+                var subscriptionId = await SubscribeAsync(subscriber.Build).CfAwait();
+            }
+
+            // connect the cluster
+            await Cluster.ConnectAsync(cancellationToken).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            // order is important, must dispose the cluster last, as it will tear down
+            // connections that may be required by other things being disposed
+
+            try
+            {
+                if (_metricsPublisher != null) await _metricsPublisher.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while disposing the metrics publisher.&quot;);
+            }
+
+            try
+            {
+                await _nearCacheManager.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while disposing the near cache manager.&quot;);
+            }
+
+            try
+            {
+                await _distributedOjects.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while disposing the distributed object factory.&quot;);
+            }
+
+            try
+            {
+                await Cluster.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while disposing the cluster.&quot;);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[54,9,54,147,0],[56,13,56,84,0],[57,13,57,83,0],[58,13,58,122,0],[59,13,59,102,0],[60,13,60,70,0],[62,13,62,109,0],[63,13,63,119,0],[65,13,65,41,0],[67,17,67,99,0],[68,17,68,93,0],[69,17,69,64,0],[73,13,73,30,0],[74,9,74,10,0],[81,13,82,101,0],[84,13,85,105,0],[88,13,89,29,0],[89,29,89,119,0],[89,119,89,120,0],[92,13,93,59,0],[96,13,97,79,0],[100,13,101,81,0],[104,13,105,28,0],[105,28,105,129,0],[105,129,105,130,0],[110,13,111,58,0],[114,13,115,66,0],[115,66,115,181,0],[115,181,115,182,0],[116,9,116,10,0],[121,34,121,38,0],[124,31,124,49,0],[127,27,127,43,0],[130,38,130,50,0],[133,59,133,96,0],[136,33,136,49,0],[139,36,139,55,0],[144,60,144,64,0],[159,22,159,36,0],[159,37,159,39,0],[159,40,159,60,0],[162,17,162,87,0],[166,13,166,69,0],[167,9,167,10,0],[172,13,172,71,0],[173,17,173,24,0],[180,17,180,47,0],[180,48,180,97,0],[181,13,181,14,0],[182,13,182,32,0],[184,17,184,96,0],[185,13,185,14,0],[189,17,189,66,0],[190,13,190,14,0],[191,13,191,32,0],[193,17,193,97,0],[194,13,194,14,0],[198,17,198,67,0],[199,13,199,14,0],[200,13,200,32,0],[202,17,202,105,0],[203,13,203,14,0],[207,17,207,56,0],[208,13,208,14,0],[209,13,209,32,0],[211,17,211,86,0],[212,13,212,14,0],[213,9,213,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\MetricDescriptor.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+
+namespace Hazelcast.Metrics
+{
+    // a metric descriptor for values of a given type
+    internal class MetricDescriptor&lt;TValue&gt; : IMetricDescriptor
+    {
+        private IDictionary&lt;string, string&gt; _tags;
+
+        public MetricDescriptor(string name)
+        {
+            Name = name;
+        }
+
+        public MetricDescriptor(string prefix, string name)
+            : this(name)
+        {
+            Prefix = prefix;
+        }
+
+        public string Prefix { get; set; }
+
+        public string Name { get; set; }
+
+        public string DiscriminatorKey { get; set; }
+
+        public string DiscriminatorValue { get; set; }
+
+        public MetricUnit Unit { get; set; }
+
+        public IDictionary&lt;string, string&gt; Tags =&gt; _tags ??= new Dictionary&lt;string, string&gt;();
+
+        public int TagCount =&gt; _tags?.Count ?? 0;
+
+        public MetricDescriptor&lt;TValue&gt; WithUnit(MetricUnit unit)
+        {
+            Unit = unit;
+            return this;
+        }
+
+        public MetricDescriptor&lt;TValue&gt; WithDiscriminator(string key, string value)
+        {
+            DiscriminatorKey = key;
+            DiscriminatorValue = value;
+            return this;
+        }
+
+        public MetricDescriptor&lt;TValue&gt; WithTag(string key, string value)
+        {
+            Tags[key] = value;
+            return this;
+        }
+
+        // &quot;excluded targets&quot; are not supported
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,45,0],[26,13,26,25,0],[27,9,27,10,0],[30,15,30,25,0],[32,13,32,29,0],[33,9,33,10,0],[35,32,35,36,0],[35,37,35,41,0],[37,30,37,34,0],[37,35,37,39,0],[39,42,39,46,0],[39,47,39,51,0],[41,44,41,48,0],[41,49,41,53,0],[43,34,43,38,0],[43,39,43,43,0],[45,52,45,94,0],[47,32,47,49,0],[51,13,51,25,0],[52,13,52,25,0],[57,13,57,36,0],[58,13,58,40,0],[59,13,59,25,0],[64,13,64,31,0],[65,13,65,25,0]]);
+    </script>
+  </body>
+</html>

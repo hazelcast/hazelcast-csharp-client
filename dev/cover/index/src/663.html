@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\RemoteExceptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Maps remote exceptions to C# exceptions.
+    /// &lt;/summary&gt;
+    internal static class RemoteExceptions
+    {
+        private static readonly HashSet&lt;RemoteError&gt; RetryableExceptions = new HashSet&lt;RemoteError&gt;
+        {
+            RemoteError.CallerNotMember,
+            RemoteError.MemberLeft,
+            RemoteError.PartitionMigrating,
+            RemoteError.RetryableHazelcast,
+            RemoteError.RetryableIO,
+            RemoteError.TargetNotMember,
+            RemoteError.WrongTarget,
+            RemoteError.TargetNotReplicaException,
+            RemoteError.CannotReplicateException,
+            RemoteError.HazelcastInstanceNotActive,
+
+            // this one must *not* automatically retryable, because it requires more
+            // checks on the client and message in order to decide whether to retry
+            //RemoteError.TargetDisconnected,
+        };
+
+        /// &lt;summary&gt;
+        /// Creates a C# exception that represents an exception that was thrown remotely on a server.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;errorHolders&quot;&gt;Server errors.&lt;/param&gt;
+        /// &lt;returns&gt;An exception representing the specified server errors.&lt;/returns&gt;
+        internal static RemoteException CreateException(IEnumerable&lt;ErrorHolder&gt; errorHolders)
+        {
+            if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
+
+            return CreateException(errorHolders.GetEnumerator());
+        }
+
+        /// &lt;summary&gt;
+        /// Create a C# exception that represents an exception that was thrown remotely on a server.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;errorHolders&quot;&gt;Server errors.&lt;/param&gt;
+        /// &lt;returns&gt;An exception representing the specified server errors.&lt;/returns&gt;
+        private static RemoteException CreateException(IEnumerator&lt;ErrorHolder&gt; errorHolders)
+        {
+            if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
+
+            if (!errorHolders.MoveNext())
+                return null;
+
+            var errorHolder = errorHolders.Current;
+            if (errorHolder == null) return new RemoteException(RemoteError.Undefined);
+
+            var innerException = CreateException(errorHolders);
+
+            var error = RemoteError.Undefined;
+            if (Enum.IsDefined(typeof(RemoteError), errorHolder.ErrorCode))
+                error = (RemoteError) errorHolder.ErrorCode;
+
+            var retryable = RetryableExceptions.Contains(error);
+            var exception = new RemoteException(error, errorHolder.Message, innerException, retryable);
+
+            var sb = new StringBuilder();
+            var first = true;
+            foreach (var stackTraceElement in errorHolder.StackTraceElements)
+            {
+                if (first) first = false;
+                else sb.AppendLine();
+                sb.Append(&quot;   &quot;).Append(stackTraceElement);
+            }
+
+            exception.Data.Add(&quot;server&quot;, sb.ToString());
+            return exception;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,44,11,0],[53,13,53,38,0],[53,39,53,93,0],[55,13,55,66,0],[65,13,65,38,0],[65,39,65,93,0],[67,13,67,42,0],[68,17,68,29,0],[70,13,70,52,0],[71,13,71,37,0],[71,38,71,88,0],[73,13,73,64,0],[75,13,75,47,0],[76,13,76,76,0],[77,17,77,61,0],[79,13,79,65,0],[80,13,80,104,0],[82,13,82,42,0],[83,13,83,30,0],[84,22,84,43,0],[84,44,84,46,0],[84,47,84,77,0],[86,17,86,27,0],[86,28,86,42,0],[87,22,87,38,0],[88,17,88,60,0],[91,13,91,57,0],[92,13,92,30,0]]);
+    </script>
+  </body>
+</html>

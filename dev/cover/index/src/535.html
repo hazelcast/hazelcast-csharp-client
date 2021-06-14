@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\TransactionalDistributedObjectBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Clustering;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Provides a base class to transactional distributed objects.
+    /// &lt;/summary&gt;
+    internal abstract class TransactionalDistributedObjectBase : DistributedObjectBase, ITransactionalDistributedObject
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionalDistributedObjectBase&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serviceName&quot;&gt;the name of the service managing this object.&lt;/param&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;transactionClientConnection&quot;&gt;The client connection supporting the transaction.&lt;/param&gt;
+        /// &lt;param name=&quot;transactionId&quot;&gt;The unique identifier of the transaction.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        protected TransactionalDistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
+        {
+            TransactionId = transactionId;
+            TransactionClientConnection = transactionClientConnection;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Guid TransactionId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the client connection supporting the transaction.
+        /// &lt;/summary&gt;
+        public MemberConnection TransactionClientConnection { get; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[39,15,39,93,0],[41,13,41,43,0],[42,13,42,71,0],[43,9,43,10,0],[46,37,46,41,0],[51,63,51,67,0]]);
+    </script>
+  </body>
+</html>

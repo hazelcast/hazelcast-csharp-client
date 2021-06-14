@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SslOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Security.Authentication;
+using System.Text;
+using Hazelcast.Configuration;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents the SSL options.
+    /// &lt;/summary&gt;
+    public class SslOptions
+    {
+        // default is none, to let the system select the best option
+        private SslProtocols _sslProtocol = SslProtocols.None;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SslOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SslOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SslOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private SslOptions(SslOptions other)
+        {
+            Enabled = other.Enabled;
+            ValidateCertificateChain = other.ValidateCertificateChain;
+            ValidateCertificateName = other.ValidateCertificateName;
+            CheckCertificateRevocation = other.CheckCertificateRevocation;
+            CertificateName = other.CertificateName;
+            CertificatePath = other.CertificatePath;
+            CertificatePassword = other.CertificatePassword;
+            _sslProtocol = other._sslProtocol;
+        }
+
+        /// &lt;summary&gt;
+        /// Whether to enable SSL.
+        /// &lt;/summary&gt;
+        public bool Enabled { get; set; }
+
+        /// &lt;summary&gt;
+        /// Whether to validate the certificate chain.
+        /// &lt;/summary&gt;
+        public bool ValidateCertificateChain { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Whether to validate the certificate name.
+        /// &lt;/summary&gt;
+        public bool ValidateCertificateName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Whether to check for certificate revocation.
+        /// &lt;/summary&gt;
+        public bool CheckCertificateRevocation { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the certificate.
+        /// &lt;/summary&gt;
+        public string CertificateName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the full path to the certificate file.
+        /// &lt;/summary&gt;
+        public string CertificatePath { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the password for the certificate file.
+        /// &lt;/summary&gt;
+        public string CertificatePassword { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the SSL protocol.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The protocol must be a member of the &lt;see cref=&quot;SslProtocols&quot;/&gt; enum,
+        /// and currently only &lt;c&gt;Tls&lt;/c&gt;, &lt;c&gt;Tls11&lt;/c&gt; and &lt;c&gt;Tls12&lt;/c&gt; are supported,
+        /// though only the latest is recommended.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public SslProtocols Protocol
+        {
+            get =&gt; _sslProtocol;
+            set
+            {
+#pragma warning disable IDE0072
+                // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+                _sslProtocol = value switch
+                {
+                    SslProtocols.None =&gt; value,
+#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - but, we still support them
+                    SslProtocols.Tls =&gt; value,
+                    SslProtocols.Tls11 =&gt; value,
+#pragma warning restore CA5397
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
+                    SslProtocols.Tls12 =&gt; value,
+#pragma warning restore CA5398
+                    _ =&gt; throw new ConfigurationException(&quot;Invalid value. Value must be None, Tls, Tls11 or Tls12.&quot;)
+                };
+#pragma warning restore IDE0072
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var text = new StringBuilder();
+            text.Append(&quot;SslConfig {&quot;);
+            text.Append(Enabled ? &quot;enabled&quot; : &quot;disabled&quot;);
+            text.Append(&quot;, ValidateCertificateName=&quot;).Append(ValidateCertificateName ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, ValidateCertificateChain=&quot;).Append(ValidateCertificateChain ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, CheckCertificateRevocation=&quot;).Append(CheckCertificateRevocation ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, CertificateName=&#39;&quot;).Append(CertificateName);
+            text.Append(&quot;&#39;, CertificatePath=&#39;&quot;).Append(CertificatePath);
+            text.Append(&quot;&#39;}&quot;);
+            return text.ToString();
+        }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal SslOptions Clone() =&gt; new SslOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,28,0],[33,11,33,12,0],[38,9,38,45,0],[40,13,40,37,0],[41,13,41,71,0],[42,13,42,69,0],[43,13,43,75,0],[44,13,44,53,0],[45,13,45,53,0],[46,13,46,61,0],[47,13,47,47,0],[48,9,48,10,0],[53,31,53,35,0],[53,36,53,40,0],[58,48,58,52,0],[58,53,58,57,0],[58,62,58,66,0],[58,62,58,66,0],[63,47,63,51,0],[63,52,63,56,0],[68,50,68,54,0],[68,55,68,59,0],[73,41,73,45,0],[73,46,73,50,0],[78,41,78,45,0],[78,46,78,50,0],[83,45,83,49,0],[83,50,83,54,0],[95,20,95,32,0],[100,17,102,42,0],[102,42,102,47,0],[102,47,104,41,0],[104,41,104,46,0],[104,46,105,43,0],[105,43,105,48,0],[105,48,108,43,0],[108,43,108,48,0],[108,48,110,26,0],[110,26,110,117,0],[110,117,111,19,0],[113,13,113,14,0],[119,13,119,44,0],[120,13,120,40,0],[121,13,121,59,0],[122,13,122,106,0],[123,13,123,108,0],[124,13,124,112,0],[125,13,125,72,0],[126,13,126,73,0],[127,13,127,31,0],[128,13,128,36,0],[134,40,134,60,0]]);
+    </script>
+  </body>
+</html>

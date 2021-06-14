@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.ReadFromReadOnlySequence.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Buffers;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Core
+{
+    internal static partial class BytesExtensions // Read from ReadOnlySequence
+    {
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;ushort&quot;/&gt; value from a sequence of bytes, and slices the sequence accordingly.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static ushort ReadUShort(ref ReadOnlySequence&lt;byte&gt; bytes, Endianness endianness)
+        {
+            const byte length = sizeof(ushort);
+
+            if (bytes.Length &lt; length)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            var slice = bytes.Slice(bytes.Start, length);
+            ushort value;
+            if (slice.IsSingleSegment)
+            {
+                var span = slice.FirstSpan();
+                value = span.ReadUShort(endianness);
+            }
+            else
+            {
+                Span&lt;byte&gt; stackSpan = stackalloc byte[length];
+                slice.Fill(stackSpan);
+                value = ((ReadOnlySpan&lt;byte&gt;)stackSpan).ReadUShort(endianness);
+            }
+
+            bytes = bytes.Slice(slice.End);
+            return value;
+        }
+
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;int&quot;/&gt; value from a sequence of bytes, and slices the sequence accordingly.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static int ReadInt(ref ReadOnlySequence&lt;byte&gt; bytes, Endianness endianness)
+        {
+            if (bytes.Length &lt; 4)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            var slice = bytes.Slice(bytes.Start, 4);
+            int value;
+            if (slice.IsSingleSegment)
+            {
+                var span = slice.FirstSpan();
+                value = span.ReadInt(endianness);
+            }
+            else
+            {
+                Span&lt;byte&gt; stackSpan = stackalloc byte[4];
+                slice.Fill(stackSpan);
+                value = ((ReadOnlySpan&lt;byte&gt;)stackSpan).ReadInt(endianness);
+            }
+
+            bytes = bytes.Slice(slice.End);
+            return value;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,39,0],[34,17,34,94,0],[36,13,36,58,0],[38,13,38,39,0],[40,17,40,46,0],[41,17,41,53,0],[45,17,45,64,0],[46,17,46,39,0],[47,17,47,80,0],[50,13,50,44,0],[51,13,51,26,0],[62,13,62,34,0],[63,17,63,94,0],[65,13,65,53,0],[67,13,67,39,0],[69,17,69,46,0],[70,17,70,50,0],[74,17,74,59,0],[75,17,75,39,0],[76,17,76,77,0],[79,13,79,44,0],[80,13,80,26,0]]);
+    </script>
+  </body>
+</html>

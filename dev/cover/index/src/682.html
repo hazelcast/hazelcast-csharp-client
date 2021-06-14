@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\LongAverageAggregator.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Aggregation
+{
+    /// &lt;summary&gt;
+    /// Represents an aggregator that averages the input values.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Null input values are not accepted.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal sealed class LongAverageAggregator : AggregatorBase&lt;double&gt;
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;LongAverageAggregator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public LongAverageAggregator()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;LongAverageAggregator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
+        public LongAverageAggregator(string attributePath)
+            : base(attributePath)
+        { }
+
+        /// &lt;inheritdoc /&gt;
+        protected override void ReadAggregatorData(IObjectDataInput input)
+        {
+            input.ReadLong(); // member side field not used on client
+            input.ReadLong(); // member side field not used on client
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override void WriteAggregatorData(IObjectDataOutput output)
+        {
+            output.WriteLong(0L); // member side field not used on client
+            output.WriteLong(0L); // member side field not used on client
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override int ClassId =&gt; AggregatorDataSerializerHook.LongAvg;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,39,0],[31,11,31,12,0],[38,15,38,34,0],[39,11,39,12,0],[44,13,44,30,0],[45,13,45,30,0],[46,9,46,10,0],[51,13,51,34,0],[52,13,52,34,0],[53,9,53,10,0],[56,40,56,76,0]]);
+    </script>
+  </body>
+</html>

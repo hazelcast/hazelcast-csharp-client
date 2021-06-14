@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\AuthenticationOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+using Hazelcast.Security;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents authentication options.
+    /// &lt;/summary&gt;
+    public class AuthenticationOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AuthenticationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public AuthenticationOptions()
+        {
+            CredentialsFactory = new SingletonServiceFactory&lt;ICredentialsFactory&gt;();
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AuthenticationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private AuthenticationOptions(AuthenticationOptions other)
+        {
+            CredentialsFactory = other.CredentialsFactory.Clone();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; for the &lt;see cref=&quot;ICredentialsFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When set in the configuration file, it is defined as an injected type, for instance:
+        /// &lt;code&gt;
+        /// &quot;credentialsFactory&quot;:
+        /// {
+        ///   &quot;typeName&quot;: &quot;My.CredentialsFactory&quot;,
+        ///   &quot;args&quot;:
+        ///   {
+        ///     &quot;foo&quot;: 42
+        ///   }
+        /// }
+        /// &lt;/code&gt;
+        /// where &lt;c&gt;typeName&lt;/c&gt; is the name of the type, and &lt;c&gt;args&lt;/c&gt; is an optional dictionary
+        /// of arguments for the type constructor.&lt;/para&gt;
+        /// &lt;para&gt;In addition, shortcuts exists for common credentials factory. The whole &lt;c&gt;credentialsFactory&lt;/c&gt;
+        /// block can be omitted and replace by one of the following:&lt;/para&gt;
+        /// &lt;para&gt;Username and password:&lt;code&gt;
+        /// &quot;username-password&quot;:
+        /// {
+        ///   &quot;username&quot;: &quot;someone&quot;,
+        ///   &quot;password&quot;: &quot;secret&quot;
+        /// }
+        /// &lt;/code&gt;&lt;/para&gt;
+        /// &lt;para&gt;Kerberos:&lt;code&gt;
+        /// &quot;kerberos&quot;:
+        /// {
+        ///   &quot;spn&quot;: &quot;service-provider-name&quot;
+        /// }
+        /// &lt;/code&gt;&lt;/para&gt;
+        /// &lt;para&gt;Token:&lt;code&gt;
+        /// &quot;token&quot;:
+        /// {
+        ///   &quot;data&quot;: &quot;some-secret-token&quot;,
+        ///   &quot;encoding&quot;: &quot;none&quot;
+        /// }
+        /// &lt;/code&gt;Supported encodings are: &lt;c&gt;none&lt;/c&gt; and &lt;c&gt;base64&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public SingletonServiceFactory&lt;ICredentialsFactory&gt; CredentialsFactory { get; }
+
+        [BinderName(&quot;credentialsFactory&quot;)]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions CredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get =&gt; default;
+            set =&gt; CredentialsFactory.Creator = () =&gt; ServiceFactory.CreateInstance&lt;ICredentialsFactory&gt;(value.TypeName, value.Args);
+        }
+
+        [BinderName(&quot;username-password&quot;)] // + &quot;username&quot;, &quot;password&quot;
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions UsernamePasswordCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get =&gt; default;
+            set =&gt; CredentialsFactory.Creator = () =&gt; new UsernamePasswordCredentialsFactory(value.Args);
+        }
+
+        [BinderName(&quot;token&quot;)] // + &quot;encoding&quot;, &quot;data&quot;
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions TokenCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get =&gt; default;
+            set =&gt; CredentialsFactory.Creator = () =&gt; new TokenCredentialsFactory(value.Args);
+        }
+
+        [BinderName(&quot;kerberos&quot;)] // + &quot;spn&quot;
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions KerberosCredentialsFactoryBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get =&gt; default;
+            set =&gt; CredentialsFactory.Creator = () =&gt; new KerberosCredentialsFactory(value.Args);
+        }
+
+        /// &lt;summary&gt;
+        /// Configures a user name and password as the authentication mechanism.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;username&quot;&gt;Username.&lt;/param&gt;
+        /// &lt;param name=&quot;password&quot;&gt;Password.&lt;/param&gt;
+        /// &lt;returns&gt;The security options.&lt;/returns&gt;
+        public AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
+        {
+            CredentialsFactory.Creator = () =&gt; new UsernamePasswordCredentialsFactory(username, password);
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Configures static credentials as the authentication mechanism.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;credentials&quot;&gt;Credentials.&lt;/param&gt;
+        /// &lt;returns&gt;The security options.&lt;/returns&gt;
+        public AuthenticationOptions ConfigureCredentials(ICredentials credentials)
+        {
+            CredentialsFactory.Creator = () =&gt; new StaticCredentialsFactory(credentials);
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Configures a static token as the authentication mechanism.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;token&quot;&gt;A token.&lt;/param&gt;
+        /// &lt;returns&gt;The security configuration.&lt;/returns&gt;
+        public AuthenticationOptions ConfigureTokenCredentials(byte[] token)
+        {
+            return ConfigureCredentials(new TokenCredentials(token));
+        }
+
+        /// &lt;summary&gt;
+        /// Configures Kerberos as the authentication mechanism.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;The authentication options.&lt;/param&gt;
+        /// &lt;param name=&quot;spn&quot;&gt;The service principal name of the Hazelcast cluster.&lt;/param&gt;
+        /// &lt;returns&gt;The authentication options.&lt;/returns&gt;
+        public AuthenticationOptions ConfigureKerberosCredentials(string spn)
+        {
+            CredentialsFactory.Creator = () =&gt; new KerberosCredentialsFactory(spn);
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clone the options.
+        /// &lt;/summary&gt;
+        internal AuthenticationOptions Clone() =&gt; new AuthenticationOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,39,0],[31,13,31,85,0],[32,9,32,10,0],[37,9,37,67,0],[39,13,39,67,0],[40,9,40,10,0],[83,82,83,86,0],[92,20,92,27,0],[93,20,93,55,0],[93,55,93,133,0],[103,20,103,27,0],[104,20,104,55,0],[104,55,104,105,0],[114,20,114,27,0],[115,20,115,55,0],[115,55,115,94,0],[125,20,125,27,0],[126,20,126,55,0],[126,55,126,97,0],[137,13,137,48,0],[137,48,137,106,0],[137,106,137,107,0],[138,13,138,25,0],[148,13,148,48,0],[148,48,148,89,0],[148,89,148,90,0],[149,13,149,25,0],[159,13,159,70,0],[170,13,170,48,0],[170,48,170,83,0],[170,83,170,84,0],[171,13,171,25,0],[177,51,177,82,0]]);
+    </script>
+  </body>
+</html>

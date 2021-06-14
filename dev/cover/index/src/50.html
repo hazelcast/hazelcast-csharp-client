@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ObjectDataInput.positional.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    internal partial class ObjectDataInput //public api
+    {
+        public bool ReadBoolean(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfBool);
+            var value = _buffer.ReadBool(position);
+            return value;
+        }
+
+        public byte ReadByte(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfByte);
+            var value = _buffer.ReadByte(position);
+            return value;
+        }
+
+        public char ReadChar(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfChar);
+            var value = _buffer.ReadChar(position, Endianness);
+            return value;
+        }
+
+        public short ReadShort(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfShort);
+            var value = _buffer.ReadShort(position, Endianness);
+            return value;
+        }
+
+        public int ReadInt(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfInt);
+            var value = _buffer.ReadInt(position, Endianness);
+            return value;
+        }
+
+        public long ReadLong(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfLong);
+            var value = _buffer.ReadLong(position, Endianness);
+            return value;
+        }
+
+        public float ReadFloat(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfFloat);
+            var value = _buffer.ReadFloat(position, Endianness);
+            return value;
+        }
+
+        public double ReadDouble(int position)
+        {
+            CheckAvailable(position, BytesExtensions.SizeOfDouble);
+            var value = _buffer.ReadDouble(position, Endianness);
+            return value;
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,13,23,66,0],[24,13,24,52,0],[25,13,25,26,0],[30,13,30,66,0],[31,13,31,52,0],[32,13,32,26,0],[37,13,37,66,0],[38,13,38,64,0],[39,13,39,26,0],[44,13,44,67,0],[45,13,45,65,0],[46,13,46,26,0],[51,13,51,65,0],[52,13,52,63,0],[53,13,53,26,0],[58,13,58,66,0],[59,13,59,64,0],[60,13,60,26,0],[65,13,65,67,0],[66,13,66,65,0],[67,13,67,26,0],[72,13,72,68,0],[73,13,73,66,0],[74,13,74,26,0]]);
+    </script>
+  </body>
+</html>

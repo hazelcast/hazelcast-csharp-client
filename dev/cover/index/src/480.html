@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\MessageTypeConstants.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#if DEBUG
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+#endif
+
+namespace Hazelcast.Messaging
+{
+    // this is a utility class used for debugging, that analyzes the codecs via
+    // reflection and builds a table that can map the type of a received message
+    // to its actual type name (from the codec).
+    //
+    // it is only compiled, and used, in DEBUG mode.
+
+    internal static class MessageTypeConstants
+    {
+#if DEBUG
+        private static readonly Dictionary&lt;int, string&gt; MessageNames = new Dictionary&lt;int, string&gt;();
+
+        static MessageTypeConstants()
+        {
+            var codecTypes = typeof (MessageTypeConstants).Assembly
+                .GetTypes()
+                .Where(x =&gt; x.Namespace != null &amp;&amp;
+                            x.Namespace.StartsWith(&quot;Hazelcast.Protocol&quot;, StringComparison.Ordinal) &amp;&amp;
+                            x.Name.EndsWith(&quot;Codec&quot;, StringComparison.Ordinal));
+
+            var typeOfInt = typeof (int);
+
+            foreach (var codecType in codecTypes)
+            {
+                var codecConstants = codecType
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                    .Where(x =&gt; x.IsLiteral &amp;&amp;
+                                !x.IsInitOnly &amp;&amp;
+                                x.FieldType == typeOfInt &amp;&amp;
+                                x.Name.EndsWith(&quot;MessageType&quot;, StringComparison.Ordinal));
+
+                var codecName = codecType.Name;
+                codecName = codecName.Substring(0, codecName.Length - &quot;Codec&quot;.Length);
+
+                foreach (var codecConstant in codecConstants)
+                {
+                    var name = codecConstant.Name;
+                    var value = (int) codecConstant.GetValue(null);
+
+                    name = name.Substring(0, name.Length - &quot;MessageType&quot;.Length);
+                    if (name.StartsWith(&quot;Event&quot;, StringComparison.Ordinal))
+                        name = name.Substring(&quot;Event&quot;.Length);
+
+                    MessageNames[value] = codecName + &quot;.&quot; + name;
+                }
+            }
+        }
+#endif
+
+#if !DEBUG
+#pragma warning disable CA1801 // Review unused parameters - not going to use type if !DEBUG
+#endif
+        public static string GetMessageTypeName(int type)
+#pragma warning restore CA1801
+        {
+#if DEBUG
+            return MessageNames.TryGetValue(type, out var name) ? name : &quot;(unknown)&quot;;
+#else
+            return string.Empty;
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[81,13,81,33,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.Getting.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HMapWithCache&lt;TKey, TValue&gt; // Getting
+    {
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;TValue&gt; GetAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            var fromCache = await _cache.TryGetOrAddAsync(keyData, _ =&gt; GetDataAsync(keyData, cancellationToken)).CfAwait();
+            return fromCache.ValueOrDefault();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;ReadOnlyLazyDictionary&lt;TKey, TValue&gt;&gt; GetAllAsync(Dictionary&lt;Guid, Dictionary&lt;int, List&lt;IData&gt;&gt;&gt; ownersKeys, CancellationToken cancellationToken)
+        {
+            // owner keys are grouped by owners (members) and partitions
+
+            var cachedValues = new Dictionary&lt;IData, TValue&gt;();
+            var cachedKeys = new List&lt;IData&gt;();
+
+            foreach (var (_, ownerKeys) in ownersKeys)
+            {
+                foreach (var (_, partitionKeys) in ownerKeys)
+                {
+                    cachedKeys.Clear();
+                    foreach (var keyData in partitionKeys)
+                    {
+                        var (hasValue, value) = await _cache.TryGetAsync(keyData).CfAwait();
+                        if (hasValue)
+                        {
+                            cachedKeys.Add(keyData);
+                            cachedValues[keyData] = value;
+                        }
+                    }
+
+                    foreach (var keyData in cachedKeys)
+                        partitionKeys.Remove(keyData);
+                }
+            }
+
+            var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CfAwait();
+
+            // &#39;entries&#39; is a ReadOnlyLazyDictionary that contains values that are lazily
+            // deserialized - and since we just fetched the entries, none have been deserialized
+            // yet - so entry.ValueObject here is not null, and is an IData that we can pass
+            // to the cache - which will either deserialized or not depending on InMemoryFormat
+
+            // cache retrieved entries
+            foreach (var (key, entry) in entries.Entries)
+                await _cache.TryAddAsync(key, entry.ValueData).CfAwait();
+
+            // merge cached entries and retrieved entries
+            foreach (var (keyData, valueObject) in cachedValues)
+                entries.Add(keyData, valueObject);
+
+            return entries;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;bool&gt; ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            return await _cache.ContainsKeyAsync(keyData).CfAwait() || await base.ContainsKeyAsync(keyData, cancellationToken).CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,13,30,125,0],[30,73,30,113,0],[31,13,31,47,0],[32,9,32,10,0],[39,13,39,64,0],[40,13,40,48,0],[42,22,42,40,0],[42,41,42,43,0],[42,44,42,54,0],[44,26,44,48,0],[44,49,44,51,0],[44,52,44,61,0],[46,21,46,40,0],[47,30,47,41,0],[47,42,47,44,0],[47,45,47,58,0],[49,25,49,93,0],[50,25,50,38,0],[52,29,52,53,0],[53,29,53,59,0],[55,21,55,22,0],[57,30,57,41,0],[57,42,57,44,0],[57,45,57,55,0],[58,25,58,55,0],[59,17,59,18,0],[62,13,62,91,0],[70,22,70,38,0],[70,39,70,41,0],[70,42,70,57,0],[71,17,71,74,0],[74,22,74,48,0],[74,49,74,51,0],[74,52,74,64,0],[75,17,75,51,0],[77,13,77,28,0],[78,9,78,10,0],[83,13,83,138,0],[84,9,84,10,0]]);
+    </script>
+  </body>
+</html>

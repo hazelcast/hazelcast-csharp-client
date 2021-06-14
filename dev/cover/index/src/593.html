@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ConnectionRetryOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents the configuration for the retry strategy.
+    /// &lt;/summary&gt;
+    public class ConnectionRetryOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionRetryOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public ConnectionRetryOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionRetryOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private ConnectionRetryOptions(ConnectionRetryOptions other)
+        {
+            InitialBackoffMilliseconds = other.InitialBackoffMilliseconds;
+            MaxBackoffMilliseconds = other.MaxBackoffMilliseconds;
+            Multiplier = other.Multiplier;
+            ClusterConnectionTimeoutMilliseconds = other.ClusterConnectionTimeoutMilliseconds;
+            Jitter = other.Jitter;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the initial back-off time in milliseconds.
+        /// &lt;/summary&gt;
+        public int InitialBackoffMilliseconds { get; set; } = 1000;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the maximum back-off time in milliseconds.
+        /// &lt;/summary&gt;
+        public int MaxBackoffMilliseconds { get; set; } = 30*1000;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the multiplier.
+        /// &lt;/summary&gt;
+        public double Multiplier { get; set; } = 1;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the timeout in milliseconds.
+        /// &lt;/summary&gt;
+        public long ClusterConnectionTimeoutMilliseconds { get; set; } = -1; // infinite
+
+        /// &lt;summary&gt;
+        /// Gets or sets the jitter.
+        /// &lt;/summary&gt;
+        public double Jitter { get; set; }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal ConnectionRetryOptions Clone() =&gt; new ConnectionRetryOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,40,0],[26,11,26,12,0],[31,9,31,69,0],[33,13,33,75,0],[34,13,34,67,0],[35,13,35,43,0],[36,13,36,95,0],[37,13,37,35,0],[38,9,38,10,0],[43,49,43,53,0],[43,54,43,58,0],[43,63,43,67,0],[43,63,43,67,0],[48,45,48,49,0],[48,50,48,54,0],[48,59,48,66,0],[48,59,48,66,0],[53,36,53,40,0],[53,41,53,45,0],[53,50,53,51,0],[53,50,53,51,0],[58,60,58,64,0],[58,65,58,69,0],[58,74,58,76,0],[58,74,58,76,0],[63,32,63,36,0],[63,37,63,41,0],[68,52,68,84,0]]);
+    </script>
+  </body>
+</html>

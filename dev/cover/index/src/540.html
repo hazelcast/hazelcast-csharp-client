@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.AggrProj.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Aggregation;
+using Hazelcast.Core;
+using Hazelcast.Projection;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Query;
+using Hazelcast.Serialization.Collections;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    // ReSharper disable UnusedTypeParameter
+    internal partial class HMap&lt;TKey, TValue&gt; // Aggregations and Projections
+    // ReSharper restore NonReadonlyMemberInGetHashCode
+    {
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator)
+            =&gt; AggregateAsync(aggregator, CancellationToken.None);
+
+        private async Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, CancellationToken cancellationToken)
+        {
+            var aggregatorData = ToSafeData(aggregator);
+
+            var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TResult&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, IPredicate predicate)
+            =&gt; AggregateAsync(aggregator, predicate, CancellationToken.None);
+
+        private async Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, IPredicate predicate, CancellationToken cancellationToken)
+        {
+            var (aggregatorData, predicateData) = ToSafeData(aggregator, predicate);
+
+            var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TResult&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection)
+            =&gt; ProjectAsync&lt;TResult&gt;(projection, CancellationToken.None);
+
+        private async Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, CancellationToken cancellationToken)
+        {
+            var projectionData = ToSafeData(projection);
+
+            var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TResult&gt;(response, SerializationService);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, IPredicate predicate)
+            =&gt; ProjectAsync&lt;TResult&gt;(projection, predicate, CancellationToken.None);
+
+        private async Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, IPredicate predicate, CancellationToken cancellationToken)
+        {
+            var (projectionData, predicateData) = ToSafeData(projection, predicate);
+
+            var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TResult&gt;(response, SerializationService);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,16,33,66,0],[37,13,37,57,0],[39,13,39,88,0],[40,13,40,114,0],[41,13,41,87,0],[42,13,42,48,0],[43,9,43,10,0],[47,16,47,77,0],[51,13,51,85,0],[53,13,53,116,0],[54,13,54,114,0],[55,13,55,100,0],[56,13,56,48,0],[57,9,57,10,0],[61,16,61,73,0],[65,13,65,57,0],[67,13,67,86,0],[68,13,68,114,0],[69,13,69,85,0],[70,13,70,82,0],[71,9,71,10,0],[75,16,75,84,0],[79,13,79,85,0],[81,13,81,114,0],[82,13,82,114,0],[83,13,83,98,0],[84,13,84,82,0],[85,9,85,10,0]]);
+    </script>
+  </body>
+</html>

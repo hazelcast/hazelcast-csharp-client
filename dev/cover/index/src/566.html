@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxMultiMap.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal class HTxMultiMap&lt;TKey, TValue&gt; : TransactionalDistributedObjectBase, IHTxMultiMap&lt;TKey, TValue&gt;
+    {
+        public HTxMultiMap(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.MultiMap, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        { }
+
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMultiMapGetCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
+        }
+
+        public async Task&lt;bool&gt; PutAsync(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;bool&gt; RemoveAsync(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; RemoveAsync(TKey key)
+        {
+            var keyData = ToData(key);
+            var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
+        }
+
+        public async Task&lt;int&gt; GetSizeAsync()
+        {
+            var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;int&gt; GetValueCountAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,15,30,147,0],[31,11,31,12,0],[35,13,35,43,0],[36,13,36,119,0],[37,13,37,132,0],[38,13,38,99,0],[39,13,39,81,0],[40,9,40,10,0],[44,13,44,63,0],[45,13,45,130,0],[46,13,46,132,0],[47,13,47,91,0],[48,9,48,10,0],[52,13,52,63,0],[53,13,53,138,0],[54,13,54,132,0],[55,13,55,99,0],[56,9,56,10,0],[60,13,60,39,0],[61,13,61,122,0],[62,13,62,132,0],[63,13,63,102,0],[64,13,64,81,0],[65,9,65,10,0],[69,13,69,111,0],[70,13,70,132,0],[71,13,71,92,0],[72,9,72,10,0],[76,13,76,43,0],[77,13,77,126,0],[78,13,78,132,0],[79,13,79,98,0],[80,9,80,10,0]]);
+    </script>
+  </body>
+</html>

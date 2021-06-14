@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\DumpMessagingExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+#if DEBUG
+using System.Text;
+#else
+#pragma warning disable CA1801 // Review unused parameters
+#endif
+
+namespace Hazelcast.Messaging
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for dumping objects.
+    /// &lt;/summary&gt;
+    internal static class DumpMessagingExtensions
+    {
+        /// &lt;summary&gt;
+        /// Dumps a client message into a readable string.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The client message.&lt;/param&gt;
+        /// &lt;param name=&quot;level&quot;&gt;Verbosity level.&lt;/param&gt;
+        /// &lt;returns&gt;A readable string representation of the message.&lt;/returns&gt;
+        public static string Dump(this ClientMessage message, int level)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+#if DEBUG
+            string prefix;
+            var text = new StringBuilder();
+
+            // trying to do colors but that does not seem to work w/Nunit
+            //text.Append(&quot;\u001b[31m&quot;);
+
+            if (message.MessageType == 0)
+            {
+                prefix = &quot;EXCEPTION&quot;;
+                text.Append(prefix);
+            }
+            else
+            {
+                prefix = message.IsEvent
+                    ? &quot;EVENT&quot;
+                    : (message.MessageType &amp; 1) &gt; 0 ? &quot;RESPONSE&quot; : &quot;REQUEST&quot;;
+
+                var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
+
+                text.AppendLine($&quot;{prefix}  corr: {message.CorrelationId}&quot;);
+                text.Append($&quot;TYPE 0x{message.MessageType:x} {name}&quot;);
+            }
+
+            if (prefix == &quot;REQUEST&quot;)
+            {
+                if (message.FirstFrame.Length &gt;= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
+                {
+                    text.AppendLine();
+                    text.Append($&quot;PARTID {message.PartitionId}&quot;);
+                }
+            }
+
+            if (level &gt;= 2)
+            {
+                var frame = message.FirstFrame;
+                while (frame != null)
+                {
+                    text.AppendLine();
+                    text.Append(&quot;FRAME &quot;);
+                    text.Append(frame);
+                    frame = frame.Next;
+                }
+            }
+
+            //text.Append(&quot;\u001b[0m&quot;);
+
+            return text.ToString();
+#else
+            return string.Empty;
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,13,38,33,0],[38,34,38,83,0],[88,13,88,33,0]]);
+    </script>
+  </body>
+</html>

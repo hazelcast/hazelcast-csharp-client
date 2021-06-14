@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Setting.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HMap&lt;TKey, TValue&gt; // Setting
+    {
+        /// &lt;inheritdoc /&gt;
+        public Task SetAsync(TKey key, TValue value)
+            =&gt; SetAsync(key, value, TimeSpanExtensions.MinusOneMillisecond, TimeSpanExtensions.MinusOneMillisecond);
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutAsync(TKey key, TValue value)
+            =&gt; PutAsync(key, value, TimeSpanExtensions.MinusOneMillisecond, TimeSpanExtensions.MinusOneMillisecond);
+
+        /// &lt;inheritdoc /&gt;
+        public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            return SetAsync(keyData, valueData, timeToLive, TimeSpanExtensions.MinusOneMillisecond);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task SetAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            return SetAsync(keyData, valueData, timeToLive, maxIdle);
+        }
+
+        protected virtual async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+            await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutAsync(TKey key, TValue value, TimeSpan timeToLive)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            return GetAndSetAsync(keyData, valueData, timeToLive, TimeSpanExtensions.MinusOneMillisecond);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            return GetAndSetAsync(keyData, valueData, timeToLive, maxIdle);
+        }
+
+        protected virtual async Task&lt;TValue&gt; GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+
+            var response = withMaxIdle
+                ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
+                : MapPutCodec.DecodeResponse(responseMessage).Response;
+
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task SetAllAsync(IDictionary&lt;TKey, TValue&gt; entries)
+            =&gt; SetAllAsync(entries, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task SetAllAsync(IDictionary&lt;TKey, TValue&gt; entries, CancellationToken cancellationToken)
+        {
+            // TODO: is this transactional? can some entries be created and others be missing?
+
+            var ownerEntries = new Dictionary&lt;Guid, Dictionary&lt;int, List&lt;KeyValuePair&lt;IData, IData&gt;&gt;&gt;&gt;();
+
+            // verify entries + group by owner and partitions
+            foreach (var (key, value) in entries)
+            {
+                var (keyData, valueData) = ToSafeData(key, value);
+
+                var partitionId = Cluster.Partitioner.GetPartitionId(keyData.PartitionHash);
+                var ownerId = Cluster.Partitioner.GetPartitionOwner(partitionId);
+                if (!ownerEntries.TryGetValue(ownerId, out var part))
+                    part = ownerEntries[ownerId] = new Dictionary&lt;int, List&lt;KeyValuePair&lt;IData, IData&gt;&gt;&gt;();
+                if (!part.TryGetValue(partitionId, out var list))
+                    list = part[partitionId] = new List&lt;KeyValuePair&lt;IData, IData&gt;&gt;();
+                list.Add(new KeyValuePair&lt;IData, IData&gt;(keyData, valueData));
+            }
+
+            var task = SetAsync(ownerEntries, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Adds or replaces entries.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;ownerEntries&quot;&gt;Entries.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;Nothing.&lt;/returns&gt;
+        protected virtual
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task SetAsync(Dictionary&lt;Guid, Dictionary&lt;int, List&lt;KeyValuePair&lt;IData, IData&gt;&gt;&gt;&gt; ownerEntries, CancellationToken cancellationToken)
+        {
+            // TODO: add a SendAsync(...) to Cluster/Client
+            // that can send multiple messages and use one single completion source
+            // cannot inherit from TaskCompletionSource: it&#39;s not sealed but nothing is virtual
+
+            // create parallel tasks to fire requests for each owner (each network client)
+            // for each owner, serialize requests for each partition, because each message
+            // needs to have its own partition id
+            var tasks = new List&lt;Task&gt;();
+            foreach (var (ownerId, part) in ownerEntries)
+            {
+                foreach (var (partitionId, list) in part)
+                {
+                    if (list.Count == 0) continue;
+
+                    var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
+                    requestMessage.PartitionId = partitionId;
+                    var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken);
+                    tasks.Add(ownerTask);
+                }
+            }
+
+            // and wait on all tasks, ignoring the responses
+            var task = Task.WhenAll(tasks);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; ReplaceAsync(TKey key, TValue newValue)
+            =&gt; TryUpdateAsync(key, newValue, CancellationToken.None);
+
+        private async Task&lt;TValue&gt; TryUpdateAsync(TKey key, TValue newValue, CancellationToken cancellationToken)
+        {
+            var (keyData, valueData) = ToSafeData(key, newValue);
+
+            var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;bool&gt; ReplaceAsync(TKey key, TValue comparisonValue, TValue newValue)
+            =&gt; TryUpdateAsync(key, comparisonValue, newValue, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;bool&gt; TryUpdateAsync(TKey key, TValue expectedValue, TValue newValue, CancellationToken cancellationToken)
+        {
+            var (keyData, expectedData, newData) = ToSafeData(key, expectedValue, newValue);
+            var task = TryUpdateAsync(keyData, expectedData, newData, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Replaces an existing entry.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;A key.&lt;/param&gt;
+        /// &lt;param name=&quot;expectedData&quot;&gt;The expected value.&lt;/param&gt;
+        /// &lt;param name=&quot;newData&quot;&gt;The new value.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;true if the entry was replaced; otherwise false.&lt;/returns&gt;
+        protected async Task&lt;bool&gt; TryUpdateAsync(IData keyData, IData expectedData, IData newData, CancellationToken cancellationToken)
+        {
+            var requestMessage = MapReplaceIfSameCodec.EncodeRequest(Name, keyData, expectedData, newData, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var response = MapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;bool&gt; TryPutAsync(TKey key, TValue value, TimeSpan timeToWait)
+            =&gt; TrySetAsync(key, value, timeToWait, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;bool&gt; TrySetAsync(TKey key, TValue value, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var task = TrySetAsync(keyData, valueData, serverTimeout, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to set an entry within a timeout.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;A key.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;A value.&lt;/param&gt;
+        /// &lt;param name=&quot;serverTimeout&quot;&gt;A timeout.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;true if the entry was set; otherwise false.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method returns false when no lock on the key could be
+        /// acquired within the timeout.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        protected virtual async Task&lt;bool&gt; TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        {
+            var timeoutMs = serverTimeout.RoundedMilliseconds(false); // codec: 0 = server, -1 = infinite
+
+            var requestMessage = MapTryPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeoutMs);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var response = MapTryPutCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutIfAbsentAsync(TKey key, TValue value)
+            =&gt; GetOrAddAsync(key, value, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;TValue&gt; GetOrAddAsync(TKey key, TValue value, CancellationToken cancellationToken)
+        {
+            var task = GetOrAddAsync(key, value, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive)
+            =&gt; GetOrAddAsync(key, value, timeToLive, TimeSpanExtensions.MinusOneMillisecond, CancellationToken.None);
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;TValue&gt; PutIfAbsentAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
+            =&gt; GetOrAddAsync(key, value, timeToLive, maxIdle, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;TValue&gt; GetOrAddAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var task = GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an entry with a time-to-live, if no entry with the key exists.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;A key.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;param name=&quot;timeToLive&quot;&gt;A time to live.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The existing value, if any; otherwise the default value.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The value is automatically expired, evicted and removed after the &lt;paramref name=&quot;timeToLive&quot;/&gt; has elapsed..&lt;/para&gt;
+        /// &lt;para&gt;If the &lt;paramref name=&quot;timeToLive&quot;/&gt; is -1ms, the entry lives forever.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        protected virtual async Task&lt;TValue&gt; GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        {
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapPutIfAbsentWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapPutIfAbsentCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+
+            var response = withMaxIdle
+                ? MapPutIfAbsentWithMaxIdleCodec.DecodeResponse(responseMessage).Response
+                : MapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
+
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive)
+            =&gt; SetTransientAsync(key, value, timeToLive, TimeSpanExtensions.MinusOneMillisecond, CancellationToken.None);
+
+        /// &lt;inheritdoc /&gt;
+        public Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)
+            =&gt; SetTransientAsync(key, value, timeToLive, maxIdle, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task SetTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var task = SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a transient entry.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;A key.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;param name=&quot;timeToLive&quot;&gt;A time to live.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        protected virtual
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken = default)
+        {
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = maxIdle.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapPutTransientWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapPutTransientCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        public Task&lt;bool&gt; UpdateTimeToLive(TKey key, TimeSpan timeToLive)
+        {
+            throw new NotImplementedException();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,16,29,116,0],[33,16,33,116,0],[38,13,38,63,0],[39,13,39,101,0],[45,13,45,63,0],[46,13,46,70,0],[51,13,51,70,0],[52,13,52,64,0],[53,13,53,47,0],[55,13,57,96,0],[59,13,59,101,0],[60,9,60,10,0],[65,13,65,63,0],[66,13,66,107,0],[72,13,72,63,0],[73,13,73,76,0],[78,13,78,70,0],[79,13,79,64,0],[80,13,80,47,0],[82,13,84,96,0],[86,13,86,123,0],[88,13,90,72,0],[92,13,92,47,0],[93,9,93,10,0],[97,16,97,60,0],[107,13,107,106,0],[110,22,110,38,0],[110,39,110,41,0],[110,42,110,49,0],[112,17,112,67,0],[114,17,114,93,0],[115,17,115,82,0],[116,17,116,70,0],[117,21,117,108,0],[118,17,118,66,0],[119,21,119,87,0],[120,17,120,78,0],[123,13,123,66,0],[128,13,128,34,0],[130,9,130,10,0],[151,13,151,42,0],[152,22,152,41,0],[152,42,152,44,0],[152,45,152,57,0],[154,26,154,49,0],[154,50,154,52,0],[154,53,154,57,0],[156,21,156,41,0],[158,21,158,90,0],[159,21,159,62,0],[160,21,160,117,0],[161,21,161,42,0],[166,13,166,44,0],[171,13,171,34,0],[173,9,173,10,0],[177,16,177,69,0],[181,13,181,66,0],[183,13,183,101,0],[184,13,184,142,0],[185,13,185,85,0],[186,13,186,47,0],[187,9,187,10,0],[191,16,191,86,0],[199,13,199,93,0],[200,13,200,90,0],[205,13,205,41,0],[207,9,207,10,0],[219,13,219,119,0],[220,13,220,142,0],[221,13,221,91,0],[222,13,222,29,0],[223,9,223,10,0],[227,16,227,75,0],[235,13,235,63,0],[236,13,236,90,0],[241,13,241,41,0],[243,9,243,10,0],[259,13,259,70,0],[261,13,261,111,0],[262,13,262,142,0],[263,13,263,84,0],[264,13,264,29,0],[265,9,265,10,0],[269,16,269,65,0],[277,13,277,124,0],[282,13,282,41,0],[284,9,284,10,0],[288,16,288,117,0],[292,16,292,86,0],[300,13,300,63,0],[301,13,301,93,0],[306,13,306,41,0],[308,9,308,10,0],[324,13,324,70,0],[325,13,325,64,0],[326,13,326,47,0],[328,13,330,104,0],[332,13,332,142,0],[334,13,336,80,0],[338,13,338,47,0],[339,9,339,10,0],[343,16,343,121,0],[347,16,347,90,0],[355,13,355,63,0],[356,13,356,102,0],[361,13,361,34,0],[363,9,363,10,0],[378,13,378,70,0],[379,13,379,64,0],[380,13,380,47,0],[382,13,384,105,0],[385,13,385,115,0],[390,13,390,34,0],[392,9,392,10,0],[396,13,396,49,0]]);
+    </script>
+  </body>
+</html>

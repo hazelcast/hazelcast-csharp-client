@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberConnectionQueue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents the queue of members that need to be connected.
+    /// &lt;/summary&gt;
+    internal class MemberConnectionQueue : IAsyncEnumerable&lt;(MemberInfo, CancellationToken)&gt;, IAsyncDisposable
+    {
+        private readonly AsyncQueue&lt;MemberInfo&gt; _members = new AsyncQueue&lt;MemberInfo&gt;();
+        private readonly Dictionary&lt;Guid, bool&gt; _removed = new Dictionary&lt;Guid, bool&gt;();
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly SemaphoreSlim _resume = new SemaphoreSlim(0);
+        private readonly SemaphoreSlim _enumerate = new SemaphoreSlim(1);
+        private readonly object _mutex = new object();
+
+        private readonly ILogger _logger;
+
+        private volatile bool _disposed;
+        private CancellationTokenSource _itemCancel;
+        private int _suspend;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberConnectionQueue&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public MemberConnectionQueue(ILoggerFactory loggerFactory)
+        {
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger&lt;MemberConnectionQueue&gt;();
+
+            HConsole.Configure(x =&gt; x.Configure&lt;MemberConnectionQueue&gt;().SetPrefix(&quot;MBRQ&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Suspends the queue.
+        /// &lt;/summary&gt;
+        public void Suspend()
+        {
+            lock (_mutex)
+            {
+                if (_disposed) return; // nothing to suspend - but no need to throw about it
+
+                // cancel any current item
+                if (++_suspend == 1) _itemCancel?.Cancel();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Resumes the queue.
+        /// &lt;/summary&gt;
+        public void Resume(bool drain = false)
+        {
+            lock (_mutex)
+            {
+                if (_disposed) return; // nothing to resume - but no need to throw about it
+
+                if (_suspend == 0) throw new InvalidOperationException(&quot;Not suspended.&quot;);
+
+                if (drain) _members.Drain();
+
+                if (--_suspend == 0) _resume.Release();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a member to connect.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member to connect.&lt;/param&gt;
+        public void Add(MemberInfo member)
+        {
+            if (_disposed) return; // no need to add - no need to throw about it
+
+            if (_members.TryWrite(member)) return;
+
+            lock (_mutex) _removed[member.Id] = false;
+
+            // that should not happen, but log to be sure
+            _logger.LogWarning($&quot;Failed to add a member ({member}).&quot;);
+        }
+
+        public void Remove(Guid memberId)
+        {
+            lock (_mutex) if (_removed.ContainsKey(memberId)) _removed[memberId] = true;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public IAsyncEnumerator&lt;(MemberInfo, CancellationToken)&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(MemberConnectionQueue));
+
+            // ensure that disposing this class cancels the enumeration
+            return new AsyncEnumerator(this, _cancel.Token, cancellationToken);
+        }
+
+        private class AsyncEnumerator : IAsyncEnumerator&lt;(MemberInfo, CancellationToken)&gt;
+        {
+            private readonly MemberConnectionQueue _queue;
+            private readonly CancellationTokenSource _cancellation;
+            private IAsyncEnumerator&lt;MemberInfo&gt; _queueEnumerator;
+
+            public AsyncEnumerator(MemberConnectionQueue queue, CancellationToken cancellationToken1, CancellationToken cancellationToken2)
+            {
+                _queue = queue;
+                _cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken1, cancellationToken2);
+            }
+
+            public async ValueTask&lt;bool&gt; MoveNextAsync()
+            {
+                if (_cancellation.IsCancellationRequested) return false;
+
+                // only one enumerator at a time
+                if (_queueEnumerator == null)
+                {
+                    var acquired = await _queue._enumerate.WaitAsync(TimeSpan.Zero, default).CfAwait();
+                    if (!acquired) throw new InvalidOperationException(&quot;Can only enumerate once at a time.&quot;);
+                    _queueEnumerator = _queue._members.GetAsyncEnumerator(_cancellation.Token);
+                }
+
+                // when suspending:
+                // - current item, if any, is canceled
+                // - everything else is blocked until resumed
+
+                lock (_queue._mutex)
+                {
+                    if (_queue._suspend == 0)
+                    {
+                        _queue._itemCancel?.Dispose();
+                        _queue._itemCancel = null;
+                    }
+                }
+
+                while (!_cancellation.IsCancellationRequested)
+                {
+                    // this is blocking and returns true once a member is available,
+                    // or false if the queue enumerator is complete (no more members)
+                    if (!await _queueEnumerator.MoveNextAsync().CfAwait())
+                        return false;
+
+                    var member = _queueEnumerator.Current;
+
+                    // skip nulls, go wait for another member
+                    if (member == null)
+                        continue;
+
+                    // we have a candidate member
+                    while (!_cancellation.IsCancellationRequested)
+                    {
+                        // if not suspended, return, else wait and try again
+                        lock (_queue._mutex)
+                        {
+                            if (_queue._suspend == 0)
+                            {
+                                if (_queue._removed.TryGetValue(member.Id, out var removed))
+                                {
+                                    _queue._removed.Remove(member.Id);
+                                    if (removed) break;
+                                }
+
+                                HConsole.WriteLine(this, $&quot;Member {member.Uuid.ToShortString()}: connect&quot;);
+                                _queue._itemCancel = new CancellationTokenSource();
+                                return true;
+                            }
+                        }
+
+                        await _queue._resume.WaitAsync(_cancellation.Token).CfAwaitCanceled();
+                    }
+
+                    if (!_cancellation.IsCancellationRequested)
+                        HConsole.WriteLine(this, $&quot;Member {member.Uuid.ToShortString()}: skip&quot;);
+                }
+
+                return false;
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public (MemberInfo, CancellationToken) Current =&gt; (_queueEnumerator.Current, _queue._itemCancel.Token);
+
+            public async ValueTask DisposeAsync()
+            {
+                if (_queueEnumerator != null)
+                {
+                    await _queueEnumerator.DisposeAsync().CfAwait();
+                    _queue._enumerate.Release();
+                }
+
+                _cancellation.Dispose();
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            lock (_mutex)
+            {
+                if (_disposed) return default;
+                _disposed = true;
+            }
+
+            _members.Complete();
+            _cancel.Cancel();
+            _cancel.Dispose();
+
+            // cannot wait until enumeration (if any) is complete,
+            // because that depends on the caller calling MoveNext,
+            // instead, we return false if the caller calls MoveNext,
+            // and the caller should dispose the enumerator
+
+            _resume.Dispose();
+            _enumerate.Dispose();
+
+            return default;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,89,0],[31,9,31,89,0],[32,9,32,90,0],[33,9,33,71,0],[34,9,34,74,0],[35,9,35,55,0],[47,9,47,67,0],[49,13,49,39,0],[49,40,49,95,0],[50,13,50,75,0],[53,9,53,10,0],[60,13,60,26,0],[62,17,62,31,0],[62,32,62,39,0],[65,17,65,37,0],[65,38,65,60,0],[66,13,66,14,0],[67,9,67,10,0],[74,13,74,26,0],[76,17,76,31,0],[76,32,76,39,0],[78,17,78,35,0],[78,36,78,90,0],[80,17,80,27,0],[80,28,80,45,0],[82,17,82,37,0],[82,38,82,56,0],[83,13,83,14,0],[84,9,84,10,0],[92,13,92,27,0],[92,28,92,35,0],[94,13,94,43,0],[94,44,94,51,0],[96,13,96,26,0],[96,27,96,55,0],[99,13,99,71,0],[100,9,100,10,0],[104,13,104,26,0],[104,27,104,62,0],[104,63,104,89,0],[105,9,105,10,0],[110,13,110,27,0],[110,28,110,93,0],[113,13,113,80,0],[122,13,122,140,0],[124,17,124,32,0],[125,17,125,121,0],[126,13,126,14,0],[130,17,130,59,0],[130,60,130,73,0],[133,17,133,46,0],[135,21,135,104,0],[136,21,136,35,0],[136,36,136,110,0],[137,21,137,96,0],[144,17,144,37,0],[146,21,146,46,0],[148,25,148,55,0],[149,25,149,51,0],[151,17,151,18,0],[153,17,153,63,0],[157,21,157,75,0],[158,25,158,38,0],[160,21,160,59,0],[163,21,163,40,0],[164,25,164,34,0],[167,21,167,67,0],[170,25,170,45,0],[172,29,172,54,0],[174,33,174,93,0],[176,37,176,71,0],[177,37,177,49,0],[177,50,177,56,0],[181,33,181,84,0],[182,33,182,45,0],[184,25,184,26,0],[186,25,186,95,0],[189,21,189,64,0],[191,17,191,18,0],[193,17,193,30,0],[194,13,194,14,0],[197,63,197,115,0],[201,17,201,46,0],[203,21,203,69,0],[204,21,204,49,0],[207,17,207,41,0],[208,13,208,14,0],[216,13,216,26,0],[218,17,218,31,0],[218,32,218,47,0],[219,17,219,34,0],[220,13,220,14,0],[222,13,222,33,0],[223,13,223,30,0],[224,13,224,31,0],[231,13,231,31,0],[232,13,232,34,0],[234,13,234,28,0],[235,9,235,10,0]]);
+    </script>
+  </body>
+</html>

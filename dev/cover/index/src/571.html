@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\CPDistributedObjectBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Provides a base class to CP distributed objects.
+    /// &lt;/summary&gt;
+    internal abstract class CPDistributedObjectBase : ICPDistributedObject
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CPDistributedObjectBase&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serviceName&quot;&gt;The name of the service managing this object.&lt;/param&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;The CP group identifier of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        protected CPDistributedObjectBase(string serviceName, string name, CPGroupId groupId, Cluster cluster)
+        {
+            ServiceName = serviceName;
+            Name = name;
+            CPGroupId = groupId;
+            Cluster = cluster;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public string ServiceName { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public string Name { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public ICPGroupId GroupId =&gt; CPGroupId;
+
+        protected CPGroupId CPGroupId { get;}
+
+        /// &lt;inheritdoc /&gt;
+        public string PartitionKey =&gt; null;
+
+        protected Cluster Cluster { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public abstract ValueTask DestroyAsync();
+
+        /// &lt;summary&gt;
+        /// Frees resources used by this instance.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// Doesn&#39;t do anything for now, but some cleanup may be implemented later. &lt;para/&gt;
+        /// As such it is recommended to wrap object usage into &lt;code&gt;using&lt;/code&gt; statement for better compatibility with future versions.
+        /// &lt;/remarks&gt;
+        public ValueTask DisposeAsync() =&gt; default;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,111,0],[34,13,34,39,0],[35,13,35,25,0],[36,13,36,33,0],[37,13,37,31,0],[38,9,38,10,0],[41,37,41,41,0],[44,30,44,34,0],[47,38,47,47,0],[49,41,49,45,0],[52,39,52,43,0],[54,37,54,41,0],[66,44,66,51,0]]);
+    </script>
+  </body>
+</html>

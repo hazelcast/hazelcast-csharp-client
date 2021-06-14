@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxMap.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Query;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal class HTxMap&lt;TKey, TValue&gt; : TransactionalDistributedObjectBase, IHTxMap&lt;TKey, TValue&gt;
+    {
+        public HTxMap(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.Map, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        { }
+
+        public async Task&lt;bool&gt; ContainsKeyAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMapContainsKeyCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task DeleteAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMapDeleteCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            _ = TransactionalMapDeleteCodec.DecodeResponse(responseMessage);
+        }
+
+        public async Task&lt;TValue&gt; GetAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
+
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        public async Task&lt;TValue&gt; GetForUpdateAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapGetForUpdateCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        public async Task&lt;bool&gt; IsEmptyAsync()
+        {
+            var requestMessage = TransactionalMapIsEmptyCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;IReadOnlyList&lt;TKey&gt;&gt; GetKeysAsync()
+        {
+            var requestMessage = TransactionalMapKeySetCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapKeySetCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TKey&gt;(response, SerializationService);
+        }
+
+        public async Task&lt;IReadOnlyList&lt;TKey&gt;&gt; GetKeysAsync(IPredicate predicate)
+        {
+            var predicateData = ToSafeData(predicate);
+            var requestMessage = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TKey&gt;(response, SerializationService);
+        }
+
+        public async Task SetAsync(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var requestMessage = TransactionalMapSetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            _ = TransactionalMapSetCodec.DecodeResponse(responseMessage);
+        }
+
+        public Task&lt;TValue&gt; PutAsync(TKey key, TValue value)
+            =&gt; PutAsync(key, value, TimeSpanExtensions.MinusOneMillisecond);
+
+        public async Task&lt;TValue&gt; PutAsync(TKey key, TValue value, TimeSpan timeToLive)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var timeToLiveMs = timeToLive.RoundedMilliseconds(false);
+
+             var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMs);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        public async Task&lt;TValue&gt; PutIfAbsentAsync(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var requestMessage = TransactionalMapPutIfAbsentCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        public async Task&lt;TValue&gt; RemoveAsync(TKey key)
+        {
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapRemoveCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+
+        public async Task&lt;bool&gt; RemoveAsync(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+            var requestMessage = TransactionalMapRemoveIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMapRemoveIfSameCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;TValue&gt; ReplaceAsync(TKey key, TValue newValue)
+        {
+            var (keyData, valueData) = ToSafeData(key, newValue);
+
+            var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapReplaceCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TValue&gt;(response);
+        }
+
+        public async Task&lt;bool&gt; ReplaceAsync(TKey key, TValue oldValue, TValue newValue)
+        {
+            var (keyData, oldValueData, newValueData) = ToSafeData(key, oldValue, newValue);
+
+            var requestMessage = TransactionalMapReplaceIfSameCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, oldValueData, newValueData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMapReplaceIfSameCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;int&gt; GetSizeAsync()
+        {
+            var requestMessage = TransactionalMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalMapSizeCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync()
+        {
+            var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapValuesCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
+        }
+
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync(IPredicate predicate)
+        {
+            var predicateData = ToSafeData(predicate);
+            var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,15,31,142,0],[32,11,32,12,0],[36,13,36,43,0],[37,13,37,122,0],[38,13,38,132,0],[39,13,39,94,0],[40,9,40,10,0],[44,13,44,43,0],[45,13,45,117,0],[46,13,46,132,0],[47,13,47,77,0],[48,9,48,10,0],[52,13,52,43,0],[53,13,53,114,0],[54,13,54,132,0],[55,13,55,94,0],[57,13,57,47,0],[58,9,58,10,0],[62,13,62,43,0],[63,13,63,123,0],[64,13,64,132,0],[65,13,65,103,0],[66,13,66,47,0],[67,9,67,10,0],[71,13,71,109,0],[72,13,72,132,0],[73,13,73,90,0],[74,9,74,10,0],[78,13,78,108,0],[79,13,79,132,0],[80,13,80,97,0],[81,13,81,79,0],[82,9,82,10,0],[86,13,86,55,0],[87,13,87,136,0],[88,13,88,132,0],[89,13,89,110,0],[90,13,90,79,0],[91,9,91,10,0],[95,13,95,63,0],[97,13,97,125,0],[98,13,98,132,0],[99,13,99,74,0],[100,9,100,10,0],[103,16,103,76,0],[107,13,107,63,0],[109,13,109,70,0],[111,14,111,140,0],[112,13,112,132,0],[113,13,113,94,0],[114,13,114,47,0],[115,9,115,10,0],[119,13,119,63,0],[121,13,121,133,0],[122,13,122,132,0],[123,13,123,102,0],[124,13,124,47,0],[125,9,125,10,0],[129,13,129,43,0],[130,13,130,117,0],[131,13,131,132,0],[132,13,132,97,0],[133,13,133,47,0],[134,9,134,10,0],[139,13,139,63,0],[140,13,140,134,0],[141,13,141,132,0],[142,13,142,95,0],[143,9,143,10,0],[147,13,147,66,0],[149,13,149,129,0],[150,13,150,132,0],[151,13,151,98,0],[152,13,152,47,0],[153,9,153,10,0],[157,13,157,93,0],[159,13,159,152,0],[160,13,160,132,0],[161,13,161,96,0],[162,9,162,10,0],[166,13,166,106,0],[167,13,167,132,0],[168,13,168,87,0],[169,9,169,10,0],[173,13,173,108,0],[174,13,174,132,0],[175,13,175,97,0],[176,13,176,81,0],[177,9,177,10,0],[181,13,181,55,0],[182,13,182,136,0],[183,13,183,132,0],[184,13,184,110,0],[185,13,185,81,0],[186,9,186,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializableSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
+
+namespace Hazelcast.Serialization
+{
+    // note
+    //
+    // &quot;The BinaryFormatter type is dangerous and is not recommended for data processing. Applications
+    // should stop using BinaryFormatter as soon as possible, even if they believe the data they&#39;re
+    // processing to be trustworthy. BinaryFormatter is insecure and can&#39;t be made secure.&quot;
+    //
+    // see: https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/quality-rules/ca2300
+    // see: https://docs.microsoft.com/en-us/dotnet/standard/serialization/binaryformatter-security-guide
+    //
+    // TODO: replace BinaryFormatter with something else (breaking?)
+
+    /// &lt;summary&gt;
+    /// Serialize using default .NET serialization
+    /// &lt;/summary&gt;
+    internal class SerializableSerializer : SingletonSerializerBase&lt;object&gt;
+    {
+        public override int TypeId =&gt; SerializationConstants.CsharpClrSerializationType;
+
+        public override object Read(IObjectDataInput input)
+        {
+            var formatter = new BinaryFormatter();
+            using var stream = new MemoryStream(input.ReadByteArray());
+#pragma warning disable CA2300 // Do not use insecure deserializer BinaryFormatter - see note above
+#pragma warning disable CA2301
+            return formatter.Deserialize(stream);
+#pragma warning restore CA2300
+#pragma warning restore CA2301
+        }
+
+        public override void Write(IObjectDataOutput output, object obj)
+        {
+            var formatter = new BinaryFormatter();
+            using var stream = new MemoryStream();
+            formatter.Serialize(stream, obj);
+            output.WriteByteArray(stream.GetBuffer());
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,39,36,88,0],[40,13,40,51,0],[41,13,41,72,0],[44,13,44,50,0],[47,9,47,10,0],[51,13,51,51,0],[52,13,52,51,0],[53,13,53,46,0],[54,13,54,55,0],[55,9,55,10,0]]);
+    </script>
+  </body>
+</html>

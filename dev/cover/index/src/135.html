@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\RemoteException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol.Models;
+
+namespace Hazelcast.Protocol
+{
+    /// &lt;summary&gt;
+    /// Represents an exception that was thrown remotely on a server.
+    /// &lt;/summary&gt;
+    [Serializable]
+    public sealed class RemoteException : HazelcastException
+    {
+        private const string InnerExceptionPrefix = &quot; ---&gt; &quot;;
+
+        // NOTE
+        //
+        // NUnit for instance does not rely on ToString() but has its own way of
+        // displaying exceptions, which omits the Error and Retryable properties,
+        // unless we also store them as data
+        //
+        private RemoteError _error;
+        private bool _retryable;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public RemoteException()
+            : base(&quot;Remote Exception&quot;)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public RemoteException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception.&lt;/param&gt;
+        public RemoteException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;retryable&quot;&gt;Whether the operation that threw the exception can be retried.&lt;/param&gt;
+        /// &lt;param name=&quot;error&quot;&gt;The client protocol error.&lt;/param&gt;
+        public RemoteException(RemoteError error, bool retryable = false)
+            : base(error.ToString())
+        {
+            Error = error;
+            Retryable = retryable;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;error&quot;&gt;The client protocol error.&lt;/param&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;retryable&quot;&gt;Whether the operation that threw the exception can be retried.&lt;/param&gt;
+        public RemoteException(RemoteError error, string message, bool retryable = false)
+            : base(message)
+        {
+            Error = error;
+            Retryable = retryable;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;error&quot;&gt;The client protocol error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        /// &lt;param name=&quot;retryable&quot;&gt;Whether the operation that threw the exception can be retried.&lt;/param&gt;
+        public RemoteException(RemoteError error, Exception innerException, bool retryable = false)
+            : base(error.ToString(), innerException)
+        {
+            Error = error;
+            Retryable = retryable;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;error&quot;&gt;The client protocol error.&lt;/param&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        /// &lt;param name=&quot;retryable&quot;&gt;Whether the operation that threw the exception can be retried.&lt;/param&gt;
+        public RemoteException(RemoteError error, string message, Exception innerException, bool retryable = false)
+            : base(message, innerException)
+        {
+            Error = error;
+            Retryable = retryable;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        private RemoteException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            Error = (RemoteError) info.GetInt32(&quot;error&quot;);
+            Retryable = info.GetBoolean(&quot;retryable&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the protocol error.
+        /// &lt;/summary&gt;
+        public RemoteError Error
+        {
+            get =&gt; _error;
+            set
+            {
+                _error = value;
+                Data[&quot;error&quot;] = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Whether the operation that threw the exception can be retried.
+        /// &lt;/summary&gt;
+        public bool Retryable
+        {
+            get =&gt; _retryable;
+            set
+            {
+                _retryable = value;
+                Data[&quot;retryable&quot;] = value;
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
+            info.AddValue(&quot;error&quot;, Error);
+            info.AddValue(&quot;retryable&quot;, Retryable);
+            base.GetObjectData(info, context);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            // customize the exception name
+            var s = GetType() + &quot; (&quot; + Error + (Retryable ? &quot;,Retryable&quot; : &quot;&quot;) + &quot;)&quot;;
+
+            // the rest is exactly what the original Exception does
+            var message = Message;
+            if (!string.IsNullOrEmpty(message))
+            {
+                s += &quot;: &quot; + message;
+            }
+
+            if (InnerException != null)
+            {
+                s = s + Environment.NewLine + InnerExceptionPrefix + InnerException + Environment.NewLine +
+                    &quot;   &quot; + &quot;--- End of inner exception ---&quot;;
+            }
+
+            var stackTrace = StackTrace;
+            //var stackTrace = Data[&quot;server&quot;];
+            if (stackTrace != null)
+            {
+                s += Environment.NewLine + stackTrace;
+            }
+
+            var serverStackTrace = Data[&quot;server&quot;];
+            if (serverStackTrace != null)
+            {
+                s = s + Environment.NewLine + InnerExceptionPrefix + Error + Environment.NewLine + serverStackTrace + Environment.NewLine +
+                    &quot;   &quot; + &quot;--- End of remote stack trace ---&quot;;
+            }
+
+            return s;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[43,15,43,39,0],[44,11,44,12,0],[51,15,51,28,0],[52,11,52,12,0],[60,15,60,44,0],[61,11,61,12,0],[69,15,69,37,0],[71,13,71,27,0],[72,13,72,35,0],[73,9,73,10,0],[82,15,82,28,0],[84,13,84,27,0],[85,13,85,35,0],[86,9,86,10,0],[97,15,97,53,0],[99,13,99,27,0],[100,13,100,35,0],[101,9,101,10,0],[113,15,113,44,0],[115,13,115,27,0],[116,13,116,35,0],[117,9,117,10,0],[127,15,127,34,0],[129,13,129,58,0],[130,13,130,54,0],[131,9,131,10,0],[138,20,138,26,0],[141,17,141,32,0],[142,17,142,39,0],[143,13,143,14,0],[151,20,151,30,0],[154,17,154,36,0],[155,17,155,43,0],[156,13,156,14,0],[162,13,162,30,0],[162,31,162,77,0],[164,13,164,43,0],[165,13,165,51,0],[166,13,166,47,0],[167,9,167,10,0],[173,13,173,86,0],[176,13,176,35,0],[177,13,177,48,0],[179,17,179,37,0],[182,13,182,40,0],[184,17,185,62,0],[188,13,188,41,0],[190,13,190,36,0],[192,17,192,55,0],[195,13,195,51,0],[196,13,196,42,0],[198,17,199,65,0],[202,13,202,22,0]]);
+    </script>
+  </body>
+</html>

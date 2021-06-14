@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\GlobalSerializerOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    /// Configures the global serializer.
+    /// &lt;/summary&gt;
+    public class GlobalSerializerOptions : SingletonServiceFactory&lt;ISerializer&gt;
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;GlobalSerializerOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public GlobalSerializerOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;GlobalSerializerOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private GlobalSerializerOptions(GlobalSerializerOptions other, bool shallow)
+            : base(other, shallow)
+        {
+            OverrideClrSerialization = other.OverrideClrSerialization;
+        }
+
+        /// &lt;summary&gt;
+        /// Whether to fully override (and ignore) the native CLR serialization.
+        /// &lt;/summary&gt;
+        public bool OverrideClrSerialization { get; set; }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal new GlobalSerializerOptions Clone(bool shallow = true) =&gt; new GlobalSerializerOptions(this, shallow);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,9,27,41,0],[28,11,28,12,0],[34,15,34,35,0],[36,13,36,71,0],[37,9,37,10,0],[42,48,42,52,0],[42,53,42,57,0],[47,76,47,118,0]]);
+    </script>
+  </body>
+</html>

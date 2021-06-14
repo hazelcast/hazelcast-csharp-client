@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.ReadFromReadOnlySpan.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Core
+{
+    internal static partial class BytesExtensions // Read from ReadOnlySpan
+    {
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;short&quot;/&gt; value from a span of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The span of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static short ReadShort(this ReadOnlySpan&lt;byte&gt; bytes, Endianness endianness)
+        {
+            const byte length = sizeof(ushort);
+
+            if (bytes.Length &lt; length)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            unchecked
+            {
+                return (short)(endianness.IsBigEndian()
+
+                    ? bytes[0] &lt;&lt; 8 | bytes[1]
+                    : bytes[0]      | bytes[1] &lt;&lt; 8);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;ushort&quot;/&gt; value from a span of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The span of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static ushort ReadUShort(this ReadOnlySpan&lt;byte&gt; bytes, Endianness endianness)
+        {
+            const byte length = sizeof(ushort);
+
+            if (bytes.Length &lt; length)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            unchecked
+            {
+                return (ushort)(endianness.IsBigEndian()
+
+                    ? bytes[0] &lt;&lt; 8 | bytes[1]
+                    : bytes[0]      | bytes[1] &lt;&lt; 8);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;int&quot;/&gt; value from a span of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The span of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static int ReadInt(this ReadOnlySpan&lt;byte&gt; bytes, Endianness endianness)
+        {
+            const byte length = sizeof(int);
+
+            if (bytes.Length &lt; length)
+                throw new ArgumentException(ExceptionMessages.NotEnoughBytes, nameof(bytes));
+
+            return endianness.IsBigEndian()
+
+                ? bytes[0] &lt;&lt; 24 | bytes[1] &lt;&lt; 16 | bytes[2] &lt;&lt; 8  | bytes[3]
+                : bytes[0]       | bytes[1] &lt;&lt; 8  | bytes[2] &lt;&lt; 16 | bytes[3] &lt;&lt; 24;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,13,32,39,0],[33,17,33,94,0],[37,17,40,54,0],[54,13,54,39,0],[55,17,55,94,0],[59,17,62,54,0],[76,13,76,39,0],[77,17,77,94,0],[79,13,82,85,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultPortableWriter.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    internal class DefaultPortableWriter : IPortableWriter
+    {
+        private readonly int _begin;
+        private readonly IClassDefinition _cd;
+        private readonly int _offset;
+        private readonly ObjectDataOutput _out;
+        private readonly PortableSerializer _serializer;
+        private readonly ISet&lt;string&gt; _writtenFields;
+        private bool _raw;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public DefaultPortableWriter(PortableSerializer serializer, ObjectDataOutput @out, IClassDefinition cd)
+        {
+            _serializer = serializer;
+            _out = @out;
+            _cd = cd;
+            _writtenFields = new HashSet&lt;string&gt;(); //cd.GetFieldCount()
+            _begin = @out.Position;
+            // room for final offset
+            @out.WriteZeroBytes(4);
+            @out.WriteInt(cd.GetFieldCount());
+            _offset = @out.Position;
+            // one additional for raw data
+            var fieldIndexesLength = (cd.GetFieldCount() + 1)* BytesExtensions.SizeOfInt;
+            @out.WriteZeroBytes(fieldIndexesLength);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteInt(string fieldName, int value)
+        {
+            SetPosition(fieldName, FieldType.Int);
+            _out.WriteInt(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteLong(string fieldName, long value)
+        {
+            SetPosition(fieldName, FieldType.Long);
+            _out.WriteLong(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteString(string fieldName, string str)
+        {
+            SetPosition(fieldName, FieldType.Utf);
+            _out.WriteString(str);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteBoolean(string fieldName, bool value)
+        {
+            SetPosition(fieldName, FieldType.Boolean);
+            _out.WriteBoolean(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteByte(string fieldName, byte value)
+        {
+            SetPosition(fieldName, FieldType.Byte);
+            _out.WriteByte(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteChar(string fieldName, char value)
+        {
+            SetPosition(fieldName, FieldType.Char);
+            _out.WriteChar(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteDouble(string fieldName, double value)
+        {
+            SetPosition(fieldName, FieldType.Double);
+            _out.WriteDouble(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteFloat(string fieldName, float value)
+        {
+            SetPosition(fieldName, FieldType.Float);
+            _out.WriteFloat(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteShort(string fieldName, short value)
+        {
+            SetPosition(fieldName, FieldType.Short);
+            _out.WriteShort(value);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WritePortable(string fieldName, IPortable portable)
+        {
+            var fd = SetPosition(fieldName, FieldType.Portable);
+            var isNull = portable == null;
+            _out.WriteBoolean(isNull);
+            _out.WriteInt(fd.FactoryId);
+            _out.WriteInt(fd.ClassId);
+            if (!isNull)
+            {
+                CheckPortableAttributes(fd, portable);
+                _serializer.WriteInternal(_out, portable);
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteNullPortable(string fieldName, int factoryId, int classId)
+        {
+            SetPosition(fieldName, FieldType.Portable);
+            _out.WriteBoolean(true);
+            _out.WriteInt(factoryId);
+            _out.WriteInt(classId);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteBooleanArray(string fieldName, bool[] values)
+        {
+            SetPosition(fieldName, FieldType.BooleanArray);
+            _out.WriteBooleanArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteByteArray(string fieldName, byte[] values)
+        {
+            SetPosition(fieldName, FieldType.ByteArray);
+            _out.WriteByteArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteCharArray(string fieldName, char[] values)
+        {
+            SetPosition(fieldName, FieldType.CharArray);
+            _out.WriteCharArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteIntArray(string fieldName, int[] values)
+        {
+            SetPosition(fieldName, FieldType.IntArray);
+            _out.WriteIntArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteLongArray(string fieldName, long[] values)
+        {
+            SetPosition(fieldName, FieldType.LongArray);
+            _out.WriteLongArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteDoubleArray(string fieldName, double[] values)
+        {
+            SetPosition(fieldName, FieldType.DoubleArray);
+            _out.WriteDoubleArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteFloatArray(string fieldName, float[] values)
+        {
+            SetPosition(fieldName, FieldType.FloatArray);
+            _out.WriteFloatArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteShortArray(string fieldName, short[] values)
+        {
+            SetPosition(fieldName, FieldType.ShortArray);
+            _out.WriteShortArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WriteStringArray(string fieldName, string[] values)
+        {
+            SetPosition(fieldName, FieldType.UtfArray);
+            _out.WriteStringArray(values);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual void WritePortableArray&lt;TPortable&gt;(string fieldName, TPortable[] portables) where TPortable : IPortable
+        {
+            var fd = SetPosition(fieldName, FieldType.PortableArray);
+            var len = portables?.Length ?? BytesExtensions.SizeOfNullArray;
+            _out.WriteInt(len);
+            _out.WriteInt(fd.FactoryId);
+            _out.WriteInt(fd.ClassId);
+            if (len &gt; 0)
+            {
+                var offset = _out.Position;
+                _out.WriteZeroBytes(len*4);
+                for (var i = 0; i &lt; portables.Length; i++)
+                {
+                    var portable = portables[i];
+                    CheckPortableAttributes(fd, portable);
+                    var position = _out.Position;
+                    _out.WriteInt(offset + i* BytesExtensions.SizeOfInt, position);
+                    _serializer.WriteInternal(_out, portable);
+                }
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public virtual IObjectDataOutput GetRawDataOutput()
+        {
+            if (!_raw)
+            {
+                var pos = _out.Position;
+                // last index
+                var index = _cd.GetFieldCount();
+                _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
+            }
+            _raw = true;
+            return _out;
+        }
+
+        public virtual int GetVersion()
+        {
+            return _cd.Version;
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        internal virtual void End()
+        {
+            // write final offset
+            var position = _out.Position;
+            _out.WriteInt(_begin, position);
+        }
+
+        private static void CheckPortableAttributes(IFieldDefinition fd, IPortable portable)
+        {
+            if (fd.FactoryId != portable.FactoryId)
+            {
+                throw new SerializationException(
+                    &quot;Wrong Portable type! Generic portable types are not supported! &quot; + &quot; Expected factory-id: &quot; +
+                    fd.FactoryId + &quot;, Actual factory-id: &quot; + portable.FactoryId);
+            }
+            if (fd.ClassId != portable.ClassId)
+            {
+                throw new SerializationException(
+                    &quot;Wrong Portable type! Generic portable types are not supported! &quot; + &quot;Expected class-id: &quot; +
+                    fd.ClassId + &quot;, Actual class-id: &quot; + portable.ClassId);
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        private IFieldDefinition SetPosition(string fieldName, FieldType fieldType)
+        {
+            if (_raw)
+            {
+                throw new SerializationException(
+                    &quot;Cannot write Portable fields after getRawDataOutput() is called!&quot;);
+            }
+            var fd = _cd.GetField(fieldName);
+            if (fd == null)
+            {
+                throw new SerializationException(&quot;Invalid field name: &#39;&quot; + fieldName +
+                                                          &quot;&#39; for ClassDefinition {id: &quot; + _cd.ClassId +
+                                                          &quot;, version: &quot; + _cd.Version + &quot;}&quot;);
+            }
+            if (_writtenFields.Add(fieldName))
+            {
+                var pos = _out.Position;
+                var index = fd.Index;
+                _out.WriteInt(_offset + index* BytesExtensions.SizeOfInt, pos);
+                _out.WriteShort((short)fieldName.Length);
+                _out.WriteBytes(fieldName);
+                _out.WriteByte((byte) fieldType);
+            }
+            else
+            {
+                throw new SerializationException(&quot;Field &#39;&quot; + fieldName + &quot;&#39; has already been written!&quot;);
+            }
+            return fd;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,9,31,112,0],[33,13,33,38,0],[34,13,34,25,0],[35,13,35,22,0],[36,13,36,52,0],[37,13,37,36,0],[39,13,39,36,0],[40,13,40,47,0],[41,13,41,37,0],[43,13,43,90,0],[44,13,44,53,0],[45,9,45,10,0],[50,13,50,51,0],[51,13,51,34,0],[52,9,52,10,0],[57,13,57,52,0],[58,13,58,35,0],[59,9,59,10,0],[64,13,64,51,0],[65,13,65,35,0],[66,9,66,10,0],[71,13,71,55,0],[72,13,72,38,0],[73,9,73,10,0],[78,13,78,52,0],[79,13,79,35,0],[80,9,80,10,0],[85,13,85,52,0],[86,13,86,35,0],[87,9,87,10,0],[92,13,92,54,0],[93,13,93,37,0],[94,9,94,10,0],[99,13,99,53,0],[100,13,100,36,0],[101,9,101,10,0],[106,13,106,53,0],[107,13,107,36,0],[108,9,108,10,0],[113,13,113,65,0],[114,13,114,43,0],[115,13,115,39,0],[116,13,116,41,0],[117,13,117,39,0],[118,13,118,25,0],[120,17,120,55,0],[121,17,121,59,0],[123,9,123,10,0],[128,13,128,56,0],[129,13,129,37,0],[130,13,130,38,0],[131,13,131,36,0],[132,9,132,10,0],[137,13,137,60,0],[138,13,138,44,0],[139,9,139,10,0],[144,13,144,57,0],[145,13,145,41,0],[146,9,146,10,0],[151,13,151,57,0],[152,13,152,41,0],[153,9,153,10,0],[158,13,158,56,0],[159,13,159,40,0],[160,9,160,10,0],[165,13,165,57,0],[166,13,166,41,0],[167,9,167,10,0],[172,13,172,59,0],[173,13,173,43,0],[174,9,174,10,0],[179,13,179,58,0],[180,13,180,42,0],[181,9,181,10,0],[186,13,186,58,0],[187,13,187,42,0],[188,9,188,10,0],[193,13,193,56,0],[194,13,194,43,0],[195,9,195,10,0],[200,13,200,70,0],[201,13,201,76,0],[202,13,202,32,0],[203,13,203,41,0],[204,13,204,39,0],[205,13,205,25,0],[207,17,207,44,0],[208,17,208,44,0],[209,22,209,31,0],[209,33,209,53,0],[209,55,209,58,0],[211,21,211,49,0],[212,21,212,59,0],[213,21,213,50,0],[214,21,214,84,0],[215,21,215,63,0],[218,9,218,10,0],[223,13,223,23,0],[225,17,225,41,0],[227,17,227,49,0],[228,17,228,80,0],[230,13,230,25,0],[231,13,231,25,0],[236,13,236,32,0],[243,13,243,42,0],[244,13,244,45,0],[245,9,245,10,0],[249,13,249,52,0],[251,17,253,82,0],[255,13,255,48,0],[257,17,259,76,0],[261,9,261,10,0],[266,13,266,22,0],[268,17,269,89,0],[271,13,271,46,0],[272,13,272,28,0],[274,17,276,94,0],[278,13,278,47,0],[280,17,280,41,0],[281,17,281,38,0],[282,17,282,80,0],[283,17,283,58,0],[284,17,284,44,0],[285,17,285,50,0],[289,17,289,105,0],[291,13,291,23,0]]);
+    </script>
+  </body>
+</html>

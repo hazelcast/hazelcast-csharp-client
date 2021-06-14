@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClientEventHandlers.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Events;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents the client events.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Handlers for events can be synchronous or asynchronous. Asynchronous handlers are defined by
+    /// an &lt;c&gt;Action{IHazelcastClient, TArgs}&lt;/c&gt; whereas... &lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public sealed class HazelcastClientEventHandlers : EventHandlersBase&lt;IHazelcastClientEventHandler&gt;
+    {
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a partition is lost.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers PartitionLost(Action&lt;IHazelcastClient, PartitionLostEventArgs&gt; handler)
+        {
+            Add(new PartitionLostEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a partition is lost.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers PartitionLost(Func&lt;IHazelcastClient, PartitionLostEventArgs, ValueTask&gt; handler)
+        {
+            Add(new PartitionLostEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when partitions are updated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers PartitionsUpdated(Action&lt;IHazelcastClient, EventArgs&gt; handler)
+        {
+            Add(new PartitionsUpdatedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when partitions are updated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers PartitionsUpdated(Func&lt;IHazelcastClient, EventArgs, ValueTask&gt; handler)
+        {
+            Add(new PartitionsUpdatedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when members are updated
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers MembersUpdated(Action&lt;IHazelcastClient, MembersUpdatedEventArgs&gt; handler)
+        {
+            Add(new MembersUpdatedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a member is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers MembersUpdated(Func&lt;IHazelcastClient, MembersUpdatedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new MembersUpdatedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a distributed object is created.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers ObjectCreated(Action&lt;IHazelcastClient, DistributedObjectCreatedEventArgs&gt; handler)
+        {
+            Add(new DistributedObjectCreatedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a distributed object is created.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers ObjectCreated(Func&lt;IHazelcastClient, DistributedObjectCreatedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new DistributedObjectCreatedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a distributed object is destroyed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers ObjectDestroyed(Action&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs&gt; handler)
+        {
+            Add(new DistributedObjectDestroyedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a distributed object is destroyed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers ObjectDestroyed(Func&lt;IHazelcastClient, DistributedObjectDestroyedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new DistributedObjectDestroyedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a connection is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        internal HazelcastClientEventHandlers ConnectionOpened(Action&lt;IHazelcastClient, ConnectionOpenedEventArgs&gt; handler)
+        {
+            Add(new ConnectionOpenedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a connection is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        internal HazelcastClientEventHandlers ConnectionOpened(Func&lt;IHazelcastClient, ConnectionOpenedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new ConnectionOpenedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a connection is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        internal HazelcastClientEventHandlers ConnectionClosed(Action&lt;IHazelcastClient, ConnectionClosedEventArgs&gt; handler)
+        {
+            Add(new ConnectionClosedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when a connection is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        internal HazelcastClientEventHandlers ConnectionClosed(Func&lt;IHazelcastClient, ConnectionClosedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new ConnectionClosedEventHandler(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when the client state changes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers StateChanged(Action&lt;IHazelcastClient, StateChangedEventArgs&gt; handler)
+        {
+            Add(new StateChangedEventHandler(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a handler which runs when the client state changes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public HazelcastClientEventHandlers StateChanged(Func&lt;IHazelcastClient, StateChangedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new StateChangedEventHandler(handler));
+            return this;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,13,38,67,0],[39,13,39,25,0],[49,13,49,57,0],[50,13,50,25,0],[60,13,60,71,0],[61,13,61,25,0],[71,13,71,61,0],[72,13,72,25,0],[82,13,82,68,0],[83,13,83,25,0],[93,13,93,58,0],[94,13,94,25,0],[104,13,104,78,0],[105,13,105,25,0],[115,13,115,68,0],[116,13,116,25,0],[126,13,126,80,0],[127,13,127,25,0],[137,13,137,70,0],[138,13,138,25,0],[148,13,148,70,0],[149,13,149,25,0],[159,13,159,60,0],[160,13,160,25,0],[170,13,170,70,0],[171,13,171,25,0],[181,13,181,60,0],[182,13,182,25,0],[192,13,192,66,0],[193,13,193,25,0],[203,13,203,56,0],[204,13,204,25,0]]);
+    </script>
+  </body>
+</html>

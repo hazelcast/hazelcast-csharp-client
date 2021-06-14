@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Models\PagingPredicateHolder.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Query;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Protocol.Models
+{
+    internal class PagingPredicateHolder
+    {
+        internal AnchorDataListHolder AnchorDataListHolder { get; }
+
+        internal IData PredicateData { get; }
+
+        internal IData ComparatorData { get; }
+
+        internal int PageSize { get; }
+
+        internal int Page { get; }
+
+        internal byte IterationTypeId { get; }
+
+        internal IData PartitionKeyData { get; }
+
+        public PagingPredicateHolder(AnchorDataListHolder anchorDataListHolder, IData predicateData, IData comparatorData,
+            int pageSize, int page, byte iterationTypeId, IData partitionKeyData)
+        {
+            AnchorDataListHolder = anchorDataListHolder;
+            PredicateData = predicateData;
+            ComparatorData = comparatorData;
+            PageSize = pageSize;
+            Page = page;
+            IterationTypeId = iterationTypeId;
+            PartitionKeyData = partitionKeyData;
+        }
+
+        public static PagingPredicateHolder Of(IPredicate predicate, SerializationService serializationService)
+        {
+            if (predicate is null)
+                return null;
+
+            if (predicate is PartitionPredicate partitionPredicate)
+            {
+                if (partitionPredicate.Target is PagingPredicate partitionPagingPredicate)
+                {
+                    var partitionKeyData = serializationService.ToData(partitionPredicate.PartitionKey);
+                    return BuildHolder(serializationService, partitionPagingPredicate, partitionKeyData);
+                }
+
+                throw new InvalidOperationException(&quot;PartitionPredicate Target is not a PagingPredicate.&quot;);
+            }
+
+            if (predicate is PagingPredicate pagingPredicate)
+            {
+                return BuildHolder(serializationService, pagingPredicate, null);
+            }
+
+            throw new InvalidOperationException(&quot;Predicate is neither a PartitionPredicate nor a PagingPredicate.&quot;);
+        }
+
+        private static PagingPredicateHolder BuildHolder(SerializationService serializationService,
+            PagingPredicate pagingPredicate, IData partitionKeyData)
+        {
+            var anchorList = pagingPredicate.AnchorList;
+            var anchorDataList = new List&lt;KeyValuePair&lt;IData, IData&gt;&gt;(anchorList.Count);
+            var pageList = new List&lt;int&gt;(anchorList.Count);
+            foreach (var pair in anchorList)
+            {
+                pageList.Add(pair.Key);
+                var anchorEntry = pair.Value;
+                anchorDataList.Add(new KeyValuePair&lt;IData, IData&gt;(serializationService.ToData(anchorEntry.Key),
+                    serializationService.ToData(anchorEntry.Value)));
+            }
+            var anchorDataListHolder = new AnchorDataListHolder(pageList, anchorDataList);
+            var predicateData = serializationService.ToData(pagingPredicate.Predicate);
+            var comparatorData = serializationService.ToData(pagingPredicate.Comparer);
+
+            if (!pagingPredicate.IterationType.HasValue)
+                throw new InvalidOperationException(&quot;The paging predicate does not specify an iteration type.&quot;);
+
+            return new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pagingPredicate.PageSize,
+                pagingPredicate.Page, (byte) pagingPredicate.IterationType, partitionKeyData);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,62,24,66,0],[26,40,26,44,0],[28,41,28,45,0],[30,33,30,37,0],[32,29,32,33,0],[34,41,34,45,0],[36,43,36,47,0],[38,9,39,82,0],[41,13,41,57,0],[42,13,42,43,0],[43,13,43,45,0],[44,13,44,33,0],[45,13,45,25,0],[46,13,46,47,0],[47,13,47,49,0],[48,9,48,10,0],[52,13,52,35,0],[53,17,53,29,0],[55,13,55,68,0],[57,17,57,91,0],[59,21,59,105,0],[60,21,60,106,0],[63,17,63,108,0],[66,13,66,62,0],[68,17,68,81,0],[71,13,71,117,0],[77,13,77,57,0],[78,13,78,89,0],[79,13,79,60,0],[80,22,80,30,0],[80,31,80,33,0],[80,34,80,44,0],[82,17,82,40,0],[83,17,83,46,0],[84,17,85,70,0],[87,13,87,91,0],[88,13,88,88,0],[89,13,89,88,0],[91,13,91,57,0],[92,17,92,113,0],[94,13,95,95,0]]);
+    </script>
+  </body>
+</html>

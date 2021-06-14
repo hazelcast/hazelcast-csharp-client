@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HSet.Events.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Messaging;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HSet&lt;T&gt; // Events
+    {
+        protected override ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting)
+            =&gt; SetAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
+
+        protected override ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
+
+        protected override Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetAddListenerCodec.DecodeResponse(responseMessage).Response;
+
+        protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
+
+        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func&lt;IData, Guid, int, object, ValueTask&gt; handler, object state, ILoggerFactory loggerFactory)
+            =&gt; SetAddListenerCodec.HandleEventAsync(eventMessage, handler, state, loggerFactory);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,16,27,85,0],[30,16,30,74,0],[33,16,33,76,0],[36,16,36,90,0],[39,16,39,97,0]]);
+    </script>
+  </body>
+</html>

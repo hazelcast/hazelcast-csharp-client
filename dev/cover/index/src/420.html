@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\Projections.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Projection
+{
+    /// &lt;summary&gt;
+    /// Creates &lt;see cref=&quot;IProjection&quot;/&gt; instances.
+    /// &lt;/summary&gt;
+    public static class Projections
+    {
+        /// &lt;summary&gt;
+        /// Projects a single attribute.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute.&lt;/param&gt;
+        /// &lt;returns&gt;A projection.&lt;/returns&gt;
+        public static IProjection SingleAttribute(string attributePath)
+            =&gt; new SingleAttributeProjection(attributePath);
+
+        /// &lt;summary&gt;
+        /// Projects multiple attributes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePaths&quot;&gt;The attribute paths.&lt;/param&gt;
+        /// &lt;returns&gt;A projection.&lt;/returns&gt;
+        public static IProjection MultipleAttribute(params string[] attributePaths)
+            =&gt; new MultiAttributeProjection(attributePaths);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,16,28,60,0],[36,16,36,60,0]]);
+    </script>
+  </body>
+</html>

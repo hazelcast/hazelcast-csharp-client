@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\RandomProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides safe random numbers.
+    /// &lt;/summary&gt;
+    internal static class RandomProvider
+    {
+        // Notes
+        //
+        // Random is *not* thread-safe
+        // read
+        //   https://stackoverflow.com/questions/3049467
+        //   https://docs.microsoft.com/en-us/dotnet/api/system.random
+        //   https://codeblog.jonskeet.uk/2009/11/04/revisiting-randomness/
+        // for best-practices.
+
+        private static readonly Random GlobalRandom = new Random();
+        private static readonly object GlobalLock = new object();
+        private static readonly ThreadLocal&lt;Random&gt; ThreadRandom = new ThreadLocal&lt;Random&gt;(NewRandom);
+
+
+        /// &lt;summary&gt;
+        /// Creates a new random for a thread.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A new random for a thread.&lt;/returns&gt;
+        private static Random NewRandom()
+        {
+            // use GlobalRandom to get a random seed, using GlobalLock
+            // because the Random class is not thread safe
+#pragma warning disable CA5394 // Do not use insecure randomness
+            lock (GlobalLock) return new Random(GlobalRandom.Next());
+#pragma warning restore CA5394
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a thread-safe &lt;see cref=&quot;Random&quot;/&gt; instance (do *not* cache this instance).
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The instance is thread-safe because it is local to the thread. Do *not*
+        /// store the instance in a variable as that may break thread safety. Instead,
+        /// retrieve it each time it is required.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static Random Random =&gt; ThreadRandom.Value;
+
+        /// &lt;summary&gt;
+        /// Returns a non-negative random integer number (thread-safe, not appropriate for security purposes).
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to 0 and less than &lt;see cref=&quot;int.MaxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next() =&gt; Random.Next();
+#pragma warning restore CA5394
+
+        /// &lt;summary&gt;
+        /// Returns a non-negative random integer number that is less than the specified maximum (thread-safe, not appropriate for security purposes).
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;maxValue&quot;&gt;The exclusive upper bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to 0 and less than &lt;paramref name=&quot;maxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int maxValue) =&gt; Random.Next(maxValue);
+#pragma warning restore CA5394
+
+        /// &lt;summary&gt;
+        /// Returns a non-negative random integer number that is within the specified range (thread-safe, not appropriate for security purposes).
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;minValue&quot;&gt;The non-negative, inclusive lower bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;param name=&quot;maxValue&quot;&gt;The exclusive upper bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to &lt;paramref name=&quot;minValue&quot;/&gt; and less than &lt;paramref name=&quot;maxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int minValue, int maxValue) =&gt; Random.Next(minValue, maxValue);
+#pragma warning restore CA5394
+
+        /// &lt;summary&gt;
+        /// Returns a random floating-point number that is greater than or equal to 0.0, and less than 1.0 (thread-safe, not appropriate for security purposes).
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A double-precision floating-point number that is greater than or equal to 0.0, and less than 1.0.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static double NextDouble() =&gt; Random.NextDouble();
+#pragma warning restore CA5394
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,68,0],[35,9,35,66,0],[36,9,36,103,0],[48,13,48,30,0],[48,31,48,70,0],[50,9,50,10,0],[60,40,60,58,0],[71,37,71,50,0],[84,49,84,70,0],[98,63,98,94,0],[110,46,110,65,0]]);
+    </script>
+  </body>
+</html>

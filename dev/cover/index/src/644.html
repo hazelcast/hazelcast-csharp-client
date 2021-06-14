@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterEvents+Subscriptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Events;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Provides the cluster-level events management service for a cluster.
+    /// &lt;/summary&gt;
+    internal partial class ClusterEvents
+    {
+        private readonly ObjectLifecycleEventSubscription _objectLifecycleEventSubscription;
+        private readonly PartitionLostEventSubscription _partitionLostEventSubscription;
+
+        private Func&lt;DistributedObjectCreatedEventArgs, ValueTask&gt; _objectCreated;
+        private Func&lt;DistributedObjectDestroyedEventArgs, ValueTask&gt; _objectDestroyed;
+        private Func&lt;PartitionLostEventArgs, ValueTask&gt; _partitionLost;
+
+
+        #region Event
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that triggers when an object is created.
+        /// &lt;/summary&gt;
+        public Func&lt;DistributedObjectCreatedEventArgs, ValueTask&gt; ObjectCreated
+        {
+            get =&gt; _objectCreated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _objectCreated = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that triggers when an object is destroyed.
+        /// &lt;/summary&gt;
+        public Func&lt;DistributedObjectDestroyedEventArgs, ValueTask&gt; ObjectDestroyed
+        {
+            get =&gt; _objectDestroyed;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _objectDestroyed = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that triggers a partition list event.
+        /// &lt;/summary&gt;
+        public Func&lt;PartitionLostEventArgs, ValueTask&gt; PartitionLost
+        {
+            get =&gt; _partitionLost;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _partitionLost = value;
+            }
+        }
+
+        #endregion
+
+
+        /// &lt;summary&gt;
+        /// Adds an object lifecycle event subscription.
+        /// &lt;/summary&gt;
+        public Task AddObjectLifecycleSubscription()
+            =&gt; _objectLifecycleEventSubscription.AddSubscription();
+
+        /// &lt;summary&gt;
+        /// Adds a partition lost event subscription.
+        /// &lt;/summary&gt;
+        public Task AddPartitionLostSubscription()
+            =&gt; _partitionLostEventSubscription.AddSubscription();
+
+        /// &lt;summary&gt;
+        /// Removes an object lifecycle event subscription.
+        /// &lt;/summary&gt;
+        public ValueTask&lt;bool&gt; RemoveObjectLifecycleSubscription()
+            =&gt; _objectLifecycleEventSubscription.RemoveSubscription();
+
+        /// &lt;summary&gt;
+        /// Removes a partition lost event subscription.
+        /// &lt;/summary&gt;
+        public ValueTask&lt;bool&gt; RemovePartitionLostSubscription()
+            =&gt; _partitionLostEventSubscription.RemoveSubscription();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[41,20,41,34,0],[44,17,44,62,0],[45,17,45,40,0],[46,13,46,14,0],[54,20,54,36,0],[57,17,57,62,0],[58,17,58,42,0],[59,13,59,14,0],[67,20,67,34,0],[70,17,70,62,0],[71,17,71,40,0],[72,13,72,14,0],[82,16,82,67,0],[88,16,88,65,0],[94,16,94,70,0],[100,16,100,68,0]]);
+    </script>
+  </body>
+</html>

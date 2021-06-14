@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\IndexOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Hazelcast.Models
+{
+    /// &lt;summary&gt;
+    /// Configuration of an index.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Hazelcast support three types of indexes: sorted, hash and bitmap indexes. They can be
+    /// created on one or more attributes, specified by their name.&lt;/para&gt;
+    /// &lt;para&gt;Sorted indexes can be used with equality and range predicates and have logarithmic
+    /// search time.&lt;/para&gt;
+    /// &lt;para&gt;Hash indexes can be used with equality predicates and have constant search time assuming
+    /// the hash function of the indexed field disperses the elements properly.&lt;/para&gt;
+    /// &lt;para&gt;Bitmap indexes (to be completed).&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public class IndexOptions
+    {
+        public static readonly IndexType DefaultType = IndexType.Sorted;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;IndexOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public IndexOptions()
+        {}
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;IndexOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public IndexOptions(IEnumerable&lt;string&gt; attributes)
+        {
+            Attributes = attributes.ToList();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the index.
+        /// &lt;/summary&gt;
+        public string Name { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the type of the index.
+        /// &lt;/summary&gt;
+        public IndexType Type { get; set; } = DefaultType;
+
+        /// &lt;summary&gt;
+        /// Gets the indexed attributes.
+        /// &lt;/summary&gt;
+        public IList&lt;string&gt; Attributes { get; } = new List&lt;string&gt;();
+
+        /// &lt;summary&gt;
+        /// Gets or sets the bitmap index options.
+        /// &lt;/summary&gt;
+        public BitmapIndexOptions BitmapIndexOptions{ get; set; } = new BitmapIndexOptions();
+
+        /// &lt;summary&gt;
+        /// Adds an indexed attribute.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attribute&quot;&gt;The name of the attribute.&lt;/param&gt;
+        /// &lt;returns&gt;This instance for chaining.&lt;/returns&gt;
+        public IndexOptions AddAttribute(string attribute)
+        {
+            ValidateAttribute(this, attribute);
+            Attributes.Add(attribute);
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds indexed attributes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributes&quot;&gt;The names of the attributes.&lt;/param&gt;
+        /// &lt;returns&gt;This instance for chaining.&lt;/returns&gt;
+        public IndexOptions AddAttributes(params string[] attributes)
+        {
+            foreach (var attribute in attributes)
+            {
+                ValidateAttribute(this, attribute);
+            }
+            foreach (var attribute in attributes)
+            {
+                Attributes.Add(attribute);
+            }
+            return this;
+        }
+
+        internal static void ValidateAttribute(IndexOptions options, string attributeName)
+        {
+            if (attributeName == null)
+                throw new ArgumentNullException(nameof(attributeName), $&quot;Attribute name cannot be null: {options}&quot;);
+
+            attributeName = attributeName.Trim();
+
+            if (attributeName.Length == 0)
+                throw new ArgumentException($&quot;Attribute name cannot be empty: {options}&quot;, nameof(attributeName));
+
+            if (attributeName.EndsWith(&quot;.&quot;, StringComparison.Ordinal))
+                throw new ArgumentException($&quot;Attribute name cannot end with dot: {attributeName}&quot;, nameof(attributeName));
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            return $&quot;IndexConfig[Name={Name}, IndexType= {Type}, Attributes={string.Join(&quot;,&quot;, Attributes)}]&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[40,9,40,30,0],[41,10,41,11,0],[46,9,46,60,0],[48,13,48,46,0],[49,9,49,10,0],[54,30,54,34,0],[54,35,54,39,0],[59,33,59,37,0],[59,38,59,42,0],[59,47,59,58,0],[59,47,59,58,0],[64,43,64,47,0],[64,52,64,70,0],[64,52,64,70,0],[69,55,69,59,0],[69,60,69,64,0],[69,69,69,93,0],[69,69,69,93,0],[78,13,78,48,0],[79,13,79,39,0],[80,13,80,25,0],[90,22,90,35,0],[90,36,90,38,0],[90,39,90,49,0],[92,17,92,52,0],[94,22,94,35,0],[94,36,94,38,0],[94,39,94,49,0],[96,17,96,43,0],[98,13,98,25,0],[103,13,103,39,0],[104,17,104,117,0],[106,13,106,50,0],[108,13,108,43,0],[109,17,109,114,0],[111,13,111,71,0],[112,17,112,124,0],[113,9,113,10,0],[118,13,118,110,0]]);
+    </script>
+  </body>
+</html>

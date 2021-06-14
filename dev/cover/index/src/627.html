@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\ConfigurationBuilderExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast.Configuration
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; interface.
+    /// &lt;/summary&gt;
+    public static class ConfigurationBuilderExtensions
+    {
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; that reads Hazelcast configuration value from a file.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;param name=&quot;filePath&quot;&gt;The path to the file.&lt;/param&gt;
+        /// &lt;param name=&quot;fileName&quot;&gt;The name of the file.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public static IConfigurationBuilder AddHazelcastFile(this IConfigurationBuilder configurationBuilder, string filePath, string fileName, string environmentName)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+
+            var fullpath = string.IsNullOrWhiteSpace(filePath)
+                ? fileName
+                : Path.Combine(filePath, fileName);
+
+            var extension = Path.GetExtension(fullpath);
+            var directory = Path.GetDirectoryName(fullpath);
+            fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
+
+            // JSON files are reloadOnChange:false because we do not track configuration changes,
+            // and we try to mitigate issues with running apps in Docker containers.
+            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
+            configurationBuilder
+                .AddJsonFile(fullpath + extension, true, false)
+                .AddJsonFile(fullpath + &#39;.&#39; + DetermineEnvironment(environmentName) + extension, true, false);
+
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; that reads Hazelcast configuration values from environment variables.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Adds support for the hazelcast.x.y variables that do not respect the standard hazelcast__x__y pattern.&lt;/para&gt;
+        /// &lt;para&gt;Does not add default support for environment variables.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static IConfigurationBuilder AddHazelcastEnvironmentVariables(this IConfigurationBuilder configurationBuilder)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+            configurationBuilder.Add(new HazelcastEnvironmentVariablesConfigurationSource());
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; that reads Hazelcast configuration values from the command line.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Adds support for `hazelcast.x.y` arguments that do not respect the standard `hazelcast:x:y` pattern.&lt;/para&gt;
+        /// &lt;para&gt;Does not add default support for command line arguments.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+            configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args });
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; that reads Hazelcast configuration values from an in-memory collection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        public static IConfigurationBuilder AddHazelcastInMemoryCollection(this IConfigurationBuilder configurationBuilder, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt; initialData)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+            configurationBuilder.Add(new HazelcastMemoryConfigurationSource { InitialData = initialData });
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; that reads Hazelcast configuration values from various sources.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;param name=&quot;args&quot;&gt;The command line args.&lt;/param&gt;
+        /// &lt;param name=&quot;keyValues&quot;&gt;The optional key-value configuration pairs.&lt;/param&gt;
+        /// &lt;param name=&quot;optionsFilePath&quot;&gt;The optional path to the options file.&lt;/param&gt;
+        /// &lt;param name=&quot;environmentName&quot;&gt;An optional environment name.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Adds support for hazelcast-specific sources. Does not add default support for other sources.&lt;/para&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;environmentName&quot;/&gt; is missing, the environment name is determined using
+        /// the &lt;c&gt;DOTNET_ENVIRONMENT&lt;/c&gt; and &lt;c&gt;ASPNETCORE_ENVIRONMENT&lt;/c&gt; environment variables. If not
+        /// specified, the environment name is &lt;c&gt;Production&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt; keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+
+            if (string.IsNullOrWhiteSpace(optionsFileName))
+                optionsFileName = &quot;hazelcast.json&quot;;
+
+            configurationBuilder
+                .AddHazelcastFile(optionsFilePath, optionsFileName, environmentName);
+
+            configurationBuilder
+                .AddHazelcastEnvironmentVariables();
+
+            if (args != null)
+                configurationBuilder.AddHazelcastCommandLine(args);
+
+            if (keyValues != null)
+                configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
+
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds the default &lt;see cref=&quot;IConfigurationProvider&quot;/&gt; instances.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configurationBuilder&quot;&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; to add to.&lt;/param&gt;
+        /// &lt;param name=&quot;args&quot;&gt;The command line args.&lt;/param&gt;
+        /// &lt;param name=&quot;environmentName&quot;&gt;An optional environment name.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Adds support for appsettings.json, environment variables and command line arguments. This is
+        /// only useful in non-hosted environments where a configuration builder is created from scratch.&lt;/para&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;environmentName&quot;/&gt; is missing, the environment name is determined using
+        /// the &lt;c&gt;DOTNET_ENVIRONMENT&lt;/c&gt; and &lt;c&gt;ASPNETCORE_ENVIRONMENT&lt;/c&gt; environment variables. If not
+        /// specified, the environment name is &lt;c&gt;Production&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, string environmentName = null)
+        {
+            // JSON files are reloadOnChange:false because we do not track configuration changes,
+            // and we try to mitigate issues with running apps in Docker containers.
+            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
+            configurationBuilder
+                .AddJsonFile(&quot;appsettings.json&quot;, optional: true, reloadOnChange: false)
+                .AddJsonFile($&quot;appsettings.{DetermineEnvironment(environmentName)}.json&quot;, optional: true, reloadOnChange: false);
+
+            configurationBuilder.AddEnvironmentVariables();
+
+            if (args != null)
+                configurationBuilder.AddCommandLine(args);
+
+            return configurationBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines the runtime environment name.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;environmentName&quot;&gt;An optional environment name.&lt;/param&gt;
+        /// &lt;returns&gt;The runtime environment name.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Uses the rules specified at https://docs.microsoft.com/en-us/aspnet/core/fundamentals/environments
+        /// i.e. uses the specified &lt;paramref name=&quot;environmentName&quot;/&gt;, else the DOTNET_ENVIRONMENT environment
+        /// variable, else the ASPNETCORE_ENVIRONMENT environment variable, else &quot;Production&quot;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal static string DetermineEnvironment(string environmentName)
+        {
+            if (!string.IsNullOrWhiteSpace(environmentName))
+                return environmentName;
+
+            var dotnet = Environment.GetEnvironmentVariable(&quot;DOTNET_ENVIRONMENT&quot;);
+            if (!string.IsNullOrWhiteSpace(dotnet))
+                return dotnet;
+
+            var aspnetcore = Environment.GetEnvironmentVariable(&quot;ASPNETCORE_ENVIRONMENT&quot;);
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (!string.IsNullOrWhiteSpace(aspnetcore))
+                return aspnetcore;
+
+            return &quot;Production&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,13,37,46,0],[37,47,37,109,0],[39,13,41,52,0],[43,13,43,57,0],[44,13,44,61,0],[45,13,45,92,0],[51,13,53,111,0],[55,13,55,41,0],[69,13,69,46,0],[69,47,69,109,0],[70,13,70,94,0],[71,13,71,41,0],[85,13,85,46,0],[85,47,85,109,0],[86,13,86,99,0],[87,13,87,41,0],[97,13,97,46,0],[97,47,97,109,0],[98,13,98,108,0],[99,13,99,41,0],[119,13,119,46,0],[119,47,119,109,0],[121,13,121,60,0],[122,17,122,52,0],[124,13,125,86,0],[127,13,128,53,0],[130,13,130,30,0],[131,17,131,68,0],[133,13,133,35,0],[134,17,134,80,0],[136,13,136,41,0],[159,13,161,130,0],[163,13,163,60,0],[165,13,165,30,0],[166,17,166,59,0],[168,13,168,41,0],[183,13,183,61,0],[184,17,184,40,0],[186,13,186,83,0],[187,13,187,52,0],[188,17,188,31,0],[190,13,190,91,0],[192,13,192,56,0],[193,17,193,35,0],[195,13,195,33,0]]);
+    </script>
+  </body>
+</html>

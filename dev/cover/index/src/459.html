@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\MemberInfo.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Hazelcast.Networking;
+
+namespace Hazelcast.Models
+{
+    /// &lt;summary&gt;
+    /// Represents a member of a cluster.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;This class implements &lt;see cref=&quot;IEquatable{MemberInfo}&quot;/&gt; and two instances are considered
+    /// equal if their &lt;see cref=&quot;Id&quot;/&gt; are identical (the other fields are not considered for equality).&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public class MemberInfo : IEquatable&lt;MemberInfo&gt;
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberInfo&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The network address of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the server running the member.&lt;/param&gt;
+        /// &lt;param name=&quot;isLiteMember&quot;&gt;Whether the member is a &quot;lite&quot; member.&lt;/param&gt;
+        /// &lt;param name=&quot;attributes&quot;&gt;Attributes of the member.&lt;/param&gt;
+        public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLiteMember, IDictionary&lt;string, string&gt; attributes)
+        {
+            Id = id;
+            Address = address;
+            Version = version;
+            IsLiteMember = isLiteMember;
+            Attributes = new ReadOnlyDictionary&lt;string, string&gt;(attributes);
+            AddressMap = new Dictionary&lt;EndpointQualifier, NetworkAddress&gt;();
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberInfo&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The network address of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the server running the member.&lt;/param&gt;
+        /// &lt;param name=&quot;isLiteMember&quot;&gt;Whether the member is a &quot;lite&quot; member.&lt;/param&gt;
+        /// &lt;param name=&quot;attributes&quot;&gt;Attributes of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;addressMapExists&quot;&gt;Whether the address map exists.&lt;/param&gt;
+        /// &lt;param name=&quot;addressMap&quot;&gt;The address map.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;That overload of the constructor is required by generated codecs.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal MemberInfo(NetworkAddress address, Guid id, IDictionary&lt;string, string&gt; attributes, bool isLiteMember, MemberVersion version, bool addressMapExists, IDictionary&lt;EndpointQualifier, NetworkAddress&gt; addressMap)
+            : this(id, address, version, isLiteMember, attributes)
+        {
+            // yes, this constructor could be simplified, but at the moment
+            // it is what codecs expect, so don&#39;t simplify it!
+
+            if (addressMapExists) AddressMap = addressMap;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the member.
+        /// &lt;/summary&gt;
+        public Guid Id { get; }
+
+        /// &lt;summary&gt;
+        /// (for internal use only) Gets the unique identifier of the member.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Generated codecs expect this naming of the property. The public version
+        /// of this is &lt;see cref=&quot;Id&quot;/&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal Guid Uuid =&gt; Id;
+
+        /// &lt;summary&gt;
+        /// Gets the network address of the member.
+        /// &lt;/summary&gt;
+        public NetworkAddress Address { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the version of the server running the member.
+        /// &lt;/summary&gt;
+        public MemberVersion Version { get; }
+
+        /// &lt;summary&gt;
+        /// Determines whether the member is a &quot;lite&quot; member.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Lite members do not own partitions.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool IsLiteMember {get; }
+
+        /// &lt;summary&gt;
+        /// Gets the attributes of the member.
+        /// &lt;/summary&gt;
+        public IReadOnlyDictionary&lt;string, string&gt; Attributes { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the address map.
+        /// &lt;/summary&gt;
+        internal IDictionary&lt;EndpointQualifier, NetworkAddress&gt; AddressMap { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+            =&gt; Equals(obj as MemberInfo);
+
+        /// &lt;summary&gt;
+        /// Determines whether this &lt;see cref=&quot;MemberInfo&quot;/&gt; instance is equal to another &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;other&quot;&gt;The other &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if this &lt;see cref=&quot;MemberInfo&quot;/&gt; instance and the other &lt;see cref=&quot;MemberInfo&quot;/&gt; instance
+        /// are considered being equal; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool Equals(MemberInfo other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return
+                Id == other.Id;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether two &lt;see cref=&quot;MemberInfo&quot;/&gt; instances are equal.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;left&quot;&gt;The first &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.&lt;/param&gt;
+        /// &lt;param name=&quot;right&quot;&gt;The second &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the two &lt;see cref=&quot;MemberInfo&quot;/&gt; instances are considered being equal;
+        /// otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public static bool operator ==(MemberInfo left, MemberInfo right)
+            =&gt; left is null ? right is null : left.Equals(right);
+
+        /// &lt;summary&gt;
+        /// Determines whether two &lt;see cref=&quot;MemberInfo&quot;/&gt; instances are not equal.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;left&quot;&gt;The first &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.&lt;/param&gt;
+        /// &lt;param name=&quot;right&quot;&gt;The second &lt;see cref=&quot;MemberInfo&quot;/&gt; instance.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the two &lt;see cref=&quot;MemberInfo&quot;/&gt; instances are considered being not equal;
+        /// otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public static bool operator !=(MemberInfo left, MemberInfo right)
+            =&gt; !(left == right);
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode() =&gt; Id.GetHashCode();
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            return $&quot;Member [{Address.Host}]:{Address.Port} - {Id}{(IsLiteMember ? &quot; lite&quot; : &quot;&quot;)}&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[39,9,39,141,0],[41,13,41,21,0],[42,13,42,31,0],[43,13,43,31,0],[44,13,44,41,0],[45,13,45,77,0],[46,13,46,78,0],[47,9,47,10,0],[63,15,63,67,0],[68,13,68,34,0],[68,35,68,59,0],[69,9,69,10,0],[74,26,74,30,0],[83,31,83,33,0],[88,41,88,45,0],[93,40,93,44,0],[101,35,101,39,0],[106,65,106,69,0],[111,78,111,82,0],[115,16,115,41,0],[125,13,125,31,0],[125,32,125,45,0],[126,13,126,46,0],[126,47,126,59,0],[128,13,129,32,0],[140,16,140,65,0],[150,16,150,32,0],[153,46,153,62,0],[158,13,158,100,0]]);
+    </script>
+  </body>
+</html>

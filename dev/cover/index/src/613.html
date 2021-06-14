@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Murmur3HashCode.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Computes Murmur3 hash codes.
+    /// &lt;/summary&gt;
+    /// &lt;returns&gt;
+    /// &lt;para&gt;This is an x86 32bits implementation.&lt;/para&gt;
+    /// &lt;/returns&gt;
+    internal static class Murmur3HashCode
+    {
+        // ReSharper disable once InconsistentNaming
+        private const int DefaultMurmurSeed = 0x01000193;
+
+        /// &lt;summary&gt;
+        /// Reserved for internal usage.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;k&quot;&gt;Input value.&lt;/param&gt;
+        /// &lt;returns&gt;Output value.&lt;/returns&gt;
+        private static int MurmurHash3_fmix(int k)
+        {
+            k ^= (int)(((uint)k) &gt;&gt; 16);
+            k *= unchecked((int)(0x85ebca6b));
+            k ^= (int)(((uint)k) &gt;&gt; 13);
+            k *= unchecked((int)(0xc2b2ae35));
+            k ^= (int)(((uint)k) &gt;&gt; 16);
+            return k;
+        }
+
+        /// &lt;summary&gt;
+        /// Computes the hash code of an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;data&quot;&gt;An array of bytes.&lt;/param&gt;
+        /// &lt;param name=&quot;offset&quot;&gt;The offset at which hashing begins.&lt;/param&gt;
+        /// &lt;param name=&quot;count&quot;&gt;The number of bytes to hash.&lt;/param&gt;
+        /// &lt;param name=&quot;seed&quot;&gt;An optional hash seed.&lt;/param&gt;
+        /// &lt;returns&gt;The hash code of the array of bytes.&lt;/returns&gt;
+        public static int Hash(byte[] data, int offset, int count, int seed = DefaultMurmurSeed)
+        {
+            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (offset &lt; 0 || offset &gt;= data.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count &lt; 0 || offset + count &gt; data.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            var c1 = unchecked((int)(0xcc9e2d51));
+            var c2 = unchecked(0x1b873593);
+            var h1 = seed;
+            var roundedEnd = offset + (count &amp; unchecked((int)(0xfffffffc)));
+            // round down to 4 byte block
+            for (var i = offset; i &lt; roundedEnd; i += 4)
+            {
+                // little endian load order
+                var k1 = (data[i] &amp; unchecked(0xff)) |
+                         ((data[i + 1] &amp; unchecked(0xff)) &lt;&lt; 8) |
+                         ((data[i + 2] &amp; unchecked(0xff)) &lt;&lt; 16) |
+                         (data[i + 3] &lt;&lt; 24);
+                k1 *= c1;
+                k1 = (k1 &lt;&lt; 15) | ((int)(((uint)k1) &gt;&gt; 17));
+                // ROTL32(k1,15);
+                k1 *= c2;
+                h1 ^= k1;
+                h1 = (h1 &lt;&lt; 13) | ((int)(((uint)h1) &gt;&gt; 19));
+                // ROTL32(h1,13);
+                h1 = h1 * 5 + unchecked((int)(0xe6546b64));
+            }
+            // tail
+            var k11 = 0;
+            switch (count &amp; unchecked(0x03))
+            {
+                case 3:
+                    {
+                        k11 = (data[roundedEnd + 2] &amp; unchecked(0xff)) &lt;&lt; 16;
+                        goto case 2;
+                    }
+
+                case 2:
+                    {
+                        // fallthrough
+                        k11 |= (data[roundedEnd + 1] &amp; unchecked(0xff)) &lt;&lt; 8;
+                        goto case 1;
+                    }
+
+                case 1:
+                    {
+                        // fallthrough
+                        k11 |= data[roundedEnd] &amp; unchecked(0xff);
+                        k11 *= c1;
+                        k11 = (k11 &lt;&lt; 15) | ((int)(((uint)k11) &gt;&gt; 17));
+                        // ROTL32(k1,15);
+                        k11 *= c2;
+                        h1 ^= k11;
+                        break;
+                    }
+            }
+            // finalization
+            h1 ^= count;
+            h1 = MurmurHash3_fmix(h1);
+            return h1;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,13,37,41,0],[38,13,38,47,0],[39,13,39,41,0],[40,13,40,47,0],[41,13,41,41,0],[42,13,42,22,0],[55,13,55,30,0],[55,31,55,77,0],[56,13,56,53,0],[56,54,56,108,0],[57,13,57,59,0],[57,60,57,113,0],[59,13,59,51,0],[60,13,60,44,0],[61,13,61,27,0],[62,13,62,78,0],[64,18,64,32,0],[64,34,64,48,0],[64,50,64,56,0],[67,17,70,46,0],[71,17,71,26,0],[72,17,72,61,0],[74,17,74,26,0],[75,17,75,26,0],[76,17,76,61,0],[78,17,78,60,0],[81,13,81,25,0],[82,13,82,45,0],[86,25,86,78,0],[93,25,93,78,0],[100,25,100,67,0],[101,25,101,35,0],[102,25,102,72,0],[104,25,104,35,0],[105,25,105,35,0],[110,13,110,25,0],[111,13,111,39,0],[112,13,112,23,0]]);
+    </script>
+  </body>
+</html>

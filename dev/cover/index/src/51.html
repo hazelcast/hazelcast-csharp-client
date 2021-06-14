@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ObjectDataOutput.api.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Text;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    internal partial class ObjectDataOutput //public api
+    {
+        public Endianness Endianness { get; }
+
+        public void WriteBoolean(bool value)
+        {
+            WriteByte((byte) (value ? 1 : 0));
+        }
+
+        public void WriteByte(byte value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfByte);
+            _buffer.WriteByte(_position, value);
+            _position += BytesExtensions.SizeOfByte;
+        }
+
+        public void WriteSByte(sbyte value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfUnsignedByte);
+            _buffer.WriteSbyte(_position, value);
+            _position += BytesExtensions.SizeOfUnsignedByte;
+        }
+
+        public void WriteChar(char value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfChar);
+            _buffer.WriteChar(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfChar;
+        }
+
+        public void WriteShort(short value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfShort);
+            _buffer.WriteShort(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfShort;
+        }
+
+        public void WriteUShort(ushort value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfUnsignedShort);
+            _buffer.WriteUShort(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfUnsignedShort;
+        }
+
+        public void WriteInt(int value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfInt);
+            _buffer.WriteInt(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfInt;
+        }
+
+        public void WriteLong(long value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfLong);
+            _buffer.WriteLong(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfLong;
+        }
+
+        public void WriteFloat(float value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfFloat);
+            _buffer.WriteFloat(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfFloat;
+        }
+
+        public void WriteDouble(double value)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfDouble);
+            _buffer.WriteDouble(_position, value, Endianness);
+            _position += BytesExtensions.SizeOfDouble;
+        }
+
+        public void WriteString(string value)
+        {
+            var byteCount = value != null ? Encoding.UTF8.GetByteCount(value) : BytesExtensions.SizeOfNullArray;
+            WriteInt(byteCount);
+            if (byteCount &lt;= 0) return;
+
+            EnsureAvailable(byteCount);
+            _position += Encoding.UTF8.GetBytes(value, 0, value.Length, _buffer, _position);
+        }
+
+        public void WriteChars(string value)
+        {
+            var len = value.Length;
+            EnsureAvailable(len * BytesExtensions.SizeOfChar);
+            for (var i = 0; i &lt; len; i++)
+            {
+                _buffer.WriteChar(_position, value[i], Endianness);
+                _position += BytesExtensions.SizeOfChar;
+            }
+        }
+
+        public void WriteBytes(string value)
+        {
+            var len = value.Length;
+            EnsureAvailable(len);
+            for (var i = 0; i &lt; len; i++)
+            {
+                _buffer.WriteByte(_position, (byte) value[i]);
+                _position += BytesExtensions.SizeOfByte;
+            }
+        }
+
+        public void WriteBooleanArray(bool[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfBool);
+            foreach (var value in values)
+            {
+                _buffer.WriteBool(_position, value);
+                _position += BytesExtensions.SizeOfBool;
+            }
+        }
+
+        public void WriteByteArray(byte[] bytes)
+        {
+            var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (bytes == null || length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfByte);
+            Write(bytes);
+        }
+
+        public void WriteCharArray(char[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfChar);
+            foreach (var value in values)
+            {
+                _buffer.WriteChar(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfChar;
+            }
+        }
+
+        public void WriteShortArray(short[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfShort);
+            foreach (var value in values)
+            {
+                _buffer.WriteShort(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfShort;
+            }
+        }
+
+        public void WriteIntArray(int[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfInt);
+            foreach (var value in values)
+            {
+                _buffer.WriteInt(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfInt;
+            }
+        }
+
+        public void WriteLongArray(long[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfLong);
+            foreach (var value in values)
+            {
+                _buffer.WriteLong(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfLong;
+            }
+        }
+
+        public void WriteFloatArray(float[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfFloat);
+            foreach (var value in values)
+            {
+                _buffer.WriteFloat(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfFloat;
+            }
+        }
+
+        public void WriteDoubleArray(double[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfDouble);
+            foreach (var value in values)
+            {
+                _buffer.WriteDouble(_position, value, Endianness);
+                _position += BytesExtensions.SizeOfDouble;
+            }
+        }
+
+        public void WriteStringArray(string[] values)
+        {
+            var length = values?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (length &lt;= 0) return;
+
+            foreach (var value in values)
+            {
+                WriteString(value);
+            }
+        }
+
+        public void WriteObject(object value)
+        {
+            _serializationService.WriteObject(this, value);
+        }
+
+        public void Write(byte[] bytes)
+        {
+            Write(bytes, 0, bytes.Length);
+        }
+
+        public void Write(byte[] bytes, int offset, int count)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset &lt; 0 || offset &gt; bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count &lt; 0 || offset + count &gt; bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (count &lt;= 0) return;
+
+            EnsureAvailable(count);
+            System.Buffer.BlockCopy(bytes, offset, _buffer, _position, count);
+            _position += count;
+        }
+
+        public byte[] ToByteArray(int padding = 0)
+        {
+            if (_buffer == null || _position == 0)
+                return Array.Empty&lt;byte&gt;();
+
+            // TODO: inefficient
+            var newData = new byte[_position];
+            System.Buffer.BlockCopy(_buffer, 0, newData, 0, _position);
+            return newData;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,40,23,44,0],[27,13,27,47,0],[28,9,28,10,0],[32,13,32,57,0],[33,13,33,49,0],[34,13,34,53,0],[35,9,35,10,0],[39,13,39,65,0],[40,13,40,50,0],[41,13,41,61,0],[42,9,42,10,0],[46,13,46,57,0],[47,13,47,61,0],[48,13,48,53,0],[49,9,49,10,0],[53,13,53,58,0],[54,13,54,62,0],[55,13,55,54,0],[56,9,56,10,0],[60,13,60,66,0],[61,13,61,63,0],[62,13,62,62,0],[63,9,63,10,0],[67,13,67,56,0],[68,13,68,60,0],[69,13,69,52,0],[70,9,70,10,0],[74,13,74,57,0],[75,13,75,61,0],[76,13,76,53,0],[77,9,77,10,0],[81,13,81,58,0],[82,13,82,62,0],[83,13,83,54,0],[84,9,84,10,0],[88,13,88,59,0],[89,13,89,63,0],[90,13,90,55,0],[91,9,91,10,0],[95,13,95,113,0],[96,13,96,33,0],[97,13,97,32,0],[97,33,97,40,0],[99,13,99,40,0],[100,13,100,93,0],[101,9,101,10,0],[105,13,105,36,0],[106,13,106,63,0],[107,18,107,27,0],[107,29,107,36,0],[107,38,107,41,0],[109,17,109,68,0],[110,17,110,57,0],[112,9,112,10,0],[116,13,116,36,0],[117,13,117,34,0],[118,18,118,27,0],[118,29,118,36,0],[118,38,118,41,0],[120,17,120,63,0],[121,17,121,57,0],[123,9,123,10,0],[127,13,127,76,0],[128,13,128,30,0],[129,13,129,29,0],[129,30,129,37,0],[131,13,131,66,0],[132,22,132,31,0],[132,32,132,34,0],[132,35,132,41,0],[134,17,134,53,0],[135,17,135,57,0],[137,9,137,10,0],[141,13,141,75,0],[142,13,142,30,0],[143,13,143,46,0],[143,47,143,54,0],[145,13,145,66,0],[146,13,146,26,0],[147,9,147,10,0],[151,13,151,76,0],[152,13,152,30,0],[153,13,153,29,0],[153,30,153,37,0],[155,13,155,66,0],[156,22,156,31,0],[156,32,156,34,0],[156,35,156,41,0],[158,17,158,65,0],[159,17,159,57,0],[161,9,161,10,0],[165,13,165,76,0],[166,13,166,30,0],[167,13,167,29,0],[167,30,167,37,0],[169,13,169,67,0],[170,22,170,31,0],[170,32,170,34,0],[170,35,170,41,0],[172,17,172,66,0],[173,17,173,58,0],[175,9,175,10,0],[179,13,179,76,0],[180,13,180,30,0],[181,13,181,29,0],[181,30,181,37,0],[183,13,183,65,0],[184,22,184,31,0],[184,32,184,34,0],[184,35,184,41,0],[186,17,186,64,0],[187,17,187,56,0],[189,9,189,10,0],[193,13,193,76,0],[194,13,194,30,0],[195,13,195,29,0],[195,30,195,37,0],[197,13,197,66,0],[198,22,198,31,0],[198,32,198,34,0],[198,35,198,41,0],[200,17,200,65,0],[201,17,201,57,0],[203,9,203,10,0],[207,13,207,76,0],[208,13,208,30,0],[209,13,209,29,0],[209,30,209,37,0],[211,13,211,67,0],[212,22,212,31,0],[212,32,212,34,0],[212,35,212,41,0],[214,17,214,66,0],[215,17,215,58,0],[217,9,217,10,0],[221,13,221,76,0],[222,13,222,30,0],[223,13,223,29,0],[223,30,223,37,0],[225,13,225,68,0],[226,22,226,31,0],[226,32,226,34,0],[226,35,226,41,0],[228,17,228,67,0],[229,17,229,59,0],[231,9,231,10,0],[235,13,235,76,0],[236,13,236,30,0],[237,13,237,29,0],[237,30,237,37,0],[239,22,239,31,0],[239,32,239,34,0],[239,35,239,41,0],[241,17,241,36,0],[243,9,243,10,0],[247,13,247,60,0],[248,9,248,10,0],[252,13,252,43,0],[253,9,253,10,0],[257,13,257,31,0],[257,32,257,79,0],[258,13,258,53,0],[258,54,258,108,0],[259,13,259,60,0],[259,61,259,114,0],[261,13,261,28,0],[261,29,261,36,0],[263,13,263,36,0],[264,13,264,79,0],[265,13,265,32,0],[266,9,266,10,0],[270,13,270,51,0],[271,17,271,44,0],[274,13,274,47,0],[275,13,275,72,0],[276,13,276,28,0]]);
+    </script>
+  </body>
+</html>

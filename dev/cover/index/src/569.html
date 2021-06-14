@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\AtomicLong.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Provides the &lt;see cref=&quot;IAtomicLong&quot;/&gt; implementation.
+    /// &lt;/summary&gt;
+    internal class AtomicLong : CPDistributedObjectBase, IAtomicLong
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AtomicLong&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name.&lt;/param&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;The CP group identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;The cluster.&lt;/param&gt;
+        public AtomicLong(string name, CPGroupId groupId, Cluster cluster)
+            : base(ServiceNames.AtomicLong, name, groupId, cluster)
+        { }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; AddAndGetAsync(long value)
+        {
+            var requestMessage = AtomicLongAddAndGetCodec.EncodeRequest(CPGroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongAddAndGetCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;bool&gt; CompareAndSetAsync(long comparand, long value)
+        {
+            var requestMessage = AtomicLongCompareAndSetCodec.EncodeRequest(CPGroupId, Name, comparand, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongCompareAndSetCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetAndAddAsync(long value)
+        {
+            var requestMessage = AtomicLongGetAndAddCodec.EncodeRequest(CPGroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetAndAddCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetAndSetAsync(long value)
+        {
+            var requestMessage = AtomicLongGetAndSetCodec.EncodeRequest(CPGroupId, Name, value);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetAndSetCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;long&gt; DecrementAndGetAsync() =&gt; AddAndGetAsync(-1);
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;long&gt; GetAndDecrementAsync() =&gt; GetAndAddAsync(-1);
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetAsync()
+        {
+            var requestMessage = AtomicLongGetCodec.EncodeRequest(CPGroupId, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = AtomicLongGetCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;long&gt; IncrementAndGetAsync() =&gt; AddAndGetAsync(+1);
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;long&gt; GetAndIncrementAsync() =&gt; GetAndAddAsync(+1);
+
+        /// &lt;inheritdoc /&gt;
+        public Task SetAsync(long value) =&gt; GetAndSetAsync(value);
+
+        /// &lt;inheritdoc /&gt;
+        public override async ValueTask DestroyAsync()
+        {
+            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,15,35,68,0],[36,11,36,12,0],[41,13,41,97,0],[42,13,42,95,0],[43,13,43,94,0],[44,13,44,29,0],[45,9,45,10,0],[50,13,50,112,0],[51,13,51,95,0],[52,13,52,98,0],[53,13,53,29,0],[54,9,54,10,0],[59,13,59,97,0],[60,13,60,95,0],[61,13,61,94,0],[62,13,62,29,0],[63,9,63,10,0],[68,13,68,97,0],[69,13,69,95,0],[70,13,70,94,0],[71,13,71,29,0],[72,9,72,10,0],[75,53,75,71,0],[78,53,78,71,0],[83,13,83,84,0],[84,13,84,95,0],[85,13,85,88,0],[86,13,86,29,0],[87,9,87,10,0],[90,53,90,71,0],[93,53,93,71,0],[96,45,96,66,0],[101,13,101,106,0],[102,13,102,95,0],[103,13,103,88,0],[104,9,104,10,0]]);
+    </script>
+  </body>
+</html>

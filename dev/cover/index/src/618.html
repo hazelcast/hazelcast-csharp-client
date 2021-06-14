@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ServiceFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides methods to create instances of services.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The provided methods rely on the Activator.CreateInstance method to create
+    /// the new instances and are not optimized for performance. It is fine to use them
+    /// for e.g. creating singletons when the application starts, but they should not
+    /// be used for intensive creation of objects.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public static class ServiceFactory
+    {
+        /// &lt;summary&gt;
+        /// Creates a new instance of type &lt;typeparamref name=&quot;T&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the instance.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;stringArgs&quot;&gt;Optional string named arguments for the constructor (can be null).&lt;/param&gt;
+        /// &lt;param name=&quot;paramArgs&quot;&gt;Parameter arguments for the constructor.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of type &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static T CreateInstance&lt;T&gt;(IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)
+        {
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+            try
+            {
+                return As&lt;T&gt;(CreateInstanceInternal(typeof(T), stringArgs, paramArgs));
+            }
+            catch (Exception e)
+            {
+                throw new ServiceFactoryException($&quot;Failed to create an instance of type {typeof(T)}.&quot;, e);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of type &lt;paramref name=&quot;type&quot;/&gt; as &lt;typeparamref name=&quot;T&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the returned instance.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type of the created instance.&lt;/param&gt;
+        /// &lt;param name=&quot;stringArgs&quot;&gt;Optional string named arguments for the constructor (can be null).&lt;/param&gt;
+        /// &lt;param name=&quot;paramArgs&quot;&gt;Parameter arguments for the constructor.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of type &lt;paramref name=&quot;type&quot;/&gt; as &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static T CreateInstance&lt;T&gt;(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+            try
+            {
+                return As&lt;T&gt;(CreateInstanceInternal(type, stringArgs, paramArgs));
+            }
+            catch (Exception e)
+            {
+                throw new ServiceFactoryException($&quot;Failed to create an instance of type {type} as {typeof(T)}.&quot;, e);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of type &lt;paramref name=&quot;typeName&quot;/&gt; as &lt;typeparamref name=&quot;T&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the returned instance.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;typeName&quot;&gt;The name of the type of the created instance.&lt;/param&gt;
+        /// &lt;param name=&quot;stringArgs&quot;&gt;Optional string named arguments for the constructor (can be null).&lt;/param&gt;
+        /// &lt;param name=&quot;paramArgs&quot;&gt;Parameter arguments for the constructor.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of type &lt;paramref name=&quot;typeName&quot;/&gt; as &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static T CreateInstance&lt;T&gt;(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+            try
+            {
+                return As&lt;T&gt;(CreateInstanceInternal(typeName, stringArgs, paramArgs));
+            }
+            catch (Exception e)
+            {
+                throw new ServiceFactoryException($&quot;Failed to create an instance of type {typeName} as {typeof(T)}.&quot;, e);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of type &lt;paramref name=&quot;type&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type of the instance.&lt;/param&gt;
+        /// &lt;param name=&quot;stringArgs&quot;&gt;Optional string named arguments for the constructor (can be null).&lt;/param&gt;
+        /// &lt;param name=&quot;paramArgs&quot;&gt;Parameter arguments for the constructor.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of type &lt;paramref name=&quot;type&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static object CreateInstance(Type type, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+            try
+            {
+                return CreateInstanceInternal(type, stringArgs, paramArgs);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceFactoryException($&quot;Failed to create an instance of type {type}.&quot;, e);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of type &lt;paramref name=&quot;typeName&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;typeName&quot;&gt;The name of the type of the instance.&lt;/param&gt;
+        /// &lt;param name=&quot;stringArgs&quot;&gt;Optional string named arguments for the constructor (can be null).&lt;/param&gt;
+        /// &lt;param name=&quot;paramArgs&quot;&gt;Parameter arguments for the constructor.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of type &lt;paramref name=&quot;typeName&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static object CreateInstance(string typeName, IDictionary&lt;string, string&gt; stringArgs = null, params object[] paramArgs)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+            try
+            {
+                return CreateInstanceInternal(typeName, stringArgs, paramArgs);
+            }
+            catch (Exception e)
+            {
+                throw new ServiceFactoryException($&quot;Failed to create an instance of type {typeName}.&quot;, e);
+            }
+        }
+
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Casts an object.
+        /// &lt;/summary&gt;
+        internal static T As&lt;T&gt;(object o)
+        {
+            return o switch
+            {
+                T t =&gt; t,
+                null =&gt; throw new ArgumentNullException(nameof(o)),
+                _ =&gt; throw new InvalidCastException($&quot;Failed to cast object of type {o.GetType()} to {typeof (T)}.&quot;)
+            };
+        }
+
+        private static Type GetType(string typeName)
+        {
+            var type = Type.GetType(typeName);
+            if (type == null)
+                throw new ArgumentException($&quot;Unknown type \&quot;{typeName}\&quot;.&quot;, nameof(typeName));
+            return type;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Creates an instance.
+        /// &lt;/summary&gt;
+        internal static object CreateInstanceInternal(Type type, IDictionary&lt;string, string&gt; stringArgs, params object[] paramArgs)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            if (paramArgs == null) throw new ArgumentNullException(nameof(paramArgs));
+#pragma warning restore CA1508
+
+                // fast: use the empty ctor if no args (will throw if it does not exist)
+            if ((stringArgs == null || stringArgs.Count == 0) &amp;&amp; paramArgs.Length == 0)
+                return Activator.CreateInstance(type);
+
+            var ctors = type.GetConstructors(BindingFlags.Instance | BindingFlags.Public)
+                .OrderByDescending(x =&gt; x.GetParameters().Length);
+
+            List&lt;object&gt; args = null;
+            foreach (var ctor in ctors)
+            {
+                var parameters = ctor.GetParameters();
+                if (parameters.Length == 0)
+                    return Activator.CreateInstance(type);
+
+                args ??= new List&lt;object&gt;();
+                args.Clear();
+
+                var match = true;
+                foreach (var parameter in parameters)
+                {
+                    // ReSharper disable once UseMethodIsInstanceOfType
+                    var objectArg = paramArgs.FirstOrDefault(x =&gt; parameter.ParameterType.IsAssignableFrom(x.GetType()));
+                    if (objectArg != null)
+                    {
+                        args.Add(objectArg);
+                        continue;
+                    }
+
+                    if (stringArgs != null &amp;&amp;
+                        stringArgs.TryGetValue(parameter.Name, out var stringArg) &amp;&amp;
+                        ConfigurationBinder.TryConvertValue(parameter.ParameterType, stringArg, &quot;&quot;, out var value, out _))
+                    {
+                        args.Add(value);
+                        continue;
+                    }
+
+                    match = false;
+                    break;
+                }
+
+                if (match)
+                    return ctor.Invoke(args.ToArray());
+            }
+
+            // we know this throw - but then the exceptions are consistent
+            return Activator.CreateInstance(type);
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Creates an instance.
+        /// &lt;/summary&gt;
+        internal static object CreateInstanceInternal(string typeName, IDictionary&lt;string, string&gt; stringArgs, params object[] paramArgs)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+            return CreateInstanceInternal(GetType(typeName), stringArgs, paramArgs);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[52,13,52,35,0],[52,36,52,87,0],[57,17,57,88,0],[59,13,59,32,0],[61,17,61,108,0],[63,9,63,10,0],[81,13,81,30,0],[81,31,81,77,0],[84,13,84,35,0],[84,36,84,87,0],[89,17,89,83,0],[91,13,91,32,0],[93,17,93,118,0],[95,9,95,10,0],[113,13,113,53,0],[113,54,113,131,0],[116,13,116,35,0],[116,36,116,87,0],[121,17,121,87,0],[123,13,123,32,0],[125,17,125,122,0],[127,9,127,10,0],[144,13,144,30,0],[144,31,144,77,0],[147,13,147,35,0],[147,36,147,87,0],[152,17,152,76,0],[154,13,154,32,0],[156,17,156,103,0],[158,9,158,10,0],[175,13,175,53,0],[175,54,175,131,0],[178,13,178,35,0],[178,36,178,87,0],[183,17,183,80,0],[185,13,185,32,0],[187,17,187,107,0],[189,9,189,10,0],[198,13,200,24,0],[200,24,200,25,0],[200,25,201,25,0],[201,25,201,67,0],[201,67,202,22,0],[202,22,202,117,0],[202,117,203,15,0],[208,13,208,47,0],[209,13,209,30,0],[210,17,210,96,0],[211,13,211,25,0],[220,13,220,30,0],[220,31,220,77,0],[223,13,223,35,0],[223,36,223,87,0],[227,13,227,88,0],[228,17,228,55,0],[230,13,231,41,0],[231,41,231,65,0],[231,65,231,67,0],[233,13,233,38,0],[234,22,234,30,0],[234,31,234,33,0],[234,34,234,39,0],[236,17,236,55,0],[237,17,237,44,0],[238,21,238,59,0],[240,17,240,45,0],[241,17,241,30,0],[243,17,243,34,0],[244,26,244,39,0],[244,40,244,42,0],[244,43,244,53,0],[247,21,247,67,0],[247,67,247,120,0],[247,120,247,122,0],[248,21,248,43,0],[250,25,250,45,0],[251,25,251,34,0],[254,21,256,123,0],[258,25,258,41,0],[259,25,259,34,0],[262,21,262,35,0],[263,21,263,27,0],[266,17,266,27,0],[267,21,267,56,0],[271,13,271,51,0],[272,9,272,10,0],[280,13,280,53,0],[280,54,280,131,0],[281,13,281,85,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\NetworkingOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents the networking options.
+    /// &lt;/summary&gt;
+    public class NetworkingOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkingOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public NetworkingOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkingOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private NetworkingOptions(NetworkingOptions other)
+        {
+            Addresses = new List&lt;string&gt;(other.Addresses);
+            ShuffleAddresses = other.ShuffleAddresses;
+            SmartRouting = other.SmartRouting;
+            RedoOperations = other.RedoOperations;
+            ReconnectMode = other.ReconnectMode;
+            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
+
+            Ssl = other.Ssl.Clone();
+            Cloud = other.Cloud.Clone();
+            Socket = other.Socket.Clone();
+            ConnectionRetry = other.ConnectionRetry.Clone();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the default Hazelcast server port.
+        /// &lt;/summary&gt;
+        internal int DefaultPort { get; } = 5701;
+
+        /// &lt;summary&gt;
+        /// Gets the port range to scan.
+        /// &lt;/summary&gt;
+        internal int PortRange { get; } = 3;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the list of initial addresses.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The client uses this list to find a running member and connect
+        /// to it. This initial member will then send the list of other members
+        /// to the client.&lt;/para&gt;
+        /// &lt;para&gt;Each address must be a valid IPv4 or IPv6 address.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IList&lt;string&gt; Addresses { get; } = new List&lt;string&gt;();
+
+        /// &lt;summary&gt;
+        /// Whether to shuffle addresses when attempting to connect to the cluster.
+        /// &lt;/summary&gt;
+        public bool ShuffleAddresses { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Whether smart routing is enabled.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If true (default), client will route the key based operations to owner of
+        /// the key at the best effort.&lt;/para&gt;
+        /// &lt;para&gt;Note that it however does not guarantee that the operation will always be
+        /// executed on the owner, as the member table is only updated every 10 seconds.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool SmartRouting { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Whether to retry operations.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;While sending the requests to related members, operations can fail due to various
+        /// reasons. Read-only operations are retried by default. If you want to enable retry for
+        /// the other operations, set this property to &lt;c&gt;true&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;para&gt;Note that it is not clear whether the operation is performed or not. For idempotent
+        /// operations this is harmless, but for non idempotent ones retrying can cause
+        /// undesirable effects. Also note that the redo can perform on any member.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+
+        public bool RedoOperations { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the &lt;see cref=&quot;ReconnectMode&quot;/&gt; in case the client is disconnected.
+        /// &lt;/summary&gt;
+        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SslOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public SslOptions Ssl { get; } = new SslOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;CloudOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public CloudOptions Cloud { get; } = new CloudOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SocketOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public SocketOptions Socket { get; } = new SocketOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the connection &lt;see cref=&quot;ConnectionRetryOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Specifies the Hazelcast client connection parameters, including the timeout, i.e. the maximum
+        /// amount of time that the Hazelcast client can spend trying to establish a connection to the cluster
+        /// before failing. See &lt;see cref=&quot;SocketOptions&quot;/&gt; for specifying the individual socket parameters,
+        /// including the individual socket connection timeout.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
+
+        /// &lt;summary&gt;
+        /// Gets or sets the connection timeout.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This timeout is used in various places. It is the connection timeout for each individual
+        /// socket. It is also the timeout for cloud discovery.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal NetworkingOptions Clone() =&gt; new NetworkingOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,35,0],[29,11,29,12,0],[34,9,34,59,0],[36,13,36,59,0],[37,13,37,55,0],[38,13,38,47,0],[39,13,39,51,0],[40,13,40,49,0],[41,13,41,81,0],[43,13,43,37,0],[44,13,44,41,0],[45,13,45,43,0],[46,13,46,61,0],[47,9,47,10,0],[52,36,52,40,0],[52,45,52,49,0],[52,45,52,49,0],[57,34,57,38,0],[57,43,57,44,0],[57,43,57,44,0],[68,42,68,46,0],[68,51,68,69,0],[68,51,68,69,0],[73,40,73,44,0],[73,45,73,49,0],[73,54,73,58,0],[73,54,73,58,0],[84,36,84,40,0],[84,41,84,45,0],[84,50,84,54,0],[84,50,84,54,0],[98,38,98,42,0],[98,43,98,47,0],[98,52,98,56,0],[98,52,98,56,0],[103,46,103,50,0],[103,51,103,55,0],[108,33,108,37,0],[108,42,108,58,0],[108,42,108,58,0],[113,37,113,41,0],[113,46,113,64,0],[113,46,113,64,0],[118,39,118,43,0],[118,48,118,67,0],[118,48,118,67,0],[129,57,129,61,0],[129,66,129,94,0],[129,66,129,94,0],[138,52,138,56,0],[138,57,138,61,0],[138,66,138,71,0],[138,66,138,71,0],[143,47,143,74,0]]);
+    </script>
+  </body>
+</html>

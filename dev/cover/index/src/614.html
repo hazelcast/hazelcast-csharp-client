@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\NumericExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the numeric value type (&lt;see cref=&quot;long&quot;/&gt;, &lt;see cref=&quot;int&quot;/&gt;...).
+    /// &lt;/summary&gt;
+    internal static class NumericExtensions
+    {
+        /// &lt;summary&gt;
+        /// Converts this value to an equivalent &lt;see cref=&quot;int&quot;/&gt; clamped value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;This value.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;int&quot;/&gt; clamped value equivalent to this &lt;paramref name=&quot;value&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Contrary to &lt;see cref=&quot;Convert.ToInt32(long)&quot;/&gt; which throws if the value is outside
+        /// the &lt;see cref=&quot;int&quot;/&gt; min-max values, this method clamps the returned value with those min-max
+        /// values.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static int ClampToInt32(this long value)
+        {
+#if NETSTANDARD2_0
+            if (value &gt; int.MaxValue) return int.MaxValue;
+            if (value &lt; int.MinValue) return int.MinValue;
+            return (int) value;
+#else
+            return (int) Math.Clamp(value, int.MinValue, int.MaxValue);
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[41,13,41,72,0]]);
+    </script>
+  </body>
+</html>

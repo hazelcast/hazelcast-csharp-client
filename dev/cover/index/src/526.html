@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEventHandlerBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Models;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Handles map events.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TSender&quot;&gt;The type of the sender.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TArgs&quot;&gt;The actual type of the arguments.&lt;/typeparam&gt;
+    internal abstract class MapEventHandlerBase&lt;TKey, TValue, TSender, TArgs&gt; : IMapEventHandler&lt;TKey, TValue, TSender&gt;
+    {
+        private readonly Func&lt;TSender, TArgs, ValueTask&gt; _handler;
+
+        protected MapEventHandlerBase(MapEventTypes eventType, Func&lt;TSender, TArgs, ValueTask&gt; handler)
+        {
+            EventType = eventType;
+            _handler = handler;
+        }
+
+        public MapEventTypes EventType { get; }
+
+        public ValueTask HandleAsync(TSender sender, MemberInfo member, int numberOfAffectedEntries, object state)
+            =&gt; _handler(sender, CreateEventArgs(member, numberOfAffectedEntries, state));
+
+        protected abstract TArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries, object state);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,104,0],[34,13,34,35,0],[35,13,35,32,0],[36,9,36,10,0],[38,42,38,46,0],[41,16,41,89,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\AsyncQueue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides a lightweight asynchronous queue for multiple providers,
+    /// and one single sequential consumer.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
+    internal sealed class AsyncQueue&lt;T&gt; : IAsyncEnumerable&lt;T&gt;
+    {
+        private readonly ConcurrentQueue&lt;T&gt; _items = new ConcurrentQueue&lt;T&gt;();
+        private readonly object _lock = new object();
+        private TaskCompletionSource&lt;bool&gt; _waiting;
+        private CancellationTokenRegistration _reg;
+        private T _current;
+        private bool _completed;
+
+        /// &lt;summary&gt;
+        /// Drains the queue.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Removes all the items that are in the queue (while blocking writes)
+        /// and have not yet been waited for with &lt;see cref=&quot;WaitAsync&quot;/&gt;. If an item
+        /// has been waited for, but not yet retrieved with &lt;see cref=&quot;Read&quot;/&gt;, it is
+        /// not drained.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public void Drain()
+        {
+            lock (_lock)
+            {
+                while (_items.TryDequeue(out _))
+                { }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to write an item to the queue.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;item&quot;&gt;The item.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the item was written; otherwise (the queue is complete) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool TryWrite(T item)
+        {
+            TaskCompletionSource&lt;bool&gt; waiting = null;
+
+            lock (_lock)
+            {
+                if (_completed) return false;
+
+                if (_waiting == null)
+                {
+                    _items.Enqueue(item);
+                }
+                else
+                {
+                    _current = item;
+                    waiting = _waiting;
+                    _waiting = null;
+                    _reg.Dispose();
+                }
+            }
+
+            waiting?.TrySetResult(true);
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Completes the queue.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The queue keeps providing its items for reading, but it is not possible to write items anymore.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public void Complete()
+        {
+            TaskCompletionSource&lt;bool&gt; waiting;
+
+            lock (_lock)
+            {
+                _completed = true;
+                waiting = _waiting;
+                _waiting = null;
+                _reg.Dispose();
+            }
+
+            waiting?.TrySetResult(false);
+        }
+
+        // there is going to be only 1 reader pumping items out and processing them
+        // sequentially, so if we enter this method and the queue is empty and we
+        // return a task, we are not going to enter this method again until that task
+        // has completed - in other words, there can only be one _waiting at a time
+
+        /// &lt;summary&gt;
+        /// Waits for an item to become available.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if an item is available; otherwise (the queue is complete) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public ValueTask&lt;bool&gt; WaitAsync(CancellationToken cancellationToken = default)
+        {
+            if (_items.TryDequeue(out _current))
+                return new ValueTask&lt;bool&gt;(true);
+
+            lock (_lock)
+            {
+                if (_items.TryDequeue(out _current))
+                    return new ValueTask&lt;bool&gt;(true);
+
+                if (_completed)
+                    return new ValueTask&lt;bool&gt;(false);
+
+                _waiting = new TaskCompletionSource&lt;bool&gt;();
+                _reg = cancellationToken.Register(() =&gt; _waiting.TrySetCanceled());
+                return new ValueTask&lt;bool&gt;(_waiting.Task);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads the available item.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The available item, or &lt;c&gt;default(T)&lt;/c&gt; if no item is available.&lt;/returns&gt;
+        public T Read()
+        {
+            return _current;
+        }
+
+        // ---- IAsyncEnumerable ----
+
+        /// &lt;inheritdoc /&gt;
+        public IAsyncEnumerator&lt;T&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
+            =&gt; new AsyncEnumerator(this, cancellationToken);
+
+        // ---- IAsyncEnumerator ----
+
+        private class AsyncEnumerator : IAsyncEnumerator&lt;T&gt;
+        {
+            private readonly AsyncQueue&lt;T&gt; _queue;
+            private readonly CancellationToken _cancellationToken;
+
+            public AsyncEnumerator(AsyncQueue&lt;T&gt; queue, CancellationToken cancellationToken)
+            {
+                _queue = queue;
+                _cancellationToken = cancellationToken;
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public ValueTask&lt;bool&gt; MoveNextAsync() =&gt; _queue.WaitAsync(_cancellationToken);
+
+            /// &lt;inheritdoc /&gt;
+            public T Current =&gt; _queue._current;
+
+            /// &lt;inheritdoc /&gt;
+            public ValueTask DisposeAsync() =&gt; default;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,79,0],[30,9,30,54,0],[47,13,47,25,0],[49,17,49,49,0],[51,13,51,14,0],[52,9,52,10,0],[61,13,61,55,0],[63,13,63,25,0],[65,17,65,32,0],[65,33,65,46,0],[67,17,67,38,0],[69,21,69,42,0],[73,21,73,37,0],[74,21,74,40,0],[75,21,75,37,0],[76,21,76,36,0],[78,13,78,14,0],[80,13,80,41,0],[81,13,81,25,0],[82,9,82,10,0],[94,13,94,25,0],[96,17,96,35,0],[97,17,97,36,0],[98,17,98,33,0],[99,17,99,32,0],[100,13,100,14,0],[102,13,102,42,0],[103,9,103,10,0],[117,13,117,49,0],[118,17,118,50,0],[120,13,120,25,0],[122,17,122,53,0],[123,21,123,54,0],[125,17,125,32,0],[126,21,126,55,0],[128,17,128,61,0],[129,17,129,57,0],[129,57,129,82,0],[129,82,129,84,0],[130,17,130,59,0],[132,9,132,10,0],[140,13,140,29,0],[147,16,147,60,0],[156,13,156,93,0],[158,17,158,32,0],[159,17,159,56,0],[160,13,160,14,0],[163,55,163,91,0],[166,33,166,48,0],[169,48,169,55,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\CollectionItemEventHandler.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Models;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represents a handler for the &lt;see cref=&quot;CollectionItemEventTypes.Message&quot;/&gt; event.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;T&quot;&gt;The topic object type.&lt;/typeparam&gt;
+    internal class CollectionItemEventHandler&lt;T&gt; : ICollectionItemEventHandler&lt;T&gt;
+    {
+        private readonly Func&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;, ValueTask&gt; _handler;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CollectionItemEventHandler{T}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;eventType&quot;&gt;The event type to handle.&lt;/param&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;An action to execute&lt;/param&gt;
+        public CollectionItemEventHandler(CollectionItemEventTypes eventType, Func&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;, ValueTask&gt; handler)
+        {
+            EventType = eventType;
+            _handler = handler;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public CollectionItemEventTypes EventType { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public ValueTask HandleAsync(IHCollection&lt;T&gt; sender, MemberInfo member, Lazy&lt;T&gt; item, object state)
+            =&gt; _handler(sender, CreateEventArgs(member, item, state));
+
+        /// &lt;summary&gt;
+        /// Creates event arguments.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
+        /// &lt;param name=&quot;item&quot;&gt;The item.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        /// &lt;returns&gt;Event arguments.&lt;/returns&gt;
+        private static CollectionItemEventArgs&lt;T&gt; CreateEventArgs(MemberInfo member, Lazy&lt;T&gt; item, object state)
+            =&gt; new CollectionItemEventArgs&lt;T&gt;(member, item, state);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,148,0],[36,13,36,35,0],[37,13,37,32,0],[38,9,38,10,0],[41,53,41,57,0],[45,16,45,70,0],[55,16,55,67,0]]);
+    </script>
+  </body>
+</html>

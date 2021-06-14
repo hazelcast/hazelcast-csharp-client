@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultPortableReader.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    internal class DefaultPortableReader : IPortableReader
+    {
+        private const char NestedFieldPattern = &#39;.&#39;;
+
+        private readonly int _finalPosition;
+        private readonly ObjectDataInput _in;
+        private readonly int _offset;
+
+        protected readonly IClassDefinition Cd;
+        private readonly PortableSerializer Serializer;
+        private bool _raw;
+
+        public DefaultPortableReader(PortableSerializer serializer, ObjectDataInput @in, IClassDefinition cd)
+        {
+            _in = @in;
+            Serializer = serializer;
+            Cd = cd;
+            int fieldCount;
+            try
+            {
+                // final position after portable is read
+                _finalPosition = @in.ReadInt();
+                // field count
+                fieldCount = @in.ReadInt();
+            }
+            catch (IOException e)
+            {
+                throw new SerializationException(e);
+            }
+            if (fieldCount != cd.GetFieldCount())
+            {
+                throw new InvalidOperationException(&quot;Field count[&quot; + fieldCount + &quot;] in stream does not match &quot; + cd);
+            }
+            _offset = @in.Position;
+        }
+
+        public virtual int Version =&gt; Cd.Version;
+
+        public virtual bool HasField(string fieldName)
+        {
+            return Cd.HasField(fieldName);
+        }
+
+        public virtual ICollection&lt;string&gt; GetFieldNames()
+        {
+            return Cd.GetFieldNames();
+        }
+
+        public virtual FieldType GetFieldType(string fieldName)
+        {
+            return Cd.GetFieldType(fieldName);
+        }
+
+        public virtual int GetFieldClassId(string fieldName)
+        {
+            return Cd.GetFieldClassId(fieldName);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual int ReadInt(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Int);
+            return _in.ReadInt(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual long ReadLong(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Long);
+            return _in.ReadLong(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual string ReadString(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.Utf);
+                _in.Position = pos;
+                return _in.ReadString();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual bool ReadBoolean(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Boolean);
+            return _in.ReadBoolean(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual byte ReadByte(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Byte);
+            return _in.ReadByte(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual char ReadChar(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Char);
+            return _in.ReadChar(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual double ReadDouble(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Double);
+            return _in.ReadDouble(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual float ReadFloat(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Float);
+            return _in.ReadFloat(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual short ReadShort(string fieldName)
+        {
+            var pos = ReadPosition(fieldName, FieldType.Short);
+            return _in.ReadShort(pos);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual bool[] ReadBooleanArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.BooleanArray);
+                _in.Position = pos;
+                return _in.ReadBooleanArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual byte[] ReadByteArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.ByteArray);
+                _in.Position = pos;
+                return _in.ReadByteArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual char[] ReadCharArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.CharArray);
+                _in.Position = pos;
+                return _in.ReadCharArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual int[] ReadIntArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.IntArray);
+                _in.Position = pos;
+                return _in.ReadIntArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual long[] ReadLongArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.LongArray);
+                _in.Position = pos;
+                return _in.ReadLongArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual double[] ReadDoubleArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.DoubleArray);
+                _in.Position = pos;
+                return _in.ReadDoubleArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual float[] ReadFloatArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.FloatArray);
+                _in.Position = pos;
+                return _in.ReadFloatArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual short[] ReadShortArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.ShortArray);
+                _in.Position = pos;
+                return _in.ReadShortArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual string[] ReadStringArray(string fieldName)
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var pos = ReadPosition(fieldName, FieldType.UtfArray);
+                _in.Position = pos;
+                return _in.ReadStringArray();
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual TPortable ReadPortable&lt;TPortable&gt;(string fieldName) where TPortable : IPortable
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var fd = Cd.GetField(fieldName);
+                if (fd == null)
+                {
+                    throw ThrowUnknownFieldException(fieldName);
+                }
+                if (fd.FieldType != FieldType.Portable)
+                {
+                    throw new SerializationException(&quot;Not a Portable field: &quot; + fieldName);
+                }
+                var pos = ReadPosition(fd);
+                _in.Position = pos;
+                var isNull = _in.ReadBoolean();
+                var factoryId = _in.ReadInt();
+                var classId = _in.ReadInt();
+                CheckFactoryAndClass(fd, factoryId, classId);
+                if (!isNull)
+                {
+                    return (TPortable) Serializer.Read(_in, factoryId, classId);
+                }
+                return default;
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual TPortable[] ReadPortableArray&lt;TPortable&gt;(string fieldName) where TPortable : IPortable
+        {
+            var currentPos = _in.Position;
+            try
+            {
+                var fd = Cd.GetField(fieldName);
+                if (fd == null)
+                {
+                    throw ThrowUnknownFieldException(fieldName);
+                }
+                if (fd.FieldType != FieldType.PortableArray)
+                {
+                    throw new SerializationException(&quot;Not a Portable array field: &quot; + fieldName);
+                }
+                var pos = ReadPosition(fd);
+                _in.Position = pos;
+                var len = _in.ReadInt();
+                var factoryId = _in.ReadInt();
+                var classId = _in.ReadInt();
+
+                if (len == BytesExtensions.SizeOfNullArray) return null;
+
+                CheckFactoryAndClass(fd, factoryId, classId);
+                var portables = new TPortable[len];
+                if (len &gt; 0)
+                {
+                    var offset = _in.Position;
+                    for (var i = 0; i &lt; len; i++)
+                    {
+                        var start = _in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
+                        _in.Position = start;
+                        portables[i] = (TPortable) Serializer.Read(_in, factoryId, classId);
+                    }
+                }
+                return portables;
+            }
+            finally
+            {
+                _in.Position = currentPos;
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        public virtual IObjectDataInput GetRawDataInput()
+        {
+            if (!_raw)
+            {
+                var pos = _in.ReadInt(_offset + Cd.GetFieldCount()* BytesExtensions.SizeOfInt);
+                _in.Position = pos;
+            }
+            _raw = true;
+            return _in;
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        internal void End()
+        {
+            _in.Position = _finalPosition;
+        }
+
+        private static void CheckFactoryAndClass(IFieldDefinition fd, int factoryId, int classId)
+        {
+            if (factoryId != fd.FactoryId)
+            {
+                throw new ArgumentException(&quot;Invalid factoryId! Expected: &quot; + fd.FactoryId + &quot;, Current: &quot; +
+                                            factoryId);
+            }
+            if (classId != fd.ClassId)
+            {
+                throw new ArgumentException(&quot;Invalid classId! Expected: &quot; + fd.ClassId + &quot;, Current: &quot; + classId);
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        private int ReadNestedPosition(string fieldName, FieldType type)
+        {
+            var fieldNames = fieldName.Split(NestedFieldPattern);
+            if (fieldNames.Length &gt; 1)
+            {
+                IFieldDefinition fd = null;
+                var reader = this;
+                for (var i = 0; i &lt; fieldNames.Length; i++)
+                {
+                    fd = reader.Cd.GetField(fieldNames[i]);
+                    if (fd == null)
+                    {
+                        break;
+                    }
+                    if (i == fieldNames.Length - 1)
+                    {
+                        break;
+                    }
+                    var pos = reader.ReadPosition(fd);
+                    _in.Position = pos;
+                    var isNull = _in.ReadBoolean();
+                    if (isNull)
+                    {
+                        throw new ArgumentNullException(&quot;Parent field is null: &quot; + fieldNames[i]);
+                    }
+                    reader = Serializer.CreateReader(_in);
+                }
+                if (fd == null)
+                {
+                    throw ThrowUnknownFieldException(fieldName);
+                }
+                if (fd.FieldType != type)
+                {
+                    throw new SerializationException(&quot;Not a &#39;&quot; + type + &quot;&#39; field: &quot; + fieldName);
+                }
+                return reader.ReadPosition(fd);
+            }
+            throw ThrowUnknownFieldException(fieldName);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        private int ReadPosition(string fieldName, FieldType type)
+        {
+            if (_raw)
+            {
+                throw new SerializationException(
+                    &quot;Cannot read Portable fields after getRawDataInput() is called!&quot;);
+            }
+            var fd = Cd.GetField(fieldName);
+            if (fd == null)
+            {
+                return ReadNestedPosition(fieldName, type);
+            }
+            if (fd.FieldType != type)
+            {
+                throw new SerializationException(&quot;Not a &#39;&quot; + type + &quot;&#39; field: &quot; + fieldName);
+            }
+            return ReadPosition(fd);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        private int ReadPosition(IFieldDefinition fd)
+        {
+            var pos = _in.ReadInt(_offset + fd.Index* BytesExtensions.SizeOfInt);
+            var len = _in.ReadShort(pos);
+            // name + len + type
+            return pos + BytesExtensions.SizeOfShort + len + 1;
+        }
+
+        private SerializationException ThrowUnknownFieldException(string fieldName)
+        {
+            return
+                new SerializationException(&quot;Unknown field name: &#39;&quot; + fieldName + &quot;&#39; for ClassDefinition {id: &quot; +
+                                                    Cd.ClassId + &quot;, version: &quot; + Cd.Version + &quot;}&quot;);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,110,0],[36,13,36,23,0],[37,13,37,37,0],[38,13,38,21,0],[43,17,43,48,0],[45,17,45,44,0],[46,13,46,14,0],[49,17,49,53,0],[51,13,51,50,0],[53,17,53,119,0],[55,13,55,36,0],[56,9,56,10,0],[58,39,58,49,0],[62,13,62,43,0],[67,13,67,39,0],[72,13,72,47,0],[77,13,77,50,0],[83,13,83,62,0],[84,13,84,37,0],[90,13,90,63,0],[91,13,91,38,0],[97,13,97,43,0],[100,17,100,66,0],[101,17,101,36,0],[102,17,102,41,0],[106,17,106,43,0],[107,13,107,14,0],[108,9,108,10,0],[113,13,113,66,0],[114,13,114,41,0],[120,13,120,63,0],[121,13,121,38,0],[127,13,127,63,0],[128,13,128,38,0],[134,13,134,65,0],[135,13,135,40,0],[141,13,141,64,0],[142,13,142,39,0],[148,13,148,64,0],[149,13,149,39,0],[155,13,155,43,0],[158,17,158,75,0],[159,17,159,36,0],[160,17,160,47,0],[164,17,164,43,0],[165,13,165,14,0],[166,9,166,10,0],[171,13,171,43,0],[174,17,174,72,0],[175,17,175,36,0],[176,17,176,44,0],[180,17,180,43,0],[181,13,181,14,0],[182,9,182,10,0],[187,13,187,43,0],[190,17,190,72,0],[191,17,191,36,0],[192,17,192,44,0],[196,17,196,43,0],[197,13,197,14,0],[198,9,198,10,0],[203,13,203,43,0],[206,17,206,71,0],[207,17,207,36,0],[208,17,208,43,0],[212,17,212,43,0],[213,13,213,14,0],[214,9,214,10,0],[219,13,219,43,0],[222,17,222,72,0],[223,17,223,36,0],[224,17,224,44,0],[228,17,228,43,0],[229,13,229,14,0],[230,9,230,10,0],[235,13,235,43,0],[238,17,238,74,0],[239,17,239,36,0],[240,17,240,46,0],[244,17,244,43,0],[245,13,245,14,0],[246,9,246,10,0],[251,13,251,43,0],[254,17,254,73,0],[255,17,255,36,0],[256,17,256,45,0],[260,17,260,43,0],[261,13,261,14,0],[262,9,262,10,0],[267,13,267,43,0],[270,17,270,73,0],[271,17,271,36,0],[272,17,272,45,0],[276,17,276,43,0],[277,13,277,14,0],[278,9,278,10,0],[283,13,283,43,0],[286,17,286,71,0],[287,17,287,36,0],[288,17,288,46,0],[292,17,292,43,0],[293,13,293,14,0],[294,9,294,10,0],[299,13,299,43,0],[302,17,302,49,0],[303,17,303,32,0],[305,21,305,65,0],[307,17,307,56,0],[309,21,309,92,0],[311,17,311,44,0],[312,17,312,36,0],[313,17,313,48,0],[314,17,314,47,0],[315,17,315,45,0],[316,17,316,62,0],[317,17,317,29,0],[319,21,319,81,0],[321,17,321,32,0],[325,17,325,43,0],[326,13,326,14,0],[327,9,327,10,0],[332,13,332,43,0],[335,17,335,49,0],[336,17,336,32,0],[338,21,338,65,0],[340,17,340,61,0],[342,21,342,98,0],[344,17,344,44,0],[345,17,345,36,0],[346,17,346,41,0],[347,17,347,47,0],[348,17,348,45,0],[350,17,350,60,0],[350,61,350,73,0],[352,17,352,62,0],[353,17,353,52,0],[354,17,354,29,0],[356,21,356,47,0],[357,26,357,35,0],[357,37,357,44,0],[357,46,357,49,0],[359,25,359,88,0],[360,25,360,46,0],[361,25,361,93,0],[364,17,364,34,0],[368,17,368,43,0],[369,13,369,14,0],[370,9,370,10,0],[375,13,375,23,0],[377,17,377,96,0],[378,17,378,36,0],[380,13,380,25,0],[381,13,381,24,0],[387,13,387,43,0],[388,9,388,10,0],[392,13,392,43,0],[394,17,395,56,0],[397,13,397,39,0],[399,17,399,115,0],[401,9,401,10,0],[406,13,406,66,0],[407,13,407,39,0],[409,17,409,44,0],[410,17,410,35,0],[411,22,411,31,0],[411,33,411,54,0],[411,56,411,59,0],[413,21,413,60,0],[414,21,414,36,0],[418,21,418,52,0],[422,21,422,55,0],[423,21,423,40,0],[424,21,424,52,0],[425,21,425,32,0],[427,25,427,99,0],[429,21,429,59,0],[431,17,431,32,0],[433,21,433,65,0],[435,17,435,42,0],[437,21,437,98,0],[439,17,439,48,0],[441,13,441,57,0],[447,13,447,22,0],[449,17,450,87,0],[452,13,452,45,0],[453,13,453,28,0],[455,17,455,60,0],[457,13,457,38,0],[459,17,459,94,0],[461,13,461,37,0],[467,13,467,82,0],[468,13,468,42,0],[470,13,470,64,0],[475,13,477,100,0]]);
+    </script>
+  </body>
+</html>

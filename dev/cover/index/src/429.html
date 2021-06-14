@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\CloudDiscovery.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.Net;
+using System.Text;
+using System.Text.RegularExpressions;
+using Hazelcast.Exceptions;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Networking
+{
+    // TODO: better test the web service part
+
+    internal class CloudDiscovery
+    {
+        // internal const string CloudUrlBaseProperty = &quot;hazelcast.client.cloud.url&quot;;
+        // internal const string CloudUrlBase = &quot;https://coordinator.hazelcast.cloud&quot;;
+        private const string CloudUrlPath = &quot;/cluster/discovery?token=&quot;;
+        private const string RegexErrorStr = &quot;(?&lt;=message\&quot;:\&quot;).*?(?=\&quot;)&quot;;
+        private const string RegexPrivateStr = &quot;(?&lt;=private-address\&quot;:\&quot;).*?(?=\&quot;)&quot;;
+        private const string RegexPublicStr = &quot;(?&lt;=public-address\&quot;:\&quot;).*?(?=\&quot;)&quot;;
+
+        private readonly ILogger _logger;
+        private readonly Uri _endpointUrl;
+        private readonly int _connectionTimeoutMilliseconds;
+        private readonly int _defaultPort;
+        private static string _response;
+
+        internal CloudDiscovery(string discoveryToken, int connectionTimeoutMilliseconds, Uri cloudBaseUrl, int defaultPort, ILoggerFactory loggerFactory)
+        {
+            if (string.IsNullOrWhiteSpace(discoveryToken)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(discoveryToken));
+            if (cloudBaseUrl == null) throw new ArgumentNullException(nameof(cloudBaseUrl));
+
+            _defaultPort = defaultPort;
+            _endpointUrl = new Uri(cloudBaseUrl, CloudUrlPath + discoveryToken);
+            _connectionTimeoutMilliseconds = connectionTimeoutMilliseconds;
+            _logger = loggerFactory?.CreateLogger&lt;CloudDiscovery&gt;() ?? throw new ArgumentNullException(nameof(loggerFactory));
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Sets the constant response for tests.
+        /// &lt;/summary&gt;
+        internal static void SetResponse(string response)
+        {
+            _response = response;
+        }
+
+
+        [ExcludeFromCodeCoverage] // not testing the web connection
+        public IDictionary&lt;NetworkAddress, NetworkAddress&gt; Scan()
+        {
+            if (!string.IsNullOrWhiteSpace(_response)) return ParseResponse(_response);
+
+            try
+            {
+                // TODO: is this the best way to do an http request?
+                var httpWebRequest = (HttpWebRequest) WebRequest.Create(_endpointUrl);
+                httpWebRequest.Method = WebRequestMethods.Http.Get;
+                httpWebRequest.Timeout = _connectionTimeoutMilliseconds;
+                httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;
+                httpWebRequest.Headers.Set(&quot;Accept-Charset&quot;, &quot;UTF-8&quot;);
+                var resp = ReadFromResponse(httpWebRequest.GetResponse());
+                return ParseResponse(resp);
+            }
+            catch (WebException we)
+            {
+                var resp = ReadFromResponse(we.Response);
+                var errorMsg = ParseErrorResponse(resp);
+                _logger.LogWarning($&quot;Hazelcast cloud discovery error: &#39;{errorMsg}&#39;.&quot;);
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, &quot;Hazelcast cloud discovery failed.&quot;);
+            }
+            return null;
+        }
+
+        [ExcludeFromCodeCoverage] // not testing the web connection
+        private static string ReadFromResponse(WebResponse webResponse)
+        {
+            using var responseStream = webResponse.GetResponseStream();
+            using var sr = new StreamReader(responseStream, Encoding.UTF8);
+            return sr.ReadToEnd();
+        }
+
+        private Dictionary&lt;NetworkAddress, NetworkAddress&gt; ParseResponse(string jsonResult)
+        {
+            var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matchesPrivate = regexPrivate.Matches(jsonResult);
+            var matchesPublic = regexPublic.Matches(jsonResult);
+
+            var privateToPublicAddresses = new Dictionary&lt;NetworkAddress, NetworkAddress&gt;();
+            for (var i = 0; i &lt; matchesPrivate.Count; i++)
+            {
+                var privateAddressStr = matchesPrivate[i].Value;
+                var publicAddressStr = matchesPublic[i].Value;
+
+                var publicAddress = NetworkAddress.Parse(publicAddressStr);
+                if (publicAddress.Port == 0)
+                    publicAddress = publicAddress.WithPort(_defaultPort);
+
+                var privateAddress = NetworkAddress.Parse(privateAddressStr);
+                if (privateAddress.Port == 0)
+                    privateAddress = privateAddress.WithPort(publicAddress.Port);
+
+                privateToPublicAddresses.Add(privateAddress, publicAddress);
+            }
+            return privateToPublicAddresses;
+        }
+
+        [ExcludeFromCodeCoverage] // not testing the web connection
+        private static string ParseErrorResponse(string jsonResult)
+        {
+            var regexError = new Regex(RegexErrorStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matchesError = regexError.Match(jsonResult);
+            return matchesError.Value;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[44,9,44,155,0],[46,13,46,59,0],[46,60,46,143,0],[47,13,47,38,0],[47,39,47,93,0],[49,13,49,40,0],[50,13,50,81,0],[51,13,51,76,0],[52,13,52,127,0],[53,9,53,10,0],[60,13,60,34,0],[61,9,61,10,0],[103,13,103,108,0],[104,13,104,106,0],[105,13,105,67,0],[106,13,106,65,0],[108,13,108,93,0],[109,18,109,27,0],[109,29,109,53,0],[109,55,109,58,0],[111,17,111,65,0],[112,17,112,63,0],[114,17,114,76,0],[115,17,115,45,0],[116,21,116,74,0],[118,17,118,78,0],[119,17,119,46,0],[120,21,120,82,0],[122,17,122,77,0],[124,13,124,45,0]]);
+    </script>
+  </body>
+</html>

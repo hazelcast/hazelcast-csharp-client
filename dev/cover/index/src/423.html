@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\PartitionTable.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+
+namespace Hazelcast.Partitioning
+{
+    /// &lt;summary&gt;
+    /// Represents a cluster partition table.
+    /// &lt;/summary&gt;
+    internal class PartitionTable
+    {
+        private readonly Dictionary&lt;int, Guid&gt; _partitionsMap;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;PartitionTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;originClientId&quot;&gt;The unique identifier of the client that originated the table.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the partition table.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionsMap&quot;&gt;A map of partition identifiers to cluster member identifiers.&lt;/param&gt;
+        public PartitionTable(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
+        {
+            OriginClientId = originClientId;
+            Version = version;
+            _partitionsMap = partitionsMap;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the identifier of the client that originated the table.
+        /// &lt;/summary&gt;
+        public Guid OriginClientId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the version of the partition table.
+        /// &lt;/summary&gt;
+        public int Version { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the number of partitions in the table.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _partitionsMap.Count;
+
+        /// &lt;summary&gt;
+        /// Maps a partition to the corresponding cluster member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
+        /// &lt;returns&gt;The identifier of the cluster member corresponding to the partition, or an
+        /// empty Guid if no cluster member corresponds to the partition.&lt;/returns&gt;
+        public Guid MapPartitionId(int partitionId)
+            =&gt; _partitionsMap.TryGetValue(partitionId, out var memberId) ? memberId : default;
+
+        /// &lt;summary&gt;
+        /// Determines whether this partition table is superseded by a new table.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;originClientId&quot;&gt;The identifier of the client that originated the new partition table.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the new partition table.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionsMap&quot;&gt;A new map of partition identifiers to cluster member identifiers.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public bool IsSupersededBy(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
+            =&gt; partitionsMap.Count &gt; 0 &amp;&amp; (originClientId != OriginClientId || version &gt; Version);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,101,0],[35,13,35,45,0],[36,13,36,31,0],[37,13,37,44,0],[38,9,38,10,0],[43,38,43,42,0],[48,30,48,34,0],[53,29,53,49,0],[62,16,62,94,0],[72,16,72,98,0]]);
+    </script>
+  </body>
+</html>

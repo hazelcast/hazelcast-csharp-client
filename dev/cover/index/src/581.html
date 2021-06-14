@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.Protocol.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Core
+{
+    internal static partial class BytesExtensions // Protocol
+    {
+        // use little endian where it makes sense
+        // for some types (byte, bool...) it just does not make sense
+        // for some types (guid...) endianness is just not an option
+
+        public static void WriteLongL(this byte[] bytes, int position, long value)
+            =&gt; bytes.WriteLong(position, value, Endianness.LittleEndian);
+
+        public static void WriteIntL(this byte[] bytes, int position, int value)
+            =&gt; bytes.WriteInt(position, value, Endianness.LittleEndian);
+
+        public static void WriteIntL(this byte[] bytes, int position, Enum value)
+            =&gt; bytes.WriteInt(position, (int) (object) value, Endianness.LittleEndian);
+
+        public static void WriteBoolL(this byte[] bytes, int position, bool value)
+            =&gt; bytes.WriteBool(position, value);
+
+        public static void WriteGuidL(this byte[] bytes, int position, Guid value)
+            =&gt; bytes.WriteGuid(position, value);
+
+        public static void WriteByteL(this byte[] bytes, int position, byte value)
+            =&gt; bytes.WriteByte(position, value);
+
+        public static long ReadLongL(this byte[] bytes, int position)
+            =&gt; bytes.ReadLong(position, Endianness.LittleEndian);
+
+        public static int ReadIntL(this byte[] bytes, int position)
+            =&gt; bytes.ReadInt(position, Endianness.LittleEndian);
+
+        public static bool ReadBoolL(this byte[] bytes, int position)
+            =&gt; bytes.ReadBool(position);
+
+        public static Guid ReadGuidL(this byte[] bytes, int position)
+            =&gt; bytes.ReadGuid(position);
+
+        public static byte ReadByteL(this byte[] bytes, int position)
+            =&gt; bytes.ReadByte(position);
+
+        private static Guid ReadGuid(this byte[] bytes, int position)
+        {
+            // read the &#39;empty&#39; bool
+            if (bytes.ReadBool(position)) return Guid.Empty;
+
+            // not &#39;empty&#39;, must be able to read a full guid
+            if (bytes.Length &lt; position + SizeOfGuid)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            position += SizeOfByte;
+
+            // ReSharper disable once UseObjectOrCollectionInitializer
+#pragma warning disable IDE0017 // Simplify object initialization
+            var v = new JavaUuidOrder();
+#pragma warning restore IDE0017 // Simplify object initialization
+
+            v.X0 = bytes[position]; position += SizeOfByte;
+            v.X1 = bytes[position]; position += SizeOfByte;
+            v.X2 = bytes[position]; position += SizeOfByte;
+            v.X3 = bytes[position]; position += SizeOfByte;
+
+            v.X4 = bytes[position]; position += SizeOfByte;
+            v.X5 = bytes[position]; position += SizeOfByte;
+            v.X6 = bytes[position]; position += SizeOfByte;
+            v.X7 = bytes[position]; position += SizeOfByte;
+
+            v.X8 = bytes[position]; position += SizeOfByte;
+            v.X9 = bytes[position]; position += SizeOfByte;
+            v.XA = bytes[position]; position += SizeOfByte;
+            v.XB = bytes[position]; position += SizeOfByte;
+
+            v.XC = bytes[position]; position += SizeOfByte;
+            v.XD = bytes[position]; position += SizeOfByte;
+            v.XE = bytes[position]; position += SizeOfByte;
+            v.XF = bytes[position];
+
+            return v.Value;
+        }
+
+        private static void WriteGuid(this byte[] bytes, int position, Guid value)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+
+            // must at least be able to write a bool
+            if (position &lt; 0 || bytes.Length &lt; position + SizeOfBool)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            // write the &#39;empty&#39; bool
+            bytes.WriteBool(position, value == Guid.Empty);
+            if (value == Guid.Empty) return;
+
+            // if not empty, must be able to write the full guid
+            if (bytes.Length &lt; position + SizeOfGuid)
+                throw new ArgumentOutOfRangeException(nameof(position));
+
+            position += SizeOfByte;
+
+            var v = new JavaUuidOrder {Value = value};
+
+            bytes[position] = v.X0;
+            position += SizeOfByte;
+            bytes[position] = v.X1;
+            position += SizeOfByte;
+            bytes[position] = v.X2;
+            position += SizeOfByte;
+            bytes[position] = v.X3;
+            position += SizeOfByte;
+
+            bytes[position] = v.X4;
+            position += SizeOfByte;
+            bytes[position] = v.X5;
+            position += SizeOfByte;
+            bytes[position] = v.X6;
+            position += SizeOfByte;
+            bytes[position] = v.X7;
+            position += SizeOfByte;
+
+            bytes[position] = v.X8;
+            position += SizeOfByte;
+            bytes[position] = v.X9;
+            position += SizeOfByte;
+            bytes[position] = v.XA;
+            position += SizeOfByte;
+            bytes[position] = v.XB;
+            position += SizeOfByte;
+
+            bytes[position] = v.XC;
+            position += SizeOfByte;
+            bytes[position] = v.XD;
+            position += SizeOfByte;
+            bytes[position] = v.XE;
+            position += SizeOfByte;
+            bytes[position] = v.XF;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,16,26,73,0],[29,16,29,72,0],[32,16,32,87,0],[35,16,35,48,0],[38,16,38,48,0],[41,16,41,48,0],[44,16,44,65,0],[47,16,47,64,0],[50,16,50,40,0],[53,16,53,40,0],[56,16,56,40,0],[61,13,61,42,0],[61,43,61,61,0],[64,13,64,54,0],[65,17,65,73,0],[67,13,67,36,0],[71,13,71,41,0],[74,13,74,36,0],[74,37,74,60,0],[75,13,75,36,0],[75,37,75,60,0],[76,13,76,36,0],[76,37,76,60,0],[77,13,77,36,0],[77,37,77,60,0],[79,13,79,36,0],[79,37,79,60,0],[80,13,80,36,0],[80,37,80,60,0],[81,13,81,36,0],[81,37,81,60,0],[82,13,82,36,0],[82,37,82,60,0],[84,13,84,36,0],[84,37,84,60,0],[85,13,85,36,0],[85,37,85,60,0],[86,13,86,36,0],[86,37,86,60,0],[87,13,87,36,0],[87,37,87,60,0],[89,13,89,36,0],[89,37,89,60,0],[90,13,90,36,0],[90,37,90,60,0],[91,13,91,36,0],[91,37,91,60,0],[92,13,92,36,0],[94,13,94,28,0],[99,13,99,31,0],[99,32,99,79,0],[102,13,102,70,0],[103,17,103,73,0],[106,13,106,60,0],[107,13,107,37,0],[107,38,107,45,0],[110,13,110,54,0],[111,17,111,73,0],[113,13,113,36,0],[115,13,115,55,0],[117,13,117,36,0],[118,13,118,36,0],[119,13,119,36,0],[120,13,120,36,0],[121,13,121,36,0],[122,13,122,36,0],[123,13,123,36,0],[124,13,124,36,0],[126,13,126,36,0],[127,13,127,36,0],[128,13,128,36,0],[129,13,129,36,0],[130,13,130,36,0],[131,13,131,36,0],[132,13,132,36,0],[133,13,133,36,0],[135,13,135,36,0],[136,13,136,36,0],[137,13,137,36,0],[138,13,138,36,0],[139,13,139,36,0],[140,13,140,36,0],[141,13,141,36,0],[142,13,142,36,0],[144,13,144,36,0],[145,13,145,36,0],[146,13,146,36,0],[147,13,147,36,0],[148,13,148,36,0],[149,13,149,36,0],[150,13,150,36,0],[151,9,151,10,0]]);
+    </script>
+  </body>
+</html>

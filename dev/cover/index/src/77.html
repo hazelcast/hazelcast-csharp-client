@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ListSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization.DefaultSerializers
+{
+    internal class ListSerializer&lt;T&gt; : SingletonSerializerBase&lt;List&lt;T&gt;&gt;
+    {
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeArrayList;
+
+        public override List&lt;T&gt; Read(IObjectDataInput input)
+        {
+            var size = input.ReadInt();
+            if (size &lt;= BytesExtensions.SizeOfNullArray) return null;
+
+            var list = new List&lt;T&gt;(size);
+            for (var i = 0; i &lt; size; i++)
+            {
+                list.Add(input.ReadObject&lt;T&gt;());
+            }
+            return list;
+        }
+
+        public override void Write(IObjectDataOutput output, List&lt;T&gt; obj)
+        {
+            var size = obj?.Count ?? BytesExtensions.SizeOfNullArray;
+            output.WriteInt(size);
+            foreach (var o in obj)
+            {
+                output.WriteObject(o);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,39,22,86,0],[26,13,26,40,0],[27,13,27,57,0],[27,58,27,70,0],[29,13,29,42,0],[30,18,30,27,0],[30,29,30,37,0],[30,39,30,42,0],[32,17,32,49,0],[34,13,34,25,0],[39,13,39,70,0],[40,13,40,35,0],[41,22,41,27,0],[41,28,41,30,0],[41,31,41,34,0],[43,17,43,39,0],[45,9,45,10,0]]);
+    </script>
+  </body>
+</html>

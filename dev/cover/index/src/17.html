@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Clustering;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+using Hazelcast.Metrics;
+using Hazelcast.NearCaching;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents the Hazelcast client options.
+    /// &lt;/summary&gt;
+    public sealed partial class HazelcastOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public HazelcastOptions()
+        {
+            Subscribers = new List&lt;IHazelcastClientEventSubscriber&gt;();
+            SubscribersBinder = new CollectionBinder&lt;InjectionOptions&gt;(x
+                =&gt; Subscribers.Add(new HazelcastClientEventSubscriber(x.TypeName)));
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private HazelcastOptions(HazelcastOptions other)
+        {
+            ClientName = other.ClientName;
+            ClusterName = other.ClusterName;
+            Subscribers = new List&lt;IHazelcastClientEventSubscriber&gt;(other.Subscribers);
+            Labels = new HashSet&lt;string&gt;(other.Labels);
+            LoggerFactory = other.LoggerFactory.Clone();
+            PatternMatcher = other.PatternMatcher;
+
+            ((IClusterOptions) this).ClientNamePrefix = ((IClusterOptions) other).ClientNamePrefix;
+
+            Core = other.Core.Clone();
+            Heartbeat = other.Heartbeat.Clone();
+            Networking = other.Networking.Clone();
+            Authentication = other.Authentication.Clone();
+            LoadBalancer = other.LoadBalancer.Clone();
+            Serialization = other.Serialization.Clone();
+            Messaging = other.Messaging.Clone();
+            Events = other.Events.Clone();
+            Metrics = other.Metrics.Clone();
+
+            NearCache = other.NearCache.Clone();
+            NearCaches = other.NearCaches.Select(kvp
+                =&gt; new KeyValuePair&lt;string, NearCacheOptions&gt;(kvp.Key, kvp.Value.Clone()))
+                .ToDictionary();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;IServiceProvider&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;In dependency-injection scenario the service provider may be available,
+        /// so that service factories can return injected services. In non-dependency-injection
+        /// scenario, this returns &lt;c&gt;null&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        /// &lt;returns&gt;The service provider.&lt;/returns&gt;
+        public IServiceProvider ServiceProvider { get; internal set; }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;CoreOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The core options.&lt;/returns&gt;
+        [BinderIgnore(false)]
+        internal CoreOptions Core { get; } = new CoreOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the metrics options.
+        /// &lt;/summary&gt;
+        public MetricsOptions Metrics { get; } = new MetricsOptions();
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A deep clone of the options.&lt;/returns&gt;
+        internal HazelcastOptions Clone() =&gt; new HazelcastOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,34,0],[36,13,36,71,0],[37,13,38,20,0],[38,20,38,83,0],[38,83,38,85,0],[39,9,39,10,0],[44,9,44,57,0],[46,13,46,43,0],[47,13,47,45,0],[48,13,48,88,0],[49,13,49,56,0],[50,13,50,57,0],[51,13,51,51,0],[53,13,53,100,0],[55,13,55,39,0],[56,13,56,49,0],[57,13,57,51,0],[58,13,58,59,0],[59,13,59,55,0],[60,13,60,57,0],[61,13,61,49,0],[62,13,62,43,0],[63,13,63,45,0],[65,13,65,49,0],[66,13,68,33,0],[67,20,67,90,0],[69,9,69,10,0],[80,51,80,55,0],[80,56,80,69,0],[87,37,87,41,0],[87,46,87,63,0],[87,46,87,63,0],[92,41,92,45,0],[92,50,92,70,0],[92,50,92,70,0],[98,46,98,72,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\EndpointQualifier.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Models
+{
+    internal class EndpointQualifier : IIdentifiedDataSerializable, IEquatable&lt;EndpointQualifier&gt;
+    {
+        public EndpointQualifier(ProtocolType type, string identifier)
+        {
+            Type = type;
+            Identifier = identifier;
+        }
+
+        public void ReadData(IObjectDataInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
+            Type = (ProtocolType) input.ReadInt();
+            Identifier = input.ReadString();
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
+            output.WriteInt((int) Type);
+            output.WriteString(Identifier);
+        }
+
+        public int FactoryId =&gt; 0; // ClusterDataSerializerHook.F_ID
+
+        public int ClassId =&gt; 17; // ClusterDataSerializerHook.ENDPOINT_QUALIFIER
+
+        public string Identifier { get; private set; }
+
+        public ProtocolType Type { get; private set; }
+
+        public bool Equals(EndpointQualifier other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return
+                Identifier == other.Identifier &amp;&amp;
+                Type == other.Type;
+        }
+
+        public override bool Equals(object obj)
+            =&gt; Equals(obj as EndpointQualifier);
+
+        public static bool operator ==(EndpointQualifier left, EndpointQualifier right)
+            =&gt; left is null ? right is null : left.Equals(right);
+
+        public static bool operator !=(EndpointQualifier left, EndpointQualifier right)
+            =&gt; !(left == right);
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Identifier, (int) Type);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,71,0],[24,13,24,25,0],[25,13,25,37,0],[26,9,26,10,0],[30,13,30,31,0],[30,32,30,79,0],[32,13,32,51,0],[33,13,33,45,0],[34,9,34,10,0],[38,13,38,32,0],[38,33,38,81,0],[40,13,40,41,0],[41,13,41,44,0],[42,9,42,10,0],[44,33,44,34,0],[46,31,46,33,0],[48,36,48,40,0],[48,41,48,53,0],[50,36,50,40,0],[50,41,50,53,0],[54,13,54,31,0],[54,32,54,45,0],[55,13,55,46,0],[55,47,55,59,0],[57,13,59,36,0],[63,16,63,48,0],[66,16,66,65,0],[69,16,69,32,0],[73,13,73,61,0]]);
+    </script>
+  </body>
+</html>

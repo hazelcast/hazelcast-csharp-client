@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastCommandLineConfigurationSource.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast.Configuration
+{
+    /// &lt;summary&gt;
+    /// Represents Hazelcast command line arguments as an &lt;see cref=&quot;IConfigurationSource&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class HazelcastCommandLineConfigurationSource : IConfigurationSource
+    {
+        /*
+        /// &lt;summary&gt;
+        /// Gets or sets the switch mappings.
+        /// &lt;/summary&gt;
+        public IDictionary&lt;string, string&gt; SwitchMappings { get; set; }
+        */
+
+        /// &lt;summary&gt;
+        /// Gets or sets the command line args.
+        /// &lt;/summary&gt;
+        public IEnumerable&lt;string&gt; Args { get; set; }
+
+        /// &lt;inheritdoc /&gt;
+        public IConfigurationProvider Build(IConfigurationBuilder builder)
+        {
+            return new HazelcastCommandLineConfigurationProvider(Args /*, SwitchMappings*/);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,43,35,47,0],[35,48,35,52,0],[40,13,40,93,0]]);
+    </script>
+  </body>
+</html>

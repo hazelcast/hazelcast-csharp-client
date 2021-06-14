@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DictionaryBinder.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
+
+namespace Hazelcast.Core
+{
+    internal class DictionaryBinder : IDictionary&lt;string, string&gt;
+    {
+        private readonly Action&lt;string, string&gt; _onItem;
+
+        public DictionaryBinder(Action&lt;string, string&gt; onItem)
+        {
+            _onItem = onItem;
+        }
+
+        public IEnumerator&lt;KeyValuePair&lt;string, string&gt;&gt; GetEnumerator()
+        {
+            throw new NotSupportedException();
+        }
+
+        // dotCover does not understand that GetEnumerator() throws and does not return
+        [ExcludeFromCodeCoverage]
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(KeyValuePair&lt;string, string&gt; item)
+        {
+            _onItem(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(KeyValuePair&lt;string, string&gt; item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CopyTo(KeyValuePair&lt;string, string&gt;[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(KeyValuePair&lt;string, string&gt; item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public int Count =&gt; throw new NotSupportedException();
+
+        public bool IsReadOnly =&gt; throw new NotSupportedException();
+
+        public void Add(string key, string value)
+        {
+            _onItem(key, value);
+        }
+
+        public bool ContainsKey(string key)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(string key)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool TryGetValue(string key, out string value)
+        {
+            throw new NotSupportedException();
+        }
+
+        public string this[string key]
+        {
+            get =&gt; throw new NotSupportedException();
+            set =&gt; _onItem(key, value);
+        }
+
+        public ICollection&lt;string&gt; Keys =&gt; throw new NotSupportedException();
+
+        public ICollection&lt;string&gt; Values =&gt; throw new NotSupportedException();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,26,63,0],[28,13,28,30,0],[29,9,29,10,0],[33,13,33,47,0],[45,13,45,43,0],[46,9,46,10,0],[50,13,50,47,0],[55,13,55,47,0],[60,13,60,47,0],[65,13,65,47,0],[68,29,68,62,0],[70,35,70,68,0],[74,13,74,33,0],[75,9,75,10,0],[79,13,79,47,0],[84,13,84,47,0],[89,13,89,47,0],[94,20,94,53,0],[95,20,95,39,0],[98,44,98,77,0],[100,46,100,79,0]]);
+    </script>
+  </body>
+</html>

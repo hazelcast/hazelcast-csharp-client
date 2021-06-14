@@ -10,7 +10,7 @@
     <meta name="viewport" content="width=device-width">
     <meta name="title" content="ClientOfflineException Class
    | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.56.6.0">
+    <meta name="generator" content="docfx 2.58.0.0">
     
     <link rel="shortcut icon" href="../../images/favicon.png">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
@@ -161,7 +161,7 @@ public sealed class ClientOfflineException : HazelcastException, ISerializable</
   <h5 id="Hazelcast_Exceptions_ClientOfflineException_remarks"><strong>Remarks</strong></h5>
   <div class="markdown level0 remarks"><p>The <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.State.html#Hazelcast_Exceptions_ClientOfflineException_State">State</a> property provides the <a class="xref" href="Hazelcast.ClientState.html">ClientState</a> of the client
 at the time the exception was thrown. The client may be either not connected at all, in which
-case retrying an operation will not succeed. Or, it may be  temporarily disconnected and trying
+case retrying an operation will not succeed. Or, it may be temporarily disconnected and trying
 to reconnect, in which case retrying an operation may eventually succeed.</p>
 </div>
   </div>
@@ -177,6 +177,14 @@ to reconnect, in which case retrying an operation may eventually succeed.</p>
 </td>
       </tr>
       <tr>
+        <td id="Hazelcast_Exceptions_ClientOfflineException__ctor_System_Exception_" data-uid="Hazelcast.Exceptions.ClientOfflineException.#ctor(System.Exception)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.-ctor.html#Hazelcast_Exceptions_ClientOfflineException__ctor_System_Exception_">ClientOfflineException(Exception)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.html">ClientOfflineException</a> class with a reference to
+the inner exception that is the cause of this exception.</p>
+</td>
+      </tr>
+      <tr>
         <td id="Hazelcast_Exceptions_ClientOfflineException__ctor_System_Exception_Hazelcast_ClientState_" data-uid="Hazelcast.Exceptions.ClientOfflineException.#ctor(System.Exception,Hazelcast.ClientState)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.-ctor.html#Hazelcast_Exceptions_ClientOfflineException__ctor_System_Exception_Hazelcast_ClientState_">ClientOfflineException(Exception, ClientState)</a>
         </td>
@@ -185,10 +193,25 @@ the inner exception that is the cause of this exception.</p>
 </td>
       </tr>
       <tr>
+        <td id="Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_" data-uid="Hazelcast.Exceptions.ClientOfflineException.#ctor(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.-ctor.html#Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_">ClientOfflineException(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.html">ClientOfflineException</a> class with a specified error message.</p>
+</td>
+      </tr>
+      <tr>
         <td id="Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_Hazelcast_ClientState_" data-uid="Hazelcast.Exceptions.ClientOfflineException.#ctor(System.String,Hazelcast.ClientState)" class="hz-one-third">
           <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.-ctor.html#Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_Hazelcast_ClientState_">ClientOfflineException(String, ClientState)</a>
         </td>
         <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.html">ClientOfflineException</a> class with a specified error message.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_System_Exception_" data-uid="Hazelcast.Exceptions.ClientOfflineException.#ctor(System.String,System.Exception)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.-ctor.html#Hazelcast_Exceptions_ClientOfflineException__ctor_System_String_System_Exception_">ClientOfflineException(String, Exception)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Initializes a new instance of the <a class="xref" href="Hazelcast.Exceptions.ClientOfflineException.html">ClientOfflineException</a> class with a specified error message
+and a reference to the inner exception that is the cause of this exception.</p>
 </td>
       </tr>
       <tr>

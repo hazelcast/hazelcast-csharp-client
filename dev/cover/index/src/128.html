@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\PredicateBuilder.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Query
+{
+    /// &lt;summary&gt;
+    /// Builds a predicate.
+    /// &lt;/summary&gt;
+    public class PredicateBuilder
+    {
+        private readonly string _name;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;PredicateBuilder&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name of the target.&lt;/param&gt;
+        internal PredicateBuilder(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
+            _name = name;
+        }
+
+
+
+        /// &lt;summary&gt;
+        /// Negates a predicate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;predicate&quot;&gt;The predicate.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        internal static IPredicate Not(IPredicate predicate)
+            =&gt; new NotPredicate(predicate);
+
+
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is between the specified inclusive bounds.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;lowerBound&quot;&gt;The lower inclusive bound.&lt;/param&gt;
+        /// &lt;param name=&quot;upperBound&quot;&gt;The upper inclusive bound.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsBetween(object lowerBound, object upperBound)
+            =&gt; new BetweenPredicate(_name, lowerBound, upperBound);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is equal to one of the specified values.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;values&quot;&gt;The values.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsIn(params object[] values)
+            =&gt; new InPredicate(_name, values);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is equal to the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsEqualTo(object value)
+            =&gt; new EqualPredicate(_name, value);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is not equal to the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsNotEqualTo(object value)
+            =&gt; new NotEqualPredicate(_name, value);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is less than the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsLessThan(object value)
+            =&gt; new GreaterLessPredicate(_name, value, false, true);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is less than, or equal to, the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsLessThanOrEqualTo(object value)
+            =&gt; new GreaterLessPredicate(_name, value, true, true);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is greater than the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsGreaterThan(object value)
+            =&gt; new GreaterLessPredicate(_name, value, false, false);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is greater than, or equal to, the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsGreaterThanOrEqualTo(object value)
+            =&gt; new GreaterLessPredicate(_name, value, true, false);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified case-insensitive pattern.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;pattern&quot;&gt;The pattern.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is case-insensitive.&lt;/para&gt;
+        /// &lt;para&gt;In the pattern, the % character (percentage sign) is a placeholder for
+        /// multiple characters, and the _ character (underscore) is a placeholder for
+        /// a single character.&lt;/para&gt;
+        /// &lt;para&gt;These two special characters can be escaped with a backslash.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate IsILike(string pattern)
+            =&gt; new CaseInsensitiveLikePredicate(_name, pattern);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified case-sensitive pattern.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;pattern&quot;&gt;The pattern.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is case-sensitive.&lt;/para&gt;
+        /// &lt;para&gt;In the pattern, the % character (percentage sign) is a placeholder for
+        /// multiple characters, and the _ character (underscore) is a placeholder for
+        /// a single character.&lt;/para&gt;
+        /// &lt;para&gt;These two special characters can be escaped with a backslash.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate IsLike(string pattern)
+            =&gt; new LikePredicate(_name, pattern);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified regular expression.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;regex&quot;&gt;The regular expression.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is interpreted exactly in the same way as described in the
+        /// documentation for the Java &lt;c&gt;java.util.regex.Pattern&lt;/c&gt; class.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate Matches(string regex)
+            =&gt; new RegexPredicate(_name, regex);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,9,31,47,0],[33,13,33,49,0],[33,50,33,123,0],[34,13,34,26,0],[35,9,35,10,0],[45,16,45,43,0],[56,16,56,67,0],[64,16,64,46,0],[72,16,72,48,0],[80,16,80,51,0],[88,16,88,67,0],[96,16,96,66,0],[104,16,104,68,0],[112,16,112,67,0],[127,16,127,64,0],[142,16,142,49,0],[154,16,154,48,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\SqlPredicate.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Query
+{
+    /// &lt;summary&gt;
+    ///     SQL Predicate
+    /// &lt;/summary&gt;
+    internal class SqlPredicate : IPredicate, IIdentifiedDataSerializable
+    {
+        private string _sql;
+
+        public SqlPredicate()
+        { }
+
+        public SqlPredicate(string sql)
+        {
+            _sql = sql;
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteString(_sql);
+        }
+
+        public void ReadData(IObjectDataInput input)
+        {
+            _sql = input.ReadString();
+        }
+
+        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
+
+        public int ClassId =&gt; PredicateDataSerializerHook.SqlPredicate;
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is SqlPredicate other &amp;&amp; Equals(this, other);
+        }
+
+        private static bool Equals(SqlPredicate left, SqlPredicate right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+
+            return left._sql == right._sql;
+        }
+
+        public override int GetHashCode()
+        {
+
+            // ReSharper disable NonReadonlyMemberInGetHashCode
+            return _sql != null ? _sql.GetHashCode(StringComparison.Ordinal) : 0;
+            // ReSharper restore NonReadonlyMemberInGetHashCode
+        }
+
+        public override string ToString()
+        {
+            return &quot;SQL(&#39;&quot; + _sql + &quot;&#39;)&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,9,27,30,0],[28,11,28,12,0],[30,9,30,40,0],[32,13,32,24,0],[33,9,33,10,0],[37,13,37,38,0],[38,9,38,10,0],[42,13,42,39,0],[43,9,43,10,0],[45,33,45,62,0],[47,31,47,71,0],[51,13,51,44,0],[51,45,51,57,0],[52,13,52,29,0],[52,30,52,43,0],[53,13,53,69,0],[58,13,58,46,0],[58,47,58,59,0],[59,13,59,47,0],[59,48,59,61,0],[61,13,61,44,0],[68,13,68,82,0],[74,13,74,42,0]]);
+    </script>
+  </body>
+</html>
