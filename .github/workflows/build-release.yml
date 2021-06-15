@@ -33,6 +33,8 @@ jobs:
     name: Analyze
     runs-on: ubuntu-latest
 
+    if: github.repository == 'hazelcast/hazelcast-csharp-client'
+
     outputs:
       todo: ${{ steps.analyze.outputs.todo}}
       version: ${{ steps.analyze.outputs.version}}
