@@ -30,7 +30,7 @@ namespace Hazelcast.Examples.SoakTests
     //
     // or, with arguments:
     //
-    // ./hz.ps1 run-example ~Soak1 --%
+    // ./hz.ps1 run-example ~Soak1 ---
     //   --hazelcast:examples:soak1:ThreadCount=1             (valid integer)
     //   --hazelcast:examples:soak1:Duration="HH:MM:SS"       (valid timespan)
     //   --hazelcast:networking:addresses:0=127.0.0.1:5701

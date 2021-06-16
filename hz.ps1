@@ -259,7 +259,7 @@ $versionSuffix = ""
 if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 
     if (-not ($options.version -match '^(\d+\.\d+\.\d+)(?:\-([a-z0-9\.\-]*))?$')) {
-        Die "Version `"$options.version`" is not a valid SemVer version"
+        Die "Version `"$($options.version)`" is not a valid SemVer version"
     }
 
     $versionPrefix = $Matches.1
