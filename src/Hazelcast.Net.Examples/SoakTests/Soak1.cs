@@ -183,7 +183,7 @@ namespace Hazelcast.Examples.SoakTests
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex.Message);
+                    logger.LogError(ex.GetType().Name + ": " + ex.Message);
                 }
             }
         }
