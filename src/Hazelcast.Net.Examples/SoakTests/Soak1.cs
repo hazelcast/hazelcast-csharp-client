@@ -24,12 +24,36 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.SoakTests
 {
+    // run the soak test with:
+    //
     // ./hz.ps1 run-example ~Soak1 --%
+    //   --hazelcast:examples:soak1:ThreadCount=1             (valid integer)
+    //   --hazelcast:examples:soak1:Duration="HH:MM:SS"       (valid timespan)
+    //   --hazelcast:networking:addresses:0=127.0.0.1:5701
+    //   --hazelcast:networking:addresses:1=127.0.0.1:5702
+    //
+    // alternatively, to run from published examples, run with:
+    //
     // ./hx.exe ~Soak1
     //   --hazelcast:examples:soak1:ThreadCount=1             (valid integer)
     //   --hazelcast:examples:soak1:Duration="HH:MM:SS"       (valid timespan)
     //   --hazelcast:networking:addresses:0=127.0.0.1:5701
     //   --hazelcast:networking:addresses:1=127.0.0.1:5702
+    //
+    // each server must run a 4.2+ server; start a server once by running:
+    //
+    // ./hz.ps1 server -server 4.2
+    //
+    // this will download all the required JARs from the proper repositories, *and*
+    // a default hazelcast-<version>.xml configuration file. stop the server, and
+    // edit the file to add the following xml fragment to the <serialization> element:
+    //
+    //   <data-serializable-factories>
+    //     <data-serializable-factory factory-id="66">com.hazelcast.client.test.IdentifiedFactory</data-serializable-factory>
+    //   </data-serializable-factories>
+    //
+    // restart the server
+
 
     // ReSharper disable once UnusedMember.Global
     public class Soak1
