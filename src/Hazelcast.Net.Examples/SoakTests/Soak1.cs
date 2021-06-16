@@ -51,7 +51,7 @@ namespace Hazelcast.Examples.SoakTests
     //
     // each server must run a 4.2+ server; start a server once by running:
     //
-    // ./hz.ps1 server -server 4.2
+    // ./hz.ps1 run-server -server 4.2
     //
     // this will download all the required JARs from the proper repositories, *and*
     // a default hazelcast-<version>.xml configuration file. stop the server, and
