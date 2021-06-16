@@ -26,11 +26,20 @@ namespace Hazelcast.Examples.SoakTests
 {
     // run the soak test with:
     //
+    // ./hz.ps1 run-example ~Soak1
+    //
+    // or, with arguments:
+    //
     // ./hz.ps1 run-example ~Soak1 --%
     //   --hazelcast:examples:soak1:ThreadCount=1             (valid integer)
     //   --hazelcast:examples:soak1:Duration="HH:MM:SS"       (valid timespan)
     //   --hazelcast:networking:addresses:0=127.0.0.1:5701
     //   --hazelcast:networking:addresses:1=127.0.0.1:5702
+    //
+    // NOTE1: if you do not pass all arguments in one unique line, but use instead multiple lines
+    //  as displayed above, don't forget to terminate each line with the continuation character
+    //  for your shell, which is ` (backtick) for PowerShell or \ (backslash) for bash
+    // NOTE2: the --% thing is a PowerShell thing that is required for proper arguments parsing
     //
     // alternatively, to run from published examples, run with:
     //
@@ -64,7 +73,7 @@ namespace Hazelcast.Examples.SoakTests
         {
             public int ThreadCount { get; set; } = 2;
 
-            public string Duration { get; set; } = null;
+            public string Duration { get; set; } = "1m";
 
             public int EntryCount { get; set; } = 10_000;
         }
