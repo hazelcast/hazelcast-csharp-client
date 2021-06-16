@@ -12,7 +12,11 @@ inputs:
   version:
     description: "The client version."
     required: false
-    default: '0.0.0-preview.0'
+    default: ''
+  sha:
+    description: "The commit SHA."
+    required: false
+    default: ''
   token:
     description: GitHub Access Token
     required: false

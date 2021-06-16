@@ -230,11 +230,6 @@ jobs:
         run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test,cover-to-docs
 
       # report tests results
-      # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
-      # It's not possible to specify under which workflow test report should belong if more
-      # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
-      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
-      # trigger multiple builds on the same SHA
       - name: Report tests results
         uses: dorny/test-reporter@v1
         if: (success() || failure()) && steps.build.conclusion == 'success'
@@ -254,9 +249,10 @@ jobs:
           name: Test Coverage (${{ matrix.os }})
           path: temp/tests/cover
           version: ${{ needs.analyze.outputs.version }}
+          sha: ${{ github.sha }}
 
       # upload test coverage artifact
-      - name: Archive test coverage artifact
+      - name: Upload test coverage artifact
         uses: actions/upload-artifact@v2
         with:
           name: Test-Coverage (${{ matrix.os }})
@@ -268,7 +264,7 @@ jobs:
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
-      - name: Archive NuGet packages artifact
+      - name: Upload NuGet packages artifact
         uses: actions/upload-artifact@v2
         with:
           name: NuGet-Packages (${{ matrix.os }})
@@ -301,7 +297,7 @@ jobs:
           ls ./temp/gh-pages-patches/
 
       # archive docs patch
-      - name: Archive docs patch artifact
+      - name: Upload docs patch artifact
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
@@ -363,6 +359,8 @@ jobs:
         run: |
           mkdir ./temp
           mkdir ./temp/gh-pages-patches
+          mkdir ./temp/tests
+          mkdir ./temp/tests/cover
 
       # download docs patch artifact
       - name: Download docs patch artifact
@@ -371,12 +369,21 @@ jobs:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
 
+      # download test coverage artifact
+      - name: Download test coverage artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Test-Coverage (windows-latest)
+          path: ./temp/tests/cover
+
       # verify downloads
       - name: Verify downloads
         shell: bash
         run: |
           echo "docs patch:"
           ls ./temp/gh-pages-patches
+          echo "test coverage:"
+          ls ./temp/tests/cover
 
       # checkout documentation
       - name: Checkout documentation
@@ -393,7 +400,7 @@ jobs:
           git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
           git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
 
-      # publish documentation
+      # publish 'dev' documentation
       - name: Publish Documentation
         shell: bash
         run: |
@@ -401,6 +408,13 @@ jobs:
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
+
+      # publish to codecov
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secret.CODECOV_TOKEN }}
+          files: ./temp/tests/cover/cover-net5.0.xml
 
 
 

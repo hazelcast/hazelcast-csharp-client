@@ -36,7 +36,7 @@ jobs:
           git init # ensure we have a dummy repo, reporter wants it
 
       # cannot use download action because we get artifacts from another run
-      - name: Download tests results (${{ matrix.os }})
+      - name: Download tests results and coverage artifacts (${{ matrix.os }})
         uses: actions/github-script@v4
         with:
           script: |
@@ -61,6 +61,7 @@ jobs:
             download('Test-Results (${{ matrix.os }})', '/test-results/test-results.zip');
             download('Test-Coverage (${{ matrix.os }})', '/test-coverage/test-coverage.zip');
 
+      # unzip artifacts
       - name: Unzip artifacts
         shell: bash
         run: |
@@ -71,7 +72,8 @@ jobs:
           unzip test-coverage/test-coverage.zip -d test-coverage
           ls ./test-coverage
 
-      - name: Report tests results
+      # report test results
+      - name: Report test results
         uses: dorny/test-reporter@v1
         with:
           name: Test Results (${{ matrix.os }})
@@ -81,9 +83,17 @@ jobs:
           list-tests: failed
           fail-on-error: false
 
-      - name: Report tests coverage
+      # report test coverage
+      - name: Report test coverage
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage (${{ matrix.os }})
           path: ./test-coverage
-          version: none
+          sha: ${{ github.sha }}
+
+      # publish to codecov
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secret.CODECOV_TOKEN }}
+          files: ./test-coverage/cover-net5.0.json

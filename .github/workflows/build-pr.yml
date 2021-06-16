@@ -58,18 +58,6 @@ jobs:
         with:
           dotnet-version: '5.0.x'
 
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework MSBUILD
-      #  if: matrix.os == 'windows-latest'
-      #  uses: microsoft/setup-msbuild@v1.0.2
-      #  with:
-      #    vs-version: '[15.0,16.0)'
-
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework NUGET
-      #  if: matrix.os == 'windows-latest'
-      #  uses: nuget/setup-nuget@v1
-
       # Install Java
       - name: Install JDK
         uses: actions/setup-java@v2
@@ -103,18 +91,20 @@ jobs:
           if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
           ./hz.ps1 @a
 
-      # report
-      # we cannot report here as this workflow isn't allowed to write back
-      # so are just going to upload the test results, which will be used by report-pr
-      - name: Archive test results artifact
+      # test results & coverage: we cannot report here as this workflow doesn't have 
+      # the required permissions nor tokens to write back to our resources (since it runs
+      # on a PR) - so we upload everything as artifacts, and the report-pr workflow will
+      # take care of reporting
+
+      # upload test results artifact
+      - name: Upload test results artifact
         uses: actions/upload-artifact@v2
         with:
           name: Test-Results (${{ matrix.os }})
           path: './temp/tests/results/*.trx'
 
       # upload test coverage artifact
-      # we cannot report either
-      - name: Archive test coverage artifact
+      - name: Upload test coverage artifact
         uses: actions/upload-artifact@v2
         with:
           name: Test-Coverage (${{ matrix.os }})

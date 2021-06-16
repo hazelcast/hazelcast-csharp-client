@@ -72,3 +72,9 @@ NOTES
     name =~ /HazelcastTests/
   will restrict the tests to only 3-4 tests that are sure to pass - BEWARE this is for
   experimenting only, do not ever ever merge this test.filter file!
+
+  from test-reporter README, "Check Runs are created for specific commit SHA. 
+  It's not possible to specify under which workflow test report should belong if more
+  workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
+  your test report will appear in an unexpected place in GitHub UI." -- so, better not
+  trigger multiple builds on the same SHA

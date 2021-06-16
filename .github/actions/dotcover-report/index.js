@@ -47,25 +47,34 @@ async function run() {
     
     try {
         const fpath = process.cwd() + '/' + path;
-        const dirs = await fs.readdir(fpath, { withFileTypes: true});
-        for (const dir of dirs) {
-            if (!dir.isDirectory()) continue;
-            const content = await fs.readFile(`${fpath}/${dir.name}/cover.json`, 'utf-8');
+        const files = await fs.readdir(fpath, { withFileTypes: true});
+        for (const file of files) {
+            if (file.isDirectory() || !file.name.endsWith('.json')) continue;
+
+            const target = file.name.substr('cover-'.length, file.name.length - 'cover-.json'.length);
+
+            const content = await fs.readFile(`${fpath}/${file.name}`, 'utf-8');
             const p = content.indexOf('{'); // trim weirdish leading chars
             const report = JSON.parse(content.substring(p));
-            const target = dir.name.substr('cover-'.length);
             const percent = report.CoveragePercent;
+
             summary += `\n* ${target}: ${percent}%`;
         }
-        
-        var coverVersion = version;
-        if (version.indexOf('-') > 0) {
-            coverVersion = 'dev';
+
+        summary += '\n\nThe detailed code coverage report has been uploaded as an artifact.';
+
+        if (version !== '') {
+            var coverVersion = version;
+            if (version.indexOf('-') > 0) { coverVersion = 'dev'; }
+
+            var docUrl = `http://hazelcast.github.io/hazelcast-csharp-client/${coverVersion}/cover/index.html`;
+            summary += `\n\nThe report for this version has been published as part of the [documentation](${docUrl}).`;
         }
-        
-        var coverUrl = `http://hazelcast.github.io/hazelcast-csharp-client/${coverVersion}/cover/index.html`;
-        summary += '\n\nThe complete code coverage report has been uploaded as an artifact, ';
-        summary += `and the latest report for this version is also [available online](${coverUrl}).`;
+
+        if (sha !== '') {
+            var covUrl = `http://hazelcast.github.io/hazelcast-csharp-client/${coverVersion}/cover/index.html`;
+            summary += `\n\nThe report for this commit has been published on [codecov](${covUrl}).`;
+        }
     }
     catch (error) {
         summary = `Failed: ${error.message}`;
