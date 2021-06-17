@@ -194,6 +194,11 @@ $actions = @(
        desc = "runs an example";
        note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
     },
+    @{
+        name = "publish-examples";
+        desc = "publishes examples";
+        note = "Publishes examples into temp/examples"
+    },
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
@@ -273,7 +278,6 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-# FIXME RENAME THESE
 $hzVersion = $options.server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
@@ -1760,6 +1764,33 @@ function hz-run-example {
     &$hx $options.commargs
 }
 
+# publish examples
+function hz-publish-examples {
+
+        Write-Output ""
+        Write-Output "Publish examples..."
+
+        if (test-path "$tmpDir/examples") {
+            remove-item "$tmpDir/examples" -Force -Recurse
+        }
+
+        mkdir "$tmpDir/examples" >$null 2>&1
+
+        foreach ($framework in $frameworks) {
+            Write-Output ""
+            Write-Output "Publish examples for $framework..."
+            $publishArgs = @(
+                "$srcDir/Hazelcast.Net.Examples",
+                "-c", "$($options.configuration)",
+                "-f", "$framework",
+                "-o", "$tmpDir/examples/examples-$framework",
+                "--no-restore", "--no-build", "--packages", $nugetPackages
+            )
+            dotnet publish $publishArgs
+            compress-archive -path "$tmpDir/examples/examples-$framework/" -destinationPath "$tmpDir/examples/examples-$framework.zip"
+        }
+}
+
 # ########
 # ########
 # ########
@@ -1806,6 +1837,7 @@ if ($do.'build-docs') { need git build-proj docfx }
 if ($do.'publish-docs') { need git }
 if ($do.'serve-docs') { need build-proj docfx }
 if ($do.'generate-codecs') { need git python }
+if ($do.'publish-examples') { need dotnet-complete }
 
 # ensure needs are satisfied
 $needs.Keys | foreach-object {

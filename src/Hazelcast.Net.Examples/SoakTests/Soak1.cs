@@ -54,8 +54,9 @@ namespace Hazelcast.Examples.SoakTests
     // ./hz.ps1 run-server -server 4.2
     //
     // this will download all the required JARs from the proper repositories, *and*
-    // a default hazelcast-<version>.xml configuration file. stop the server, and
-    // edit the file to add the following xml fragment to the <serialization> element:
+    // a default hazelcast-<version>.xml configuration file into the build directory.
+    // stop the server, and edit the build/hazelcast-<version>.xml file to add the
+    // following xml fragment to the <serialization> element:
     //
     //   <data-serializable-factories>
     //     <data-serializable-factory factory-id="66">com.hazelcast.client.test.IdentifiedFactory</data-serializable-factory>
@@ -181,9 +182,10 @@ namespace Hazelcast.Examples.SoakTests
                     map = await client.GetMapAsync<string, string>("soak1").ConfigureAwait(false);
                     break;
                 }
-                catch (Exception e)
+                catch (Exception ex)
                 {
-                    logger.LogError(e.StackTrace);
+                    logger.LogError($"Thread {id} failed to acquire the map ({ex.GetType().Name}: {ex.Message}), abort");
+                    return;
                 }
             }
 
@@ -216,7 +218,7 @@ namespace Hazelcast.Examples.SoakTests
                 }
                 catch (Exception ex)
                 {
-                    logger.LogError(ex.GetType().Name + ": " + ex.Message);
+                    logger.LogError($"Thead {id} caught {ex.GetType().Name}: {ex.Message}");
                 }
             }
         }
