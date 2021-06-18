@@ -15,7 +15,7 @@ fi
 # though I would have a hard time explaining why exactly.
 
 c=()
-for i in "$@"; do c+=("$i"); done
+for i in "$@"; do if [ $i == "---" ]; then c+=("--%"); else c+=("$i"); fi done
 $POWERSHELL ./hz.ps1 "${c[@]}"
 
 #eof

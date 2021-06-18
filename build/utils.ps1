@@ -74,7 +74,7 @@ function Validate-Platform {
 # write usage
 function Write-Usage ( $params, $actions ) {
     Write-Output ""
-    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>] [<commargs>] [--% <rawargs>]"
+    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>] [<commargs>] [--- <rawargs>]"
     Write-Output ""
     Write-Output "  <options>    arguments for commands (see available options below)."
     Write-Output "  <commands>   CSV list of commands (see available commands below) to be executed by the script."
@@ -225,7 +225,7 @@ function Parse-Args ( $argx, $params ) {
     if ($options -is [string]) { return }
     
     $arg = $_
-    
+
     # value of a valid param
     if ($param -ne $null) {
       if (-not ($arg -is $param.type)) {
@@ -242,8 +242,9 @@ function Parse-Args ( $argx, $params ) {
     }
     
     # enter raw block?
-    # must use pwsh's own --% syntax
-    if ($arg -eq "--%") {
+    # when invoking ./hz.ps1 from pwsh, use --- to isolate commargs else we think they are hz.ps1 params
+    # when invoking ./hs.sh from bash, use --- for the same reason, and it's converted to --% (pwsh's own thing)
+    if ($arg -eq "--%" -or $arg -eq "---") {
       $justRaw = $true
       $canBeCommand = $false
       return # continue foreach-object

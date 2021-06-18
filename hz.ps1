@@ -111,13 +111,15 @@ $params = @(
        desc = "build reproducible assemblies" },
     @{ name = "serverConfig";    type = [string];  default = $null;
        parm = "<path>";
-       desc = "the server configuration xml file"
+       desc = "the full path to the server configuration xml file"
     },
     @{ name = "accept-risks";    type = [switch];  default = $false; 
        desc = "accepts risks associated with certain commands";
        note = "Commands such as trigger-release or publish-docs will not run unless this param is set. This is a safety to prevent triggering them by accident."
     }
 )
+
+$beware = "BEWARE: running this command has consequences! You MUST specify the -accept-risks option."
 
 # first one is the default one
 # order is important as they will run in the specified order
@@ -141,8 +143,8 @@ $actions = @(
        note = "Create a vX.Y.Z tag corresponding to the version in src/Directory.Build.Props, or the version specified via the -version option."
     },
     @{ name = "trigger-release";
-       desc = "triggers a release (BEWARE!)";
-       note = "Creates the vX.Y.Z tag corresponding to the version in src/Directory.Build.Props if required, and pushes the tag."
+       desc = "triggers a release";
+       note = "Creates the vX.Y.Z tag corresponding to the version in src/Directory.Build.Props if required, and pushes the tag. $beware"
     },
     @{ name = "build"; 
        desc = "builds the solution"
@@ -160,7 +162,7 @@ $actions = @(
     },
     @{ name = "publish-docs";
        desc = "pushes the documentation releast Git commit to GitHub";
-       note = "The commits needs to be prepared with git-doc."
+       note = "The commits needs to be prepared with git-doc. $beware"
     },
     @{ name = "pack-nuget"; 
        desc = "packs the NuGet packages"
@@ -175,11 +177,13 @@ $actions = @(
     },
     @{ name = "run-remote-controller"; alias = "rc";
        uniq = $true;
-       desc = "runs the remote controller for tests"
+       desc = "runs the remote controller for tests";
+       note = "This command downloads the required JARs and configuration file."
     },
     @{ name = "run-server"; 
        uniq = $true;
-       desc = "runs a server for tests"
+       desc = "runs a server for tests";
+       note = "This command downloads the required JARs and configuration file."
     },
     @{ name = "generate-codecs";
        uniq = $true;
@@ -189,6 +193,15 @@ $actions = @(
        uniq = $true;
        desc = "runs an example";
        note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
+    },
+    @{
+        name = "publish-examples";
+        desc = "publishes examples";
+        note = "Publishes examples into temp/examples"
+    },
+    @{ name = "cover-to-docs";
+       desc = "copy test coverage to documentation";
+       note = "Documentation and test coverage must exist."
     }
 
     # failed-tests?!
@@ -251,7 +264,7 @@ $versionSuffix = ""
 if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 
     if (-not ($options.version -match '^(\d+\.\d+\.\d+)(?:\-([a-z0-9\.\-]*))?$')) {
-        Die "Version `"$options.version`" is not a valid SemVer version"
+        Die "Version `"$($options.version)`" is not a valid SemVer version"
     }
 
     $versionPrefix = $Matches.1
@@ -265,7 +278,6 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-# FIXME RENAME THESE
 $hzVersion = $options.server
 $hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
@@ -298,11 +310,6 @@ $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
 $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
-
-if ([string]::IsNullOrWhiteSpace($options.serverConfig)) {
-
-    $options.serverConfig = "$buildDir/hazelcast-$hzVersion.xml"
-}
 
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
@@ -534,9 +541,9 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     $script:options.classpath = $classpath
 }
 
-# ensures we have all jars required for the remote controller and the server,
+# ensures we have all jars & config required for the remote controller and the server,
 # by downloading them if needed, and add them to the $script:options.classpath
-function ensure-jars {
+function ensure-server-files {
 
     Write-Output "Prepare server/rc..."
     if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
@@ -554,6 +561,68 @@ function ensure-jars {
 
         # ensure we have the hazelcast server jar
         ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
+        if  (test-path $options.serverConfig) {
+            # config was specified and exists
+            Write-Output "Detected $($options.serverConfig)"
+        }
+        else {
+            # config was specified but is missing
+            Die "Configuration file $($options.serverConfig) is missing."
+        }
+    }
+    elseif (test-path "$buildDir\hazelcast-$($options.server).xml") {
+        # config was not specified, try with specified server version
+        Write-Output "Detected hazelcast-$($options.server).xml"
+        $options.serverConfig = "$buildDir\hazelcast-$($options.server).xml"
+    }
+    elseif (test-path "$buildDir\hazelcast-$hzVersion.xml") {
+        # config was not specified, try with fixed server version
+        Write-Output "Detected hazelcast-$hzVersion.xml"
+        $options.serverConfig = "$buildDir\hazelcast-$hzVersion.xml"
+    }
+    else {
+        # no config found, try to download
+
+        $v = $hzVersion
+        if ($v.EndsWith('-SNAPSHOT')) { $v = $v.SubString(0, $v.Length - '-SNAPSHOT'.Length)}
+
+        if ($v -eq $hzVersion) {
+            Write-Output "Downloading hazelcast-$hzVersion.xml ..."
+        }
+        else {
+            Write-Output "Downloading hazelcast-$v.xml -> hazelcast-$hzVersion.xml ..."
+        }
+
+        $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
+        $dest = "$buildDir\hazelcast-$hzVersion.xml"
+        $response = invoke-web-request $url $dest
+
+        if ($response.StatusCode -eq 404) {
+            Write-Output "Failed to download hazelcast-$v.xml (404) from tag v$v"
+            if (test-path $dest) { rm $dest }
+            $p0 = $v.IndexOf('.')
+            $p1 = $v.LastIndexOf('.')
+            if ($p0 -ne $p1) {
+                $v = $v.SubString(0, $p1) + ".z"
+                Write-Output "Downloading from branch $v ..."
+                $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+                $response = invoke-web-request $url $dest
+
+                if ($response.StatusCode -ne 200) {
+                    if (test-path $dest) { rm $dest }
+                    Die "Failed to download $url ($($response.StatusCode))"
+                }
+            }
+        }
+        elseif ($response.StatusCode -ne 200) {
+            if (test-path $dest) { rm $dest }
+            Die "Failed to download $url ($($response.StatusCode))"
+        }
+
+        $options.serverConfig = "$buildDir\hazelcast-$hzVersion.xml"
     }
 }
 
@@ -1049,8 +1118,8 @@ function hz-build-docs-on-windows {
         $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
                           "Its content is not final and remains subject to changes.</div>"
         $devwarnClass = "devwarn"
-        $devdoc_doc = "<li>development / in-progress version <a href=`"dev/doc/index.html`">$version</a></li>"
-        $devdoc_api = "<li>development / in-progress version <a href=`"dev/api/index.html`">$version</a></li>"
+        $devdoc_doc = "<li>development / in-progress version <a href=`"dev/doc/index.html`">$($options.version)</a></li>"
+        $devdoc_api = "<li>development / in-progress version <a href=`"dev/api/index.html`">$($options.version)</a></li>"
     }
     else {
         $devwarnMessage = ""
@@ -1086,6 +1155,49 @@ function hz-build-docs {
     }
     else {
         Write-Output "Docs: building is not supported on non-Windows platforms"
+    }
+}
+
+# copy test coverage to doc
+function hz-cover-to-docs-on-windows {
+
+    $docs = "$tmpDir/docfx.out"
+    $versiondocs = "$docs/$docDstDir"
+    $coverdocs = "$versiondocs/cover"
+    $coverdir = "$tmpDir/tests/cover/cover-netcoreapp3.1.html"
+
+    Write-Output ""
+    Write-Output "Copy tests coverage to documentation"
+    Write-Output "  Source         : $coverdir"
+    Write-Output "  Documentation  : $coverdocs"
+
+    if (-not (test-path $docs)) { Die "Could not find $docs. Maybe you should build the docs first?" }
+    if (-not (test-path $coverdir)) { Die "Could not find $coverdir. Maybe you should run tests with coverage first?" }
+    if (-not (test-path $versiondocs)) { mkdir $versiondocs >$null 2>&1 }
+
+    if (test-path $coverdocs) { remove-item -recurse -force $coverdocs }
+    mkdir $coverdocs >$null 2>&1
+
+    copy-item -recurse "$coverdir/*" "$coverdocs/"
+    add-content "$coverdocs/index/css/dotcover.report.css" "`n`npre.source-code { font-family:Menlo,Monaco,Consolas,`"Courier New`",monospace; font-size:12px; }"
+    $index1 = get-content "$docDir/templates/hz/cover-index.html"
+    $index2 = [string]::Join(' ', (get-content "$coverdocs/index.html"))
+    if (-not ($index2 -match '(?s-m)<script type="text/javascript">(.*)</script>')) {
+        Die "panic: no cover data"
+    }
+    $data = $Matches.1
+    $index1 = $index1.Replace("/*DOTCOVER_DATA*/", $data);
+    set-content -path "$coverdocs/index.html" -value $index1
+}
+
+# copy test coverage to doc
+# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
+function hz-cover-to-docs {
+    if ($isWindows) {
+        hz-cover-to-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
     }
 }
 
@@ -1337,7 +1449,7 @@ function run-tests ( $f ) {
     if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=`"$($options.testFilter.Replace("<FRAMEWORK>", $f))`"" }
 
     if ($options.cover) {
-        $coveragePath = "$tmpDir/tests/cover/cover-$f"
+        $coveragePath = "$tmpDir/tests/cover/cover-$f.html"
         if (!(test-path $coveragePath)) {
             mkdir $coveragePath > $null
         }
@@ -1345,10 +1457,12 @@ function run-tests ( $f ) {
         $dotCoverArgs = @(
             "--dotCoverFilters=$($options.coverageFilter)",
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
-            "--dotCoverOutput=$coveragePath/index.html",
-            "--dotCoverReportType=HTML",
-            "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log",
-            "--dotCoverSourcesSearchPaths=$srcDir"
+            "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log", # log
+            "--dotCoverSourcesSearchPaths=$srcDir", # reference sources in HTML output
+
+            # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
+            "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
+            "--dotCoverOutput=$coveragePath/index.html;$tmpDir/tests/cover/cover-$f.json;$tmpDir/tests/cover/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
@@ -1650,6 +1764,33 @@ function hz-run-example {
     &$hx $options.commargs
 }
 
+# publish examples
+function hz-publish-examples {
+
+        Write-Output ""
+        Write-Output "Publish examples..."
+
+        if (test-path "$tmpDir/examples") {
+            remove-item "$tmpDir/examples" -Force -Recurse
+        }
+
+        mkdir "$tmpDir/examples" >$null 2>&1
+
+        foreach ($framework in $frameworks) {
+            Write-Output ""
+            Write-Output "Publish examples for $framework..."
+            $publishArgs = @(
+                "$srcDir/Hazelcast.Net.Examples",
+                "-c", "$($options.configuration)",
+                "-f", "$framework",
+                "-o", "$tmpDir/examples/examples-$framework",
+                "--no-restore", "--no-build", "--packages", $nugetPackages
+            )
+            dotnet publish $publishArgs
+            compress-archive -path "$tmpDir/examples/examples-$framework/" -destinationPath "$tmpDir/examples/examples-$framework.zip"
+        }
+}
+
 # ########
 # ########
 # ########
@@ -1682,20 +1823,21 @@ function need {
 register-needs git 
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
 register-needs build-proj can-sign docfx
-register-needs java server-version jars # ensure jars *after* server version!
+register-needs java server-version server-files # ensure jars *after* server version!
 register-needs enterprise-key nuget-api-key
 
 # define with actions + pretty sure some are missing
 if ($do.'build') { need git dotnet-complete build-proj can-sign }
-if ($do.'test') { need git dotnet-complete java jars server-version build-proj enterprise-key }
+if ($do.'test') { need git dotnet-complete java server-files server-version build-proj enterprise-key }
 if ($do.'pack-nuget') { need dotnet-minimal }
 if ($do.'push-nuget') { need dotnet-minimal nuget-api-key }
-if ($do.'run-remote-controller') { need java jars server-version enterprise-key }
-if ($do.'run-server') { need java jars server-version enterprise-key }
+if ($do.'run-remote-controller') { need java server-files server-version enterprise-key }
+if ($do.'run-server') { need java server-files server-version enterprise-key }
 if ($do.'build-docs') { need git build-proj docfx }
 if ($do.'publish-docs') { need git }
 if ($do.'serve-docs') { need build-proj docfx }
 if ($do.'generate-codecs') { need git python }
+if ($do.'publish-examples') { need dotnet-complete }
 
 # ensure needs are satisfied
 $needs.Keys | foreach-object {
