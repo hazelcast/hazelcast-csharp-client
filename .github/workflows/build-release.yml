@@ -516,7 +516,7 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
         run: |
-          ./hz.ps1 -noRestore -localRestore push-nuget
+          ./hz.ps1 -noRestore -localRestore push-nuget -yolo
 
       # checkout documentation
       - name: Checkout documentation
