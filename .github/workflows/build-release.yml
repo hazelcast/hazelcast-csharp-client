@@ -472,6 +472,13 @@ jobs:
           git config user.email "github-actions@hazelcast.com"
           git config user.name "GitHub Actions (Build Release)"
 
+      # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
+      - name: Checkout devops
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./build/devops
+
       # prepare for artifacts
       - name: Prepare for artifacts
         shell: bash

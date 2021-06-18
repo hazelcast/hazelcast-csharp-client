@@ -68,7 +68,6 @@ function Validate-Platform {
     if ($isMacOS) { $platform = "macOS" }
 
     $script:platform = $platform
-    $script:isWindows2 = ($isWindows -or $platform -eq "windows") # cannot modify the built-in flag
 }
 
 # write usage
@@ -127,68 +126,56 @@ function Write-Usage ( $params, $actions ) {
         format-table -autosize -property name,infos -hideTableHeaders -wrap
 }
 
+function Get-Action ( $actions, $name ) {
+    return $actions | where-object { $_.name -eq $name } | select-object -first 1
+}
+
 # parse commangs
 function Parse-Commands ( $commands, $actions ) {
 
-    # create do
-    $do = new-object Collections.Specialized.OrderedDictionary
-    $actions | foreach-object {
-        $do[$_.name] = $false
-    }
-
-    # create actions hashtable
-    $actionx = @{}
-    $actions | foreach-object {
-        $action = $_
-        $actionx[$action.name] = $action
-        if ($action.alias -is [string]) {
-            $action.alias.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | foreach-object {
-                $alias = $_.Trim()
-                $actionx[$alias] = $action
-            }
-        }
-    }
-
     # default?
     if ($commands.Count -eq 0) {
-        $do[$actions[0].name] = $true
-        return $do
+        $actions[0].run = $true
+        return
     }
 
     $uniq = $null
     $count = 0
+    $err = $null
+
+    $actions | foreach-object { $_.run = $false }
 
     # else handle Commands
     $commands | foreach-object {
 
-        if ($do -is [string]) { return }
+        if ($err -is [string]) { return }
 
-        $command = $actionx[$_]
-        if ($command -eq $null) {
-            $do = "unknown command `'$_`'"
+        $action = get-action $actions $_
+        if ($action -eq $null) {
+            $err = "unknown command `'$_`'"
             return
         }
 
-        if ($command.uniq) {
+        if ($action.uniq) {
 
             if ($count -ne 0) { 
 
-                $do = "Command '$($command.name)' cannot be mixed with other commands." 
+                $err = "Command '$($action.name)' cannot be mixed with other commands." 
                 return
             }
-            $uniq = $command.name
+            $uniq = $action.name
         }
         elseif ($uniq -ne $null) { 
         
-            $do = "Command '$uniq' cannot be mixed with other commands."
+            $err = "Command '$uniq' cannot be mixed with other commands."
             return
         }
 
-        $do[$command.name] = $true
+        $action.run = $true
         $count += 1
     }
 
-    return $do
+    return $err
 }
 
 # parse arguments: (args, params) -> options
@@ -454,4 +441,11 @@ function get-commarg ( $name ) {
         }
     }
     return $commarg
+}
+
+function get-project-name ( $path ) {
+    $p = $path.LastIndexOf('\')
+    $n = $path.SubString($p+1)
+    $n = $n.SubString(0, $n.Length - '.csproj'.Length)
+    return $n;
 }
