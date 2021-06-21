@@ -282,7 +282,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Examples
-          path: './temp/publish/examples-*'        
+          path: './temp/examples/*.zip'        
 
       # git the docs, create the patch
       - name: Create docs patch
@@ -413,7 +413,7 @@ jobs:
       - name: Publish to Codecov
         uses: codecov/codecov-action@v1
         with:
-          token: ${{ secret.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./temp/tests/cover/cover-netcoreapp3.1.xml
 
 
