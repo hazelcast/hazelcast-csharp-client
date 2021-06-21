@@ -168,7 +168,6 @@ $actions = @(
        need = @( "dotnet-minimal" )
     },
     @{ name = "serve-docs";
-       uniq = $true;
        desc = "serves the documentation";
        need = @( "build-proj", "docfx" )
     },
@@ -236,7 +235,7 @@ if ($options -is [string]) {
 }
 $err = Parse-Commands $options.commands $actions
 if ($err -is [string]) {
-    Die "$do - use 'help' to list valid commands"
+    Die "$err - use 'help' to list valid commands"
 }
 
 if ((get-action $actions help).run) {
@@ -614,14 +613,14 @@ function ensure-server-files {
 }
 
 # gets a dotnet sdk for a particular version
-function get-dotnet-sdk ( $sdks, $v ) {
+function get-dotnet-sdk ( $sdks, $v, $preview ) {
 
     # trust dotnet to return the sdks ordered by version, so last is the highest version
     # exclude versions containing "-" ie anything pre-release (TODO: why?)
     $sdk = $sdks `
         | Select-String -pattern "^$v" `
         | Foreach-Object { $_.ToString().Split(' ')[0] } `
-        | Select-String -notMatch -pattern "-" `
+        | Where-Object { ($preview -and $_.Contains('-')) -or (-not $preview -and -not $_.Contains('-')) } `
         | Select-Object -last 1
 
     if ($null -eq $sdk) { return "n/a" } 
@@ -637,21 +636,36 @@ function require-dotnet ( $full ) {
     $dotnetVersion = (&dotnet --version)
     Write-Output "  Version $dotnetVersion"
 
+    if ($pre) {
+        Write-Output "  (global.json does not allow pre-release versions)"
+    }
+    else {
+        Write-Output "  (global.json is missing or allows pre-release versions)"
+    }
+
+    if (test-path "$slnRoot/global.json") {
+        $json = (get-content "$slnRoot/global.json" -raw) | convertFrom-json
+        $pre = $true
+        if ($json.sdk -ne $null -and $json.sdk.allowPrerelease -ne $null) {
+            $pre = $json.sdk.allowPrerelease
+        }
+    }
+
     $sdks = (&dotnet --list-sdks)
     
-    $v21 = get-dotnet-sdk $sdks "2.1"
+    $v21 = get-dotnet-sdk $sdks "2.1" $false
     if ($full -and $null -eq $v21) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 2.1.x"
     }
-    $v31 = get-dotnet-sdk $sdks "3.1"
+    $v31 = get-dotnet-sdk $sdks "3.1" $false
     if ($full -and $null -eq $v31) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 3.1.x"
     }
-    $v50 = get-dotnet-sdk $sdks "5.0"
+    $v50 = get-dotnet-sdk $sdks "5.0" $false
     if ($null -eq $v50) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
@@ -662,8 +676,14 @@ function require-dotnet ( $full ) {
         Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 5.0.200+"
     }
-    $v60 = get-dotnet-sdk $sdks "6.0" # 6.0 is not required
+    $v60 = get-dotnet-sdk $sdks "6.0" $false # 6.0 is not required
     
+    $v50preview = get-dotnet-sdk $sdks "5.0" $true
+    $v60preview = get-dotnet-sdk $sdks "6.0" $true
+
+    if ($pre) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
+    if ($pre) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v50preview)" }
+
     Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 
     $script:ensuredDotnet = $true
