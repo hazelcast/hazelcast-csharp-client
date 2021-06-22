@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HQueue.Dequeue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HQueue&lt;T&gt; // Dequeue
+    {
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;T&gt; PeekAsync() // peek, or null
+        {
+            var requestMessage = QueuePeekCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;T&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;T&gt; GetElementAsync()
+        {
+            return await PeekAsync().CfAwait() ?? throw new InvalidOperationException(&quot;The queue is empty.&quot;);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;T&gt; PollAsync(TimeSpan timeToWait = default)
+        {
+            var timeToWaitMs = timeToWait.RoundedMilliseconds(); // codec: 0 = zero, -1 = infinite
+
+            var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;T&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;T&gt; TakeAsync()
+        {
+            var requestMessage = QueueTakeCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;T&gt;(response);
+        }
+
+         /// &lt;inheritdoc /&gt;
+        public async Task&lt;int&gt; DrainToAsync(ICollection&lt;T&gt; items)
+        {
+            var requestMessage = QueueDrainToCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
+
+            foreach (var itemData in response) items.Add(ToObject&lt;T&gt;(itemData));
+            return response.Count;
+        }
+
+         /// &lt;inheritdoc /&gt;
+        public async Task&lt;int&gt; DrainToAsync(ICollection&lt;T&gt; items, int maxElements)
+        {
+            var requestMessage = QueueDrainToMaxSizeCodec.EncodeRequest(Name, maxElements);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
+
+            foreach (var itemData in response) items.Add(ToObject&lt;T&gt;(itemData));
+            return response.Count;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,13,28,69,1],[29,13,29,124,1],[30,13,30,84,1],[31,13,31,42,1],[32,9,32,10,1],[37,13,37,110,1],[38,9,38,10,0],[43,13,43,65,1],[45,13,45,83,1],[46,13,46,124,1],[47,13,47,84,1],[48,13,48,42,1],[49,9,49,10,1],[54,13,54,69,1],[55,13,55,124,1],[56,13,56,84,1],[57,13,57,42,1],[58,9,58,10,1],[63,13,63,72,1],[64,13,64,124,1],[65,13,65,94,1],[67,22,67,34,1],[67,35,67,37,1],[67,38,67,46,1],[67,48,67,81,1],[68,13,68,35,1],[69,9,69,10,1],[74,13,74,92,1],[75,13,75,124,1],[76,13,76,94,1],[78,22,78,34,1],[78,35,78,37,1],[78,38,78,46,1],[78,48,78,81,1],[79,13,79,35,1],[80,9,80,10,1]]);
+    </script>
+  </body>
+</html>

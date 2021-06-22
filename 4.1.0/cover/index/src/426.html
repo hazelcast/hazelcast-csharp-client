@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\Strategies\StringPartitioningStrategy.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Partitioning.Strategies
+{
+    /// &lt;summary&gt;
+    /// Implements an &lt;see cref=&quot;IPartitioningStrategy&quot;/&gt; that returns the object if it is a string (trimming leading &#39;@&#39;), else returns null.
+    /// &lt;/summary&gt;
+    internal sealed class StringPartitioningStrategy : IPartitioningStrategy
+    {
+        /// &lt;inheritdoc /&gt;
+        public object GetPartitionKey(object o)
+            =&gt; o is string s ? GetPartitionKey(s) : null;
+
+        /// &lt;summary&gt;
+        /// Gets the partition key of a string value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;s&quot;&gt;The string value.&lt;/param&gt;
+        /// &lt;returns&gt;The partition key of the string value.&lt;/returns&gt;
+        public static string GetPartitionKey(string s)
+            =&gt; s?.TrimStart(&#39;@&#39;);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,16,24,57,1],[32,16,32,33,1]]);
+    </script>
+  </body>
+</html>

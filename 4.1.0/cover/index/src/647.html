@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterMembers.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Core;
+using Hazelcast.Events;
+using Hazelcast.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Provides the members management services of a cluster.
+    /// &lt;/summary&gt;
+    internal class ClusterMembers : IAsyncDisposable
+    {
+        private readonly object _mutex = new object();
+        private readonly ClusterState _clusterState;
+        private readonly ILogger _logger;
+        private readonly ILoadBalancer _loadBalancer;
+
+        private readonly TerminateConnections _terminateConnections;
+        private readonly MemberConnectionQueue _memberConnectionQueue;
+
+        private MemberTable _members;
+        private bool _connected;
+
+        // flag + semaphore to wait for the first &quot;partitions view&quot; event
+        //private volatile int _firstPartitionsViewed;
+        //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0, 1);
+
+        // member id -&gt; connection
+        // not concurrent, always managed through the mutex
+        private readonly Dictionary&lt;Guid, MemberConnection&gt; _connections = new Dictionary&lt;Guid, MemberConnection&gt;();
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterMembers&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;clusterState&quot;&gt;The cluster state.&lt;/param&gt;
+        /// &lt;param name=&quot;terminateConnections&quot;&gt;The terminate connections task.&lt;/param&gt;
+        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections)
+        {
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterMembers&gt;().SetPrefix(&quot;CLUST.MBRS&quot;));
+
+            _clusterState = clusterState;
+            _terminateConnections = terminateConnections;
+            _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
+
+            _logger = _clusterState.LoggerFactory.CreateLogger&lt;ClusterMembers&gt;();
+
+            _members = new MemberTable();
+
+            // members to connect
+            if (clusterState.IsSmartRouting) _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
+        }
+
+
+        #region Event Handlers
+
+        /// &lt;summary&gt;
+        /// Adds a connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;param name=&quot;isNewCluster&quot;&gt;Whether the connection is the first connection to a new cluster.&lt;/param&gt;
+        public void AddConnection(MemberConnection connection, bool isNewCluster)
+        {
+            // accept every connection, regardless of whether there is a known corresponding member,
+            // since the first connection is going to come before we get the first members view.
+
+            lock (_mutex)
+            {
+                // don&#39;t add the connection if it is not active - if it *is* active, it still
+                // could turn not-active anytime, but thanks to _mutex that will only happen
+                // after the connection has been added
+                if (!connection.Active) return;
+
+                var contains = _connections.ContainsKey(connection.MemberId);
+
+                if (contains)
+                {
+                    // we cannot accept this connection, it&#39;s a duplicate (internal error?)
+                    _logger.LogWarning($&quot;Cannot accept connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, a connection to that member already exists.&quot;);
+                    _terminateConnections.Add(connection); // kill.kill.kill
+                    return;
+                }
+
+                // add the connection
+                _connections[connection.MemberId] = connection;
+
+                if (isNewCluster)
+                {
+                    // reset members
+                    // this is safe because... isNewCluster means that this is the very first connection and there are
+                    // no other connections yet and therefore we should not receive events and therefore no one
+                    // should invoke SetMembers.
+                    // TODO: what if and &quot;old&quot; membersUpdated event is processed?
+                    _members = new MemberTable();
+                }
+
+                // if this is a true member connection
+                if (_members.ContainsMember(connection.MemberId))
+                {
+                    // if this is the first connection to an actual member, change state &amp; trigger event
+                    if (!_connected)
+                    {
+                        // change Started | Disconnected -&gt; Connected, ignore otherwise, it could be ShuttingDown or Shutdown
+                        _logger.LogDebug($&quot;Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, now connected.&quot;);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else
+                    {
+                        _logger.LogDebug($&quot;Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}.&quot;);
+                    }
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Removes a connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        public void RemoveConnectionAsync(MemberConnection connection)
+        {
+            lock (_mutex)
+            {
+                var contains = _connections.ContainsKey(connection.MemberId);
+
+                // ignore unknown connection that were not added in the first place,
+                // or that have been replaced
+                if (!contains || _connections[connection.MemberId].Id != connection.Id)
+                    return;
+
+                // remove the connection and check whether we are potentially disconnecting
+                // ie whether we were connected, and either we don&#39;t have connections any more, or no member
+                // is connected (has a matching connection)
+                _connections.Remove(connection.MemberId);
+                var disconnecting = _connected &amp;&amp; (_connections.Count == 0 || _members.Members.All(x =&gt; !_connections.ContainsKey(x.Id)));
+
+                // if we are not disconnecting, we can return - we are done
+                if (!disconnecting)
+                {
+                    _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.&quot;);
+
+                    // if we are connected,
+                    // and the disconnected member is still a member, queue it for reconnection
+                    if (_connected &amp;&amp; _members.TryGetMember(connection.MemberId, out var member))
+                        _memberConnectionQueue?.Add(member);
+                    return;
+                }
+            }
+
+            // otherwise, we might be disconnecting
+
+            // but, the connection queue was running and might have added a new connection
+            // we *need* a stable state in order to figure out whether we are disconnecting or not,
+            // and if we are, we *need* to drain the queue (stop connecting more members) - and
+            // the only way to achieve this is to suspend the queue
+            _memberConnectionQueue?.Suspend();
+
+            // note: multiple connections can close an once = multiple calls can reach this point
+
+            var drain = false;
+            try
+            {
+                lock (_mutex) // but we deal with calls one by one
+                {
+                    if (_connected) // and only disconnect once
+                    {
+                        // if we have connections, and at least one member is connected (has a matching connection),
+                        // then the queue has added a new connection indeed and we are finally not disconnecting - we
+                        // can return - we are done
+                        if (_connections.Count &gt; 0 &amp;&amp; _members.Members.Any(x =&gt; _connections.ContainsKey(x.Id)))
+                        {
+                            // if the disconnected member is still a member, queue it for reconnection
+                            if (_members.TryGetMember(connection.MemberId, out var member))
+                                _memberConnectionQueue?.Add(member);
+                            _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.&quot;);
+                            return;
+                        }
+
+                        // otherwise, we&#39;re really disconnecting: flip _connected, and change the state
+                        _connected = false;
+                        _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, disconnecting.&quot;);
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+
+                        // and drain the queue: stop connecting members, we need to fully reconnect
+                        drain = true;
+                    }
+                }
+            }
+            finally
+            {
+                // don&#39;t forget to resume the queue
+                _memberConnectionQueue?.Resume(drain);
+            }
+        }
+
+        private void LogDiffs(MemberTable table, Dictionary&lt;MemberInfo, int&gt; diff)
+        {
+            var msg = new StringBuilder();
+            msg.Append(&quot;Members [&quot;);
+            msg.Append(table.Count);
+            msg.AppendLine(&quot;] {&quot;);
+            foreach (var member in table.Members)
+            {
+                msg.Append(&quot;    &quot;);
+                msg.Append(member.Address);
+                msg.Append(&quot; - &quot;);
+                msg.Append(member.Id);
+                if (diff.TryGetValue(member, out var d) &amp;&amp; d == 2)
+                    msg.Append(&quot; - new&quot;);
+                msg.AppendLine();
+            }
+            msg.Append(&#39;}&#39;);
+
+            _logger.LogInformation(msg.ToString());
+        }
+
+        /// &lt;summary&gt;
+        /// Set the members.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding event arguments, if members were updated; otherwise &lt;c&gt;null&lt;/c&gt;.&lt;/returns&gt;
+        public MembersUpdatedEventArgs SetMembers(int version, ICollection&lt;MemberInfo&gt; members)
+        {
+            // skip old sets
+            if (version &lt; _members.Version)
+                return null;
+
+            // replace the table
+            var previous = _members;
+            var table = new MemberTable(version, members);
+            lock (_mutex) _members = table;
+
+            // notify the load balancer of the new list of members
+            // (the load balancer can always return a member that is not a member
+            // anymore, see note in GetMember)
+            _loadBalancer.SetMembers(members.Select(x =&gt; x.Id));
+
+            // compute changes
+            // count 1 for old members, 2 for new members, and then the result is
+            // 1=removed, 2=added, 3=unchanged
+            // MemberInfo overrides GetHashCode and can be used as a key here
+            var diff = new Dictionary&lt;MemberInfo, int&gt;();
+            if (previous == null)
+            {
+                foreach (var m in members)
+                    diff[m] = 2;
+            }
+            else
+            {
+                foreach (var m in previous.Members)
+                    diff[m] = 1;
+
+                foreach (var m in members)
+                    if (diff.ContainsKey(m)) diff[m] += 2;
+                    else diff[m] = 2;
+            }
+
+            // log, if the members have changed (one of them at least is not 3=unchanged)
+            if (_logger.IsEnabled(LogLevel.Information) &amp;&amp; diff.Any(d =&gt; d.Value != 3))
+                LogDiffs(table, diff);
+
+            // process changes, gather events
+            var added = new List&lt;MemberInfo&gt;();
+            var removed = new List&lt;MemberInfo&gt;();
+            foreach (var (member, status) in diff) // all members, old and new
+            {
+                switch (status)
+                {
+                    case 1: // old but not new = removed
+                        HConsole.WriteLine(this, $&quot;Removed member {member.Id} at {member.Address}&quot;);
+                        removed.Add(member);
+
+                        // dequeue the member
+                        _memberConnectionQueue?.Remove(member.Id);
+
+                        break;
+
+                    case 2: // new but not old = added
+                        HConsole.WriteLine(this, $&quot;Added member {member.Id} at {member.Address}&quot;);
+                        added.Add(member);
+
+                        // queue the member for connection
+                        _memberConnectionQueue?.Add(member);
+
+                        break;
+
+                    case 3: // old and new = no change
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+
+            var maybeDisconnected = false;
+            lock (_mutex)
+            {
+                // removed members need to have their connection removed and terminated
+                foreach (var member in removed)
+                {
+                    if (_connections.TryGetValue(member.Id, out var c))
+                    {
+                        _connections.Remove(member.Id);
+                        _terminateConnections.Add(c);
+                    }
+                }
+
+                var isAnyMemberConnected = _members.Members.Any(x =&gt; _connections.ContainsKey(x.Id));
+
+                if (!_connected)
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // if we were not connected and now one member happens to be connected then we are now connected
+                        // we hold the mutex so nothing bad can happen
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.&quot;);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else
+                    {
+                        // remain disconnected
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none is connected, remain disconnected.&quot;);
+                    }
+                }
+                else
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // remain connected
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.&quot;);
+                    }
+                    else
+                    {
+                        // we probably are disconnected now
+                        // but the connection queue is running and might have re-added a member
+                        maybeDisconnected = true;
+                    }
+                }
+            }
+
+            // release _mutex, suspend the queue
+            if (maybeDisconnected)
+            {
+                _memberConnectionQueue?.Suspend();
+                var disconnected = false;
+                try
+                {
+                    lock (_mutex)
+                    {
+                        var isAnyMemberConnected = _members.Members.Any(x =&gt; _connections.ContainsKey(x.Id));
+                        if (!isAnyMemberConnected)
+                        {
+                            // no more connected member, we are now disconnected
+                            _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none connected, disconnecting.&quot;);
+                            _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                            _connected = false;
+                            disconnected = true;
+                        }
+                        else
+                        {
+                            _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.&quot;);
+                        }
+                    }
+                }
+                finally
+                {
+                    _memberConnectionQueue?.Resume(disconnected);
+                }
+            }
+
+            return new MembersUpdatedEventArgs(added, removed, members.ToList());
+        }
+
+        #endregion
+
+
+        /// &lt;summary&gt;
+        /// Enumerates the members to connect.
+        /// &lt;/summary&gt;
+        public IAsyncEnumerable&lt;(MemberInfo, CancellationToken)&gt; MembersToConnect
+            =&gt; _memberConnectionQueue;
+
+        /// &lt;summary&gt;
+        /// Reports that a member failed to connect.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member that failed to connect.&lt;/param&gt;
+        public void FailedToConnect(MemberInfo member)
+        {
+            lock (_mutex)
+            {
+                if (_members.ContainsMember(member.Id))
+                    _memberConnectionQueue.Add(member);
+            }
+        }
+
+
+        /// &lt;summary&gt;
+        /// Gets a connection to a random member.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A random client connection if available; otherwise &lt;c&gt;null&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;para&gt;The connection should be active, but there is no guarantee it will not become immediately inactive.&lt;/para&gt;
+        public MemberConnection GetRandomConnection()
+        {
+            MemberConnection connection;
+
+            // In &quot;smart routing&quot; mode the clients connect to each member of the cluster. Since each
+            // data partition uses the well known and consistent hashing algorithm, each client
+            // can send an operation to the relevant cluster member, which increases the
+            // overall throughput and efficiency. Smart mode is the default mode.
+            //
+            // In &quot;uni-socket&quot; mode the clients is required to connect to a single member, which
+            // then behaves as a gateway for the other members. Firewalls, security, or some
+            // custom networking issues can be the reason for these cases.
+
+            if (_clusterState.IsSmartRouting)
+            {
+                // &quot;smart&quot; mode
+
+                // limit the number of tries to the amount of known members, but
+                // it is ok to try more than once, order to return a connection
+                // that has a reasonable chance of being usable
+                var count = _loadBalancer.Count;
+
+                for (var i = 0; i &lt; count; i++)
+                {
+                    var memberId = _loadBalancer.GetMember();
+
+                    // if the load balancer does not have members, break
+                    if (memberId == Guid.Empty)
+                        break;
+
+                    // we cannot guarantee that the connection we&#39;ll return will not correspond to
+                    // a member... that is not a member by the time it is used... but at least we
+                    // can make sure it *still* is a member now
+                    if (!_members.ContainsMember(memberId))
+                        continue;
+
+                    lock (_mutex)
+                    {
+                        if (_connections.TryGetValue(memberId, out connection))
+                            return connection;
+                    }
+                }
+            }
+
+            // either &quot;smart&quot; mode but the load balancer did not return a member,
+            // or &quot;uni-socket&quot; mode where there should only be once connection
+            lock (_mutex) connection = _connections.Values.FirstOrDefault();
+
+            // may be null
+            return connection;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the oldest active connection.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The oldest active connection, or &lt;c&gt;null&lt;/c&gt; if no connection is active.&lt;/returns&gt;
+        public MemberConnection GetOldestConnection()
+        {
+            return _connections.Values
+                .Where(x =&gt; x.Active)
+                .OrderBy(x =&gt; x.ConnectTime)
+                .FirstOrDefault();
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to get a connection for a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if a connection to the specified member was found; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;para&gt;The connection should be active, but there is no guarantee it will not become immediately inactive.&lt;/para&gt;
+        public bool TryGetConnection(Guid memberId, out MemberConnection connection)
+        {
+            lock (_mutex) return _connections.TryGetValue(memberId, out connection);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets information about each member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;liteOnly&quot;&gt;Whether to only return lite members.&lt;/param&gt;
+        /// &lt;returns&gt;The current members.&lt;/returns&gt;
+        public IEnumerable&lt;MemberInfo&gt; GetMembers(bool liteOnly = false)
+        {
+            IEnumerable&lt;MemberInfo&gt; members = _members.Members;
+            if (liteOnly) members = members.Where(x =&gt; x.IsLiteMember);
+            return members;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets information about a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;returns&gt;Information about the specified member, or &lt;c&gt;null&lt;/c&gt; if no member with the specified identifier was found.&lt;/returns&gt;
+        public MemberInfo GetMember(Guid memberId)
+        {
+            return _members.TryGetMember(memberId, out var memberInfo)
+                ? memberInfo
+                : null;
+        }
+
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            await _memberConnectionQueue.DisposeAsync().CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,55,1],[51,9,51,117,1],[58,9,58,100,1],[62,13,62,42,1],[63,13,63,58,1],[64,13,64,99,1],[66,13,66,82,1],[68,13,68,42,1],[71,13,71,45,1],[71,46,71,125,1],[72,9,72,10,1],[87,13,87,26,1],[92,17,92,40,1],[92,41,92,48,0],[94,17,94,78,1],[96,17,96,30,1],[99,21,99,194,0],[100,21,100,59,0],[101,21,101,28,0],[105,17,105,64,1],[107,17,107,34,1],[114,21,114,50,1],[118,17,118,66,1],[121,21,121,37,1],[124,25,124,159,0],[125,25,125,121,0],[126,25,126,43,0],[130,25,130,144,1],[133,13,133,14,1],[134,9,134,10,1],[142,13,142,26,1],[144,17,144,78,1],[148,17,148,88,1],[149,21,149,28,0],[154,17,154,58,1],[155,17,155,105,1],[155,105,155,136,1],[155,136,155,139,1],[158,17,158,36,1],[160,21,160,160,1],[164,21,164,98,1],[165,25,165,61,1],[166,21,166,28,1],[168,13,168,14,1],[176,13,176,47,1],[180,13,180,31,1],[183,17,183,30,1],[185,21,185,36,1],[190,25,190,81,1],[190,81,190,111,0],[190,111,190,113,1],[193,29,193,92,0],[194,33,194,69,0],[195,29,195,168,0],[196,29,196,36,0],[200,25,200,44,1],[201,25,201,161,1],[202,25,202,100,1],[205,25,205,38,1],[207,17,207,18,1],[212,17,212,55,1],[213,13,213,14,1],[214,9,214,10,1],[218,13,218,43,1],[219,13,219,37,1],[220,13,220,37,1],[221,13,221,35,1],[222,22,222,32,1],[222,33,222,35,1],[222,36,222,49,1],[224,17,224,36,1],[225,17,225,44,1],[226,17,226,35,1],[227,17,227,39,1],[228,17,228,67,1],[229,21,229,42,1],[230,17,230,34,1],[232,13,232,29,1],[234,13,234,52,1],[235,9,235,10,1],[246,13,246,44,1],[247,17,247,29,0],[250,13,250,37,1],[251,13,251,59,1],[252,13,252,26,1],[252,27,252,44,1],[257,13,257,58,1],[257,58,257,62,1],[257,62,257,65,1],[263,13,263,58,1],[264,13,264,34,1],[266,26,266,31,0],[266,32,266,34,0],[266,35,266,42,0],[267,21,267,33,0],[271,26,271,31,1],[271,32,271,34,1],[271,35,271,51,1],[272,21,272,33,1],[274,26,274,31,1],[274,32,274,34,1],[274,35,274,42,1],[275,21,275,45,1],[275,46,275,59,1],[276,26,276,38,1],[280,13,280,74,1],[280,74,280,86,1],[280,86,280,88,1],[281,17,281,39,1],[284,13,284,48,1],[285,13,285,50,1],[286,22,286,42,1],[286,43,286,45,1],[286,46,286,50,1],[292,25,292,45,1],[295,25,295,67,1],[297,25,297,31,1],[301,25,301,43,1],[304,25,304,61,1],[306,25,306,31,1],[312,25,312,59,0],[316,13,316,43,1],[317,13,317,26,1],[320,26,320,36,1],[320,37,320,39,1],[320,40,320,47,1],[322,21,322,72,1],[324,25,324,56,0],[325,25,325,54,0],[329,17,329,70,1],[329,70,329,100,1],[329,100,329,102,1],[331,17,331,33,1],[333,21,333,46,1],[337,25,337,173,1],[338,25,338,121,1],[339,25,339,43,1],[344,25,344,171,0],[349,21,349,46,1],[352,25,352,176,1],[358,25,358,50,0],[361,13,361,14,0],[364,13,364,35,1],[366,17,366,51,0],[367,17,367,42,0],[370,21,370,34,0],[372,25,372,78,0],[372,78,372,108,0],[372,108,372,110,0],[373,25,373,51,0],[376,29,376,166,0],[377,29,377,104,0],[378,29,378,48,0],[379,29,379,49,0],[383,29,383,180,0],[385,21,385,22,0],[389,21,389,66,0],[390,17,390,18,0],[393,13,393,82,1],[403,16,403,38,1],[411,13,411,26,1],[413,17,413,56,1],[414,21,414,56,1],[415,13,415,14,1],[416,9,416,10,1],[437,13,437,46,1],[444,17,444,49,1],[446,22,446,31,1],[446,33,446,42,1],[446,44,446,47,1],[448,21,448,62,1],[451,21,451,48,1],[457,21,457,60,1],[460,21,460,34,1],[462,25,462,80,1],[463,29,463,47,1],[464,21,464,22,1],[470,13,470,26,1],[470,27,470,77,1],[473,13,473,31,1],[474,9,474,10,1],[482,13,483,29,0],[483,29,483,37,0],[483,37,484,31,0],[484,31,484,44,0],[484,44,485,35,0],[497,13,497,26,1],[497,27,497,85,1],[498,9,498,10,1],[507,13,507,64,1],[508,13,508,26,1],[508,27,508,56,1],[508,56,508,70,1],[508,70,508,72,1],[509,13,509,28,1],[519,13,521,24,1],[528,13,528,67,1],[529,9,529,10,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\SocketExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;Socket&quot;/&gt; class.
+    /// &lt;/summary&gt;
+    internal static class SocketExtensions
+    {
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
+            =&gt; socket.ConnectAsync(endPoint, timeoutMilliseconds, default);
+
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
+            =&gt; socket.ConnectAsync(endPoint, -1, cancellationToken);
+
+        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
+        {
+            // this is the code that the runtime uses, unchanged
+
+            if (socket == null) throw new ArgumentNullException(nameof(socket));
+
+            var tcs = new TaskCompletionSource&lt;bool&gt;(socket);
+            socket.BeginConnect(endPoint, iar =&gt;
+            {
+                var innerTcs = (TaskCompletionSource&lt;bool&gt;)iar.AsyncState;
+                try
+                {
+                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
+                    innerTcs.TrySetResult(true);
+                }
+                catch (Exception e) { innerTcs.TrySetException(e); }
+            }, tcs);
+
+            // only, we don&#39;t return the task, but handle the cancellation
+            //return tcs.Task;
+
+            var cancellation = cancellationToken == default
+                ? new CancellationTokenSource()
+                : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+
+            try
+            {
+                var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CfAwait();
+
+                // if the connect task has completed successfully...
+                if (t == tcs.Task)
+                {
+                    cancellation.Cancel(); // cancel the delay
+                    await t.CfAwait(); // may throw
+                    return;
+                }
+            }
+            finally
+            {
+                cancellation.Dispose(); // make sure we dispose the cancellation
+            }
+
+            // else the delay has been cancelled due to either timeout, or cancellation
+            // we need to close and dispose the socket,
+            // and this will trigger the callback, thus EndConnect, which will throw,
+            // and this will fault the connection task, so await will throw too,
+            // and then everything will be ok
+
+            TryCloseAndDispose(socket);
+            await TryAwait(tcs.Task).CfAwait();
+
+            // finally, throw the correct exception
+            // favor cancellation over timeout
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException(&quot;The socket connection operation has been canceled.&quot;);
+
+            throw new TimeoutException(&quot;The socket connection operation has timed out.&quot;);
+        }
+
+        [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
+        private static void TryCloseAndDispose(Socket socket)
+        {
+            try
+            {
+                socket.Close();
+                socket.Dispose();
+            }
+            catch { /* may happen, don&#39;t care */ }
+        }
+
+        [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
+        private static async Task TryAwait(Task task)
+        {
+            try
+            {
+                await task.CfAwait();
+            }
+            catch { /* may happen, don&#39;t care */ }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,16,30,75,1],[33,16,33,68,1],[39,13,39,32,1],[39,33,39,81,1],[41,13,41,62,1],[42,13,44,17,1],[44,17,44,75,1],[44,75,47,21,1],[47,21,47,72,1],[47,72,48,21,1],[48,21,48,49,1],[48,49,49,17,1],[49,17,49,18,1],[49,18,50,17,1],[50,17,50,36,1],[50,36,50,39,1],[50,39,50,67,1],[50,67,50,68,1],[50,68,50,69,1],[50,69,51,13,1],[51,13,51,14,1],[51,14,51,21,1],[56,13,58,86,1],[62,17,62,117,1],[65,17,65,35,1],[67,21,67,43,1],[68,21,68,39,1],[69,21,69,28,1],[71,13,71,14,1],[74,17,74,40,1],[83,13,83,40,1],[84,13,84,48,1],[88,13,88,59,1],[89,17,89,108,1],[91,13,91,90,1],[92,9,92,10,1]]);
+    </script>
+  </body>
+</html>

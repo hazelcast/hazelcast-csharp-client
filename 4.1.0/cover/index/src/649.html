@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterState.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Partitioning;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents the state of the cluster.
+    /// &lt;/summary&gt;
+    internal class ClusterState : IAsyncDisposable
+    {
+        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
+        private readonly object _mutex = new object();
+        private readonly StateChangeQueue _stateChangeQueue;
+
+        private Action _shutdownRequested;
+        private volatile bool _readonlyProperties;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterState&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
+        {
+            Options = options;
+            ClusterName = clusterName;
+            ClientName = clientName;
+            Partitioner = partitioner;
+            LoggerFactory = loggerFactory;
+
+            _stateChangeQueue = new StateChangeQueue(loggerFactory);
+
+            HConsole.Configure(x=&gt; x.Configure&lt;ClusterState&gt;().SetPrefix(&quot;CLUST.STATE&quot;));
+        }
+
+        #region Events
+
+        /// &lt;summary&gt;
+        /// Triggers when the state changes.
+        /// &lt;/summary&gt;
+        public Func&lt;ClientState, ValueTask&gt; StateChanged
+        {
+            get =&gt; _stateChangeQueue.StateChanged;
+            set
+            {
+                ThrowIfPropertiesAreReadOnly();
+                _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Triggers when shutdown is requested.
+        /// &lt;/summary&gt;
+        public Action ShutdownRequested
+        {
+            get =&gt; _shutdownRequested;
+            set
+            {
+                ThrowIfPropertiesAreReadOnly();
+                _shutdownRequested = value;
+            }
+        }
+
+        #endregion
+
+        #region Readonly Properties
+
+        /// &lt;summary&gt;
+        /// Throws an &lt;see cref=&quot;InvalidOperationException&quot;/&gt; if properties (On...) are read-only.
+        /// &lt;/summary&gt;
+        public void ThrowIfPropertiesAreReadOnly()
+        {
+            if (_readonlyProperties) throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+        }
+
+        /// &lt;summary&gt;
+        /// Sets properties (On...) as read-only.
+        /// &lt;/summary&gt;
+        public void SetPropertiesReadOnly()
+        {
+            _readonlyProperties = true;
+        }
+
+        #endregion
+
+        #region Infos
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the cluster, as assigned by the client.
+        /// &lt;/summary&gt;
+        public Guid ClientId { get; } = Guid.NewGuid();
+
+        /// &lt;summary&gt;
+        /// Gets the name of the cluster client, as assigned by the client.
+        /// &lt;/summary&gt;
+        public string ClientName { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the name of the cluster server.
+        /// &lt;/summary&gt;
+        public string ClusterName { get; }
+
+        #endregion
+
+        #region ClientState
+
+        // NOTE: the initial ClientState is the default value, i.e. zero
+        // we don&#39;t make it ClientState.Unknown because we don&#39;t want it
+        // to be publicly visible, as this is a purely internal state
+
+        /// &lt;summary&gt;
+        /// Gets the client state.
+        /// &lt;/summary&gt;
+        public ClientState ClientState { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Changes the state, and pushes the change to the events queue.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        public void ChangeState(ClientState newState)
+        {
+            lock (_mutex)
+            {
+                if (ClientState == newState)
+                    return;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
+                _stateChangeQueue.Add(newState);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Changes the state if it is as expected, and pushes the change to the events queue.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;param name=&quot;expectedState&quot;&gt;The expected state.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool ChangeState(ClientState newState, ClientState expectedState)
+        {
+            lock (_mutex)
+            {
+                if (ClientState != expectedState)
+                    return false;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
+                _stateChangeQueue.Add(newState);
+                return true;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Changes the state if it is as expected, and pushes the change to the events queue.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;param name=&quot;expectedStates&quot;&gt;The expected states.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool ChangeState(ClientState newState, params ClientState[] expectedStates)
+        {
+            lock (_mutex)
+            {
+                if (!expectedStates.Contains(ClientState))
+                    return false;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
+                _stateChangeQueue.Add(newState);
+                return true;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the state change event has been handled.&lt;/returns&gt;
+        public async Task ChangeStateAndWait(ClientState newState)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (ClientState == newState)
+                    return;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;param name=&quot;expectedState&quot;&gt;The expected state.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed, and the corresponding
+        /// event has been handled; otherwise (not changed) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public async Task&lt;bool&gt; ChangeStateAndWait(ClientState newState, ClientState expectedState)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (ClientState != expectedState)
+                    return false;
+
+                ClientState = newState;
+                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Changes the state if it is as expected, and pushes the change to the events queue,
+        /// then waits for the event to be handled.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;param name=&quot;expectedStates&quot;&gt;The expected states.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed, and the corresponding
+        /// event has been handled; otherwise (not changed) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public async Task&lt;bool&gt; ChangeStateAndWait(ClientState newState, params ClientState[] expectedStates)
+        {
+            Task wait;
+            lock (_mutex)
+            {
+                if (!expectedStates.Contains(ClientState))
+                    return false;
+
+                ClientState = newState;
+                wait = _stateChangeQueue.AddAndWait(newState);
+            }
+
+            await wait.CfAwait();
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Waits until connected, or it becomes impossible to connect.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if connected; otherwise &lt;c&gt;false&lt;/c&gt; meaning it has become impossible to connect.&lt;/returns&gt;
+        public ValueTask&lt;bool&gt; WaitForConnectedAsync(CancellationToken cancellationToken)
+        {
+            lock (_mutex)
+            {
+                // already connected
+                if (ClientState == ClientState.Connected) return new ValueTask&lt;bool&gt;(true);
+
+                // never going to be connected
+                if (ClientState != ClientState.Started &amp;&amp; ClientState != ClientState.Disconnected) return new ValueTask&lt;bool&gt;(false);
+            }
+
+            return WaitForConnectedAsync2(cancellationToken);
+        }
+
+        private async ValueTask&lt;bool&gt; WaitForConnectedAsync2(CancellationToken cancellationToken)
+        {
+            TaskCompletionSource&lt;ClientState&gt; wait;
+            CancellationTokenRegistration reg;
+
+            lock (_mutex)
+            {
+                // already connected
+                if (ClientState == ClientState.Connected) return true;
+
+                // never going to be connected
+                if (ClientState != ClientState.Started &amp;&amp; ClientState != ClientState.Disconnected) return false;
+
+                // must wait
+                wait = new TaskCompletionSource&lt;ClientState&gt;();
+                reg = cancellationToken.Register(() =&gt; wait.TrySetCanceled());
+                _stateChangeQueue.StateChanged += x =&gt;
+                {
+                    // either connected, or never going to be connected
+                    if (x != ClientState.Started &amp;&amp; x != ClientState.Disconnected)
+                        wait.TrySetResult(x);
+
+                    // keep waiting
+                    return default;
+                };
+            }
+
+            ClientState state;
+            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
+
+            reg.Dispose();
+
+            return state == ClientState.Connected;
+        }
+
+        /// &lt;summary&gt;
+        /// Whether the cluster is connected.
+        /// &lt;/summary&gt;
+        public bool IsConnected =&gt; ClientState == ClientState.Connected;
+
+        /// &lt;summary&gt;
+        /// Whether the cluster is active i.e. connected or connecting.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When the cluster is active it is either connected, or trying to get
+        /// connected. It may make sense to retry operations that fail, because they
+        /// should succeed when the cluster is eventually connected.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool IsActive =&gt; ClientState == ClientState.Starting ||
+                                ClientState == ClientState.Started ||
+                                ClientState == ClientState.Connected ||
+                                ClientState == ClientState.Disconnected;
+
+        /// &lt;summary&gt;
+        /// Throws a &lt;see cref=&quot;ClientOfflineException&quot;/&gt; if the cluster is not active.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;An optional inner exception.&lt;/param&gt;
+        public void ThrowIfNotActive(Exception innerException = null)
+        {
+            if (!IsActive) throw new ClientOfflineException(innerException, ClientState);
+        }
+
+        #endregion
+
+        public Exception ThrowClientOfflineException()
+        {
+            // due to a race condition between ClusterMembers potentially removing all its connections,
+            // and ClusterConnections figuring we are now disconnected and changing the state, the state
+            // here could still be ClientState.Connected - fix it.
+
+            var clientState = ClientState;
+            if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
+            return new ClientOfflineException(clientState);
+
+        }
+
+        /// &lt;summary&gt;
+        /// Requests that the client shuts down.
+        /// &lt;/summary&gt;
+        public void RequestShutdown()
+        {
+            _shutdownRequested?.Invoke();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the options.
+        /// &lt;/summary&gt;
+        public IClusterOptions Options { get; }
+
+        /// &lt;summary&gt;
+        /// Whether smart routing is enabled.
+        /// &lt;/summary&gt;
+        public bool IsSmartRouting =&gt; Options.Networking.SmartRouting;
+
+        /// &lt;summary&gt;
+        /// Gets the partitioner.
+        /// &lt;/summary&gt;
+        public Partitioner Partitioner { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the logger factory.
+        /// &lt;/summary&gt;
+        public ILoggerFactory LoggerFactory { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the cluster instrumentation.
+        /// &lt;/summary&gt;
+        public ClusterInstrumentation Instrumentation { get; } = new ClusterInstrumentation();
+
+        /// &lt;summary&gt;
+        /// Gets the correlation identifier sequence.
+        /// &lt;/summary&gt;
+        public ISequence&lt;long&gt; CorrelationIdSequence { get; } = new Int64Sequence();
+
+        /// &lt;summary&gt;
+        /// Gets the next correlation identifier.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The next correlation identifier.&lt;/returns&gt;
+        public long GetNextCorrelationId() =&gt; CorrelationIdSequence.GetNext();
+
+        /// &lt;summary&gt;
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            await _stateChangeQueue.DisposeAsync().CfAwait();
+            _clusterCancellation.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,9,31,103,1],[32,9,32,55,1],[41,9,41,147,1],[43,13,43,31,1],[44,13,44,39,1],[45,13,45,37,1],[46,13,46,39,1],[47,13,47,43,1],[49,13,49,69,1],[52,9,52,10,1],[61,20,61,50,1],[64,17,64,48,1],[65,17,65,106,1],[66,13,66,14,1],[74,20,74,38,1],[77,17,77,48,1],[78,17,78,44,1],[79,13,79,14,1],[91,13,91,37,1],[91,38,91,115,0],[92,9,92,10,1],[99,13,99,40,1],[100,9,100,10,1],[109,32,109,36,1],[109,41,109,55,1],[114,36,114,40,1],[119,37,119,41,1],[132,42,132,46,1],[132,47,132,59,1],[140,13,140,26,0],[142,17,142,45,0],[143,21,143,28,0],[145,17,145,40,0],[147,17,147,49,0],[148,13,148,14,0],[149,9,149,10,0],[159,13,159,26,1],[161,17,161,50,1],[162,21,162,34,1],[164,17,164,40,1],[166,17,166,49,1],[167,17,167,29,1],[169,9,169,10,1],[179,13,179,26,1],[181,17,181,59,1],[182,21,182,34,0],[184,17,184,40,1],[186,17,186,49,1],[187,17,187,29,1],[189,9,189,10,1],[200,13,200,26,1],[202,17,202,45,1],[203,21,203,28,0],[205,17,205,40,1],[207,17,207,63,1],[208,13,208,14,1],[210,13,210,34,1],[211,9,211,10,1],[224,13,224,26,1],[226,17,226,50,1],[227,21,227,34,0],[229,17,229,40,1],[231,17,231,63,1],[232,13,232,14,1],[234,13,234,34,1],[235,13,235,25,1],[236,9,236,10,1],[249,13,249,26,0],[251,17,251,59,0],[252,21,252,34,0],[254,17,254,40,0],[255,17,255,63,0],[256,13,256,14,0],[258,13,258,34,0],[259,13,259,25,0],[260,9,260,10,0],[269,13,269,26,1],[272,17,272,58,1],[272,59,272,92,1],[275,17,275,99,1],[275,100,275,134,0],[276,13,276,14,1],[278,13,278,62,1],[279,9,279,10,1],[286,13,286,26,1],[289,17,289,58,1],[289,59,289,71,0],[292,17,292,99,1],[292,100,292,113,0],[295,17,295,64,1],[296,17,296,56,1],[296,56,296,77,0],[296,77,296,79,1],[297,17,300,21,1],[300,21,300,83,1],[300,83,301,25,1],[301,25,301,46,1],[301,46,304,21,1],[304,21,304,36,1],[304,36,305,19,1],[306,13,306,14,1],[309,19,309,54,1],[309,55,309,56,1],[309,57,309,62,0],[309,66,309,76,0],[309,77,309,78,0],[311,13,311,27,1],[313,13,313,51,1],[314,9,314,10,1],[319,36,319,72,1],[329,33,332,72,1],[340,13,340,27,1],[340,28,340,90,1],[341,9,341,10,1],[351,13,351,43,1],[352,13,352,54,1],[352,55,352,94,0],[353,13,353,60,1],[362,13,362,42,1],[363,9,363,10,1],[368,42,368,46,1],[373,39,373,70,1],[378,42,378,46,1],[383,47,383,51,1],[388,57,388,61,0],[388,66,388,94,1],[393,56,393,60,1],[393,65,393,84,1],[399,47,399,78,1],[405,13,405,62,1],[406,13,406,44,1],[407,9,407,10,1]]);
+    </script>
+  </body>
+</html>

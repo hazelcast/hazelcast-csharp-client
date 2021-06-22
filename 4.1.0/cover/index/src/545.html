@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Indexing.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    // ReSharper disable UnusedTypeParameter
+    internal partial class HMap&lt;TKey, TValue&gt; // Indexing
+    // ReSharper restore NonReadonlyMemberInGetHashCode
+    {
+        /// &lt;inheritdoc /&gt;
+        public Task AddIndexAsync(IndexOptions indexOptions)
+            =&gt; AddIndexAsync(indexOptions, CancellationToken.None);
+
+        public Task AddIndexAsync(IndexType indexType, params string[] attributes)
+        {
+            var indexConfig = new IndexOptions {Type = indexType};
+            indexConfig.AddAttributes(attributes);
+            return AddIndexAsync(indexConfig, CancellationToken.None);
+        }
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task AddIndexAsync(IndexOptions indexOptions, CancellationToken cancellationToken)
+        {
+            if (indexOptions == null) throw new ArgumentNullException(nameof(indexOptions));
+
+            var requestMessage = MapAddIndexCodec.EncodeRequest(Name, indexOptions.ValidateAndNormalize(Name));
+            var task = Cluster.Messaging.SendAsync(requestMessage, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,16,30,67,0],[34,13,34,67,0],[35,13,35,51,0],[36,13,36,71,0],[45,13,45,38,0],[45,39,45,93,0],[47,13,47,112,0],[48,13,48,87,0],[53,13,53,34,0],[55,9,55,10,0]]);
+    </script>
+  </body>
+</html>

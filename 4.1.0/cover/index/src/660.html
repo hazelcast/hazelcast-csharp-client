@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberTable.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using Hazelcast.Models;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents a cluster member table.
+    /// &lt;/summary&gt;
+    internal class MemberTable
+    {
+        private readonly Dictionary&lt;Guid, MemberInfo&gt; _members;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public MemberTable()
+            : this(-1, new Dictionary&lt;Guid, MemberInfo&gt;())
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the member table.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        public MemberTable(int version, Dictionary&lt;Guid, MemberInfo&gt; members)
+        {
+            Version = version;
+            _members = members;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the member table.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        public MemberTable(int version, IEnumerable&lt;MemberInfo&gt; members)
+            : this(version, members.ToDictionary(x =&gt; x.Id, x =&gt; x))
+        {}
+
+        /// &lt;summary&gt;
+        /// Gets the version of the member table.
+        /// &lt;/summary&gt;
+        public int Version { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the number of members in the table.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _members.Count;
+
+        /// &lt;summary&gt;
+        /// Gets the members.
+        /// &lt;/summary&gt;
+        public IReadOnlyCollection&lt;MemberInfo&gt; Members =&gt; _members.Values;
+
+        /// &lt;summary&gt;
+        /// Determines whether the table contains a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the table contains the member; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool ContainsMember(Guid memberId) =&gt; _members.ContainsKey(memberId);
+
+        /// &lt;summary&gt;
+        /// Tries to get the member associated with the specified identifier.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the table contains the member; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool TryGetMember(Guid memberId, out MemberInfo member) =&gt; _members.TryGetValue(memberId, out member);
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var text = new StringBuilder();
+            text.Append(&quot;MemberTable (&quot;);
+            text.Append(Count);
+            text.Append(&quot; members: &quot;);
+            text.Append(string.Join(&quot;, &quot;, Members));
+            text.Append(&#39;)&#39;);
+            return text.ToString();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,15,34,59,1],[35,11,35,12,1],[42,9,42,78,1],[44,13,44,31,1],[45,13,45,32,1],[46,9,46,10,1],[54,15,54,55,1],[54,55,54,59,1],[54,59,54,66,1],[54,66,54,67,1],[54,67,54,69,1],[55,10,55,11,1],[60,30,60,34,1],[65,29,65,43,1],[70,59,70,74,1],[77,54,77,84,1],[85,75,85,117,1],[90,13,90,44,0],[91,13,91,42,0],[92,13,92,32,0],[93,13,93,39,0],[94,13,94,53,0],[95,13,95,30,0],[96,13,96,36,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\CollectionExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+
+namespace Hazelcast.Core
+{
+    internal static class CollectionExtensions
+    {
+        /// &lt;summary&gt;
+        /// Removes the first occurrence of a specific key-value pair from a collection of key-value pairs.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the key.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the value.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The collection.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if an occurrence was removed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public static bool TryRemove&lt;TKey, TValue&gt;(this ICollection&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, TKey key, TValue value)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            return source.Remove(new KeyValuePair&lt;TKey, TValue&gt;(key, value));
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,32,1],[33,33,33,81,1],[34,13,34,78,1]]);
+    </script>
+  </body>
+</html>

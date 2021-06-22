@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\InPredicate.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Query
+{
+    internal class InPredicate : IPredicate, IIdentifiedDataSerializable
+    {
+        private string _attributeName;
+        private object[] _values;
+
+        public InPredicate()
+        {
+        }
+
+        public InPredicate(string attributeName, params object[] values)
+        {
+            _attributeName = attributeName;
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            _values = values ?? throw new ArgumentNullException(nameof(values));
+#pragma warning restore CA1508 // Avoid dead conditional code
+        }
+
+        public void ReadData(IObjectDataInput input)
+        {
+            _attributeName = input.ReadString();
+            var size = input.ReadInt();
+            _values = new object[size];
+            for (var i = 0; i &lt; size; i++)
+            {
+                _values[i] = input.ReadObject&lt;object&gt;();
+            }
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteString(_attributeName);
+            output.WriteInt(_values.Length);
+            foreach (var value in _values)
+            {
+                output.WriteObject(value);
+            }
+        }
+
+        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
+
+        public int ClassId =&gt; PredicateDataSerializerHook.InPredicate;
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is InPredicate other &amp;&amp; Equals(this, other);
+        }
+
+        private static bool Equals(InPredicate left, InPredicate right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+
+            return left._attributeName == right._attributeName &amp;&amp;
+                   left._values.SequenceEqual(right._values);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                // ReSharper disable NonReadonlyMemberInGetHashCode
+                return ((_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
+                       (_values != null ? _values.GetHashCode() : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
+            }
+        }
+
+        public override string ToString()
+        {
+            return &quot;(&quot; + _attributeName + &quot; IN &quot; + string.Join(&quot;, &quot;, _values) + &quot;)&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,26,29,1],[28,9,28,10,1],[30,9,30,73,1],[32,13,32,44,1],[35,13,35,81,1],[37,9,37,10,1],[41,13,41,49,1],[42,13,42,40,1],[43,13,43,40,1],[44,18,44,27,1],[44,29,44,37,1],[44,39,44,42,1],[46,17,46,57,1],[48,9,48,10,1],[52,13,52,48,1],[53,13,53,45,1],[54,22,54,31,1],[54,32,54,34,1],[54,35,54,42,1],[56,17,56,43,1],[58,9,58,10,1],[60,33,60,62,1],[62,31,62,70,1],[66,13,66,44,1],[66,45,66,57,1],[67,13,67,29,1],[67,30,67,43,1],[68,13,68,68,1],[73,13,73,46,1],[73,47,73,59,1],[74,13,74,47,1],[74,48,74,61,1],[76,13,77,62,1],[85,17,86,70,1],[93,13,93,85,1]]);
+    </script>
+  </body>
+</html>

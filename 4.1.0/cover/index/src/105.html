@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyList.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections;
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization.Collections
+{
+    /// &lt;summary&gt;
+    /// Represents a lazy list of values.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;This class is not thread-safe for writing: it should be entirely populated
+    /// in a thread-safe way, before being returned to readers.&lt;/para&gt;
+    /// &lt;para&gt;This class is thread-safe for reading, however for performance purposes, some values may
+    /// be deserialized multiple times in multi-threaded situations.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal sealed class ReadOnlyLazyList&lt;TValue&gt; : IReadOnlyList&lt;TValue&gt;
+    {
+        private readonly List&lt;ReadOnlyLazyEntry&lt;TValue&gt;&gt; _content = new List&lt;ReadOnlyLazyEntry&lt;TValue&gt;&gt;();
+        private readonly SerializationService _serializationService;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyList{TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
+        public ReadOnlyLazyList(SerializationService serializationService)
+        {
+            _serializationService = serializationService;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyList{TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;Value data items.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
+        public ReadOnlyLazyList(IEnumerable&lt;IData&gt; valueData, SerializationService serializationService)
+        {
+            _serializationService = serializationService;
+            foreach (var valueObject in valueData)
+                _content.Add(new ReadOnlyLazyEntry&lt;TValue&gt;(valueObject));
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        public void Add(IData valueData)
+        {
+            _content.Add(new ReadOnlyLazyEntry&lt;TValue&gt;(valueData));
+        }
+
+        /// &lt;summary&gt;
+        /// Ensures that a cache entry has a value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entry&quot;&gt;The cache entry.&lt;/param&gt;
+        private void EnsureValue(ReadOnlyLazyEntry&lt;TValue&gt; entry)
+        {
+            if (entry.HasValue) return;
+
+            // accepted race-condition here
+
+            entry.Value = _serializationService.ToObject&lt;TValue&gt;(entry.ValueData);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public IEnumerator&lt;TValue&gt; GetEnumerator()
+        {
+            foreach (var cacheEntry in _content)
+            {
+                EnsureValue(cacheEntry);
+                yield return cacheEntry.Value;
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public int Count =&gt; _content.Count;
+
+        /// &lt;inheritdoc /&gt;
+        public TValue this[int index]
+        {
+            get
+            {
+                var cacheEntry = _content[index];
+                EnsureValue(cacheEntry);
+                return cacheEntry.Value;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,107,0],[32,9,32,107,1],[39,9,39,75,0],[41,13,41,58,0],[42,9,42,10,0],[49,9,49,105,1],[51,13,51,58,1],[52,22,52,37,1],[52,38,52,40,1],[52,41,52,50,1],[53,17,53,74,1],[54,9,54,10,1],[62,13,62,68,0],[63,9,63,10,0],[71,13,71,32,1],[71,33,71,40,1],[75,13,75,83,1],[76,9,76,10,1],[81,22,81,36,1],[81,37,81,39,1],[81,40,81,48,1],[83,17,83,41,1],[84,17,84,47,1],[86,9,86,10,1],[91,13,91,36,1],[95,29,95,43,1],[102,17,102,50,1],[103,17,103,41,1],[104,17,104,41,1]]);
+    </script>
+  </body>
+</html>

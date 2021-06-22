@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.ReadFromByteArray.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics;
+
+namespace Hazelcast.Core
+{
+    internal static partial class BytesExtensions // Read from byte[]
+    {
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;byte&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static byte ReadByte(this byte[] bytes, int position)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfByte);
+
+            return bytes[position];
+        }
+
+        public static sbyte ReadSByte(this byte[] bytes, int position)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfUnsignedByte);
+
+            return (sbyte) bytes[position];
+        }
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;short&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static short ReadShort(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfShort);
+
+            unchecked
+            {
+                return endianness.IsBigEndian()
+
+                    ? (short) (bytes[position + 0] &lt;&lt; 8 | bytes[position + 1])
+                    : (short) (bytes[position]          | bytes[position + 1] &lt;&lt; 8);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;ushort&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static ushort ReadUShort(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfUnsignedShort);
+
+            unchecked
+            {
+                return endianness.IsBigEndian()
+
+                    ? (ushort) (bytes[position + 0] &lt;&lt; 8 | bytes[position + 1])
+                    : (ushort) (bytes[position]          | bytes[position + 1] &lt;&lt; 8);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads an &lt;see cref=&quot;int&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static int ReadInt(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfInt);
+
+            unchecked
+            {
+                return endianness.IsBigEndian()
+
+                    ? bytes[position] &lt;&lt; 24     | bytes[position + 1] &lt;&lt; 16 |
+                      bytes[position + 2] &lt;&lt; 8  | bytes[position + 3]
+
+                    : bytes[position]           | bytes[position + 1] &lt;&lt; 8 |
+                      bytes[position + 2] &lt;&lt; 16 | bytes[position + 3] &lt;&lt; 24;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;long&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static long ReadLong(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfLong);
+
+            unchecked
+            {
+                return endianness.IsBigEndian()
+
+                    ? (long) bytes[position] &lt;&lt; 56     | (long) bytes[position + 1] &lt;&lt; 48 |
+                      (long) bytes[position + 2] &lt;&lt; 40 | (long) bytes[position + 3] &lt;&lt; 32 |
+                      (long) bytes[position + 4] &lt;&lt; 24 | (long) bytes[position + 5] &lt;&lt; 16 |
+                      (long) bytes[position + 6] &lt;&lt; 8  |        bytes[position + 7]
+
+                    :        bytes[position]           | (long) bytes[position + 1] &lt;&lt; 8 |
+                      (long) bytes[position + 2] &lt;&lt; 16 | (long) bytes[position + 3] &lt;&lt; 24 |
+                      (long) bytes[position + 4] &lt;&lt; 32 | (long) bytes[position + 5] &lt;&lt; 40 |
+                      (long) bytes[position + 6] &lt;&lt; 48 | (long) bytes[position + 7] &lt;&lt; 56;
+            }
+        }
+
+
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;float&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static float ReadFloat(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfFloat);
+
+            int value;
+            unchecked
+            {
+                value = endianness.IsBigEndian()
+
+                    ? bytes[position] &lt;&lt; 24     | bytes[position + 1] &lt;&lt; 16 |
+                      bytes[position + 2] &lt;&lt; 8  | bytes[position + 3]
+
+                    : bytes[position]           | bytes[position + 1] &lt;&lt; 8 |
+                      bytes[position + 2] &lt;&lt; 16 | bytes[position + 3] &lt;&lt; 24;
+            }
+
+#if NETSTANDARD2_0
+            return BitConverter.ToSingle(BitConverter.GetBytes(value), 0);
+#else
+            // this is essentially an unsafe *((float*)&amp;value)
+            return BitConverter.Int32BitsToSingle(value);
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;double&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static double ReadDouble(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfDouble);
+
+            long value;
+            unchecked
+            {
+                value = endianness.IsBigEndian()
+
+                    ? (long) bytes[position] &lt;&lt; 56     | (long) bytes[position + 1] &lt;&lt; 48 |
+                      (long) bytes[position + 2] &lt;&lt; 40 | (long) bytes[position + 3] &lt;&lt; 32 |
+                      (long) bytes[position + 4] &lt;&lt; 24 | (long) bytes[position + 5] &lt;&lt; 16 |
+                      (long) bytes[position + 6] &lt;&lt; 8  |        bytes[position + 7]
+
+                    :        bytes[position]           | (long) bytes[position + 1] &lt;&lt; 8 |
+                      (long) bytes[position + 2] &lt;&lt; 16 | (long) bytes[position + 3] &lt;&lt; 24 |
+                      (long) bytes[position + 4] &lt;&lt; 32 | (long) bytes[position + 5] &lt;&lt; 40 |
+                      (long) bytes[position + 6] &lt;&lt; 48 | (long) bytes[position + 7] &lt;&lt; 56;
+            }
+
+            // this is essentially an unsafe *((double*)&amp;value)
+            return BitConverter.Int64BitsToDouble(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;bool&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static bool ReadBool(this byte[] bytes, int position)
+            =&gt; bytes.ReadByte(position) != 0;
+
+        /// &lt;summary&gt;
+        /// Reads a &lt;see cref=&quot;char&quot;/&gt; value from an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be read.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;The value.&lt;/returns&gt;
+        public static char ReadChar(this byte[] bytes, int position, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfChar);
+            unchecked
+            {
+                return (char)(endianness.IsBigEndian()
+
+                    ? bytes[position] &lt;&lt; 8 | bytes[position + 1]
+                    : bytes[position]      | bytes[position + 1] &lt;&lt; 8);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,13,32,36,1],[39,13,39,44,0],[55,17,58,85,1],[75,17,78,86,1],[95,17,101,77,1],[118,17,128,91,1],[148,17,154,77,1],[161,13,161,58,1],[179,17,189,91,1],[193,13,193,58,1],[203,16,203,45,1],[217,17,220,72,1]]);
+    </script>
+  </body>
+</html>

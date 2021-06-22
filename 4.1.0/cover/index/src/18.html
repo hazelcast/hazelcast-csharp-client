@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.Misc.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+using Hazelcast.NearCaching;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast
+{
+    public partial class HazelcastOptions // Misc
+    {
+        // NOTE
+        // AsyncStart is not an option for the CSharp client,
+        // as it would make little sense for our full-async code
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; for &lt;see cref=&quot;ILoggerFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SingletonServiceFactory{T}&quot;/&gt; for &lt;see cref=&quot;ILoggerFactory&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The only option available for logging is the &lt;see cref=&quot;ILoggerFactory&quot;/&gt; creator, which can only
+        /// be set programmatically. All other logging options (level, etc.) are configured via the
+        /// default Microsoft configuration system. See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging
+        /// for details and documentation.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+
+        [BinderIgnore]
+        public SingletonServiceFactory&lt;ILoggerFactory&gt; LoggerFactory { get; } = new SingletonServiceFactory&lt;ILoggerFactory&gt;();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SerializationOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The serialization options.&lt;/returns&gt;
+        public SerializationOptions Serialization { get; } = new SerializationOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;CommonNearCacheOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The common Near Cache options.&lt;/returns&gt;
+        public CommonNearCacheOptions NearCache { get; } = new CommonNearCacheOptions();
+
+        /// &lt;summary&gt;
+        /// Gets or sets the configuration pattern matcher.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This can only be set programmatically.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IPatternMatcher PatternMatcher { get; set; } = new MatchingPointPatternMatcher();
+
+        /// &lt;summary&gt;
+        /// Gets the dictionary which contains the &lt;see cref=&quot;NearCacheOptions&quot;/&gt; for each near cache.
+        /// &lt;/summary&gt;
+        public IDictionary&lt;string, NearCacheOptions&gt; NearCaches { get; } = new Dictionary&lt;string, NearCacheOptions&gt;();
+
+        /// &lt;summary&gt;
+        /// Gets options for a near cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name.&lt;/param&gt;
+        /// &lt;returns&gt;Options for the Near Cache matching the specified &lt;paramref name=&quot;name&quot;/&gt;.&lt;/returns&gt;
+        public NearCacheOptions GetNearCacheOptions(string name)
+        {
+            if (NearCaches.TryGetValue(name, out var configuration))
+                return configuration;
+
+            var key = PatternMatcher.Matches(NearCaches.Keys, name);
+            return key == null ? null : NearCaches[key];
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[42,72,42,76,1],[42,81,42,126,1],[42,81,42,126,1],[48,53,48,57,1],[48,62,48,88,1],[48,62,48,88,1],[54,51,54,55,1],[54,60,54,88,1],[54,60,54,88,1],[62,49,62,53,1],[62,54,62,58,1],[62,63,62,96,1],[62,63,62,96,1],[67,67,67,71,1],[67,76,67,118,1],[67,76,67,118,1],[76,13,76,69,1],[77,17,77,38,0],[79,13,79,69,1],[80,13,80,57,1]]);
+    </script>
+  </body>
+</html>

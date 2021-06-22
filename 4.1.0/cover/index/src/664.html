@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\RetryStrategy.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Implements a &lt;see cref=&quot;IRetryStrategy&quot;/&gt; with back-off and timeout.
+    /// &lt;/summary&gt;
+    internal class RetryStrategy : IRetryStrategy
+    {
+        private readonly int _initialBackOffMilliseconds;
+        private readonly int _maxBackOffMilliseconds;
+        private readonly double _multiplier;
+        private readonly long _timeoutMilliseconds;
+        private readonly double _jitter;
+        private readonly string _action;
+        private readonly ILogger _logger;
+
+        private int _currentBackOffMilliseconds;
+        private int _attempts;
+        private DateTime _begin;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public RetryStrategy(string action, ConnectionRetryOptions options, ILoggerFactory loggerFactory)
+            : this(action,
+                (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
+                options.MaxBackoffMilliseconds,
+                options.Multiplier,
+                options.ClusterConnectionTimeoutMilliseconds,
+                options.Jitter,
+                loggerFactory)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
+        /// &lt;param name=&quot;initialBackOffMilliseconds&quot;&gt;The initial back-off value in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;maxBackOffMilliseconds&quot;&gt;The maximum back-off value in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;multiplier&quot;&gt;The multiplier.&lt;/param&gt;
+        /// &lt;param name=&quot;timeoutMilliseconds&quot;&gt;The timeout in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;jitter&quot;&gt;A jitter factor.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public RetryStrategy(string action, int initialBackOffMilliseconds, int maxBackOffMilliseconds, double multiplier, long timeoutMilliseconds, double jitter, ILoggerFactory loggerFactory)
+        {
+            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(action));
+#pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
+            _action = action.ToLowerInvariant();
+#pragma warning restore CA1308
+            _initialBackOffMilliseconds = initialBackOffMilliseconds;
+            _maxBackOffMilliseconds = maxBackOffMilliseconds;
+            _multiplier = multiplier;
+            _timeoutMilliseconds = timeoutMilliseconds;
+            _jitter = jitter;
+            _logger = loggerFactory?.CreateLogger&lt;RetryStrategy&gt;() ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            Restart();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask&lt;bool&gt; WaitAsync(CancellationToken cancellationToken)
+        {
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException();
+
+            _attempts++;
+
+            var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
+
+            if (_timeoutMilliseconds &gt; 0 &amp;&amp; elapsed &gt; _timeoutMilliseconds)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, timeout ({_timeoutMilliseconds}ms).&quot;);
+                return false;
+            }
+
+            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
+            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
+
+            _logger.LogDebug($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms&quot;);
+
+            try
+            {
+                await Task.Delay(delay, cancellationToken).CfAwait();
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, cancelled.&quot;);
+                return false;
+            }
+            catch (Exception)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, error.&quot;);
+                return false;
+            }
+
+            _currentBackOffMilliseconds = (int) Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            return true;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public void Restart()
+        {
+            _attempts = 0;
+            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
+            _begin = DateTime.UtcNow;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[48,15,54,31,1],[55,11,55,12,1],[67,9,67,194,1],[69,13,69,51,1],[69,52,69,127,0],[71,13,71,49,1],[73,13,73,70,1],[74,13,74,62,1],[75,13,75,38,1],[76,13,76,56,1],[77,13,77,30,1],[78,13,78,126,1],[80,13,80,23,1],[81,9,81,10,1],[86,13,86,59,1],[87,17,87,56,0],[89,13,89,25,1],[91,13,91,78,1],[93,13,93,76,1],[95,17,95,140,1],[96,17,96,30,1],[99,13,99,113,1],[100,13,100,90,1],[102,13,102,122,1],[106,17,106,70,1],[107,13,107,14,1],[108,13,108,47,0],[110,17,110,115,0],[111,17,111,30,0],[113,13,113,30,0],[115,17,115,111,0],[116,17,116,30,0],[119,13,119,126,1],[120,13,120,25,1],[121,9,121,10,1],[126,13,126,27,1],[127,13,127,106,1],[128,13,128,38,1],[129,9,129,10,1]]);
+    </script>
+  </body>
+</html>

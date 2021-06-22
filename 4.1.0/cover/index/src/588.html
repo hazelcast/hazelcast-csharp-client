@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Clock.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+#nullable enable
+
+using System;
+using System.Threading;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents the system clock.
+    /// &lt;/summary&gt;
+    internal static class Clock
+    {
+        // unix epoch is 00:00:00 UTC on January 1st, 1970
+        private static readonly DateTime Jan1St1970 = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+        private static int _initialized;
+        private static long _offsetMilliseconds;
+
+        /// &lt;summary&gt;
+        /// Initializes the clock.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Clock options.&lt;/param&gt;
+        internal static void Initialize(ClockOptions options)
+        {
+            if (Interlocked.CompareExchange(ref _initialized, 1, 0) == 1)
+            {
+                //throw new InvalidOperationException(&quot;The clock has already been initialized.&quot;);
+                if (options.OffsetMilliseconds != _offsetMilliseconds)
+                    throw new InvalidOperationException(&quot;The clock has already been initialized with a different offset.&quot;);
+                return;
+            }
+            _offsetMilliseconds = options.OffsetMilliseconds;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Resets the clock.
+        /// &lt;/summary&gt;
+        internal static void Reset()
+        {
+            _offsetMilliseconds = 0;
+            _initialized = 0;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the epoch time in milliseconds, i.e. the number of milliseconds that have elapsed since the epoch (00:00:00 UTC on January 1st, 1970).
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;The epoch time in milliseconds.&lt;/remarks&gt;
+        public static long Milliseconds
+            =&gt; ToEpoch(DateTime.UtcNow);
+
+        /// &lt;summary&gt;
+        /// Gets a number (-1) representing &#39;never&#39;.
+        /// &lt;/summary&gt;
+        public static long Never
+            =&gt; -1L;
+
+        /// &lt;summary&gt;
+        /// Gets the origin date and time.
+        /// &lt;/summary&gt;
+        public static DateTime Origin
+            =&gt; Jan1St1970;
+
+        /// &lt;summary&gt;
+        /// Gets the UTC &lt;see cref=&quot;DateTime&quot;/&gt; corresponding to an epoch time.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;epochMilliseconds&quot;&gt;The epoch time in milliseconds.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding UTC &lt;see cref=&quot;DateTime&quot;/&gt;.&lt;/returns&gt;
+        public static DateTime ToDateTime(long epochMilliseconds)
+            =&gt; Jan1St1970.AddMilliseconds(epochMilliseconds - _offsetMilliseconds);
+
+        /// &lt;summary&gt;
+        /// Gets the epoch time in milliseconds corresponding to an UTC &lt;see cref=&quot;DateTime&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;dateTime&quot;&gt;The &lt;see cref=&quot;DateTime&quot;/&gt;.&lt;/param&gt;
+        /// &lt;returns&gt;The epoch time in milliseconds corresponding to the &lt;see cref=&quot;DateTime&quot;/&gt;.&lt;/returns&gt;
+        public static long ToEpoch(DateTime dateTime)
+            =&gt; (long) (dateTime - Jan1St1970).TotalMilliseconds + _offsetMilliseconds;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,107,1],[39,13,39,74,1],[42,17,42,71,1],[43,21,43,124,1],[44,17,44,24,1],[46,13,46,62,1],[47,9,47,10,1],[55,13,55,37,1],[56,13,56,30,1],[57,9,57,10,1],[64,16,64,40,1],[70,16,70,19,1],[76,16,76,26,1],[84,16,84,83,1],[92,16,92,86,1]]);
+    </script>
+  </body>
+</html>

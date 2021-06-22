@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\Heartbeat.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol.Codecs;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    internal class Heartbeat : IAsyncDisposable
+    {
+        private readonly TimeSpan _period;
+        private readonly TimeSpan _timeout;
+
+        private readonly TerminateConnections _terminateConnections;
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMessaging _clusterMessaging;
+        private readonly ILogger _logger;
+
+        private readonly CancellationTokenSource _cancel;
+        private readonly Task _heartbeating;
+
+        private readonly HashSet&lt;MemberConnection&gt; _connections = new HashSet&lt;MemberConnection&gt;();
+        private readonly object _mutex = new object();
+
+        private int _active;
+
+        public Heartbeat(ClusterState clusterState, ClusterMessaging clusterMessaging, HeartbeatOptions options, TerminateConnections terminateConnections)
+        {
+            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
+            _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
+            _terminateConnections = terminateConnections;
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            _logger = clusterState.LoggerFactory.CreateLogger&lt;Heartbeat&gt;(); // FIXME with client ID?
+            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
+            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
+
+            if (options.PeriodMilliseconds &lt; 0)
+            {
+                _logger.LogInformation(&quot;Heartbeat is disabled (period &lt; 0)&quot;);
+                return;
+            }
+
+            // sanity checks
+            if (_timeout &lt;= _period)
+            {
+                var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
+                _logger.LogWarning(&quot;Heartbeat timeout {Timeout}ms is &lt;= period {Period}ms, falling back to a {Value}ms timeout.&quot;,
+                    _timeout, _period.TotalMilliseconds, timeout);
+                _timeout = timeout;
+            }
+
+            _logger.LogInformation(&quot;Heartbeat with {Period}ms period and {Timeout}ms timeout&quot;,
+                _period.ToString(&quot;hh\\:mm\\:ss&quot;, CultureInfo.InvariantCulture),
+                _timeout.ToString(&quot;hh\\:mm\\:ss&quot;, CultureInfo.InvariantCulture));
+
+            HConsole.Configure(x =&gt; x.Configure&lt;Heartbeat&gt;().SetPrefix(&quot;HEARTBEAT&quot;)); // FIXME with client ID?
+
+            _cancel = new CancellationTokenSource();
+            _heartbeating = BeatAsync(_cancel.Token);
+            _active = 1;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection to add.&lt;/param&gt;
+        public void AddConnection(MemberConnection connection)
+        {
+            lock (_mutex) { if (connection.Active) _connections.Add(connection); }
+        }
+
+        /// &lt;summary&gt;
+        /// Removes a connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection to remove.&lt;/param&gt;
+        public void RemoveConnection(MemberConnection connection)
+        {
+            lock (_mutex) _connections.Remove(connection);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
+                return;
+
+            HConsole.WriteLine(this, &quot;Stopping...&quot;);
+
+            _cancel.Cancel();
+
+            try
+            {
+                await _heartbeating.CfAwaitCanceled();
+            }
+            catch (Exception e)
+            {
+                // unexpected
+                _logger.LogWarning(e, &quot;Caught an exception while disposing Heartbeat.&quot;);
+            }
+
+            _cancel.Dispose();
+
+            HConsole.WriteLine(this, &quot;Stopped.&quot;);
+        }
+
+        private async Task BeatAsync(CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(_period, cancellationToken).CfAwait();
+                if (cancellationToken.IsCancellationRequested) break;
+                HConsole.WriteLine(this, $&quot;Run with period={(int)_period.TotalSeconds}s, timeout={(int)_timeout.TotalSeconds}s&quot;);
+                await RunAsync(cancellationToken).CfAwait();
+            }
+        }
+
+        // runs once on the whole cluster
+        private async Task RunAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug(&quot;Run heartbeat&quot;);
+
+            var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
+            const int maxTasks = 4; // max 4 at a time TODO: consider making it an option?
+
+            // run for each member
+            var tasks = new List&lt;Task&gt;();
+
+            // capture and enumerate connections
+            List&lt;MemberConnection&gt; connections;
+            lock (_mutex) connections = new List&lt;MemberConnection&gt;(_connections);
+            using var connectionsEnumerator = connections.Where(x =&gt; x.Active).GetEnumerator();
+
+            void StartCurrent()
+            {
+                var connection = connectionsEnumerator.Current;
+                if (connection != null &amp;&amp; connection.Active)
+                    tasks.Add(RunAsync(connection, now, cancellationToken));
+            }
+
+            // start maxTasks tasks
+            while (tasks.Count &lt; maxTasks &amp;&amp; connectionsEnumerator.MoveNext() &amp;&amp; !cancellationToken.IsCancellationRequested) StartCurrent();
+
+            // each time a task completes, replace it with another task
+            while (tasks.Count &gt; 0)
+            {
+                var task = await Task.WhenAny(tasks).CfAwait();
+                tasks.Remove(task);
+
+                if (connectionsEnumerator.MoveNext() &amp;&amp; !cancellationToken.IsCancellationRequested) StartCurrent();
+            }
+        }
+
+        // runs once on a connection to a member
+        private async Task RunAsync(MemberConnection connection, DateTime now, CancellationToken cancellationToken)
+        {
+            var readElapsed = now - connection.LastReadTime;
+            var writeElapsed = now - connection.LastWriteTime;
+
+            HConsole.WriteLine(this, $&quot;Heartbeat {_clusterState.ClientName} on {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}, &quot; +
+                                     $&quot;written {(int)writeElapsed.TotalSeconds}s ago, &quot; +
+                                     $&quot;read {(int)readElapsed.TotalSeconds}s ago&quot;);
+
+            // make sure we read from the client at least every &#39;timeout&#39;,
+            // which is greater than the interval, so we *should* have
+            // read from the last ping, if nothing else, so no read means
+            // that the client not responsive - terminate it
+
+            if (readElapsed &gt; _timeout &amp;&amp; writeElapsed &lt; _period)
+            {
+                _logger.LogWarning(&quot;Heartbeat timeout for connection {ConnectionId}, terminating.&quot;, connection.Id.ToShortString());
+                if (connection.Active) _terminateConnections.Add(connection);
+                return;
+            }
+
+            // make sure we write to the client at least every &#39;period&#39;,
+            // this should trigger a read when we receive the response
+            if (writeElapsed &gt; _period)
+            {
+                _logger.LogDebug(&quot;Ping client {ClientId}&quot;, connection.Id.ToShortString());
+
+                var requestMessage = ClientPingCodec.EncodeRequest();
+
+                try
+                {
+                    // ping should complete within the default invocation timeout
+                    var responseMessage = await _clusterMessaging
+                        .SendToMemberAsync(requestMessage, connection, cancellationToken)
+                        .CfAwait();
+
+                    // just to be sure everything is ok
+                    _ = ClientPingCodec.DecodeResponse(responseMessage);
+                }
+                catch (ClientOfflineException)
+                {
+                    // down
+                }
+                catch (TaskTimeoutException)
+                {
+                    _logger.LogWarning(&quot;Heartbeat ping timeout for connection {ConnectionId}, terminating.&quot;, connection.Id.ToShortString());
+                    if (connection.Active) _terminateConnections.Add(connection);
+                }
+                catch (Exception e)
+                {
+                    // unexpected
+                    _logger.LogWarning(e, &quot;Heartbeat has thrown an exception, but will continue.&quot;);
+                }
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[41,9,41,99,1],[42,9,42,55,1],[46,9,46,156,1],[48,13,48,99,1],[49,13,49,111,1],[50,13,50,58,1],[51,13,51,33,1],[51,34,51,83,0],[53,13,53,76,1],[54,13,54,77,1],[55,13,55,79,1],[57,13,57,48,1],[59,17,59,78,0],[60,17,60,24,0],[64,13,64,37,1],[66,17,66,88,0],[67,17,68,67,0],[69,17,69,36,0],[72,13,74,82,1],[78,13,78,53,1],[79,13,79,54,1],[80,13,80,25,1],[81,9,81,10,1],[89,13,89,26,1],[89,29,89,51,1],[89,52,89,81,1],[89,82,89,83,1],[90,9,90,10,1],[98,13,98,26,1],[98,27,98,59,1],[99,9,99,10,1],[105,13,105,69,1],[106,17,106,24,0],[110,13,110,30,1],[114,17,114,55,1],[115,13,115,14,1],[116,13,116,32,0],[119,17,119,89,0],[120,13,120,14,0],[122,13,122,31,1],[125,9,125,10,1],[129,13,129,63,1],[131,17,131,72,1],[132,17,132,63,1],[134,17,134,61,1],[136,9,136,10,0],[141,13,141,47,1],[143,13,143,36,1],[147,13,147,42,1],[151,13,151,26,1],[151,27,151,82,1],[152,13,152,70,1],[152,70,152,78,1],[152,78,152,96,1],[156,17,156,64,1],[157,17,157,61,1],[158,21,158,77,1],[159,13,159,14,1],[162,13,162,125,1],[162,126,162,141,1],[165,13,165,36,1],[167,17,167,64,1],[168,17,168,36,1],[170,17,170,100,1],[170,101,170,116,0],[172,9,172,10,1],[177,13,177,61,1],[178,13,178,63,1],[189,13,189,66,1],[191,17,191,132,0],[192,17,192,39,0],[192,40,192,78,0],[193,17,193,24,0],[198,13,198,40,1],[200,17,200,91,1],[202,17,202,70,1],[207,21,209,36,1],[212,21,212,73,1],[213,17,213,18,1],[214,17,214,47,0],[217,17,217,18,0],[218,17,218,45,0],[220,21,220,141,0],[221,21,221,43,0],[221,44,221,82,0],[222,17,222,18,0],[223,17,223,36,0],[226,21,226,100,0],[227,17,227,18,0],[229,9,229,10,1]]);
+    </script>
+  </body>
+</html>

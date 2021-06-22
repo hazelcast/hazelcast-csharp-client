@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClient.Objects.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.CP;
+using Hazelcast.DistributedObjects;
+using Hazelcast.DistributedObjects.Impl;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast
+{
+    internal partial class HazelcastClient // Distributed Objects
+    {
+        private readonly ISequence&lt;long&gt; _lockReferenceIdSequence = new Int64Sequence();
+        private ICPSubsystem _cpSubsystem;
+
+        /// &lt;summary&gt;
+        /// Gets the CP subsystem.
+        /// &lt;/summary&gt;
+        public ICPSubsystem CPSubsystem =&gt; _cpSubsystem ??= new CPSubsystem(Cluster, SerializationService);
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DestroyAsync(IDistributedObject o)
+        {
+            await _distributedOjects.DestroyAsync(o).CfAwait();
+        }
+
+        // (internal for tests only)
+        internal async ValueTask DestroyAsync(string serviceName, string name)
+        {
+            await _distributedOjects.DestroyAsync(serviceName, name).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;IHMap&lt;TKey, TValue&gt;&gt; GetMapAsync&lt;TKey, TValue&gt;(string name)
+        {
+            // lookup a cache configuration for the specified map
+            var nearCacheOptions = _options.GetNearCacheOptions(name);
+            var nearCache = nearCacheOptions == null
+                ? null
+                : await _nearCacheManager.GetOrCreateNearCacheAsync&lt;TValue&gt;(name, nearCacheOptions).CfAwait();
+
+            HMap&lt;TKey, TValue&gt; CreateMap(string n, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+                =&gt; nearCacheOptions == null
+                    ? new HMap&lt;TKey, TValue&gt;(n, factory, cluster, serializationService, _lockReferenceIdSequence, loggerFactory)
+                    : new HMapWithCache&lt;TKey, TValue&gt;(n, factory, cluster, serializationService, _lockReferenceIdSequence, nearCache, loggerFactory);
+
+            return await _distributedOjects.GetOrCreateAsync&lt;IHMap&lt;TKey, TValue&gt;, HMap&lt;TKey, TValue&gt;&gt;(ServiceNames.Map, name, true, CreateMap).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHReplicatedMap&lt;TKey, TValue&gt;&gt; GetReplicatedMapAsync&lt;TKey, TValue&gt;(string name)
+        {
+            var partitionId = Cluster.Partitioner.GetRandomPartitionId();
+
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHReplicatedMap&lt;TKey, TValue&gt;, HReplicatedMap&lt;TKey, TValue&gt;&gt;(ServiceNames.ReplicatedMap, name, true,
+                (n, f, c, sr, lf)
+                    =&gt; new HReplicatedMap&lt;TKey,TValue&gt;(n, f, c, sr, partitionId, lf));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHMultiMap&lt;TKey, TValue&gt;&gt; GetMultiMapAsync&lt;TKey, TValue&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHMultiMap&lt;TKey, TValue&gt;, HMultiMap&lt;TKey, TValue&gt;&gt;(ServiceNames.MultiMap, name, true,
+                (n, f, c, sr, lf)
+                    =&gt; new HMultiMap&lt;TKey, TValue&gt;(n, f, c, sr, _lockReferenceIdSequence, lf));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHTopic&lt;T&gt;&gt; GetTopicAsync&lt;T&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHTopic&lt;T&gt;, HTopic&lt;T&gt;&gt;(ServiceNames.Topic, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    =&gt; new HTopic&lt;T&gt;(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHList&lt;T&gt;&gt; GetListAsync&lt;T&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHList&lt;T&gt;, HList&lt;T&gt;&gt;(ServiceNames.List, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    =&gt; new HList&lt;T&gt;(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHSet&lt;T&gt;&gt; GetSetAsync&lt;T&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHSet&lt;T&gt;, HSet&lt;T&gt;&gt;(ServiceNames.Set, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    =&gt; new HSet&lt;T&gt;(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHQueue&lt;T&gt;&gt; GetQueueAsync&lt;T&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHQueue&lt;T&gt;, HQueue&lt;T&gt;&gt;(ServiceNames.Queue, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    =&gt; new HQueue&lt;T&gt;(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;IHRingBuffer&lt;T&gt;&gt; GetRingBufferAsync&lt;T&gt;(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync&lt;IHRingBuffer&lt;T&gt;, HRingBuffer&lt;T&gt;&gt;(ServiceNames.RingBuffer, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    =&gt; new HRingBuffer&lt;T&gt;(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,89,1],[34,44,34,107,1],[39,13,39,64,1],[40,9,40,10,1],[45,13,45,80,0],[46,9,46,10,0],[52,13,52,71,1],[53,13,55,111,1],[58,20,60,149,1],[62,13,62,154,1],[63,9,63,10,1],[72,13,72,74,1],[74,13,76,87,1],[76,24,76,85,1],[81,13,81,41,1],[83,9,83,10,1],[92,13,94,96,1],[94,24,94,94,1],[99,13,99,41,1],[101,9,101,10,1],[110,13,112,97,1],[112,24,112,95,1],[117,13,117,41,1],[119,9,119,10,1],[128,13,130,96,1],[130,24,130,94,1],[135,13,135,41,1],[137,9,137,10,1],[146,13,148,95,1],[148,24,148,93,1],[153,13,153,41,1],[155,9,155,10,1],[164,13,166,97,1],[166,24,166,95,1],[171,13,171,41,1],[173,9,173,10,1],[182,13,184,102,1],[184,24,184,100,1],[189,13,189,41,1],[191,9,191,10,1]]);
+    </script>
+  </body>
+</html>

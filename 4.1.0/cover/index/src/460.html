@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\MemberVersion.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Models
+{
+    /// &lt;summary&gt;
+    /// Represents the version of a cluster member.
+    /// &lt;/summary&gt;
+    public class MemberVersion
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberVersion&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;major&quot;&gt;The major version number.&lt;/param&gt;
+        /// &lt;param name=&quot;minor&quot;&gt;The minor version number.&lt;/param&gt;
+        /// &lt;param name=&quot;patch&quot;&gt;The patch version number.&lt;/param&gt;
+        public MemberVersion(byte major, byte minor, byte patch)
+        {
+            Major = major;
+            Minor = minor;
+            Patch = patch;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the major version number.
+        /// &lt;/summary&gt;
+        public byte Major { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the minor version number.
+        /// &lt;/summary&gt;
+        public byte Minor { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the patch version number.
+        /// &lt;/summary&gt;
+        public byte Patch { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            return $&quot;{Major}.{Minor}.{Patch}&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,65,1],[30,13,30,27,1],[31,13,31,27,1],[32,13,32,27,1],[33,9,33,10,1],[38,29,38,33,1],[43,29,43,33,1],[48,29,48,33,1],[53,13,53,47,1]]);
+    </script>
+  </body>
+</html>

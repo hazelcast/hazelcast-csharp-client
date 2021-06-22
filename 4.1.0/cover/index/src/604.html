@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HConsoleOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+#if HZ_CONSOLE
+using System.Collections.Generic;
+#else
+// ReSharper disable UnusedTypeParameter
+#pragma warning disable CA1801 // Review unused parameters
+#pragma warning disable CA1822 // Mark members as static
+#endif
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents the options for the console.
+    /// &lt;/summary&gt;
+#if HZ_CONSOLE_PUBLIC
+    public
+#else
+    internal
+#endif
+    class HConsoleOptions
+    {
+#if HZ_CONSOLE
+        private readonly Dictionary&lt;object, HConsoleTargetOptions&gt; _targetConfigs = new Dictionary&lt;object, HConsoleTargetOptions&gt;();
+        private readonly Dictionary&lt;Type, HConsoleTargetOptions&gt; _typeConfigs = new Dictionary&lt;Type, HConsoleTargetOptions&gt;();
+#endif
+
+        // Configure methods are not conditional (since they have a non-void return type)
+        // but that does not matter because they will be invoked from within the
+        // HConsole.Configure() method, which *is* conditional, so they won&#39;t be
+        // compiled either when HZ_CONSOLE is not defined.
+
+        #region Configure
+
+        /// &lt;summary&gt;
+        /// Configures default options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The default options to configure.&lt;/returns&gt;
+        public HConsoleTargetOptions Configure()
+#if HZ_CONSOLE
+            =&gt; Configure&lt;object&gt;();
+#else
+            =&gt; default;
+#endif
+
+        /// &lt;summary&gt;
+        /// Configures options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TSource&quot;&gt;The source type.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
+        public HConsoleTargetOptions Configure&lt;TSource&gt;()
+#if HZ_CONSOLE
+            =&gt; Configure(typeof (TSource));
+#else
+            =&gt; default;
+#endif
+
+        /// &lt;summary&gt;
+        /// Configures options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceType&quot;&gt;The source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
+        public HConsoleTargetOptions Configure(Type sourceType)
+        {
+#if HZ_CONSOLE
+            if (!_typeConfigs.TryGetValue(sourceType ?? throw new ArgumentNullException(nameof(sourceType)), out var info))
+                info = _typeConfigs[sourceType] = new HConsoleTargetOptions(this);
+            return info;
+#else
+            return default;
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Configures options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceTypeName&quot;&gt;The name of the source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
+        public HConsoleTargetOptions Configure(string sourceTypeName)
+#if HZ_CONSOLE
+            =&gt; Configure(Type.GetType(sourceTypeName) ?? throw new ArgumentException($&quot;Could not find type {sourceTypeName}.&quot;, nameof(sourceTypeName)));
+#else
+            =&gt; default;
+#endif
+
+        /// &lt;summary&gt;
+        /// Configures options for a source object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
+        /// &lt;returns&gt;The options for the source object.&lt;/returns&gt;
+        public HConsoleTargetOptions Configure(object source)
+        {
+#if HZ_CONSOLE
+            if (!_targetConfigs.TryGetValue(source ?? throw new ArgumentNullException(nameof(source)), out var info))
+                info = _targetConfigs[source] = new HConsoleTargetOptions(this);
+            return info;
+#else
+            return default;
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the default options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The console options.&lt;/returns&gt;
+        public HConsoleOptions Clear() =&gt; Clear&lt;object&gt;();
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TSource&quot;&gt;The source type.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear&lt;TSource&gt;()
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(typeof(TSource));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceType&quot;&gt;The source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear(Type sourceType)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(sourceType ?? throw new ArgumentNullException(nameof(sourceType)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceTypeName&quot;&gt;The name of the source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear(string sourceTypeName)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(Type.GetType(sourceTypeName) ?? throw new ArgumentException($&quot;Could not find type {sourceTypeName}.&quot;, nameof(sourceTypeName)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a specific object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;target&quot;&gt;The object.&lt;/param&gt;
+        /// &lt;returns&gt;The console options.&lt;/returns&gt;
+        public HConsoleOptions Clear(object target)
+        {
+#if HZ_CONSOLE
+            _targetConfigs.Remove(target ?? throw new ArgumentNullException(nameof(target)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears all options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions ClearAll()
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Clear();
+            _targetConfigs.Clear();
+#endif
+            return this;
+        }
+
+        #endregion
+
+#if HZ_CONSOLE
+        /// &lt;summary&gt;
+        /// Gets the options for a source object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
+        /// &lt;returns&gt;The complete options that apply to the specified source object.&lt;/returns&gt;
+        public HConsoleTargetOptions GetOptions(object source)
+        {
+            if (_targetConfigs.TryGetValue(source, out var config))
+                config = config.Clone();
+            else
+                config = new HConsoleTargetOptions(this);
+
+            var type = source.GetType();
+            while (type != null &amp;&amp; !config.IsComplete)
+            {
+                if (_typeConfigs.TryGetValue(type, out var c)) config = config.Merge(c);
+                type = type.BaseType;
+            }
+
+            if (!config.IsComplete)
+                config = config.Complete();
+
+            return config;
+        }
+#endif
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[57,16,57,23,0],[69,16,69,23,0],[84,13,84,28,0],[97,16,97,23,0],[112,13,112,28,0],[120,43,120,58,0],[132,13,132,25,0],[145,13,145,25,0],[158,13,158,25,0],[171,13,171,25,0],[184,13,184,25,0]]);
+    </script>
+  </body>
+</html>

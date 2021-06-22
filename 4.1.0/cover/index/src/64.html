@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\StreamSerializerAdapter.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Text;
+
+namespace Hazelcast.Serialization
+{
+    internal sealed class StreamSerializerAdapter&lt;T&gt; : ISerializerAdapter
+    {
+        private readonly IStreamSerializer&lt;T&gt; _serializer;
+
+        public StreamSerializerAdapter(IStreamSerializer&lt;T&gt; serializer)
+        {
+            _serializer = serializer;
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public void Write(IObjectDataOutput output, object obj)
+        {
+            _serializer.Write(output, (T) obj);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public object Read(IObjectDataInput input)
+        {
+            return _serializer.Read(input);
+        }
+
+        public int TypeId =&gt; _serializer.TypeId;
+
+        public void Dispose()
+        {
+            _serializer.Dispose();
+        }
+
+        public ISerializer Serializer =&gt; _serializer;
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder(&quot;SerializerAdapter{&quot;);
+            sb.Append(&quot;serializer=&quot;).Append(_serializer);
+            sb.Append(&#39;}&#39;);
+            return sb.ToString();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,72,1],[25,13,25,38,1],[26,9,26,10,1],[31,13,31,48,1],[32,9,32,10,1],[37,13,37,44,1],[40,30,40,48,1],[44,13,44,35,1],[45,9,45,10,1],[47,42,47,53,1],[51,13,51,62,0],[52,13,52,58,0],[53,13,53,28,0],[54,13,54,34,0]]);
+    </script>
+  </body>
+</html>

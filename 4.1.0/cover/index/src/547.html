@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Locking.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    // ReSharper disable UnusedTypeParameter
+    internal partial class HMap&lt;TKey, TValue&gt; // Locking
+    {
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task LockAsync(TKey key)
+        {
+            var task = LockAsync(key, TimeSpanExtensions.MinusOneMillisecond);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task LockAsync(TKey key, TimeSpan leaseTime)
+        {
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.GetNext();
+
+            // codec wants -1 for server config, 0 for zero (useless), &quot;max&quot; for max = server config
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
+
+            var requestMessage = MapLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, refId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            _ = MapLockCodec.DecodeResponse(responseMessage);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task&lt;bool&gt; TryLockAsync(TKey key)
+        {
+            var task = TryLockAsync(key, TimeSpan.Zero, TimeSpanExtensions.MinusOneMillisecond);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task&lt;bool&gt; TryLockAsync(TKey key, TimeSpan timeToWait)
+        {
+            var task = TryLockAsync(key, timeToWait, TimeSpanExtensions.MinusOneMillisecond);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;bool&gt; TryLockAsync(TKey key, TimeSpan timeToWait, TimeSpan leaseTime)
+        {
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.GetNext();
+
+            // codec wants -1 for server config, 0 for zero (useless), &quot;max&quot; for max = server config
+            var leaseTimeMs = leaseTime.RoundedMilliseconds();
+
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = MapTryLockCodec.EncodeRequest(Name, keyData, ContextId, leaseTimeMs, timeToWaitMs, refId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+            var response = MapTryLockCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;bool&gt; IsLockedAsync(TKey key)
+            =&gt; IsLockedAsync(key, CancellationToken.None);
+
+        private async Task&lt;bool&gt; IsLockedAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MapIsLockedCodec.EncodeRequest(Name, keyData);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var response = MapIsLockedCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task UnlockAsync(TKey key)
+            =&gt; UnlockAsync(key, CancellationToken.None);
+
+        private async Task UnlockAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.GetNext();
+
+            var requestMessage = MapUnlockCodec.EncodeRequest(Name, keyData, ContextId, refId);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task ForceUnlockAsync(TKey key)
+            =&gt; ForceUnlockAsync(key, CancellationToken.None);
+
+        private async Task ForceUnlockAsync(TKey key, CancellationToken cancellationToken)
+        {
+            var keyData = ToSafeData(key);
+
+            var refId = _lockReferenceIdSequence.GetNext();
+
+            var requestMessage = MapForceUnlockCodec.EncodeRequest(Name, keyData, refId);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,79,1],[38,13,38,34,1],[40,9,40,10,1],[45,13,45,43,1],[47,13,47,60,1],[50,13,50,63,1],[52,13,52,107,1],[53,13,53,123,1],[54,13,54,62,1],[55,9,55,10,1],[64,13,64,97,1],[69,13,69,41,1],[71,9,71,10,1],[80,13,80,94,1],[85,13,85,41,1],[87,9,87,10,1],[92,13,92,43,1],[94,13,94,60,1],[97,13,97,63,1],[100,13,100,65,1],[102,13,102,124,1],[103,13,103,123,1],[104,13,104,85,1],[105,13,105,29,1],[106,9,106,10,1],[110,16,110,58,1],[114,13,114,43,1],[116,13,116,80,1],[117,13,117,142,1],[118,13,118,86,1],[119,13,119,29,1],[120,9,120,10,1],[124,16,124,56,1],[128,13,128,43,1],[130,13,130,60,1],[132,13,132,96,1],[133,13,133,115,1],[138,13,138,34,1],[140,9,140,10,1],[144,16,144,61,1],[148,13,148,43,1],[150,13,150,60,1],[152,13,152,90,1],[153,13,153,115,1],[158,13,158,34,1],[160,9,160,10,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\NetworkAddress.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents a network address.
+    /// &lt;/summary&gt;
+    public class NetworkAddress : IEquatable&lt;NetworkAddress&gt;
+    {
+        // NOTES
+        //
+        // an IP v4 address is &#39;x.x.x.x&#39; where each octet &#39;x&#39; is a byte (8 bits unsigned)
+        //
+        // an IP v4 endpoint is &#39;&lt;address&gt;:p&#39; where &#39;p&#39; is the port number
+        //
+        // an IP v6 address can be normal (pure v6) or dual (v6 + v4)
+        //  normal is &#39;y:y:y:y:y:y:y:y&#39; where each segment &#39;y&#39; is a word (16 bits unsigned)
+        //  dual is &#39;y:y:y:y:y:y:x.x.x.x&#39;
+        //  missing segments are assumed to be zeros
+        //
+        // it can also be &#39;y:y:y:y:y:y:y:y%i&#39; where &#39;i&#39; is the scope id (a number, &#39;eth0&#39;..)
+        //
+        // an IP v6 endpoint is &#39;[&lt;address&gt;]:p&#39; where &#39;p&#39; is the port number
+        //
+        // read
+        // https://superuser.com/questions/99746/why-is-there-a-percent-sign-in-the-ipv6-address
+        // https://docs.microsoft.com/en-us/previous-versions/aa917150(v=msdn.10)
+        // which explain the &#39;node-local&#39; vs &#39;link-local&#39; vs &#39;global&#39; scopes
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; class with a hostname and a port.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostName&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        public NetworkAddress(string hostName, int port = 0)
+            : this(hostName, GetIPAddressByName(hostName), port)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; class with an IP address and a port.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;ipAddress&quot;&gt;The IP address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        public NetworkAddress(IPAddress ipAddress, int port = 0)
+            : this(null, ipAddress, port)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; with an IP endpoint.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;endpoint&quot;&gt;The IP endpoint.&lt;/param&gt;
+        internal NetworkAddress(IPEndPoint endpoint)
+        {
+            IPEndPoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+
+            var ipAddress = IPEndPoint.Address;
+            if (ipAddress == null) throw new ArgumentException(&quot;Address cannot be null.&quot;, nameof(endpoint));
+
+            HostName = ipAddress.ToString();
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostName&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;param name=&quot;ipAddress&quot;&gt;The IP address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;hostName&quot;/&gt; and &lt;paramref name=&quot;ipAddress&quot;/&gt; are assumed to be consistent.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal NetworkAddress(string hostName, IPAddress ipAddress, int port)
+        {
+            if (ipAddress == null) throw new ArgumentNullException(nameof(ipAddress));
+            if (port &lt; 0) throw new ArgumentOutOfRangeException(nameof(port));
+
+            IPEndPoint = new IPEndPoint(ipAddress, port);
+            HostName = string.IsNullOrWhiteSpace(hostName) ? ipAddress.ToString() : hostName;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The origin address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        internal NetworkAddress(NetworkAddress source, int port)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (port &lt; 0) throw new ArgumentOutOfRangeException(nameof(port));
+
+            IPEndPoint = new IPEndPoint(source.IPAddress, port);
+            HostName = source.HostName;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the host name.
+        /// &lt;/summary&gt;
+        public string HostName { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the host name (prefer &lt;see cref=&quot;HostName&quot;/&gt;).
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;
+        /// &lt;para&gt;This property returns &lt;see cref=&quot;HostName&quot;/&gt; and is required by codecs
+        /// that use names derived from the protocol definitions, because the protocol
+        /// codecs generator does not know yet how to map / rename properties.&lt;/para&gt;
+        /// &lt;/returns&gt;
+        internal string Host =&gt; HostName;
+
+        /// &lt;summary&gt;
+        /// Gets the port.
+        /// &lt;/summary&gt;
+        public int Port =&gt; IPEndPoint.Port;
+
+        /// &lt;summary&gt;
+        /// Gets the IP address corresponding to this address.
+        /// &lt;/summary&gt;
+        // ReSharper disable once InconsistentNaming
+        public IPAddress IPAddress =&gt; IPEndPoint.Address;
+
+        /// &lt;summary&gt;
+        /// Gets the IP endpoint corresponding to this address.
+        /// &lt;/summary&gt;
+        // ReSharper disable once InconsistentNaming
+        public IPEndPoint IPEndPoint { get; }
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v4 address.
+        /// &lt;/summary&gt;
+        public bool IsIpV4 =&gt; IPAddress.AddressFamily == AddressFamily.InterNetwork;
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v6 address.
+        /// &lt;/summary&gt;
+        public bool IsIpV6 =&gt; IPAddress.AddressFamily == AddressFamily.InterNetworkV6;
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v6 address which is global (non-local), or scoped.
+        /// &lt;/summary&gt;
+        public bool IsIpV6GlobalOrScoped =&gt; (!IPAddress.IsIPv6SiteLocal &amp;&amp; !IPAddress.IsIPv6LinkLocal) || IPAddress.ScopeId &gt; 0;
+
+        /// &lt;summary&gt;
+        /// Gets an IP address by name, via DNS.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostname&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding IP address.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Returns the first IP v4 address available, if any,
+        /// else the first IP v6 address available. Throws if it cannot
+        /// get an IP for the hostname via DNS.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        // ReSharper disable once InconsistentNaming
+        internal static IPAddress GetIPAddressByName(string hostname)
+        {
+            if (hostname == &quot;0.0.0.0&quot;) return IPAddress.Any;
+
+            var addresses = HDns.GetHostAddresses(hostname);
+
+            // prefer an IP v4, if possible
+            return addresses.FirstOrDefault(x =&gt; x.AddressFamily == AddressFamily.InterNetwork) ??
+                   addresses.FirstOrDefault();
+        }
+
+        /// &lt;summary&gt;
+        /// Parses a string into a &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;s&quot;&gt;The string.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultPort&quot;&gt;The default port to use if none is specified.&lt;/param&gt;
+        /// &lt;returns&gt;The network address.&lt;/returns&gt;
+        internal static NetworkAddress Parse(string s, int defaultPort = 0)
+        {
+            if (TryParse(s, out NetworkAddress address, defaultPort)) return address;
+            throw new FormatException($&quot;The string \&quot;{s}\&quot; does not represent a valid network address.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to parse a string into a &lt;see cref=&quot;NetworkAddress&quot;/&gt; instance.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;s&quot;&gt;The string.&lt;/param&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The network address.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultPort&quot;&gt;The default port to use if none is specified.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the string could be parsed into an address.&lt;/returns&gt;
+        internal static bool TryParse(string s, out NetworkAddress address, int defaultPort = 0)
+        {
+            address = null;
+
+            var span = s.AsSpan();
+            var colon1 = span.IndexOf(&#39;:&#39;);
+            var colon2 = span.LastIndexOf(&#39;:&#39;);
+            var brket1 = span.IndexOf(&#39;[&#39;);
+            var brket2 = span.IndexOf(&#39;]&#39;);
+            var port = defaultPort;
+
+            // opening bracket must be first
+            if (brket1 &gt; 0) return false;
+
+            // must have both brackets, or none
+            if (brket1 == 0 != brket2 &gt;= 0) return false;
+
+            // brackets =&gt; colon if any *must* be right after closing bracket
+            if (brket1 == 0 &amp;&amp; colon2 &gt; brket2 + 1) return false;
+
+            // no bracket and single colon, or one colon after brackets
+            // =&gt; parse port
+            if ((brket2 &lt; 0 &amp;&amp; colon2 &gt; 0 &amp;&amp; colon1 == colon2) ||
+                (brket2 &gt; 0 &amp;&amp; colon2 &gt; brket2))
+            {
+#if NETSTANDARD2_0
+                if (!int.TryParse(span.Slice(colon2 + 1).ToString(), out port))
+                    return false;
+#endif
+#if NETSTANDARD2_1
+                if (!int.TryParse(span.Slice(colon2 + 1), out port))
+                    return false;
+#endif
+            }
+
+            ReadOnlySpan&lt;char&gt; hostName;
+
+#pragma warning disable IDE0057 // Slice can be simplified
+
+            if (brket1 == 0)
+            {
+                // if we have brackets, they must contain colons
+                if (colon2 &lt; 0 || colon1 &gt; brket2) return false;
+
+                // hostname is in-between brackets
+                // (and has to be parseable as an ip address)
+                hostName = span.Slice(1, brket2 - 1);
+            }
+            else
+            {
+                // one single colon = hostname is whatever is before
+                // otherwise, hostname is the whole string
+                hostName = (colon2 &gt; 0 &amp;&amp; colon1 == colon2) ? span.Slice(0, colon2) : span;
+            }
+
+#pragma warning restore IDE0057 // Slice can be simplified
+
+            // must have a hostname - look at the code above, hostname cannot be empty here
+            //if (hostName.Length == 0)
+            //    return false;
+
+            // note that in IPv6 case, hostname can contain a % followed by a scope id
+            // which is fine, IPAddress.TryParse handles it
+
+            string hostNameString;
+
+#if NET462 || NETSTANDARD2_0
+            if (IPAddress.TryParse(hostName.ToString(), out var ipAddress))
+#endif
+#if NETSTANDARD2_1
+            if (IPAddress.TryParse(hostName, out var ipAddress))
+#endif
+            {
+                // if the hostname parses to an ip address, fine
+                hostNameString = ipAddress.ToString();
+            }
+            else
+            {
+                // if we have brackets, hostname must be parseable
+                if (brket1 == 0) return false;
+
+                hostNameString = hostName.ToString();
+
+                // else, try to get the ip via DNS
+                try
+                {
+                    ipAddress = GetIPAddressByName(hostNameString);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            address = new NetworkAddress(hostNameString, ipAddress, port);
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of the network address with the same host but a different port.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of the network address with the same host but a different port.&lt;/returns&gt;
+        internal NetworkAddress WithPort(int port) =&gt; new NetworkAddress(Host, port);
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var name = IPAddress.ToString(); // or HostName?
+            return IPAddress.AddressFamily == AddressFamily.InterNetworkV6
+                ? $&quot;[{name}]:{Port}&quot;
+                : $&quot;{name}:{Port}&quot;;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode() =&gt; IPEndPoint.GetHashCode();
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+        {
+            return obj is NetworkAddress other &amp;&amp; Equals(this, other);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public bool Equals(NetworkAddress other)
+        {
+            return Equals(this, other);
+        }
+
+        /// &lt;summary&gt;
+        /// Compares two instances for equality.
+        /// &lt;/summary&gt;
+        private static bool Equals(NetworkAddress a1, NetworkAddress a2)
+        {
+            // return true if both are null or both are the same instance
+            if (ReferenceEquals(a1, a2)) return true;
+
+            // return false if either is null since the other cannot be null
+            if (a1 is null || a2 is null) return false;
+
+            // actual comparison
+            return a1.IPEndPoint.Equals(a2.IPEndPoint);
+        }
+
+        /// &lt;summary&gt;
+        /// Overrides the == operator.
+        /// &lt;/summary&gt;
+        public static bool operator ==(NetworkAddress a1, NetworkAddress a2)
+            =&gt; Equals(a1, a2);
+
+        /// &lt;summary&gt;
+        /// Overrides the != operator.
+        /// &lt;/summary&gt;
+        public static bool operator !=(NetworkAddress a1, NetworkAddress a2)
+            =&gt; !(a1 == a2);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[53,15,53,65,1],[54,11,54,12,1],[62,15,62,42,1],[63,11,63,12,1],[69,9,69,53,1],[71,13,71,88,1],[73,13,73,48,1],[74,13,74,35,1],[74,36,74,109,1],[76,13,76,45,1],[77,9,77,10,1],[88,9,88,80,1],[90,13,90,35,1],[90,36,90,87,1],[91,13,91,26,1],[91,27,91,79,1],[93,13,93,58,1],[94,13,94,94,1],[95,9,95,10,1],[103,9,103,65,1],[105,13,105,32,1],[105,33,105,81,1],[106,13,106,26,1],[106,27,106,79,1],[108,13,108,65,1],[109,13,109,40,1],[110,9,110,10,1],[115,34,115,38,1],[125,33,125,41,1],[130,28,130,43,1],[136,39,136,57,1],[142,40,142,44,1],[147,31,147,84,1],[152,31,152,86,1],[157,45,157,128,1],[172,13,172,39,1],[172,40,172,61,1],[174,13,174,61,1],[177,13,177,50,1],[177,50,177,95,1],[177,95,178,47,1],[189,13,189,70,1],[189,71,189,86,1],[190,13,190,106,1],[202,13,202,28,1],[204,13,204,35,1],[205,13,205,44,1],[206,13,206,48,1],[207,13,207,44,1],[208,13,208,44,1],[209,13,209,36,1],[212,13,212,28,1],[212,29,212,42,1],[215,13,215,44,1],[215,45,215,58,1],[218,13,218,52,1],[218,53,218,66,1],[222,13,223,49,1],[230,17,230,69,1],[231,21,231,34,1],[239,13,239,29,1],[242,17,242,51,1],[242,52,242,65,1],[246,17,246,54,1],[252,17,252,92,1],[270,13,270,65,1],[274,17,274,55,1],[279,17,279,33,1],[279,34,279,47,1],[281,17,281,54,1],[286,21,286,68,1],[287,17,287,18,1],[288,17,288,22,1],[290,21,290,34,1],[294,13,294,75,1],[295,13,295,25,1],[296,9,296,10,1],[303,55,303,85,1],[308,13,308,45,1],[309,13,311,36,1],[315,46,315,70,1],[320,13,320,71,0],[326,13,326,40,1],[335,13,335,41,1],[335,42,335,54,1],[338,13,338,42,1],[338,43,338,56,1],[341,13,341,56,1],[348,16,348,30,1],[354,16,354,27,1]]);
+    </script>
+  </body>
+</html>

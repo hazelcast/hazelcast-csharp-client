@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ConcurrentHashMapStreamSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+
+namespace Hazelcast.Serialization.DefaultSerializers
+{
+    internal class ConcurrentHashMapStreamSerializer : DictStreamSerializerBase&lt;ConcurrentDictionary&lt;object, object&gt;&gt;
+    {
+        private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
+
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeConcurrentHashMap;
+
+        public override ConcurrentDictionary&lt;object, object&gt; Read(IObjectDataInput input)
+        {
+            var size = input.ReadInt();
+            var dict = new ConcurrentDictionary&lt;object, object&gt;(DefaultConcurrencyLevel, size);
+            return DeserializeEntries(input, size, dict);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,90,0],[24,39,24,94,1],[28,13,28,40,0],[29,13,29,96,0],[30,13,30,58,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializationException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
+    /// &lt;/summary&gt;
+    [Serializable]
+    public sealed class SerializationException : HazelcastException
+    {
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SerializationException()
+            : base(ExceptionMessages.SerializationException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public SerializationException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public SerializationException(Exception innerException)
+            : base(ExceptionMessages.SerializationException, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public SerializationException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        private SerializationException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,15,32,61,0],[33,11,33,12,0],[40,15,40,28,1],[41,11,41,12,1],[50,15,50,77,0],[51,11,51,12,0],[61,15,61,44,0],[62,11,62,12,0],[72,15,72,34,0],[73,11,73,12,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCache`TValue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.NearCaching
+{
+    /// &lt;summary&gt;
+    /// Represents a typed Near Cache.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values stored in the cache.&lt;/typeparam&gt;
+    internal class NearCache&lt;TValue&gt; : IAsyncDisposable
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCache{TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cache&quot;&gt;A non-typed Near Cache.&lt;/param&gt;
+        public NearCache(NearCache cache)
+        {
+            InnerCache = cache;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the inner non-typed Near Cache.
+        /// &lt;/summary&gt;
+        public NearCache InnerCache { get; }
+
+        /// &lt;summary&gt;
+        /// Tries to add a value to the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the value could be added; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public async ValueTask&lt;bool&gt; TryAddAsync(IData keyData, IData valueData)
+            =&gt; await InnerCache.TryAddAsync(keyData, valueData).CfAwait();
+
+        /// &lt;summary&gt;
+        /// Tries to get a value from, or add a value to, the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueFactory&quot;&gt;A factory that accepts the key data and returns the value data.&lt;/param&gt;
+        /// &lt;returns&gt;An attempt at getting or adding a value to the cache.&lt;/returns&gt;
+        public async Task&lt;Maybe&lt;TValue&gt;&gt; TryGetOrAddAsync(IData keyData, Func&lt;IData, Task&lt;IData&gt;&gt; valueFactory)
+        {
+            try
+            {
+                var (success, valueObject) = await InnerCache.TryGetOrAddAsync(keyData, valueFactory).CfAwait();
+                var value = ToTValue(valueObject);
+                if (success) return value;
+                return Maybe.None;
+            }
+            catch
+            {
+                InnerCache.Remove(keyData);
+                throw;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to get a value from the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;returns&gt;An attempt at getting the value from the cache.&lt;/returns&gt;
+        public async ValueTask&lt;Attempt&lt;TValue&gt;&gt; TryGetAsync(IData keyData)
+        {
+            var (success, value) = await InnerCache.TryGetAsync(keyData).CfAwait();
+            if (!success) return Attempt.Failed;
+
+            return ToTValue(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the cache contains an entry.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the cache contains an entry with the specified key.&lt;/returns&gt;
+        public async ValueTask&lt;bool&gt; ContainsKeyAsync(IData keyData)
+            =&gt; await InnerCache.ContainsKeyAsync(keyData).CfAwait();
+
+        /// &lt;summary&gt;
+        /// Removes an entry from the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;returns&gt;Whether an entry was removed.&lt;/returns&gt;
+        public bool Remove(IData keyData)
+            =&gt; InnerCache.Remove(keyData);
+
+        /// &lt;summary&gt;
+        /// Clears the cache.
+        /// &lt;/summary&gt;
+        public void Clear()
+            =&gt; InnerCache.Clear();
+
+        /// &lt;summary&gt;
+        /// Converts a cached value object to a &lt;typeparamref name=&quot;TValue&quot;/&gt; value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;valueObject&quot;&gt;The value object.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;typeparamref name=&quot;TValue&quot;/&gt; value.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Depending on the &lt;see cref=&quot;InMemoryFormat&quot;/&gt; configured for the cache,
+        /// the internal cached value can be either &lt;see cref=&quot;IData&quot;/&gt; (i.e. serialized),
+        /// or the de-serialized &lt;typeparamref name=&quot;TValue&quot;/&gt; value.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private TValue ToTValue(object valueObject)
+        {
+            if (valueObject == null) return default;
+
+            return InnerCache.InMemoryFormat.Equals(InMemoryFormat.Binary)
+                ? InnerCache.SerializationService.ToObject&lt;TValue&gt;(valueObject)
+                : (TValue) valueObject;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            await InnerCache.DisposeAsync().CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,42,1],[34,13,34,32,1],[35,9,35,10,1],[40,39,40,43,1],[49,16,49,74,1],[61,17,61,113,1],[62,17,62,51,1],[63,17,63,29,1],[63,30,63,43,1],[64,17,64,35,1],[66,13,66,18,0],[68,17,68,44,0],[69,17,69,23,0],[71,9,71,10,1],[80,13,80,84,1],[81,13,81,26,1],[81,27,81,49,1],[83,13,83,36,1],[84,9,84,10,1],[92,16,92,68,1],[100,16,100,42,1],[106,16,106,34,1],[120,13,120,37,1],[120,38,120,53,1],[122,13,124,40,1],[130,13,130,55,1],[131,9,131,10,1]]);
+    </script>
+  </body>
+</html>

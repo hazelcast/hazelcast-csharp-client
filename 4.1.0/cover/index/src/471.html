@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\ClientMessage.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Messaging
+{
+    /// &lt;summary&gt;
+    /// Represents a message, or a fragment of a message.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;A message is composed of frames. The first frame of a message contains, in its
+    /// payload, the message type (4 bytes), the correlation id (long), the partition id (int)
+    /// or backup acknowledgement count (1 byte), and more fixed data fields. The other frames
+    /// contain more data fields.&lt;/para&gt;
+    /// &lt;para&gt;A message can be fragmented when being carried over the network, see
+    /// &lt;see cref=&quot;ClientMessageFragmentingExtensions&quot;/&gt; for details on the structure of a fragmented
+    /// message. Fragments are assembled back by the &lt;see cref=&quot;ClientMessageConnection&quot;/&gt;.&lt;/para&gt;
+    /// &lt;para&gt;Frames are a linked list controlled by &lt;see cref=&quot;FirstFrame&quot;/&gt; and
+    /// &lt;see cref=&quot;LastFrame&quot;/&gt;. The last frame always has the &lt;see cref=&quot;FrameFlags.Final&quot;/&gt;
+    /// flag set.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal partial class ClientMessage : IEnumerable&lt;Frame&gt;
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientMessage&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;firstFrame&quot;&gt;An optional first frame.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Only the single specified frame is added to the message, regardless
+        /// of whether it is part of a linked list and has a next frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ClientMessage(Frame firstFrame = null)
+        {
+            FirstFrame = LastFrame = firstFrame;
+            if (firstFrame != null)
+            {
+                firstFrame.Next = null;
+                LastFrame.Flags |= FrameFlags.Final;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Whether the operation carried by this message can be retried.
+        /// &lt;/summary&gt;
+        public bool IsRetryable { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the operation carried by this message.
+        /// &lt;/summary&gt;
+        public string OperationName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the first frame of the message.
+        /// &lt;/summary&gt;
+        public Frame FirstFrame { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the first frame of the message, or throw.
+        /// &lt;/summary&gt;
+        private Frame FirstFrameOrThrow =&gt; FirstFrame ?? throw new InvalidOperationException(&quot;Message does not have a first frame.&quot;);
+
+        /// &lt;summary&gt;
+        /// Gets or sets the last frame of the message.
+        /// &lt;/summary&gt;
+        public Frame LastFrame { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the message flags.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Getting or setting this property requires that the message has the appropriate first frame.&lt;/para&gt;
+        /// &lt;para&gt;Message flags and Frame flags are carried by the same field.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ClientMessageFlags Flags
+        {
+            get =&gt; (ClientMessageFlags) FirstFrameOrThrow.Flags;
+            set =&gt; FirstFrameOrThrow.Flags = (FrameFlags) value;
+        }
+
+        /// &lt;summary&gt;
+        /// Appends a single frame to the message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame to append.&lt;/param&gt;
+        /// &lt;returns&gt;The original message, with the frame appended.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Only the single specified frame is appended to the message, regardless
+        /// of whether it is part of a linked list and has a next frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ClientMessage Append(Frame frame)
+        {
+            if (frame == null) throw new ArgumentNullException(nameof(frame));
+
+            frame.Next = null;
+
+            if (FirstFrame == null)
+            {
+                FirstFrame = LastFrame = frame;
+            }
+            else
+            {
+                LastFrame.Flags &amp;= ~FrameFlags.Final;
+                LastFrame.Next = frame;
+                LastFrame = frame;
+            }
+
+            LastFrame.Flags |= FrameFlags.Final;
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Appends frames to the message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;firstFrame&quot;&gt;The first frame to append.&lt;/param&gt;
+        /// &lt;param name=&quot;lastFrame&quot;&gt;The last frame to append.&lt;/param&gt;
+        /// &lt;param name=&quot;trustable&quot;&gt;Whether the supplied frames can be trusted.&lt;/param&gt;
+        /// &lt;returns&gt;The original message, with the frames appended.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Append the specified frame, and all next frames if any.&lt;/para&gt;
+        /// &lt;para&gt;Does not clone the frames, so the frames cannot be reused once appended.&lt;/para&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;trustable&quot;/&gt; is true, it is assumed that &lt;see cref=&quot;lastFrame&quot;/&gt;
+        /// can be reached from &lt;see cref=&quot;firstFrame&quot;/&gt; and is already marked as final.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ClientMessage AppendFragment(Frame firstFrame, Frame lastFrame, bool trustable = false)
+        {
+            if (firstFrame == null) throw new ArgumentNullException(nameof(firstFrame));
+            if (lastFrame == null) throw new ArgumentNullException(nameof(lastFrame));
+
+            // trust the appended frame chain is safe
+            if (!trustable)
+            {
+                var frame = firstFrame;
+                while (frame.Next != null) frame = frame.Next;
+                if (frame != lastFrame)
+                    throw new ArgumentException(&quot;Broken linked list.&quot;, nameof(lastFrame));
+            }
+
+            if (LastFrame == null) // then first is null to - this is an empty message
+            {
+                FirstFrame = firstFrame; // begin with fragment
+            }
+            else
+            {
+                LastFrame.Flags &amp;= ~FrameFlags.Final; // not final anymore
+                LastFrame.Next = firstFrame; // append fragment
+            }
+
+            LastFrame = lastFrame;
+
+            // trust lastFrame is already final
+            if (!trustable)
+                LastFrame.Flags |= FrameFlags.Final;
+
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the message is backup-aware.
+        /// &lt;/summary&gt;
+        public bool IsBackupAware =&gt; Flags.HasAll(ClientMessageFlags.BackupAware);
+
+        /// &lt;summary&gt;
+        /// Determines whether the message carries a backup event.
+        /// &lt;/summary&gt;
+        public bool IsBackupEvent =&gt; Flags.HasAll(ClientMessageFlags.BackupEvent);
+
+        /// &lt;summary&gt;
+        /// Determines whether the message carries an event.
+        /// &lt;/summary&gt;
+        public bool IsEvent =&gt; Flags.HasAll(ClientMessageFlags.Event);
+
+        /// &lt;summary&gt;
+        /// Gets or sets the message type.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Getting or setting this property requires that the message has the appropriate first frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int MessageType
+        {
+            get =&gt; FirstFrameOrThrow.ReadMessageType();
+            set =&gt; FirstFrameOrThrow.WriteMessageType(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the correlation id.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Getting or setting this property requires that the message has the appropriate first frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public long CorrelationId
+        {
+            get =&gt; FirstFrameOrThrow.ReadCorrelationId();
+            set =&gt; FirstFrameOrThrow.WriteCorrelationId(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the partition id.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Getting or setting this property requires that the message has the appropriate first frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int PartitionId
+        {
+            get =&gt; FirstFrameOrThrow.ReadPartitionId();
+            set =&gt; FirstFrameOrThrow.WritePartitionId(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the fragment id.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Getting or setting this property requires that the message has the appropriate first frame.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public long FragmentId
+        {
+            get =&gt; FirstFrameOrThrow.ReadFragmentId();
+            set =&gt; FirstFrameOrThrow.WriteFragmentId(value);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the message carries an exception.
+        /// &lt;/summary&gt;
+        public bool IsException =&gt; MessageType == 0;
+
+        /// &lt;inheritdoc /&gt;
+        public IEnumerator&lt;Frame&gt; GetEnumerator()
+            =&gt; new FrameEnumerator(this);
+
+        /// &lt;inheritdoc /&gt;
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[47,9,47,54,1],[49,13,49,49,1],[50,13,50,36,1],[52,17,52,40,1],[53,17,53,53,1],[55,9,55,10,1],[60,35,60,39,1],[60,40,60,44,1],[65,39,65,43,1],[65,44,65,48,1],[70,35,70,39,1],[70,40,70,52,1],[75,44,75,133,1],[80,34,80,38,1],[80,39,80,51,1],[91,20,91,64,1],[92,20,92,64,1],[106,13,106,31,1],[106,32,106,79,1],[108,13,108,31,1],[110,13,110,36,1],[112,17,112,48,1],[116,17,116,54,1],[117,17,117,40,1],[118,17,118,35,1],[121,13,121,49,1],[122,13,122,25,1],[140,13,140,36,1],[140,37,140,89,1],[141,13,141,35,1],[141,36,141,87,1],[144,13,144,28,1],[146,17,146,40,1],[147,17,147,43,1],[147,44,147,63,1],[148,17,148,40,1],[149,21,149,91,1],[152,13,152,35,1],[154,17,154,41,1],[158,17,158,54,1],[159,17,159,45,1],[162,13,162,35,1],[165,13,165,28,1],[166,17,166,53,1],[168,13,168,25,1],[174,38,174,82,1],[179,38,179,82,1],[184,32,184,70,1],[194,20,194,55,1],[195,20,195,61,1],[206,20,206,57,1],[207,20,207,63,1],[218,20,218,55,1],[219,20,219,61,1],[230,20,230,54,1],[231,20,231,60,1],[237,36,237,52,1],[241,16,241,41,1],[246,13,246,36,1]]);
+    </script>
+  </body>
+</html>

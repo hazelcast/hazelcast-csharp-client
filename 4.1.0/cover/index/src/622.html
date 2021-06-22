@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\SingletonServiceFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents a singleton service factory.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TService&quot;&gt;The type of the service.&lt;/typeparam&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; class supports defining how
+    /// a service should be created, via its &lt;see cref=&quot;Creator&quot;/&gt; property, and then provides
+    /// a unique instance of that service via its &lt;see cref=&quot;Service&quot;/&gt; property.&lt;/para&gt;
+    /// &lt;para&gt;In a configuration file, it supports a &lt;c&gt;typeName&lt;/c&gt; property which is the
+    /// name of the type, and a &lt;c&gt;args&lt;/c&gt; property which is a dictionary of arguments for
+    /// the type constructor. For instance:
+    /// &lt;code&gt;&quot;service&quot;:
+    /// {
+    ///   &quot;typeName&quot;: &quot;My.Service,My.dll&quot;,
+    ///   &quot;args&quot;:
+    ///   {
+    ///     &quot;foo&quot;: 33
+    ///   }
+    /// }&lt;/code&gt;&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public class SingletonServiceFactory&lt;TService&gt; : IDisposable
+        where TService : class
+    {
+        private Lazy&lt;TService&gt; _lazyService;
+        private Func&lt;TService&gt; _creator;
+        private IServiceProvider _serviceProvider;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SingletonServiceFactory()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        protected SingletonServiceFactory(SingletonServiceFactory&lt;TService&gt; other, bool shallow)
+        {
+            if (other == null) throw new ArgumentNullException(nameof(other));
+
+            if (shallow)
+            {
+                _serviceProvider = other._serviceProvider;
+                _creator = other._creator;
+                _lazyService = other._lazyService; // one single lazy service, shared by clones
+                OwnsService = false; // owned by the original factory, not by clones
+            }
+            else
+            {
+                // create a new lazy service
+                if (other._serviceProvider != null) ServiceProvider = other._serviceProvider;
+                else if (other._creator != null) Creator = other._creator;
+                OwnsService = other.OwnsService; // can own the service
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the service creator.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Do not set the creator after the service has been created,
+        /// as that could have unspecified consequences.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Func&lt;TService&gt; Creator
+        {
+            get =&gt; _creator;
+            set
+            {
+                _serviceProvider = null;
+                _creator = value;
+                OwnsService = true;
+                _lazyService = _creator == null ? null : new Lazy&lt;TService&gt;(_creator);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether this service factory has been configured and can create a service.
+        /// &lt;/summary&gt;
+        public bool IsConfigured =&gt; _creator != null;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the service provider.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Do not set the service provider after the service has been created,
+        /// as that could have unspecified consequences.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IServiceProvider ServiceProvider
+        {
+            get =&gt; _serviceProvider;
+            set
+            {
+                _serviceProvider = value;
+                _creator = null;
+                OwnsService = false;
+                _lazyService = new Lazy&lt;TService&gt;(() =&gt; (TService) _serviceProvider.GetService(typeof(TService)) ??
+                                                        throw new InvalidOperationException($&quot;There is no service of type {typeof(TService)}.&quot;));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Whether the factory owns the service.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, services created via &lt;see cref=&quot;Creator&quot;/&gt; are owned by the factory while
+        /// services created via &lt;see cref=&quot;ServiceProvider&quot;/&gt; are not, but this property can be used
+        /// to force a different behavior.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool OwnsService { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets the singleton instance of the service.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The singleton instance of the service, or null if this service factory has not been configured.&lt;/returns&gt;
+        // TODO: consider throwing instead of returning null
+        public TService Service =&gt; _lazyService?.Value;
+
+        /// &lt;summary&gt;
+        /// Clones this service factory.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When cloning a singleton service factory, a shallow clones is performed
+        /// by default, meaning that the (lazy) service instance is cloned too. In other
+        /// words, the singleton remains a singleton across clones.&lt;/para&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;shallow&quot;/&gt; is set to false, a deep clone is created,
+        /// which would create an entirely new singleton.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        /// &lt;returns&gt;A clone of the service factory.&lt;/returns&gt;
+        internal SingletonServiceFactory&lt;TService&gt; Clone(bool shallow = true) =&gt; new SingletonServiceFactory&lt;TService&gt;(this, shallow);
+
+        /// &lt;inheritdoc cref=&quot;IDisposable.Dispose&quot;/&gt;
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// &lt;summary&gt;
+        /// Frees, releases or resets managed resources.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;disposing&quot;&gt;&lt;c&gt;true&lt;/c&gt; when invoked from &lt;see cref=&quot;Dispose&quot;/&gt;; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/param&gt;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposing) return;
+
+            var lazyService = Interlocked.Exchange(ref _lazyService, null);
+            if (lazyService == null) return;
+
+            if (!OwnsService || !lazyService.IsValueCreated)
+                return;
+
+            var value = lazyService.Value;
+            if (value is IDisposable disposable)
+                disposable.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[50,9,50,41,1],[51,11,51,12,1],[56,9,56,97,1],[58,13,58,31,1],[58,32,58,79,1],[60,13,60,25,1],[62,17,62,59,1],[63,17,63,43,1],[64,17,64,51,1],[65,17,65,37,1],[70,17,70,52,1],[70,53,70,94,1],[71,22,71,49,1],[71,50,71,75,1],[72,17,72,49,1],[74,9,74,10,1],[85,20,85,28,1],[88,17,88,41,1],[89,17,89,34,1],[90,17,90,36,1],[91,17,91,87,1],[92,13,92,14,1],[98,37,98,53,1],[109,20,109,36,1],[112,17,112,42,1],[113,17,113,33,1],[114,17,114,37,1],[115,17,115,57,1],[115,57,116,144,1],[116,144,116,146,1],[117,13,117,14,1],[128,35,128,39,1],[128,40,128,44,1],[135,36,135,55,1],[148,82,148,134,1],[153,13,153,27,1],[154,13,154,39,1],[155,9,155,10,1],[163,13,163,28,1],[163,29,163,36,1],[165,13,165,76,1],[166,13,166,37,1],[166,38,166,45,1],[168,13,168,61,1],[169,17,169,24,1],[171,13,171,43,1],[172,13,172,49,1],[173,17,173,38,1],[174,9,174,10,1]]);
+    </script>
+  </body>
+</html>

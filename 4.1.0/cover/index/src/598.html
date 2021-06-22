@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\EnumerableExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; interface.
+    /// &lt;/summary&gt;
+    internal static class EnumerableExtensions
+    {
+        /// &lt;summary&gt;
+        /// Shuffles an enumerable.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The enumerated type.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The original enumerable.&lt;/param&gt;
+        /// &lt;returns&gt;The original enumerable items, in random order.&lt;/returns&gt;
+        public static IEnumerable&lt;T&gt; Shuffle&lt;T&gt;(this IEnumerable&lt;T&gt; source)
+            =&gt; source.OrderBy(x =&gt; RandomProvider.Next());
+
+        /// &lt;summary&gt;
+        /// Combine multiple &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; instances.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T1&quot;&gt;The first enumerated type.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T2&quot;&gt;The second enumerated type.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The instances to combine.&lt;/param&gt;
+        /// &lt;returns&gt;One single &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; combining the multiple instances.&lt;/returns&gt;
+        public static IEnumerable&lt;(T1, T2)&gt; Combine&lt;T1, T2&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2) source)
+        {
+            var (source1, source2) = source;
+
+            if (source1 == null) throw new ArgumentException(&quot;Element #1 of source is null.&quot;, nameof(source));
+            if (source2 == null) throw new ArgumentException(&quot;Element #2 of source is null.&quot;, nameof(source));
+
+            var i1 = source1.GetEnumerator();
+            var i2 = source2.GetEnumerator();
+
+            try
+            {
+                while (i1.MoveNext() &amp;&amp; i2.MoveNext())
+                    yield return (i1.Current, i2.Current);
+            }
+            finally
+            {
+                i1.Dispose();
+                i2.Dispose();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Combine &lt;see cref=&quot;IEnumerable{T}&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T1&quot;&gt;The first enumerated type.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T2&quot;&gt;The second enumerated type.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T3&quot;&gt;The third enumerated type.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T4&quot;&gt;The fourth enumerated type.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The instances to combine.&lt;/param&gt;
+        /// &lt;returns&gt;One single &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; combining the multiple instances.&lt;/returns&gt;
+        public static IEnumerable&lt;(T1, T2, T3, T4)&gt; Combine&lt;T1, T2, T3, T4&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2, IEnumerable&lt;T3&gt; Source3, IEnumerable&lt;T4&gt; Source4) source)
+        {
+            var (source1, source2, source3, source4) = source;
+
+            if (source1 == null) throw new ArgumentException(&quot;Element #1 of source is null.&quot;, nameof(source));
+            if (source2 == null) throw new ArgumentException(&quot;Element #2 of source is null.&quot;, nameof(source));
+            if (source3 == null) throw new ArgumentException(&quot;Element #3 of source is null.&quot;, nameof(source));
+            if (source4 == null) throw new ArgumentException(&quot;Element #4 of source is null.&quot;, nameof(source));
+
+            var i1 = source1.GetEnumerator();
+            var i2 = source2.GetEnumerator();
+            var i3 = source3.GetEnumerator();
+            var i4 = source4.GetEnumerator();
+
+            try
+            {
+                while (i1.MoveNext() &amp;&amp; i2.MoveNext() &amp;&amp; i3.MoveNext() &amp;&amp; i4.MoveNext())
+                    yield return (i1.Current, i2.Current, i3.Current, i4.Current);
+            }
+            finally
+            {
+                i1.Dispose();
+                i2.Dispose();
+                i3.Dispose();
+                i4.Dispose();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; from an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey, TValue}&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to create a &lt;see cref=&quot;IDictionary{TKey,TValue}&quot;/&gt; from.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; that contains values provided by &lt;paramref name=&quot;source&quot;/&gt;.&lt;/returns&gt;
+        public static IDictionary&lt;TKey, TValue&gt; ToDictionary&lt;TKey, TValue&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source)
+            =&gt; source.ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
+
+        /// &lt;summary&gt;
+        /// Creates a &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; from an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of (key, value) pairs.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to create a &lt;see cref=&quot;IDictionary{TKey,TValue}&quot;/&gt; from.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; that contains values provided by &lt;paramref name=&quot;source&quot;/&gt;.&lt;/returns&gt;
+        public static IDictionary&lt;TKey, TValue&gt; ToDictionary&lt;TKey, TValue&gt;(this IEnumerable&lt;(TKey Key, TValue Value)&gt; source)
+            =&gt; source.ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,16,33,36,1],[33,36,33,57,1],[33,57,33,58,1],[44,13,44,45,1],[46,13,46,33,1],[46,34,46,111,1],[47,13,47,33,1],[47,34,47,111,1],[49,13,49,46,1],[50,13,50,46,1],[54,17,54,55,1],[55,21,55,59,1],[56,13,56,14,1],[59,17,59,30,1],[60,17,60,30,1],[61,13,61,14,1],[62,9,62,10,1],[75,13,75,63,1],[77,13,77,33,1],[77,34,77,111,1],[78,13,78,33,1],[78,34,78,111,1],[79,13,79,33,1],[79,34,79,111,1],[80,13,80,33,1],[80,34,80,111,1],[82,13,82,46,1],[83,13,83,46,1],[84,13,84,46,1],[85,13,85,46,1],[89,17,89,89,1],[90,21,90,83,1],[91,13,91,14,1],[94,17,94,30,1],[95,17,95,30,1],[96,17,96,30,1],[97,17,97,30,1],[98,13,98,14,1],[99,9,99,10,1],[109,16,109,41,1],[109,41,109,46,1],[109,46,109,53,1],[109,53,109,60,1],[109,60,109,61,1],[119,16,119,41,1],[119,41,119,46,1],[119,46,119,53,1],[119,53,119,60,1],[119,60,119,61,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\Binding\ConfigurationBinder.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
+using System.Reflection;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast.Configuration.Binding
+{
+    // NOTES
+    //
+    // this is an exact copy of the ConfigurationBuilder that ships with Microsoft&#39;s package,
+    // with some enhancements, which should be marked with an &#39;//hz&#39; comment.
+    //
+    // and with the &#39;Bind&#39; extension methods renamed &#39;HzBind&#39; to avoid conflicting with the
+    // original binder&#39;s methods - which are visible by default in netcore apps for instance.
+
+    /// &lt;summary&gt;
+    /// Static helper class that allows binding strongly typed objects to configuration values.
+    /// &lt;/summary&gt;
+    internal static class ConfigurationBinder
+    {
+        /// &lt;summary&gt;
+        /// Attempts to bind the configuration instance to a new instance of type T.
+        /// If this configuration section has a value, that will be used.
+        /// Otherwise binding by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the new instance to bind.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;returns&gt;The new instance of T if successful, default(T) otherwise.&lt;/returns&gt;
+        public static T Get&lt;T&gt;(this IConfiguration configuration)
+            =&gt; (configuration ?? throw new ArgumentNullException(nameof(configuration))).Get&lt;T&gt;(_ =&gt; { });
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the configuration instance to a new instance of type T.
+        /// If this configuration section has a value, that will be used.
+        /// Otherwise binding by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the new instance to bind.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;configureOptions&quot;&gt;Configures the binder options.&lt;/param&gt;
+        /// &lt;returns&gt;The new instance of T if successful, default(T) otherwise.&lt;/returns&gt;
+        public static T Get&lt;T&gt;(this IConfiguration configuration, Action&lt;BinderOptions&gt; configureOptions)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
+            var result = configuration.Get(typeof(T), configureOptions);
+            if (result == null)
+            {
+                return default;
+            }
+            return (T) result;
+        }
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the configuration instance to a new instance of type T.
+        /// If this configuration section has a value, that will be used.
+        /// Otherwise binding by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type of the new instance to bind.&lt;/param&gt;
+        /// &lt;returns&gt;The new instance if successful, null otherwise.&lt;/returns&gt;
+        public static object Get(this IConfiguration configuration, Type type)
+            =&gt; (configuration ?? throw new ArgumentNullException(nameof(configuration))).Get(type, _ =&gt; { });
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the configuration instance to a new instance of type T.
+        /// If this configuration section has a value, that will be used.
+        /// Otherwise binding by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type of the new instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;configureOptions&quot;&gt;Configures the binder options.&lt;/param&gt;
+        /// &lt;returns&gt;The new instance if successful, null otherwise.&lt;/returns&gt;
+        public static object Get(this IConfiguration configuration, Type type, Action&lt;BinderOptions&gt; configureOptions)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+
+            var options = new BinderOptions();
+            configureOptions?.Invoke(options);
+            return BindInstance(type, instance: null, config: configuration, options: options);
+        }
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the given object instance to the configuration section specified by the key by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;instance&quot;&gt;The object to bind.&lt;/param&gt;
+        public static void HzBind(this IConfiguration configuration, string key, object instance)
+            =&gt; (configuration ?? throw new ArgumentNullException(nameof(configuration))).GetSection(key).HzBind(instance);
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the given object instance to the configuration section specified by the key by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;instance&quot;&gt;The object to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;configureOptions&quot;&gt;Configures the binder options.&lt;/param&gt;
+        public static void HzBind(this IConfiguration configuration, string key, object instance, Action&lt;BinderOptions&gt; configureOptions)
+            =&gt; (configuration ?? throw new ArgumentNullException(nameof(configuration))).GetSection(key).HzBind(instance, configureOptions);
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the given object instance to configuration values by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;instance&quot;&gt;The object to bind.&lt;/param&gt;
+        public static void HzBind(this IConfiguration configuration, object instance)
+            =&gt; configuration.HzBind(instance, o =&gt; { });
+
+        /// &lt;summary&gt;
+        /// Attempts to bind the given object instance to configuration values by matching property names against configuration keys recursively.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration instance to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;instance&quot;&gt;The object to bind.&lt;/param&gt;
+        /// &lt;param name=&quot;configureOptions&quot;&gt;Configures the binder options.&lt;/param&gt;
+        public static void HzBind(this IConfiguration configuration, object instance, Action&lt;BinderOptions&gt; configureOptions)
+        {
+            if (configuration == null)
+            {
+                throw new ArgumentNullException(nameof(configuration));
+            }
+
+            if (instance != null)
+            {
+                var options = new BinderOptions();
+                configureOptions?.Invoke(options);
+                BindInstance(instance.GetType(), instance, configuration, options);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Extracts the value with the specified key and converts it to type T.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type to convert the value to.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section&#39;s value to convert.&lt;/param&gt;
+        /// &lt;returns&gt;The converted value.&lt;/returns&gt;
+        public static T GetValue&lt;T&gt;(this IConfiguration configuration, string key)
+        {
+            return GetValue(configuration, key, default(T));
+        }
+
+        /// &lt;summary&gt;
+        /// Extracts the value with the specified key and converts it to type T.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type to convert the value to.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section&#39;s value to convert.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultValue&quot;&gt;The default value to use if no value is found.&lt;/param&gt;
+        /// &lt;returns&gt;The converted value.&lt;/returns&gt;
+        public static T GetValue&lt;T&gt;(this IConfiguration configuration, string key, T defaultValue)
+        {
+            return (T)GetValue(configuration, typeof(T), key, defaultValue);
+        }
+
+        /// &lt;summary&gt;
+        /// Extracts the value with the specified key and converts it to the specified type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type to convert the value to.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section&#39;s value to convert.&lt;/param&gt;
+        /// &lt;returns&gt;The converted value.&lt;/returns&gt;
+        public static object GetValue(this IConfiguration configuration, Type type, string key)
+        {
+            return GetValue(configuration, type, key, defaultValue: null);
+        }
+
+        /// &lt;summary&gt;
+        /// Extracts the value with the specified key and converts it to the specified type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configuration&quot;&gt;The configuration.&lt;/param&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type to convert the value to.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key of the configuration section&#39;s value to convert.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultValue&quot;&gt;The default value to use if no value is found.&lt;/param&gt;
+        /// &lt;returns&gt;The converted value.&lt;/returns&gt;
+        public static object GetValue(this IConfiguration configuration, Type type, string key, object defaultValue)
+        {
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            var section = configuration.GetSection(key);
+            var value = section.Value;
+            if (value != null)
+            {
+                return ConvertValue(type, value, section.Path);
+            }
+            return defaultValue;
+        }
+
+        private static void BindNonScalar(this IConfiguration configuration, object instance, BinderOptions options)
+        {
+            if (instance != null)
+            {
+                foreach (var property in GetAllProperties(instance.GetType().GetTypeInfo()))
+                {
+                    BindProperty(property, instance, configuration, options);
+                }
+            }
+        }
+
+        private static void BindProperty(PropertyInfo property, object instance, IConfiguration config, BinderOptions options)
+        {
+            // hz - support making a property with [BinderIgnore] to ignore it
+            var ignoreAttribute = property.GetCustomAttribute&lt;BinderIgnoreAttribute&gt;();
+            if (ignoreAttribute != null &amp;&amp; ignoreAttribute.Ignore)
+                return;
+
+            var bindNonPublic = ignoreAttribute != null &amp;&amp; !ignoreAttribute.Ignore;
+
+            // We don&#39;t support set only, non public, or indexer properties
+            if (property.GetMethod == null ||
+                (!bindNonPublic &amp;&amp; !options.BindNonPublicProperties &amp;&amp; !property.GetMethod.IsPublic) ||
+                property.GetMethod.GetParameters().Length &gt; 0)
+            {
+                return;
+            }
+
+            var propertyValue = property.GetValue(instance);
+            var hasSetter = property.SetMethod != null &amp;&amp; (property.SetMethod.IsPublic || options.BindNonPublicProperties || bindNonPublic);
+
+            if (propertyValue == null &amp;&amp; !hasSetter)
+            {
+                // Property doesn&#39;t have a value and we cannot set it so there is no
+                // point in going further down the graph
+                return;
+            }
+
+            // hz - support marking a property with [BinderName(...)] to rename it
+            var name = property.GetCustomAttribute&lt;BinderNameAttribute&gt;()?.Name ?? property.Name;
+
+            propertyValue = BindInstance(property.PropertyType, propertyValue, config.GetSection(name), options);
+
+            if (propertyValue != null &amp;&amp; hasSetter)
+            {
+                try
+                {
+                    property.SetValue(instance, propertyValue);
+                }
+                catch (Exception e)
+                {
+                    // hz
+                    throw new ConfigurationException($&quot;Failed to set property &#39;{name}&#39; value &#39;{propertyValue}&#39;.&quot;, e);
+                }
+            }
+        }
+
+        private static object BindToCollection(TypeInfo typeInfo, IConfiguration config, BinderOptions options)
+        {
+            var type = typeof(List&lt;&gt;).MakeGenericType(typeInfo.GenericTypeArguments[0]);
+            var instance = Activator.CreateInstance(type);
+            BindCollection(instance, type, config, options);
+            return instance;
+        }
+
+        // Try to create an array/dictionary instance to back various collection interfaces
+        private static object AttemptBindToCollectionInterfaces(Type type, IConfiguration config, BinderOptions options)
+        {
+            var typeInfo = type.GetTypeInfo();
+
+            if (!typeInfo.IsInterface)
+            {
+                return null;
+            }
+
+            var collectionInterface = FindOpenGenericInterface(typeof(IReadOnlyList&lt;&gt;), type);
+            if (collectionInterface != null)
+            {
+                // IEnumerable&lt;T&gt; is guaranteed to have exactly one parameter
+                return BindToCollection(typeInfo, config, options);
+            }
+
+            collectionInterface = FindOpenGenericInterface(typeof(IReadOnlyDictionary&lt;,&gt;), type);
+            if (collectionInterface != null)
+            {
+                var dictionaryType = typeof(Dictionary&lt;,&gt;).MakeGenericType(typeInfo.GenericTypeArguments[0], typeInfo.GenericTypeArguments[1]);
+                var instance = Activator.CreateInstance(dictionaryType);
+                BindDictionary(instance, dictionaryType, config, options);
+                return instance;
+            }
+
+            collectionInterface = FindOpenGenericInterface(typeof(IDictionary&lt;,&gt;), type);
+            if (collectionInterface != null)
+            {
+                var instance = Activator.CreateInstance(typeof(Dictionary&lt;,&gt;).MakeGenericType(typeInfo.GenericTypeArguments[0], typeInfo.GenericTypeArguments[1]));
+                BindDictionary(instance, collectionInterface, config, options);
+                return instance;
+            }
+
+            collectionInterface = FindOpenGenericInterface(typeof(IReadOnlyCollection&lt;&gt;), type);
+            if (collectionInterface != null)
+            {
+                // IReadOnlyCollection&lt;T&gt; is guaranteed to have exactly one parameter
+                return BindToCollection(typeInfo, config, options);
+            }
+
+            collectionInterface = FindOpenGenericInterface(typeof(ICollection&lt;&gt;), type);
+            if (collectionInterface != null)
+            {
+                // ICollection&lt;T&gt; is guaranteed to have exactly one parameter
+                return BindToCollection(typeInfo, config, options);
+            }
+
+            collectionInterface = FindOpenGenericInterface(typeof(IEnumerable&lt;&gt;), type);
+            if (collectionInterface != null)
+            {
+                // IEnumerable&lt;T&gt; is guaranteed to have exactly one parameter
+                return BindToCollection(typeInfo, config, options);
+            }
+
+            return null;
+        }
+
+        private static object BindInstance(Type type, object instance, IConfiguration config, BinderOptions options)
+        {
+            // if binding IConfigurationSection, break early
+            if (type == typeof(IConfigurationSection))
+            {
+                return config;
+            }
+
+            var section = config as IConfigurationSection;
+            var configValue = section?.Value;
+            if (configValue != null &amp;&amp; TryConvertValue(type, configValue, section.Path, out var convertedValue, out var error))
+            {
+                if (error != null)
+                {
+                    throw error;
+                }
+
+                // Leaf nodes are always reinitialized
+                return convertedValue;
+            }
+
+            if (config != null &amp;&amp; config.GetChildren().Any())
+            {
+                // If we don&#39;t have an instance, try to create one
+                if (instance == null)
+                {
+                    // We are already done if binding to a new collection instance worked
+                    instance = AttemptBindToCollectionInterfaces(type, config, options);
+                    if (instance != null)
+                    {
+                        return instance;
+                    }
+
+                    instance = CreateInstance(type);
+                }
+
+                // See if its a Dictionary
+                var collectionInterface = FindOpenGenericInterface(typeof(IDictionary&lt;,&gt;), type);
+                if (collectionInterface != null)
+                {
+                    BindDictionary(instance, collectionInterface, config, options);
+                }
+                else if (type.IsArray)
+                {
+                    instance = BindArray((Array)instance, config, options);
+                }
+                else
+                {
+                    // See if its an ICollection
+                    collectionInterface = FindOpenGenericInterface(typeof(ICollection&lt;&gt;), type);
+                    if (collectionInterface != null)
+                    {
+                        BindCollection(instance, collectionInterface, config, options);
+                    }
+                    // Something else
+                    else
+                    {
+                        BindNonScalar(config, instance, options);
+                    }
+                }
+            }
+
+            return instance;
+        }
+
+        private static object CreateInstance(Type type)
+        {
+            var typeInfo = type.GetTypeInfo();
+
+            if (typeInfo.IsInterface || typeInfo.IsAbstract)
+            {
+                throw new InvalidOperationException(Resources.FormatError_CannotActivateAbstractOrInterface(type));
+            }
+
+            if (type.IsArray)
+            {
+                if (typeInfo.GetArrayRank() &gt; 1)
+                {
+                    throw new InvalidOperationException(Resources.FormatError_UnsupportedMultidimensionalArray(type));
+                }
+
+                return Array.CreateInstance(typeInfo.GetElementType(), 0);
+            }
+
+            var hasDefaultConstructor = typeInfo.DeclaredConstructors.Any(ctor =&gt; ctor.IsPublic &amp;&amp; ctor.GetParameters().Length == 0);
+            if (!hasDefaultConstructor)
+            {
+                throw new InvalidOperationException(Resources.FormatError_MissingParameterlessConstructor(type));
+            }
+
+            try
+            {
+                return Activator.CreateInstance(type);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException(Resources.FormatError_FailedToActivate(type), ex);
+            }
+        }
+
+        private static void BindDictionary(object dictionary, Type dictionaryType, IConfiguration config, BinderOptions options)
+        {
+            var typeInfo = dictionaryType.GetTypeInfo();
+
+            // IDictionary&lt;K,V&gt; is guaranteed to have exactly two parameters
+            var keyType = typeInfo.GenericTypeArguments[0];
+            var valueType = typeInfo.GenericTypeArguments[1];
+            var keyTypeIsEnum = keyType.GetTypeInfo().IsEnum;
+
+            if (keyType != typeof(string) &amp;&amp; !keyTypeIsEnum)
+            {
+                // We only support string and enum keys
+                return;
+            }
+
+            var setter = typeInfo.GetDeclaredProperty(&quot;Item&quot;);
+            foreach (var child in config.GetChildren())
+            {
+                var item = BindInstance(
+                    type: valueType,
+                    instance: null,
+                    config: child,
+                    options: options);
+                if (item != null)
+                {
+                    if (keyType == typeof(string))
+                    {
+                        var key = child.Key;
+                        setter.SetValue(dictionary, item, new object[] { key });
+                    }
+                    else if (keyTypeIsEnum)
+                    {
+                        var key = Enum.Parse(keyType, child.Key);
+                        setter.SetValue(dictionary, item, new object[] { key });
+                    }
+                }
+            }
+        }
+
+        private static void BindCollection(object collection, Type collectionType, IConfiguration config, BinderOptions options)
+        {
+            var typeInfo = collectionType.GetTypeInfo();
+
+            // ICollection&lt;T&gt; is guaranteed to have exactly one parameter
+            var itemType = typeInfo.GenericTypeArguments[0];
+            var addMethod = typeInfo.GetDeclaredMethod(&quot;Add&quot;);
+
+            foreach (var section in config.GetChildren())
+            {
+                try
+                {
+                    var item = BindInstance(
+                        type: itemType,
+                        instance: null,
+                        config: section,
+                        options: options);
+                    if (item != null)
+                    {
+                        addMethod.Invoke(collection, new[] { item });
+                    }
+                }
+                catch
+                {
+                    throw; // hz
+                }
+            }
+        }
+
+        private static Array BindArray(Array source, IConfiguration config, BinderOptions options)
+        {
+            var children = config.GetChildren().ToArray();
+            var arrayLength = source.Length;
+            var elementType = source.GetType().GetElementType();
+            var newArray = Array.CreateInstance(elementType, arrayLength + children.Length);
+
+            // binding to array has to preserve already initialized arrays with values
+            if (arrayLength &gt; 0)
+            {
+                Array.Copy(source, newArray, arrayLength);
+            }
+
+            for (int i = 0; i &lt; children.Length; i++)
+            {
+                try
+                {
+                    var item = BindInstance(
+                        type: elementType,
+                        instance: null,
+                        config: children[i],
+                        options: options);
+                    if (item != null)
+                    {
+                        newArray.SetValue(item, arrayLength + i);
+                    }
+                }
+                catch
+                {
+                    throw; // hz
+                }
+            }
+
+            return newArray;
+        }
+
+        internal static bool TryConvertValue(Type type, string value, string path, out object result, out Exception error)
+        {
+            error = null;
+            result = null;
+            if (type == typeof(object))
+            {
+                result = value;
+                return true;
+            }
+
+            if (type.GetTypeInfo().IsGenericType &amp;&amp; type.GetGenericTypeDefinition() == typeof(Nullable&lt;&gt;))
+            {
+                if (string.IsNullOrEmpty(value))
+                {
+                    return true;
+                }
+                return TryConvertValue(Nullable.GetUnderlyingType(type), value, path, out result, out error);
+            }
+
+            var converter = TypeDescriptor.GetConverter(type);
+
+            if (converter.CanConvertFrom(typeof(string)))
+            {
+                try
+                {
+                    result = converter.ConvertFromInvariantString(value);
+                }
+                catch (Exception ex)
+                {
+                    error = new InvalidOperationException(Resources.FormatError_FailedBinding(path, type), ex);
+                }
+                return true;
+            }
+
+            return false;
+        }
+
+        private static object ConvertValue(Type type, string value, string path)
+        {
+            TryConvertValue(type, value, path, out var result, out var error);
+            if (error != null)
+            {
+                throw error;
+            }
+            return result;
+        }
+
+        private static Type FindOpenGenericInterface(Type expected, Type actual)
+        {
+            var actualTypeInfo = actual.GetTypeInfo();
+            if(actualTypeInfo.IsGenericType &amp;&amp;
+                actual.GetGenericTypeDefinition() == expected)
+            {
+                return actual;
+            }
+
+            var interfaces = actualTypeInfo.ImplementedInterfaces;
+            foreach (var interfaceType in interfaces)
+            {
+                if (interfaceType.GetTypeInfo().IsGenericType &amp;&amp;
+                    interfaceType.GetGenericTypeDefinition() == expected)
+                {
+                    return interfaceType;
+                }
+            }
+            return null;
+        }
+
+        private static IEnumerable&lt;PropertyInfo&gt; GetAllProperties(TypeInfo type)
+        {
+            var allProperties = new List&lt;PropertyInfo&gt;();
+
+            do
+            {
+                allProperties.AddRange(type.DeclaredProperties);
+                type = type.BaseType.GetTypeInfo();
+            }
+            while (type != typeof(object).GetTypeInfo());
+
+            return allProperties;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[46,16,46,104,1],[46,104,46,105,1],[46,105,46,106,1],[59,13,59,39,1],[59,40,59,95,1],[61,13,61,73,1],[62,13,62,32,1],[64,17,64,32,1],[66,13,66,31,1],[78,16,78,107,1],[78,107,78,108,1],[78,108,78,109,1],[91,13,91,39,1],[91,40,91,95,1],[93,13,93,47,1],[94,13,94,47,1],[95,13,95,96,1],[105,16,105,122,1],[115,16,115,140,1],[123,16,123,54,1],[123,54,123,55,1],[123,55,123,56,1],[133,13,133,39,1],[135,17,135,72,1],[138,13,138,34,1],[140,17,140,51,1],[141,17,141,51,1],[142,17,142,84,1],[144,9,144,10,1],[155,13,155,61,1],[168,13,168,77,1],[180,13,180,75,1],[193,13,193,39,1],[193,40,193,95,1],[194,13,194,57,1],[195,13,195,39,1],[196,13,196,31,1],[198,17,198,64,1],[200,13,200,33,1],[205,13,205,34,1],[207,26,207,38,1],[207,39,207,41,1],[207,42,207,92,1],[209,21,209,78,1],[212,9,212,10,1],[217,13,217,88,1],[218,13,218,67,1],[219,17,219,24,1],[221,13,221,84,1],[224,13,226,63,1],[228,17,228,24,1],[231,13,231,61,1],[232,13,232,141,1],[234,13,234,53,1],[238,17,238,24,1],[242,13,242,98,1],[244,13,244,114,1],[246,13,246,52,1],[250,21,250,64,1],[251,17,251,18,1],[252,17,252,36,1],[255,21,255,118,1],[258,9,258,10,1],[262,13,262,89,1],[263,13,263,59,1],[264,13,264,61,1],[265,13,265,29,1],[271,13,271,47,1],[273,13,273,39,1],[275,17,275,29,1],[278,13,278,95,1],[279,13,279,45,1],[282,17,282,68,1],[285,13,285,98,1],[286,13,286,45,1],[288,17,288,144,1],[289,17,289,73,1],[290,17,290,75,1],[291,17,291,33,1],[294,13,294,90,1],[295,13,295,45,1],[297,17,297,164,1],[298,17,298,80,1],[299,17,299,33,1],[302,13,302,97,1],[303,13,303,45,1],[306,17,306,68,1],[309,13,309,89,1],[310,13,310,45,1],[313,17,313,68,1],[316,13,316,89,1],[317,13,317,45,1],[320,17,320,68,1],[323,13,323,25,1],[329,13,329,55,1],[331,17,331,31,1],[334,13,334,59,1],[335,13,335,46,1],[336,13,336,128,1],[338,17,338,35,1],[340,21,340,33,1],[344,17,344,39,1],[347,13,347,62,1],[350,17,350,38,1],[353,21,353,89,1],[354,21,354,42,1],[356,25,356,41,1],[359,21,359,53,1],[363,17,363,98,1],[364,17,364,49,1],[366,21,366,84,1],[368,22,368,39,1],[370,21,370,76,1],[375,21,375,97,1],[376,21,376,53,1],[378,25,378,88,1],[383,25,383,66,1],[388,13,388,29,1],[393,13,393,47,1],[395,13,395,61,1],[397,17,397,116,1],[400,13,400,30,1],[402,17,402,49,1],[404,21,404,119,1],[407,17,407,75,1],[410,13,410,83,1],[410,83,410,132,1],[410,132,410,134,1],[411,13,411,40,1],[413,17,413,114,1],[418,17,418,55,1],[420,13,420,33,1],[422,17,422,103,1],[424,9,424,10,1],[428,13,428,57,1],[431,13,431,60,1],[432,13,432,62,1],[433,13,433,62,1],[435,13,435,61,1],[438,17,438,24,1],[441,13,441,63,1],[442,22,442,31,1],[442,32,442,34,1],[442,35,442,55,1],[444,17,448,39,1],[449,17,449,34,1],[451,21,451,51,1],[453,25,453,45,1],[454,25,454,81,1],[456,26,456,44,1],[458,25,458,66,1],[459,25,459,81,1],[463,9,463,10,1],[467,13,467,57,1],[470,13,470,61,1],[471,13,471,63,1],[473,22,473,33,1],[473,34,473,36,1],[473,37,473,57,1],[477,21,481,43,1],[482,21,482,38,1],[484,25,484,70,1],[486,17,486,18,1],[487,17,487,22,1],[489,21,489,27,1],[492,9,492,10,1],[496,13,496,59,1],[497,13,497,45,1],[498,13,498,65,1],[499,13,499,93,1],[502,13,502,33,1],[504,17,504,59,1],[507,18,507,27,1],[507,29,507,48,1],[507,50,507,53,1],[511,21,515,43,1],[516,21,516,38,1],[518,25,518,66,1],[520,17,520,18,1],[521,17,521,22,1],[523,21,523,27,1],[527,13,527,29,1],[532,13,532,26,1],[533,13,533,27,1],[534,13,534,40,1],[536,17,536,32,1],[537,17,537,29,1],[540,13,540,107,1],[542,17,542,49,1],[544,21,544,33,1],[546,17,546,110,1],[549,13,549,63,1],[551,13,551,58,1],[555,21,555,74,1],[556,17,556,18,1],[557,17,557,37,1],[559,21,559,112,1],[560,17,560,18,1],[561,17,561,29,1],[564,13,564,26,1],[569,13,569,79,1],[570,13,570,31,1],[572,17,572,29,1],[574,13,574,27,1],[579,13,579,55,1],[580,13,581,63,1],[583,17,583,31,1],[586,13,586,67,1],[587,22,587,39,1],[587,40,587,42,1],[587,43,587,53,1],[589,17,590,74,1],[592,21,592,42,1],[595,13,595,25,1],[596,9,596,10,1],[600,13,600,58,1],[604,17,604,65,1],[605,17,605,52,1],[607,13,607,58,1],[609,13,609,34,1]]);
+    </script>
+  </body>
+</html>
