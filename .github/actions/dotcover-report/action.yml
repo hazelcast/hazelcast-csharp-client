@@ -1,0 +1,26 @@
+name: 'dotcover-report'
+description: 'Reports dotCover output.'
+inputs:
+  name:
+    description: "The name of the check run."
+    required: true
+    default: 'Test Coverage'
+  path:
+    description: "The path to the directory where the test coverage results have been produced."
+    required: true
+    default: ''
+  version:
+    description: "The client version."
+    required: false
+    default: ''
+  sha:
+    description: "The commit SHA."
+    required: false
+    default: ''
+  token:
+    description: GitHub Access Token
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'node12'
+  main: 'dist/index.js'

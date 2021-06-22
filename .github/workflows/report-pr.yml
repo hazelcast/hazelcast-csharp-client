@@ -31,48 +31,69 @@ jobs:
         shell: bash
         run: |
           echo "Build PR conclusion: ${{ github.event.workflow_run.conclusion }}"
-          mkdir ./tests-results
+          mkdir ./test-results
+          mkdir ./test-coverage
           git init # ensure we have a dummy repo, reporter wants it
 
-        # cannot use download action because we get artifacts from another run
-        # must fix the github.workspace outside of JS because in JS it's too late
-      - name: Download tests results (${{ matrix.os }})
+      # cannot use download action because we get artifacts from another run
+      - name: Download tests results and coverage artifacts (${{ matrix.os }})
         uses: actions/github-script@v4
         with:
           script: |
+            var fs = require('fs');
             var artifacts = await github.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
                repo: context.repo.repo,
                run_id: ${{ github.event.workflow_run.id }},
             });
-            var matchArtifact = artifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "Test-Results (windows-latest)"
-            })[0];
-            var download = await github.actions.downloadArtifact({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               artifact_id: matchArtifact.id,
-               archive_format: 'zip',
-            });
-            var fs = require('fs');
-            // fix github workspace, wants linux-style path
-            //var ghws = '${{ github.workspace }}';
-            var ghws = process.env.GITHUB_WORKSPACE; //.replace(/\\/g, '/').replace(/([a-z])\:\//i, '/mnt/$1/');
-            fs.writeFileSync(ghws + '/tests-results/tests-results.zip', Buffer.from(download.data));
+            function download(name, path) {
+                var artifact = artifacts.data.artifacts.filter((art) => {
+                  return art.name == name + 
+                })[0];
+                var download = await github.actions.downloadArtifact({
+                   owner: context.repo.owner,
+                   repo: context.repo.repo,
+                   artifact_id: artifact.id,
+                   archive_format: 'zip',
+                });
+                fs.writeFileSync(process.env.GITHUB_WORKSPACE + path, Buffer.from(download.data));
+            }
+            download('Test-Results (${{ matrix.os }})', '/test-results/test-results.zip');
+            download('Test-Coverage (${{ matrix.os }})', '/test-coverage/test-coverage.zip');
 
-      - name: Unzip test results
-        run: unzip tests-results/tests-results.zip -d tests-results
+      # unzip artifacts
+      - name: Unzip artifacts
+        shell: bash
+        run: |
+          echo "Tests results:"
+          unzip test-results/test-results.zip -d test-results
+          ls ./test-results
+          echo "Tests coverage:"
+          unzip test-coverage/test-coverage.zip -d test-coverage
+          ls ./test-coverage
 
-      - name: List test results
-        run: ls ./tests-results
-
-      - name: Report
+      # report test results
+      - name: Report test results
         uses: dorny/test-reporter@v1
         with:
           name: Test Results (${{ matrix.os }})
-          path: ./tests-results/results-*.trx
+          path: ./test-results/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
           fail-on-error: false
 
+      # report test coverage
+      - name: Report test coverage
+        uses: ./.github/actions/dotcover-report
+        with:
+          name: Test Coverage (${{ matrix.os }})
+          path: ./test-coverage
+          sha: ${{ github.sha }}
+
+      # publish to codecov
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secret.CODECOV_TOKEN }}
+          files: ./test-coverage/cover-netcoreapp3.1.json

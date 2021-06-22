@@ -63,18 +63,6 @@ jobs:
         with:
           dotnet-version: '5.0.x'
 
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework MSBUILD
-      #  if: matrix.os == 'windows-latest'
-      #  uses: microsoft/setup-msbuild@v1.0.2
-      #  with:
-      #    vs-version: '[15.0,16.0)'
-
-      ## Install .NET Framework stuff for docfx
-      #- name: Install .NET Framework NUGET
-      #  if: matrix.os == 'windows-latest'
-      #  uses: nuget/setup-nuget@v1
-
       # Install Java
       - name: Install JDK
         uses: actions/setup-java@v2
@@ -96,7 +84,7 @@ jobs:
         shell: pwsh
         run: ./hz.ps1 -localRestore build #,docs,pubdocs
 
-      # test
+      # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
       - name: Test
         id: test
@@ -104,17 +92,12 @@ jobs:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         shell: pwsh
         run: |
-          $a = @( "test", "-noRestore", "-localRestore" )
+          $a = @( "test", "-noRestore", "-localRestore", "-cover" )
           if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
           ./hz.ps1 @a
 
-      # report
-      # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
-      # It's not possible to specify under which workflow test report should belong if more
-      # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
-      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
-      # trigger multiple builds on the same SHA
-      - name: Report
+      # report test results
+      - name: Report test results
         uses: dorny/test-reporter@v1
         if: (success() || failure()) && steps.build.conclusion == 'success'
         with:
@@ -125,3 +108,24 @@ jobs:
           list-tests: failed
           fail-on-error: false
 
+      # report test coverage
+      - name: Report test coverage
+        uses: ./.github/actions/dotcover-report
+        with:
+          name: Test Coverage (${{ matrix.os }})
+          path: temp/tests/cover
+          sha: ${{ github.sha }}
+
+      # upload test coverage artifact
+      - name: Upload test coverage artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Coverage (${{ matrix.os }})
+          path: './temp/tests/cover/' # entire directory
+
+      # publish to codecov
+      - name: Publish to Codecov 
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./temp/tests/cover/cover-netcoreapp3.1.xml

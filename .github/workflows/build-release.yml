@@ -36,8 +36,8 @@ jobs:
     if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
     outputs:
-      todo: ${{ steps.analyze.outputs.todo}}
-      version: ${{ steps.analyze.outputs.version}}
+      todo: ${{ steps.analyze.outputs.todo}} # 'build' when pushing to release/2.1.4, 'release' when pushing v2.1.4 tag, otherwise 'nothing'
+      version: ${{ steps.analyze.outputs.version}} # 2.1.4 or 2.1.4-preview.1 - matches the branch/tag and the code
 
     steps:
 
@@ -227,15 +227,10 @@ jobs:
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
         shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test
+        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test,cover-to-docs
 
-      # report
-      # note: from test-reporter README, "Check Runs are created for specific commit SHA. 
-      # It's not possible to specify under which workflow test report should belong if more
-      # workflows are running for the same SHA. Thanks to this GitHub "feature" it's possible 
-      # your test report will appear in an unexpected place in GitHub UI." -- so, better not
-      # trigger multiple builds on the same SHA
-      - name: Report
+      # report tests results
+      - name: Report tests results
         uses: dorny/test-reporter@v1
         if: (success() || failure()) && steps.build.conclusion == 'success'
         with:
@@ -246,8 +241,18 @@ jobs:
           list-tests: failed
           fail-on-error: false
 
+      # report tests coverage
+      # same note as above
+      - name: Report tests coverage
+        uses: ./.github/actions/dotcover-report
+        with:
+          name: Test Coverage (${{ matrix.os }})
+          path: temp/tests/cover
+          version: ${{ needs.analyze.outputs.version }}
+          sha: ${{ github.sha }}
+
       # upload test coverage artifact
-      - name: Archive test coverage artifact
+      - name: Upload test coverage artifact
         uses: actions/upload-artifact@v2
         with:
           name: Test-Coverage (${{ matrix.os }})
@@ -259,7 +264,7 @@ jobs:
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
-      - name: Archive NuGet packages artifact
+      - name: Upload NuGet packages artifact
         uses: actions/upload-artifact@v2
         with:
           name: NuGet-Packages (${{ matrix.os }})
@@ -277,7 +282,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Examples
-          path: './temp/publish/examples-*'        
+          path: './temp/examples/*.zip'        
 
       # git the docs, create the patch
       - name: Create docs patch
@@ -292,12 +297,124 @@ jobs:
           ls ./temp/gh-pages-patches/
 
       # archive docs patch
-      - name: Archive docs patch artifact
+      - name: Upload docs patch artifact
         if: matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v2
         with:
           name: Docs-Patch
           path: './temp/gh-pages-patches/*.patch'
+
+
+
+  # publish the work-in-progress release
+  publish-wip:
+
+    name: Publish Work-In-Progress
+    runs-on: ubuntu-latest
+
+    needs: [ analyze, build-release ]
+    if: needs.analyze.outputs.todo == 'build'
+
+    steps:
+
+      - name: Install Utilities (Linux only)
+        shell: bash
+        run: |
+          sudo apt-get update 
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # configure Git so that we can commit
+      - name: Configure repository
+        shell: bash
+        run: |
+          git config user.email "github-actions@hazelcast.com"
+          git config user.name "GitHub Actions (Build Release)"
+
+      # prepare for artifacts
+      - name: Prepare for artifacts
+        shell: bash
+        run: |
+          mkdir ./temp
+          mkdir ./temp/gh-pages-patches
+          mkdir ./temp/tests
+          mkdir ./temp/tests/cover
+
+      # download docs patch artifact
+      - name: Download docs patch artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Docs-Patch
+          path: ./temp/gh-pages-patches
+
+      # download test coverage artifact
+      - name: Download test coverage artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: Test-Coverage (windows-latest)
+          path: ./temp/tests/cover
+
+      # verify downloads
+      - name: Verify downloads
+        shell: bash
+        run: |
+          echo "docs patch:"
+          ls ./temp/gh-pages-patches
+          echo "test coverage:"
+          ls ./temp/tests/cover
+
+      # checkout documentation
+      - name: Checkout documentation
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: gh-pages
+          path: ./temp/gh-pages
+
+      # configure Git so that we can commit
+      - name: Configure documentation repository
+        shell: bash
+        run: |
+          git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
+          git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
+
+      # publish 'dev' documentation
+      - name: Publish Documentation
+        shell: bash
+        run: |
+          echo "Apply patch"
+          cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          echo "Push"
+          git -C ./temp/gh-pages push origin gh-pages
+
+      # publish to codecov
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./temp/tests/cover/cover-netcoreapp3.1.xml
 
 
 
@@ -355,6 +472,13 @@ jobs:
           git config user.email "github-actions@hazelcast.com"
           git config user.name "GitHub Actions (Build Release)"
 
+      # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
+      - name: Checkout devops
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: ./build/devops
+
       # prepare for artifacts
       - name: Prepare for artifacts
         shell: bash
@@ -392,18 +516,30 @@ jobs:
         env:
           NUGET_API_KEY: ${{ secrets.HAZELCAST_NUGET_API_KEY }}
         run: |
-          ./hz.ps1 -noRestore -localRestore push-nuget
+          ./hz.ps1 -noRestore -localRestore push-nuget -yolo
+
+      # checkout documentation
+      - name: Checkout documentation
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: gh-pages
+          path: ./temp/gh-pages
+
+      # configure Git so that we can commit
+      - name: Configure documentation repository
+        shell: bash
+        run: |
+          git -C ./temp/gh-pages config user.email "github-actions@hazelcast.com"
+          git -C ./temp/gh-pages config user.name "GitHub Actions (Build Release)"
 
       # publish documentation
       - name: Publish Documentation
         shell: bash
         run: |
-          mkdir ./temp/gh-pages
-          git -C ./temp/gh-pages init
-          git -C ./temp/gh-pages remote add origin https://github.com/hazelcast/hazelcast-csharp-client.git
-          git -C ./temp/gh-pages fetch origin gh-pages
-          git -C ./temp/gh-pages checkout gh-pages
+          echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
       # trash the release branch

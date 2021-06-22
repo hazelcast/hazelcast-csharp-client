@@ -1,0 +1,36 @@
+GITHUB ACTIONS WORKFLOWS
+
+
+dotcover-report
+---------------
+
+  copies the test coverage results as a workflow check run so that it's easy to get the numbers
+
+  action was coded from tutorial at
+    https://docs.github.com/en/actions/creating-actions/creating-a-javascript-action
+
+  in order to code the action, you will need to
+  - upgrade to latest node by downloading it & installing it
+  - upgrade to latest npm
+    this may require a bit of cleanup:
+      rm -rf ~/AppData/Roaming/npm
+      npm cache clear --force
+      npm install -g npm@latest
+
+  then
+    npm init -y
+    npm install @actions/core
+    npm install @actions/github
+    npm install -g @vercel/ncc
+
+  edit action.yml, index.js, package.json... and then build:
+  npm run pack
+
+  which runs 'ncc build index.js -o dist' and produces dist/index.js
+    
+  - troubleshoot
+    define ACTIONS_STEP_DEBUG=true repository secret to see core.debug messages    
+
+  - beware!
+    do NOT commit the node_modules directory
+

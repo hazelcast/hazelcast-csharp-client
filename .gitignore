@@ -6,6 +6,8 @@ bin/
 /.idea/
 /.nuget/
 /.github/secrets
+/.github/actions/**/node_modules
+/build/devops/
 
 *.user
 *.suo

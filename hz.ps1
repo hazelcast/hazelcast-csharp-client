@@ -21,8 +21,15 @@
 # (and, GitHub actions tend to end up running with 'Stop' by default)
 $ErrorActionPreference='Continue'
 
+# prepare directories
+$scriptRoot = "$PSScriptRoot" # expected to be ./build/
+$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
+$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
+$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
+
 # include utils
-. ./build/utils.ps1
+. "$buildDir\utils.ps1"
 
 # ensure we have the right platform
 Validate-Platform
@@ -113,13 +120,10 @@ $params = @(
        parm = "<path>";
        desc = "the full path to the server configuration xml file"
     },
-    @{ name = "accept-risks";    type = [switch];  default = $false; 
-       desc = "accepts risks associated with certain commands";
-       note = "Commands such as trigger-release or publish-docs will not run unless this param is set. This is a safety to prevent triggering them by accident."
+    @{ name = "verbose-tests";   type = [switch];  default = $false;
+       desc = "verbose tests results with errors"
     }
 )
-
-$beware = "BEWARE: running this command has consequences! You MUST specify the -accept-risks option."
 
 # first one is the default one
 # order is important as they will run in the specified order
@@ -142,70 +146,67 @@ $actions = @(
        desc = "tags a release";
        note = "Create a vX.Y.Z tag corresponding to the version in src/Directory.Build.Props, or the version specified via the -version option."
     },
-    @{ name = "trigger-release";
-       desc = "triggers a release";
-       note = "Creates the vX.Y.Z tag corresponding to the version in src/Directory.Build.Props if required, and pushes the tag. $beware"
-    },
     @{ name = "build"; 
-       desc = "builds the solution"
+       desc = "builds the solution";
+       need = @( "git", "dotnet-complete", "build-proj", "can-sign" )
     },
     @{ name = "test"; 
-       desc = "runs the tests"
+       desc = "runs the tests";
+       need = @( "git", "dotnet-complete", "java", "server-files", "server-version", "build-proj", "enterprise-key" ) 
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
-       note = "Building the documentation is not supported on non-Windows platforms as DocFX requires .NET Framework."
+       note = "Building the documentation is not supported on non-Windows platforms as DocFX requires .NET Framework.";
+       need = @( "git", "build-proj", "docfx" )
     },
     @{ name = "git-docs"; 
        desc = "prepares the documentation release Git commit";
        note = "The commit still needs to be pushed to GitHub pages."
     },
-    @{ name = "publish-docs";
-       desc = "pushes the documentation releast Git commit to GitHub";
-       note = "The commits needs to be prepared with git-doc. $beware"
-    },
     @{ name = "pack-nuget"; 
-       desc = "packs the NuGet packages"
-    },
-    @{ name = "push-nuget"; 
-       desc = "pushes the NuGet packages to NuGet";
-       note = "Pushing the NuGet packages requires a NuGet API key, which must be supplied via the NUGET_API_KEY environment variable."
+       desc = "packs the NuGet packages";
+       need = @( "dotnet-minimal" )
     },
     @{ name = "serve-docs";
-       uniq = $true;
-       desc = "serves the documentation"
+       desc = "serves the documentation";
+       need = @( "build-proj", "docfx" )
     },
     @{ name = "run-remote-controller"; alias = "rc";
        uniq = $true;
        desc = "runs the remote controller for tests";
-       note = "This command downloads the required JARs and configuration file."
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "server-version", "enterprise-key" )
     },
     @{ name = "run-server"; 
        uniq = $true;
        desc = "runs a server for tests";
-       note = "This command downloads the required JARs and configuration file."
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "server-version", "enterprise-key" )
     },
     @{ name = "generate-codecs";
        uniq = $true;
-       desc = "generates the codec source files"
+       desc = "generates the codec source files";
+       need = @( "git", "python" )
     },
     @{ name = "run-example"; alias = "ex";
        uniq = $true;
        desc = "runs an example";
        note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
     },
-    @{
-        name = "publish-examples";
-        desc = "publishes examples";
-        note = "Publishes examples into temp/examples"
+    @{ name = "publish-examples";
+       desc = "publishes examples";
+       note = "Publishes examples into temp/examples";
+       need = @( "dotnet-complete" )
     },
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
     }
-
-    # failed-tests?!
 )
+
+# include devops
+$devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
+if (test-path $devops_actions) { . $devops_actions }
 
 # pwsh handling of args is... interesting
 $clargs = [Environment]::GetCommandLineArgs()
@@ -232,12 +233,12 @@ $options = Parse-Args $argx $params
 if ($options -is [string]) {
     Die "$options - use 'help' to list valid parameters"
 }
-$do = Parse-Commands $options.commands $actions
-if ($do -is [string]) {
-    Die "$do - use 'help' to list valid commands"
+$err = Parse-Commands $options.commands $actions
+if ($err -is [string]) {
+    Die "$err - use 'help' to list valid commands"
 }
 
-if ($do.'help') {
+if ((get-action $actions help).run) {
     Write-Usage $params $actions
     exit 0
 }
@@ -299,15 +300,9 @@ if ($options.server.Contains("SNAPSHOT")) {
     $mvnEntRepo = $mvnEntReleaseRepo
 }
 
-# prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be ./build/
-$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
-
-$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
-$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+# more directories
 $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
-$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
@@ -356,7 +351,7 @@ else {
 
 # determine framework(s)
 $frameworks = @( "net462", "netcoreapp2.1", "netcoreapp3.1" )
-if (-not $isWindows2) {
+if (-not $isWindows) {
     $frameworks = @( "netcoreapp2.1", "netcoreapp3.1" )
 }
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
@@ -390,15 +385,6 @@ function ensure-enterprise-key {
         }
     }
     $script:enterpriseKey = $enterpriseKey
-}
-
-# ensure we have the nuget api key for pushing
-function ensure-nuget-api-key {
-
-    $nugetApiKey = $env:NUGET_API_KEY
-    if ($do.'push-nuget' -and [System.String]::IsNullOrWhiteSpace($nugetApiKey)) {
-        Die "Pushing to NuGet requires a NuGet API key in NUGET_API_KEY environment variable."
-    }
 }
 
 # finds latest version of a NuGet package in the NuGet cache
@@ -534,7 +520,7 @@ function ensure-jar ( $jar, $repo, $artifact ) {
         download-maven-artifact $repo $group $art $ver $cls "$tmpDir/lib/$jar"
     }
     $s = ";"
-    if (-not $isWindows2) { $s = ":" }
+    if (-not $isWindows) { $s = ":" }
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
     $classpath += "$tmpDir/lib/$jar"
@@ -627,14 +613,14 @@ function ensure-server-files {
 }
 
 # gets a dotnet sdk for a particular version
-function get-dotnet-sdk ( $sdks, $v ) {
+function get-dotnet-sdk ( $sdks, $v, $preview ) {
 
     # trust dotnet to return the sdks ordered by version, so last is the highest version
-    # exclude versions containing "-" ie anything pre-release FIXME why?
+    # exclude versions containing "-" ie anything pre-release (TODO: why?)
     $sdk = $sdks `
         | Select-String -pattern "^$v" `
         | Foreach-Object { $_.ToString().Split(' ')[0] } `
-        | Select-String -notMatch -pattern "-" `
+        | Where-Object { ($preview -and $_.Contains('-')) -or (-not $preview -and -not $_.Contains('-')) } `
         | Select-Object -last 1
 
     if ($null -eq $sdk) { return "n/a" } 
@@ -643,26 +629,43 @@ function get-dotnet-sdk ( $sdks, $v ) {
 
 function require-dotnet ( $full ) {
 
+    if ($script:ensuredDotnet) { return }
+
     ensure-command "dotnet"
 
     $dotnetVersion = (&dotnet --version)
     Write-Output "  Version $dotnetVersion"
 
+    if ($pre) {
+        Write-Output "  (global.json does not allow pre-release versions)"
+    }
+    else {
+        Write-Output "  (global.json is missing or allows pre-release versions)"
+    }
+
+    if (test-path "$slnRoot/global.json") {
+        $json = (get-content "$slnRoot/global.json" -raw) | convertFrom-json
+        $pre = $true
+        if ($json.sdk -ne $null -and $json.sdk.allowPrerelease -ne $null) {
+            $pre = $json.sdk.allowPrerelease
+        }
+    }
+
     $sdks = (&dotnet --list-sdks)
     
-    $v21 = get-dotnet-sdk $sdks "2.1"
+    $v21 = get-dotnet-sdk $sdks "2.1" $false
     if ($full -and $null -eq $v21) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 2.1.x"
     }
-    $v31 = get-dotnet-sdk $sdks "3.1"
+    $v31 = get-dotnet-sdk $sdks "3.1" $false
     if ($full -and $null -eq $v31) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 3.1.x"
     }
-    $v50 = get-dotnet-sdk $sdks "5.0"
+    $v50 = get-dotnet-sdk $sdks "5.0" $false
     if ($null -eq $v50) {
         Write-Output ""
         Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
@@ -673,8 +676,14 @@ function require-dotnet ( $full ) {
         Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
         Die "Could not find dotnet SDK version 5.0.200+"
     }
-    $v60 = get-dotnet-sdk $sdks "6.0" # 6.0 is not required
+    $v60 = get-dotnet-sdk $sdks "6.0" $false # 6.0 is not required
     
+    $v50preview = get-dotnet-sdk $sdks "5.0" $true
+    $v60preview = get-dotnet-sdk $sdks "6.0" $true
+
+    if ($pre) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
+    if ($pre) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v50preview)" }
+
     Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 
     $script:ensuredDotnet = $true
@@ -761,6 +770,13 @@ function ensure-build-proj {
     }
 }
 
+function clean-dir ( $dir ) {
+    if (test-path $dir) {
+        Write-Output "  $dir"
+        remove-item $dir -force -recurse
+    }
+}
+
 # cleans the solution
 function hz-clean {
 
@@ -772,17 +788,12 @@ function hz-clean {
         remove-item $_.fullname -Force -Recurse
     }
 
-    # clears output
-    if (test-path $outDir) {
-        Write-Output "  $outDir"
-        remove-item $outDir -force -recurse
-    }
+    # clears output, publish
+    clean-dir $outDir
+    clean-dir "$tmpdir/publish"
 
     # clears tests (results, cover...)
-    if (test-path "$tmpDir\tests") {
-        Write-Output "  $tmpDir\tests"
-        remove-item "$tmpDir\tests" -force -recurse
-    }
+    clean-dir "$tmpDir\tests"
 
     # clears logs (server, rc...)
     if (test-path "$tmpDir") {
@@ -793,18 +804,13 @@ function hz-clean {
     }
 
     # clears docs
-    if (test-path "$tmpDir\docfx.out") {
-        Write-Output "  $tmpDir\docfx.out"
-        remove-item "$tmpDir\docfx.out" -force -recurse
-    }
-    if (test-path "$docDir\templates\hz\Plugins") {
-        Write-Output "  $docDir\templates\hz\Plugins"
-        remove-item "$docDir\templates\hz\Plugins" -force -recurse
-    }
-    if (test-path "$tmpDir\gh-pages") {
-        Write-Output "  $tmpDir\gh-pages"
-        remove-item "$tmpDir\gh-pages" -force -recurse
-    }
+    clean-dir "$tmpDir\docfx.out"
+    clean-dir "$docDir\templates\hz\Plugins"
+    clean-dir "$tmpDir\gh-pages"
+    clean-dir "$tmpDir\gh-pages-patches"
+
+    # clean ndepend
+    clean-dir "$tmpDir\ndepend.out"
 
     Write-Output ""
 }
@@ -925,29 +931,6 @@ function hz-tag-release {
     }
 }
 
-# triggers the release
-function hz-trigger-release {
-
-    if (-not $options.'accept-risks') {
-        Die "Cannot trigger a release if you do not accept the risks (see -accept-risks option)."
-    }
-
-    Write-Output "Version: trigger v$($options.version) release"
-
-    $remote = Get-HazelcastRemote
-    if ($remote -eq $null) {
-        Die "Failed to get Hazelcast remote"
-    }
-
-    git rev-parse "refs/tags/v$($options.version)" >$null 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        hz-tag-release
-    }
-
-    Write-Output "Version: push tag v$($options.version)"
-    git push --tags $remote refs/tags/v$($options.version) >$null 2>&1
-}
-
 # generates the codecs
 function hz-generate-codecs {
 
@@ -978,35 +961,55 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
+    if ($frameworks.Count -eq 1) {
+        $framework = $frameworks[0]
+    }
+    else {
+        $framework = "(all)"
+    }
+
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
     Write-Output "  Define         : $($options.constants)"
-    Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
+    Write-Output "  Framework      : $framework"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
+    Write-Output ""
     
-    Write-Output "Resolve projects dependencies..."
+    Write-Output "Resolve projects..."
     $projs = Get-ChildItem -path $srcDir -recurse -depth 1 -include *.csproj
     $t = @{}
     $sc = [System.IO.Path]::DirectorySeparatorChar
     $projs | Foreach-Object {
         $proj = $_
         
+        $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
+
         # exclude
-        if (!$isWindows2 -and $proj.BaseName -eq "Hazelcast.Net.DocAsCode") { return } # continue
+        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and (
+            !$isWindows -or            # not on linux
+            $frameworks.Count -eq 1 )  # not for specific framework
+        ) {
+            Write-Output "  $(get-project-name $k) -> (excluded) "
+            return  # continue
+        }
         
         $x = [xml] (Get-Content $proj); 
         $n = $x.SelectNodes("//ProjectReference/@Include");
-        $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
         if ($t[$k] -eq $null) { $t[$k] = @() }
 
-        $n | Foreach-Object {
-            $dep = $_.Value
-            $d = $dep.SubString("../".Length).Replace("\", $sc).Replace("/", $sc)
-            Write-Output "  $k -> $d"
-            $t[$k] += $d
+        if ($n.Count -eq 0) {
+            Write-Output "  $(get-project-name $k) -> (no dependencies)"
+        }
+        else {
+            $n | Foreach-Object {
+                $dep = $_.Value
+                $d = $dep.SubString("../".Length).Replace("\", $sc).Replace("/", $sc)
+                Write-Output "  $(get-project-name $k) -> $(get-project-name $d)"
+                $t[$k] += $d
+            }
         }
     }
     
@@ -1014,7 +1017,7 @@ function hz-build {
     Write-Output "Order projects..."
     $projs = Get-TopologicalSort $t
     $projs | Foreach-Object {
-       Write-Output "  $_ "
+       Write-Output "  $(get-project-name $_) "
     }
 
     Write-Output ""
@@ -1022,8 +1025,12 @@ function hz-build {
     $buildArgs = @(
         "-c", $options.configuration,
         "--packages", $nugetPackages
-        # "-f", "$framework"
     )
+
+    if ($frameworks.Count -eq 1) {
+        $buildArgs += "-f"
+        $buildArgs += $frameworks[0]
+    }
 
     if ($options.reproducible) {
         $buildArgs += "-p:ContinuousIntegrationBuild=true"
@@ -1201,6 +1208,17 @@ function hz-cover-to-docs {
     }
 }
 
+# copy test coverage to doc
+# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
+function hz-cover-to-docs {
+    if ($isWindows) {
+        hz-cover-to-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
+    }
+}
+
 # gits the documentation (on Windows)
 function hz-git-docs-on-windows {
 
@@ -1261,30 +1279,6 @@ function hz-git-docs {
     }
     else {
         Write-Output "Docs: gitting is not supported on non-Windows platforms"
-    }
-}
-
-# publishes the documentation (on Windows)
-function hz-publish-docs-on-windows {
-
-    Write-Output "Release Documentation"
-    Write-Output "  Source         : $tmpdir/docfx.out"
-    Write-Output "  Pages repo     : $tmpdir/gh-pages"
-
-    git -C $tmpdir/gh-pages push origin gh-pages
-}
-
-# pushes the documentation
-# but only on Windows
-function hz-publish-docs {
-    if ($isWindows) {
-        if (-not $options.'accept-risks') {
-            Die "Cannot publish docs if you do not accept the risks (see -accept-risks option)."
-        }
-        hz-publish-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: publishing is not supported on non-Windows platforms"
     }
 }
 
@@ -1531,13 +1525,12 @@ function hz-test {
     Write-Output "  Test Name      : $testName"
     Write-Output "  Results        : $tmpDir/tests/results"
 
-    if ($do.'test' -and $options.cover) {
+    if ($options.cover) {
         Write-Output ""
         Write-Output "Tests Coverage"
         Write-Output "  Filter         : $($options.coverageFilter)"
         Write-Output "  Reports & logs : $tmpDir/tests/cover"
     }   
-
 
     # run tests
     $script:testResults = @()
@@ -1588,7 +1581,7 @@ function hz-test {
 
                 foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
                     Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
-                    if ($doFailedTests) {
+                    if ($options.'verbose-tests') {
                         Write-Output $testCase.failure.message.innerText
                         Write-Output $testCase.failure."stack-trace".innerText
                         Write-Output ""
@@ -1724,23 +1717,6 @@ function hz-pack-nuget {
     Get-ChildItem "$tmpDir\output" | Foreach-Object { Write-Output "  $_" }
 }
 
-# pushes packages to NuGet
-function hz-push-nuget {
-
-    if (-not $testsSuccess) {
-
-        Die "Cannot push NuGet packages if tests are not successful."
-    }
-
-    Write-Output "Push NuGet packages..."
-
-    Write-Output "FROM: $tmpDir/output/"
-    ls "$tmpDir/output/"
-
-    &dotnet nuget push "$tmpDir/output/Hazelcast.Net.$($options.version).nupkg" --api-key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
-    &dotnet nuget push "$tmpDir/output/Hazelcast.Net.Win32.$($options.version).nupkg" --api-key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
-}
-
 # verifies that the version in Directory.Build.props is the specified version
 function hz-verify-version {
 
@@ -1801,45 +1777,30 @@ $javaFix = @()
 $testsSuccess = $true
 $ensuredDotnet = $false
 
-# define needs
+# define needs - ordered!
 $needs = new-object Collections.Specialized.OrderedDictionary
-
-function register-needs { 
-
-    $args | foreach-object { $script:needs[$_] = $false } 
-}
-
-function need {
-
-    $args | foreach-object {      
-        if ($script:needs[$_] -eq $null) {
-            Die "Panic: unknown need $_"
-        }
-        $script:needs[$_] = $true
-    }
-}
-
-# register ordered needs
+function register-needs { $args | foreach-object { $script:needs[$_] = $false } }
 register-needs git 
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
 register-needs build-proj can-sign docfx
-register-needs java server-version server-files # ensure jars *after* server version!
+register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 
-# define with actions + pretty sure some are missing
-if ($do.'build') { need git dotnet-complete build-proj can-sign }
-if ($do.'test') { need git dotnet-complete java server-files server-version build-proj enterprise-key }
-if ($do.'pack-nuget') { need dotnet-minimal }
-if ($do.'push-nuget') { need dotnet-minimal nuget-api-key }
-if ($do.'run-remote-controller') { need java server-files server-version enterprise-key }
-if ($do.'run-server') { need java server-files server-version enterprise-key }
-if ($do.'build-docs') { need git build-proj docfx }
-if ($do.'publish-docs') { need git }
-if ($do.'serve-docs') { need build-proj docfx }
-if ($do.'generate-codecs') { need git python }
-if ($do.'publish-examples') { need dotnet-complete }
+# gather needs from actions
+$actions | foreach-object {
 
-# ensure needs are satisfied
+    $action = $_
+    if (-not $action.run) { return }
+
+    if ($action.need -ne $null) {
+        $action.need | foreach-object {
+            $needs[$_] = $true
+        }
+    }
+}
+
+# ensure needs are satisfied (in order)
+Write-Output ""
 $needs.Keys | foreach-object {
 
     $f = $_
@@ -1860,9 +1821,10 @@ if ($isNewVersion) { $s += " (new, was $currentVersion)" }
 Write-Output "Client version $($options.version)$s"
 
 # this goes first
-if ($do.'clean') {
+$clean = get-action $actions clean
+if ($clean.run) {
     hz-clean 
-    $do.'clean' = $false
+    $clean.run = $false
 }
 
 # then always prepare directories
@@ -1870,19 +1832,18 @@ if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
 if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
 # do actions
-$do.Keys | foreach-object {
+$actions | foreach-object {
 
-    $f = $_
-    if (-not $do[$f]) { return }
+    $action = $_
+    if (-not $action.run) { return }
 
-    get-command "hz-$f" >$null 2>&1
-    if (-not $?) {
+    $f = "hz-$($action.name)"
+    get-command $f >$null 2>&1
 
-        Die "Panic: function 'hz-$f' not found"
-    }
+    if (-not $?) { Die "Panic: function '$f' not found" }
 
     Write-Output ""
-    &"hz-$f"
+    &$f
 }
 
 Write-Output ""
