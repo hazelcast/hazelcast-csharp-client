@@ -23,4 +23,5 @@
 ## [Sources](contrib-sources.md)
 ## [Building](contrib-build.md)
 ## [Tests Coverage Report](../cover/index.html)
+## [GitHub Actions](contrib-actions.md)
 ## [FAQ](contrib-faq.md)
