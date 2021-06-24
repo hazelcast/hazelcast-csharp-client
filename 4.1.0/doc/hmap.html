@@ -85,6 +85,7 @@
 <li>A <code>HMultiMap</code> map is a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html">MultiMap</a>: a specialized map that supports storing multiple values under a single key. </li>
 <li>A <code>HReplicatedMap</code> map is a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html">ReplicatedMap</a>: a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.</li>
 </ul>
+<p>The maps behavior can be configured on the server: see the general <a href="https://docs.hazelcast.com/imdg/latest/data-structures/map.html">Map documentation</a> for complete details about maps.</p>
 <h2 id="defining-maps">Defining Maps</h2>
 <p>Maps are fully identified by their type (<code>HMap</code>, <code>HReplicatedMap</code> or <code>HMultiMap</code>) and unique name, regardless of the types specified for keys and values. In other words, an <code>HMap&lt;string, string&gt;</code> and an <code>HMap&lt;int, int&gt;</code> named with the same name are backed by the <em>same</em> cluster structure. Obviously, refering to a map with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.</p>
 <p>Key and value types can be just about any valid .NET type, provided that they can be (de)serialized by the Hazelcast .NET Client (see the <a href="serialization.md">Serialization</a> documentation). They do not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves (for instance, if in-memory format is configured as <code>OBJECT</code>, or if entries are processed by entry processors), the types must also be (de)serializable by the cluster.</p>
@@ -119,7 +120,7 @@
     })
     .Cleared((sender, args) =&gt; {
         logger.LogInformation(&quot;The map has been cleared.&quot;);
-    }))
+    }));
 
 // ...
 
