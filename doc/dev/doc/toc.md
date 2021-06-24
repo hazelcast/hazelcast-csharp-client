@@ -14,6 +14,7 @@
 ## [HSet](hset.md)
 ## [HTopic](htopic.md)
 ## [AtomicLong](atomiclong.md)
+## [AtomicRef](atomicref.md)
 # [CP SubSystem](cpsubsystem.md)
 # [Locking](locking.md)
 # [Events](events.md)
