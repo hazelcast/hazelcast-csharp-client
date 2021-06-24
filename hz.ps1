@@ -835,7 +835,7 @@ function ensure-java {
 
     if ($javaVersionString.StartsWith("openjdk ")) {
 
-        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)`"") {
+        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)([_-][0-9-_]+)?`"") {
 
             $javaVersion = $matches[1]
         }
