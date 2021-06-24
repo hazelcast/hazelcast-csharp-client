@@ -95,5 +95,5 @@ jobs:
       - name: Publish to Codecov
         uses: codecov/codecov-action@v1
         with:
-          token: ${{ secret.CODECOV_TOKEN }}
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./test-coverage/cover-netcoreapp3.1.json
