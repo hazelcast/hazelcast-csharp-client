@@ -85,7 +85,11 @@
 <div class="NOTE"><h5>Note</h5><p>See the original Java client <a href="https://docs.hazelcast.com/imdg/latest/cp-subsystem/cp-subsystem.html">CP SubSystem</a> documentation for more details.</p>
 </div>
 <p>The CP SubSystem is a component of a Hazelcast cluster that builds a strongly consistent layer for a set of distributed data structures. Its APIs can be used for implementing distributed coordination use cases, such as leader election, distributed locking, synchronization, and metadata management. It is accessed via the <code>IHazelcastClient.CPSubSystem</code> property. Its data structures are CP with respect to the <a href="http://awoc.wolski.fi/dlib/big-data/Brewer_podc_keynote_2000.pdf">CAP principle</a>, i.e., they always maintain <a href="https://aphyr.com/posts/313-strong-consistency-models">linearizability</a> and prefer consistency over availability during network partitions. Besides network partitions, the CP SubSystem withstands server and client failures.</p>
-<p>Currently, the C# client CP SubSystem only implements the <a href="atomiclong.html">AtomicLong</a> service.</p>
+<p>Currently, the C# client CP SubSystem implements the following services:</p>
+<ul>
+<li><a href="atomiclong.html">AtomicLong</a></li>
+<li><a href="atomicref.html">AtomicRef</a></li>
+</ul>
 </article>
           </div>
           
