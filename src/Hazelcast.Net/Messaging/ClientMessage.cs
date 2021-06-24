@@ -62,6 +62,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Gets or sets the name of the operation carried by this message.
         /// </summary>
+        /// <remarks> Only used for logging purposes. </remarks>
         public string OperationName { get; set; }
 
         /// <summary>

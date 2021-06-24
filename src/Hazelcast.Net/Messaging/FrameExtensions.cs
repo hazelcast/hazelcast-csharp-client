@@ -106,7 +106,7 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
-        /// Skips the current frame it is a "null frame".
+        /// Skips the current frame if it is a "null frame".
         /// </summary>
         /// <returns></returns>
         public static bool SkipNull(this IEnumerator<Frame> frames)
