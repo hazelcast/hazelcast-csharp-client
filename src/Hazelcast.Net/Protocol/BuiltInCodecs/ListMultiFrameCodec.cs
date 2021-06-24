@@ -95,7 +95,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
 
-        public static List<T> DecodeNullable<T>(ref IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
+        public static List<T> DecodeNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
         {
             return iterator.SkipNull() ? null : Decode(iterator, decodeFunction);
         }

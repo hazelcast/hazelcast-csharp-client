@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
+using Hazelcast.Sql;
 using Hazelcast.Transactions;
 
 namespace Hazelcast
@@ -229,5 +230,13 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name);
+
+        /// <summary>
+        /// Returns a service to execute distributed SQL queries.
+        /// </summary>
+        ///<remarks>
+        /// The service is in beta state. Behavior and API might be changed in future releases.
+        /// </remarks>
+        Task<ISqlService> GetSqlServiceAsync();
     }
 }

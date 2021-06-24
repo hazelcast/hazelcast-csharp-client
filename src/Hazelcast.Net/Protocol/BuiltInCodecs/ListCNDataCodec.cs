@@ -18,33 +18,19 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class DataCodec
+    /// <summary>
+    /// Codec for the list of data which allows optional items.
+    /// </summary>
+    internal static class ListCNDataCodec
     {
-        public static void Encode(ClientMessage clientMessage, IData data)
+        public static void Encode(ClientMessage clientMessage, IEnumerable<IData> collection)
         {
-            clientMessage.Append(new Frame(data.ToByteArray()));
+            ListMultiFrameCodec.Encode(clientMessage, collection, DataCodec.EncodeNullable);
         }
 
-        public static void EncodeNullable(ClientMessage clientMessage, IData data)
+        public static IList<IData> Decode(IEnumerator<Frame> iterator)
         {
-            clientMessage.Append(data == null
-                ? Frame.CreateNull()
-                : new Frame(data.ToByteArray()));
-        }
-
-        public static IData Decode(Frame frame)
-        {
-            return new HeapData(frame.Bytes);
-        }
-
-        public static IData Decode(IEnumerator<Frame> iterator)
-        {
-            return Decode(iterator.Take());
-        }
-
-        public static IData DecodeNullable(IEnumerator<Frame> iterator)
-        {
-            return iterator.SkipNull() ? null : Decode(iterator);
+            return ListMultiFrameCodec.Decode(iterator, DataCodec.DecodeNullable);
         }
     }
 }
