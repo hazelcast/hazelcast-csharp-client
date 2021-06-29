@@ -30,17 +30,13 @@ namespace Hazelcast
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
         private ICPSubsystem _cpSubsystem;
 
+        // FIXME [Oleksii] discuss if lazy is needed
         private readonly Lazy<ISqlService> _sqlServiceLazy;
 
         /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
         public ICPSubsystem CPSubsystem => _cpSubsystem ??= new CPSubsystem(Cluster, SerializationService);
-
-        public HazelcastClient()
-        {
-            _sqlServiceLazy = new Lazy<ISqlService>(() => new SqlService(Cluster));
-        }
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)

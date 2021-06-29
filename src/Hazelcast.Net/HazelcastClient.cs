@@ -24,6 +24,7 @@ using Hazelcast.Events;
 using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 using MemberInfo = Hazelcast.Models.MemberInfo;
 
@@ -61,6 +62,7 @@ namespace Hazelcast
 
             _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
+            _sqlServiceLazy = new Lazy<ISqlService>(() => new SqlService(Cluster, SerializationService));
 
             if (options.Metrics.Enabled)
             {
