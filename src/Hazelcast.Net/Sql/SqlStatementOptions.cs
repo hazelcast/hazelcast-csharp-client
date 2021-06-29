@@ -2,10 +2,13 @@
 
 namespace Hazelcast.Sql
 {
-    // FIXME [Oleksii] normalize documentation
     public class SqlStatementOptions
     {
         public static readonly SqlStatementOptions Default = new SqlStatementOptions();
+
+        private string _schema = null;
+        private TimeSpan _timeout = TimeSpan.Zero;
+        private int _cursorBufferSize = 4096;
 
         /// <summary>
         /// The schema name.
@@ -21,7 +24,17 @@ namespace Hazelcast.Sql
         /// The schema name is case sensitive. For example, 'foo' and 'Foo' are different schemas
         /// </para>
         /// </remarks>
-        public string Schema { get; set; }
+        public string Schema
+        {
+            get => _schema;
+            set
+            {
+                if (value != null && string.IsNullOrWhiteSpace(value))
+                    throw new ArgumentException("Empty or whitespace schema is not allowed.");
+
+                _schema = value;
+            }
+        }
 
         /// <summary>
         /// <para>
@@ -30,9 +43,21 @@ namespace Hazelcast.Sql
         /// Defaults to <see cref="TimeSpan.Zero"/>.
         /// </para>
         /// <para>
+        /// <see cref="TimeSpan.Zero"/> means that the timeout in server config will be used.
+        /// <see cref="System.Threading.Timeout.InfiniteTimeSpan"/> means no timeout.
         /// </para>
         /// </summary>
-        public TimeSpan Timeout { get; set; }
+        public TimeSpan Timeout
+        {
+            get => _timeout;
+            set
+            {
+                if (value < TimeSpan.Zero && value != System.Threading.Timeout.InfiniteTimeSpan)
+                    throw new ArgumentException("Negative timeouts apart from Timeout.InfiniteTimeSpan are not allowed.");
+
+                _timeout = value;
+            }
+        }
 
         /// <summary>
         /// The cursor buffer size (measured in the number of rows).
@@ -51,7 +76,17 @@ namespace Hazelcast.Sql
         /// boost for queries with large result sets at the cost of increased memory consumption.
         /// </para>
         /// </remarks>
-        public int CursorBufferSize { get; set; } = 4096;
+        public int CursorBufferSize
+        {
+            get => _cursorBufferSize;
+            set
+            {
+                if (value <= 0)
+                    throw new ArgumentException("Cursor buffer size must be positive.");
+
+                _cursorBufferSize = value;
+            }
+        }
 
         /// <summary>
         /// Expected result type of SQL query.
