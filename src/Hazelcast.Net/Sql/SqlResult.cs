@@ -1,26 +1,41 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
-    public class SqlResult: IAsyncEnumerable<SqlRow>, IAsyncDisposable
+    public class SqlResult : IAsyncEnumerable<SqlRow>, IEnumerable<SqlRow>, IAsyncDisposable
     {
         private readonly SqlService _sqlService;
-        private readonly SerializationService _serializationService;
         private readonly SqlQueryId _queryId;
 
-        /// <summary>
-        /// The page size used for pagination
-        /// </summary>
-        private readonly uint _cursorBufferSize;
+        private readonly SqlRowMetadata _rowMetadata;
+        private readonly SqlPage _page;
+        private readonly long _updateCount;
 
-        /** If true, SqlResult is an object iterable, otherwise SqlRow iterable */
-        private readonly bool _returnRawResult;
+        public SqlResult(SqlService sqlService, SqlQueryId queryId,
+            SqlRowMetadata rowMetadata, SqlPage page, long updateCount
+        )
+        {
+            _sqlService = sqlService;
+            _queryId = queryId;
 
-        private readonly Guid _clientId;
+            _rowMetadata = rowMetadata;
+            _page = page;
+            _updateCount = updateCount;
+        }
+
+        public IEnumerator<SqlRow> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
 
         public IAsyncEnumerator<SqlRow> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
