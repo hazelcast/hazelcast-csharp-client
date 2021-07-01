@@ -44,6 +44,7 @@ namespace Hazelcast.Protocol.Codecs
 #if SERVER_CODEC
     internal static class SqlFetch_reservedServerCodec
 #else
+    // FIXME [Oleksii] clarify if reserved codes are needed
     internal static class SqlFetch_reservedCodec
 #endif
     {

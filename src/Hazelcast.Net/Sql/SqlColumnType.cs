@@ -49,7 +49,6 @@ namespace Hazelcast.Sql
         /// </summary>
         BigInt,
 
-        // FIXME [Oleksii] clarify .NET type
         /// <summary>
         /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="decimal"/> in .NET.
         /// </summary>
@@ -65,13 +64,11 @@ namespace Hazelcast.Sql
         /// </summary>
         Double,
 
-        // FIXME [Oleksii] clarify .NET type
         /// <summary>
         /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="System.DateTime"/> in .NET.
         /// </summary>
         Date,
 
-        // FIXME [Oleksii] clarify .NET type
         /// <summary>
         /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="System.TimeSpan"/> in .NET.
         /// </summary>
