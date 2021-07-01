@@ -41,6 +41,9 @@ namespace Hazelcast.Sql
         /// </summary>
         public long LocalIdLow { get; }
 
+        public Guid MemberId { get; }
+        public Guid LocalId { get; }
+
         /// <summary>
         /// Initializes a new instance of <see cref="SqlQueryId"/> class.
         /// </summary>

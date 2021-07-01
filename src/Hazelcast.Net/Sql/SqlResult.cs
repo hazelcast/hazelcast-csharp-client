@@ -1,50 +1,109 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
-    public class SqlResult : IAsyncEnumerable<SqlRow>, IEnumerable<SqlRow>, IAsyncDisposable
+    // FIXME [Oleksii] Clarify if should be thread safe
+    public class SqlResult : IAsyncEnumerator<SqlRow>
     {
+        /// <summary>
+        /// If equals <see cref="UpdateCount"/>, <see cref="SqlResult"/> contains no data but only count of updated rows.
+        /// </summary>
+        public const int NoUpdateCount = -1;
+
         private readonly SqlService _sqlService;
+        private readonly SerializationService _serializationService;
+
         private readonly SqlQueryId _queryId;
-
+        private readonly int _cursorBufferSize;
         private readonly SqlRowMetadata _rowMetadata;
-        private readonly SqlPage _page;
-        private readonly long _updateCount;
 
-        public SqlResult(SqlService sqlService, SqlQueryId queryId,
+        private SqlPageEnumerator _pageEnumerator;
+
+        private bool _closed;
+
+        public SqlRow Current => _pageEnumerator.Current;
+        public long UpdateCount { get; } = NoUpdateCount;
+
+        internal SqlResult(
+            SqlService sqlService, SerializationService serializationService,
+            SqlQueryId queryId, int cursorBufferSize,
             SqlRowMetadata rowMetadata, SqlPage page, long updateCount
         )
         {
             _sqlService = sqlService;
+            _serializationService = serializationService;
             _queryId = queryId;
+            _cursorBufferSize = cursorBufferSize;
 
-            _rowMetadata = rowMetadata;
-            _page = page;
-            _updateCount = updateCount;
+            if (rowMetadata != null)
+                _rowMetadata = rowMetadata;
+            else
+                UpdateCount = updateCount;
+
+            _pageEnumerator = new SqlPageEnumerator(serializationService, rowMetadata, page);
         }
 
-        public IEnumerator<SqlRow> GetEnumerator()
+        public async ValueTask DisposeAsync()
         {
-            throw new NotImplementedException();
+            if (_closed)
+                return;
+
+            await _sqlService.CloseAsync(_queryId);
+            _closed = true;
         }
 
-        IEnumerator IEnumerable.GetEnumerator()
+        public async ValueTask<bool> MoveNextAsync()
         {
-            return GetEnumerator();
+            EnsureCanEnumerate();
+
+            if (_pageEnumerator.MoveNext())
+                return true;
+
+            if (_pageEnumerator.IsLastPage)
+                return false;
+
+            var page = await _sqlService.FetchAsync(_queryId, _cursorBufferSize);
+            _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
+
+            return _pageEnumerator.MoveNext();
         }
 
-        public IAsyncEnumerator<SqlRow> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+        public IAsyncEnumerable<SqlRow> EnumerateOnceAsync()
         {
-            throw new NotImplementedException();
+            async IAsyncEnumerable<SqlRow> Enumerate()
+            {
+                while (await MoveNextAsync().CfAwait())
+                    yield return Current;
+            }
+
+            EnsureCanEnumerate();
+            return Enumerate();
         }
 
-        public ValueTask DisposeAsync()
+        public IEnumerable<SqlRow> EnumerateOnce()
         {
-            throw new NotImplementedException();
+            IEnumerable<SqlRow> Enumerate()
+            {
+                // FIXME [Oleksii] discuss synchronous approach
+                while (MoveNextAsync().GetAwaiter().GetResult())
+                    yield return Current;
+            }
+
+            EnsureCanEnumerate();
+            return Enumerate();
+        }
+
+        private void EnsureCanEnumerate()
+        {
+            if (_closed)
+                throw new ObjectDisposedException(nameof(SqlResult));
+
+            if (_rowMetadata == null)
+                throw new InvalidOperationException("This result contains only update count.");
         }
     }
 }

@@ -29,6 +29,11 @@ namespace Hazelcast.Sql
 
         public bool IsLast { get; }
 
+        // FIXME [Oleksii] check if at least 1 row is guaranteed
+        public int RowCount => _data[0].Length;
+
+        public object this[int row, int column] => _data[column][row];
+
         public SqlPage(SqlColumnType[] columnTypes, object[][] data, bool isLast)
         {
             _columnTypes = columnTypes;

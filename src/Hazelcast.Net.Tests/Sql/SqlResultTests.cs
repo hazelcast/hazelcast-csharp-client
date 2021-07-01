@@ -16,7 +16,7 @@ namespace Hazelcast.Tests.Sql
             var result = await sqlService.ExecuteAsync($"SELECT * FROM {MapName}");
             await result.DisposeAsync();
 
-            Assert.Throws<ObjectDisposedException>(() => result.GetAsyncEnumerator());
+            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
         }
 
         [Test]
@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Sql
 
             Assert.DoesNotThrowAsync(async () =>
             {
-                await foreach (var row in result)
+                await foreach (var row in result.EnumerateOnceAsync())
                     GC.KeepAlive(row);
             });
         }

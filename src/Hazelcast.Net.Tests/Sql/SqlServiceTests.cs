@@ -14,7 +14,7 @@ namespace Hazelcast.Tests.Sql
             var result = await sql.ExecuteAsync($"SELECT * FROM {MapName}");
 
             var expectedValues = MapValues;
-            var resultValues = result.ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
@@ -30,7 +30,7 @@ namespace Hazelcast.Tests.Sql
             var result = await sql.ExecuteAsync($"SELECT * FROM {MapName} WHERE this >= ?", new object[] { minValue });
 
             var expectedValues = MapValues.Where(p => p.Value >= minValue);
-            var resultValues = result.ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
@@ -46,7 +46,7 @@ namespace Hazelcast.Tests.Sql
             var result = await sql.ExecuteAsync($"SELECT * FROM {MapName} WHERE __key == ?", new object[] { key });
 
             var expectedValues = MapValues.Where(p => p.Key == key);
-            var resultValues = result.ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }

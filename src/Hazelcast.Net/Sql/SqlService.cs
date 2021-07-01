@@ -55,7 +55,7 @@ namespace Hazelcast.Sql
                 throw new HazelcastSqlException(sqlError);
 
             // FIXME [Oleksii] discuss if throw immediately or forward to result
-            return BuildResult(response, queryId);
+            return BuildResult(response, queryId, options.CursorBufferSize);
         }
 
         public async Task<SqlPage> FetchAsync(SqlQueryId queryId, int cursorBufferSize)
@@ -77,12 +77,12 @@ namespace Hazelcast.Sql
             var response = SqlCloseCodec.DecodeResponse(responseMessage);
         }
 
-        private SqlResult BuildResult(SqlExecuteCodec.ResponseParameters response, SqlQueryId queryId)
+        private SqlResult BuildResult(SqlExecuteCodec.ResponseParameters response, SqlQueryId queryId, int cursorBufferSize)
         {
-            return new SqlResult(this, queryId,
-                response.RowMetadata is {} rowMetadata ? new SqlRowMetadata(rowMetadata) : null,
-                response.RowPage,
-                response.UpdateCount
+            return new SqlResult(
+                this, _serializationService, queryId, cursorBufferSize,
+                response.RowMetadata is { } rowMetadata ? new SqlRowMetadata(rowMetadata) : null,
+                response.RowPage, response.UpdateCount
             );
         }
     }
