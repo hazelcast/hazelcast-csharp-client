@@ -48,7 +48,7 @@ jobs:
             });
             function download(name, path) {
                 var artifact = artifacts.data.artifacts.filter((art) => {
-                  return art.name == name + 
+                  return art.name == name;
                 })[0];
                 var download = await github.actions.downloadArtifact({
                    owner: context.repo.owner,
