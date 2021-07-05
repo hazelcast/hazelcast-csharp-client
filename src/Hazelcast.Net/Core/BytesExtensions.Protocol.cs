@@ -40,11 +40,20 @@ namespace Hazelcast.Core
         public static void WriteByteL(this byte[] bytes, int position, byte value)
             => bytes.WriteByte(position, value);
 
+        public static short ReadShortL(this byte[] bytes, int position)
+            => bytes.ReadShort(position, Endianness.LittleEndian);
+
         public static long ReadLongL(this byte[] bytes, int position)
             => bytes.ReadLong(position, Endianness.LittleEndian);
 
         public static int ReadIntL(this byte[] bytes, int position)
             => bytes.ReadInt(position, Endianness.LittleEndian);
+
+        public static float ReadFloatL(this byte[] bytes, int position)
+            => bytes.ReadFloat(position, Endianness.LittleEndian);
+
+        public static double ReadDoubleL(this byte[] bytes, int position)
+            => bytes.ReadDouble(position, Endianness.LittleEndian);
 
         public static bool ReadBoolL(this byte[] bytes, int position)
             => bytes.ReadBool(position);

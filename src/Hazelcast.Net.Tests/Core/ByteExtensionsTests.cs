@@ -418,6 +418,21 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
+        [TestCase(new byte[]{0, 0xE5, 0x07, 0x07, 0x1E}, 1, "2021-07-30")]
+        public void ReadLocalDate(byte[] bytes, int position, string expected)
+        {
+            Assert.AreEqual(expected, bytes.ReadLocalDate(position));
+        }
+
+        [Test]
+        [TestCase(new byte[]{0, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "12:17:16")]
+        [TestCase(new byte[]{0, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "21:59:56.012345678")]
+        public void ReadLocalTime(byte[] bytes, int position, string expected)
+        {
+            Assert.AreEqual(expected, bytes.ReadLocalTime(position));
+        }
+
+        [Test]
         public void ValidateUtf8()
         {
             // a string that contains 1, 2, 3 and 4 bytes chars
@@ -430,7 +445,6 @@ namespace Hazelcast.Tests.Core
             // and back
             Assert.That(Encoding.UTF8.GetString(encodingBytes), Is.EqualTo(s));
         }
-
 
         [Test]
         public void FillSpan()

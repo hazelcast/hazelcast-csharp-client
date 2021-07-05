@@ -12,25 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
-using Hazelcast.Sql;
 
-namespace Hazelcast.Protocol.Codecs
+namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    // FIXME [Oleksii] implement or generate
-    // https://github.com/hazelcast/hazelcast-csharp-client/issues/409
-    internal static class SqlPageCodec
+    internal static class ListCNLocalDateTimeCodec
     {
-        public static void Encode(ClientMessage clientMessage, SqlPage sqlPage)
+        public static IList<string> Decode(IEnumerator<Frame> iterator)
         {
-            throw new NotImplementedException();
-        }
-
-        public static SqlPage Decode(IEnumerator<Frame> iterator)
-        {
-            throw new NotImplementedException();
+            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfLocalDateTime, BytesExtensions.ReadLocalDateTime);
         }
     }
 }

@@ -85,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-#if SERVER_CODEC
+#if FALSE
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -111,7 +111,7 @@ namespace Hazelcast.Protocol.Codecs
             public Hazelcast.Sql.SqlError Error { get; set; }
         }
 
-#if SERVER_CODEC
+#if FALSE
         public static ClientMessage EncodeResponse(Hazelcast.Sql.SqlPage rowPage, Hazelcast.Sql.SqlError error)
         {
             var clientMessage = new ClientMessage();

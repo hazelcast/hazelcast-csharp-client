@@ -121,7 +121,7 @@ namespace Hazelcast.Protocol.Codecs
             return clientMessage;
         }
 
-#if SERVER_CODEC
+#if FALSE // FIXME [Olesii] discuss whether to remove these parts and how to update protocol
         public static RequestParameters DecodeRequest(ClientMessage clientMessage)
         {
             using var iterator = clientMessage.GetEnumerator();
@@ -162,7 +162,7 @@ namespace Hazelcast.Protocol.Codecs
             public Hazelcast.Sql.SqlError Error { get; set; }
         }
 
-#if SERVER_CODEC
+#if FALSE
         public static ClientMessage EncodeResponse(IList<Hazelcast.Sql.SqlColumnMetadata> rowMetadata, Hazelcast.Sql.SqlPage rowPage, long updateCount, Hazelcast.Sql.SqlError error)
         {
             var clientMessage = new ClientMessage();

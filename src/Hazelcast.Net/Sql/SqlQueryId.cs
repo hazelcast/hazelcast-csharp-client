@@ -41,9 +41,6 @@ namespace Hazelcast.Sql
         /// </summary>
         public long LocalIdLow { get; }
 
-        public Guid MemberId { get; }
-        public Guid LocalId { get; }
-
         /// <summary>
         /// Initializes a new instance of <see cref="SqlQueryId"/> class.
         /// </summary>
@@ -57,7 +54,11 @@ namespace Hazelcast.Sql
 
         public SqlQueryId(Guid memberId, Guid localId)
         {
-            // FIXME [OIeksii] implement
+            var memberBytes = memberId.ToByteArray();
+            (MemberIdHigh, MemberIdLow) = (BitConverter.ToInt64(memberBytes, 0), BitConverter.ToInt64(memberBytes, sizeof(long)));
+
+            var localBytes = localId.ToByteArray();
+            (LocalIdHigh, LocalIdLow) = (BitConverter.ToInt64(localBytes, 0), BitConverter.ToInt64(localBytes, sizeof(long)));
         }
 
         // FIXME [Oleksii] clarify naming - client or member?

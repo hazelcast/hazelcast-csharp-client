@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
@@ -39,7 +40,7 @@ namespace Hazelcast.Sql
         {
             var values = Enumerable.Range(0, _page.RowCount)
                 .Select(i => _serializationService.ToObject(_page[index, i]))
-                .ToList();
+                .ToList(_page.RowCount);
 
             return new SqlRow(values, _rowMetadata);
         }

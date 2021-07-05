@@ -50,11 +50,6 @@ namespace Hazelcast.Sql
         BigInt,
 
         /// <summary>
-        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="decimal"/> in .NET.
-        /// </summary>
-        Decimal,
-
-        /// <summary>
         /// <c>REAL</c> type, represented by <c>java.lang.Float</c> in Java and by <see cref="float"/> in .NET.
         /// </summary>
         Real,
@@ -63,6 +58,11 @@ namespace Hazelcast.Sql
         /// <c>DOUBLE</c> type, represented by <c>java.lang.Double</c> in Java and by <see cref="double"/> in .NET.
         /// </summary>
         Double,
+
+        /// <summary>
+        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="decimal"/> in .NET.
+        /// </summary>
+        Decimal,
 
         /// <summary>
         /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="System.DateTime"/> in .NET.

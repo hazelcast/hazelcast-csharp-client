@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.Core
 {
@@ -33,5 +35,20 @@ namespace Hazelcast.Core
             if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Remove(new KeyValuePair<TKey, TValue>(key, value));
         }
+
+        public static T[] Slice<T>(this T[] array, long startIncl, long endExcl)
+        {
+            var res = new T[endExcl - startIncl];
+            Array.Copy(
+                sourceArray: array, sourceIndex: startIncl,
+                destinationArray: res, destinationIndex: 0, length: res.Length
+            );
+
+            return res;
+        }
+
+        public static IReadOnlyList<T> AsReadOnly<T>(this IList<T> list) => new ReadOnlyCollection<T>(list);
+
+        public static IReadOnlyList<object> AsReadOnlyObjectList<T>(this IList<T> list) => new ReadOnlyObjectList<T>(list);
     }
 }

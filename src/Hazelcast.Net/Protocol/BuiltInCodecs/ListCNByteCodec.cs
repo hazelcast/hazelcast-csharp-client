@@ -12,33 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal delegate T DecodeDelegate<out T>(IEnumerator<Frame> iterator);
-
-    internal delegate T DecodeBytesDelegate<out T>(byte[] bytes, int position);
-
-    internal static class CodecUtil
+    internal static class ListCNByteCodec
     {
-        public static void EncodeNullable<T>(ClientMessage clientMessage, T value, Action<ClientMessage, T> encode)
+        public static IList<byte> Decode(IEnumerator<Frame> iterator)
         {
-            if (value == null)
-            {
-                clientMessage.Append(Frame.CreateNull());
-            }
-            else
-            {
-                encode(clientMessage, value);
-            }
-        }
-
-        public static T DecodeNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decode) where T : class
-        {
-            return iterator.SkipNull() ? null : decode(iterator);
+            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfByte, BytesExtensions.ReadByte);
         }
     }
 }

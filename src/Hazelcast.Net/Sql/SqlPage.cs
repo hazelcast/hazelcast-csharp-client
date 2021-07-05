@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Hazelcast.Sql
 {
     /// <summary>
@@ -25,16 +27,16 @@ namespace Hazelcast.Sql
         /// Holds returned data in this page. First index is column number, the second one is row number.
         /// </summary>
         /// <remarks>This is chosen this way because server sends SQL pages in columnar format.</remarks>
-        private readonly object[][] _data;
+        private readonly IReadOnlyList<object>[] _data;
 
         public bool IsLast { get; }
 
         // FIXME [Oleksii] check if at least 1 row is guaranteed
-        public int RowCount => _data[0].Length;
+        public int RowCount => _data[0].Count;
 
         public object this[int row, int column] => _data[column][row];
 
-        public SqlPage(SqlColumnType[] columnTypes, object[][] data, bool isLast)
+        public SqlPage(SqlColumnType[] columnTypes, IReadOnlyList<object>[] data, bool isLast)
         {
             _columnTypes = columnTypes;
             _data = data;

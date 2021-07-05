@@ -100,6 +100,26 @@ namespace Hazelcast.Core
         public const int SizeOfGuid = (1 + 16) * SizeOfByte;
 
         /// <summary>
+        /// Gets the size of a Java LocalDate value in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfLocalDate = SizeOfShort + SizeOfByte * 2;
+
+        /// <summary>
+        /// Gets the size of a Java LocalTime value in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfLocalTime = SizeOfInt + SizeOfByte * 3;
+
+        /// <summary>
+        /// Gets the size of a Java LocalDateTime value in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfLocalDateTime = SizeOfLocalDate + SizeOfLocalTime;
+
+        /// <summary>
+        /// Gets the size of a Java OffsetDateTime value in arrays or sequences of bytes.
+        /// </summary>
+        public const int SizeOfOffsetDateTime = SizeOfLocalDateTime + SizeOfInt;
+
+        /// <summary>
         /// Copies a sequence of <typeparamref name="T"/> to a span of <typeparamref name="T"/>.
         /// </summary>
         /// <typeparam name="T">The type of the items in the sequence and span.</typeparam>
