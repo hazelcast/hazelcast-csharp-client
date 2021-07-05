@@ -145,12 +145,23 @@ function Parse-Commands ( $commands, $actions ) {
 
     $actions | foreach-object { $_.run = $false }
 
+    $actionx = @{}
+    $actions | foreach-object {
+        $a = $_
+        $actionx[$a.name] = $a
+        if ($a.alias -is [string]) {
+          $a.alias.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | foreach-object {
+            $actionx[$_.Trim()] = $a
+          }
+        }
+    }
+
     # else handle Commands
     $commands | foreach-object {
 
         if ($err -is [string]) { return }
 
-        $action = get-action $actions $_
+        $action = $actionx[$_]
         if ($action -eq $null) {
             $err = "unknown command `'$_`'"
             return
