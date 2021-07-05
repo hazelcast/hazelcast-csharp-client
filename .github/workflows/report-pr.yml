@@ -46,7 +46,7 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ github.event.workflow_run.id }},
             });
-            function download(name, path) {
+            async function download(name, path) {
                 var artifact = artifacts.data.artifacts.filter((art) => {
                   return art.name == name;
                 })[0];
@@ -58,8 +58,8 @@ jobs:
                 });
                 fs.writeFileSync(process.env.GITHUB_WORKSPACE + path, Buffer.from(download.data));
             }
-            download('Test-Results (${{ matrix.os }})', '/test-results/test-results.zip');
-            download('Test-Coverage (${{ matrix.os }})', '/test-coverage/test-coverage.zip');
+            await download('Test-Results (${{ matrix.os }})', '/test-results/test-results.zip');
+            await download('Test-Coverage (${{ matrix.os }})', '/test-coverage/test-coverage.zip');
 
       # unzip artifacts
       - name: Unzip artifacts
