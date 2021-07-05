@@ -22,7 +22,7 @@
 $ErrorActionPreference='Continue'
 
 # prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be ./build/
+$scriptRoot = "$PSScriptRoot"
 $slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
 $srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
 $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
@@ -58,7 +58,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "4.0-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
+    @{ name = "server";          type = [string];  default = "4.1-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -636,19 +636,19 @@ function require-dotnet ( $full ) {
     $dotnetVersion = (&dotnet --version)
     Write-Output "  Version $dotnetVersion"
 
-    if ($pre) {
-        Write-Output "  (global.json does not allow pre-release versions)"
-    }
-    else {
-        Write-Output "  (global.json is missing or allows pre-release versions)"
-    }
-
+    $allowPrerelease = $true
     if (test-path "$slnRoot/global.json") {
         $json = (get-content "$slnRoot/global.json" -raw) | convertFrom-json
-        $pre = $true
         if ($json.sdk -ne $null -and $json.sdk.allowPrerelease -ne $null) {
-            $pre = $json.sdk.allowPrerelease
+            $allowPrerelease = $json.sdk.allowPrerelease
         }
+    }
+
+    if ($allowPrerelease) {
+        Write-Output "  (global.json is missing or allows pre-release versions)"
+    }
+    else {
+        Write-Output "  (global.json does not allow pre-release versions)"
     }
 
     $sdks = (&dotnet --list-sdks)
@@ -681,8 +681,8 @@ function require-dotnet ( $full ) {
     $v50preview = get-dotnet-sdk $sdks "5.0" $true
     $v60preview = get-dotnet-sdk $sdks "6.0" $true
 
-    if ($pre) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
-    if ($pre) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v50preview)" }
+    if ($allowPrerelease) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
+    if ($allowPrerelease) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v60preview)" }
 
     Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 
