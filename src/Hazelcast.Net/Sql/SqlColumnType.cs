@@ -60,27 +60,27 @@ namespace Hazelcast.Sql
         Double,
 
         /// <summary>
-        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="decimal"/> in .NET.
+        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
         Decimal,
 
         /// <summary>
-        /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="System.DateTime"/> in .NET.
+        /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
         Date,
 
         /// <summary>
-        /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="System.TimeSpan"/> in .NET.
+        /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
         Time,
 
         /// <summary>
-        /// <c>TIMESTAMP</c> type, represented by <c>java.lang.LocalDateTime</c> in Java and by <see cref="System.DateTime"/> in .NET.
+        /// <c>TIMESTAMP</c> type, represented by <c>java.lang.LocalDateTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
         Timestamp,
 
         /// <summary>
-        /// <c>TIMESTAMP_WITH_TIME_ZONE</c> type, represented by <c>java.lang.OffsetDateTime</c> in Java and by <see cref="System.DateTimeOffset"/> in .NET.
+        /// <c>TIMESTAMP_WITH_TIME_ZONE</c> type, represented by <c>java.lang.OffsetDateTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
         TimestampWithTimeZone,
 

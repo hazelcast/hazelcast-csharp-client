@@ -19,7 +19,7 @@ namespace Hazelcast.Sql
     /// <summary>
     /// Cluster-wide unique SQL query ID.
     /// </summary>
-    public class SqlQueryId
+    internal class SqlQueryId
     {
         /// <summary>
         /// Member ID: most significant bits

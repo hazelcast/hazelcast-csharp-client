@@ -6,7 +6,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
 {
-    public class SqlTestBase: SingleMemberClientRemoteTestBase
+    public class SqlTestBase : SingleMemberClientRemoteTestBase
     {
         protected const string MapName = "MyMap";
 

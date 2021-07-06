@@ -19,7 +19,7 @@ namespace Hazelcast.Sql
     /// <summary>
     /// A server-side error that is propagated to the client.
     /// </summary>
-    public class SqlError
+    internal class SqlError
     {
         public int Code { get; }
         public string Message { get; }

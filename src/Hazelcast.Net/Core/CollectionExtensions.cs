@@ -36,6 +36,12 @@ namespace Hazelcast.Core
             return source.Remove(new KeyValuePair<TKey, TValue>(key, value));
         }
 
+        /// <summary>
+        /// Creates a new array and copies all data from <paramref name="array"/> starting from <paramref name="startIncl"/> and up to <paramref name="endExcl"/> indices.
+        /// </summary>
+        /// <remarks>
+        /// Similar to Array.prototype.slice method in JavaScript.
+        /// </remarks>
         public static T[] Slice<T>(this T[] array, long startIncl, long endExcl)
         {
             var res = new T[endExcl - startIncl];
@@ -47,8 +53,16 @@ namespace Hazelcast.Core
             return res;
         }
 
-        public static IReadOnlyList<T> AsReadOnly<T>(this IList<T> list) => new ReadOnlyCollection<T>(list);
+        /// <summary>
+        /// Returns read-only wrapper for <paramref name="list"/>
+        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/>.
+        /// </summary>
+        public static IReadOnlyList<T> AsReadOnly<T>(this IList<T> list) => list as IReadOnlyList<T> ?? new ReadOnlyCollection<T>(list);
 
-        public static IReadOnlyList<object> AsReadOnlyObjectList<T>(this IList<T> list) => new ReadOnlyObjectList<T>(list);
+        /// <summary>
+        /// Returns read-only wrapper for <paramref name="list"/> where each element is returned as <see cref="object"/> with boxing performed if needed
+        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/> (T is <see cref="object"/>).
+        /// </summary>
+        public static IReadOnlyList<object> AsReadOnlyObjectList<T>(this IList<T> list) => list as IReadOnlyList<object> ?? new ReadOnlyObjectList<T>(list);
     }
 }

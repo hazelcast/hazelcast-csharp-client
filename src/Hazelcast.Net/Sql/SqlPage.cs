@@ -19,7 +19,7 @@ namespace Hazelcast.Sql
     /// <summary>
     /// Contains SQL data returned from the returned to the client.
     /// </summary>
-    public class SqlPage
+    internal class SqlPage
     {
         private readonly SqlColumnType[] _columnTypes;
 
