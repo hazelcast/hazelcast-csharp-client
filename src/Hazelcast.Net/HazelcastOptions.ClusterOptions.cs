@@ -119,21 +119,13 @@ namespace Hazelcast
                 if (string.IsNullOrWhiteSpace(typeName))
                     throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
 
-                switch (typeName.ToUpperInvariant())
+                LoadBalancer.Creator = typeName.ToUpperInvariant() switch
                 {
-                    case "RANDOM":
-                        LoadBalancer.Creator = () => new RandomLoadBalancer();
-                        break;
-                    case "ROUNDROBIN":
-                        LoadBalancer.Creator = () => new RoundRobinLoadBalancer();
-                        break;
-                    case "STATIC":
-                        LoadBalancer.Creator = () => new StaticLoadBalancer(value.Args);
-                        break;
-                    default:
-                        LoadBalancer.Creator = () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args);
-                        break;
-                }
+                    "RANDOM" => () => new RandomLoadBalancer(),
+                    "ROUNDROBIN" => () => new RoundRobinLoadBalancer(),
+                    "STATIC" => () => new StaticLoadBalancer(value.Args),
+                    _ => () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args)
+                };
             }
         }
 

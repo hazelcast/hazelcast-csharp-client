@@ -30,6 +30,7 @@ namespace Hazelcast.Configuration
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <param name="filePath">The path to the file.</param>
         /// <param name="fileName">The name of the file.</param>
+        /// <param name="environmentName">The name of the environment.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         /// <returns></returns>
         public static IConfigurationBuilder AddHazelcastFile(this IConfigurationBuilder configurationBuilder, string filePath, string fileName, string environmentName)
@@ -41,7 +42,7 @@ namespace Hazelcast.Configuration
                 : Path.Combine(filePath, fileName);
 
             var extension = Path.GetExtension(fullpath);
-            var directory = Path.GetDirectoryName(fullpath);
+            var directory = Path.GetDirectoryName(fullpath) ?? "";
             fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
 
             // JSON files are reloadOnChange:false because we do not track configuration changes,
@@ -75,15 +76,17 @@ namespace Hazelcast.Configuration
         /// Adds an <see cref="IConfigurationProvider"/> that reads Hazelcast configuration values from the command line.
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
+        /// <param name="args">The command line args.</param>
+        /// <param name="switchMappings">Command line switch mappings.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         /// <remarks>
         /// <para>Adds support for `hazelcast.x.y` arguments that do not respect the standard `hazelcast:x:y` pattern.</para>
         /// <para>Does not add default support for command line arguments.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args)
+        public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
-            configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args });
+            configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args, SwitchMappings = switchMappings });
             return configurationBuilder;
         }
 
@@ -91,6 +94,7 @@ namespace Hazelcast.Configuration
         /// Adds an <see cref="IConfigurationProvider"/> that reads Hazelcast configuration values from an in-memory collection.
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
+        /// <param name="initialData">The initial key value configuration pairs.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         public static IConfigurationBuilder AddHazelcastInMemoryCollection(this IConfigurationBuilder configurationBuilder, IEnumerable<KeyValuePair<string, string>> initialData)
         {
@@ -104,8 +108,10 @@ namespace Hazelcast.Configuration
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <param name="args">The command line args.</param>
+        /// <param name="switchMappings">Command line switch mappings.</param>
         /// <param name="keyValues">The optional key-value configuration pairs.</param>
         /// <param name="optionsFilePath">The optional path to the options file.</param>
+        /// <param name="optionsFileName">The optional name of the options file.</param>
         /// <param name="environmentName">An optional environment name.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         /// <remarks>
@@ -114,7 +120,7 @@ namespace Hazelcast.Configuration
         /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
         /// specified, the environment name is <c>Production</c>.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
+        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null, IEnumerable < KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
 
@@ -131,7 +137,7 @@ namespace Hazelcast.Configuration
                 .AddHazelcastEnvironmentVariables();
 
             if (args != null)
-                configurationBuilder.AddHazelcastCommandLine(args);
+                configurationBuilder.AddHazelcastCommandLine(args, switchMappings);
 
             if (keyValues != null)
                 configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
@@ -144,6 +150,7 @@ namespace Hazelcast.Configuration
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <param name="args">The command line args.</param>
+        /// <param name="switchMappings">Optional command line switch mappings.</param>
         /// <param name="environmentName">An optional environment name.</param>
         /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
         /// <remarks>
@@ -153,7 +160,7 @@ namespace Hazelcast.Configuration
         /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
         /// specified, the environment name is <c>Production</c>.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, string environmentName = null)
+        public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null, string environmentName = null)
         {
             // JSON files are reloadOnChange:false because we do not track configuration changes,
             // and we try to mitigate issues with running apps in Docker containers.
@@ -172,7 +179,7 @@ namespace Hazelcast.Configuration
             configurationBuilder.AddEnvironmentVariables();
 
             if (args != null)
-                configurationBuilder.AddCommandLine(args);
+                configurationBuilder.AddCommandLine(args, switchMappings);
 
             return configurationBuilder;
         }

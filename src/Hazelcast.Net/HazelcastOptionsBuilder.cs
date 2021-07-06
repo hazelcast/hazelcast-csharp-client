@@ -27,6 +27,7 @@ namespace Hazelcast
     public class HazelcastOptionsBuilder
     {
         private string[] _args;
+        private IDictionary<string, string> _switchMappings;
         private Dictionary<string, string> _keyValues;
         private string _optionsFilePath;
         private string _optionsFileName;
@@ -39,10 +40,12 @@ namespace Hazelcast
         /// Sets the command-line arguments to use when building the options.
         /// </summary>
         /// <param name="args">The command-line arguments.</param>
+        /// <param name="switchMappings">Optional command-line switch mappings.</param>
         /// <returns>This options builder.</returns>
-        public HazelcastOptionsBuilder With(string[] args)
+        public HazelcastOptionsBuilder With(string[] args, IDictionary<string, string> switchMappings = null)
         {
             _args = args ?? throw new ArgumentNullException(nameof(args));
+            _switchMappings = switchMappings;
             return this;
         }
 
@@ -173,8 +176,8 @@ namespace Hazelcast
 
         private void Setup(IConfigurationBuilder builder)
         {
-            builder.AddDefaults(_args, _environmentName);
-            builder.AddHazelcast(_args, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+            builder.AddDefaults(_args, _switchMappings, _environmentName);
+            builder.AddHazelcast(_args, _switchMappings, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
 
             if (_setups == null) return;
 

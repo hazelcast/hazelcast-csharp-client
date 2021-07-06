@@ -44,7 +44,7 @@ namespace Hazelcast.Tests.DotNet
 
             var options = runAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
             var taskCompletionSource = new TaskCompletionSource<int>(options);
-            var task = Task.Run(async () =>
+            var task = Task.Run(() =>
             {
                 steps.Add("task.start");
 
@@ -619,9 +619,9 @@ namespace Hazelcast.Tests.DotNet
 
         private class AsyncThing
         {
-            private static AsyncLocal<AsyncThing> _current = new AsyncLocal<AsyncThing>();
+            private static readonly AsyncLocal<AsyncThing> _current = new AsyncLocal<AsyncThing>();
             private static int _idSequence;
-            private int _id;
+            private readonly int _id;
 
             private AsyncThing()
             {

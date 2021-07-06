@@ -32,6 +32,7 @@ namespace Hazelcast
         /// Builds Hazelcast options.
         /// </summary>
         /// <param name="args">Optional command-line arguments.</param>
+        /// <param name="switchMappings">Optional command-line switch mappings.</param>
         /// <param name="keyValues">Optional key-value pairs.</param>
         /// <param name="optionsFilePath">Optional options file path (without filename).</param>
         /// <param name="optionsFileName">Optional options file name (without path, with extension).</param>
@@ -46,12 +47,12 @@ namespace Hazelcast
         /// i.e. from the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> variables and,
         /// if not specified, defaults to "Production".</para>
         /// </remarks>
-        public static HazelcastOptions Build(string[] args = null, IEnumerable<KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configure = null)
+        public static HazelcastOptions Build(string[] args = null, IDictionary<string, string> switchMappings = null, IEnumerable < KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             return Build(builder =>
             {
-                builder.AddDefaults(args, environmentName);
-                builder.AddHazelcast(args, keyValues, optionsFilePath, optionsFileName, environmentName);
+                builder.AddDefaults(args, switchMappings, environmentName);
+                builder.AddHazelcast(args, switchMappings, keyValues, optionsFilePath, optionsFileName, environmentName);
             }, configure);
         }
 

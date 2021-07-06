@@ -145,8 +145,8 @@ namespace Hazelcast.Tests.Configuration
             Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
 
             var configuration = new ConfigurationBuilder()
-                .AddDefaults(CommandLineArgs, "Testing")
-                .AddHazelcast(CommandLineArgs, InMemoryData, path, "Test.json", "Testing")
+                .AddDefaults(CommandLineArgs, null, "Testing")
+                .AddHazelcast(CommandLineArgs, null, InMemoryData, path, "Test.json", "Testing")
                 .Build();
 
             for (var i = 1; i <= 8; i++)
@@ -171,8 +171,8 @@ namespace Hazelcast.Tests.Configuration
             Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
 
             var configuration = new ConfigurationBuilder()
-                .AddDefaults(CommandLineArgs, "Testing")
-                .AddHazelcast(CommandLineArgs, InMemoryData, optionsFilePath: path, environmentName: "Testing")
+                .AddDefaults(CommandLineArgs, null, "Testing")
+                .AddHazelcast(CommandLineArgs, null, InMemoryData, optionsFilePath: path, environmentName: "Testing")
                 .Build();
 
             for (var i = 1; i <= 8; i++)
