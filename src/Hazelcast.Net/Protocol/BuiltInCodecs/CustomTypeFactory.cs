@@ -77,7 +77,9 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static SqlColumnMetadata CreateSqlColumnMetadata(string name, int type, bool isNullableExists, bool nullable)
         {
-            // FIXME [Oleksii] ensure correct conversion
+            if (!Enum.IsDefined(typeof(SqlColumnType), type))
+                throw new NotSupportedException($"Column type #{type} is not supported.");
+
             var sqlColumnType = (SqlColumnType)type;
 
             return new SqlColumnMetadata(name, sqlColumnType,
