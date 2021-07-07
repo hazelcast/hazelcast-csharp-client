@@ -14,14 +14,16 @@ namespace Hazelcast.Tests.Sql
             .ToDictionary(i => $"{i}", i => i);
 
         [OneTimeSetUp]
-        private async Task InitAll()
+        protected async Task InitAll()
         {
             var map = await Client.GetMapAsync<string, int>(MapName);
             await map.SetAllAsync(MapValues);
+
+            var data = await map.GetEntriesAsync();
         }
 
         [OneTimeTearDown]
-        private async Task DisposeAll()
+        protected async Task DisposeAll()
         {
             var map = await Client.GetMapAsync<string, int>(MapName);
             await map.ClearAsync();
