@@ -28,15 +28,11 @@ namespace Hazelcast
     internal partial class HazelcastClient // Distributed Objects
     {
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
-        private ICPSubsystem _cpSubsystem;
-
-        // FIXME [Oleksii] discuss if lazy is needed
-        private readonly Lazy<ISqlService> _sqlServiceLazy;
 
         /// <summary>
         /// Gets the CP subsystem.
         /// </summary>
-        public ICPSubsystem CPSubsystem => _cpSubsystem ??= new CPSubsystem(Cluster, SerializationService);
+        public ICPSubsystem CPSubsystem { get; }
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
@@ -196,9 +192,6 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public Task<ISqlService> GetSqlServiceAsync()
-        {
-            return Task.FromResult(_sqlServiceLazy.Value);
-        }
+        public Task<ISqlService> GetSqlServiceAsync() => Task.FromResult<ISqlService>(_sqlService);
     }
 }

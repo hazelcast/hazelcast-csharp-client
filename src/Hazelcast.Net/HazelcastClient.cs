@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Events;
 using Hazelcast.Metrics;
@@ -42,6 +43,7 @@ namespace Hazelcast
         private readonly DistributedObjectFactory _distributedOjects;
         private readonly NearCacheManager _nearCacheManager;
         private readonly MetricsPublisher _metricsPublisher;
+        private readonly SqlService _sqlService;
 
         private int _disposed;
 
@@ -62,7 +64,8 @@ namespace Hazelcast
 
             _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
-            _sqlServiceLazy = new Lazy<ISqlService>(() => new SqlService(Cluster, SerializationService));
+            _sqlService = new SqlService(cluster, serializationService);
+            CPSubsystem = new CPSubsystem(cluster, serializationService);
 
             if (options.Metrics.Enabled)
             {
