@@ -58,5 +58,10 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             iterator.SkipToStructEnd();
             return new SqlPage(columnTypes, columns, isLast);
         }
+
+        public static void Encode(ClientMessage clientMessage, SqlPage page)
+        {
+            throw new NotSupportedException($"Server-side {nameof(SqlPage)}.{nameof(Encode)} is not supported.");
+        }
     }
 }
