@@ -17,11 +17,23 @@ using Hazelcast.Exceptions;
 
 namespace Hazelcast.Sql
 {
-    public class HazelcastSqlException: HazelcastException
+    public class HazelcastSqlException : HazelcastException
     {
-        internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message) { }
+        // FIXME [Oleksii] clarify naming - client or member
+        public Guid ClientId { get; }
 
-        // FIXME [Oleksii] save details
-        internal HazelcastSqlException(SqlError error) { }
+        internal int ErrorCode { get; }
+
+        internal HazelcastSqlException(Guid clientId, int errorCode, string message) : base(message)
+        {
+            ClientId = clientId;
+            ErrorCode = errorCode;
+        }
+
+        internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message) : this(clientId, (int)errorCode, message)
+        { }
+
+        internal HazelcastSqlException(SqlError error) : this(error.OriginatingMemberId, error.Code, error.Message)
+        { }
     }
 }
