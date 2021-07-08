@@ -24,7 +24,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         private const int TypeNullOnly = 1;
         private const int TypeNotNullOnly = 2;
         private const int TypeMixed = 3;
-        private const int HeaderSize = BytesExtensions.SizeOfByte * BytesExtensions.SizeOfInt;
+        private const int HeaderSize = BytesExtensions.SizeOfByte + BytesExtensions.SizeOfInt;
         private const int ItemsPerBitmask = 8;
 
         public static IList<T> Decode<T>(Frame frame, int itemSizeInBytes, DecodeBytesDelegate<T> decodeFunc)
@@ -45,7 +45,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var res = new List<T>(count);
             for (var i = 0; i < count; i++)
-                res[i] = decodeFunc(bytes, HeaderSize + i * itemSizeInBytes);
+                res.Add(decodeFunc(bytes, HeaderSize + i * itemSizeInBytes));
 
             return res;
         }

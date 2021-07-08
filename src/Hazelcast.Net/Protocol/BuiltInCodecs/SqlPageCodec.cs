@@ -24,6 +24,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static SqlPage Decode(IEnumerator<Frame> iterator)
         {
+            iterator.MoveNext();
+
             var isLast = iterator.Take().Bytes[0] == 1;
 
             var columnTypeIds = ListIntegerCodec.Decode(iterator);
@@ -34,7 +36,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             foreach (var columnTypeId in columnTypeIds)
             {
                 columnTypes[i] = (SqlColumnType)columnTypeId;
-                columns[i++] = columnTypes[i] switch
+                columns[i] = columnTypes[i] switch
                 {
                     SqlColumnType.Varchar => ListMultiFrameCodec.DecodeContainsNullable(iterator, StringCodec.Decode),
                     SqlColumnType.Boolean => ListCNBoolCodec.Decode(iterator).AsReadOnlyObjectList(),
@@ -53,6 +55,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                     SqlColumnType.Null => new object[iterator.Take().Bytes.ReadIntL(0)],
                     _ => throw new NotSupportedException($"Column type #{columnTypeId} is not supported.")
                 };
+
+                i++;
             }
 
             iterator.SkipToStructEnd();

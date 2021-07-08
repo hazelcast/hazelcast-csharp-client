@@ -22,77 +22,77 @@ namespace Hazelcast.Sql
         /// <summary>
         /// <c>VARCHAR</c> type, represented by <c>java.lang.String</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        Varchar,
+        Varchar = 0,
 
         /// <summary>
         /// <c>BOOLEAN</c> type, represented by <c>java.lang.Boolean</c> in Java and by <see cref="bool"/> in .NET.
         /// </summary>
-        Boolean,
+        Boolean = 1,
 
         /// <summary>
         /// <c>TINYINT</c> type, represented by <c>java.lang.Byte</c> in Java and by <see cref="byte"/> in .NET.
         /// </summary>
-        TinyInt,
+        TinyInt = 2,
 
         /// <summary>
         /// <c>SMALLINT</c> type, represented by <c>java.lang.Short</c> in Java and by <see cref="short"/> in .NET.
         /// </summary>
-        SmallInt,
+        SmallInt = 3,
 
         /// <summary>
         /// <c>INTEGER</c> type, represented by <c>java.lang.Integer</c> in Java and by <see cref="int"/> in .NET.
         /// </summary>
-        Integer,
+        Integer = 4,
 
         /// <summary>
         /// <c>BIGINT</c> type, represented by <c>java.lang.Long</c> in Java and by <see cref="long"/> in .NET.
         /// </summary>
-        BigInt,
-
-        /// <summary>
-        /// <c>REAL</c> type, represented by <c>java.lang.Float</c> in Java and by <see cref="float"/> in .NET.
-        /// </summary>
-        Real,
-
-        /// <summary>
-        /// <c>DOUBLE</c> type, represented by <c>java.lang.Double</c> in Java and by <see cref="double"/> in .NET.
-        /// </summary>
-        Double,
+        BigInt = 5,
 
         /// <summary>
         /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        Decimal,
+        Decimal = 6,
+
+        /// <summary>
+        /// <c>REAL</c> type, represented by <c>java.lang.Float</c> in Java and by <see cref="float"/> in .NET.
+        /// </summary>
+        Real = 7,
+
+        /// <summary>
+        /// <c>DOUBLE</c> type, represented by <c>java.lang.Double</c> in Java and by <see cref="double"/> in .NET.
+        /// </summary>
+        Double = 8,
 
         /// <summary>
         /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        Date,
+        Date = 9,
 
         /// <summary>
         /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        Time,
+        Time = 10,
 
         /// <summary>
         /// <c>TIMESTAMP</c> type, represented by <c>java.lang.LocalDateTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        Timestamp,
+        Timestamp = 11,
 
         /// <summary>
         /// <c>TIMESTAMP_WITH_TIME_ZONE</c> type, represented by <c>java.lang.OffsetDateTime</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
-        TimestampWithTimeZone,
+        TimestampWithTimeZone = 12,
 
         /// <summary>
         /// <c>OBJECT</c> type, could be represented by any Java and .NET class.
         /// </summary>
-        Object,
+        Object = 13,
 
         /// <summary>
         /// The type of the generic SQL <c>NULL</c> literal. <para/>
         /// The only valid value of <c>NULL</c> type is <c>null</c>.
         /// </summary>
-        Null
+        Null = 14
     }
 }

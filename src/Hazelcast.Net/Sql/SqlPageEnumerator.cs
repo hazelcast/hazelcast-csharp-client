@@ -27,7 +27,7 @@ namespace Hazelcast.Sql
         private readonly SqlRowMetadata _rowMetadata;
         private readonly SqlPage _page;
 
-        private int _currentIndex = -1;
+        private int _currentIndex;
         private Lazy<SqlRow> _currentLazy;
 
         public SqlRow Current => _currentLazy?.Value;
@@ -38,10 +38,13 @@ namespace Hazelcast.Sql
             _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
             _rowMetadata = rowMetadata ?? throw new ArgumentNullException(nameof(rowMetadata));
             _page = page ?? throw new ArgumentNullException(nameof(page));
+
+            ((IEnumerator)this).Reset();
         }
 
         public bool MoveNext()
         {
+            _currentIndex++;
             if (_currentIndex >= _page.RowCount)
                 return false;
 
@@ -50,10 +53,10 @@ namespace Hazelcast.Sql
             return true;
         }
 
-        private SqlRow BuildRow(int index)
+        private SqlRow BuildRow(int rowIndex)
         {
-            var values = Enumerable.Range(0, _page.RowCount)
-                .Select(i => _serializationService.ToObject(_page[index, i]))
+            var values = Enumerable.Range(0, _page.ColumnCount)
+                .Select(colIndex => _serializationService.ToObject(_page[rowIndex, colIndex]))
                 .ToList(_page.RowCount);
 
             return new SqlRow(values, _rowMetadata);
@@ -61,7 +64,11 @@ namespace Hazelcast.Sql
 
         object IEnumerator.Current => Current;
 
-        void IEnumerator.Reset() => throw new NotSupportedException();
+        void IEnumerator.Reset()
+        {
+            _currentIndex = -1;
+            _currentLazy = null;
+        }
 
         void IDisposable.Dispose()
         { }

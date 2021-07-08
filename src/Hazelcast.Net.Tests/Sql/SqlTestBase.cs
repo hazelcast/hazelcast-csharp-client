@@ -18,8 +18,6 @@ namespace Hazelcast.Tests.Sql
         {
             var map = await Client.GetMapAsync<string, int>(MapName);
             await map.SetAllAsync(MapValues);
-
-            var data = await map.GetEntriesAsync();
         }
 
         [OneTimeTearDown]

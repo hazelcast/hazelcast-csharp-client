@@ -33,6 +33,7 @@ namespace Hazelcast.Sql
 
         // FIXME [Oleksii] check if at least 1 row is guaranteed
         public int RowCount => _data[0].Count;
+        public int ColumnCount => _data.Length;
 
         public object this[int row, int column] => _data[column][row];
 

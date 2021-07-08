@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Sql
         public async Task ExecuteWithStringParameter(string key)
         {
             var sql = await Client.GetSqlServiceAsync();
-            var result = await sql.ExecuteAsync($"SELECT * FROM {MapName} WHERE __key == ?", new object[] { key });
+            var result = await sql.ExecuteAsync($"SELECT * FROM {MapName} WHERE __key = ?", new object[] { key });
 
             var expectedValues = MapValues.Where(p => p.Key == key);
             var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
