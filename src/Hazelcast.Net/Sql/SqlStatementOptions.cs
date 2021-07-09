@@ -84,7 +84,7 @@ namespace Hazelcast.Sql
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When a statement is submitted for execution, a <see cref="SqlResult"/> is returned as a result. When rows are ready to be
+        /// When a statement is submitted for execution, a <see cref="SqlQueryResult"/> is returned as a result. When rows are ready to be
         /// consumed, they are put into an internal buffer of the cursor. This parameter defines the maximum number of rows in
         /// that buffer. When the threshold is reached, the backpressure mechanism will slow down the execution, possibly to a
         /// complete halt, to prevent out-of-memory.

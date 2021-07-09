@@ -21,57 +21,62 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     // FIXME [Oleksii] Clarify if should be thread safe
-    public class SqlResult : IAsyncEnumerator<SqlRow>
+    public class SqlQueryResult : IAsyncEnumerator<SqlRow>
     {
-        /// <summary>
-        /// If equals <see cref="UpdateCount"/>, this <see cref="SqlResult"/> contains rows data instead of count of updated rows.
-        /// </summary>
-        public const int NoUpdateCount = -1;
-
-        private readonly SqlService _sqlService;
         private readonly SerializationService _serializationService;
+        private readonly Task _initTask;
+        private readonly Func<Task<SqlPage>> _fetchNextFunc;
+        private readonly Func<Task> _closeFunc;
 
-        private readonly SqlQueryId _queryId;
-        private readonly int _cursorBufferSize;
-        private readonly SqlRowMetadata _rowMetadata;
-
+        private SqlRowMetadata _rowMetadata;
         private SqlPageEnumerator _pageEnumerator;
 
-        private bool _closed;
+        private bool _queryClosed;
+        private bool _disposed;
 
-        public SqlRow Current => _pageEnumerator.Current;
-        public long UpdateCount { get; } = NoUpdateCount;
+        public SqlRow Current => _pageEnumerator?.Current;
 
-        internal SqlResult(
-            SqlService sqlService, SerializationService serializationService,
-            SqlQueryId queryId, int cursorBufferSize,
-            SqlRowMetadata rowMetadata, SqlPage page, long updateCount
-        )
+        internal SqlQueryResult(
+            SerializationService serializationService,
+            Task<(SqlRowMetadata rowMetadata, SqlPage page)> fetchFirstTask,
+            Func<Task<SqlPage>> fetchNextFunc,
+            Func<Task> closeFunc)
         {
-            _sqlService = sqlService;
             _serializationService = serializationService;
-            _queryId = queryId;
-            _cursorBufferSize = cursorBufferSize;
+            _initTask = fetchFirstTask.ContinueWith(InitFromTaskAsync).Unwrap();
+            _fetchNextFunc = fetchNextFunc;
+            _closeFunc = closeFunc;
+        }
 
-            if (rowMetadata != null)
-                _rowMetadata = rowMetadata;
-            else
-                UpdateCount = updateCount;
+        private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> fetchFirstTask)
+        {
+            var (rowMetadata, page) = await fetchFirstTask; // Ensure task succeeded or forward exception
 
-            _pageEnumerator = new SqlPageEnumerator(serializationService, rowMetadata, page);
+            _rowMetadata = rowMetadata;
+            UpdateCurrentPage(page);
+        }
+
+        private void UpdateCurrentPage(SqlPage page)
+        {
+            _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
+            _queryClosed = page.IsLast; // no need to close
         }
 
         public async ValueTask DisposeAsync()
         {
-            if (_closed)
-                return;
+            if (!_queryClosed)
+            {
+                await _closeFunc().CfAwait();
+                _queryClosed = true;
+            }
 
-            await _sqlService.CloseAsync(_queryId);
-            _closed = true;
+            _disposed = true;
         }
 
         public async ValueTask<bool> MoveNextAsync()
         {
+            await _initTask;
+
             EnsureCanEnumerate();
 
             if (_pageEnumerator.MoveNext())
@@ -80,8 +85,8 @@ namespace Hazelcast.Sql
             if (_pageEnumerator.IsLastPage)
                 return false;
 
-            var page = await _sqlService.FetchAsync(_queryId, _cursorBufferSize);
-            _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
+            var page = await _fetchNextFunc().CfAwait();
+            UpdateCurrentPage(page);
 
             return _pageEnumerator.MoveNext();
         }
@@ -113,11 +118,8 @@ namespace Hazelcast.Sql
 
         private void EnsureCanEnumerate()
         {
-            if (_closed)
-                throw new ObjectDisposedException(nameof(SqlResult));
-
-            if (_rowMetadata == null)
-                throw new InvalidOperationException("This result contains only update count.");
+            if (_disposed)
+                throw new ObjectDisposedException(nameof(SqlQueryResult));
         }
     }
 }

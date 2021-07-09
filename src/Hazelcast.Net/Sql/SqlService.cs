@@ -33,11 +33,32 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
         }
 
-        public async Task<SqlResult> ExecuteAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        public Task<SqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
         {
             parameters ??= Array.Empty<object>();
             options ??= SqlStatementOptions.Default;
+            var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
+            return Task.FromResult(new SqlQueryResult(
+                _serializationService,
+                FetchFirstPageAsync(queryId, sql, parameters, options),
+                () => FetchNextPageAsync(queryId, options.CursorBufferSize),
+                () => CloseAsync(queryId)
+            ));
+        }
+
+        public Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        {
+            parameters ??= Array.Empty<object>();
+            options ??= SqlStatementOptions.Default;
+            var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
+
+            return FetchUpdateCountAsync(queryId, sql, parameters, options);
+        }
+
+        private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
+            string sql, object[] parameters, SqlStatementOptions options)
+        {
             var connection = _cluster.Members.GetRandomConnection();
             if (connection == null)
             {
@@ -46,11 +67,9 @@ namespace Hazelcast.Sql
                 );
             }
 
-            var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
-
             var serializedParameters = parameters
                 .Select(p => _serializationService.ToData(p))
-                .ToList();
+                .ToList(parameters.Length);
 
             var requestMessage = SqlExecuteCodec.EncodeRequest(
                 sql,
@@ -68,11 +87,39 @@ namespace Hazelcast.Sql
             if (response.Error is { } sqlError)
                 throw new HazelcastSqlException(sqlError);
 
-            // FIXME [Oleksii] discuss if throw immediately or forward to result
-            return BuildResult(response, queryId, options.CursorBufferSize);
+            return response;
+
         }
 
-        public async Task<SqlPage> FetchAsync(SqlQueryId queryId, int cursorBufferSize)
+        private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,
+            string sql, object[] parameters, SqlStatementOptions options)
+        {
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options);
+            if (result.RowMetadata == null)
+            {
+                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
+                    "Expected row set in response but got update count." // FIXME [Oleksii] review error message
+                );
+            }
+
+            return (new SqlRowMetadata(result.RowMetadata), result.RowPage);
+        }
+
+        private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId,
+            string sql, object[] parameters, SqlStatementOptions options)
+        {
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options);
+            if (result.RowMetadata != null)
+            {
+                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
+                    "Expected update count in response but got row set." // FIXME [Oleksii] review error message
+                );
+            }
+
+            return result.UpdateCount;
+        }
+
+        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
@@ -84,20 +131,11 @@ namespace Hazelcast.Sql
             return response.RowPage;
         }
 
-        public async Task CloseAsync(SqlQueryId queryId)
+        private async Task CloseAsync(SqlQueryId queryId)
         {
             var requestMessage = SqlCloseCodec.EncodeRequest(queryId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = SqlCloseCodec.DecodeResponse(responseMessage);
-        }
-
-        private SqlResult BuildResult(SqlExecuteCodec.ResponseParameters response, SqlQueryId queryId, int cursorBufferSize)
-        {
-            return new SqlResult(
-                this, _serializationService, queryId, cursorBufferSize,
-                response.RowMetadata is { } rowMetadata ? new SqlRowMetadata(rowMetadata) : null,
-                response.RowPage, response.UpdateCount
-            );
         }
     }
 }

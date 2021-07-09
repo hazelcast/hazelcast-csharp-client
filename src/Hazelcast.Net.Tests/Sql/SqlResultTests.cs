@@ -13,7 +13,7 @@ namespace Hazelcast.Tests.Sql
         {
             var sqlService = await Client.GetSqlServiceAsync();
 
-            var result = await sqlService.ExecuteAsync($"SELECT * FROM {MapName}");
+            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName}");
             await result.DisposeAsync();
 
             Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Sql
         {
             var sqlService = await Client.GetSqlServiceAsync();
 
-            var result = await sqlService.ExecuteAsync($"SELECT * FROM {MapName}",
+            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName}",
                 options: new SqlStatementOptions { CursorBufferSize = (int)(MapValues.Count * pageSizeRatio) }
             );
 
