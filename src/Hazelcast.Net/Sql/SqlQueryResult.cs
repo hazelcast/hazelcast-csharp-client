@@ -21,7 +21,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     // FIXME [Oleksii] Clarify if should be thread safe
-    internal class SqlQueryResult : ISqlQueryResult
+    internal class SqlQueryResult: ISqlQueryResult
     {
         private readonly SerializationService _serializationService;
         private readonly Task _initTask;
@@ -31,8 +31,7 @@ namespace Hazelcast.Sql
         private SqlRowMetadata _rowMetadata;
         private SqlPageEnumerator _pageEnumerator;
 
-        private bool _queryClosed;
-        private bool _disposed;
+        private Task _disposeTask;
 
         public SqlRow Current => _pageEnumerator?.Current;
 
@@ -51,7 +50,6 @@ namespace Hazelcast.Sql
         private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> fetchFirstTask)
         {
             var (rowMetadata, page) = await fetchFirstTask; // Ensure task succeeded or forward exception
-
             _rowMetadata = rowMetadata;
             UpdateCurrentPage(page);
         }
@@ -59,31 +57,34 @@ namespace Hazelcast.Sql
         private void UpdateCurrentPage(SqlPage page)
         {
             _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
-            _queryClosed = page.IsLast; // no need to close
+
+            if (page.IsLast)
+                _disposeTask = Task.CompletedTask; // no need to close
         }
 
         public async ValueTask DisposeAsync()
         {
-            if (!_queryClosed)
+            if (_disposeTask == null)
             {
-                await _closeFunc().CfAwait();
-                _queryClosed = true;
+                _disposeTask = _closeFunc();
+                var _ =_initTask.ContinueWith(t => t.Exception); // mark possible init exception as observed
             }
 
-            _disposed = true;
+            await _disposeTask; // FIXME [Oleksii] discuss that if failed, exception will be rethrown
         }
 
         public async ValueTask<bool> MoveNextAsync()
         {
             await _initTask;
 
-            EnsureCanEnumerate();
-
             if (_pageEnumerator.MoveNext())
                 return true;
 
             if (_pageEnumerator.IsLastPage)
                 return false;
+
+            // do not try to continue enumeration if disposed(ing)
+            EnsureNotDisposed();
 
             var page = await _fetchNextFunc().CfAwait();
             UpdateCurrentPage(page);
@@ -99,7 +100,7 @@ namespace Hazelcast.Sql
                     yield return Current;
             }
 
-            EnsureCanEnumerate();
+            EnsureNotDisposed();
             return Enumerate();
         }
 
@@ -112,13 +113,13 @@ namespace Hazelcast.Sql
                     yield return Current;
             }
 
-            EnsureCanEnumerate();
+            EnsureNotDisposed();
             return Enumerate();
         }
 
-        private void EnsureCanEnumerate()
+        private void EnsureNotDisposed()
         {
-            if (_disposed)
+            if (_disposeTask != null)
                 throw new ObjectDisposedException(nameof(SqlQueryResult));
         }
     }
