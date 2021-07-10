@@ -50,19 +50,5 @@ namespace Hazelcast.Tests.Sql
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
-
-        [OneTimeSetUp]
-        public async Task InitAll()
-        {
-            var map = await Client.GetMapAsync<string, int>(MapName);
-            await map.SetAllAsync(MapValues);
-        }
-
-        [OneTimeTearDown]
-        public async Task DisposeAll()
-        {
-            var map = await Client.GetMapAsync<string, int>(MapName);
-            await map.ClearAsync();
-        }
     }
 }
