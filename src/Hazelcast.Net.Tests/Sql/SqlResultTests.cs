@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Hazelcast.Sql;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -9,33 +8,40 @@ namespace Hazelcast.Tests.Sql
     public class SqlResultTests: SqlTestBase
     {
         [Test]
-        public async Task EnumerateThrowsAfterClose()
+        public async Task EnumerateAfterDispose()
         {
             var sqlService = await Client.GetSqlServiceAsync();
 
-            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName}");
+            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
             await result.DisposeAsync();
 
             Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
         }
 
         [Test]
-        [TestCase(1)]
-        [TestCase(2)]
-        [TestCase(.5)]
-        [TestCase(.33)]
-        public async Task Enumerate(double pageSizeRatio)
+        public async Task EnumerateMultipleTimes()
         {
             var sqlService = await Client.GetSqlServiceAsync();
 
-            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName}",
-                options: new SqlStatementOptions { CursorBufferSize = (int)(MapValues.Count * pageSizeRatio) }
-            );
+            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
+            await result.MoveNextAsync();
+
+            Assert.Throws<InvalidOperationException>(() => result.EnumerateOnce());
+            Assert.Throws<InvalidOperationException>(() => result.EnumerateOnceAsync());
+        }
+
+        [Test]
+        public async Task DisposeMultipleTimes()
+        {
+            var sqlService = await Client.GetSqlServiceAsync();
+
+            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
+            await result.DisposeAsync();
 
             Assert.DoesNotThrowAsync(async () =>
             {
-                await foreach (var row in result.EnumerateOnceAsync())
-                    GC.KeepAlive(row);
+                await result.DisposeAsync();
+                await result.DisposeAsync();
             });
         }
     }
