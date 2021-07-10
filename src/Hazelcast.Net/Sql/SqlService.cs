@@ -33,18 +33,20 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
         }
 
-        public Task<SqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        public Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
         {
             parameters ??= Array.Empty<object>();
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            return Task.FromResult(new SqlQueryResult(
-                _serializationService,
-                FetchFirstPageAsync(queryId, sql, parameters, options),
-                () => FetchNextPageAsync(queryId, options.CursorBufferSize),
-                () => CloseAsync(queryId)
-            ));
+            return Task.FromResult<ISqlQueryResult>(
+                new SqlQueryResult(
+                    _serializationService,
+                    FetchFirstPageAsync(queryId, sql, parameters, options),
+                    () => FetchNextPageAsync(queryId, options.CursorBufferSize),
+                    () => CloseAsync(queryId)
+                )
+            );
         }
 
         public Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)

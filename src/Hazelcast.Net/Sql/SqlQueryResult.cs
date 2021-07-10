@@ -21,7 +21,7 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     // FIXME [Oleksii] Clarify if should be thread safe
-    public class SqlQueryResult : IAsyncEnumerator<SqlRow>
+    internal class SqlQueryResult : ISqlQueryResult
     {
         private readonly SerializationService _serializationService;
         private readonly Task _initTask;

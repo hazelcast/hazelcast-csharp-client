@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace Hazelcast.Sql
 {
-    public interface ISqlService
+    public interface ISqlQueryResult: IAsyncEnumerator<SqlRow>
     {
-        Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null);
-        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null);
+        IAsyncEnumerable<SqlRow> EnumerateOnceAsync();
+        IEnumerable<SqlRow> EnumerateOnce();
     }
 }
