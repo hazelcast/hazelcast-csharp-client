@@ -107,6 +107,18 @@ namespace Hazelcast.Sql
             return (new SqlRowMetadata(result.RowMetadata), result.RowPage);
         }
 
+        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize)
+        {
+            var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
+            var response = SqlFetchCodec.DecodeResponse(responseMessage);
+
+            if (response.Error is { } sqlError)
+                throw new HazelcastSqlException(sqlError);
+
+            return response.RowPage;
+        }
+
         private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId,
             string sql, object[] parameters, SqlStatementOptions options)
         {
@@ -119,18 +131,6 @@ namespace Hazelcast.Sql
             }
 
             return result.UpdateCount;
-        }
-
-        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize)
-        {
-            var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
-            var response = SqlFetchCodec.DecodeResponse(responseMessage);
-
-            if (response.Error is { } sqlError)
-                throw new HazelcastSqlException(sqlError);
-
-            return response.RowPage;
         }
 
         private async Task CloseAsync(SqlQueryId queryId)
