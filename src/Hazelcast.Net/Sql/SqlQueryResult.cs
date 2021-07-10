@@ -31,7 +31,8 @@ namespace Hazelcast.Sql
         private SqlRowMetadata _rowMetadata;
         private SqlPageEnumerator _pageEnumerator;
 
-        private Task _disposeTask;
+        private bool _enumerateStarted;
+        private bool _disposed;
 
         public SqlRow Current => _pageEnumerator?.Current;
 
@@ -57,24 +58,24 @@ namespace Hazelcast.Sql
         private void UpdateCurrentPage(SqlPage page)
         {
             _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
-
-            if (page.IsLast)
-                _disposeTask = Task.CompletedTask; // no need to close
         }
 
         public async ValueTask DisposeAsync()
         {
-            if (_disposeTask == null)
-            {
-                _disposeTask = _closeFunc();
-                var _ =_initTask.ContinueWith(t => t.Exception); // mark possible init exception as observed
-            }
+            if (!_initTask.IsCompleted)
+                _ = _initTask.ContinueWith(t => t.Exception); // mark possible init exception as observed
 
-            await _disposeTask; // FIXME [Oleksii] discuss that if failed, exception will be rethrown
+            var queryCompleted = _pageEnumerator?.IsLastPage ?? false;
+            if (!_disposed && !queryCompleted)
+                await _closeFunc(); // FIXME [Oleksii] discuss possible exception in Dispose
+
+            _disposed = true;
         }
 
         public async ValueTask<bool> MoveNextAsync()
         {
+            _enumerateStarted = true;
+
             await _initTask;
 
             if (_pageEnumerator.MoveNext())
@@ -101,6 +102,7 @@ namespace Hazelcast.Sql
             }
 
             EnsureNotDisposed();
+            EnsureEnumerationNotStarted();
             return Enumerate();
         }
 
@@ -114,13 +116,20 @@ namespace Hazelcast.Sql
             }
 
             EnsureNotDisposed();
+            EnsureEnumerationNotStarted();
             return Enumerate();
         }
 
         private void EnsureNotDisposed()
         {
-            if (_disposeTask != null)
+            if (_disposed)
                 throw new ObjectDisposedException(nameof(SqlQueryResult));
+        }
+
+        private void EnsureEnumerationNotStarted()
+        {
+            if (_enumerateStarted)
+                throw new InvalidOperationException("Result enumeration already started");
         }
     }
 }
