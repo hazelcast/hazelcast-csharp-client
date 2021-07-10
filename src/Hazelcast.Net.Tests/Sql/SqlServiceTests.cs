@@ -47,6 +47,26 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
+        [TestCase(3, 1)]
+        [TestCase(3, 3)]
+        [TestCase(3, 5)]
+        [TestCase(5, 2)]
+        [TestCase(6, 3)]
+        public async Task ExecuteQueryJet(int total, int pageSize)
+        {
+            var sqlService = await Client.GetSqlServiceAsync();
+
+            var result = await sqlService.ExecuteQueryAsync($"SELECT v FROM TABLE(generate_series(1,{total}))",
+                options: new SqlStatementOptions { CursorBufferSize = pageSize }
+            );
+
+            var expectedValues = Enumerable.Range(1, total);
+            var resultValues = result.EnumerateOnce().Select(r => r.GetColumn<int>("v"));
+
+            CollectionAssert.AreEquivalent(expectedValues, resultValues);
+        }
+
+        [Test]
         [TestCase(0)]
         [TestCase(1)]
         [TestCase(5)]
