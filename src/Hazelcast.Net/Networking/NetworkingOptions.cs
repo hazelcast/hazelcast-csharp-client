@@ -39,6 +39,7 @@ namespace Hazelcast.Networking
             RedoOperations = other.RedoOperations;
             ReconnectMode = other.ReconnectMode;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
+            UsePublicAddresses = other.UsePublicAddresses;
 
             Ssl = other.Ssl.Clone();
             Cloud = other.Cloud.Clone();
@@ -101,6 +102,11 @@ namespace Hazelcast.Networking
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+
+        /// <summary>
+        /// FIXME: document
+        /// </summary>
+        public bool? UsePublicAddresses { get; set; }
 
         /// <summary>
         /// Gets the <see cref="SslOptions"/>.

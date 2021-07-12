@@ -103,6 +103,47 @@ namespace Hazelcast.Configuration
             return configurationBuilder;
         }
 
+        // TODO: this is how we should do it, really - but then 
+        public static IConfigurationBuilder AddStuff(this IConfigurationBuilder configurationBuilder, 
+            string[] args,
+            IEnumerable<KeyValuePair<string, string>> defaults = null,
+            IEnumerable<KeyValuePair<string, string>> keyValues = null, 
+            string optionsFilePath = null, 
+            string optionsFileName = null, 
+            string environmentName = null)
+        {
+            if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
+
+            if (string.IsNullOrWhiteSpace(optionsFileName))
+                optionsFileName = "hazelcast.json";
+
+            // JSON files are reloadOnChange:false because we do not track configuration changes,
+            // and we try to mitigate issues with running apps in Docker containers.
+            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
+            if (defaults != null)
+                configurationBuilder.AddInMemoryCollection(defaults);
+
+            configurationBuilder
+                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
+                .AddJsonFile($"appsettings.{DetermineEnvironment(environmentName)}.json", optional: true, reloadOnChange: false)
+                .AddHazelcastFile(optionsFilePath, optionsFileName, environmentName);
+
+            configurationBuilder
+                .AddEnvironmentVariables()
+                .AddHazelcastEnvironmentVariables();
+
+            if (args != null)
+                configurationBuilder
+                    .AddCommandLine(args)
+                    .AddHazelcastCommandLine(args);
+
+            if (keyValues != null)
+                configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
+
+            return configurationBuilder;
+        }
+
         /// <summary>
         /// Adds an <see cref="IConfigurationProvider"/> that reads Hazelcast configuration values from various sources.
         /// </summary>

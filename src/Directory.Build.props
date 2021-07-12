@@ -37,7 +37,7 @@
     - HZ_OPTIMIZE_ASYNC enables async/await optimizations
   -->
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-    <DefineConstants>HZ_CONSOLE;CODE_ANALYSIS;TRACE$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
+    <DefineConstants>HZ_CONSOLE;HZ_CONSOLE_PUBLIC;CODE_ANALYSIS;TRACE$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Release'">
     <DefineConstants>$(DefineAssemblySigning);$(DefineUserConstants)</DefineConstants>

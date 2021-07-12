@@ -58,7 +58,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             }
         }
 
-        public static IDictionary<TKey, TValue> Decode<TKey, TValue>(IEnumerator<Frame> iterator, DecodeDelegate<TKey> decodeKey, DecodeDelegate<TValue> decodeValue)
+        public static Dictionary<TKey, TValue> Decode<TKey, TValue>(IEnumerator<Frame> iterator, DecodeDelegate<TKey> decodeKey, DecodeDelegate<TValue> decodeValue)
         {
             var result = new Dictionary<TKey, TValue>();
 
@@ -77,7 +77,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
 
-        public static IDictionary<TKey, TValue> DecodeNullable<TKey, TValue>(IEnumerator<Frame> iterator, DecodeDelegate<TKey> decodeKey, DecodeDelegate<TValue> decodeValue)
+        public static Dictionary<TKey, TValue> DecodeNullable<TKey, TValue>(IEnumerator<Frame> iterator, DecodeDelegate<TKey> decodeKey, DecodeDelegate<TValue> decodeValue)
         {
             return iterator.SkipNull() ? null : Decode(iterator, decodeKey, decodeValue);
         }

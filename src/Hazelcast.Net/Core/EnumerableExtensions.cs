@@ -33,6 +33,20 @@ namespace Hazelcast.Core
             => source.OrderBy(x => RandomProvider.Next());
 
         /// <summary>
+        /// Shuffles an enumerable.
+        /// </summary>
+        /// <typeparam name="T">The enumerated type.</typeparam>
+        /// <param name="source">The original enumerable.</param>
+        /// <returns>The original enumerable items, in random order.</returns>
+        public static IReadOnlyCollection<T> Shuffle<T>(this IReadOnlyCollection<T> source)
+        {
+            // if source is a collection, we can optimize the list creation
+            var l = new List<T>(source.Count);
+            l.AddRange(source.OrderBy(x => RandomProvider.Next()));
+            return l;
+        }
+
+        /// <summary>
         /// Combine multiple <see cref="IEnumerable{T}"/> instances.
         /// </summary>
         /// <typeparam name="T1">The first enumerated type.</typeparam>
@@ -117,5 +131,36 @@ namespace Hazelcast.Core
         /// <returns>A <see cref="Dictionary{TKey,TValue}"/> that contains values provided by <paramref name="source"/>.</returns>
         public static IDictionary<TKey, TValue> ToDictionary<TKey, TValue>(this IEnumerable<(TKey Key, TValue Value)> source)
             => source.ToDictionary(x => x.Key, x => x.Value);
+
+        /// <summary>
+        /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to deconstruct.</param>
+        /// <param name="item1">The first item.</param>
+        public static void Deconstruct<T>(this IEnumerable<T> source, out T item1)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item1 = e.Current;
+        }
+
+        /// <summary>
+        /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to deconstruct.</param>
+        /// <param name="item1">The first item.</param>
+        /// <param name="item2">The second item.</param>
+        public static void Deconstruct<T>(this IEnumerable<T> source, out T item1, out T item2)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item1 = e.Current;
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item2 = e.Current;
+        }
     }
 }

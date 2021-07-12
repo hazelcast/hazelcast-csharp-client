@@ -39,7 +39,34 @@ namespace Hazelcast
         /// </remarks>
 
         [BinderIgnore]
-        public SingletonServiceFactory<ILoggerFactory> LoggerFactory { get; } = new SingletonServiceFactory<ILoggerFactory>();
+        public SingletonLoggerFactoryServiceFactory LoggerFactory { get; } = new SingletonLoggerFactoryServiceFactory();
+
+        // FIXME document?
+        public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory<ILoggerFactory>, ILoggerFactory
+        {
+            public SingletonLoggerFactoryServiceFactory() { }
+
+            public SingletonLoggerFactoryServiceFactory(SingletonLoggerFactoryServiceFactory other, bool shallow) : base(other, shallow) { }
+
+            /// <inheritdoc />
+            public ILogger CreateLogger(string categoryName) => Service.CreateLogger(categoryName);
+
+            /// <inheritdoc />
+            public void AddProvider(ILoggerProvider provider) => Service.AddProvider(provider); // FIXME not sure we want to support this?
+
+            /// <summary>
+            /// Clones this service factory.
+            /// </summary>
+            /// <remarks>
+            /// <para>When cloning a singleton service factory, a shallow clones is performed
+            /// by default, meaning that the (lazy) service instance is cloned too. In other
+            /// words, the singleton remains a singleton across clones.</para>
+            /// <para>If <paramref name="shallow"/> is set to false, a deep clone is created,
+            /// which would create an entirely new singleton.</para>
+            /// </remarks>
+            /// <returns>A clone of the service factory.</returns>
+            internal new SingletonLoggerFactoryServiceFactory Clone(bool shallow = true) => new SingletonLoggerFactoryServiceFactory(this, shallow);
+        }
 
         /// <summary>
         /// Gets the <see cref="SerializationOptions"/>.
