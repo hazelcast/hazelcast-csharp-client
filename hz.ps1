@@ -427,6 +427,9 @@ function ensure-server-version {
     
     $version = $script:hzVersion
 
+    # set server version (to filter tests)
+    $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
+
     if (-not ($version.EndsWith("-SNAPSHOT"))) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
         return;
@@ -460,7 +463,7 @@ function ensure-server-version {
     Write-Output "Server: found version $version2 on Maven, using this version"
     $script:hzVersion = $version2
 
-    # set server version (to filter tests)
+    # update server version
     $env:HAZELCAST_SERVER_VERSION=$version2.TrimEnd("-SNAPSHOT")
 }
 
