@@ -122,6 +122,9 @@ $params = @(
     },
     @{ name = "verbose-tests";   type = [switch];  default = $false;
        desc = "verbose tests results with errors"
+    },
+    @{ name = "yolo";            type = [switch]; default = $false;
+       desc = "confirms excution of sensitive actions"
     }
 )
 

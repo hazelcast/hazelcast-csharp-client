@@ -5,6 +5,8 @@ A `HMap` map is a distributed key/value store corresponding to a cluster-side [M
 * A `HMultiMap` map is a distributed key/value store corresponding to a cluster-side [MultiMap](https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html): a specialized map that supports storing multiple values under a single key. 
 * A `HReplicatedMap` map is a distributed key/value store corresponding to a cluster-side [ReplicatedMap](https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html): a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.
 
+The maps behavior can be configured on the server: see the general [Map documentation](https://docs.hazelcast.com/imdg/latest/data-structures/map.html) for complete details about maps.
+
 ## Defining Maps
 
 Maps are fully identified by their type (`HMap`, `HReplicatedMap` or `HMultiMap`) and unique name, regardless of the types specified for keys and values. In other words, an `HMap<string, string>` and an `HMap<int, int>` named with the same name are backed by the *same* cluster structure. Obviously, refering to a map with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
@@ -56,7 +58,7 @@ var id = await map.SubscribeAsync(events => events
     })
     .Cleared((sender, args) => {
         logger.LogInformation("The map has been cleared.");
-    }))
+    }));
 
 // ...
 

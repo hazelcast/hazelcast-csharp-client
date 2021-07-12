@@ -14,6 +14,7 @@
 ## [HSet](hset.md)
 ## [HTopic](htopic.md)
 ## [AtomicLong](atomiclong.md)
+## [AtomicRef](atomicref.md)
 # [CP SubSystem](cpsubsystem.md)
 # [Locking](locking.md)
 # [Events](events.md)
@@ -23,4 +24,5 @@
 ## [Sources](contrib-sources.md)
 ## [Building](contrib-build.md)
 ## [Tests Coverage Report](../cover/index.html)
+## [GitHub Actions](contrib-actions.md)
 ## [FAQ](contrib-faq.md)

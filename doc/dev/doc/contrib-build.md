@@ -1,100 +1,66 @@
 # Building
 
-## Building On Windows
-
 ### Requirements
 
-Although the solution builds in Visual Studio or Rider, a complete build requires Powershell, and Visual Studio 2019 or at least the Visual Studio Build Tools 2019, which you can download from the [Visual Studio](https://visualstudio.microsoft.com/) site.
+For day to day development, the solution builds in Visual Studio or Rider. However, it is possible to build it entirely via our custom PowerShell script. 
 
-.NET Core is also required. You can download it from the [Download .NET](https://dotnet.microsoft.com/download) page. Recent 2.1 and 3.1 SDKs are required. You can verify whether .NET Core is installed, and which versions are supported, by running `dotnet --info` in a command window.
+The minimal requires are:
+* PowerShell 6.2+
+* .NET 2.1, 3.1 and 5.0 SDKs
+* Java runtime, if you want to run tests
 
-### Building
+Visual Studio 2019, or at least the Visual Studio Build Tools 2019, can be downloaded from the [Visual Studio](https://visualstudio.microsoft.com/) site. .NET can be downloaded from the [Download .NET](https://dotnet.microsoft.com/download) page. You can verify whether .NET Core is installed, and which versions are supported, by running `dotnet --info` in a command window.
 
-For a complete build, start a Powershell console and build with:
+PowerShell can be installed on Windows through the [Windows Store](https://www.microsoft.com/store/apps/9MZ1SNWT0N5D); the [PowerShell](https://microsoft.com/powershell) documentation describes other means of installation for Windows and the various flavours of Linux.
+
+The [OpenJDK](https://openjdk.java.net/) provides open Java JDKs for Windows and Linux.
+
+## Building On Windows
+
+For a complete build, start a Powershell console and build using the `hz.ps1` script:
 
 ```powershell
-PS> ./hz.ps1 <options> <commands>
+PS> ./hs.ps1 build
 ```
 
 See the build script section below for details and arguments.
 
 ## Building On Linux
 
-It is possible to build the Hazelcast .NET library on Linux, along with .NET Core App 2.1 and 3.1 tests and examples. It is not possible to build the .NET Framework 4.6.2 tests or examples, as .NET Framework is not supported on Linux.
-
-At the moment it is not possible to build the documentation on Linux, as DocFX does not run on .NET Core yet (see [this issue](https://github.com/dotnet/docfx/issues/138) for details). The upcoming v3 of DocFX will run on .NET Core.
-
-### Requirements
-
-.NET Core must be installed (see [.NET Core on Linux Debian](https://docs.microsoft.com/en-us/dotnet/core/install/linux-debian) for instructions for Debian). Recent 2.1 and 3.1 SDKs are required. In addition, a recent 2.2 runtime is required by dotCover to run test coverage. You can verify whether .NET Core is installed, and which versions are supported, by running `dotnet --info` in a command window.
-
-Powershell must be installed (see [Installing Powershell Core on Linux](https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell-core-on-linux)
-for instructions).
-
-In order to run tests, Java is required. For Debian:
+For a complete build, from a shell console, use the `hz.sh` script:
 
 ```sh
-apt-get update
-apt-get install openjdk-11-jre
-```
-
-### Building
-
-From a shell console, build with:
-
-```sh
-$ ./hz.sh <options> <commands>
+$ ./hz.sh build
 ```
 
 See the build script section below for details and arguments.
 
+Note that `hs.sh` is just a proxy to `hz.ps1`: the actual build actions are always performed by `hz.ps1`, which is common to Windows and Linux.
+
+It is not possible to build the .NET Framework version of the Hazelcast .NET client on Linux, as the .NET Framework is not supported on Linux. All other targets build on Linux. At the moment it is not possible to build the documentation on Linux, as DocFX does not run on .NET Core yet (see [this issue](https://github.com/dotnet/docfx/issues/138) for details). The upcoming v3 of DocFX will run on .NET Core.
+
 ## Build Script
 
-On Linux, `hz.sh` is just a proxy to `hz.ps1`. The actual build is always performed by `hz.ps1`, which is common to Windows and Linux. It accepts the following options:
-
-* `-enterprise` test enterprise features
-* `-server <version>` the server version to use for tests
-* `-framework <version>` the framework version to build (default: all)
-* `-configuration <Release|Debug>` the configuration to build (default: `Release`)
-* `-version` version to build (overrides `src/Directory.Build.props`)
-* `-sign` whether to sign the assemblies
-* `-testFilter <filter>` filter for tests
-* `-test <test>` filter for tests
-* `-cover` whether to cover the tests
-* `-coverageFilter <filter>` filter for tests coverage
-
-Server `<version>` must match a released Hazelcast IMDG server version, e.g. `4.0` or `4.1-SNAPSHOT`. Server JARs are automatically downloaded for tests.
-
-Framework `<version>` must match a valid .NET target framework moniker, e.g. `net462` or `netcoreapp3.1`. Check the project files (`.csproj`) for supported versions.
-
-
-Build commands is a comma-separated list of values. Order is not important. Supported values are:
-* `clean` cleans the solution (removes all bin, obj, and temporary directories)
-* `build` builds the solution
-* `docs` builds the documentation
-* `docsIf` builds the documentation if the platform supports it
-* `docsServe` serves the documentation site (alias: `ds`)
-* `tests` runs the tests
-* `cover` when running the tests, also perform code coverage analysis
-* `nuget` builds the NuGet package(s)
-* `nupush` pushes the NuGet package(s)
-* `rc` runs the remote controller for tests
-* `server` runs the server for tests
-* `failedTests` outputs extra details about failed tests (alias: `ft`)
-
-When no target is specified, the script runs `clean`, `build`, `docsIf` and `tests`.
-
-For example, after a complete build, one can rebuild and serve the documentation with:
+The `hz.[hs|ps1]` script accepts options, commands, and command arguments.
 
 ```powershell
-PS> ./hz.ps1 docs,docsServe
+PS> ./hz.[sh|ps1] [<options>] [<commands>] [<commargs>] [--- <rawargs>]
 ```
 
-When the `-enterprise` option is set, in order to test the enterprise features, the `HAZELCAST_ENTERPRISE_KEY` environment variable must contain a valid Hazelcast Enterprise key. Alternatively, the key can be stored in the `build/enterprise.key` file.
+To list all options and command, run `./hz.[sh|ps1] help`. 
 
-When the `-sign` option is set, in order to sign the assemblies, Hazelcast's private signing key must be available in the `build/hazelcast.snk` file.
+Examples of valid usages:
 
-When the `nupush` command is executed, in order to push the packages to NuGet, the `NUGET_API_KEY` must contain Hazelcast's NuGet API key.
+```powershell
+./hz.ps1 build                                 # builds the code
+./hz.ps1 build,test                            # builds the code and run the tests
+./hz.ps1 -cover test                           # runs the tests with test coverage
+./hz.ps1 test -cover                           # same
+./hz.ps1 set-version -version 1.2.3            # updates the version
+./hz.ps1 run-remote-controller                 # runs a remote controller for tests
+./hz.ps1 run-server -server 4.2                # runs version 4.2 of the server
+./hz.ps1 run-example ~Soak1 --- --hazelcast.   # runs an example
+```
 
 ## SDK Selection
 
