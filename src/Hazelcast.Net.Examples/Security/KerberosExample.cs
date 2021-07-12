@@ -16,7 +16,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.Examples.Client
+namespace Hazelcast.Examples.Security
 {
     // ReSharper disable once UnusedMember.Global
     public class KerberosExample
