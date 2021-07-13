@@ -52,6 +52,8 @@ For a faster serialization of objects, Hazelcast recommends to implement the `Id
 ```csharp
 public class Employee : IIdentifiedDataSerializable
 {
+    public const int ClassId = 100;
+
     public int Id { get; set; }
     public string Name { get; set; }
 
@@ -67,8 +69,8 @@ public class Employee : IIdentifiedDataSerializable
         output.WriteString(Name);
     }
 
-    public int FactoryId => SampleDataSerializableFactory.FactoryId;
-    public int ClassId => 100;
+    int IIdentifiedDataSerializable.FactoryId => SampleDataSerializableFactory.FactoryId;
+    int IIdentifiedDataSerializable.ClassId => 100;
 }
 ```
 
@@ -84,7 +86,7 @@ public class SampleDataSerializableFactory : IDataSerializableFactory
 
     public IIdentifiedDataSerializable Create(int typeId)
     {
-        if (typeId == 100) return new Employee();
+        if (typeId == Employee.ClassId) return new Employee();
         return null;
     }
 }
@@ -139,13 +141,14 @@ A sample portable implementation of a `Customer` class looks like the following:
 ```csharp
 public class Customer : IPortable
 {
+    public const int ClassId = 1;
+
     public string Name { get; set; }
     public int Id { get; set; }
     public DateTime LastOrder { get; set; }
 
-    public int FactoryId => SamplePortableFactory.FactoryId;
-
-    public int ClassId => 1;
+    int IPortable.FactoryId => SamplePortableFactory.FactoryId;
+    int IPortable.ClassId => ClassId;
 
     public void WritePortable(IPortableWriter writer)
     {
@@ -226,10 +229,7 @@ Let's say your custom `CustomSerializer` will serialize `CustomSerializableType`
 ```csharp
 public class CustomSerializer : IStreamSerializer<CustomSerializableType>
 {
-    public int TypeId => 10;
-    {
-        return 10;
-    }
+    public const int TypeId = 10;
 
     public void Write(IObjectDataOutput output, CustomSerializableType t)
     {
@@ -242,9 +242,14 @@ public class CustomSerializer : IStreamSerializer<CustomSerializableType>
     {
         var len = input.ReadInt();
         var array = new byte[len];
-        input.ReadFully(array);
+        input.Read(array, 0, array.Length);
         return new CustomSerializableType { Value = Encoding.UTF8.GetString(array) };
     }
+
+    int ISerializer.TypeId => TypeId;
+
+    public void Dispose()
+    { }
 }
 ```
 
@@ -255,8 +260,12 @@ Now the last required step is to register the `CustomSerializer` to the configur
 
 ```c#
 var hazelcastOptions = new HazelcastOptionsBuilder().Build();
-hazelcastOptions.Serialization
-    .AddSerializer(typeof(CustomSerializableType), new CustomSerializer());
+hazelcastOptions.Serialization.Serializers.Add(
+    new SerializerOptions {
+        SerializedType = typeof(CustomSerializableType),
+        Creator = () => new CustomSerializer()
+    }
+);
 ```
 
 **Declarative Configuration:**
@@ -312,7 +321,7 @@ You can query JSON objects in the cluster using the `Predicate`s of your choice.
 
 The global serializer is identical to custom serializers from the implementation perspective. It is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them. By default, the global serializer does not handle .NET Serializable instances. However, you can configure it to be responsible for those instances.
 
-A custom serializer should be registered for a specific class type. The global serializer will handle all class types if all the steps in searching for a serializer fail as described in Serialization Interface Types.
+A custom serializer should be registered for a specific class type. The global serializer will handle all class types if all the steps in searching for a serializer, as described previously, fail.
 
 **Use cases**
 
@@ -324,17 +333,19 @@ A sample global serializer that integrates with a third party serializer is show
 ```csharp
 public class GlobalSerializer : IStreamSerializer<object>
 {
-    public int TypeId => 20;
+    public const int TypeId = 20;
 
     public void Write(IObjectDataOutput output, object obj)
     {
-        output.write(MyFavoriteSerializer.serialize(obj))
+        output.write(MyFavoriteSerializer.Serialize(obj))
     }
 
     public object Read(IObjectDataInput input)
     {
-        return MyFavoriteSerializer.deserialize(input);
+        return MyFavoriteSerializer.Deserialize(input);
     }
+
+    int ISerializer.TypeId => TypeId;
 }
 ```
 

@@ -52,7 +52,7 @@ Server certificate CN or SAN field can be validated against a value you set into
 
 ### TLS/SSL Protocol
 
-You can configure the TLS/SSL protocol using the `SslOptions.Protocol` option. Valid options are values of the `System.Security.Authentication.SslProtocols` enum. Depending on your .Net version, below values are valid:
+You can configure the TLS/SSL protocol using the `SslOptions.Protocol` option. Valid options are values of the `System.Security.Authentication.SslProtocols` enum. Depending on your .NET version, below values are valid:
 
 * **None**    : Allows the operating system to choose the best protocol to use. 
 * **Ssl2**    : SSL 2.0 Protocol. *RFC 6176 prohibits the usage of SSL 2.0.* 
