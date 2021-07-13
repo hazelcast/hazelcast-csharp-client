@@ -4,7 +4,7 @@ The Hazelcast .NET solution is Open Source, released under the [Apache License 2
 
 You can engage with the Hazelcast team, and the community at large, via several channels:
 * Post questions on our [GitHub](https://github.com/hazelcast/hazelcast-csharp-client) repository
-* Join the our [Slack](https://slack.hazelcast.com/) community and head for the `#dotnet-client` channel
+* Join our [Slack](https://slack.hazelcast.com/) community and head for the `#dotnet-client` channel
 
 If you are looking for contribution ideas, you can loop for our [list of "good first issues"](https://github.com/hazelcast/hazelcast-csharp-client/issues?q=is%3Aopen+is%3Aissue+label%3A%22Good+First+Issue%22).
 
