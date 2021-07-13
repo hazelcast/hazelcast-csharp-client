@@ -15,12 +15,12 @@
 using System;
 using System.Threading.Tasks;
 
-namespace Hazelcast.Examples.Client
+namespace Hazelcast.Examples.Security
 {
     // ReSharper disable once UnusedMember.Global
-    public class ClientSslMutualAuthExample
+    public class ClientSslExample
     {
-        public static async Task Main(string[] args)
+        public static async Task Main(params string[] args)
         {
             var options = new HazelcastOptionsBuilder()
                 .With(args)
@@ -32,9 +32,12 @@ namespace Hazelcast.Examples.Client
             // self-signed certificates should be registered and allowed
             options.Networking.Ssl.Enabled = true;
 
-            // providing a client pfx certificate will enable mutual authentication
-            // if the server is also configured for mutual authentication.
-            options.Networking.Ssl.CertificatePath = "CLIENT_PFX_CERTIFICATE_PATH";
+            // disable certificate validation
+            //options.Networking.Ssl.ValidateCertificateChain = false;
+
+            // validate the server certificate name
+            //options.Networking.Ssl.ValidateCertificateName = true;
+            //options.Networking.Ssl.CertificateName = "CERTIFICATE CN OR SAN VALUE HERE";
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
