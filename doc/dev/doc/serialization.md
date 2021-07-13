@@ -39,7 +39,7 @@ When Hazelcast .NET client serializes an object into `IData`:
 2. If the above check fails, then Hazelcast checks if it is an instance of `Hazelcast.Serialization.IIdentifiedDataSerializable`.
 3. If the above check fails, then Hazelcast checks if it is an instance of `Hazelcast.Serialization.IPortable`.
 4. If the above check fails, then Hazelcast checks if it is an instance of one of the default types (see above default types).
-5. If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of `IByteArraySerializer<T>` or `IStreamSerializer<T>`. Custom serializer is searched using the input object’s class and its parent class up to `Object`. If parent class search fails, all interfaces implemented by the class are also checked.
+5. If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of `IByteArraySerializer<T>` or `IStreamSerializer<T>`. Custom serializer is searched using the input object’s class and its parent class up to `Object`. If parent class search fails, all interfaces implemented by the class are also checked (note that the *order* in which these interfaces are checked is not specified).
 6. If the above check fails, then Hazelcast checks if it is Serializable ( `Type.IsSerializable` ) and a Global Serializer is not registered with CLR serialization Override feature.
 7. If the above check fails, Hazelcast will use the registered Global Serializer if one exists.
 
