@@ -83,15 +83,54 @@
 <p>The Hazelcast .NET client uses the logging abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> namespace. </p>
 <p>By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.</p>
 <p>Microsoft provides a range of providers to log to various destinations. In addition, a variety of third-party products such as <a href="https://serilog.net/">Serilog</a> support complex logging patterns and more destinations (to the filesystem, the Cloud, etc).</p>
-<h2 id="example-logging-to-console">Example: logging to console</h2>
-<p>For instance, to enable logging to console, a reference to the <a href="https://www.nuget.org/packages/microsoft.extensions.logging.console">Microsoft.Extensions.Logging.Console</a> NuGet package must be added, and then the Hazelcast client needs to be configured to use that implementation:</p>
-<pre><code>var hazelcastOptions = HazelcastOptions.Build(configure: (configuration, options) =&gt;
-    LoggerFactory.Create(builder =&gt;
-        builder
-            .AddConfiguration(configuration.GetSection(&quot;logging&quot;))
-            .AddConsole());
-);
-</code></pre><h2 id="configuration">Configuration</h2>
+<h2 id="quick-start-logging-to-console">Quick start: logging to console</h2>
+<p>To enable logging to console, add a NuGet reference to the <a href="https://www.nuget.org/packages/microsoft.extensions.logging.console">Microsoft.Extensions.Logging.Console</a> NuGet package, and then configure the Hazelcast client to use that implementation:</p>
+<pre><code>var hazelcastOptions = new HazelcastOptionsBuilder()
+    .With(args)
+    .WithConsoleLogger(LogLevel.Information)
+    .Build();
+</code></pre><p>Where the <code>WithConsoleLogger</code> is:</p>
+<pre><code>public static HazelcastOptionsBuilder WithConsoleLogger(this HazelcastOptionsBuilder builder, LogLevel hazelcastLogLevel = LogLevel.None)
+{
+    return builder
+        .With(&quot;Logging:LogLevel:Default&quot;, &quot;None&quot;)
+        .With(&quot;Logging:LogLevel:System&quot;, &quot;Information&quot;)
+        .With(&quot;Logging:LogLevel:Microsoft&quot;, &quot;Information&quot;)
+        .With(&quot;Logging:LogLevel:Hazelcast&quot;, hazelcastLogLevel.ToString())
+        .With((configuration, options) =&gt;
+        {
+            // configure logging factory and add the console provider
+            options.LoggerFactory.Creator = () =&gt; LoggerFactory.Create(loggingBuilder =&gt;
+                loggingBuilder
+                    .AddConfiguration(configuration.GetSection(&quot;logging&quot;))
+                    .AddConsole());
+        });
+}
+</code></pre><p>Note that the in-memory option set with <code>.With(&quot;Logging:LogLevel:Hazelcast&quot;, hazelcastLogLevel.ToString())</code> statement takes precedence over everything else (command-line, environment variables...) and you may want to comment it out when experimenting with the code.</p>
+<p>You can find this example as <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/LoggingExample.cs">LoggingExample.cs</a> in our examples project. If you <a href="http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/contrib-build.html">build</a> and <a href="http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/examples.html">run</a> this example, it will produce the following output:</p>
+<pre><code>info: Hazelcast.Examples.LoggingExample.A[0]
+      This is an INFO message from Hazelcast.Examples.LoggingExamples.A
+warn: Hazelcast.Examples.LoggingExample.A[0]
+      This is a WARNING message from Hazelcast.Examples.LoggingExamples.A
+warn: Hazelcast.Examples.LoggingExample.B[0]
+      This is a WARNING message from Hazelcast.Examples.LoggingExamples.B
+</code></pre><p>You can experiment changing the log levels in code, or via the command line, or via environment variables:</p>
+<pre><code>PS&gt; ./hz.ps1 run-example Logging --- --Logging:LogLevel:Hazelcast=Debug
+</code></pre><p>Also note that options set with <code>With(&quot;Logging:LogLevel:Hazelcast&quot;, &quot;Debug&quot;)</code> method calls take precedence over command line options.</p>
+<h2 id="other-implementations">Other implementations</h2>
+<p>Using a different implementation consists in</p>
+<ul>
+<li>Adding a NuGet reference to a different NuGet package, such as <a href="https://www.nuget.org/packages/Microsoft.Extensions.Logging.AzureAppServices/">Microsoft.Extensions.Logging.AzureAppServices</a> in order to log to Azure App Services, or a Serilog package to log to a file</li>
+<li>Replacing the <code>AddConsole()</code> call above with the appropriate method, as defined by the implementation</li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<p>The example above defines <em>log levels</em>:</p>
+<ul>
+<li><code>None</code> by default</li>
+<li><code>Information</code> for loggers named <code>System.*</code> or <code>Microsoft.*</code></li>
+<li><code>Information</code> for loggers named <code>Hazelcast.*</code></li>
+</ul>
+<p>The various existing <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel">LogLevel</a> values allows for fine-tuning of what should, or should not, be logged. We recommend running Hazelcast with the <code>Information</code> log level by default, though running with the <code>Debug</code> log level may help troubleshooting issues (but should not be used in production environment).</p>
 <p>Logging is configured as per <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> conventions. In a configuration file, one would need a <em>logging</em> section distinct from the <em>hazelcast</em> section:</p>
 <pre><code>{
     &quot;hazelcast&quot;: {
@@ -107,13 +146,15 @@
     }
 }
 </code></pre><p>Refer to Microsoft&#39;s documentation for more details.</p>
+<p>Logging can also be configured programmatically with statements such as <code>.With(&quot;Logging:LogLevel:Hazelcast&quot;, LogLevel.Debug.ToString())</code> as per the example above.</p>
 <h2 id="re-using-the-logging-system">Re-using the logging system</h2>
 <p>The logging system is available for the user to log in their application, too. At the moment, the best way to access the logging system is:</p>
 <pre><code>var loggerFactory = hazelcastOptions.LoggerFactory.Service;
 var logger = loggerFactory.CreateLogger&lt;MyClass&gt;();
 logger.LogInformation(&quot;hello!&quot;):
-</code></pre><p>NOTE: in the future, the logging system will be more directly exposed by the client.</p>
-<p>NOTE: in DI-based applications, things work a bit differently (to be documented).</p>
+</code></pre><p>NOTE: in the future, the logging system will be more directly exposed by the client, e.g. <code>hazelcastClient.LoggerFactory.CreateLogger&lt;MyClass&gt;()</code>.</p>
+<h2 id="dependency-injection-applications">Dependency injection applications</h2>
+<p>In a typical application relying on dependency injection, the logger factory and loggers are registered in a container and injected in code. The <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Client/ContainerExample.cs">ContainerExample</a> and <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Client/HostedExample.cs">HostedExample</a> are good starting points to understand how to wire Hazelcast in such applications.</p>
 </article>
           </div>
           
