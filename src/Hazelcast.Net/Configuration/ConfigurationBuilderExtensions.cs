@@ -118,6 +118,9 @@ namespace Hazelcast.Configuration
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
 
+            // TODO: allow for .WithDefault("", "") to programmatically set values that can be overriden
+            //configurationBuilder.AddInMemoryCollection()
+
             if (string.IsNullOrWhiteSpace(optionsFileName))
                 optionsFileName = "hazelcast.json";
 
@@ -155,6 +158,12 @@ namespace Hazelcast.Configuration
             // JSON files are reloadOnChange:false because we do not track configuration changes,
             // and we try to mitigate issues with running apps in Docker containers.
             // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
+
+            // order must respect
+            // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration
+
+            // TODO: allow for .WithDefault("", "") to programmatically set values that can be overriden
+            //configurationBuilder.AddInMemoryCollection()
 
             configurationBuilder
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
