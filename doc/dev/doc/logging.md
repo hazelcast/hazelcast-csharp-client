@@ -15,6 +15,7 @@ var hazelcastOptions = new HazelcastOptionsBuilder()
     .With(args)
     .WithConsoleLogger(LogLevel.Information)
     .Build();
+```
 
 Where the `WithConsoleLogger` is:
 
@@ -36,6 +37,8 @@ public static HazelcastOptionsBuilder WithConsoleLogger(this HazelcastOptionsBui
         });
 }
 ```
+
+Note that the in-memory option set with `.With("Logging:LogLevel:Hazelcast", hazelcastLogLevel.ToString())` statement takes precedence over everything else (command-line, environment variables...) and you may want to comment it out when experimenting with the code.
 
 You can find this example as [LoggingExample.cs](https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/LoggingExample.cs) in our examples project. If you [build](http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/contrib-build.html) and [run](http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/examples.html) this example, it will produce the following output:
 
