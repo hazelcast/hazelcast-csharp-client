@@ -26,6 +26,7 @@ and
 |----------------------------|-------------------------|
 | DateTime                   | java.util.Date          |
 | System.Numeric.BigInteger  | java.math.BigInteger    |
+| Guid                       | java.util.UUID          |
 
 
 Arrays of the above types can be serialized as `bool[]`, `byte[]`, `short[]`, `int[]`, `long[]`, `float[]`, `double[]`,  `char[]` and `string[]`.
@@ -41,6 +42,8 @@ When Hazelcast .NET client serializes an object into `IData`:
 5. If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of `IByteArraySerializer<T>` or `IStreamSerializer<T>`. Custom serializer is searched using the input object’s class and its parent class up to `Object`. If parent class search fails, all interfaces implemented by the class are also checked.
 6. If the above check fails, then Hazelcast checks if it is Serializable ( `Type.IsSerializable` ) and a Global Serializer is not registered with CLR serialization Override feature.
 7. If the above check fails, Hazelcast will use the registered Global Serializer if one exists.
+
+Note that, at the moment, there is no built-in automatic support for `IEnumerable<T>` or `T[]` beyond the default types documented above.
 
 ## IdentifiedDataSerializable Serialization
 
@@ -92,7 +95,7 @@ The last step is to register the `IDataSerializableFactory` to the `Serializatio
 **Programmatic Configuration:**
 ```csharp
 var hazelcastOptions = new HazelcastOptionsBuilder().Build();
-var factory = new Hazelcast.Examples.SampleDataSerializableFactory();
+var factory = new SampleDataSerializableFactory();
 hazelcastOptions.Serialization
     .AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId, factory);
 ```
@@ -105,7 +108,7 @@ hazelcastOptions.Serialization
             "dataSerializableFactories": [
                 {
                     "id": 1000,
-                    "typeName": "Hazelcast.Examples.SampleDataSerializableFactory"
+                    "typeName": "SampleDataSerializableFactory"
                 }
             ]
         }
@@ -114,6 +117,8 @@ hazelcastOptions.Serialization
 ```
 
 Note that the identifier that is passed to the `SerializationOptions` is same as value of the `FactoryId` of the `Employee` class.
+
+Here (and in all examples below), `typeName` is the fully-qualified CLR type name. Depending on your code, it could be `"MyFactory"` but may have to be `"My.Namespace.Factory"` or even `"My.Namespace.Factory, My.Assembly"`.
 
 ## Portable Serialization
 
@@ -180,7 +185,7 @@ The last step is to register the `IPortableFactory` to the `SerializationOptions
 **Programmatic Configuration:**
 ```c#
 var hazelcastOptions = new HazelcastOptionsBuilder().Build();
-var factory = new Hazelcast.Examples.SamplePortableFactory();
+var factory = new SamplePortableFactory();
 hazelcastOptions.Serialization
     .AddPortableFactory(SamplePortableFactory.FactoryId, factory);
 ```
@@ -193,7 +198,7 @@ hazelcastOptions.Serialization
             "portableFactories": [
                 {
                     "id": 1,
-                    "typeName": "Hazelcast.Examples.SamplePortableFactory"
+                    "typeName": "SamplePortableFactory"
                 }
             ]
         }
@@ -261,8 +266,8 @@ hazelcastOptions.Serialization
         "serialization": {
             "serializers": [
                 {
-                    "serializedTypeName": "Hazelcast.Examples.CustomSerializableType",
-                    "typeName": "Hazelcast.Examples.CustomSerializer"
+                    "serializedTypeName": "CustomSerializableType",
+                    "typeName": "CustomSerializer"
                 }
             ]
         }
@@ -348,7 +353,7 @@ hazelcastOptions.Serialization.GlobalSerializer.Creator =
     "hazelcast": {
         "serialization": {
             "globalSerializer": {
-                "serializedTypeName": "Hazelcast.Examples.CustomSerializableType",
+                "serializedTypeName": "CustomSerializableType",
                 "overrideClrSerialization": true
             }
         }

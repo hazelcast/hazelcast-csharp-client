@@ -35,13 +35,13 @@ Of course these can also be configured via command-line options or environment v
 
 ### Enabling TLS/SSL
 
-TLS/SSL for the Hazelcast .NET client can be enabled/disabled using the `Enabled` option. When this option is set to `true`, TLS/SSL will be configured with respect to the other `SslOptions` options. Setting this option to `false` will result in discarding the other `SslOptions` options.
+TLS/SSL for the Hazelcast .NET client can be enabled/disabled using the `Enabled` option. When this option is set to `true`, TLS/SSL will be configured with respect to the other `SslOptions` options. Setting this option to `false` will result in discarding other `SslOptions` properties.
 
 Default value is `false` (disabled). 
 
 ### Certificate Chain validation
 
-Remote SSL certificate chain validation can be enabled/disabled using the `SslOptions.ValidateCertificateChain` option. It is enabled by default. If you need to bypass certificate validation for some reason, you can disable it as follows by setting the value to `false`. 
+Remote SSL certificate chain validation can be enabled/disabled using the `SslOptions.ValidateCertificateChain` option. It is enabled by default. If you need to bypass certificate validation for some reason, you can disable it by setting the value to `false`. 
 
 Validation is done by .NET and delegated to OS, and you need to make sure your server certificate is trusted by your OS.
 Please refer to [this blog](https://blogs.msdn.microsoft.com/webdev/2017/11/29/configuring-https-in-asp-net-core-across-different-platforms/) for information on how to configure your OS to trust your server certificates.
@@ -52,14 +52,14 @@ Server certificate CN or SAN field can be validated against a value you set into
 
 ### TLS/SSL Protocol
 
-You can configure the TLS/SSL protocol using the `SslOptions.Protocol` option. Valid options are string values of `System.Security.Authentication.SslProtocols` Enum. Depending on your .Net Framework/Net core version, below values are valid:
+You can configure the TLS/SSL protocol using the `SslOptions.Protocol` option. Valid options are values of the `System.Security.Authentication.SslProtocols` enum. Depending on your .Net version, below values are valid:
 
 * **None**    : Allows the operating system to choose the best protocol to use. 
 * **Ssl2**    : SSL 2.0 Protocol. *RFC 6176 prohibits the usage of SSL 2.0.* 
 * **Ssl3**    : SSL 3.0 Protocol. *RFC 7568 prohibits the usage of SSL 3.0.*
 * **Tls**     : TLS 1.0 Protocol described in RFC 2246. *deprecated.*
 * **Tls11**   : TLS 1.1 Protocol described in RFC 4346. *deprecated.*
-* **Tls12**   : TLS 1.2 Protocol described in RFC 5246. *deprecated.*
+* **Tls12**   : TLS 1.2 Protocol described in RFC 5246. *recommended.*
 
 ## Mutual Authentication
 
