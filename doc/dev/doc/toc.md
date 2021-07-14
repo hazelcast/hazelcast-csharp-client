@@ -5,6 +5,7 @@
 # [Options](options.md)
 # [Logging](logging.md)
 # [Distributed Objects](distributedObjects.md)
+# [Distributed Computing](distributedComputing.md)
 # [Distributed Query](distributedQuery.md)
 ## [HMap](hmap.md)
 ## [HMultiMap](hmap.md)
