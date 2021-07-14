@@ -17,7 +17,7 @@ There are many built-in `IPredicate` implementations for your query requirements
 * `True()`, `False()`: Predicates returning true and hence including all the entries or false for filtering all out.
 * `EqualTo()`, `NotEqualTo()`: Checks if attribute value is equal or not equal to a given value.
 * `InstanceOf()`: Checks if attribute value has a certain type.
-* `Like(), ILike()`: Checks if attribute value matches some case-sensitive (like) or case-insensitive (ilike) string pattern. `%` (percentage sign is the placeholder for any number of characters, `_` (underscore) is placeholder a single character.
+* `Like(), ILike()`: Checks if attribute value matches some case-sensitive (like) or case-insensitive (ilike) string pattern. `%` (percentage sign) is the placeholder for any number of characters, `_` (underscore) is placeholder a single character.
 * `GreaterThan()`, `GreaterThanOrEqualTo()`, `LessThan()`, `LessThanOrEqualTo()`: Checks if attribute value is in specified relation with a value.
 * `Between()`: Checks if attribute value is in between two values (both are inclusive).
 * `In()`: Checks if attribute value is an element of a certain list.
