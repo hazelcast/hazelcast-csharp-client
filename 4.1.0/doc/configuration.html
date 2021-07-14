@@ -121,12 +121,13 @@ cluster server address can be done via the following Json fragment in any of the
     }
 }
 </code></pre><p>It can alternatively be specified by setting an environment variable (note that the dotted format may not be supported on every platform):</p>
-<pre><code class="lang-sh">hazelcast__networking__addresses__0=server:port
+<pre><code class="lang-sh">hazelcast__networking__addresses__0=server:port   ## supported on all platforms
+hazelcast:networking:addresses:0=server:port      ## not supported on all platforms
 hazelcast.networking.addresses.0=server:port
 </code></pre><p>It can alternatively be specified with command line arguments:</p>
 <pre><code class="lang-sh">$ myApp hazelcast:networking:addresses:0=server:port
 $ myApp hazelcast.networking.addresses.0=server:port
-</code></pre><p>All the .NET Core supported formats are supported (i.e. <code>/arg value</code>, <code>/arg=value</code>, <code>-arg value</code>, etc.). See
+</code></pre><p>All the .NET Core supported formats are supported (i.e. <code>/arg value</code>, <code>/arg=value</code>, <code>--arg value</code>, etc.). See
 the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#command-line">documentation</a> for details.</p>
 <p>Finally, the method supports direct, in-memory key/values, where values can use either the dot or colon separator:</p>
 <pre><code class="lang-csharp">var options = HazelcastOptions.Build(args, new[]
