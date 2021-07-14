@@ -83,7 +83,7 @@ public class Employee : IPortable
 Note that `Employee` is implementing `IPortable`. As portable types are not deserialized on the server side for querying, you don't need to implement its Java equivalent on the server side.
 
 For the non-portable types, you need to implement its Java equivalent and its serializable factory on the server side for server to reconstitute the objects from binary formats.
-In this case before starting the server, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). See [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/4.2/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
+In this case before starting the server, you need to compile the `Employee` and related factory classes with server's `CLASSPATH` and add them to the `user-lib` directory in the extracted `hazelcast-<version>.zip` (or `tar`). See [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
 
 > **NOTE: Querying with `IPortable` interface is faster as compared to `IIdentifiedDataSerializable`.**
 
@@ -283,7 +283,7 @@ If you want to sort the result before paging, you need to specify a comparator o
 Also, this comparator class should implement' one of `IIdentifiedDataSerializable` or `IPortable`. After implementing this class in .NET,
 you need to implement the Java equivalent of it and its factory. The Java equivalent of the comparator should implement `java.util.Comparator`.
 Note that the `Compare` function of `Comparator` on the Java side is the equivalent of the `Compare` function of `IComparer` on the .NET side.
-When you implement the `Comparator` and its factory, you can add them to the `CLASSPATH` of the server side. See [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/4.2/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
+When you implement the `Comparator` and its factory, you can add them to the `CLASSPATH` of the server side. See [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
 
 Also, you can access a specific page more easily with the help of the `Page` property of returned `IPagingPredicate`. This way, if you make a query for the 100th page, for example, it will get this page results immediately instead of reaching 100 pages one by one using the `NextPage` function.
 
