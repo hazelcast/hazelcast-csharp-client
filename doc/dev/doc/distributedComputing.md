@@ -6,7 +6,7 @@ This chapter explains how you can use Hazelcast IMDG's entry processor implement
 
 Hazelcast supports entry processing. An entry processor is a function that executes your code on a map entry in an atomic way.
 
-An entry processor is a good option if you perform bulk processing on an `IMap`. Usually you perform a loop of keys -- executing `IMap.Get(key)`, mutating the value and finally putting the entry back in the map using `IMap.Put(key,value)`. If you perform this process from a client or from a member where the keys do not exist, you effectively perform two network hops for each update: the first to retrieve the data and the second to update the mutated value.
+An entry processor is a good option if you perform bulk processing on an `IHMap`. Usually you perform a loop of keys - executing `IHMap.GetAsync(key)`, mutating the value and finally putting the entry back in the map using `IHMap.PutAsync(key,value)`. If you perform this process from a client or from a member where the keys do not exist, you effectively perform two network hops for each update: the first to retrieve the data and the second to update the mutated value.
 
 If you are doing the process described above, you should consider using entry processors. An entry processor executes a read and updates upon the member where the data resides. This eliminates the costly network hops described above.
 
@@ -16,51 +16,46 @@ Hazelcast sends the entry processor to each cluster member and these members app
 
 ## Processing Entries
 
-The `IMap` interface provides the following functions for entry processing:
+The `Hazelcast.DistributedObjects.IHMap` interface provides the following functions for entry processing:
 
-* `executeOnKey` processes an entry mapped by a key.
-* `executeOnKeys` processes entries mapped by a list of keys.
-* `executeOnEntries` can process all entries in a map with a defined predicate. Predicate is optional.
+* `ExecuteAsync<T>(IEntryProcessor<T>, TKey)` processes an entry mapped by a key.
+* `ExecuteAsync<T>(IEntryProcessor<T>, IEnumerable<TKey>)` processes entries mapped by a list of keys.
+* `ExecuteAsync<T>(IEntryProcessor<T>, IPredicate)` processes all entries in a map with a defined predicate.
+* `ExecuteAsync<T>(IEntryProcessor<T>)` processes all entries in a map.
 
-In the .NET client, an `EntryProcessor` should be `IIdentifiedDataSerializable` or `IPortable` because the server should be able to deserialize it to process.
+In the .NET client, an `IEntryProcessor` should be `IIdentifiedDataSerializable` or `IPortable` because the server should be able to deserialize it to process.
 
-The following is an example for `EntryProcessor` which is `IIdentifiedDataSerializable`.
+The following is an example for `IEntryProcessor` which is `IIdentifiedDataSerializable`.
 
-```c#
-public class IdentifiedEntryProcessor : IEntryProcessor, IIdentifiedDataSerializable
+```csharp
+public class IdentifiedEntryProcessor : IEntryProcessor<string>, IIdentifiedDataSerializable
 {
-    internal const int ClassId = 1;
+    public const int FactoryIdConst = 5; // Id of corresponding IDataSerializableFactory
+    public const int ClassIdConst = 1; // corresponds to Java's IdentifiedEntryProcessor.CLASS_ID
 
-    private string value;
+    public int FactoryId => FactoryIdConst;
+    public int ClassId => ClassIdConst;
 
-    public IdentifiedEntryProcessor(string value = null)
+    private string _value;
+
+    public IdentifiedEntryProcessor(string value)
     {
-        this.value = value;
+        _value = value;
     }
 
     public void ReadData(IObjectDataInput input)
     {
-        value = input.ReadUTF();
+        _value = input.ReadString();
     }
 
     public void WriteData(IObjectDataOutput output)
     {
-        output.WriteUTF(value);
-    }
-
-    public int GetFactoryId()
-    {
-        return IdentifiedFactory.FactoryId;
-    }
-
-    public int GetId()
-    {
-        return ClassId;
+        output.WriteString(_value);
     }
 }
 ```
 
-Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see the [Adding User Library to CLASSPATH section](#1212-adding-user-library-to-classpath).
+Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's `CLASSPATH`, see [Adding User Library to CLASSPATH](https://docs.hazelcast.com/imdg/latest/clusters/deploying-code-from-clients.html#adding-user-library-to-classpath).
 
 The following is the Java equivalent of the entry processor in .NET client given above:
 
@@ -142,11 +137,12 @@ Now you need to configure the `hazelcast.xml` to add your factory as shown below
 
 The code that runs on the entries is implemented in Java on the server side. The client side entry processor is used to specify which entry processor should be called. For more details about the Java implementation of the entry processor, see the [Entry Processor section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#entry-processor) in the Hazelcast IMDG Reference Manual.
 
-After the above implementations and configuration are done and you start the server where your library is added to its `CLASSPATH`, you can use the entry processor in the `IMap` functions. See the following example.
+After the above implementations and configuration are done and you start the server where your library is added to its `CLASSPATH`, you can use the entry processor in the `IHMap` functions. See the following example.
 
-```c#
-map.ExecuteOnKey("key", new IdentifiedEntryProcessor("processed"));
-Console.WriteLine("Value for key is : {0}", map.Get("key"));
+```csharp
+var map = await client.GetMapAsync<string, string>("processing-map");
+await map.ExecuteAsync(new IdentifiedEntryProcessor("processed"), "key");
+Console.WriteLine($"Value for key is: {await map.GetAsync("key")}");
 //Output:
-//Value for key is : processed
+//Value for key is: processed
 ```
