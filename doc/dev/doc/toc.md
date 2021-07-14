@@ -18,6 +18,8 @@
 ## [HTopic](htopic.md)
 ## [AtomicLong](atomiclong.md)
 ## [AtomicRef](atomicref.md)
+# [Distributed Computing](distributedComputing.md)
+# [Distributed Query](distributedQuery.md)
 # [CP SubSystem](cpsubsystem.md)
 # [Logging](logging.md)
 # [Locking](locking.md)
