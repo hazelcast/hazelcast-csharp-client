@@ -159,7 +159,7 @@ namespace Hazelcast.Core
 
         public static string ReadOffsetDateTime(this byte[] bytes, int position)
         {
-            var localDateTime = ReadLocalDate(bytes, position);
+            var localDateTime = ReadLocalDateTime(bytes, position);
             var offsetSeconds = ReadIntL(bytes, position + SizeOfLocalDateTime);
 
             var offsetMinutes = Math.Abs(offsetSeconds / 60);
@@ -169,7 +169,7 @@ namespace Hazelcast.Core
             var offsetModifier = offsetSeconds < 0 ? '-' : '+';
             var offsetHours = offsetMinutes / 60;
             offsetMinutes %= 60;
-            return $"{localDateTime}{offsetModifier}{offsetHours}:{offsetMinutes}";
+            return $"{localDateTime}{offsetModifier}{offsetHours:D2}:{offsetMinutes:D2}";
         }
 
         /// <summary>
