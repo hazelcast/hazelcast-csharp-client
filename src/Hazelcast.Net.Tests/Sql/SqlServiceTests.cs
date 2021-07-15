@@ -22,7 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
-    public class SqlServiceTests: SqlTestBase
+    public class SqlServiceTests : SqlTestBase
     {
         [Test]
         [TestCase(3, 1)]

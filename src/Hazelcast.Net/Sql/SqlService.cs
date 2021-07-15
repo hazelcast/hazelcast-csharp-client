@@ -22,7 +22,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
-    internal class SqlService: ISqlService
+    internal class SqlService : ISqlService
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;

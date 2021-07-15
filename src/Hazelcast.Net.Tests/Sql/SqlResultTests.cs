@@ -19,7 +19,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
-    public class SqlResultTests: SqlTestBase
+    public class SqlResultTests : SqlTestBase
     {
         [Test]
         public async Task EnumerateAfterDispose()
