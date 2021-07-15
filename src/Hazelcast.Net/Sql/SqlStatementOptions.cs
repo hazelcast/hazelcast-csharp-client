@@ -105,11 +105,5 @@ namespace Hazelcast.Sql
                 _cursorBufferSize = value;
             }
         }
-
-        /// <summary>
-        /// Expected result type of SQL query.
-        /// Defaults to <see cref="SqlResultType.Any"/>.
-        /// </summary>
-        public SqlResultType ExpectedResultType { get; set; } = SqlResultType.Any;
     }
 }

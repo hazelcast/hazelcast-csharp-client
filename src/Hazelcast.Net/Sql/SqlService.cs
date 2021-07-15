@@ -59,7 +59,7 @@ namespace Hazelcast.Sql
         }
 
         private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options)
+            string sql, object[] parameters, SqlStatementOptions options, SqlResultType resultType)
         {
             var connection = _cluster.Members.GetRandomConnection();
             if (connection == null)
@@ -79,7 +79,7 @@ namespace Hazelcast.Sql
                 (long)options.Timeout.TotalMilliseconds,
                 options.CursorBufferSize,
                 options.Schema,
-                (byte)options.ExpectedResultType,
+                (byte)resultType,
                 queryId
             );
 
@@ -96,7 +96,7 @@ namespace Hazelcast.Sql
         private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,
             string sql, object[] parameters, SqlStatementOptions options)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows);
             if (result.RowMetadata == null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
@@ -122,7 +122,7 @@ namespace Hazelcast.Sql
         private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId,
             string sql, object[] parameters, SqlStatementOptions options)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount);
             if (result.RowMetadata != null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,

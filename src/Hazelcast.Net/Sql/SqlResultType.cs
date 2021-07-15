@@ -16,8 +16,7 @@ using System.Runtime.Serialization;
 
 namespace Hazelcast.Sql
 {
-    // FIXME [Oleksii] check if [Flags] will work
-    public enum SqlResultType
+    internal enum SqlResultType
     {
         /// <summary>
         /// The statement may produce either rows or an update count.
