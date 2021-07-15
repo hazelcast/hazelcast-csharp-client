@@ -72,7 +72,6 @@ namespace Hazelcast.Protocol.CustomCodecs
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             var version = MemberVersionCodec.Decode(iterator);
             var isAddressMapExists = false;
-            // FIXME this change cannot happen here!!
             Dictionary<Hazelcast.Models.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
             if (iterator.NextIsNotTheEnd())
             {

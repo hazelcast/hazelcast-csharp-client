@@ -560,12 +560,13 @@ namespace Hazelcast.Clustering
 
                 if (connection.Address == member.ConnectAddress)
                 {
-                    if (_logger.IsDebugEnabled()) // FIXME - do this everywhere, perfs!
+                    // TODO: wherever we LogDebug an interpolated $"" string we *must* do this check, for performances reasons!
+                    if (_logger.IsDebugEnabled())
                         _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}.");
                     return Attempt.If(active, connection);
                 }
 
-                if (_logger.IsDebugEnabled()) // FIXME - do this everywhere, perfs!
+                if (_logger.IsDebugEnabled())
                     _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}, but member address is {member.ConnectAddress}.");
             }
 
@@ -589,8 +590,7 @@ namespace Hazelcast.Clustering
 #pragma warning restore CA2000
                 if (memberConnection.MemberId != member.Id)
                 {
-                    _logger.LogWarning("MEH WRONG MEMBER");
-                    // FIXME WHAT SHALL WE DO?
+                    _logger.LogWarning($"Client {_clusterState.ClientName} connected address {member.ConnectAddress} expecting member {member.Id.ToShortString()} but found member {memberConnection.MemberId}, dropping the connection.");
                     _clusterMembers.TerminateConnection(memberConnection);
                     return Attempt.Fail<MemberConnection>();
                 }

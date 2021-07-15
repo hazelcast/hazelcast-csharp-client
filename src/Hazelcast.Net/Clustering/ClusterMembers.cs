@@ -200,7 +200,7 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connectedFIXME."); // FIXME
+                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.");
 
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
@@ -560,7 +560,7 @@ namespace Hazelcast.Clustering
         /// <para>The connection should be active, but there is no guarantee it will not become immediately inactive.</para>
         public bool TryGetConnection(Guid memberId, out MemberConnection connection)
         {
-            lock (_mutex) return _connections.TryGetValue(memberId, out connection); // FIXME address?
+            lock (_mutex) return _connections.TryGetValue(memberId, out connection);
         }
 
         /// <summary>

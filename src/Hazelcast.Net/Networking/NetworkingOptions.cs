@@ -104,8 +104,12 @@ namespace Hazelcast.Networking
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
 
         /// <summary>
-        /// FIXME: document
+        /// Whether to use the public addresses of members.
         /// </summary>
+        /// <remarks>When connecting to clusters where members have different public and
+        /// internal addresses, this option can be used to indicate whether to use, or not
+        /// use, the public addresses. When <c>null</c> (by default), the client will try
+        /// to determine which address to use automatically.</remarks>
         public bool? UsePublicAddresses { get; set; }
 
         /// <summary>
