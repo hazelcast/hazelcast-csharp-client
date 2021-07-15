@@ -60,6 +60,14 @@ namespace Hazelcast
         /// </summary>
         ICPSubsystem CPSubsystem { get; }
 
+        /// <summary>
+        /// Returns a service to execute distributed SQL queries.
+        /// </summary>
+        ///<remarks>
+        /// The service is in beta state. Behavior and API might be changed in future releases.
+        /// </remarks>
+        ISqlService Sql { get; }
+
         // TODO: consider implementing client.ClusterId
         /*
         /// <summary>
@@ -230,13 +238,5 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name);
-
-        /// <summary>
-        /// Returns a service to execute distributed SQL queries.
-        /// </summary>
-        ///<remarks>
-        /// The service is in beta state. Behavior and API might be changed in future releases.
-        /// </remarks>
-        Task<ISqlService> GetSqlServiceAsync();
     }
 }

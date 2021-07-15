@@ -34,9 +34,7 @@ namespace Hazelcast.Tests.Sql
         {
             Debug.Assert(pageSize <= MapValues.Count);
 
-            var sqlService = await Client.GetSqlServiceAsync();
-
-            var result = await sqlService.ExecuteQueryAsync($"SELECT * FROM {MapName} ORDER BY __key LIMIT {total}",
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} ORDER BY __key LIMIT {total}",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
 
@@ -54,9 +52,7 @@ namespace Hazelcast.Tests.Sql
         [TestCase(6, 3)]
         public async Task ExecuteQueryJet(int total, int pageSize)
         {
-            var sqlService = await Client.GetSqlServiceAsync();
-
-            var result = await sqlService.ExecuteQueryAsync($"SELECT v FROM TABLE(generate_series(1,{total}))",
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT v FROM TABLE(generate_series(1,{total}))",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
 
@@ -73,8 +69,7 @@ namespace Hazelcast.Tests.Sql
         [TestCase(100)]
         public async Task ExecuteQueryWithIntParameter(int minValue)
         {
-            var sql = await Client.GetSqlServiceAsync();
-            var result = await sql.ExecuteQueryAsync($"SELECT * FROM {MapName} WHERE this >= ?", new object[] { minValue });
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} WHERE this >= ?", new object[] { minValue });
 
             var expectedValues = MapValues.Where(p => p.Value >= minValue);
             var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
@@ -89,8 +84,7 @@ namespace Hazelcast.Tests.Sql
         [TestCase("100")]
         public async Task ExecuteQueryWithStringParameter(string key)
         {
-            var sql = await Client.GetSqlServiceAsync();
-            var result = await sql.ExecuteQueryAsync($"SELECT * FROM {MapName} WHERE __key = ?", new object[] { key });
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} WHERE __key = ?", new object[] { key });
 
             var expectedValues = MapValues.Where(p => p.Key == key);
             var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());

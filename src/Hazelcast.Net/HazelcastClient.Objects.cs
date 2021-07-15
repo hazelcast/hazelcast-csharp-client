@@ -29,10 +29,11 @@ namespace Hazelcast
     {
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
 
-        /// <summary>
-        /// Gets the CP subsystem.
-        /// </summary>
+        /// <inheritdoc />
         public ICPSubsystem CPSubsystem { get; }
+
+        /// <inheritdoc />
+        public ISqlService Sql { get; }
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)
@@ -190,8 +191,5 @@ namespace Hazelcast
             return await task.CfAwait();
 #endif
         }
-
-        /// <inheritdoc />
-        public Task<ISqlService> GetSqlServiceAsync() => Task.FromResult<ISqlService>(_sqlService);
     }
 }
