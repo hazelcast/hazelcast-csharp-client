@@ -418,18 +418,35 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        [TestCase(new byte[]{0, 0xE5, 0x07, 0x07, 0x1E}, 1, "2021-07-30")]
+        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B}, 1, "2021-07-11")]
+        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F}, 1, "1001-12-31")]
         public void ReadLocalDate(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(expected, bytes.ReadLocalDate(position));
         }
 
         [Test]
-        [TestCase(new byte[]{0, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "12:17:16")]
-        [TestCase(new byte[]{0, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "21:59:56.012345678")]
+        [TestCase(new byte[]{0x00, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "12:17:16")]
+        [TestCase(new byte[]{0xFF, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "21:59:56.012345678")]
         public void ReadLocalTime(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(expected, bytes.ReadLocalTime(position));
+        }
+
+        [Test]
+        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "2021-07-11T12:17:16")]
+        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "1001-12-31T21:59:56.012345678")]
+        public void ReadLocalDateTime(byte[] bytes, int position, string expected)
+        {
+            Assert.AreEqual(expected, bytes.ReadLocalDateTime(position));
+        }
+
+        [Test]
+        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2A, 0x00, 0x00}, 1, "2021-07-11T12:17:16+03:00")]
+        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00}, 1, "1001-12-31T21:59:56.012345678Z")]
+        public void ReadOffsetDateTime(byte[] bytes, int position, string expected)
+        {
+            Assert.AreEqual(expected, bytes.ReadOffsetDateTime(position));
         }
 
         [Test]
