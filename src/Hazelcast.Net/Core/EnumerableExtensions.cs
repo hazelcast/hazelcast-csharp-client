@@ -162,5 +162,43 @@ namespace Hazelcast.Core
             if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
             item2 = e.Current;
         }
+
+        /// <summary>
+        /// Gets the index of the first <see cref="IList{T}"/> item that satisfies the specified <paramref name="predicate"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="list">A list of items.</param>
+        /// <param name="predicate">A predicate.</param>
+        /// <returns>The index of the first item that satisfies the specified <paramref name="predicate"/>, or -1.</returns>
+        public static int IndexOf<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var i = 0;
+            foreach (var item in list)
+                if (predicate(item))
+                    return i;
+                else
+                    i += 1;
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the index of the last <see cref="IList{T}"/> item that satisfies the specified <paramref name="predicate"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="list">A list of items.</param>
+        /// <param name="predicate">A predicate.</param>
+        /// <returns>The index of the last item that satisfies the specified <paramref name="predicate"/>, or -1.</returns>
+        public static int LastIndexOf<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var i = 0;
+            var f = -1;
+            foreach (var item in list)
+            {
+                if (predicate(item)) f = i;
+                i += 1;
+            }
+            return f;
+        }
+
     }
 }

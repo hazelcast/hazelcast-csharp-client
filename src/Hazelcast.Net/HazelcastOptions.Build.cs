@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
 
@@ -27,34 +25,6 @@ namespace Hazelcast
         /// </summary>
         /// <returns>The Hazelcast configuration section name, which is <c>"hazelcast"</c>.</returns>
         internal const string Hazelcast = "hazelcast";
-
-        /// <summary>
-        /// Builds Hazelcast options.
-        /// </summary>
-        /// <param name="args">Optional command-line arguments.</param>
-        /// <param name="switchMappings">Optional command-line switch mappings.</param>
-        /// <param name="keyValues">Optional key-value pairs.</param>
-        /// <param name="optionsFilePath">Optional options file path (without filename).</param>
-        /// <param name="optionsFileName">Optional options file name (without path, with extension).</param>
-        /// <param name="environmentName">Optional environment name.</param>
-        /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
-        /// <returns>Hazelcast options.</returns>
-        /// <remarks>
-        /// <para>When <paramref name="optionsFilePath"/> is not provided, the options file is searched in the
-        /// default .NET configuration location, which usually is where the application resides.</para>
-        /// <para>When <paramref name="optionsFileName"/> is not provided, the name is "hazelcast".</para>
-        /// <para>When <paramref name="environmentName"/> is not provided, it is determined the standard .NET way,
-        /// i.e. from the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> variables and,
-        /// if not specified, defaults to "Production".</para>
-        /// </remarks>
-        public static HazelcastOptions Build(string[] args = null, IDictionary<string, string> switchMappings = null, IEnumerable < KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null, Action<IConfiguration, HazelcastOptions> configure = null)
-        {
-            return Build(builder =>
-            {
-                builder.AddDefaults(args, switchMappings, environmentName);
-                builder.AddHazelcast(args, switchMappings, keyValues, optionsFilePath, optionsFileName, environmentName);
-            }, configure);
-        }
 
         /// <summary>
         /// (internal for tests only) Builds Hazelcast options.

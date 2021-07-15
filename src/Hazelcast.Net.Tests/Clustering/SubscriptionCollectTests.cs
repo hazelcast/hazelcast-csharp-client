@@ -95,12 +95,12 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Start client");
 
-            var options = HazelcastOptions.Build(configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
                 options.Networking.Addresses.Add("127.0.0.1:11002");
                 options.Events.SubscriptionCollectDelay = TimeSpan.FromSeconds(4); // don't go too fast
-            });
+            }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Get map");

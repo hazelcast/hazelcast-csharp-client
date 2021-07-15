@@ -96,7 +96,7 @@ namespace Hazelcast.Tests.Networking
             RcCluster = await RcClient.CreateClusterAsync(serverXml);
             RcMember = await RcClient.StartMemberAsync(RcCluster);
 
-            var options = HazelcastOptions.Build();
+            var options = new HazelcastOptionsBuilder().Build();
             options.Networking.Addresses.Clear();
             //options.Networking.Addresses.Add("localhost:5701");
             options.Networking.Addresses.Add("127.0.0.1:5701");

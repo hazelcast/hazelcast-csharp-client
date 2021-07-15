@@ -15,7 +15,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using Hazelcast.Core;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.CommandLine;
+using Microsoft.Extensions.Configuration.EnvironmentVariables;
+using Microsoft.Extensions.Configuration.Json;
 
 namespace Hazelcast.Configuration
 {
@@ -37,13 +41,7 @@ namespace Hazelcast.Configuration
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
 
-            var fullpath = string.IsNullOrWhiteSpace(filePath)
-                ? fileName
-                : Path.Combine(filePath, fileName);
-
-            var extension = Path.GetExtension(fullpath);
-            var directory = Path.GetDirectoryName(fullpath) ?? "";
-            fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
+            var (fullpath, extension) = GetHazelcastFilePath(filePath, fileName);
 
             // JSON files are reloadOnChange:false because we do not track configuration changes,
             // and we try to mitigate issues with running apps in Docker containers.
@@ -54,6 +52,18 @@ namespace Hazelcast.Configuration
                 .AddJsonFile(fullpath + '.' + DetermineEnvironment(environmentName) + extension, true, false);
 
             return configurationBuilder;
+        }
+
+        private static (string, string) GetHazelcastFilePath(string filePath, string fileName)
+        {
+            var fullpath = string.IsNullOrWhiteSpace(filePath)
+                ? fileName
+                : Path.Combine(filePath, fileName);
+
+            var extension = Path.GetExtension(fullpath);
+            var directory = Path.GetDirectoryName(fullpath) ?? "";
+            fullpath = Path.Combine(directory, Path.GetFileNameWithoutExtension(fullpath));
+            return (fullpath, extension);
         }
 
         /// <summary>
@@ -103,9 +113,27 @@ namespace Hazelcast.Configuration
             return configurationBuilder;
         }
 
-        // TODO: this is how we should do it, really - but then 
-        public static IConfigurationBuilder AddStuff(this IConfigurationBuilder configurationBuilder, 
+        /// <summary>
+        /// Configures an <see cref="IConfigurationBuilder"/> to read default and Hazelcast configuration values from various sources.
+        /// </summary>
+        /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
+        /// <param name="args">The command line args.</param>
+        /// <param name="switchMappings">Command line switch mappings.</param>
+        /// <param name="defaults">The defaults key-value configuration pairs.</param>
+        /// <param name="keyValues">The optional key-value configuration pairs.</param>
+        /// <param name="optionsFilePath">The optional path to the options file.</param>
+        /// <param name="optionsFileName">The optional name of the options file.</param>
+        /// <param name="environmentName">An optional environment name.</param>
+        /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
+        /// <remarks>
+        /// <para>Adds support for default and hazelcast-specific sources.</para>
+        /// <para>If <paramref name="environmentName"/> is missing, the environment name is determined using
+        /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
+        /// specified, the environment name is <c>Production</c>.</para>
+        /// </remarks>
+        public static IConfigurationBuilder AddHazelcastAndDefaults(this IConfigurationBuilder configurationBuilder, 
             string[] args,
+            IDictionary<string, string> switchMappings = null,
             IEnumerable<KeyValuePair<string, string>> defaults = null,
             IEnumerable<KeyValuePair<string, string>> keyValues = null, 
             string optionsFilePath = null, 
@@ -114,15 +142,15 @@ namespace Hazelcast.Configuration
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
 
-            if (string.IsNullOrWhiteSpace(optionsFileName))
-                optionsFileName = "hazelcast.json";
+            if (defaults != null)
+                configurationBuilder.AddHazelcastInMemoryCollection(defaults); // handles both standard and hazelcast syntax
 
             // JSON files are reloadOnChange:false because we do not track configuration changes,
             // and we try to mitigate issues with running apps in Docker containers.
             // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
 
-            if (defaults != null)
-                configurationBuilder.AddInMemoryCollection(defaults);
+            if (string.IsNullOrWhiteSpace(optionsFileName))
+                optionsFileName = "hazelcast.json";
 
             configurationBuilder
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
@@ -135,21 +163,22 @@ namespace Hazelcast.Configuration
 
             if (args != null)
                 configurationBuilder
-                    .AddCommandLine(args)
-                    .AddHazelcastCommandLine(args);
+                    .AddCommandLine(args, switchMappings)
+                    .AddHazelcastCommandLine(args, switchMappings);
 
             if (keyValues != null)
-                configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
+                configurationBuilder.AddHazelcastInMemoryCollection(keyValues); // handles both standard and hazelcast syntax
 
             return configurationBuilder;
         }
 
         /// <summary>
-        /// Adds an <see cref="IConfigurationProvider"/> that reads Hazelcast configuration values from various sources.
+        /// Configures an <see cref="IConfigurationBuilder"/> to read Hazelcast configuration values from various sources.
         /// </summary>
         /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
         /// <param name="args">The command line args.</param>
         /// <param name="switchMappings">Command line switch mappings.</param>
+        /// <param name="defaults">The defaults key-value configuration pairs.</param>
         /// <param name="keyValues">The optional key-value configuration pairs.</param>
         /// <param name="optionsFilePath">The optional path to the options file.</param>
         /// <param name="optionsFileName">The optional name of the options file.</param>
@@ -161,66 +190,53 @@ namespace Hazelcast.Configuration
         /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
         /// specified, the environment name is <c>Production</c>.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null, IEnumerable < KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null)
+        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, 
+            string[] args, 
+            IDictionary<string, string> switchMappings = null,
+            IEnumerable<KeyValuePair<string, string>> defaults = null,
+            IEnumerable < KeyValuePair<string, string>> keyValues = null, 
+            string optionsFilePath = null, 
+            string optionsFileName = null, 
+            string environmentName = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
 
-            // TODO: allow for .WithDefault("", "") to programmatically set values that can be overriden
-            //configurationBuilder.AddInMemoryCollection()
+            var sources = configurationBuilder.Sources;
+
+            // this is always going to be the first one
+            if (defaults != null)
+                sources.Insert(0, new HazelcastMemoryConfigurationSource { InitialData = defaults }); // handles both standard and hazelcast syntax
 
             if (string.IsNullOrWhiteSpace(optionsFileName))
                 optionsFileName = "hazelcast.json";
 
-            configurationBuilder
-                .AddHazelcastFile(optionsFilePath, optionsFileName, environmentName);
+            // always process the hazelcast configuration file
+            var i = sources.LastIndexOf(source => source is FileConfigurationSource);
+            var (fullpath, extension) = GetHazelcastFilePath(optionsFilePath, optionsFileName);
+            var fileSource1 = new JsonConfigurationSource { Optional = true, ReloadOnChange = false, Path = fullpath + extension };
+            var fileSource2 = new JsonConfigurationSource { Optional = true, ReloadOnChange = false, Path = fullpath + '.' + DetermineEnvironment(environmentName) + extension };
+            if (i != -1)
+            {
+                sources.Insert(i + 1, fileSource2);
+                sources.Insert(i + 1, fileSource1);
+            }
+            else
+            {
+                sources.Add(fileSource1);
+                sources.Add(fileSource2);
+            }
 
-            configurationBuilder
-                .AddHazelcastEnvironmentVariables();
+            // process hazelcast-style environment variables if normal environment variables are processed
+            i = sources.IndexOf(source => source is EnvironmentVariablesConfigurationSource);
+            if (i != -1) sources.Insert(i + 1, new HazelcastEnvironmentVariablesConfigurationSource());
 
-            if (args != null)
-                configurationBuilder.AddHazelcastCommandLine(args, switchMappings);
+            // process hazelcast-style command line arguments if normal command line arguments are processed
+            i = sources.LastIndexOf(source => source is CommandLineConfigurationSource);
+            if (i != -1) sources.Insert(i + 1, new HazelcastCommandLineConfigurationSource { Args = args, SwitchMappings = switchMappings });
 
+            // this is always going to be the last one
             if (keyValues != null)
-                configurationBuilder.AddHazelcastInMemoryCollection(keyValues);
-
-            return configurationBuilder;
-        }
-
-        /// <summary>
-        /// Adds the default <see cref="IConfigurationProvider"/> instances.
-        /// </summary>
-        /// <param name="configurationBuilder">The <see cref="IConfigurationBuilder"/> to add to.</param>
-        /// <param name="args">The command line args.</param>
-        /// <param name="switchMappings">Optional command line switch mappings.</param>
-        /// <param name="environmentName">An optional environment name.</param>
-        /// <returns>The <see cref="IConfigurationBuilder"/>.</returns>
-        /// <remarks>
-        /// <para>Adds support for appsettings.json, environment variables and command line arguments. This is
-        /// only useful in non-hosted environments where a configuration builder is created from scratch.</para>
-        /// <para>If <paramref name="environmentName"/> is missing, the environment name is determined using
-        /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
-        /// specified, the environment name is <c>Production</c>.</para>
-        /// </remarks>
-        public static IConfigurationBuilder AddDefaults(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null, string environmentName = null)
-        {
-            // JSON files are reloadOnChange:false because we do not track configuration changes,
-            // and we try to mitigate issues with running apps in Docker containers.
-            // (see https://github.com/hazelcast/hazelcast-csharp-client/issues/322)
-
-            // order must respect
-            // https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration
-
-            // TODO: allow for .WithDefault("", "") to programmatically set values that can be overriden
-            //configurationBuilder.AddInMemoryCollection()
-
-            configurationBuilder
-                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: false)
-                .AddJsonFile($"appsettings.{DetermineEnvironment(environmentName)}.json", optional: true, reloadOnChange: false);
-
-            configurationBuilder.AddEnvironmentVariables();
-
-            if (args != null)
-                configurationBuilder.AddCommandLine(args, switchMappings);
+                sources.Add(new HazelcastMemoryConfigurationSource { InitialData = keyValues }); // handles both standard and hazelcast syntax
 
             return configurationBuilder;
         }

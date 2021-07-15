@@ -63,6 +63,9 @@ namespace Hazelcast.Examples.Client
         // it is possible to run more than once with --hazelcast.example.runCount=2
         // the pause between the runs can be configured to 10s with --hazelcast.example.pauseDuration=00:00:10
         // you may want to enable re-connection with --hazelcast.networking.reconnectMode=reconnectAsync
+        // it is possible to change the Hazelcast logging level from Information to anything else,
+        // with --Logging:LogLevel:Hazelcast=Debug (note that for this non-Hazelcast property, the dot-separator
+        // is not supported and a true .NET supported separator must be used - here, a colon)
 
         public static async Task Main(string[] args)
         {
@@ -72,7 +75,7 @@ namespace Hazelcast.Examples.Client
             var options = new HazelcastOptionsBuilder()
                 .Bind("hazelcast:example", exampleOptions)
                 .With(args)
-                .WithConsoleLogger(LogLevel.Debug) // FIXME this default level should *NOT* prevent cmdline commands !!
+                .WithConsoleLogger()
                 /*
                 .With("Logging:LogLevel:Default", "None")
                 .With("Logging:LogLevel:System", "Information")
@@ -111,7 +114,7 @@ namespace Hazelcast.Examples.Client
             var worker = new Worker(client, client.Options.LoggerFactory);
 
             // end
-            logger.LogDebug("Begin.");
+            logger.LogInformation("Begin.");
 
             // run
             for (var i = 0; i < exampleOptions.RunCount; i++)
@@ -119,16 +122,16 @@ namespace Hazelcast.Examples.Client
                 // pause?
                 if (i > 0 && exampleOptions.PauseDuration > TimeSpan.Zero)
                 {
-                    logger.LogDebug("Wait...");
+                    logger.LogInformation("Wait...");
                     await Task.Delay(exampleOptions.PauseDuration).ConfigureAwait(false);
                 }
 
-                logger.LogDebug($"Run {i+1}...");
+                logger.LogInformation($"Run {i+1}...");
                 await worker.RunAsync().ConfigureAwait(false);
             }
 
             // end
-            logger.LogDebug("End.");
+            logger.LogInformation("End.");
         }
 
         public class ExampleOptions
@@ -175,7 +178,7 @@ namespace Hazelcast.Examples.Client
                 await _client.DestroyAsync(map).ConfigureAwait(false);
                 _logger.LogInformation("Destroyed the map.");
 
-                _logger.LogInformation("End run");
+                _logger.LogInformation("End run.");
             }
         }
     }

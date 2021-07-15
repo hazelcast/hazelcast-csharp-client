@@ -56,8 +56,7 @@ namespace Hazelcast.Tests.Remote
             return HazelcastOptions.Build(
                 builder =>
                 {
-                    builder.AddDefaults(null);
-                    builder.AddHazelcast(null);
+                    builder.AddHazelcastAndDefaults(null);
                     builder.AddInMemoryCollection(keyValues);
                     builder.AddUserSecrets(GetType().Assembly, true);
                 },

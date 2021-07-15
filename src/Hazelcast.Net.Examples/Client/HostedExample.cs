@@ -73,7 +73,7 @@ namespace Hazelcast.Examples.Client
             Host.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((hostingContext, builder) =>
                 {
-                    // add Hazelcast-specific configuration
+                    // inserts Hazelcast-specific configuration
                     // (default configuration has been added by the host)
                     builder.AddHazelcast(args);
 

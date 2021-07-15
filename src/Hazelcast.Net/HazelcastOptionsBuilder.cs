@@ -28,6 +28,7 @@ namespace Hazelcast
     {
         private string[] _args;
         private IDictionary<string, string> _switchMappings;
+        private Dictionary<string, string> _defaults;
         private Dictionary<string, string> _keyValues;
         private string _optionsFilePath;
         private string _optionsFileName;
@@ -46,6 +47,22 @@ namespace Hazelcast
         {
             _args = args ?? throw new ArgumentNullException(nameof(args));
             _switchMappings = switchMappings;
+            return this;
+        }
+
+        /// <summary>
+        /// Adds a default key/value pair to use when building the options.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithDefault(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+            // assuming value can be null or empty
+
+            _defaults ??= new Dictionary<string, string>();
+            _defaults[key] = value;
             return this;
         }
 
@@ -144,16 +161,27 @@ namespace Hazelcast
         }
 
         /// <summary>
+        /// Adds an <see cref="HazelcastOptions"/> configuration delegate.
+        /// </summary>
+        /// <param name="configure">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder With(Action<HazelcastOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            return With((_, o) => configure(o));
+        }
+
+        /// <summary>
         /// Adds an <see cref="IConfigurationBuilder"/> configuration delegate.
         /// </summary>
-        /// <param name="setup">The delegate.</param>
+        /// <param name="configure">The delegate.</param>
         /// <returns>This options builder.</returns>
-        public HazelcastOptionsBuilder With(Action<IConfigurationBuilder> setup)
+        public HazelcastOptionsBuilder ConfigureBuilder(Action<IConfigurationBuilder> configure)
         {
-            if (setup == null) throw new ArgumentNullException(nameof(setup));
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             _setups ??= new List<Action<IConfigurationBuilder>>();
-            _setups.Add(setup);
+            _setups.Add(configure);
             return this;
         }
 
@@ -176,8 +204,7 @@ namespace Hazelcast
 
         private void Setup(IConfigurationBuilder builder)
         {
-            builder.AddDefaults(_args, _switchMappings, _environmentName);
-            builder.AddHazelcast(_args, _switchMappings, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+            builder.AddHazelcastAndDefaults(_args, _switchMappings, _defaults, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
 
             if (_setups == null) return;
 
