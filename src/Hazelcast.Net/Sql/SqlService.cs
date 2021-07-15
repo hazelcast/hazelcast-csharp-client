@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -49,18 +50,23 @@ namespace Hazelcast.Sql
             );
         }
 
-        public Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        public Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             parameters ??= Array.Empty<object>();
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            return FetchUpdateCountAsync(queryId, sql, parameters, options);
+            return FetchUpdateCountAsync(queryId, sql, parameters, options, cancellationToken);
         }
 
         private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options, SqlResultType resultType)
+            string sql, object[] parameters, SqlStatementOptions options, SqlResultType resultType,
+            CancellationToken cancellationToken = default)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var connection = _cluster.Members.GetRandomConnection();
             if (connection == null)
             {
@@ -83,7 +89,7 @@ namespace Hazelcast.Sql
                 queryId
             );
 
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken);
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
             if (response.Error is { } sqlError)
@@ -120,9 +126,10 @@ namespace Hazelcast.Sql
         }
 
         private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options)
+            string sql, object[] parameters, SqlStatementOptions options,
+            CancellationToken cancellationToken)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken);
             if (result.RowMetadata != null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,

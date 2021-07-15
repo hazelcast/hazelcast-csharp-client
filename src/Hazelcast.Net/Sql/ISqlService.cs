@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Sql
@@ -19,6 +20,6 @@ namespace Hazelcast.Sql
     public interface ISqlService
     {
         Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null);
-        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null);
+        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default);
     }
 }
