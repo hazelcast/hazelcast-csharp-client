@@ -76,30 +76,7 @@ namespace Hazelcast.Examples.Client
                 .Bind("hazelcast:example", exampleOptions)
                 .With(args)
                 .WithConsoleLogger()
-                /*
-                .With("Logging:LogLevel:Default", "None")
-                .With("Logging:LogLevel:System", "Information")
-                .With("Logging:LogLevel:Microsoft", "Information")
-                .With("Logging:LogLevel:Hazelcast", "Debug")
-                .With((configuration, options) =>
-                {
-                    // configure logging factory and add the console provider
-                    options.LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
-                        loggingBuilder
-                            .AddConfiguration(configuration.GetSection("logging"))
-                            .AddHConsole());
-                })
-                */
                 .Build();
-
-            //using var _ = Core.HConsole.Capture(consoleOptions => consoleOptions
-            //    .ClearAll()
-            //    .Configure().SetLevel(1)
-            //    .Configure<Core.AsyncContext>().SetMinLevel()
-            //    .Configure("Hazelcast.Networking.SocketConnectionBase").SetIndent(1).SetLevel(0).SetPrefix("SOCKET")
-            //    .Configure("Hazelcast.Clustering.MemberConnection").SetLevel(1)
-            //    .Configure<ILogger>().SetPrefix("LOG")
-            //);
 
             // create a client
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options); // disposed when method exits

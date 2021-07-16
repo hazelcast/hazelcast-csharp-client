@@ -200,5 +200,50 @@ namespace Hazelcast.Core
             return f;
         }
 
+        /// <summary>
+        /// Filters a sequence of <see cref="KeyValuePair{TKey,TValue}"/> based on a predicate.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="predicate">A function to test each <see cref="KeyValuePair{TKey,TValue}"/> for a condition.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<KeyValuePair<TKey, TValue>> WherePair<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, bool> predicate)
+            => source.Where(pair => predicate(pair.Key, pair.Value));
+
+        /// <summary>
+        /// Filters a sequence of <see cref="KeyValuePair{TKey,TValue}"/> based on a predicate.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="predicate">A function to test each <see cref="KeyValuePair{TKey,TValue}"/> for a condition.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<KeyValuePair<TKey, TValue>> WherePair<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, int, bool> predicate)
+            => source.Where((pair, index) => predicate(pair.Key, pair.Value, index));
+
+        /// <summary>
+        /// Project each element of a sequence of <see cref="KeyValuePair{TKey,TValue}"/> into a new form.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <typeparam name="TResult">The type of the projected elements.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="selector">A transform function to apply to each <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> whose elements are the result of the transform function on each element of the source.</returns>
+        public static IEnumerable<TResult> SelectPair<TKey, TValue, TResult>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, TResult> selector)
+            => source.Select(pair => selector(pair.Key, pair.Value));
+
+        /// <summary>
+        /// Project each element of a sequence of <see cref="KeyValuePair{TKey,TValue}"/> into a new form.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <typeparam name="TResult">The type of the projected elements.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="selector">A transform function to apply to each <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> whose elements are the result of the transform function on each element of the source.</returns>
+        public static IEnumerable<TResult> SelectPair<TKey, TValue, TResult>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, int, TResult> selector)
+            => source.Select((pair, index) => selector(pair.Key, pair.Value, index));
     }
 }

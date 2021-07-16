@@ -19,5 +19,7 @@ namespace Hazelcast.Core
     internal static class LoggingExtensions
     {
         public static bool IsDebugEnabled(this ILogger logger) => logger.IsEnabled(LogLevel.Debug);
+
+        public static bool IsWarningEnabled(this ILogger logger) => logger.IsEnabled(LogLevel.Warning);
     }
 }
