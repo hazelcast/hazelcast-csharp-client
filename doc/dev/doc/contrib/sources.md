@@ -8,7 +8,11 @@ git clone --recurse-submodules https://github.com/hazelcast/hazelcast-csharp-cli
 
 Note that the repository relies on Git [submodules](https://git-scm.com/book/en/v2/Git-Tools-Submodules), and therefore the `--recurse-submodules` is required.
 
+## Branches
+
 Development of new features takes place in the `master` branch. Maintenance of released versions take place in `X.Y.z` branches, e.g. version `4.1` is maintained in the `4.1.z` branch. 
+
+## Tools
 
 The code uses C# [version](https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/configure-language-version) 8.0 (as per the `src/Directory.Build.props` file) though we plan to migrate to 9.0. The `Hazelcast.Net` package targets netstandard 2.0 and 2.1, and is supported on .NET Framework 4.6.2 and later, .NET Core 2.1 (LTS), .NET Core 3.1 (LTS).
 
