@@ -1172,6 +1172,10 @@ function hz-build-docs-on-windows {
               -replace "<li><!--DEVDOC_API--></li>", $devdoc_api
             set-content -path $_ -value $text
         }
+        
+    $text = get-content "$tmpDir/docfx.out/404.html"
+    $text = $text -replace "<head>", "<head>`n    <base href=`"/hazelcast-csharp-client/`">"
+    set-content -path "$tmpDir/docfx.out/404.html" -value $text
 }
 
 # builds the documentation
