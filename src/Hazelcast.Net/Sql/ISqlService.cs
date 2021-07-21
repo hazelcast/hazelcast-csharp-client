@@ -19,7 +19,47 @@ namespace Hazelcast.Sql
 {
     public interface ISqlService
     {
-        Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null);
-        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default);
+        /// <summary>
+        /// Executes SQL query (SELECT ...).
+        /// </summary>
+        /// <param name="sql">SQL query to execute.</param>
+        /// <param name="parameters">
+        /// <para>Ordered list of parameters to be substituted in the query.</para>
+        /// <para>
+        /// Parameter placeholder can be specified via "?".
+        /// Each occurrence of "?" will use next parameter in the list.
+        /// </para>
+        /// </param>
+        /// <param name="options">
+        /// <see cref="SqlStatementOptions"/> to use with the query.
+        /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
+        /// </param>
+        /// <returns>
+        /// <see cref="ISqlQueryResult"/> representing set of rows returned from this query.
+        /// </returns>
+        Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null,
+            SqlStatementOptions options = null
+        );
+
+        /// <summary>
+        /// Executes SQL command (CREATE/UPDATE/DELETE ...).
+        /// </summary>
+        /// <param name="sql">SQL command to execute.</param>
+        /// <param name="parameters">
+        /// <para>Ordered list of parameters to be substituted in the query.</para>
+        /// <para>
+        /// Parameter placeholder can be specified via "?".
+        /// Each occurrence of "?" will use next parameter in the list.
+        /// </para>
+        /// </param>
+        /// <param name="options">
+        /// <see cref="SqlStatementOptions"/> to use with the query.
+        /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
+        /// </param>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/> that can be used to cancel executing query.</param>
+        /// <returns>Number of rows affected by the statement.</returns>
+        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null,
+            SqlStatementOptions options = null, CancellationToken cancellationToken = default
+        );
     }
 }
