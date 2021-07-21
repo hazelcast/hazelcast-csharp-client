@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Numerics;
@@ -32,30 +33,22 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             var bytes = iterator.Take().Bytes;
             var contentSize = bytes.ReadIntL(0);
-            var body = bytes.Slice(BytesExtensions.SizeOfInt, BytesExtensions.SizeOfInt + contentSize);
+            var body = new ReadOnlySpan<byte>(bytes, BytesExtensions.SizeOfInt, contentSize);
 
-            // FIXME [Oleksii] check and cleanup redundant code
-            var isNegative = (body[0] & 0x80) > 0;
-            //if (isNegative)
-            //{
-            //    for (var i = 0; i < body.Length; i++)
-            //        body[i] = (byte)~body[i];
-            //}
+#if NETSTANDARD2_0
+            var bodyLE = body.ToArray();
+            Array.Reverse(bodyLE);
+            var unscaled = new BigInteger(bodyLE);
+#else
+            var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
+#endif
 
-            var unscaled = new BigInteger(body);
-            //if (isNegative)
-            //{
-            //    unscaled += 1;
-            //}
-
-            var scale = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize);
-
-            var unscaledString = unscaled.ToString("N", NoSignFormat) ?? "0";
-            var unsignedString = scale switch
+            var unscaledString = unscaled.ToString("G", NoSignFormat) ?? "0";
+            var unsignedString = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize) switch
             {
-                var x when x < 0 => $"{unscaledString}{new string('0', -scale)}",
-                var x when x > 0 && x < unscaledString.Length => $"{unscaledString[..^scale]}.{unscaledString[^scale..]}",
-                var x when x >= unscaledString.Length => $"0.{new string('0', scale - unscaledString.Length)}{unscaledString}",
+                var scale when scale < 0 => $"{unscaledString}{new string('0', -scale)}",
+                var scale when scale > 0 && scale < unscaledString.Length => $"{unscaledString[..^scale]}.{unscaledString[^scale..]}",
+                var scale when scale >= unscaledString.Length => $"0.{new string('0', scale - unscaledString.Length)}{unscaledString}",
                 _ => unscaledString
             };
 
