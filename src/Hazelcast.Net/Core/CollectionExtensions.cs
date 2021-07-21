@@ -37,23 +37,6 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Creates a new array and copies all data from <paramref name="array"/> starting from <paramref name="startIncl"/> and up to <paramref name="endExcl"/> indices.
-        /// </summary>
-        /// <remarks>
-        /// Similar to Array.prototype.slice method in JavaScript.
-        /// </remarks>
-        public static T[] Slice<T>(this T[] array, long startIncl, long endExcl)
-        {
-            var res = new T[endExcl - startIncl];
-            Array.Copy(
-                sourceArray: array, sourceIndex: startIncl,
-                destinationArray: res, destinationIndex: 0, length: res.Length
-            );
-
-            return res;
-        }
-
-        /// <summary>
         /// Returns read-only wrapper for <paramref name="list"/>
         /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/>.
         /// </summary>

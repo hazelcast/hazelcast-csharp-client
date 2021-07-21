@@ -32,8 +32,6 @@ namespace Hazelcast.Tests.Sql
         [TestCase(6, 3)]
         public async Task ExecuteQueryMap(int total, int pageSize)
         {
-            Debug.Assert(pageSize <= MapValues.Count);
-
             var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} ORDER BY __key LIMIT {total}",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
