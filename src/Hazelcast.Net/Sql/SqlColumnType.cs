@@ -29,6 +29,7 @@ namespace Hazelcast.Sql
         /// </summary>
         Boolean = 1,
 
+        // FIXME [Oleksii] discuss sign preservation
         /// <summary>
         /// <c>TINYINT</c> type, represented by <c>java.lang.Byte</c> in Java and by <see cref="byte"/> in .NET.
         /// </summary>
@@ -64,6 +65,7 @@ namespace Hazelcast.Sql
         /// </summary>
         Double = 8,
 
+        // FIXME [Oleksii] discuss year range in HZ SQL and Java
         /// <summary>
         /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="string"/> in .NET.
         /// </summary>
