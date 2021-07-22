@@ -38,6 +38,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 columnTypes[i] = (SqlColumnType)columnTypeId;
                 columns[i] = columnTypes[i] switch
                 {
+                    // TODO [Oleksii] avoid boxing via generic column types
                     SqlColumnType.Varchar => ListMultiFrameCodec.DecodeContainsNullable(iterator, StringCodec.Decode),
                     SqlColumnType.Boolean => ListCNBoolCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.TinyInt => ListCNByteCodec.Decode(iterator).AsReadOnlyObjectList(),
@@ -47,10 +48,10 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                     SqlColumnType.Real => ListCNFloatCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Double => ListCNDoubleCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Decimal => ListMultiFrameCodec.Decode(iterator, BigDecimalCodec.DecodeNullable),
-                    SqlColumnType.Date => ListCNLocalDateCodec.Decode(iterator).AsReadOnly(),
-                    SqlColumnType.Time => ListCNLocalTimeCodec.Decode(iterator).AsReadOnly(),
-                    SqlColumnType.Timestamp => ListCNLocalDateTimeCodec.Decode(iterator).AsReadOnly(),
-                    SqlColumnType.TimestampWithTimeZone => ListCNOffsetDateTimeCodec.Decode(iterator).AsReadOnly(),
+                    SqlColumnType.Date => ListCNLocalDateCodec.Decode(iterator).AsReadOnlyObjectList(),
+                    SqlColumnType.Time => ListCNLocalTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
+                    SqlColumnType.Timestamp => ListCNLocalDateTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
+                    SqlColumnType.TimestampWithTimeZone => ListCNOffsetDateTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Object => ListMultiFrameCodec.Decode(iterator, DataCodec.DecodeNullable),
                     SqlColumnType.Null => new object[iterator.Take().Bytes.ReadIntL(0)],
                     _ => throw new NotSupportedException($"Column type #{columnTypeId} is not supported.")

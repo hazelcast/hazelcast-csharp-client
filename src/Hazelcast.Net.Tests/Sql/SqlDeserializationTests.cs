@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
@@ -198,22 +197,18 @@ namespace Hazelcast.Tests.Sql
         )]
         public async Task Date(params string[] expectedValues)
         {
-            await using var map = await CreateNewMap<object>();
+            await using var map = await CreateNewMap<HLocalDate>();
 
-            var expectedDates = expectedValues.Select(s =>
-            {
-                var parts = new Regex(@"\b-\b").Split(s);
-                return (year: parts[0], month: parts[1], day: parts[2]);
-            });
+            var expectedDates = expectedValues.Select(HLocalDate.Parse).ToList();
 
             var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
                 string.Join(";", expectedDates.Select((val, index) =>
-                    $"map.set(new java.lang.Integer({index}), java.time.LocalDate.of({val.year},{val.month},{val.day}))"
+                    $"map.set(new java.lang.Integer({index}), java.time.LocalDate.of({val.Year},{val.Month},{val.Day}))"
                 )) + ";";
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedValues);
+            await AssertSqlResultMatch(map.Name, expectedDates);
         }
 
         [Test]
@@ -228,20 +223,71 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateNewMap<object>();
 
-            var expectedDates = expectedValues.Select(s =>
-            {
-                var parts = new Regex(@":|\.").Split(s);
-                return (hour: parts[0], minute: parts[1], second: parts[2], ms: parts.GetOrDefault(3) ?? "0");
-            });
+            var expectedTimes = expectedValues.Select(HLocalTime.Parse).ToList();
 
             var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
-                string.Join(";", expectedDates.Select((val, index) =>
-                    $"map.set(new java.lang.Integer({index}), java.time.LocalTime.of({val.hour},{val.minute},{val.second},{val.ms}))"
+                string.Join(";", expectedTimes.Select((val, index) =>
+                    $"map.set(new java.lang.Integer({index}), java.time.LocalTime.of({val.Hour},{val.Minute},{val.Second},{val.Nanosecond}))"
                 )) + ";";
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedValues);
+            await AssertSqlResultMatch(map.Name, expectedTimes);
+        }
+
+        [Test]
+        [TestCase(
+            "0000-01-01T00:00:00",
+            "-32768-01-01T12:00:00",
+            "1970-01-01T13:12:11.123456000",
+            "2021-07-15T01:02:03.000456789",
+            "32767-12-31T23:59:59.999999999"
+        )]
+        public async Task Timestamp(params string[] expectedValues)
+        {
+            await using var map = await CreateNewMap<HLocalDateTime>();
+
+            var expectedTimestamps = expectedValues.Select(HLocalDateTime.Parse).ToList();
+
+            var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
+                string.Join(";", expectedTimestamps.Select((val, index) =>
+                    $"map.set(new java.lang.Integer({index}), java.time.LocalDateTime.of({val.Year},{val.Month},{val.Day},{val.Hour},{val.Minute},{val.Second},{val.Nanosecond}))"
+                )) + ";";
+
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
+
+            await AssertSqlResultMatch(map.Name, expectedTimestamps);
+        }
+
+        [Test]
+        [TestCase(
+            "0000-01-01T00:00:00Z",
+            "-32768-01-01T12:00:00+01:02",
+            "1970-01-01T13:12:11.123456000-02:01",
+            "2021-07-15T01:02:03.000456789+12:34",
+            "32767-12-31T23:59:59.999999999-18:00"
+        )]
+        public async Task TimestampWithTimeZone(params string[] expectedValues)
+        {
+            await using var map = await CreateNewMap<HOffsetDateTime>();
+
+            var expectedTimestamps = expectedValues.Select(HOffsetDateTime.Parse).ToList();
+
+            var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
+                string.Join(";", expectedTimestamps.Select((val, index) =>
+                {
+                    var local = val.LocalDateTime;
+                    return "map.set(" +
+                        $"new java.lang.Integer({index}), " +
+                        "java.time.OffsetDateTime.of(" +
+                        $"{local.Year},{local.Month},{local.Day},{local.Hour},{local.Minute},{local.Second},{local.Nanosecond}," +
+                        $"java.time.ZoneOffset.ofTotalSeconds({val.Offset.TotalSeconds})" +
+                        "))";
+                })) + ";";
+
+            await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
+
+            await AssertSqlResultMatch(map.Name, expectedTimestamps);
         }
 
         [Test]

@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Core
 {
@@ -129,47 +130,37 @@ namespace Hazelcast.Core
             }
         }
 
-        public static string ReadLocalDate(this byte[] bytes, int position)
+        public static HLocalDate ReadLocalDate(this byte[] bytes, int position)
         {
             var year = bytes.ReadShortL(position);
             var month = bytes.ReadByte(position + SizeOfShort);
             var date = bytes.ReadByte(position + SizeOfShort + SizeOfByte);
 
-            return $"{year:D4}-{month:D2}-{date:D2}";
+            return new HLocalDate(year, month, date);
         }
 
-        public static string ReadLocalTime(this byte[] bytes, int position)
+        public static HLocalTime ReadLocalTime(this byte[] bytes, int position)
         {
             var hour = bytes.ReadByte(position);
             var minute = bytes.ReadByte(position + SizeOfByte);
             var second = bytes.ReadByte(position + SizeOfByte * 2);
             var nano = bytes.ReadIntL(position + SizeOfByte * 3);
 
-            return nano == 0
-                ? $"{hour:D2}:{minute:D2}:{second:D2}"
-                : $"{hour:D2}:{minute:D2}:{second:D2}.{nano:D9}";
+            return new HLocalTime(hour, minute, second, nano);
         }
 
-        public static string ReadLocalDateTime(this byte[] bytes, int position)
+        public static HLocalDateTime ReadLocalDateTime(this byte[] bytes, int position)
         {
             var date = ReadLocalDate(bytes, position);
             var time = ReadLocalTime(bytes, position + SizeOfLocalDate);
-            return $"{date}T{time}";
+            return new HLocalDateTime(date, time);
         }
 
-        public static string ReadOffsetDateTime(this byte[] bytes, int position)
+        public static HOffsetDateTime ReadOffsetDateTime(this byte[] bytes, int position)
         {
             var localDateTime = ReadLocalDateTime(bytes, position);
             var offsetSeconds = ReadIntL(bytes, position + SizeOfLocalDateTime);
-
-            var offsetMinutes = Math.Abs(offsetSeconds / 60);
-            if (offsetMinutes == 0)
-                return localDateTime + 'Z';
-
-            var offsetModifier = offsetSeconds < 0 ? '-' : '+';
-            var offsetHours = offsetMinutes / 60;
-            offsetMinutes %= 60;
-            return $"{localDateTime}{offsetModifier}{offsetHours:D2}:{offsetMinutes:D2}";
+            return new HOffsetDateTime(localDateTime, TimeSpan.FromSeconds(offsetSeconds));
         }
 
         /// <summary>

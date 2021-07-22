@@ -15,12 +15,13 @@
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class ListCNLocalDateTimeCodec
     {
-        public static IList<string> Decode(IEnumerator<Frame> iterator)
+        public static IList<HLocalDateTime> Decode(IEnumerator<Frame> iterator)
         {
             return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfLocalDateTime, BytesExtensions.ReadLocalDateTime);
         }

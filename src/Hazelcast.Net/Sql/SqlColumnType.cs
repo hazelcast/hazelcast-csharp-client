@@ -67,22 +67,22 @@ namespace Hazelcast.Sql
 
         // FIXME [Oleksii] discuss year range in HZ SQL and Java
         /// <summary>
-        /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="string"/> in .NET.
+        /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="HLocalDate"/> in .NET.
         /// </summary>
         Date = 9,
 
         /// <summary>
-        /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="string"/> in .NET.
+        /// <c>TIME</c> type, represented by <c>java.lang.LocalTime</c> in Java and by <see cref="HLocalTime"/> in .NET.
         /// </summary>
         Time = 10,
 
         /// <summary>
-        /// <c>TIMESTAMP</c> type, represented by <c>java.lang.LocalDateTime</c> in Java and by <see cref="string"/> in .NET.
+        /// <c>TIMESTAMP</c> type, represented by <c>java.lang.LocalDateTime</c> in Java and by <see cref="HLocalDateTime"/> in .NET.
         /// </summary>
         Timestamp = 11,
 
         /// <summary>
-        /// <c>TIMESTAMP_WITH_TIME_ZONE</c> type, represented by <c>java.lang.OffsetDateTime</c> in Java and by <see cref="string"/> in .NET.
+        /// <c>TIMESTAMP_WITH_TIME_ZONE</c> type, represented by <c>java.lang.OffsetDateTime</c> in Java and by <see cref="HOffsetDateTime"/> in .NET.
         /// </summary>
         TimestampWithTimeZone = 12,
 
