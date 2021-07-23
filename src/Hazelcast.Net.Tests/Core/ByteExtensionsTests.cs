@@ -17,6 +17,7 @@ using System.Buffers;
 using System.Linq;
 using System.Text;
 using Hazelcast.Core;
+using Hazelcast.Sql;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -422,7 +423,7 @@ namespace Hazelcast.Tests.Core
         [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F}, 1, "1001-12-31")]
         public void ReadLocalDate(byte[] bytes, int position, string expected)
         {
-            Assert.AreEqual(expected, bytes.ReadLocalDate(position));
+            Assert.AreEqual(HLocalDate.Parse(expected), bytes.ReadLocalDate(position));
         }
 
         [Test]
@@ -430,7 +431,7 @@ namespace Hazelcast.Tests.Core
         [TestCase(new byte[]{0xFF, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "21:59:56.012345678")]
         public void ReadLocalTime(byte[] bytes, int position, string expected)
         {
-            Assert.AreEqual(expected, bytes.ReadLocalTime(position));
+            Assert.AreEqual(HLocalTime.Parse(expected), bytes.ReadLocalTime(position));
         }
 
         [Test]
@@ -438,7 +439,7 @@ namespace Hazelcast.Tests.Core
         [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "1001-12-31T21:59:56.012345678")]
         public void ReadLocalDateTime(byte[] bytes, int position, string expected)
         {
-            Assert.AreEqual(expected, bytes.ReadLocalDateTime(position));
+            Assert.AreEqual(HLocalDateTime.Parse(expected), bytes.ReadLocalDateTime(position));
         }
 
         [Test]
@@ -446,7 +447,7 @@ namespace Hazelcast.Tests.Core
         [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00}, 1, "1001-12-31T21:59:56.012345678Z")]
         public void ReadOffsetDateTime(byte[] bytes, int position, string expected)
         {
-            Assert.AreEqual(expected, bytes.ReadOffsetDateTime(position));
+            Assert.AreEqual(HOffsetDateTime.Parse(expected), bytes.ReadOffsetDateTime(position));
         }
 
         [Test]
