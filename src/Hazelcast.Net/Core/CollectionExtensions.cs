@@ -43,8 +43,8 @@ namespace Hazelcast.Core
         public static IReadOnlyList<T> AsReadOnly<T>(this IList<T> list) => list as IReadOnlyList<T> ?? new ReadOnlyCollection<T>(list);
 
         /// <summary>
-        /// Returns read-only wrapper for <paramref name="list"/> where each element is returned as <see cref="object"/> with boxing performed if needed
-        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/> (T is <see cref="object"/>).
+        /// Returns read-only wrapper for <paramref name="list"/> where each element is returned as <see cref="object"/> with boxing performed as needed
+        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/> with <c>T</c> being <see cref="object"/>.
         /// </summary>
         public static IReadOnlyList<object> AsReadOnlyObjectList<T>(this IList<T> list) => list as IReadOnlyList<object> ?? new ReadOnlyObjectList<T>(list);
     }

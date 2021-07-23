@@ -120,7 +120,7 @@ namespace Hazelcast.Core
 
         /// <summary>
         /// Enumerates <paramref name="source"/> to a new <see cref="List{T}"/> starting from <paramref name="initialCapacity"/> size.
-        /// This allows to avoid or minimize list resizing if number of elements if known fully or approximately.
+        /// This allows to avoid or minimize list resizing if number of elements is known fully or approximately.
         /// </summary>
         public static List<T> ToList<T>(this IEnumerable<T> source, int initialCapacity)
         {
