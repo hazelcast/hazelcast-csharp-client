@@ -31,6 +31,9 @@ namespace Hazelcast.Core
         public static void WriteIntL(this byte[] bytes, int position, Enum value)
             => bytes.WriteInt(position, (int) (object) value, Endianness.LittleEndian);
 
+        public static void WriteShortL(this byte[] bytes, int position, short value)
+            => bytes.WriteShort(position, value, Endianness.LittleEndian);
+
         public static void WriteBoolL(this byte[] bytes, int position, bool value)
             => bytes.WriteBool(position, value);
 

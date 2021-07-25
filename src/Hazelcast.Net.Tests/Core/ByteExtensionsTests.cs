@@ -419,35 +419,99 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B}, 1, "2021-07-11")]
-        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F}, 1, "1001-12-31")]
+        [TestCase(new byte[] { 0x00, 0xE5, 0x07, 0x07, 0x0B }, 1, "2021-07-11")]
+        [TestCase(new byte[] { 0xFF, 0xE9, 0x03, 0x0C, 0x1F }, 1, "1001-12-31")]
         public void ReadLocalDate(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(HLocalDate.Parse(expected), bytes.ReadLocalDate(position));
         }
 
         [Test]
-        [TestCase(new byte[]{0x00, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "12:17:16")]
-        [TestCase(new byte[]{0xFF, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "21:59:56.012345678")]
+        [TestCase("2021-07-11", new byte[] { 0xE5, 0x07, 0x07, 0x0B }, 1)]
+        [TestCase("1001-12-31", new byte[] { 0xE9, 0x03, 0x0C, 0x1F }, 1)]
+        public void WriteLocalDate(string localDateStr, byte[] expected, int position)
+        {
+            var (localDate, bytes) = (HLocalDate.Parse(localDateStr), new byte[position + BytesExtensions.SizeOfLocalDate]);
+            bytes.WriteLocalDate(position, localDate);
+            CollectionAssert.AreEqual(expected, bytes.Skip(position));
+        }
+
+        [Test]
+        [TestCase(new byte[] { 0x00, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00 }, 1, "12:17:16")]
+        [TestCase(new byte[] { 0xFF, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00 }, 1, "21:59:56.012345678")]
         public void ReadLocalTime(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(HLocalTime.Parse(expected), bytes.ReadLocalTime(position));
         }
 
         [Test]
-        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00}, 1, "2021-07-11T12:17:16")]
-        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00}, 1, "1001-12-31T21:59:56.012345678")]
+        [TestCase("12:17:16", new byte[] { 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00 }, 1)]
+        [TestCase("21:59:56.012345678", new byte[] { 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00 }, 1)]
+        public void WriteLocalTime(string localTimeStr, byte[] expected, int position)
+        {
+            var (localTime, bytes) = (HLocalTime.Parse(localTimeStr), new byte[position + BytesExtensions.SizeOfLocalTime]);
+            bytes.WriteLocalTime(position, localTime);
+            CollectionAssert.AreEqual(expected, bytes.Skip(position));
+        }
+
+        [Test]
+        [TestCase(
+            new byte[] { 0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00 },
+            1, "2021-07-11T12:17:16"
+        )]
+        [TestCase(
+            new byte[] { 0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00 },
+            1, "1001-12-31T21:59:56.012345678"
+        )]
         public void ReadLocalDateTime(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(HLocalDateTime.Parse(expected), bytes.ReadLocalDateTime(position));
         }
 
         [Test]
-        [TestCase(new byte[]{0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2A, 0x00, 0x00}, 1, "2021-07-11T12:17:16+03:00")]
-        [TestCase(new byte[]{0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00}, 1, "1001-12-31T21:59:56.012345678Z")]
+        [TestCase(
+            "2021-07-11T12:17:16",
+            new byte[] { 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00 }, 1
+        )]
+        [TestCase(
+            "1001-12-31T21:59:56.012345678",
+            new byte[] { 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00 }, 1
+        )]
+        public void WriteLocalDateTime(string localDateTimeStr, byte[] expected, int position)
+        {
+            var (localDateTime, bytes) = (HLocalDateTime.Parse(localDateTimeStr), new byte[position + BytesExtensions.SizeOfLocalDateTime]);
+            bytes.WriteLocalDateTime(position, localDateTime);
+            CollectionAssert.AreEqual(expected, bytes.Skip(position));
+        }
+
+        [Test]
+        [TestCase(
+            new byte[] { 0x00, 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2A, 0x00, 0x00 },
+            1, "2021-07-11T12:17:16+03:00"
+        )]
+        [TestCase(
+            new byte[] { 0xFF, 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00 },
+            1, "1001-12-31T21:59:56.012345678Z"
+        )]
         public void ReadOffsetDateTime(byte[] bytes, int position, string expected)
         {
             Assert.AreEqual(HOffsetDateTime.Parse(expected), bytes.ReadOffsetDateTime(position));
+        }
+
+        [Test]
+        [TestCase(
+            "2021-07-11T12:17:16+03:00",
+            new byte[] { 0xE5, 0x07, 0x07, 0x0B, 0x0C, 0x11, 0x10, 0x00, 0x00, 0x00, 0x00, 0x30, 0x2A, 0x00, 0x00 }, 1
+        )]
+        [TestCase(
+            "1001-12-31T21:59:56.012345678Z",
+            new byte[] { 0xE9, 0x03, 0x0C, 0x1F, 0x15, 0x3B, 0x38, 0x4E, 0x61, 0xBC, 0x00, 0x00, 0x00, 0x00, 0x00 }, 1
+        )]
+        public void WriteOffsetDateTime(string offsetDateTimeStr, byte[] expected, int position)
+        {
+            var (offsetDateTime, bytes) = (HOffsetDateTime.Parse(offsetDateTimeStr), new byte[position + BytesExtensions.SizeOfOffsetDateTime]);
+            bytes.WriteOffsetDateTime(position, offsetDateTime);
+            CollectionAssert.AreEqual(expected, bytes.Skip(position));
         }
 
         [Test]
