@@ -21,31 +21,32 @@ namespace Hazelcast.Examples
     {
         // run this example with
         // ./hz.ps1 run-example Logging 
-        // ./hz.ps1 run-example Logging --% --Logging:LogLevel:Hazelcast.Examples.LoggingExample.A=Debug
+        // ./hz.ps1 run-example Logging --- --Logging:LogLevel:Hazelcast.Examples.LoggingExample.A=Debug
+        //
+        // note that options set with the With(...) method of the HazelcastOptionsBuilder take precedence
+        // over everything, including command-line and environment variable options.
 
         public static void Main(string[] args)
         {
             var options = new HazelcastOptionsBuilder()
                 .With(args)
                 .WithConsoleLogger()
-                .With("Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Information")
+                .With("Logging:LogLevel:Hazelcast.Examples.LoggingExample.B", "Warning")
                 .Build();
 
             var loggerFactory = options.LoggerFactory.Service;
 
             var loggerA = loggerFactory.CreateLogger<A>();
 
-            // default level is None - nothing shows
-            loggerA.LogDebug("debug.a");
-            loggerA.LogInformation("info.a");
-            loggerA.LogWarning("warning.a");
+            loggerA.LogDebug("This is a DEBUG message from Hazelcast.Examples.LoggingExamples.A");
+            loggerA.LogInformation("This is an INFO message from Hazelcast.Examples.LoggingExamples.A");
+            loggerA.LogWarning("This is a WARNING message from Hazelcast.Examples.LoggingExamples.A");
 
             var loggerB = loggerFactory.CreateLogger<B>();
 
-            // level is info - first line is skipped
-            loggerB.LogDebug("debug.b");
-            loggerB.LogInformation("info.b");
-            loggerB.LogWarning("warning.b");
+            loggerB.LogDebug("This is a DEBUG message from Hazelcast.Examples.LoggingExamples.B");
+            loggerB.LogInformation("This is an INFO message from Hazelcast.Examples.LoggingExamples.B");
+            loggerB.LogWarning("This is a WARNING message from Hazelcast.Examples.LoggingExamples.B");
 
             // flush logs!
             loggerFactory.Dispose();

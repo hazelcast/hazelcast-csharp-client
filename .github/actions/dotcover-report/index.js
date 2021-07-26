@@ -12,6 +12,7 @@ async function run() {
     const token = core.getInput('token', { required: true });
     const name = core.getInput('name', { required: true });
     const path = core.getInput('path', { required: true });
+    const sha = core.getInput('sha', { required: true });
     const version = core.getInput('version', { required: false });
     
     // get the REST api
@@ -24,6 +25,7 @@ async function run() {
     const repository = context.payload.repository;
     
     // get the ref 
+    // TODO: ref vs sha ?!
     const ref = getSha(context);
     if (!ref) {
       core.error(`Context: ${JSON.stringify(context, null, 2)}`);
@@ -63,6 +65,9 @@ async function run() {
 
         summary += '\n\nThe detailed code coverage report has been uploaded as an artifact.';
 
+        // build-branch and report-pr pass 'sha', version remains ''
+        // build-release passes 'sha' and 'version'
+
         if (version !== '') {
             var coverVersion = version;
             if (version.indexOf('-') > 0) { coverVersion = 'dev'; }
@@ -72,7 +77,7 @@ async function run() {
         }
 
         if (sha !== '') {
-            var covUrl = `http://hazelcast.github.io/hazelcast-csharp-client/${coverVersion}/cover/index.html`;
+            var covUrl = `https://codecov.io/gh/hazelcast/hazelcast-csharp-client/commit/${sha}/`;
             summary += `\n\nThe report for this commit has been published on [codecov](${covUrl}).`;
         }
     }

@@ -6,41 +6,27 @@ Building the complete Hazelcast.Net solution builds the example project.
 
 ## Running Examples
 
-Examples can then be executed with:
+Examples can then be executed through the `hz.[sh|ps1]` script:
 
+```powershell
+PS> ./hz.ps1 run-example Client.SimpleExample
 ```
-cd src/Hazelcast.Net/Examples/bin/<configuration>/<target>
-./hx.exe <name>
+
+By default, this runs the `netcoreapp3.1` Release version of the example. The `hz.[sh|ps1]` script provides options (see the [Building](contrib-build.md) page for details) that can be used to change these. For instance, the following command runs the `net462` Debug version of the example:
+
+```powershell
+PS> ./hz.ps1 run-example -c Debug -f net462 Client.SimpleExample
 ```
 
-Where:
-
-* `<configuration>` is the configuration that was built, either `Debug` or `Release`.
-* `<target>` is the target .NET, either `net462` for .NET Framework 4.6.2, or `netcoreapp2.1` or `netcoreapp3.1` for the corresponding .NET Core versions.
-* `<name>` is the short name of the example class. If the full class name is `Hazelcast.Examples.Namespace.SomeExample` then the short name is `Namespace.SomeExample`. Note that the `Example` suffix can be ommited.
-
-For instance, this runs the .NET Framework 4.6.2, Release build, client SimpleExample:
-
-```
-cd src/Hazelcast.Net/Examples/bin/Release/net462
-./hx.exe Client.Simple
-```
+The example name (here, `Client.SimpleExample`) is the short name of the class: if the full class name is `Hazelcast.Examples.Namespace.SomeExample` then the short name is `Namespace.SomeExample`. The `Example` suffix can be ommited, so `Client.Simple` would work too. And, it is possible to use a tilde character to run examples with name matching the argument. For instance `~Client` would run all examples with a short name containing `Client`.
 
 Additional arguments are passed to the example as command-line arguments, and therefore can be used to configure Hazelcast. For instance, if the server runs on `192.168.42.42:5757`, the example above can be launched with:
 
-```
-./hx.exe Client.SimpleExample --hazelcast.networking.addresses.0=192.168.42.42:5757
+```powershell
+PS> ./hz.ps1 run-example Client.SimpleExample --- --hazelcast.networking.addresses.0=192.168.42.42:5757
 ```
 
-## Advanced Running
-
-The example launcher (`hx.exe`) can identify the example to run via a regular expression. The expression is provided by prefixing the `<name>` argument with a `~` character, and then the launcher runs every example whose type `FullName` property matches the expression.
-
-For instance, this runs every example with a name containing "CustomSerializer".
-
-```
-./hx.exe "~CustomSerializer" 
-```
+Note: the `---` separator tells the `hz.[sh|ps]` script that the trailing arguments are not arguments for the script, but for the example.
 
 ## Reusing Examples
 

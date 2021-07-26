@@ -473,10 +473,14 @@ jobs:
           git config user.name "GitHub Actions (Build Release)"
 
       # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
+      # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different 
+      # repository that is private you will need to provide your own PAT."
       - name: Checkout devops
         uses: actions/checkout@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: hazelcast/DevOps
+          ref: master
+          token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
           path: ./build/devops
 
       # prepare for artifacts
