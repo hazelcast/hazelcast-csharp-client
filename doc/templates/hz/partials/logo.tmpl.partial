@@ -1,6 +1,5 @@
 {{!Copyright (c) Microsoft. All rights reserved. Licensed under the MIT license. See LICENSE file in the project root for full license information.}}
 
 <a class="navbar-brand" href="{{_rel}}index.html">
-  <img id="logo" src="{{_rel}}images/hazelcast-logo.png" alt="{{_appName}}" />
-  <span>Hazelcast .NET</span>
+  <img id="logo" src="{{_rel}}images/hazelcast-logo.svg" alt="{{_appName}}" />
 </a>
