@@ -27,13 +27,16 @@ namespace Hazelcast.Sql
             RegexOptions.Compiled | RegexOptions.ExplicitCapture
         );
 
-        public static readonly HLocalDate Max = new HLocalDate(short.MaxValue, 12, 31);
-        public static readonly HLocalDate Min = new HLocalDate(short.MinValue, 1, 1);
+        public const int MaxYear = 999_999_999;
+        public const int MinYear = -999_999_999;
+
+        public static readonly HLocalDate Max = new HLocalDate(MinYear, 12, 31);
+        public static readonly HLocalDate Min = new HLocalDate(MaxYear, 1, 1);
 
         /// <summary>
-        /// Year value. Ranges between -32768 (<see cref="short.MinValue"/>) and 32767 (<see cref="short.MaxValue"/>) inclusive.
+        /// Year value. Ranges between <see cref="MinYear"/> and <see cref="MaxYear"/> inclusive.
         /// </summary>
-        public short Year { get; }
+        public int Year { get; }
 
         /// <summary>
         /// Month value. Ranges between 1 and 12 inclusive.
@@ -45,8 +48,10 @@ namespace Hazelcast.Sql
         /// </summary>
         public byte Day { get; }
 
-        public HLocalDate(short year, byte month, byte day)
+        public HLocalDate(int year, byte month, byte day)
         {
+            if (year < MinYear || year > MaxYear)
+                throw new ArgumentOutOfRangeException(nameof(year), $@"Year must be between {MinYear} and {MaxYear}.");
             if (month < 1 || month > 12)
                 throw new ArgumentOutOfRangeException(nameof(month), @"Month must be between 1 and 12.");
             if (day < 1 || day > 31 || day > DateTime.DaysInMonth(year % 4 + 4, month))
@@ -59,7 +64,7 @@ namespace Hazelcast.Sql
 
         public HLocalDate(DateTime dateTime)
         {
-            Year = (short)dateTime.Year;
+            Year = dateTime.Year;
             Month = (byte)dateTime.Month;
             Day = (byte)dateTime.Day;
         }
@@ -88,7 +93,7 @@ namespace Hazelcast.Sql
 
             var match = ParseRegex.Match(s);
             if (!match.Success ||
-                !short.TryParse(match.Groups["year"].Value, out var year) ||
+                !int.TryParse(match.Groups["year"].Value, out var year) ||
                 !byte.TryParse(match.Groups["month"].Value, out var month) ||
                 !byte.TryParse(match.Groups["day"].Value, out var day)
             )

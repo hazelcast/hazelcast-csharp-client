@@ -190,10 +190,13 @@ namespace Hazelcast.Tests.Sql
         // FIXME [Oleksii] discuss year range in HZ SQL and Java
         [Test]
         [TestCase(
-            "-32768-01-01",
-            "1970-01-01",
+            "1970-02-02",
             "2021-07-15",
-            "32767-12-31"
+            "0000-01-01",
+            "32767-12-31",
+            "-32768-01-01",
+            "-999999999-01-01",
+            "999999999-12-31"
         )]
         public async Task Date(params string[] expectedValues)
         {

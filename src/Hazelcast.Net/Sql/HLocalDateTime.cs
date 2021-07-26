@@ -35,7 +35,7 @@ namespace Hazelcast.Sql
         public HLocalTime Time { get; }
 
         /// <inheritdoc cref="HLocalDate.Year"/>
-        public short Year => Date.Year;
+        public int Year => Date.Year;
 
         /// <inheritdoc cref="HLocalDate.Month"/>
         public byte Month => Date.Month;
@@ -61,13 +61,13 @@ namespace Hazelcast.Sql
             Time = time;
         }
 
-        public HLocalDateTime(short year, byte month, byte day, byte hour, byte minute, byte second, int nanosecond)
+        public HLocalDateTime(int year, byte month, byte day, byte hour, byte minute, byte second, int nanosecond)
         {
             Date = new HLocalDate(year, month, day);
             Time = new HLocalTime(hour, minute, second, nanosecond);
         }
 
-        public HLocalDateTime(short year, byte month, byte day)
+        public HLocalDateTime(int year, byte month, byte day)
         {
             Date = new HLocalDate(year, month, day);
             Time = default;

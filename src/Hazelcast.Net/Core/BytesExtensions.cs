@@ -102,7 +102,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets the size of a Java LocalDate value in arrays or sequences of bytes.
         /// </summary>
-        public const int SizeOfLocalDate = SizeOfShort + SizeOfByte * 2;
+        public const int SizeOfLocalDate = SizeOfInt + SizeOfByte * 2;
 
         /// <summary>
         /// Gets the size of a Java LocalTime value in arrays or sequences of bytes.

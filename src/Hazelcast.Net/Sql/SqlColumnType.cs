@@ -65,7 +65,6 @@ namespace Hazelcast.Sql
         /// </summary>
         Double = 8,
 
-        // FIXME [Oleksii] discuss year range in HZ SQL and Java
         /// <summary>
         /// <c>DATE</c> type, represented by <c>java.lang.LocalDate</c> in Java and by <see cref="HLocalDate"/> in .NET.
         /// </summary>

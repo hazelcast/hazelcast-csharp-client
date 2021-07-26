@@ -132,9 +132,9 @@ namespace Hazelcast.Core
 
         public static HLocalDate ReadLocalDate(this byte[] bytes, int position)
         {
-            var year = bytes.ReadShortL(position);
-            var month = bytes.ReadByte(position + SizeOfShort);
-            var date = bytes.ReadByte(position + SizeOfShort + SizeOfByte);
+            var year = bytes.ReadIntL(position);
+            var month = bytes.ReadByte(position + SizeOfInt);
+            var date = bytes.ReadByte(position + SizeOfInt + SizeOfByte);
 
             return new HLocalDate(year, month, date);
         }

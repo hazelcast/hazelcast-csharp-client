@@ -253,9 +253,9 @@ namespace Hazelcast.Core
 
         public static void WriteLocalDate(this byte[] bytes, int position, HLocalDate localDate)
         {
-            bytes.WriteShortL(position, localDate.Year);
-            bytes.WriteByte(position + SizeOfShort, localDate.Month);
-            bytes.WriteByte(position + SizeOfShort + SizeOfByte, localDate.Day);
+            bytes.WriteIntL(position, localDate.Year);
+            bytes.WriteByte(position + SizeOfInt, localDate.Month);
+            bytes.WriteByte(position + SizeOfInt + SizeOfByte, localDate.Day);
         }
 
         public static void WriteLocalTime(this byte[] bytes, int position, HLocalTime localTime)
