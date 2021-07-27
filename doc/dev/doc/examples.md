@@ -12,7 +12,7 @@ Examples can then be executed through the `hz.[sh|ps1]` script:
 PS> ./hz.ps1 run-example Client.SimpleExample
 ```
 
-By default, this runs the `netcoreapp3.1` Release version of the example. The `hz.[sh|ps1]` script provides options (see the [Building](contrib-build.md) page for details) that can be used to change these. For instance, the following command runs the `net462` Debug version of the example:
+By default, this runs the `netcoreapp3.1` Release version of the example. The `hz.[sh|ps1]` script provides options (see the [Building](contrib/building.md) page for details) that can be used to change these. For instance, the following command runs the `net462` Debug version of the example:
 
 ```powershell
 PS> ./hz.ps1 run-example -c Debug -f net462 Client.SimpleExample

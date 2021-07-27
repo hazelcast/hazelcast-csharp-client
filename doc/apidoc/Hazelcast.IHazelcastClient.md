@@ -7,15 +7,11 @@ by a @Hazelcast.HazelcastClientFactory. Before it can be used, it needs to be op
 in order to properly release its resources. For example:
 
 ```csharp
-var options = HazelcastOptions.Build();
-var factory = new HazelcastClientFactory(options);
-var client = factory.CreateClient();
-await client.OpenAsync();
+var options = new HazelcastOptionsBuilder.Build();
+var client = await HazelcastClientFactory.StartNewClientAsync();
 // ... use the client ...
 await client.DisposeAsync();
 ```
-
-See [Hazelcast Client](../doc/hazelcastClient.md) in the general documentation for more details.
 
 ---
 uid: Hazelcast.IHazelcastClient.BeginTransactionAsync*
@@ -26,9 +22,3 @@ distributed objects, and to commit or roll the transaction back.
 
 See general documetnation.... etc...
 
----
-uid: Hazelcast.IHazelcastClient.OpenAsync*
-summary: Opens the client.
----
-A client must be opened before it can access the servers. There is no corresponding "close"
-method: a client is closed when it is disposed.

@@ -8,7 +8,7 @@ The set behavior can be configured on the server: see the general [List document
 
 Sets are fully identified by their type and unique name, regardless of the types specified for set items. In other words, an `HSet<string>` and an `HSet<int>` named with the same name are backed by the *same* cluster structure. Obviously, refering to a set with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
 
-The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the [Serialization](serialization.md) documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
+The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the [Serialization](../serialization.md) documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
 
 ## Creating & Destroying Sets
 
@@ -34,7 +34,7 @@ The `HSet` structure is completely documented in the associated @Hazelcast.Distr
 * `GetSizeAsync()` gets the number of items, and `IsEmptyAsync()` determines whether the map is empty
 * `RemoveAsync(item)` remove an item
 
-The `HSet` structure exposes events (see events [general documentation](events.md)) at set level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to set events:
+The `HSet` structure exposes events (see events [general documentation](../events.md)) at set level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to set events:
 
 ```csharp
 var id = await set.SubscribeAsync(events => events

@@ -8,7 +8,7 @@ The ring-buffer behavior can be configured on the server: see the general [Queue
 
 Ring-buffers are fully identified by their type and unique name, regardless of the types specified for bufferered items. In other words, an `HRingBuffer<string>` and an `HRingBuffer<int>` named with the same name are backed by the *same* cluster structure. Obviously, refering to a ring-buffer with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
 
-The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the [Serialization](serialization.md) documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
+The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the [Serialization](../serialization.md) documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
 
 ## Creating & Destroying Ring-Buffers
 
