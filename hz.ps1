@@ -1074,7 +1074,7 @@ function hz-build {
 
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build "$srcDir\$_" $buildArgs"
+        Write-Output "> dotnet build $srcDir\$_ $buildArgs"
         dotnet build "$srcDir\$_" $buildArgs
 
         # if it failed, we can stop here
@@ -1172,7 +1172,7 @@ function hz-build-docs-on-windows {
               -replace "<li><!--DEVDOC_API--></li>", $devdoc_api
             set-content -path $_ -value $text
         }
-        
+
     $text = get-content "$tmpDir/docfx.out/404.html"
     $text = $text -replace "<head>", "<head>`n    <base href=`"/hazelcast-csharp-client/`">"
     set-content -path "$tmpDir/docfx.out/404.html" -value $text
