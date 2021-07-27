@@ -29,10 +29,10 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Sql
 {
     /// <summary>
-    /// Tests deserialization of SQL query result for all <see cref="SqlColumnType"/>s.
+    /// Tests serialization of parameters and result deserialization of SQL queries for all <see cref="SqlColumnType"/>s.
     /// </summary>
     [TestFixture]
-    public class SqlDeserializationTests : SingleMemberClientRemoteTestBase
+    public class SqlSerializationDeserializationTests : SingleMemberClientRemoteTestBase
     {
         [Test]
         [TestCase(
@@ -43,7 +43,9 @@ namespace Hazelcast.Tests.Sql
         public async Task Varchar(params string[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -54,7 +56,9 @@ namespace Hazelcast.Tests.Sql
         public async Task Boolean(params bool[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -67,7 +71,9 @@ namespace Hazelcast.Tests.Sql
         public async Task TinyInt(byte[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -82,7 +88,9 @@ namespace Hazelcast.Tests.Sql
         public async Task SmallInt(short[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -97,7 +105,9 @@ namespace Hazelcast.Tests.Sql
         public async Task Integer(int[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -112,7 +122,9 @@ namespace Hazelcast.Tests.Sql
         public async Task BigInt(long[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -142,7 +154,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedValues);
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            //await AssertSqlParametersMatchAsync(map.Name, expectedValues); // FIXME [Oleksii] enable after adding custom type
         }
 
         [Test]
@@ -163,7 +176,9 @@ namespace Hazelcast.Tests.Sql
         public async Task Real(float[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
         [Test]
@@ -184,10 +199,11 @@ namespace Hazelcast.Tests.Sql
         public async Task Double(double[] expectedValues)
         {
             await using var map = await CreateNewMap(expectedValues);
-            await AssertSqlResultMatch(map.Name, expectedValues);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedValues);
+            await AssertSqlParametersMatchAsync(map.Name, expectedValues);
         }
 
-        // FIXME [Oleksii] discuss year range in HZ SQL and Java
         [Test]
         [TestCase(
             "1970-02-02",
@@ -211,7 +227,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedDates);
+            await AssertSqlResultMatchAsync(map.Name, expectedDates);
+            await AssertSqlParametersMatchAsync(map.Name, expectedDates);
         }
 
         [Test]
@@ -235,7 +252,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedTimes);
+            await AssertSqlResultMatchAsync(map.Name, expectedTimes);
+            await AssertSqlParametersMatchAsync(map.Name, expectedTimes);
         }
 
         [Test]
@@ -259,7 +277,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedTimestamps);
+            await AssertSqlResultMatchAsync(map.Name, expectedTimestamps);
+            await AssertSqlParametersMatchAsync(map.Name, expectedTimestamps);
         }
 
         [Test]
@@ -290,7 +309,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatch(map.Name, expectedTimestamps);
+            await AssertSqlResultMatchAsync(map.Name, expectedTimestamps);
+            await AssertSqlParametersMatchAsync(map.Name, expectedTimestamps);
         }
 
         [Test]
@@ -305,8 +325,10 @@ namespace Hazelcast.Tests.Sql
         public async Task Object(params int[] expectedValues)
         {
             var expectedObjects = expectedValues.Select(i => new PortableObject(i, $"{i}", i % 2 == 0)).ToArray();
+
             await using var map = await CreateNewMap(expectedObjects);
-            await AssertSqlResultMatch(map.Name, expectedObjects);
+
+            await AssertSqlResultMatchAsync(map.Name, expectedObjects);
         }
 
         private async Task<IHMap<int, TValue>> CreateNewMap<TValue>(TValue[] values = null,
@@ -325,12 +347,23 @@ namespace Hazelcast.Tests.Sql
             return map;
         }
 
-        private async Task AssertSqlResultMatch<TValue>(string mapName, IEnumerable<TValue> expectedValues)
+        private async Task AssertSqlResultMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
         {
             var result = await Client.Sql.ExecuteQueryAsync($"SELECT this FROM {mapName} ORDER BY __key");
             var resultValues = result.EnumerateOnce().Select(r => r.GetValue<TValue>()).ToList();
 
             CollectionAssert.AreEqual(expectedValues, resultValues);
+        }
+
+        private async Task AssertSqlParametersMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
+        {
+            foreach (var expectedValue in expectedValues)
+            {
+                var result = await Client.Sql.ExecuteQueryAsync($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
+                var resultValues = result.EnumerateOnce().Select(r => r.GetValue<TValue>()).ToList();
+
+                CollectionAssert.AreEqual(new[] { expectedValue }, resultValues);
+            }
         }
 
         protected override HazelcastOptions CreateHazelcastOptions()
