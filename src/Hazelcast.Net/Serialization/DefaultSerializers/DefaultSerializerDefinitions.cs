@@ -17,6 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using Hazelcast.Core;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
@@ -41,6 +42,11 @@ namespace Hazelcast.Serialization.DefaultSerializers
             service.AddConstantSerializer<HashSet<object>>(new HashSetStreamSerializer());
 
             service.AddConstantSerializer<HazelcastJsonValue>(new HazelcastJsonValueSerializer());
+
+            service.AddConstantSerializer<HLocalDate>(new HLocalDateSerializer());
+            service.AddConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
+            service.AddConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
+            service.AddConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
         }
     }
 }
