@@ -39,7 +39,9 @@ namespace Hazelcast.Sql
         public HLocalDateTime LocalDateTime { get; }
 
         /// <summary>
-        /// Offset value. Ranges between <see cref="MinOffset"/> and <see cref="MaxOffset"/> inclusive.
+        /// Offset value.
+        /// Ranges between <see cref="MinOffset"/> and <see cref="MaxOffset"/> inclusive.
+        /// Precision is 1 second, smaller values will be rounded and lost during serialization.
         /// </summary>
         public TimeSpan Offset { get; }
 
