@@ -33,7 +33,5 @@ references:
   href: 4.1.0/doc/index.html
 - uid: api-index-4-1-0
   href: 4.1.0/api/index.html
-- uid: cover-index
-  href: cover/index.html
 - uid: doc-configuration
   href: ../doc/configuration.html

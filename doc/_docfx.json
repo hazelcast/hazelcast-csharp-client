@@ -27,7 +27,7 @@
       {
         "src": "dev",
         "dest": "__DEST__",
-        "files": [ "api/index.md", "toc.yml", "doc/**.md" ]
+        "files": [ "api/index.md", "toc.yml", "doc/**.md", "cover/index.md" ]
       }
     ],
     "resource": [ { "files": [ "images/**" ] } ],

@@ -30,6 +30,6 @@
 # [Contributing](contrib.md)
 ## [Sources](contrib/sources.md)
 ## [Building](contrib/building.md)
-## [Tests Coverage Report](xref:cover-index)
+## [Tests Coverage Report](../cover/index.md)
 ## [GitHub Actions](contrib/github-actions.md)
 ## [FAQ](contrib/contrib-faq.md)
