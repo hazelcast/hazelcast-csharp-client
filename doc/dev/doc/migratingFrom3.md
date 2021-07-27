@@ -1,14 +1,14 @@
 # Migrating from v3
 
-Version 4 of the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the C# language. For instance, its low-level networking stack relies on Microsoft's [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) library. This is the high-performance library that is used, for instance, to power the Kestrel web server. It is constantly improved, as it is the foundation of all high-performance networking in .NET Core 3.x (and the upcoming .NET Core 5.x).
+Version 4 of the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the C# language. 
 
-The *concepts* however have not changed much.
+For instance, the low-level networking stack relies on Microsoft's high-performance [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) which is used, for instance, to power the Kestrel web server. It is constantly improved, as it is the foundation of all high-performance networking in .NET Core 3.x and above.
+
+Although the *concepts* have not changed much, the version 4 API is quite different from version 3. This page documents the most important differences.
 
 ## Threading, Async and Tasks
 
 Threading has been greatly simplified and now entirely relies on the async/await pattern. In the current version of the code, all tasks run on the default task scheduler, and there is no limit on, for instance, the amount of concurrent tasks. All tasks run on the default .NET ThreadPool and the default Task scheduler. Depending on feedback, we could consider using custom Task schedulers and/or thread pools.
-
-
 
 ## Configuration
 

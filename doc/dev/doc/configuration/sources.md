@@ -1,4 +1,4 @@
-# Configuration
+# Configuration Sources
 
 Configuration follows the [Microsoft.Extensions.Configuration](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration)
 patterns. The Hazelcast client configuration is represented by the @Hazelcast.HazelcastOptions class. When simply instantiated, this
