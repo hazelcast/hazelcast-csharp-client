@@ -14,7 +14,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Models;
+using Hazelcast.Networking;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Clustering
@@ -28,105 +31,160 @@ namespace Hazelcast.Tests.Clustering
             var memberId = Guid.NewGuid();
             var lb = new StaticLoadBalancer(memberId);
 
-            Assert.That(lb.Count, Is.EqualTo(1));
-            for (var i = 0; i < 4; i++)
-                Assert.That(lb.GetMember(), Is.EqualTo(memberId));
-
-            // no effect
-            lb.SetMembers(new[] { Guid.NewGuid() });
-
-            Assert.That(lb.Count, Is.EqualTo(1));
-            for (var i = 0; i < 4; i++)
-                Assert.That(lb.GetMember(), Is.EqualTo(memberId));
-
-            lb = new StaticLoadBalancer(new Dictionary<string, string>
+            // default state
             {
-                { "memberId", memberId.ToString() }
-            });
+                Assert.That(lb.Count, Is.EqualTo(1));
+                for (var i = 0; i < 4; i++)
+                    Assert.That(lb.GetMember(onlyDataMember: i % 2 == 0), Is.EqualTo(memberId));
+            }
 
-            Assert.That(lb.Count, Is.EqualTo(1));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberId));
+            // after set members
+            foreach (var members in new[]
+            {
+                new[] { NewMemberInfo(true) },
+                new[] { NewMemberInfo(false) },
+                new[] { NewMemberInfo(true), NewMemberInfo(false) }
+            })
+            {
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(1));
+                for (var i = 0; i < 4; i++)
+                    Assert.That(lb.GetMember(), Is.EqualTo(memberId));
+            }
+
+            // set via metadata
+            {
+                lb = new StaticLoadBalancer(new Dictionary<string, string>
+                {
+                    { "memberId", memberId.ToString() }
+                });
+                Assert.That(lb.Count, Is.EqualTo(1));
+                Assert.That(lb.GetMember(), Is.EqualTo(memberId));
+            }
         }
 
         [Test]
         public void Random()
         {
-            var memberIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
             var lb = new RandomLoadBalancer();
 
-            Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
-
-            lb.SetMembers(memberIds);
-            Assert.That(lb.Count, Is.EqualTo(3));
-
-            var seen = Guid.Empty;
-            var seenDifferent = false;
-            for (var i = 0; i < 10; i++)
+            // default state
             {
-                var memberId = lb.GetMember();
-                Assert.That(memberIds, Does.Contain(memberId));
-
-                if (seen == Guid.Empty) seen = memberId;
-                else if (seen != memberId) seenDifferent = true;
+                Assert.That(lb.Count, Is.EqualTo(0));
+                Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
             }
 
-            Assert.That(seenDifferent, Is.True);
-
-            memberIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
-
-            lb.SetMembers(memberIds);
-            Assert.That(lb.Count, Is.EqualTo(2));
-
-            for (var i = 0; i < 10; i++)
+            // has only lite members
             {
-                var memberId = lb.GetMember();
-                Assert.That(memberIds, Does.Contain(memberId));
+                var members = new[] { NewMemberInfo(false), NewMemberInfo(false) };
+
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(members.Length));
+
+                Assert.That(lb.GetMember(true), Is.EqualTo(Guid.Empty));
             }
 
-            lb.SetMembers(new Guid[0]);
-            Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
+            // returns different values
+            foreach (var members in new[]
+            {
+                new[] { NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true) },
+                new[] { NewMemberInfo(true), NewMemberInfo(false), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(false) },
+            })
+            {
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(3));
+
+                var seen = Guid.Empty;
+                var seenDifferent = false;
+                for (var i = 0; i < 10; i++)
+                {
+                    var memberId = lb.GetMember();
+                    Assert.That(members.Select(m => m.Id), Does.Contain(memberId));
+
+                    if (seen == Guid.Empty) seen = memberId;
+                    else if (seen != memberId) seenDifferent = true;
+                }
+
+                Assert.That(seenDifferent, Is.True);
+            }
+
+            // returns values within set
+            {
+                var members = new[] { NewMemberInfo(false), NewMemberInfo(true) };
+
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(2));
+
+                for (var i = 0; i < 10; i++)
+                {
+                    var memberId = lb.GetMember(onlyDataMember: i % 2 == 0);
+                    Assert.That(members.Select(m => m.Id), Does.Contain(memberId));
+                }
+            }
+
+            // set empty
+            {
+                lb.SetMembers(Array.Empty<MemberInfo>());
+                Assert.That(lb.Count, Is.EqualTo(0));
+                Assert.That(lb.GetMember(onlyDataMember: false), Is.EqualTo(Guid.Empty));
+                Assert.That(lb.GetMember(onlyDataMember: true), Is.EqualTo(Guid.Empty));
+            }
         }
 
         [Test]
         public void RoundRobin()
         {
-            var memberIds = new[] { Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid() };
             var lb = new RoundRobinLoadBalancer();
 
-            Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
+            // default state
+            {
+                Assert.That(lb.Count, Is.EqualTo(0));
+                Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
+            }
 
-            lb.SetMembers(memberIds);
-            Assert.That(lb.Count, Is.EqualTo(3));
+            // has only lite members
+            {
+                var members = new[] { NewMemberInfo(false), NewMemberInfo(false) };
 
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[2]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[0]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[2]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[0]));
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(members.Length));
 
-            memberIds = new[] { Guid.NewGuid(), Guid.NewGuid() };
+                Assert.That(lb.GetMember(true), Is.EqualTo(Guid.Empty));
+            }
 
-            lb.SetMembers(memberIds);
-            Assert.That(lb.Count, Is.EqualTo(2));
+            // all members have same type
+            foreach (var members in new[]
+            {
+                new[] { NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(false) }
+            })
+            {
+                lb.SetMembers(members);
+                Assert.That(lb.Count, Is.EqualTo(members.Length));
 
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[0]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[1]));
-            Assert.That(lb.GetMember(), Is.EqualTo(memberIds[0]));
+                for (var index = 1; index <= members.Length * 2; index++)
+                    Assert.That(lb.GetMember(), Is.EqualTo(members[index % members.Length].Id));
+            }
 
-            lb.SetMembers(new Guid[0]);
-            Assert.That(lb.Count, Is.EqualTo(0));
-            Assert.That(lb.GetMember(), Is.EqualTo(Guid.Empty));
+            // set empty
+            {
+                lb.SetMembers(Array.Empty<MemberInfo>());
+                Assert.That(lb.Count, Is.EqualTo(0));
+                Assert.That(lb.GetMember(onlyDataMember: false), Is.EqualTo(Guid.Empty));
+                Assert.That(lb.GetMember(onlyDataMember: true), Is.EqualTo(Guid.Empty));
+            }
         }
 
         [Test]
         public void ArgumentExceptions()
         {
             Assert.Throws<ArgumentNullException>(() => new RoundRobinLoadBalancer().SetMembers(null));
+            Assert.Throws<ArgumentNullException>(() => new RandomLoadBalancer().SetMembers(null));
         }
+
+        private MemberInfo NewMemberInfo(bool isDataMember) => new MemberInfo(id: Guid.NewGuid(),
+            NetworkAddress.Parse("localhost"), new MemberVersion(1, 0, 0),
+            isLiteMember: !isDataMember, attributes: new Dictionary<string, string>());
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Models;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
@@ -25,28 +26,23 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// <summary>
         /// Gets the members.
         /// </summary>
-        // TODO: this should be a ReadOnlyCollection<Guid> (breaking)
 #pragma warning disable CA1002 // Do not expose generic lists
-        protected List<Guid> Members { get; private set; }
+        protected MembersInfoCollection Members { get; private set; }
 #pragma warning restore CA1002
 
         /// <inheritdoc />
         public virtual int Count => Members?.Count ?? 0;
 
         /// <inheritdoc />
-        public abstract Guid GetMember();
+        public abstract Guid GetMember(bool onlyDataMember = false);
 
         /// <inheritdoc />
-        public virtual void SetMembers(IEnumerable<Guid> memberIds)
+        public virtual void SetMembers(IEnumerable<MemberInfo> members)
         {
-            if (memberIds == null) throw new ArgumentNullException(nameof(memberIds));
+            if (members == null)
+                throw new ArgumentNullException(nameof(members));
 
-            var distinct = new HashSet<Guid>();
-            var members = new List<Guid>();
-            foreach (var memberId in memberIds)
-                if (distinct.Add(memberId))
-                    members.Add(memberId);
-            Members = members; // atomic reference
+            Members = new MembersInfoCollection(members); // atomic reference
         }
     }
 }

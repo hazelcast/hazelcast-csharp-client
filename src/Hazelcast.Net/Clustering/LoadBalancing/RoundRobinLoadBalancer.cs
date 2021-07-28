@@ -34,12 +34,20 @@ namespace Hazelcast.Clustering.LoadBalancing
         { }
 
         /// <inheritdoc />
-        public override Guid GetMember()
+        public override Guid GetMember(bool onlyDataMember = false)
         {
             var members = Members;
-            if (members == null || members.Count == 0) return default;
-            var index = Interlocked.Increment(ref _index);
-            return members[index % members.Count];
+            if (members == null) return default;
+
+            var count = onlyDataMember ? members.DataMembers.Count : members.Count;
+            if (count == 0) return default;
+
+            var index = Interlocked.Increment(ref _index) % count;
+            if (index < 0) index += count; // in case of integer overflow
+
+            return index < members.DataMembers.Count
+                ? members.DataMembers[index].Id
+                : members.LiteMembers[index - members.DataMembers.Count].Id;
         }
     }
 }

@@ -254,7 +254,7 @@ namespace Hazelcast.Clustering
             // notify the load balancer of the new list of members
             // (the load balancer can always return a member that is not a member
             // anymore, see note in GetMember)
-            _loadBalancer.SetMembers(members.Select(x => x.Id));
+            _loadBalancer.SetMembers(members);
 
             // compute changes
             // count 1 for old members, 2 for new members, and then the result is

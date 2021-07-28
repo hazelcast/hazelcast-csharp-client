@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Models;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
@@ -28,18 +29,23 @@ namespace Hazelcast.Clustering.LoadBalancing
         int Count { get; }
 
         /// <summary>
-        /// Selects a member.
+        /// Selects a member id.
         /// </summary>
+        /// <param name="onlyDataMember">
+        /// If <c>true</c>, only data-member id can be returned.
+        /// If <c>false</c>, both data or lite member id can be returned.
+        /// Default value is <c>false</c>.
+        /// </param>
         /// <returns>The unique identifier of the selected member, if any; otherwise <c>Guid.Empty</c>.</returns>
-        Guid GetMember();
+        Guid GetMember(bool onlyDataMember = false);
 
         /// <summary>
         /// Sets the members.
         /// </summary>
-        /// <param name="memberIds">The identifiers of the members.</param>
+        /// <param name="members">Members info.</param>
         /// <remarks>
         /// <para>The set of members that fully replaces the existing members.</para>
         /// </remarks>
-        void SetMembers(IEnumerable<Guid> memberIds);
+        void SetMembers(IEnumerable<MemberInfo> members);
     }
 }

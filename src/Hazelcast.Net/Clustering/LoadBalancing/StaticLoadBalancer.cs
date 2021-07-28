@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
@@ -50,11 +51,11 @@ namespace Hazelcast.Clustering.LoadBalancing
         public override int Count => 1;
 
         /// <inheritdoc />
-        public override Guid GetMember()
+        public override Guid GetMember(bool onlyDataMember = false)
             => _memberId;
 
         /// <inheritdoc />
-        public override void SetMembers(IEnumerable<Guid> memberIds)
+        public override void SetMembers(IEnumerable<MemberInfo> members)
         { }
     }
 }
