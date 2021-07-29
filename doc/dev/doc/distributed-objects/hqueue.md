@@ -34,7 +34,7 @@ The `HQueue` structure is completely documented in the associated @Hazelcast.Dis
 * `TakeAsync()` removes and returns the head item from the queue
 * `GetSizeAsync()` gets the number of items, and `IsEmptyAsync()` determines whether the queue is empty
 
-The `HQueue` structure exposes events (see events [general documentation](../events.md)) at queue level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to queue events:
+The `HQueue` structure exposes events (see events [general documentation](../events.md)) at queue level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionItemEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to queue events:
 
 ```csharp
 var id = await queue.SubscribeAsync(events => events

@@ -34,7 +34,7 @@ The `HList` structure is completely documented in the associated @Hazelcast.Dist
 * `GetSizeAsync()` gets the number of items, and `IsEmptyAsync()` determines whether the map is empty
 * `RemoveAsync(index)` remove an item
 
-The `HList` structure exposes events (see events [general documentation](../events.md)) at list level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to list events:
+The `HList` structure exposes events (see events [general documentation](../events.md)) at list level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionItemEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to list events:
 
 ```csharp
 var id = await list.SubscribeAsync(events => events

@@ -30,7 +30,7 @@ The `HTopic` structure is completely documented in the associated @Hazelcast.Dis
 
 * `PublishAsync(message)` publishes a message
 
-The `HTopic` structure exposes events (see events [general documentation](../events.md)) at topic level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to topic events:
+The `HTopic` structure exposes events (see events [general documentation](../events.md)) at topic level. A complete list of events is provided in the @Hazelcast.DistributedObjects.CollectionItemEventHandlers`1 documentation. The following example illustrates how to subscribe, and unsubscribe, to topic events:
 
 ```csharp
 var id = await topic.SubscribeAsync(events => events

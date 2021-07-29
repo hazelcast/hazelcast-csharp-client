@@ -66,5 +66,3 @@ await map.UnsubscribeAsync(id);
 ```
 
 Note that the handler methods passed to e.g. `EntryRemoved` or `Cleared` can be asynchronous, too.
-
-(to be completed)
