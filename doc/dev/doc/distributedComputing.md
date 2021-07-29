@@ -135,7 +135,7 @@ Now you need to configure the `hazelcast.xml` to add your factory as shown below
 </hazelcast>
 ```
 
-The code that runs on the entries is implemented in Java on the server side. The client side entry processor is used to specify which entry processor should be called. For more details about the Java implementation of the entry processor, see the [Entry Processor section](https://docs.hazelcast.org/docs/latest/manual/html-single/index.html#entry-processor) in the Hazelcast IMDG Reference Manual.
+The code that runs on the entries is implemented in Java on the server side. The client side entry processor is used to specify which entry processor should be called. For more details about the Java implementation of the entry processor, see the [Processing Map Entries](https://docs.hazelcast.com/hazelcast/latest/computing/entry-processor.html) in the Hazelcast IMDG Reference Manual.
 
 After the above implementations and configuration are done and you start the server where your library is added to its `CLASSPATH`, you can use the entry processor in the `IHMap` functions. See the following example.
 
