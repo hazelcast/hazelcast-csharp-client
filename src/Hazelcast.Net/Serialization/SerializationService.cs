@@ -30,7 +30,7 @@ namespace Hazelcast.Serialization
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
 
-        private static readonly IPartitioningStrategy TheEmptyPartitioningStrategy = new EmptyPartitioningStrategy();
+        private static readonly IPartitioningStrategy NullPartitioningStrategy = new NullPartitioningStrategy();
         private readonly ILogger _logger;
 
         private readonly ISerializerAdapter[] _constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
@@ -609,16 +609,41 @@ namespace Hazelcast.Serialization
 
         protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
         {
-            var partitionHash = 0;
-            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
-            var pk = partitioningStrategy?.GetPartitionKey(obj);
-            if (pk != null && pk != obj)
-            {
-                var partitionKey = ToData(pk, TheEmptyPartitioningStrategy);
-                partitionHash = partitionKey?.PartitionHash ?? 0;
-            }
+            // ToData(o) -> ToData(o, GlobalPartitionStrategy)
+            // ToData(o, strategy) -> CalculatePartitionHash(o, strategy)
+            //  (and this overload is not used anywhere else)
 
-            return partitionHash;
+            // strategy: o -> partitionKey
+            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
+            var partitionKey = partitioningStrategy?.GetPartitionKey(obj);
+
+            // returning 0 here means that we're going to create an HeapData that:
+            // - has HasPartitionHash == false
+            // - returns PartitionHash = GetHashCode() which is overriden with a Murmur3 hasher
+
+            if (partitionKey is null) return 0; // no partition key
+            if (partitionKey == obj) return 0; // obj is *not* IData (else we wouldn't be here), so this is a dead end
+
+            // fast: partitionKey *is* a hash
+            // TODO: consider implementing this?
+            //if (partitionKey is int hash) return hash;
+
+            // fast: partitionKey provides a hash
+            if (partitionKey is IData data) return data.PartitionHash;
+
+            // slow: partitionKey wants to be hashed
+            //   create a HeapData with NullPartitioningStrategy => CalculatePartitionHash returns zero,
+            //   HasPartitionHash is false, and therefore PartitionHash is obtained by Murmur3-hashing
+            //   the serialized partitionKey bytes - i.e. "hashing partitionKey"
+            var meh = ToData(partitionKey, NullPartitioningStrategy);
+            if (meh != null) return meh.PartitionHash;
+
+            // duh - should never happen, really
+            return 0;
+
+            // NOTE: this is an exact copy of the Java client algorithm and in case partitionKey is e.g. a string,
+            // it probably is not especially efficient (allocates a new HeapData etc) - it would probably be better
+            // for the partition strategy to return a dummy IData with the pre-computed hash...
         }
 
         internal static bool IsNullData(IData data)
@@ -708,14 +733,6 @@ namespace Hazelcast.Serialization
             }
 
             return serializer;
-        }
-
-        private sealed class EmptyPartitioningStrategy : IPartitioningStrategy
-        {
-            public object GetPartitionKey(object key)
-            {
-                return null;
-            }
         }
     }
 }

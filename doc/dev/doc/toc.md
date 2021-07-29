@@ -27,6 +27,7 @@
 # [Locking](locking.md)
 # [Monitoring](monitoring.md)
 # [Events](events.md)
+# [Data Affinity](data-affinity.md)
 # [Examples](examples.md)
 # [Migrating From v3](migratingFrom3.md)
 # [Contributing](contrib.md)
