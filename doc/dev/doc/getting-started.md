@@ -113,19 +113,10 @@ For example:
 ```csharp
 await using (var transaction = await client.BeginTransactionAsync())
 {
-    // ... do transaction work ...
+    var map = await transaction.GetMapAsync<string, string>("my-map");
+    await map.PutAsync("key", "value");
     transaction.Complete();
 }
-```
-
-Here, the transaction will commit when `transaction` is disposed, because it has been completed. Had it not been completed, it would have rolled back. Note that the explicit pattern is also supported, although less recommended:
-
-```csharp
-var transaction = await client.BeginTransactionAsync();
-// ... do transaction work ...
-await transactionContext.CommitAsync();  // commmit, or...
-await transactionContext.DisposeAsync(); // roll back
-await transaction.DisposeAsync();
 ```
 
 Refer to the [Transactions](transactions.md) page for details.
