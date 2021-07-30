@@ -58,6 +58,9 @@ jobs:
                 var artifact = artifacts.data.artifacts.filter((art) => {
                   return art.name == name;
                 })[0];
+                if (artifact == null) {
+                    return;
+                }
                 var download = await github.actions.downloadArtifact({
                    owner: context.repo.owner,
                    repo: context.repo.repo,
@@ -74,11 +77,19 @@ jobs:
         shell: bash
         run: |
           echo "Tests results:"
-          unzip temp/test-results/test-results.zip -d temp/test-results
-          ls ./temp/test-results
+          if [ -f temp/test-results/test-results.zip ]; then
+            unzip temp/test-results/test-results.zip -d temp/test-results
+            ls ./temp/test-results
+          else
+            echo "(missing)"
+          fi
           echo "Tests coverage:"
-          unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
-          ls ./temp/test-coverage
+          if [ -f temp/test-coverage/test-coverage.zip ]; then
+              unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
+              ls ./temp/test-coverage
+          else
+            echo "(missing)"
+          fi
 
       # report test results
       - name: Report test results
