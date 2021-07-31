@@ -21,62 +21,58 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     // FIXME [Oleksii] Clarify if should be thread safe
-    internal class SqlQueryResult : ISqlQueryResult
+    internal class SqlQueryResult : SqlResult, ISqlQueryResult
     {
         private readonly SerializationService _serializationService;
         private readonly Task _initTask;
-        private readonly Func<Task<SqlPage>> _fetchNextFunc;
-        private readonly Func<Task> _closeFunc;
+        private readonly Func<Task<SqlPage>> _nextFunc;
 
         private SqlRowMetadata _rowMetadata;
         private SqlPageEnumerator _pageEnumerator;
 
-        private bool _enumerateStarted;
-        private bool _disposed;
+        private bool _enumerationStarted;
 
         public SqlRow Current => _pageEnumerator?.Current;
 
         internal SqlQueryResult(
             SerializationService serializationService,
-            Task<(SqlRowMetadata rowMetadata, SqlPage page)> fetchFirstTask,
-            Func<Task<SqlPage>> fetchNextFunc,
-            Func<Task> closeFunc)
+            Task<(SqlRowMetadata rowMetadata, SqlPage page)> initTask,
+            Func<Task<SqlPage>> nextFunc,
+            Func<Task> closeAction) : base(closeAction)
         {
             _serializationService = serializationService;
-            _initTask = fetchFirstTask.ContinueWith(InitFromTaskAsync).Unwrap();
-            _fetchNextFunc = fetchNextFunc;
-            _closeFunc = closeFunc;
+            _initTask = initTask.ContinueWith(InitFromTaskAsync).Unwrap();
+            _nextFunc = nextFunc;
         }
 
-        private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> fetchFirstTask)
+        private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> initTask)
         {
-            var (rowMetadata, page) = await fetchFirstTask; // Ensure task succeeded or forward exception
+            var (rowMetadata, page) = await initTask; // Ensure task succeeded or forward exception
             _rowMetadata = rowMetadata;
             UpdateCurrentPage(page);
         }
 
-        private void UpdateCurrentPage(SqlPage page)
+        private void UpdateCurrentPage(SqlPage page) => _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
+
+        protected override bool CloseRequired => !(_pageEnumerator is { IsLastPage: true });
+
+        public override async ValueTask DisposeAsync()
         {
-            _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
-        }
+            if (!_initTask.IsCompleted) // mark possible Query Cancelled exception as observed
+            {
+                _ = _initTask.ContinueWith(t => t.Exception?.Handle(
+                    e => e is HazelcastSqlException { ErrorCode: (int)SqlErrorCode.CancelledByUser }
+                ));
+            }
 
-        public async ValueTask DisposeAsync()
-        {
-            if (!_initTask.IsCompleted)
-                _ = _initTask.ContinueWith(t => t.Exception); // mark possible init exception as observed
-
-            var queryCompleted = _pageEnumerator?.IsLastPage ?? false;
-            if (!_disposed && !queryCompleted)
-                await _closeFunc(); // FIXME [Oleksii] discuss possible exception in Dispose
-
-            _disposed = true;
+            await base.DisposeAsync();
         }
 
         public async ValueTask<bool> MoveNextAsync()
         {
-            _enumerateStarted = true;
+            _enumerationStarted = true;
 
-            await _initTask;
+            await _initTask.CfAwait();
 
             if (_pageEnumerator.MoveNext())
                 return true;
@@ -85,9 +81,9 @@ namespace Hazelcast.Sql
                 return false;
 
             // do not try to continue enumeration if disposed(ing)
-            EnsureNotDisposed();
+            ThrowIfDisposed();
 
-            var page = await _fetchNextFunc().CfAwait();
+            var page = await _nextFunc().CfAwait();
             UpdateCurrentPage(page);
 
             return _pageEnumerator.MoveNext();
@@ -101,8 +97,8 @@ namespace Hazelcast.Sql
                     yield return Current;
             }
 
-            EnsureNotDisposed();
-            EnsureEnumerationNotStarted();
+            ThrowIfDisposed();
+            ThrowIfEnumerationNotStarted();
             return Enumerate();
         }
 
@@ -115,20 +111,14 @@ namespace Hazelcast.Sql
                     yield return Current;
             }
 
-            EnsureNotDisposed();
-            EnsureEnumerationNotStarted();
+            ThrowIfDisposed();
+            ThrowIfEnumerationNotStarted();
             return Enumerate();
         }
 
-        private void EnsureNotDisposed()
+        private void ThrowIfEnumerationNotStarted()
         {
-            if (_disposed)
-                throw new ObjectDisposedException(nameof(SqlQueryResult));
-        }
-
-        private void EnsureEnumerationNotStarted()
-        {
-            if (_enumerateStarted)
+            if (_enumerationStarted)
                 throw new InvalidOperationException("Result enumeration already started");
         }
     }
