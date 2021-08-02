@@ -77,11 +77,18 @@ namespace Hazelcast.Sql
             Nanosecond = dateTime.Millisecond * 1000;
         }
 
-        public DateTime ToDateTime() => new DateTime(0, 0, 0, Hour, Minute, Second, DateTimeKind.Local).AddMilliseconds(Nanosecond / 1000d);
+        public HLocalTime(TimeSpan timeSpan)
+        {
+            Hour = (byte)timeSpan.Hours;
+            Minute = (byte)timeSpan.Minutes;
+            Second = (byte)timeSpan.Seconds;
+            Nanosecond = timeSpan.Milliseconds * 1000;
+        }
+
         public TimeSpan ToTimeSpan() => new TimeSpan(0, Hour, Minute, Second, Nanosecond / 1000);
 
-        public static explicit operator DateTime(HLocalTime localTime) => localTime.ToDateTime();
         public static explicit operator TimeSpan(HLocalTime localTime) => localTime.ToTimeSpan();
+        public static explicit operator HLocalTime(TimeSpan timeSpan) => new HLocalTime(timeSpan);
         public static explicit operator HLocalTime(DateTime dateTime) => new HLocalTime(dateTime);
 
         public override string ToString() => Nanosecond == 0
