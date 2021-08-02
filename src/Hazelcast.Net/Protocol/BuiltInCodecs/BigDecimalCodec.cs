@@ -14,22 +14,16 @@
 
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class BigDecimalCodec
     {
-        private static readonly NumberFormatInfo NoSignFormat = new NumberFormatInfo
-        {
-            NegativeSign = "",
-            PositiveSign = ""
-        };
-
-        public static string Decode(IEnumerator<Frame> iterator)
+        public static HBigDecimal Decode(IEnumerator<Frame> iterator)
         {
             var bytes = iterator.Take().Bytes;
             var contentSize = bytes.ReadIntL(0);
@@ -43,21 +37,14 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
 #endif
 
-            var unscaledString = unscaled.ToString("G", NoSignFormat) ?? "0";
-            var unsignedString = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize) switch
-            {
-                var scale when scale < 0 => $"{unscaledString}{new string('0', -scale)}",
-                var scale when scale > 0 && scale < unscaledString.Length => $"{unscaledString[..^scale]}.{unscaledString[^scale..]}",
-                var scale when scale >= unscaledString.Length => $"0.{new string('0', scale - unscaledString.Length)}{unscaledString}",
-                _ => unscaledString
-            };
+            var scale = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize);
 
-            return (unscaled.Sign < 0 ? '-' : (char?)null) + unsignedString;
+            return new HBigDecimal(unscaled, scale);
         }
 
-        public static string DecodeNullable(IEnumerator<Frame> iterator)
+        public static HBigDecimal DecodeNullable(IEnumerator<Frame> iterator)
         {
-            return CodecUtil.DecodeNullable(iterator, Decode);
+            return iterator.SkipNull() ? default : Decode(iterator);
         }
     }
 }

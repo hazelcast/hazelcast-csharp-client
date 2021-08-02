@@ -47,7 +47,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                     SqlColumnType.BigInt => ListCNLongCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Real => ListCNFloatCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Double => ListCNDoubleCodec.Decode(iterator).AsReadOnlyObjectList(),
-                    SqlColumnType.Decimal => ListMultiFrameCodec.Decode(iterator, BigDecimalCodec.DecodeNullable),
+                    SqlColumnType.Decimal => ListMultiFrameCodec.Decode(iterator, BigDecimalCodec.DecodeNullable).AsReadOnlyObjectList(),
                     SqlColumnType.Date => ListCNLocalDateCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Time => ListCNLocalTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Timestamp => ListCNLocalDateTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
