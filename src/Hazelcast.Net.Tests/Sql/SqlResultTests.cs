@@ -24,7 +24,7 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task EnumerateAfterDispose()
         {
-            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
             await result.DisposeAsync();
 
             Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task EnumerateMultipleTimes()
         {
-            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
             await result.MoveNextAsync();
 
             Assert.Throws<InvalidOperationException>(() => result.EnumerateOnce());
@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task DisposeMultipleTimes()
         {
-            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {MapName} LIMIT 1");
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
             await result.DisposeAsync();
 
             Assert.DoesNotThrowAsync(async () =>

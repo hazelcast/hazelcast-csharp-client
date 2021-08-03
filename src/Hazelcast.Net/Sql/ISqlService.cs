@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
-using System.Threading.Tasks;
-
 namespace Hazelcast.Sql
 {
     public interface ISqlService
@@ -37,9 +34,7 @@ namespace Hazelcast.Sql
         /// <returns>
         /// <see cref="ISqlQueryResult"/> representing set of rows returned from this query.
         /// </returns>
-        Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null,
-            SqlStatementOptions options = null
-        );
+        ISqlQueryResult ExecuteQuery(string sql, object[] parameters = null, SqlStatementOptions options = null);
 
         /// <summary>
         /// Executes SQL command (CREATE/UPDATE/DELETE ...).
@@ -56,10 +51,7 @@ namespace Hazelcast.Sql
         /// <see cref="SqlStatementOptions"/> to use with the query.
         /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
         /// </param>
-        /// <param name="cancellationToken"><see cref="CancellationToken"/> that can be used to cancel executing query.</param>
         /// <returns><see cref="ISqlCommandResult"/> containing command execution status and affected rows count.</returns>
-        Task<ISqlCommandResult> ExecuteCommandAsync(string sql, object[] parameters = null,
-            SqlStatementOptions options = null, CancellationToken cancellationToken = default
-        );
+        ISqlCommandResult ExecuteCommand(string sql, object[] parameters = null, SqlStatementOptions options = null);
     }
 }
