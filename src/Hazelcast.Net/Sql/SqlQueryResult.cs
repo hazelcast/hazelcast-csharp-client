@@ -54,6 +54,7 @@ namespace Hazelcast.Sql
 
         private void UpdateCurrentPage(SqlPage page) => _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
 
+        // Require closing unless we fetched last page in query
         protected override bool CloseRequired => !(_pageEnumerator is { IsLastPage: true });
 
         public override async ValueTask DisposeAsync()

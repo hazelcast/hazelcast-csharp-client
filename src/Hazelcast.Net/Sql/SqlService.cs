@@ -50,7 +50,7 @@ namespace Hazelcast.Sql
             );
         }
 
-        public Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
+        public Task<ISqlCommandResult> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -58,7 +58,12 @@ namespace Hazelcast.Sql
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            return FetchUpdateCountAsync(queryId, sql, parameters, options, cancellationToken);
+            return Task.FromResult<ISqlCommandResult>(
+                new SqlCommandResult(
+                    FetchUpdateCountAsync(queryId, sql, parameters, options, cancellationToken),
+                    () => CloseAsync(queryId)
+                )
+            );
         }
 
         private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,

@@ -57,8 +57,8 @@ namespace Hazelcast.Sql
         /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
         /// </param>
         /// <param name="cancellationToken"><see cref="CancellationToken"/> that can be used to cancel executing query.</param>
-        /// <returns>Number of rows affected by the statement.</returns>
-        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null,
+        /// <returns><see cref="ISqlCommandResult"/> containing command execution status and affected rows count.</returns>
+        Task<ISqlCommandResult> ExecuteCommandAsync(string sql, object[] parameters = null,
             SqlStatementOptions options = null, CancellationToken cancellationToken = default
         );
     }

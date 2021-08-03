@@ -10,7 +10,7 @@ namespace Hazelcast.Sql
             service.ExecuteQueryAsync(sql, parameters);
 
         /// <inheritdoc cref="ISqlService.ExecuteCommandAsync"/>
-        public static Task<long> ExecuteCommandAsync(this ISqlService service, string sql, CancellationToken cancellationToken) =>
-            service.ExecuteCommandAsync(sql, cancellationToken);
+        public static Task<ISqlCommandResult> ExecuteCommandAsync(this ISqlService service, string sql, CancellationToken cancellationToken) =>
+            service.ExecuteCommandAsync(sql, parameters: null, options: null, cancellationToken);
     }
 }
