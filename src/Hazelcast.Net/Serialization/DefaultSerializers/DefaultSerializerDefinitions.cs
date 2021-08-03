@@ -47,6 +47,8 @@ namespace Hazelcast.Serialization.DefaultSerializers
             service.AddConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
             service.AddConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
             service.AddConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
+
+            service.AddConstantSerializer<HBigDecimal>(new HBigDecimalSerializer());
         }
     }
 }

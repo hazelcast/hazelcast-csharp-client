@@ -145,7 +145,9 @@ namespace Hazelcast.Tests.Sql
         )]
         public async Task Decimal(params string[] expectedValues)
         {
-            await using var map = await CreateNewMap<object>();
+            await using var map = await CreateNewMap<HBigDecimal>();
+
+            var expectedDecimals = expectedValues.Select(HBigDecimal.Parse).ToList();
 
             var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
                 string.Join(";", expectedValues.Select((val, index) =>
@@ -154,8 +156,8 @@ namespace Hazelcast.Tests.Sql
 
             await RcClient.ExecuteOnControllerAsync(RcCluster.Id, populateScript, Lang.JAVASCRIPT);
 
-            await AssertSqlResultMatchAsync(map.Name, expectedValues);
-            //await AssertSqlParametersMatchAsync(map.Name, expectedValues); // FIXME [Oleksii] enable after adding custom type
+            await AssertSqlResultMatchAsync(map.Name, expectedDecimals);
+            await AssertSqlParametersMatchAsync(map.Name, expectedDecimals);
         }
 
         [Test]
