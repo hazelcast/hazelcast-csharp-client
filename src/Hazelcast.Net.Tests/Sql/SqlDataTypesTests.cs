@@ -81,5 +81,62 @@ namespace Hazelcast.Tests.Sql
             Assert.AreEqual((HLocalTime)timeSpanValue, localTimeValue);
             Assert.AreEqual(timeSpanValue.ToString(@"hh\:mm\:ss"), localTimeValue.ToString());
         }
+
+        [TestCase("2020-07-15T07:11:42")]
+        [TestCase("0001-01-01T00:00:00")] // DateTime.MinValue
+        [TestCase("9999-12-31T23:59:59")] // DateTime.MaxValue
+        [TestCase("12345-11-22T11:22:33")] // too large
+        [TestCase("0000-01-01T11:22:33")] // too small
+        [TestCase("-12345-11-22T11:22:33")] // negative
+        public void LocalDateTime(string stringValue)
+        {
+            var localDateTimeValue = HLocalDateTime.Parse(stringValue);
+
+            if (DateTime.TryParse(stringValue, Culture, DateTimeStyles.None, out var dateTimeValue))
+            {
+                Assert.AreEqual(dateTimeValue, (DateTime)localDateTimeValue);
+                Assert.AreEqual((HLocalDateTime)dateTimeValue, localDateTimeValue);
+                Assert.AreEqual(dateTimeValue.ToString("yyyy-MM-ddTHH:mm:ss"), localDateTimeValue.ToString());
+            }
+            else
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => _ = (DateTime)localDateTimeValue);
+                Assert.AreEqual(stringValue, localDateTimeValue.ToString());
+            }
+        }
+
+        [TestCase("2020-07-15T07:11:42Z")]
+        [TestCase("2020-07-15T07:11:42+11:22")]
+        [TestCase("0001-01-01T00:00:00Z")] // DateTimeOffset.MinValue
+        [TestCase("0001-01-01T00:00:00-18:00")] // DateTimeOffset.MinValue + min offset
+        [TestCase("9999-12-31T23:59:59Z")] // DateTimeOffset.MaxValue
+        [TestCase("9999-12-31T23:59:59+18:00")] // DateTimeOffset.MaxValue + max offset
+        [TestCase("12345-11-22T11:22:33Z")] // too large
+        [TestCase("12345-11-22T11:22:33+12:34")] // too large with offset
+        [TestCase("0000-01-01T11:22:33Z")] // too small
+        [TestCase("0000-01-01T11:22:33-12:34")] // too small with offset
+        [TestCase("-12345-11-22T11:22:33Z")] // negative
+        [TestCase("-12345-11-22T11:22:33-12:34")] // negative with offset
+        public void OffsetDateTime(string stringValue)
+        {
+            var offsetDateTimeValue = HOffsetDateTime.Parse(stringValue);
+
+            if (DateTimeOffset.TryParse(stringValue, Culture, DateTimeStyles.None, out var dateTimeOffsetValue))
+            {
+                Assert.AreEqual(dateTimeOffsetValue, (DateTimeOffset)offsetDateTimeValue);
+                Assert.AreEqual((HOffsetDateTime)dateTimeOffsetValue, offsetDateTimeValue);
+                Assert.AreEqual(
+                    dateTimeOffsetValue.Offset == TimeSpan.Zero
+                        ? dateTimeOffsetValue.ToString("yyyy-MM-ddTHH:mm:ssZ")
+                        : dateTimeOffsetValue.ToString("yyyy-MM-ddTHH:mm:ssK"),
+                    offsetDateTimeValue.ToString()
+                );
+            }
+            else
+            {
+                Assert.Throws<ArgumentOutOfRangeException>(() => _ = (DateTimeOffset)offsetDateTimeValue);
+                Assert.AreEqual(stringValue, offsetDateTimeValue.ToString());
+            }
+        }
     }
 }

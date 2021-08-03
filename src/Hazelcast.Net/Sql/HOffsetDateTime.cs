@@ -59,7 +59,7 @@ namespace Hazelcast.Sql
         { }
 
         public HOffsetDateTime(DateTimeOffset dateTimeOffset) :
-            this(new HLocalDateTime(dateTimeOffset.LocalDateTime), dateTimeOffset.Offset)
+            this(new HLocalDateTime(dateTimeOffset.DateTime), dateTimeOffset.Offset)
         { }
 
         public bool TryToDateTimeOffset(out DateTimeOffset dateTimeOffset)
@@ -73,7 +73,7 @@ namespace Hazelcast.Sql
             return true;
         }
 
-        public DateTimeOffset ToDateTimeOffset() => new DateTimeOffset(LocalDateTime.ToDateTime(), Offset);
+        public DateTimeOffset ToDateTimeOffset() => new DateTimeOffset(LocalDateTime.ToDateTime().Ticks, Offset);
 
         public static explicit operator DateTimeOffset(HOffsetDateTime offsetDateTime) => offsetDateTime.ToDateTimeOffset();
         public static explicit operator HOffsetDateTime(DateTimeOffset dateTimeOffset) => new HOffsetDateTime(dateTimeOffset);
