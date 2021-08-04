@@ -21,7 +21,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
-    public class SqlServiceTests : SqlTestBase
+    public class SqlQueryTests : SqlTestBase
     {
         [Test]
         [TestCase(3, 1)]
@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Sql
         [TestCase(3, 5)]
         [TestCase(5, 2)]
         [TestCase(6, 3)]
-        public async Task ExecuteQueryMap(int total, int pageSize)
+        public async Task ExecuteQuery(int total, int pageSize)
         {
             var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} ORDER BY __key LIMIT {total}",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
@@ -37,24 +37,6 @@ namespace Hazelcast.Tests.Sql
 
             var expectedValues = MapValues.OrderBy(p => p.Key).Take(total).ToDictionary();
             var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
-
-            CollectionAssert.AreEquivalent(expectedValues, resultValues);
-        }
-
-        [Test]
-        [TestCase(3, 1)]
-        [TestCase(3, 3)]
-        [TestCase(3, 5)]
-        [TestCase(5, 2)]
-        [TestCase(6, 3)]
-        public async Task ExecuteQueryJet(int total, int pageSize)
-        {
-            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{total}))",
-                options: new SqlStatementOptions { CursorBufferSize = pageSize }
-            );
-
-            var expectedValues = Enumerable.Range(1, total);
-            var resultValues = result.EnumerateOnce().Select(r => r.GetColumn<int>("v"));
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
