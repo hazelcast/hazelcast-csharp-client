@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 
 namespace Hazelcast.Sql
@@ -19,7 +20,7 @@ namespace Hazelcast.Sql
     /// <summary>
     /// Provides access to non-reusable stream of rows from SQL query.
     /// </summary>
-    public interface ISqlQueryResult: IAsyncEnumerator<SqlRow>
+    public interface ISqlQueryResult: IAsyncEnumerator<SqlRow>, IAsyncDisposable
     {
         /// <summary>
         /// <para>
