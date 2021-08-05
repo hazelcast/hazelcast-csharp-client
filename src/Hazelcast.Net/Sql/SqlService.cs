@@ -95,7 +95,6 @@ namespace Hazelcast.Sql
                 throw new HazelcastSqlException(sqlError);
 
             return response;
-
         }
 
         private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,

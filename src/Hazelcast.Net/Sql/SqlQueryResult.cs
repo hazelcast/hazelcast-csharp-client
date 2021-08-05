@@ -43,6 +43,11 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
             _initTask = initTask.ContinueWith(InitFromTaskAsync).Unwrap();
             _nextFunc = nextFunc;
+
+            // Mark exception in initial task as handled in case if query cancelled
+            _initTask.ContinueWith(t => t.Exception?.Handle(
+                e => Disposed && e is HazelcastSqlException { ErrorCode: (int)SqlErrorCode.CancelledByUser }
+            ));
         }
 
         private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> initTask)
@@ -57,20 +62,10 @@ namespace Hazelcast.Sql
         // Require closing unless we fetched last page in query
         protected override bool CloseRequired => !(_pageEnumerator is { IsLastPage: true });
 
-        public override async ValueTask DisposeAsync()
-        {
-            if (!_initTask.IsCompleted) // mark possible Query Cancelled exception as observed
-            {
-                _ = _initTask.ContinueWith(t => t.Exception?.Handle(
-                    e => e is HazelcastSqlException { ErrorCode: (int)SqlErrorCode.CancelledByUser }
-                ));
-            }
-
-            await base.DisposeAsync();
-        }
-
         public async ValueTask<bool> MoveNextAsync()
         {
+            ThrowIfDisposed();
+
             _enumerationStarted = true;
 
             await _initTask.CfAwait();
@@ -80,9 +75,6 @@ namespace Hazelcast.Sql
 
             if (_pageEnumerator.IsLastPage)
                 return false;
-
-            // do not try to continue enumeration if disposed(ing)
-            ThrowIfDisposed();
 
             var page = await _nextFunc().CfAwait();
             UpdateCurrentPage(page);
@@ -99,7 +91,7 @@ namespace Hazelcast.Sql
             }
 
             ThrowIfDisposed();
-            ThrowIfEnumerationNotStarted();
+            ThrowIfEnumerationStarted();
             return Enumerate();
         }
 
@@ -113,11 +105,11 @@ namespace Hazelcast.Sql
             }
 
             ThrowIfDisposed();
-            ThrowIfEnumerationNotStarted();
+            ThrowIfEnumerationStarted();
             return Enumerate();
         }
 
-        private void ThrowIfEnumerationNotStarted()
+        private void ThrowIfEnumerationStarted()
         {
             if (_enumerationStarted)
                 throw new InvalidOperationException("Result enumeration already started");

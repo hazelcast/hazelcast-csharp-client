@@ -24,7 +24,8 @@ namespace Hazelcast.Sql
     internal abstract class SqlResult : IAsyncDisposable
     {
         private readonly Func<Task> _closeAction;
-        private bool _disposed;
+
+        protected bool Disposed { get; private set; }
 
         protected SqlResult(Func<Task> closeAction)
         {
@@ -35,14 +36,14 @@ namespace Hazelcast.Sql
 
         public virtual async ValueTask DisposeAsync()
         {
-            if (CloseRequired && !_disposed)
+            if (CloseRequired && !Disposed)
                 await _closeAction();
-            _disposed = true;
+            Disposed = true;
         }
 
         protected void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (Disposed)
                 throw new ObjectDisposedException(nameof(SqlQueryResult));
         }
     }
