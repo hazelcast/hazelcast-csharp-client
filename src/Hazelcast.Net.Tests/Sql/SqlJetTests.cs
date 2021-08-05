@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -68,6 +69,56 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(mapName);
             var mapValue = await map.GetAsync(1);
             Assert.AreEqual(expected: insertRow.value, mapValue);
+        }
+
+        [Test]
+        public async Task Update()
+        {
+            var values = new Dictionary<int, int>
+            {
+                { 1, 1 },
+                { 2, 2 },
+                { 3, 3 }
+            };
+            var update = (key: 2, value: -2);
+
+            await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
+            await map.SetAllAsync(values);
+
+            var updateRowsCount = await Client.Sql.ExecuteCommand(
+                $@"UPDATE {map.Name} SET this = {update.value} WHERE __key = {update.key}"
+            ).Execution;
+            //Assert.AreEqual(expected: 1, updateRowsCount);
+
+            values[update.key] = update.value;
+
+            var mapValues = await map.GetEntriesAsync();
+            CollectionAssert.AreEquivalent(expected: values, mapValues);
+        }
+
+        [Test]
+        public async Task Delete()
+        {
+            var values = new Dictionary<int, int>
+            {
+                { 1, 1 },
+                { 2, 2 },
+                { 3, 3 }
+            };
+            var deleteKey = 2;
+
+            await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
+            await map.SetAllAsync(values);
+
+            var deleteRowsCount = await Client.Sql.ExecuteCommand(
+                $@"DELETE FROM {map.Name} WHERE __key = {deleteKey}"
+            ).Execution;
+            //Assert.AreEqual(expected: 1, deleteRowsCount);
+
+            values.Remove(deleteKey);
+
+            var mapValues = await map.GetEntriesAsync();
+            CollectionAssert.AreEquivalent(expected: values, mapValues);
         }
 
         [Test]
