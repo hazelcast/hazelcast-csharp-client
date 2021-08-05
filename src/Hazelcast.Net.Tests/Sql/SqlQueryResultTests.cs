@@ -24,16 +24,22 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task EnumerateAfterDispose()
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
+            await using var map = await CreateIntMapAsync(size: 10);
+
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.DisposeAsync();
 
+            Assert.ThrowsAsync<ObjectDisposedException>(async () => await result.MoveNextAsync());
             Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
+            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
         }
 
         [Test]
         public async Task EnumerateMultipleTimes()
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
+            await using var map = await CreateIntMapAsync(size: 10);
+
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.MoveNextAsync();
 
             Assert.Throws<InvalidOperationException>(() => result.EnumerateOnce());
@@ -43,7 +49,9 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task DisposeMultipleTimes()
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} LIMIT 1");
+            await using var map = await CreateIntMapAsync(size: 10);
+
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.DisposeAsync();
 
             Assert.DoesNotThrowAsync(async () =>

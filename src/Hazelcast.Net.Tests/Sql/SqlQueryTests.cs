@@ -14,7 +14,6 @@
 
 using System.Linq;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.Sql;
 using NUnit.Framework;
 
@@ -31,42 +30,31 @@ namespace Hazelcast.Tests.Sql
         [TestCase(6, 3)]
         public async Task ExecuteQuery(int total, int pageSize)
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} ORDER BY __key LIMIT {total}",
+            await using var map = await CreateIntMapAsync(total);
+
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} ORDER BY __key",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
 
-            var expectedValues = MapValues.OrderBy(p => p.Key).Take(total).ToDictionary();
-            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var expectedValues = GenerateIntMapValues(total);
+            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
 
         [Test]
-        [TestCase(0)]
-        [TestCase(1)]
-        [TestCase(5)]
-        [TestCase(100)]
-        public async Task ExecuteQueryWithIntParameter(int minValue)
+        [TestCase(10, 0)]
+        [TestCase(10, 1)]
+        [TestCase(10, 5)]
+        [TestCase(10, 100)]
+        public async Task ExecuteQueryWithParameter(int total, int minValue)
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} WHERE this >= ?", new object[] { minValue });
+            await using var map = await CreateIntMapAsync(total);
 
-            var expectedValues = MapValues.Where(p => p.Value >= minValue);
-            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} WHERE __key >= ?", minValue);
 
-            CollectionAssert.AreEquivalent(expectedValues, resultValues);
-        }
-
-        [Test]
-        [TestCase("0")]
-        [TestCase("1")]
-        [TestCase("5")]
-        [TestCase("100")]
-        public async Task ExecuteQueryWithStringParameter(string key)
-        {
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {MapName} WHERE __key = ?", new object[] { key });
-
-            var expectedValues = MapValues.Where(p => p.Key == key);
-            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<string>(), r => r.GetValue<int>());
+            var expectedValues = GenerateIntMapValues(total).Where(p => p.Key >= minValue);
+            var resultValues = result.EnumerateOnce().ToDictionary(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }

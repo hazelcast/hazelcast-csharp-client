@@ -12,35 +12,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
 using Hazelcast.Testing;
-using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
 {
-    public class SqlTestBase : SingleMemberClientRemoteTestBase
+    public abstract class SqlTestBase : SingleMemberClientRemoteTestBase
     {
-        protected const string MapName = "MyMap";
+        private const string JetEnabledConfig = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
+            "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"" +
+            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
+            "  xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" +
+            "  http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">" +
+            "  <jet enabled=\"true\"></jet>" +
+            "</hazelcast>";
 
-        protected readonly Dictionary<string, int> MapValues = Enumerable.Range(1, 10)
-            .ToDictionary(i => $"{i}", i => i);
+        protected virtual bool EnableJet => false;
 
-        [OneTimeSetUp]
-        protected async Task InitAll()
+        protected override string RcClusterConfiguration => EnableJet
+            ? JetEnabledConfig
+            : base.RcClusterConfiguration;
+
+        protected async Task<IHMap<int, string>> CreateIntMapAsync(int size)
         {
-            var map = await Client.GetMapAsync<string, int>(MapName);
+            var map = await Client.GetMapAsync<int, string>(GenerateMapName());
+
             await map.AddIndexAsync(IndexType.Sorted, "__key");
-            await map.SetAllAsync(MapValues);
+            await map.AddIndexAsync(IndexType.Sorted, "this");
+
+            await map.SetAllAsync(GenerateIntMapValues(size));
+
+            return map;
         }
 
-        [OneTimeTearDown]
-        protected async Task DisposeAll()
-        {
-            var map = await Client.GetMapAsync<string, int>(MapName);
-            await map.ClearAsync();
-        }
+        protected Dictionary<int, string> GenerateIntMapValues(int size) => Enumerable.Range(1, size)
+            .ToDictionary(i => i, i => $"{i}");
+
+        private string GenerateMapName() => new string($"{Guid.NewGuid():N}".Select(c => char.IsDigit(c) ? (char)(c + 'g' - '1') : c).ToArray());
     }
 }
