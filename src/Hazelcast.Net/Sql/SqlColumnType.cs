@@ -51,7 +51,7 @@ namespace Hazelcast.Sql
         BigInt = 5,
 
         /// <summary>
-        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="string"/> in .NET.
+        /// <c>DECIMAL</c> type, represented by <c>java.lang.BigDecimal</c> in Java and by <see cref="HBigDecimal"/> in .NET.
         /// </summary>
         Decimal = 6,
 
