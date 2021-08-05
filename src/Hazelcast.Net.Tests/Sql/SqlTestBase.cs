@@ -53,6 +53,6 @@ namespace Hazelcast.Tests.Sql
         protected Dictionary<int, string> GenerateIntMapValues(int size) => Enumerable.Range(1, size)
             .ToDictionary(i => i, i => $"{i}");
 
-        private string GenerateMapName() => new string($"{Guid.NewGuid():N}".Select(c => char.IsDigit(c) ? (char)(c + 'g' - '1') : c).ToArray());
+        protected string GenerateMapName() => new string($"{Guid.NewGuid():N}".Select(c => char.IsDigit(c) ? (char)(c + 'g' - '1') : c).ToArray());
     }
 }

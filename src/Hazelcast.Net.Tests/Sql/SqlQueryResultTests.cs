@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Sql;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -21,6 +22,9 @@ namespace Hazelcast.Tests.Sql
     [TestFixture]
     public class SqlQueryResultTests : SqlTestBase
     {
+        // Needed to create long-running query
+        protected override bool EnableJet => true;
+
         [Test]
         public async Task EnumerateAfterDispose()
         {
@@ -59,6 +63,23 @@ namespace Hazelcast.Tests.Sql
                 await result.DisposeAsync();
                 await result.DisposeAsync();
             });
+        }
+
+        [Test]
+        public async Task DisposeDuringQuery()
+        {
+            var result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))", new SqlStatementOptions
+            {
+                CursorBufferSize = 1
+            });
+
+            var moveNextTask = result.MoveNextAsync().AsTask();
+
+            // wait for query to reach server
+            await Task.Delay(millisecondsDelay: 10);
+            await result.DisposeAsync();
+
+            Assert.ThrowsAsync<HazelcastSqlException>(() => moveNextTask);
         }
     }
 }

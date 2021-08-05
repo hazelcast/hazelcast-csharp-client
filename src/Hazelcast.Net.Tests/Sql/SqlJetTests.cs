@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System.Linq;
-using Hazelcast.Sql;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -21,32 +21,91 @@ namespace Hazelcast.Tests.Sql
     [TestFixture]
     public class SqlJetTests : SqlTestBase
     {
-        // enable Jet
-        protected override string RcClusterConfiguration =>
-            "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-            "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"" +
-            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
-            "  xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" +
-            "  http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">" +
-            "  <jet enabled=\"true\"></jet>" +
-            "</hazelcast>";
+        protected override bool EnableJet => true;
 
         [Test]
-        [TestCase(3, 1)]
-        [TestCase(3, 3)]
-        [TestCase(3, 5)]
-        [TestCase(5, 2)]
-        [TestCase(100, 15)]
-        public void ExecuteQueryJet(int total, int pageSize)
+        public void GenerateSeries()
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{total}))",
-                options: new SqlStatementOptions { CursorBufferSize = pageSize }
-            );
+            var count = 10;
+            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{count}))");
 
-            var expectedValues = Enumerable.Range(1, total);
+            var expectedValues = Enumerable.Range(1, count);
             var resultValues = result.EnumerateOnce().Select(r => r.GetColumn<int>("v"));
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
+        }
+
+        [Test]
+        public void GenerateStream()
+        {
+            var (speed, take) = (10, 15);
+            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_stream({speed}))");
+
+            var expectedValues = Enumerable.Range(0, take).Select(i => (long)i).ToArray();
+            var resultValues = result.EnumerateOnce().Take(take).Select(r => r.GetColumn<long>("v")).ToArray();
+
+            CollectionAssert.AreEquivalent(expectedValues, resultValues);
+        }
+
+        [Test]
+        public async Task CreateInsertMapping()
+        {
+            var mapName = GenerateMapName();
+            var insertRow = (key: 1, value: -1);
+
+            var createRowsCount = await Client.Sql.ExecuteCommand(
+                $@"CREATE MAPPING {mapName} (__key INTEGER, this INTEGER) TYPE IMap OPTIONS (
+                    'keyFormat'='integer',
+                    'valueFormat'='integer')"
+            ).Execution;
+            Assert.AreEqual(expected: 0, createRowsCount);
+
+            var insertRowsCount = await Client.Sql.ExecuteCommand(
+                $@"INSERT INTO {mapName} VALUES ({insertRow.key}, {insertRow.value})"
+            ).Execution;
+            //Assert.AreEqual(expected: 1, insertRowsCount);
+
+            await using var map = await Client.GetMapAsync<int, int>(mapName);
+            var mapValue = await map.GetAsync(1);
+            Assert.AreEqual(expected: insertRow.value, mapValue);
+        }
+
+        [Test]
+        public async Task SelectCount()
+        {
+            var count = 10;
+            await using var map = await CreateIntMapAsync(count);
+
+            await using var result = Client.Sql.ExecuteQuery($"SELECT COUNT(*) FROM {map.Name}");
+            var selectCount = result.EnumerateOnce().Select(r => r.GetColumn<long>(0)).Single();
+
+            Assert.AreEqual(expected: count, selectCount);
+        }
+
+        [Test]
+        public async Task SelectSum()
+        {
+            var count = 10;
+            await using var map = await CreateIntMapAsync(count);
+
+            await using var result = Client.Sql.ExecuteQuery($"SELECT SUM(__key) FROM {map.Name}");
+            var selectSum = result.EnumerateOnce().Select(r => r.GetColumn<long>(0)).Single();
+
+            var expectedSum = GenerateIntMapValues(count).Sum(p => p.Key);
+            Assert.AreEqual(expectedSum, selectSum);
+        }
+
+        [Test]
+        public async Task SelectMax()
+        {
+            var count = 10;
+            await using var map = await CreateIntMapAsync(count);
+
+            await using var result = Client.Sql.ExecuteQuery($"SELECT MAX(__key) FROM {map.Name}");
+            var selectSum = result.EnumerateOnce().Select(r => r.GetColumn<int>(0)).Single();
+
+            var expectedSum = GenerateIntMapValues(count).Max(p => p.Key);
+            Assert.AreEqual(expectedSum, selectSum);
         }
     }
 }
