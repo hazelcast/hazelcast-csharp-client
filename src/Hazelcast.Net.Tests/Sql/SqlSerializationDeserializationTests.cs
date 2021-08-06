@@ -351,7 +351,7 @@ namespace Hazelcast.Tests.Sql
 
         private async Task AssertSqlResultMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
         {
-            var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} ORDER BY __key");
+            await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} ORDER BY __key");
             var resultValues = result.EnumerateOnce().Select(r => r.GetValue<TValue>()).ToList();
 
             CollectionAssert.AreEqual(expectedValues, resultValues);
@@ -361,7 +361,7 @@ namespace Hazelcast.Tests.Sql
         {
             foreach (var expectedValue in expectedValues)
             {
-                var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
+                await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
                 var resultValues = result.EnumerateOnce().Select(r => r.GetValue<TValue>()).ToList();
 
                 CollectionAssert.AreEqual(new[] { expectedValue }, resultValues);

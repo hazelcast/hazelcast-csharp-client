@@ -25,10 +25,10 @@ namespace Hazelcast.Tests.Sql
         protected override bool EnableJet => true;
 
         [Test]
-        public void GenerateSeries()
+        public async Task GenerateSeries()
         {
             var count = 10;
-            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{count}))");
+            await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{count}))");
 
             var expectedValues = Enumerable.Range(1, count);
             var resultValues = result.EnumerateOnce().Select(r => r.GetColumn<int>("v"));
@@ -37,10 +37,10 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
-        public void GenerateStream()
+        public async Task GenerateStream()
         {
             var (speed, take) = (10, 15);
-            var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_stream({speed}))");
+            await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_stream({speed}))");
 
             var expectedValues = Enumerable.Range(0, take).Select(i => (long)i).ToArray();
             var resultValues = result.EnumerateOnce().Take(take).Select(r => r.GetColumn<long>("v")).ToArray();
@@ -54,16 +54,18 @@ namespace Hazelcast.Tests.Sql
             var mapName = GenerateMapName();
             var insertRow = (key: 1, value: -1);
 
-            var createRowsCount = await Client.Sql.ExecuteCommand(
+            await using var createCommand= Client.Sql.ExecuteCommand(
                 $@"CREATE MAPPING {mapName} (__key INTEGER, this INTEGER) TYPE IMap OPTIONS (
                     'keyFormat'='integer',
                     'valueFormat'='integer')"
-            ).Execution;
+            );
+            var createRowsCount = await createCommand.Execution;
             Assert.AreEqual(expected: 0, createRowsCount);
 
-            var insertRowsCount = await Client.Sql.ExecuteCommand(
+            await using var insertCommand = Client.Sql.ExecuteCommand(
                 $@"INSERT INTO {mapName} VALUES ({insertRow.key}, {insertRow.value})"
-            ).Execution;
+            );
+            var insertRowsCount = await insertCommand.Execution;
             //Assert.AreEqual(expected: 1, insertRowsCount);
 
             await using var map = await Client.GetMapAsync<int, int>(mapName);
@@ -85,9 +87,10 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
 
-            var updateRowsCount = await Client.Sql.ExecuteCommand(
+            await using var command = Client.Sql.ExecuteCommand(
                 $@"UPDATE {map.Name} SET this = {update.value} WHERE __key = {update.key}"
-            ).Execution;
+            );
+            var updateRowsCount = await command.Execution;
             //Assert.AreEqual(expected: 1, updateRowsCount);
 
             values[update.key] = update.value;
@@ -110,9 +113,10 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
 
-            var deleteRowsCount = await Client.Sql.ExecuteCommand(
+            await using var command = Client.Sql.ExecuteCommand(
                 $@"DELETE FROM {map.Name} WHERE __key = {deleteKey}"
-            ).Execution;
+            );
+            var deleteRowsCount = await command.Execution;
             //Assert.AreEqual(expected: 1, deleteRowsCount);
 
             values.Remove(deleteKey);

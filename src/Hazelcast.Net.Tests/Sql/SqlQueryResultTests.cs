@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateIntMapAsync(size: 10);
 
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
+            await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.MoveNextAsync();
 
             Assert.Throws<InvalidOperationException>(() => result.EnumerateOnce());
