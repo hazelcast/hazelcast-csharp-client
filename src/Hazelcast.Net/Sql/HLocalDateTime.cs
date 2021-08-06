@@ -99,7 +99,7 @@ namespace Hazelcast.Sql
         {
             localDateTime = default;
 
-            var parts = s.Split(new[] { 'T' }, StringSplitOptions.RemoveEmptyEntries);
+            var parts = s.Split(new[] { 'T', 't' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 2)
                 return false;
 
