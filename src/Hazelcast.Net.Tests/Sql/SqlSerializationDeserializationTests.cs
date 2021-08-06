@@ -321,6 +321,7 @@ namespace Hazelcast.Tests.Sql
             0,
             1,
             -1,
+            123456,
             int.MaxValue,
             int.MinValue
         })]
@@ -331,6 +332,18 @@ namespace Hazelcast.Tests.Sql
             await using var map = await CreateNewMap(expectedObjects);
 
             await AssertSqlResultMatchAsync(map.Name, expectedObjects);
+
+            await using var fieldsQuery = Client.Sql.ExecuteQuery($@"
+                SELECT {nameof(PortableObject.IntValue)}, {nameof(PortableObject.StringValue)}, {nameof(PortableObject.BoolValue)}
+                FROM {map.Name}"
+            );
+            var objects = fieldsQuery.EnumerateOnce().Select(r => new PortableObject(
+                r.GetColumn<int>(nameof(PortableObject.IntValue)),
+                r.GetColumn<string>(nameof(PortableObject.StringValue)),
+                r.GetColumn<bool>(nameof(PortableObject.BoolValue))
+            )).ToArray();
+
+            CollectionAssert.AreEquivalent(expectedObjects, objects);
         }
 
         private async Task<IHMap<int, TValue>> CreateNewMap<TValue>(TValue[] values = null,
