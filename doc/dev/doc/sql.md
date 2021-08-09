@@ -1,4 +1,32 @@
-# SQL
+# SQL <!-- omit in toc -->
+
+- [Example: How to Query an IHMap using SQL](#example-how-to-query-an-ihmap-using-sql)
+- [Querying IHMap](#querying-ihmap)
+  - [Names](#names)
+  - [Fields](#fields)
+    - [Key and Value Objects](#key-and-value-objects)
+    - [Key and Value Fields](#key-and-value-fields)
+    - ["SELECT *" Queries](#select--queries)
+- [Data Types](#data-types)
+  - [Decimal String Format](#decimal-string-format)
+  - [Date String Format](#date-string-format)
+  - [Time String Format](#time-string-format)
+  - [Timestamp String Format](#timestamp-string-format)
+  - [Timestamp with Timezone String Format](#timestamp-with-timezone-string-format)
+- [Casting](#casting)
+  - [How to Cast](#how-to-cast)
+  - [Casting Between Types](#casting-between-types)
+  - [An Example of Implicit Cast](#an-example-of-implicit-cast)
+  - [An Example of Explicit Cast](#an-example-of-explicit-cast)
+  - [Important Notes About Comparison and Casting](#important-notes-about-comparison-and-casting)
+- [SELECT](#select)
+  - [Synopsis](#synopsis)
+  - [Description](#description)
+  - [Sorting](#sorting)
+  - [Unsupported Features](#unsupported-features)
+- [Expressions](#expressions)
+- [Lite Members](#lite-members)
+- [More Information](#more-information)
 
 The SQL service provided by Hazelcast .NET client allows you to query data stored in `IHMap` declaratively.
 
