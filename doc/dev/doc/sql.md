@@ -2,8 +2,8 @@
 
 - [Example: How to Query an IHMap using SQL](#example-how-to-query-an-ihmap-using-sql)
 - [Querying IHMap](#querying-ihmap)
-  - [Names](#names)
-  - [Fields](#fields)
+  - [Map Names](#map-names)
+  - [Field Names](#field-names)
     - [Key and Value Objects](#key-and-value-objects)
     - [Key and Value Fields](#key-and-value-fields)
     - ["SELECT *" Queries](#select--queries)
@@ -50,7 +50,7 @@ await foreach (var row in result.EnumerateOnceAsync())
 
 The following subsections describe how you can access Hazelcast map objects and perform queries on them.
 
-### Names
+### Map Names
 
 The SQL service exposes `IHMap` objects as tables in the predefined `partitioned` schema using exact names.
 This schema is in the SQL service search path so that you can access the `IHMap` objects with or without the schema name.s
@@ -62,7 +62,7 @@ SELECT * FROM employee
 SELECT * FROM partitioned.employee
 ```
 
-### Fields
+### Field Names
 
 The SQL service resolves fields accessible from the SQL automatically. The service reads the first local entry pair of the `IHMap` to construct the list of fields. If the `IHMap` does not have local entries on the member where the query is started, then the list of fields cannot be resolved, and an exception is thrown.
 
@@ -131,8 +131,7 @@ If both the key and value have fields with the same name, then the field of the 
 
 You may use the `SELECT * FROM <table>` syntax to get all the table fields.
 
-The `__key` and `this` fields are returned by the `SELECT *` queries if they do not have nested fields. For `IHMap<number, Employee>`,
-the following query does not return the `this` field, because the value has nested fields `Name` and `Age`:
+The `__key` and `this` fields are returned by the `SELECT *` queries if they do not have nested fields. For `IHMap<number, Employee>`, the following query does not return the `this` field, because the value has nested fields `Name` and `Age`:
 
 ```sql
 -- Returns __key, Name, Age
@@ -297,4 +296,4 @@ You cannot start SQL queries on lite members. This limitation will be removed in
 
 Please refer to [IMDG SQL docs](https://docs.hazelcast.com/imdg/4.2/sql/distributed-sql.html) for more information.
 
-For basic usage of SQL, see `SqlBasicQueryExample` in `Hazelcast.Net.Examples` project.
+For basic usage of SQL, see `SqlBasicQueryExample` in *Hazelcast.Net.Examples* project.
