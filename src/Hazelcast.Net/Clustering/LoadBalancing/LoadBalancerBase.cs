@@ -27,7 +27,7 @@ namespace Hazelcast.Clustering.LoadBalancing
         /// Gets the members.
         /// </summary>
 #pragma warning disable CA1002 // Do not expose generic lists
-        protected MembersInfoCollection Members { get; private set; }
+        protected MemberInfoCollection Members { get; private set; }
 #pragma warning restore CA1002
 
         /// <inheritdoc />
@@ -42,7 +42,7 @@ namespace Hazelcast.Clustering.LoadBalancing
             if (members == null)
                 throw new ArgumentNullException(nameof(members));
 
-            Members = new MembersInfoCollection(members); // atomic reference
+            Members = new MemberInfoCollection(members); // atomic reference
         }
     }
 }

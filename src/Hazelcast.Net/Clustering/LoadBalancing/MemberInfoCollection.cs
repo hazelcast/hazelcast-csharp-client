@@ -5,7 +5,7 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Clustering.LoadBalancing
 {
-    public class MembersInfoCollection
+    public class MemberInfoCollection
     {
         /// <summary>
         /// Gets the data members.
@@ -19,7 +19,7 @@ namespace Hazelcast.Clustering.LoadBalancing
 
         public int Count => DataMembers.Count + LiteMembers.Count;
 
-        public MembersInfoCollection(IEnumerable<MemberInfo> members)
+        public MemberInfoCollection(IEnumerable<MemberInfo> members)
         {
             if (members == null)
                 throw new ArgumentNullException(nameof(members));
