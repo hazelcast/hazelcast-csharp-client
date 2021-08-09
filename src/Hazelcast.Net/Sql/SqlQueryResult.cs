@@ -82,6 +82,7 @@ namespace Hazelcast.Sql
             return _pageEnumerator.MoveNext();
         }
 
+        /// <inheritdoc/>
         public IAsyncEnumerable<SqlRow> EnumerateOnceAsync()
         {
             async IAsyncEnumerable<SqlRow> Enumerate()
@@ -95,6 +96,7 @@ namespace Hazelcast.Sql
             return Enumerate();
         }
 
+        /// <inheritdoc/>
         public IEnumerable<SqlRow> EnumerateOnce()
         {
             IEnumerable<SqlRow> Enumerate()

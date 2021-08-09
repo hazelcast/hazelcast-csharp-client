@@ -18,7 +18,8 @@ using System.Collections.Generic;
 namespace Hazelcast.Sql
 {
     /// <summary>
-    /// Provides access to non-reusable stream of rows from SQL query.
+    /// Represents SQL query (SELECT ...).
+    /// Provides methods to enumerate queried rows or cancel/dispose the query.
     /// </summary>
     public interface ISqlQueryResult: IAsyncEnumerator<SqlRow>, IAsyncDisposable
     {
@@ -30,12 +31,11 @@ namespace Hazelcast.Sql
         /// Invoking this method again after enumeration has started, will throw <see cref="System.InvalidOperationException"/>.
         /// </para>
         /// <para>
-        /// Creating another <see cref="IAsyncEnumerator{T}"/> from obtained enumerable or starting another <c>foreach</c> cycle
-        /// will continue iterating from previous position instead of the beginning.
+        /// Reusing obtained enumerable may lead to unpredictable results.
         /// </para>
         /// </summary>
-        /// <exception cref="System.ObjectDisposedException">SQL result was disposed.</exception>
-        /// <exception cref="System.InvalidOperationException">Enumeration has already started.</exception>
+        /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
+        /// <exception cref="InvalidOperationException">Enumeration has already started.</exception>
         IAsyncEnumerable<SqlRow> EnumerateOnceAsync();
 
         /// <summary>
@@ -46,12 +46,11 @@ namespace Hazelcast.Sql
         /// Invoking this method again after enumeration has started, will throw <see cref="System.InvalidOperationException"/>.
         /// </para>
         /// <para>
-        /// Creating another <see cref="IEnumerator{T}"/> from obtained enumerable or starting another <c>foreach</c> cycle
-        /// will continue iterating from previous position instead of the beginning.
+        /// Reusing obtained enumerable may lead to unpredictable results.
         /// </para>
         /// </summary>
-        /// <exception cref="System.ObjectDisposedException">SQL result was disposed.</exception>
-        /// <exception cref="System.InvalidOperationException">Enumeration has already started.</exception>
+        /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
+        /// <exception cref="InvalidOperationException">Enumeration has already started.</exception>
         IEnumerable<SqlRow> EnumerateOnce();
     }
 }

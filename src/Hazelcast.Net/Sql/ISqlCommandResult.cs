@@ -18,13 +18,17 @@ using System.Threading.Tasks;
 namespace Hazelcast.Sql
 {
     /// <summary>
-    /// Represents SQL command (CREATE, UPDATE, DELETE) with count of affected rows.
+    /// Represents SQL command (CREATE, INSERT, UPDATE, DELETE, etc.).
+    /// Provides methods to wait for command execution or cancel/dispose it.
     /// </summary>
     public interface ISqlCommandResult: IAsyncDisposable
     {
         /// <summary>
         /// Task representing command execution.
-        /// When successfully completed returns <see cref="long"/> as count of affected rows.
+        /// <para>
+        /// In current version this Task returned value is always 0.
+        /// In later version this will represent count of rows affected.
+        /// </para>
         /// </summary>
         public Task<long> Execution { get; }
     }
