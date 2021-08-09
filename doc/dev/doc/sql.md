@@ -7,6 +7,9 @@
     - [Key and Value Objects](#key-and-value-objects)
     - [Key and Value Fields](#key-and-value-fields)
     - ["SELECT *" Queries](#select--queries)
+  - [Special characters in names](#special-characters-in-names)
+  - [Enumerating query result](#enumerating-query-result)
+  - [Disposing or cancelling the query](#disposing-or-cancelling-the-query)
 - [Data Types](#data-types)
   - [Decimal String Format](#decimal-string-format)
   - [Date String Format](#date-string-format)
@@ -137,6 +140,77 @@ The `__key` and `this` fields are returned by the `SELECT *` queries if they do 
 -- Returns __key, Name, Age
 SELECT * FROM employee
 ```
+
+### Special characters in names
+
+If map or field name contains non-alphanumeric characters or starts with a number, you will need to enclose it in double quotes:
+
+```sql
+SELECT * FROM "my-map"
+SELECT * FROM "2map"
+```
+
+### Enumerating query result
+`ISqlService.ExecuteQuery` returns `Hazelcast.Sql.ISqlQueryResult` which provides methods to enumerate or cancel the running query:
+
+```csharp
+await using var result = client.Sql.ExecuteQuery("SELECT Name, Age FROM employee");
+```
+
+It represents one-off stream of rows, implements `IAsyncEnumerator` and can be iterated via `MoveNextAsync()` implementation. Invoking it will either advance row on the last fetched page, or make an asynchronous query for the next one. Below is an example of enumeration via `MoveNextAsync()`:
+
+```csharp
+while (await result.MoveNextAsync())
+    Console.WriteLine(result.Current.GetColumn<string>("Name"));
+```
+
+You can also get instance of `IEnumerable<>` by calling `EnumerateOnce()` method. Code below uses `IEnumerable<>` to iterate rows:
+
+```csharp
+foreach (var row in result.EnumerateOnce())
+    Console.WriteLine(row.GetColumn<string>("Name"));
+```
+
+LINQ can also be used once over obtained `IEnumerable<>`:
+
+```csharp
+var namesByAge = result.EnumerateOnce()
+    .Select(r => (name: r.GetColumn<string>("Name"), age: r.GetColumn<int>("Age")))
+    .ToLookup(e => e.age, e => e.name);
+```
+
+For async enumeration via `IAsyncEnumerable<>` you can call `EnumerateOnceAsync()`:
+
+```csharp
+await foreach (var row in result.EnumerateOnceAsync())
+    Console.WriteLine(row.GetColumn<string>("Name"));
+```
+
+Using LINQ over `IAsyncEnumerable` requires installing separate [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package.
+
+Note, that invoking any of these methods after enumeration has started will throw `InvalidOperationException`. Reusing obtained `IAsyncEnumerable<>` or `IEnumerable<>` instances does not restart enumeration and can lead to unpredictable results.
+
+### Disposing or cancelling the query
+
+Both `ISqlQueryResult` and `ISqlCommandResult` implements `IAsyncDisposable`. Their `DisposeAsync` implementation will make sure to cancel the query and free used server resources.
+
+Because of this, it is recommended to wrap operations with query or command into `await using` statement. This will ensure to send Cancel request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:
+
+```csharp
+await using (var result = client.Sql.ExecuteQuery("SELECT * FROM MyMap"))
+{
+    //...
+}
+```
+
+```csharp
+await using var result = Client.Sql.ExecuteCommand("INSERT INTO MyMap VALUES (1, 2)");
+//...
+```
+
+To cancel the query by client-side timeout, user action or other reasons you can invoke `DisposeAsync` any time, even during execution. See `SqlCancellationExample` in *Hazelcast.Net.Examples* project for examples. `ISqlQueryResult.MoveNextAsync()` or `ISqlQueryCommand.Execution` may throw `HazelcastSqlException` if query is cancelled while they are running.
+
+> **NOTE: Currently `HazelcastSqlException` provides no simple way to identify if it was caused by client-side cancellation or other error apart from parsing exception message. This may be improved in future versions.**
 
 ## Data Types
 
