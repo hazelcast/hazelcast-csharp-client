@@ -9,7 +9,7 @@ The SQL service provided by Hazelcast .NET client allows you to query data store
 This SQL query returns map entries whose values are more than 1:
 
 ```csharp
-await using var map = await client.GetMapAsync<int, string>("my-map");
+await using var map = await client.GetMapAsync<int, string>("MyMap");
 await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"{v}"));
 
 await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} WHERE this > 2");
@@ -115,7 +115,7 @@ SELECT * FROM employee
 
 The SQL service supports a set of SQL data types represented by `Hazelcast.Sql.SqlColumnType` enum. The table below shows SQL datatype, and corresponding .NET types:
 
-| Column Type                  | Javascript                      |
+| Column Type                  | .NET                      |
 |------------------------------|---------------------------------|
 | **VARCHAR**                  | `string`                        |
 | **BOOLEAN**                  | `bool`                          |
@@ -166,15 +166,14 @@ Examples: `10:20:30`, `23:59:59.999999999`
 
 ### Timestamp String Format
 
-SQL `TIMESTAMP` type uses `yyyy-mm-dd(T|t)HH:mm:ss.SSS` format which is the combination of
+SQL `TIMESTAMP` type uses `yyyy-mm-dd(T|t)HH:mm:ss.SSS` which is the combination of
 `DATE` and `TIME` strings. There must be a `T` or `t` letter in between.
 
 Examples: `2021-07-01T10:20:30`, `1990-12-31t23:59:59.999999999`
 
 ### Timestamp with Timezone String Format
 
-SQL `TIMESTAMP WITH TIMEZONE` type is sent and received as a string with the `yyyy-mm-dd(T|t)HH:mm:ss.SSS{timezoneString}` format which is the combination of
-`TIMESTAMP` and timezone strings. The timezone string can be one of `Z`, `+hh:mm` or `-hh:mm` where `hh` represents hour-in-day, and `mm` represents minutes-in-hour.
+SQL `TIMESTAMP WITH TIMEZONE` uses `yyyy-mm-dd(T|t)HH:mm:ss.SSS{timezoneString}` which is the combination of `TIMESTAMP` and timezone strings. The timezone string can be one of `Z`, `+hh:mm` or `-hh:mm` where `hh` represents hour-in-day, and `mm` represents minutes-in-hour.
 The timezone must be in the range `[-18:00, +18:00]`.
 
 `2021-07-01T10:20:30Z`, `1990-12-31t23:59:59.999999999+11:30`
@@ -197,41 +196,36 @@ SELECT * FROM someMap WHERE this = CAST(? AS INTEGER)
 
 When comparing a column with a parameter, your parameter must be of a compatible type. You can cast string to every SQL type.
 
-#### Using Long
+### An Example of Implicit Cast
+In the example below, Age column is of type `INTEGER`. We pass parameters as shorts (`TINYINT`) and they are automatically casted to `INTEGER` for comparison.
 
-In the example below, age column is of type `INTEGER`. Since long objects are sent as `BIGINT` and `BIGINT` is comparable with `INTEGER`, the query is valid without an explicit `CAST`.
-
-```javascript
-const result = client.getSqlService().execute(
-    'SELECT * FROM myMap WHERE age > ? AND age < ?',
-    [long.fromNumber(13), long.fromNumber(18)]
+```csharp
+await using var result = client.Sql.ExecuteQuery(
+    $"SELECT Name FROM {map.Name} WHERE Age > ? AND Age < ?",
+    (short)20, (short)30
 );
 ```
 
-### An Example of Casting
+### An Example of Explicit Cast
 
-In the example below, age column is of type `INTEGER`. The default number type is `double` in Node.js client. We cast
-doubles as `BIGINT`, and `BIGINT` is comparable with `INTEGER` the query is valid. Note that we can also cast to other types that are
-comparable with `INTEGER`.
+In the example below, Age column is of type `INTEGER`. We pass parameters as strings (`VARCHAR`) and cast them to `INTEGER` for comparison.
 
-```javascript
-const result = client.getSqlService().execute(
-    'SELECT * FROM myMap WHERE age > CAST(? AS BIGINT) AND age < CAST(? AS BIGINT)',
-    [13, 18]
+```csharp
+await using var result = client.Sql.ExecuteQuery(
+    $"SELECT Name FROM {map.Name} WHERE Age > CAST(? AS INTEGER) AND Age < CAST(? AS INTEGER)",
+    "20", "30"
 );
 ```
 
-#### Important Notes About Comparison and Casting
+### Important Notes About Comparison and Casting
 
-* In case of comparison operators (=, <, <>, ...), if one side is `?`, it's assumed to be exactly the other side's type, except that `TINYINT`, `SMALLINT`, `INTEGER` are all converted to `BIGINT`.
+* In case of comparison operators (=, <, <>, ...), if one side is `?`, it's assumed to be exactly the other side's type, except that `TINYINT`, `SMALLINT`, `INTEGER` are all converted to `BIGINT`. Note, that reverse is not valid as it may lead to value loss.
 
 * String parameters can be cast to any type. The cast operation may fail though.
 
-* To send a `DECIMAL` type, use a string with an explicit `CAST`.
+* To send a `DECIMAL` type, use `Hazelcast.Sql.HBigDecimal` or an explicit `CAST` from string or other number type.
 
-* To send date and time related types, use a string with an explicit `CAST`.
-
-* See [SQL data types code samples](code_samples/sql-data-types.js) for example usage of all data types.
+* To send date and time related types, use corresponding `Hazelcast.Sql.H*` type or a string with an explicit `CAST`.
 
 ## SELECT
 
@@ -259,8 +253,6 @@ You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and lim
 
 The following features are **not supported** and are planned for future releases:
 
-* `GROUP BY`/`HAVING`
-* `JOIN`
 * set operators (`UNION`, `INTERSECT`, `MINUS`)
 * subqueries (`SELECT … FROM table WHERE x = (SELECT …)`)
 
