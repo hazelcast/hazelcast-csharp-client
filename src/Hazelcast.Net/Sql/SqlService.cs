@@ -66,7 +66,7 @@ namespace Hazelcast.Sql
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            var connection = _cluster.Members.GetRandomConnection();
+            var connection = _cluster.Members.GetConnectionForSql();
             if (connection == null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.ConnectionProblem,
