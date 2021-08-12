@@ -494,12 +494,16 @@ namespace Hazelcast.Clustering
 
             // Otherwise iterate over connections and return the first one that's not to a lite member
             MemberConnection firstConnection = null;
-            foreach (var (memberId, connection) in _connections)
-            {
-                firstConnection ??= connection;
 
-                if (_members.TryGetMember(memberId, out var member) && !member.IsLiteMember)
-                    return connection;
+            lock (_mutex)
+            {
+                foreach (var (memberId, connection) in _connections)
+                {
+                    firstConnection ??= connection;
+
+                    if (_members.TryGetMember(memberId, out var member) && !member.IsLiteMember)
+                        return connection;
+                }
             }
 
             // Failed to get a connection to a data member
