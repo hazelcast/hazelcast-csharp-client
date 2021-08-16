@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Core
 {
@@ -140,7 +141,6 @@ namespace Hazelcast.Core
             }
         }
 
-
         /// <summary>
         /// Writes a <see cref="float"/> value to an array of bytes.
         /// </summary>
@@ -216,7 +216,6 @@ namespace Hazelcast.Core
             }
         }
 
-
         /// <summary>
         /// Writes a <see cref="bool"/> value to an array of bytes.
         /// </summary>
@@ -225,7 +224,6 @@ namespace Hazelcast.Core
         /// <param name="value">The value to write.</param>
         public static void WriteBool(this byte[] bytes, int position, bool value)
             => bytes.WriteByte(position, value ? (byte) 0x01 : (byte) 0x00);
-
 
         /// <summary>
         /// Writes a <see cref="char"/> value to an array of bytes.
@@ -251,6 +249,33 @@ namespace Hazelcast.Core
                     bytes[position + 1] = (byte) (unsigned >> 8);
                 }
             }
+        }
+
+        public static void WriteLocalDate(this byte[] bytes, int position, HLocalDate localDate)
+        {
+            bytes.WriteIntL(position, localDate.Year);
+            bytes.WriteByte(position + SizeOfInt, localDate.Month);
+            bytes.WriteByte(position + SizeOfInt + SizeOfByte, localDate.Day);
+        }
+
+        public static void WriteLocalTime(this byte[] bytes, int position, HLocalTime localTime)
+        {
+            bytes.WriteByte(position, localTime.Hour);
+            bytes.WriteByte(position + SizeOfByte, localTime.Minute);
+            bytes.WriteByte(position + SizeOfByte * 2, localTime.Second);
+            bytes.WriteIntL(position + SizeOfByte * 3, localTime.Nanosecond);
+        }
+
+        public static void WriteLocalDateTime(this byte[] bytes, int position, HLocalDateTime localDateTime)
+        {
+            bytes.WriteLocalDate(position, localDateTime.Date);
+            bytes.WriteLocalTime(position + SizeOfLocalDate, localDateTime.Time);
+        }
+
+        public static void WriteOffsetDateTime(this byte[] bytes, int position, HOffsetDateTime offsetDateTime)
+        {
+            bytes.WriteLocalDateTime(position, offsetDateTime.LocalDateTime);
+            bytes.WriteIntL(position + SizeOfLocalDateTime, (int)offsetDateTime.Offset.TotalSeconds);
         }
     }
 }
