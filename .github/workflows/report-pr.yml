@@ -22,6 +22,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
