@@ -97,7 +97,7 @@ namespace Hazelcast.Metrics
                 await foreach (var metric in metricSource.PublishMetrics())
                     metrics.Add(metric);
 
-            // TODO add NearCache manager as a metric source! - except, then, the souce can be async!
+            // TODO add NearCache manager as a metric source! - except, then, the source can be async!
             //await foreach (var nearCache in _nearCaches)
             //    metrics.AddRange(nearCache.Statistics.PublishMetrics());
 
@@ -110,7 +110,7 @@ namespace Hazelcast.Metrics
                 {
                     foreach (var metric in metrics)
                         compressor.Append(metric);
-                    bytes = compressor.GetBytesAndReset(); // FIXME should we, like, recycle it?
+                    bytes = compressor.GetBytesAndReset(); // TODO: consider re-using the compressor
                 }
 
                 if (cancellationToken.IsCancellationRequested) return;

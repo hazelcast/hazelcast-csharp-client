@@ -616,8 +616,7 @@ namespace Hazelcast.Tests.Remote
             var m2 = await dictionary.GetAllAsync(ss);
             Assert.AreEqual(m2.Count, 2);
 
-            int gv;
-            m2.TryGetValue(1, out gv);
+            m2.TryGetValue(1, out var gv);
             Assert.AreEqual(gv, 1);
 
             m2.TryGetValue(3, out gv);
@@ -1017,7 +1016,7 @@ namespace Hazelcast.Tests.Remote
             await map.SetAsync("key1", "value1");
             await map.RemoveAsync("key1");
 
-            await AssertEx.SucceedsEventually(async () =>
+            await AssertEx.SucceedsEventually(() =>
             {
                 Assert.That(args, Is.Not.Null);
                 Assert.That(args.Key, Is.EqualTo("key1"));

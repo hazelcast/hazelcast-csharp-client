@@ -44,7 +44,7 @@ namespace Hazelcast.Tests.DotNet
 
             var options = runAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
             var taskCompletionSource = new TaskCompletionSource<int>(options);
-            var task = Task.Run(async () =>
+            var task = Task.Run(() =>
             {
                 steps.Add("task.start");
 
@@ -619,30 +619,29 @@ namespace Hazelcast.Tests.DotNet
 
         private class AsyncThing
         {
-            private static AsyncLocal<AsyncThing> _current = new AsyncLocal<AsyncThing>();
+            private static readonly AsyncLocal<AsyncThing> CurrentAsyncLocal = new AsyncLocal<AsyncThing>();
             private static int _idSequence;
-            private int _id;
 
             private AsyncThing()
             {
-                _id = _idSequence++;
+                Id = _idSequence++;
             }
-            public int Id => _id;
+            public int Id { get; }
 
-            public static bool HasCurrent => _current.Value != null;
+            public static bool HasCurrent => CurrentAsyncLocal.Value != null;
 
-            public static AsyncThing Current => _current.Value;
+            public static AsyncThing Current => CurrentAsyncLocal.Value;
 
             public static void Ensure()
             {
-                if (_current.Value == null) _current.Value = new AsyncThing();
+                if (CurrentAsyncLocal.Value == null) CurrentAsyncLocal.Value = new AsyncThing();
             }
 
             public static IDisposable New()
             {
-                var current = _current.Value;
+                var current = CurrentAsyncLocal.Value;
                 var used = new UsedAsyncThing(current);
-                _current.Value = new AsyncThing();
+                CurrentAsyncLocal.Value = new AsyncThing();
                 return used;
             }
 
@@ -657,7 +656,7 @@ namespace Hazelcast.Tests.DotNet
 
                 public void Dispose()
                 {
-                    _current.Value = _asyncThing;
+                    CurrentAsyncLocal.Value = _asyncThing;
                 }
             }
         }

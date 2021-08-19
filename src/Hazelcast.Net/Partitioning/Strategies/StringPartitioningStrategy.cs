@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Partitioning.Strategies
 {
     /// <summary>
@@ -32,7 +34,7 @@ namespace Hazelcast.Partitioning.Strategies
         {
             if (s == null) return null;
 
-            var pos = s.IndexOf('@');
+            var pos = s.IndexOf('@', StringComparison.Ordinal);
             return pos < 0 ? s : s[(pos + 1)..];
         }
     }
