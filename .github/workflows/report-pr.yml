@@ -22,6 +22,7 @@ jobs:
       github.event.workflow_run.conclusion == 'success' }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
@@ -74,25 +75,31 @@ jobs:
 
       # unzip artifacts
       - name: Unzip artifacts
+        id: unzip
         shell: bash
         run: |
           echo "Tests results:"
           if [ -f temp/test-results/test-results.zip ]; then
+            echo "::set-output name=results::true"
             unzip temp/test-results/test-results.zip -d temp/test-results
             ls ./temp/test-results
           else
+            echo "::set-output name=results::false"
             echo "(missing)"
           fi
           echo "Tests coverage:"
           if [ -f temp/test-coverage/test-coverage.zip ]; then
-              unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
-              ls ./temp/test-coverage
+            echo "::set-output name=coverage::true"
+            unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
+            ls ./temp/test-coverage
           else
+            echo "::set-output name=coverage::false"
             echo "(missing)"
           fi
 
       # report test results
       - name: Report test results
+        if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
           name: Test Results (${{ matrix.os }})
@@ -104,6 +111,7 @@ jobs:
 
       # report test coverage
       - name: Report test coverage
+        if: steps.unzip.outputs.coverage == 'true'
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage (${{ matrix.os }})
@@ -112,6 +120,7 @@ jobs:
 
       # publish to codecov
       - name: Publish to Codecov
+        if: steps.unzip.outputs.coverage == 'true'
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
