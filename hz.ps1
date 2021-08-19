@@ -283,7 +283,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 
 # set versions and configure
 $hzVersion = $options.server
-$hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
+$hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
 # determine java code repositories for tests
