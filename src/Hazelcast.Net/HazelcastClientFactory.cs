@@ -44,7 +44,7 @@ namespace Hazelcast
         /// <para>Options are built via HazelcastOptions.Build method.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken = default)
-            => StartNewClientAsync(HazelcastOptions.Build(), cancellationToken);
+            => StartNewClientAsync(new HazelcastOptionsBuilder().Build(), cancellationToken);
 
         /// <summary>
         /// Starts a new <see cref="IHazelcastClient"/> instance with configured options.
@@ -88,9 +88,7 @@ namespace Hazelcast
 
         private static HazelcastOptions GetOptions(Action<HazelcastOptions> configure)
         {
-            var options = HazelcastOptions.Build();
-            configure(options);
-            return options;
+            return new HazelcastOptionsBuilder().With(configure).Build();
         }
 
         // (internal for tests only) creates the serialization service

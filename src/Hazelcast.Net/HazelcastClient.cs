@@ -37,6 +37,7 @@ namespace Hazelcast
     internal partial class HazelcastClient : IHazelcastClient
     {
         private readonly HazelcastOptions _options;
+        private HazelcastOptions _optionsClone;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
 
@@ -134,6 +135,10 @@ namespace Hazelcast
         /// <inheritdoc />
         public string ClusterName => Cluster.Name;
 
+        /// <inheritdoc />
+        // yes this is not really thread-safe but we don't care
+        public HazelcastOptions Options => _optionsClone ??= _options.Clone();
+        
         /// <inheritdoc />
         public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.GetMembers().ToList();
 

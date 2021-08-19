@@ -220,10 +220,10 @@ namespace Hazelcast.Tests.Networking
             await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
-            });
+            }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
@@ -269,10 +269,10 @@ namespace Hazelcast.Tests.Networking
             await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
-            });
+            }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
@@ -324,11 +324,11 @@ namespace Hazelcast.Tests.Networking
             await server.StartAsync().CfAwait();
 
             HConsole.WriteLine(this, "Start client");
-            var options = HazelcastOptions.Build(configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
                 options.Messaging.RetryTimeoutSeconds = 3; // default value is 120s
-            });
+            }).Build();
             await using var client = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
             HConsole.WriteLine(this, "Send message");
@@ -364,10 +364,10 @@ namespace Hazelcast.Tests.Networking
                 => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
             await server.StartAsync().CfAwait();
 
-            var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
-            });
+            }).Build();
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
@@ -418,10 +418,10 @@ namespace Hazelcast.Tests.Networking
                 => await HandleAsync(xsvr, xconn, xmsg, ReceiveMessage), LoggerFactory);
             await server.StartAsync().CfAwait();
 
-            var options = HazelcastOptions.Build(Array.Empty<string>(), configure: (configuration, options) =>
+            var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11000");
-            });
+            }).Build();
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);

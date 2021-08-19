@@ -558,7 +558,7 @@ function ensure-server-files {
 
         # ensure we have the hazelcast enterprise server + test jar
         ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
-        ensure-jar "hazelcast-enterprise-all-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}:jar:tests"
+        ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } else {
 
         # ensure we have the hazelcast server jar
@@ -1746,7 +1746,9 @@ function hz-verify-version {
 function hz-run-example {
 
     if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
-    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx.exe"
+    $ext = ""
+    if ($isWindows) { $ext = ".exe" }
+    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
     if (-not (test-path $hx)) {
         Die "Could not find the examples executable. Did you build the solution?"
     }

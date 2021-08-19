@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Clustering
         {
             using var _ = HConsoleForTest();
 
-            var options = HazelcastOptions.Build();
+            var options = new HazelcastOptionsBuilder().Build();
             options.Messaging.RetryTimeoutSeconds = 1;
 
             var loggerFactory = new NullLoggerFactory();

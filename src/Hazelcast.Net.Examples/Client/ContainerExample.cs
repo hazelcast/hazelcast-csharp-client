@@ -66,8 +66,7 @@ namespace Hazelcast.Examples.Client
 
             // build the IConfiguration
             var configuration = new ConfigurationBuilder()
-                .AddDefaults(args) // add default configuration (appsettings.json, etc)
-                .AddHazelcast(args) // add Hazelcast-specific configuration
+                .AddHazelcastAndDefaults(args) // add default configuration (appsettings.json, etc) + Hazelcast-specific configuration
                 .Build();
 
             // add hazelcast to services

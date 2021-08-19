@@ -28,9 +28,23 @@ namespace Hazelcast.Core
         /// </summary>
         /// <typeparam name="T">The enumerated type.</typeparam>
         /// <param name="source">The original enumerable.</param>
-        /// <returns>The original enumerable items, in random order.</returns>
+        /// <returns>The original items, in random order.</returns>
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
             => source.OrderBy(x => RandomProvider.Next());
+
+        /// <summary>
+        /// Shuffles a collection.
+        /// </summary>
+        /// <typeparam name="T">The enumerated type.</typeparam>
+        /// <param name="source">The original collection.</param>
+        /// <returns>The original items, in random order.</returns>
+        public static IReadOnlyCollection<T> Shuffle<T>(this IReadOnlyCollection<T> source)
+        {
+            // if source is a collection, we can optimize the list creation
+            var l = new List<T>(source.Count);
+            l.AddRange(source.OrderBy(x => RandomProvider.Next()));
+            return l;
+        }
 
         /// <summary>
         /// Combine multiple <see cref="IEnumerable{T}"/> instances.
@@ -128,5 +142,118 @@ namespace Hazelcast.Core
             list.AddRange(source);
             return list;
         }
+
+        /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to deconstruct.</param>
+        /// <param name="item1">The first item.</param>
+        public static void Deconstruct<T>(this IEnumerable<T> source, out T item1)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item1 = e.Current;
+        }
+
+        /// <summary>
+        /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}"/> to deconstruct.</param>
+        /// <param name="item1">The first item.</param>
+        /// <param name="item2">The second item.</param>
+        public static void Deconstruct<T>(this IEnumerable<T> source, out T item1, out T item2)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            using var e = source.GetEnumerator();
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item1 = e.Current;
+            if (!e.MoveNext()) throw new ArgumentException("Source does not contain enough items.", nameof(source));
+            item2 = e.Current;
+        }
+
+        /// <summary>
+        /// Gets the index of the first <see cref="IList{T}"/> item that satisfies the specified <paramref name="predicate"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="list">A list of items.</param>
+        /// <param name="predicate">A predicate.</param>
+        /// <returns>The index of the first item that satisfies the specified <paramref name="predicate"/>, or -1.</returns>
+        public static int IndexOf<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var i = 0;
+            foreach (var item in list)
+                if (predicate(item))
+                    return i;
+                else
+                    i += 1;
+            return -1;
+        }
+
+        /// <summary>
+        /// Gets the index of the last <see cref="IList{T}"/> item that satisfies the specified <paramref name="predicate"/>.
+        /// </summary>
+        /// <typeparam name="T">The type of the items.</typeparam>
+        /// <param name="list">A list of items.</param>
+        /// <param name="predicate">A predicate.</param>
+        /// <returns>The index of the last item that satisfies the specified <paramref name="predicate"/>, or -1.</returns>
+        public static int LastIndexOf<T>(this IList<T> list, Func<T, bool> predicate)
+        {
+            var i = 0;
+            var f = -1;
+            foreach (var item in list)
+            {
+                if (predicate(item)) f = i;
+                i += 1;
+            }
+            return f;
+        }
+
+        /// <summary>
+        /// Filters a sequence of <see cref="KeyValuePair{TKey,TValue}"/> based on a predicate.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="predicate">A function to test each <see cref="KeyValuePair{TKey,TValue}"/> for a condition.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<KeyValuePair<TKey, TValue>> WherePair<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, bool> predicate)
+            => source.Where(pair => predicate(pair.Key, pair.Value));
+
+        /// <summary>
+        /// Filters a sequence of <see cref="KeyValuePair{TKey,TValue}"/> based on a predicate.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="predicate">A function to test each <see cref="KeyValuePair{TKey,TValue}"/> for a condition.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> from the input sequence that satisfy the condition.</returns>
+        public static IEnumerable<KeyValuePair<TKey, TValue>> WherePair<TKey, TValue>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, int, bool> predicate)
+            => source.Where((pair, index) => predicate(pair.Key, pair.Value, index));
+
+        /// <summary>
+        /// Project each element of a sequence of <see cref="KeyValuePair{TKey,TValue}"/> into a new form.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <typeparam name="TResult">The type of the projected elements.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="selector">A transform function to apply to each <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> whose elements are the result of the transform function on each element of the source.</returns>
+        public static IEnumerable<TResult> SelectPair<TKey, TValue, TResult>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, TResult> selector)
+            => source.Select(pair => selector(pair.Key, pair.Value));
+
+        /// <summary>
+        /// Project each element of a sequence of <see cref="KeyValuePair{TKey,TValue}"/> into a new form.
+        /// </summary>
+        /// <typeparam name="TKey">The type of the keys.</typeparam>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <typeparam name="TResult">The type of the projected elements.</typeparam>
+        /// <param name="source">A sequence of <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <param name="selector">A transform function to apply to each <see cref="KeyValuePair{TKey,TValue}"/>.</param>
+        /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> whose elements are the result of the transform function on each element of the source.</returns>
+        public static IEnumerable<TResult> SelectPair<TKey, TValue, TResult>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, int, TResult> selector)
+            => source.Select((pair, index) => selector(pair.Key, pair.Value, index));
     }
 }

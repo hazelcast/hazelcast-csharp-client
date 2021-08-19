@@ -33,8 +33,7 @@ namespace Hazelcast.Testing
         {
             var options = HazelcastOptions.Build(builder =>
             {
-                builder.AddDefaults(null);
-                builder.AddHazelcast(null);
+                builder.AddHazelcastAndDefaults(null);
                 builder.AddUserSecrets(GetType().Assembly, true);
             }, null, ConfigurationSecretsKey);
 

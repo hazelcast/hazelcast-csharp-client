@@ -16,6 +16,9 @@ using System;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Networking
 {
@@ -223,7 +226,7 @@ namespace Hazelcast.Networking
                 (brket2 > 0 && colon2 > brket2))
             {
 #if NETSTANDARD2_0
-                if (!int.TryParse(span.Slice(colon2 + 1).ToString(), out port))
+                if (!int.TryParse(span[(colon2 + 1)..].ToString(), out port))
                     return false;
 #endif
 #if NETSTANDARD2_1
@@ -249,7 +252,7 @@ namespace Hazelcast.Networking
             {
                 // one single colon = hostname is whatever is before
                 // otherwise, hostname is the whole string
-                hostName = (colon2 > 0 && colon1 == colon2) ? span.Slice(0, colon2) : span;
+                hostName = (colon2 > 0 && colon1 == colon2) ? span[..colon2] : span;
             }
 
 #pragma warning restore IDE0057 // Slice can be simplified
@@ -301,6 +304,32 @@ namespace Hazelcast.Networking
         /// <param name="port">The port.</param>
         /// <returns>A new instance of the network address with the same host but a different port.</returns>
         internal NetworkAddress WithPort(int port) => new NetworkAddress(Host, port);
+
+        /// <summary>
+        /// Determines whether this address is reachable, by trying to connect to it.
+        /// </summary>
+        /// <param name="timeout">A timeout.</param>
+        /// <returns><c>true</c> if the connection was successful; otherwise false.</returns>
+        /// <remarks>Use a timeout value of -1ms for infinite.</remarks>
+        internal async Task<bool> TryReachAsync(TimeSpan timeout)
+        {
+            var socket = new Socket(IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            try
+            {
+                await socket.ConnectAsync(IPEndPoint, (int) timeout.TotalMilliseconds, CancellationToken.None).CfAwait();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                socket.Close();
+                socket.Dispose();
+            }
+        }
 
         /// <inheritdoc />
         public override string ToString()
