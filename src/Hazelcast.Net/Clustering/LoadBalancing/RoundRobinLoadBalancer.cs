@@ -25,6 +25,7 @@ namespace Hazelcast.Clustering.LoadBalancing
     /// </remarks>
     public class RoundRobinLoadBalancer : LoadBalancerBase
     {
+        // TODO: consider separating dataMember vs allMember indexes?
         private int _index;
 
         /// <summary>
