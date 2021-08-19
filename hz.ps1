@@ -558,7 +558,7 @@ function ensure-server-files {
 
         # ensure we have the hazelcast enterprise server + test jar
         ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
-        ensure-jar "hazelcast-enterprise-all-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}:jar:tests"
+        ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } else {
 
         # ensure we have the hazelcast server jar
