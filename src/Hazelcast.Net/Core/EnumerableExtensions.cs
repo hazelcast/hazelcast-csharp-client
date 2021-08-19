@@ -28,16 +28,16 @@ namespace Hazelcast.Core
         /// </summary>
         /// <typeparam name="T">The enumerated type.</typeparam>
         /// <param name="source">The original enumerable.</param>
-        /// <returns>The original enumerable items, in random order.</returns>
+        /// <returns>The original items, in random order.</returns>
         public static IEnumerable<T> Shuffle<T>(this IEnumerable<T> source)
             => source.OrderBy(x => RandomProvider.Next());
 
         /// <summary>
-        /// Shuffles an enumerable.
+        /// Shuffles a collection.
         /// </summary>
         /// <typeparam name="T">The enumerated type.</typeparam>
-        /// <param name="source">The original enumerable.</param>
-        /// <returns>The original enumerable items, in random order.</returns>
+        /// <param name="source">The original collection.</param>
+        /// <returns>The original items, in random order.</returns>
         public static IReadOnlyCollection<T> Shuffle<T>(this IReadOnlyCollection<T> source)
         {
             // if source is a collection, we can optimize the list creation

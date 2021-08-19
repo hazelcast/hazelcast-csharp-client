@@ -39,9 +39,8 @@ namespace Hazelcast.Networking
             // automatically whether to use private or public addresses by trying to reach
             // a few members
 
-            if (_options.UsePublicAddresses.HasValue)
+            if (_options.UsePublicAddresses is {} usePublicAddresses)
             {
-                var usePublicAddresses = _options.UsePublicAddresses.Value;
                 _logger.LogDebug(usePublicAddresses
                     ? "NetworkingOptions.UsePublicAddresses is true, the client will use public addresses."
                     : "NetworkingOptions.UsePublicAddresses is false, the client will use internal addresses.");
