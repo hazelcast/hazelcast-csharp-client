@@ -557,12 +557,12 @@ function ensure-server-files {
     if ($options.enterprise) {
 
         # ensure we have the hazelcast enterprise server + test jar
-        ensure-jar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
-        ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
+        ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
+        ensure-jar "hazelcast-enterprise-all-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}:jar:tests"
     } else {
 
         # ensure we have the hazelcast server jar
-        ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+        ensure-jar "hazelcast-all-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${hzVersion}"
     }
 
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
