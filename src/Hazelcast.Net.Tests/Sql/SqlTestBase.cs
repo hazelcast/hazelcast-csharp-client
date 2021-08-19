@@ -24,18 +24,10 @@ namespace Hazelcast.Tests.Sql
 {
     public abstract class SqlTestBase : SingleMemberClientRemoteTestBase
     {
-        private const string JetEnabledConfig = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
-            "<hazelcast xmlns=\"http://www.hazelcast.com/schema/config\"" +
-            "  xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"" +
-            "  xsi:schemaLocation=\"http://www.hazelcast.com/schema/config" +
-            "  http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd\">" +
-            "  <jet enabled=\"true\"></jet>" +
-            "</hazelcast>";
-
         protected virtual bool EnableJet => false;
 
         protected override string RcClusterConfiguration => EnableJet
-            ? JetEnabledConfig
+            ? Hazelcast.Testing.Remote.Resources.jet_enabled
             : base.RcClusterConfiguration;
 
         protected async Task<IHMap<int, string>> CreateIntMapAsync(int size)
