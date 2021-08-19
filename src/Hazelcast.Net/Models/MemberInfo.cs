@@ -14,7 +14,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.Linq;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Models
@@ -28,6 +30,8 @@ namespace Hazelcast.Models
     /// </remarks>
     public class MemberInfo : IEquatable<MemberInfo>
     {
+        private static readonly Dictionary<EndpointQualifier, NetworkAddress> EmptyAddressMap = new Dictionary<EndpointQualifier, NetworkAddress>();
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberInfo"/> class.
         /// </summary>
@@ -36,15 +40,9 @@ namespace Hazelcast.Models
         /// <param name="version">The version of the server running the member.</param>
         /// <param name="isLiteMember">Whether the member is a "lite" member.</param>
         /// <param name="attributes">Attributes of the member.</param>
-        public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLiteMember, IDictionary<string, string> attributes)
-        {
-            Id = id;
-            Address = address;
-            Version = version;
-            IsLiteMember = isLiteMember;
-            Attributes = new ReadOnlyDictionary<string, string>(attributes);
-            AddressMap = new Dictionary<EndpointQualifier, NetworkAddress>();
-        }
+        public MemberInfo(Guid id, NetworkAddress address, MemberVersion version, bool isLiteMember, IReadOnlyDictionary<string, string> attributes)
+            : this(address, id, attributes, isLiteMember, version, false, null)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberInfo"/> class.
@@ -59,14 +57,36 @@ namespace Hazelcast.Models
         /// <remarks>
         /// <para>That overload of the constructor is required by generated codecs.</para>
         /// </remarks>
-        internal MemberInfo(NetworkAddress address, Guid id, IDictionary<string, string> attributes, bool isLiteMember, MemberVersion version, bool addressMapExists, IDictionary<EndpointQualifier, NetworkAddress> addressMap)
-            : this(id, address, version, isLiteMember, attributes)
+        internal MemberInfo(NetworkAddress address, Guid id, IReadOnlyDictionary<string, string> attributes, bool isLiteMember, MemberVersion version, bool addressMapExists, IReadOnlyDictionary<EndpointQualifier, NetworkAddress> addressMap)
         {
-            // yes, this constructor could be simplified, but at the moment
-            // it is what codecs expect, so don't simplify it!
+            // yes, this constructor could be simplified, but it is used (exclusively) by the codec,
+            // and must respect what the codec expects, so don't simplify it!
 
-            if (addressMapExists) AddressMap = addressMap;
+            Id = id;
+            Address = address;
+            Version = version;
+            IsLiteMember = isLiteMember;
+            Attributes = attributes;
+
+            if (addressMapExists)
+            {
+                AddressMap = addressMap;
+                PublicAddress = addressMap.WherePair((qualifier, _) => qualifier.Type == ProtocolType.Client && qualifier.Identifier == "public")
+                    .SelectPair((_, addr) => addr)
+                    .FirstOrDefault();
+            }
+            else
+            {
+                AddressMap = EmptyAddressMap; // will never get modified = safe
+                PublicAddress = null;
+            }
         }
+
+        /// <summary>
+        /// Whether to use the public address or the internal address to connect to the member.
+        /// </summary>
+        /// <remarks>Determines the value of <see cref="ConnectAddress"/>.</remarks>
+        internal bool UsePublicAddress { get; set; }
 
         /// <summary>
         /// Gets the unique identifier of the member.
@@ -86,6 +106,18 @@ namespace Hazelcast.Models
         /// Gets the network address of the member.
         /// </summary>
         public NetworkAddress Address { get; }
+
+        /// <summary>
+        /// Gets the public network address of the member.
+        /// </summary>
+        public NetworkAddress PublicAddress { get; }
+
+        /// <summary>
+        /// Gets the address to connect to.
+        /// </summary>
+        /// <remarks>The address to connect to is either the <see cref="PublicAddress"/> or the <see cref="Address"/>,
+        /// depending on the network structure and how members can be reached by the client.</remarks>
+        internal NetworkAddress ConnectAddress => UsePublicAddress ? PublicAddress : Address;
 
         /// <summary>
         /// Gets the version of the server running the member.
@@ -108,7 +140,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the address map.
         /// </summary>
-        internal IDictionary<EndpointQualifier, NetworkAddress> AddressMap { get; }
+        internal IReadOnlyDictionary<EndpointQualifier, NetworkAddress> AddressMap { get; }
 
         /// <inheritdoc />
         public override bool Equals(object obj)
@@ -125,8 +157,11 @@ namespace Hazelcast.Models
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
+            // compare members on what matters: the id and the connect address
+
             return
-                Id == other.Id;
+                Id == other.Id && 
+                ConnectAddress == other.ConnectAddress;
         }
 
         /// <summary>
@@ -150,12 +185,15 @@ namespace Hazelcast.Models
             => !(left == right);
 
         /// <inheritdoc />
-        public override int GetHashCode() => Id.GetHashCode();
+        public override int GetHashCode() => HashCode.Combine(Id, ConnectAddress);
 
         /// <inheritdoc />
         public override string ToString()
         {
-            return $"Member [{Address.Host}]:{Address.Port} - {Id}{(IsLiteMember ? " lite" : "")}";
+            return $"(Member Address = {Address}, PublicAddress = {PublicAddress}, ConnectAddress = {ConnectAddress}, Id = {Id}, IsLite = {IsLiteMember})";
         }
+
+        public string ToShortString(bool flagConnectAddress)
+            => $"{Id.ToShortString()} - {Address}{(!flagConnectAddress || UsePublicAddress ? "" : "*")} / {(PublicAddress == null ? "null" : PublicAddress.ToString())}{(flagConnectAddress && UsePublicAddress ? "*" : "")}";
     }
 }

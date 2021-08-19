@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Logging;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ namespace Hazelcast
         /// </remarks>
 
         [BinderIgnore]
-        public SingletonServiceFactory<ILoggerFactory> LoggerFactory { get; } = new SingletonServiceFactory<ILoggerFactory>();
+        public SingletonLoggerFactoryServiceFactory LoggerFactory { get; } = new SingletonLoggerFactoryServiceFactory();
 
         /// <summary>
         /// Gets the <see cref="SerializationOptions"/>.

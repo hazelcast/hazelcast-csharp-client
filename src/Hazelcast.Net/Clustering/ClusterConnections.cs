@@ -16,7 +16,6 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -109,19 +108,19 @@ namespace Hazelcast.Clustering
         {
             await foreach(var (member, token) in _clusterMembers.MembersToConnect.WithCancellation(cancellationToken))
             {
-                HConsole.WriteLine(this, $"Ensure a connection for member {member.Id.ToShortString()} (at {member.Address})");
+                _logger.LogDebug($"Ensure client {_clusterState.ClientName} is connected to member {member.Id.ToShortString()} at {member.ConnectAddress}.");
 
                 var (ensured, wasCanceled, exception) = await EnsureConnectionInternalAsync(member, token, cancellationToken).CfAwait();
                 if (ensured) continue;
 
                 if (_disposed > 0)
                 {
-                    _logger.LogWarning($"Could not connect to member at {member.Address}: shutting down.");
+                    _logger.LogWarning($"Could not connect to member {member.Id.ToShortString()} at {member.ConnectAddress}: shutting down.");
                 }
                 else
                 {
                     var details = wasCanceled ? "canceled" : "failed";
-                    _logger.LogWarning(exception, $"Could not connect to member at {member.Address}: {details}.");
+                    _logger.LogWarning(exception, $"Could not connect to member {member.Id.ToShortString()} at {member.ConnectAddress}: {details}.");
 
                     _clusterMembers.FailedToConnect(member);
                 }
@@ -402,7 +401,7 @@ namespace Hazelcast.Clustering
             }
 
             // get known members' addresses
-            var addresses = _clusterMembers.GetMembers().Select(x => x.Address);
+            var addresses = _clusterMembers.GetMembers().Select(x => x.ConnectAddress);
             foreach (var address in Distinct(addresses, distinct, shuffle))
                 yield return address;
 
@@ -551,17 +550,24 @@ namespace Hazelcast.Clustering
         /// </remarks>
         private async Task<Attempt<MemberConnection>> EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
         {
-            HConsole.WriteLine(this, $"Ensure {_clusterState.ClientName} is connected to {member.Id.ToShortString()} at {member.Address}");
-
-            // if we already have a client for that address, return the client
-            // if it is active, or fail if it is not - cannot open yet another
-            // client to that same address, we'll have to wait for the inactive
-            // connection to be removed.
+            // if we already have a connection for that member, to the right address, return the connection if
+            // it is active, or fail it if is not: cannot open yet another connection to that same address, we'll
+            // have to wait for the inactive connection to be removed. OTOH if we have a connection for that
+            // member to a wrong address, keep proceeding and try to open a connection to the right address.
             if (_connections.TryGetValue(member.Id, out var connection))
             {
                 var active = connection.Active;
-                HConsole.WriteLine(this, $"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from {_clusterState.ClientName} to {member.Id.ToShortString()} at {connection.Address}");
-                return Attempt.If(active, connection);
+
+                if (connection.Address == member.ConnectAddress)
+                {
+                    // TODO: wherever we LogDebug an interpolated $"" string we *must* do this check, for performances reasons!
+                    if (_logger.IsDebugEnabled())
+                        _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}.");
+                    return Attempt.If(active, connection);
+                }
+
+                if (_logger.IsDebugEnabled())
+                    _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}, but member address is {member.ConnectAddress}.");
             }
 
             // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
@@ -576,11 +582,19 @@ namespace Hazelcast.Clustering
             {
                 // else actually connect
                 // this may throw
-                HConsole.WriteLine(this, $"{_clusterState.ClientName} not connected to {member.Id.ToShortString()} at {member.Address}, connecting");
+                if (_logger.IsDebugEnabled())
+                    _logger.LogDebug($"Client {_clusterState.ClientName} is not connected to member {member.Id.ToShortString()} at {member.ConnectAddress}, connecting.");
 
 #pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
-                return await ConnectAsync(member.Address, cancellationToken).CfAwait();
+                var memberConnection = await ConnectAsync(member.ConnectAddress, cancellationToken).CfAwait();
 #pragma warning restore CA2000
+                if (memberConnection.MemberId != member.Id)
+                {
+                    _logger.LogWarning($"Client {_clusterState.ClientName} connected address {member.ConnectAddress} expecting member {member.Id.ToShortString()} but found member {memberConnection.MemberId}, dropping the connection.");
+                    _clusterMembers.TerminateConnection(memberConnection);
+                    return Attempt.Fail<MemberConnection>();
+                }
+                return memberConnection;
             }
             catch (Exception e)
             {
@@ -614,11 +628,11 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-                 /// Opens a connection to an address.
-                 /// </summary>
-                 /// <param name="address">The address.</param>
-                 /// <param name="cancellationToken">A cancellation token.</param>
-                 /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
+        /// Opens a connection to an address.
+        /// </summary>
+        /// <param name="address">The address.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
         private async Task<MemberConnection> ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
             // map private address to public address
@@ -644,12 +658,12 @@ namespace Hazelcast.Clustering
 
             // report
             _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}"+
-                                   " on connection {LocalAddress} -> {RemoteAddress} ({ConnectionId})" +
-                                   " to member {MemberId}" +
+                                   " on connection {ConnectionId} from {LocalAddress}" +
+                                   " to member {MemberId} at {Address}" +
                                    " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
                 _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
-                connection.LocalEndPoint, result.MemberAddress, connection.Id.ToShortString(),
-                result.MemberId.ToShortString(),
+                connection.Id.ToShortString(), connection.LocalEndPoint,
+                result.MemberId.ToShortString(), address,
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
 
             // notify partitioner

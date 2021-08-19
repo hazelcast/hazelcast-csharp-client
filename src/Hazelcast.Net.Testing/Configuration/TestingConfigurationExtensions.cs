@@ -34,7 +34,7 @@ namespace Hazelcast.Testing.Configuration
         {
             return builder
                 .WithAltKey(key)
-                .With(configurationBuilder =>
+                .ConfigureBuilder(configurationBuilder =>
                 {
                     configurationBuilder.AddUserSecrets(assembly, optional);
                 });

@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastEnvironmentVariables());
             Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastFile(null, "hazelcast.json", null));
 
-            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcast(default));
+            Assert.Throws<ArgumentNullException>(() => ((ConfigurationBuilder) null).AddHazelcastAndDefaults(default));
         }
 
         [Test]
@@ -145,8 +145,7 @@ namespace Hazelcast.Tests.Configuration
             Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
 
             var configuration = new ConfigurationBuilder()
-                .AddDefaults(CommandLineArgs, "Testing")
-                .AddHazelcast(CommandLineArgs, InMemoryData, path, "Test.json", "Testing")
+                .AddHazelcastAndDefaults(CommandLineArgs, null, InMemoryData, null, path, "Test.json", "Testing")
                 .Build();
 
             for (var i = 1; i <= 8; i++)
@@ -171,8 +170,7 @@ namespace Hazelcast.Tests.Configuration
             Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
 
             var configuration = new ConfigurationBuilder()
-                .AddDefaults(CommandLineArgs, "Testing")
-                .AddHazelcast(CommandLineArgs, InMemoryData, optionsFilePath: path, environmentName: "Testing")
+                .AddHazelcastAndDefaults(CommandLineArgs, null, keyValues: InMemoryData, optionsFilePath: path, environmentName: "Testing")
                 .Build();
 
             for (var i = 1; i <= 8; i++)

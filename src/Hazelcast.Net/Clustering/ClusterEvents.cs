@@ -540,7 +540,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            HConsole.TraceLine(this, "subscribe");
+            HConsole.WriteLine(this, "subscribe");
 
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)
@@ -575,7 +575,7 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecMemberViewEvent(int version, ICollection<MemberInfo> members, object state)
         {
-            var eventArgs = _clusterMembers.SetMembers(version, members);
+            var eventArgs = await _clusterMembers.SetMembersAsync(version, members).CfAwait();
 
             // nothing to do if members have been skipped (due to version)
             if (eventArgs == null) return;

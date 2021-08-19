@@ -72,7 +72,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             var attributes = MapCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             var version = MemberVersionCodec.Decode(iterator);
             var isAddressMapExists = false;
-            IDictionary<Hazelcast.Models.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
+            Dictionary<Hazelcast.Models.EndpointQualifier, Hazelcast.Networking.NetworkAddress> addressMap = default;
             if (iterator.NextIsNotTheEnd())
             {
                 addressMap = MapCodec.Decode(iterator, EndpointQualifierCodec.Decode, AddressCodec.Decode);

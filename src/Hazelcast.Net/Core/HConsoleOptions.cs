@@ -194,12 +194,12 @@ namespace Hazelcast.Core
         /// <returns>The complete options that apply to the specified source object.</returns>
         public HConsoleTargetOptions GetOptions(object source)
         {
-            if (_targetConfigs.TryGetValue(source, out var config))
+            if (source != null && _targetConfigs.TryGetValue(source, out var config))
                 config = config.Clone();
             else
                 config = new HConsoleTargetOptions(this);
 
-            var type = source.GetType();
+            var type = source?.GetType();
             while (type != null && !config.IsComplete)
             {
                 if (_typeConfigs.TryGetValue(type, out var c)) config = config.Merge(c);

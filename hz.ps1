@@ -1746,7 +1746,9 @@ function hz-verify-version {
 function hz-run-example {
 
     if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
-    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx.exe"
+    $ext = ""
+    if ($isWindows) { $ext = ".exe" }
+    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
     if (-not (test-path $hx)) {
         Die "Could not find the examples executable. Did you build the solution?"
     }

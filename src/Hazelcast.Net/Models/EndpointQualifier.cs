@@ -68,6 +68,9 @@ namespace Hazelcast.Models
         public static bool operator !=(EndpointQualifier left, EndpointQualifier right)
             => !(left == right);
 
+        public override string ToString()
+            => $"(EndpointQualifier Identifier = '{Identifier}', Type = '{Type}')";
+
         public override int GetHashCode()
         {
             return HashCode.Combine(Identifier, (int) Type);
