@@ -286,6 +286,9 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
     Target = "~T:Hazelcast.DistributedObjects.IHTxQueue`1",
     Justification = Analysis.Justification.CA1711_Reserved)]
+[assembly: SuppressMessage(Analysis.Naming, Analysis.CA1711, Scope = Analysis.Scope.Type,
+    Target = "~T:Hazelcast.Clustering.LoadBalancing.MemberInfoCollection",
+    Justification = Analysis.Justification.CA1711_Reserved)]
 
 #endregion
 
