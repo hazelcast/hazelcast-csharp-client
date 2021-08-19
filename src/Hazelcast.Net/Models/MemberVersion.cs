@@ -57,8 +57,8 @@ namespace Hazelcast.Models
         public string ToString(bool ignorePatchVersion)
         {
             return ignorePatchVersion
-                ? $"{Major}.{Minor}.{Patch}"
-                : $"{Major}.{Minor}";
+                ? $"{Major}.{Minor}"
+                : $"{Major}.{Minor}.{Patch}";
         }
 
         /// <summary>
