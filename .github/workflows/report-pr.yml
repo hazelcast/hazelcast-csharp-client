@@ -22,18 +22,27 @@ jobs:
       github.event.workflow_run.conclusion == 'success' }}
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
 
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # no need for submodules, but we need the .github directory
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: false
+
       - name: Prepare
         shell: bash
         run: |
           echo "Build PR conclusion: ${{ github.event.workflow_run.conclusion }}"
-          mkdir ./test-results
-          mkdir ./test-coverage
-          git init # ensure we have a dummy repo, reporter wants it
+          mkdir ./temp
+          mkdir ./temp/test-results
+          mkdir ./temp/test-coverage
 
       # cannot use download action because we get artifacts from another run
       - name: Download tests results and coverage artifacts (${{ matrix.os }})
@@ -50,6 +59,9 @@ jobs:
                 var artifact = artifacts.data.artifacts.filter((art) => {
                   return art.name == name;
                 })[0];
+                if (artifact == null) {
+                    return;
+                }
                 var download = await github.actions.downloadArtifact({
                    owner: context.repo.owner,
                    repo: context.repo.repo,
@@ -58,26 +70,40 @@ jobs:
                 });
                 fs.writeFileSync(process.env.GITHUB_WORKSPACE + path, Buffer.from(download.data));
             }
-            await download('Test-Results (${{ matrix.os }})', '/test-results/test-results.zip');
-            await download('Test-Coverage (${{ matrix.os }})', '/test-coverage/test-coverage.zip');
+            await download('Test-Results (${{ matrix.os }})', '/temp/test-results/test-results.zip');
+            await download('Test-Coverage (${{ matrix.os }})', '/temp/test-coverage/test-coverage.zip');
 
       # unzip artifacts
       - name: Unzip artifacts
+        id: unzip
         shell: bash
         run: |
           echo "Tests results:"
-          unzip test-results/test-results.zip -d test-results
-          ls ./test-results
+          if [ -f temp/test-results/test-results.zip ]; then
+            echo "::set-output name=results::true"
+            unzip temp/test-results/test-results.zip -d temp/test-results
+            ls ./temp/test-results
+          else
+            echo "::set-output name=results::false"
+            echo "(missing)"
+          fi
           echo "Tests coverage:"
-          unzip test-coverage/test-coverage.zip -d test-coverage
-          ls ./test-coverage
+          if [ -f temp/test-coverage/test-coverage.zip ]; then
+            echo "::set-output name=coverage::true"
+            unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
+            ls ./temp/test-coverage
+          else
+            echo "::set-output name=coverage::false"
+            echo "(missing)"
+          fi
 
       # report test results
       - name: Report test results
+        if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
           name: Test Results (${{ matrix.os }})
-          path: ./test-results/results-*.trx
+          path: ./temp/test-results/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
@@ -85,15 +111,17 @@ jobs:
 
       # report test coverage
       - name: Report test coverage
+        if: steps.unzip.outputs.coverage == 'true'
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage (${{ matrix.os }})
-          path: ./test-coverage
+          path: ./temp/test-coverage
           sha: ${{ github.sha }}
 
       # publish to codecov
       - name: Publish to Codecov
+        if: steps.unzip.outputs.coverage == 'true'
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./test-coverage/cover-netcoreapp3.1.json
+          files: ./temp/test-coverage/cover-netcoreapp3.1.json

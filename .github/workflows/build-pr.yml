@@ -16,6 +16,7 @@ jobs:
     if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
@@ -98,6 +99,7 @@ jobs:
 
       # upload test results artifact
       - name: Upload test results artifact
+        if: (success() || failure()) && steps.build.conclusion == 'success'
         uses: actions/upload-artifact@v2
         with:
           name: Test-Results (${{ matrix.os }})
@@ -105,6 +107,7 @@ jobs:
 
       # upload test coverage artifact
       - name: Upload test coverage artifact
+        if: steps.test.conclusion == 'success'
         uses: actions/upload-artifact@v2
         with:
           name: Test-Coverage (${{ matrix.os }})
