@@ -58,7 +58,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "4.1-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
+    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
