@@ -129,6 +129,7 @@ jobs:
     if: needs.analyze.outputs.todo != 'nothing'
 
     strategy:
+      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
