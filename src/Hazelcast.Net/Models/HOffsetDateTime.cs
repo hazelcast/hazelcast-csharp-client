@@ -15,7 +15,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace Hazelcast.Sql
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents Hazelcast SQL <c>TIMESTAMP_WITH_TIME_ZONE</c> type corresponding to <c>java.time.OffsetDateTime</c> in Java.

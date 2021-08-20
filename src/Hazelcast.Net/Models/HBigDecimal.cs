@@ -2,7 +2,7 @@
 using System.Globalization;
 using System.Numerics;
 
-namespace Hazelcast.Sql
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents Hazelcast SQL <c>DECIMAL</c> type corresponding to <c>java.math.BigDecimal</c> in Java.

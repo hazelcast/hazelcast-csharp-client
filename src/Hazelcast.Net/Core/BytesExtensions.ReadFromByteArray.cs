@@ -14,7 +14,7 @@
 
 using System;
 using System.Diagnostics;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 
 namespace Hazelcast.Core
 {

@@ -15,7 +15,7 @@
 using System;
 using System.Text.RegularExpressions;
 
-namespace Hazelcast.Sql
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents Hazelcast SQL <c>DATE</c> type corresponding to <c>java.time.LocalDate</c> in Java.

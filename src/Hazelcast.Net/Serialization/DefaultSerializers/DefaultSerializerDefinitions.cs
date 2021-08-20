@@ -17,7 +17,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Numerics;
 using Hazelcast.Core;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {

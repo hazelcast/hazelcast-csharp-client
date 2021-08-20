@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Hazelcast.Sql
+namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents Hazelcast SQL <c>TIMESTAMP</c> type corresponding to <c>java.time.LocalDateTime</c> in Java.

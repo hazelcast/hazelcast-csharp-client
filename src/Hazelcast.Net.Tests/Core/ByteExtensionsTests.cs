@@ -17,7 +17,7 @@ using System.Buffers;
 using System.Linq;
 using System.Text;
 using Hazelcast.Core;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 using Hazelcast.Testing;
 using NUnit.Framework;
 

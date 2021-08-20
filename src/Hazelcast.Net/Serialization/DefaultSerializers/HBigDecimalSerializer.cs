@@ -14,7 +14,7 @@
 
 using System;
 using System.Numerics;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
