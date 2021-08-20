@@ -28,8 +28,10 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Accessors;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -134,6 +136,43 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.That(memberConnection.Active, Is.False);
             Assert.That(memberConnectionHasClosed);
+        }
+
+        [Test]
+        public async Task GetConnectionForSql_NoSmartRouting()
+        {
+            using var _ = HConsoleForTest();
+
+            var options = new HazelcastOptionsBuilder()
+                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.UsePublicAddresses = false)
+                .Build();
+
+            var loggerFactory = NullLoggerFactory.Instance;
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
+
+            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory));
+
+            foreach (var members in new[]
+            {
+                new[] { NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(false) }
+            })
+            {
+                var membersById = members.ToDictionary(m => m.Id);
+                var allMembersLite = members.All(m => m.IsLiteMember);
+
+                await clusterMembers.SetMembersAsync(version: 1, members);
+                clusterMembers.Accessor().Connections = members.ToDictionary(
+                    m => m.Id, m => NewActiveMemberConnection(m, authenticator, loggerFactory)
+                );
+
+                Assert.AreEqual(membersById[clusterMembers.GetConnectionForSql().MemberId].IsLiteMember, allMembersLite);
+                Assert.AreEqual(membersById[clusterMembers.GetConnectionForSql().MemberId].IsLiteMember, allMembersLite);
+            }
         }
 
         internal class ServerState
@@ -243,6 +282,23 @@ namespace Hazelcast.Tests.Clustering
                         break;
                     }
             }
+        }
+
+        private MemberInfo NewMemberInfo(bool isDataMember) => new MemberInfo(id: Guid.NewGuid(),
+            NetworkAddress.Parse("localhost"), new MemberVersion(1, 0, 0),
+            isLiteMember: !isDataMember, attributes: new Dictionary<string, string>());
+
+        private MemberConnection NewActiveMemberConnection(MemberInfo member, Authenticator authenticator, ILoggerFactory loggerFactory)
+        {
+            var connection = new MemberConnection(member.Address,
+                authenticator, new MessagingOptions(), new NetworkingOptions(),
+                new SslOptions(), new Int64Sequence(), loggerFactory
+            );
+
+            connection.Accessor().Active = true;
+            connection.Accessor().MemberId = member.Id;
+
+            return connection;
         }
     }
 }
