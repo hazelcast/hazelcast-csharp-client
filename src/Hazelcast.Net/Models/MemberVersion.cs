@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Generic;
+
 namespace Hazelcast.Models
 {
     /// <summary>
     /// Represents the version of a cluster member.
     /// </summary>
-    public class MemberVersion
+    public class MemberVersion: IEquatable<MemberVersion>, IComparable<MemberVersion>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberVersion"/> class.
@@ -47,10 +50,108 @@ namespace Hazelcast.Models
         /// </summary>
         public byte Patch { get; }
 
-        /// <inheritdoc />
-        public override string ToString()
+        /// <summary>
+        /// Returns a string that represents current member version.
+        /// </summary>
+        /// <param name="ignorePatchVersion">Whether to skip or include path version to the string.</param>
+        public string ToString(bool ignorePatchVersion)
         {
-            return $"{Major}.{Minor}.{Patch}";
+            return ignorePatchVersion
+                ? $"{Major}.{Minor}"
+                : $"{Major}.{Minor}.{Patch}";
         }
+
+        /// <summary>
+        /// Returns a string that represents current member version.
+        /// </summary>
+        public override string ToString() => ToString(ignorePatchVersion: false);
+
+        #region Equality members
+
+        /// <summary>
+        /// Checks if this member version is equal to <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">Other member version to compare with.</param>
+        /// <param name="ignorePatchVersion">Whether to ignore Patch number differences.</param>
+        /// <returns><c>true</c> if versions are equal, <c>false</c> otherwise.</returns>
+        public bool Equals(MemberVersion other, bool ignorePatchVersion)
+        {
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return Major == other.Major && Minor == other.Minor &&
+                (ignorePatchVersion || Patch == other.Patch);
+        }
+
+        /// <summary>
+        /// Checks if this member version is equal to <paramref name="other"/>.
+        /// </summary>
+        /// <param name="other">Other member version to compare with.</param>
+        /// <returns><c>true</c> if versions are equal, <c>false</c> otherwise.</returns>
+        public bool Equals(MemberVersion other) => Equals(other, ignorePatchVersion: false);
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MemberVersion)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Major, Minor, Patch);
+        }
+
+        public static bool operator ==(MemberVersion left, MemberVersion right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MemberVersion left, MemberVersion right)
+        {
+            return !Equals(left, right);
+        }
+
+        #endregion
+
+        #region Relational members
+
+        public int CompareTo(MemberVersion other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+
+            var majorComparison = Major.CompareTo(other.Major);
+            if (majorComparison != 0) return majorComparison;
+
+            var minorComparison = Minor.CompareTo(other.Minor);
+            if (minorComparison != 0) return minorComparison;
+
+            return Patch.CompareTo(other.Patch);
+        }
+
+        public static bool operator <(MemberVersion left, MemberVersion right)
+        {
+            return Comparer<MemberVersion>.Default.Compare(left, right) < 0;
+        }
+
+        public static bool operator >(MemberVersion left, MemberVersion right)
+        {
+            return Comparer<MemberVersion>.Default.Compare(left, right) > 0;
+        }
+
+        public static bool operator <=(MemberVersion left, MemberVersion right)
+        {
+            return Comparer<MemberVersion>.Default.Compare(left, right) <= 0;
+        }
+
+        public static bool operator >=(MemberVersion left, MemberVersion right)
+        {
+            return Comparer<MemberVersion>.Default.Compare(left, right) >= 0;
+        }
+
+        #endregion
+
     }
 }

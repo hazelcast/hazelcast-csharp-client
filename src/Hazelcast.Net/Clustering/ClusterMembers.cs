@@ -33,6 +33,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterMembers : IAsyncDisposable
     {
+        const int SqlConnectionRandomAttempts = 10;
+
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
@@ -537,6 +539,41 @@ namespace Hazelcast.Clustering
 
             // may be null
             return connection;
+        }
+
+        public MemberConnection GetConnectionForSql()
+        {
+            if (_clusterState.IsSmartRouting)
+            {
+                // There might be a race - the chosen member might be just connected or disconnected - try a
+                // couple of times, the memberOfLargerSameVersionGroup returns a random connection,
+                // we might be lucky...
+                for (var i = 0; i < SqlConnectionRandomAttempts; i++)
+                {
+                    var member = _members.FindMemberOfLargerSameVersionGroup();
+                    if (member == null) break;
+
+                    if (TryGetConnection(member.Id, out var memberConnection))
+                        return memberConnection;
+                }
+            }
+
+            // Otherwise iterate over connections and return the first one that's not to a lite member
+            MemberConnection firstConnection = null;
+
+            lock (_mutex)
+            {
+                foreach (var (memberId, connection) in _connections)
+                {
+                    firstConnection ??= connection;
+
+                    if (_members.TryGetMember(memberId, out var member) && !member.IsLiteMember)
+                        return connection;
+                }
+            }
+
+            // Failed to get a connection to a data member
+            return firstConnection;
         }
 
         /// <summary>
