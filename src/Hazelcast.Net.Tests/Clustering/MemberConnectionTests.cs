@@ -139,6 +139,35 @@ namespace Hazelcast.Tests.Clustering
         }
 
         [Test]
+        public void FindMemberOfLargerSameVersionGroup()
+        {
+            using var _ = HConsoleForTest();
+
+            foreach (var members in new[]
+            {
+                new[] { NewMemberInfo(true), NewMemberInfo(true), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(true) },
+                new[] { NewMemberInfo(false), NewMemberInfo(false), NewMemberInfo(false) }
+            })
+            {
+                var allMembersLite = members.All(m => m.IsLiteMember);
+
+                var membersTable = new MemberTable(1, members);
+
+                if (allMembersLite)
+                {
+                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup(), null);
+                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup(), null);
+                }
+                else
+                {
+                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup().IsLiteMember, false);
+                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup()?.IsLiteMember, false);
+                }
+            }
+        }
+
+        [Test]
         public async Task GetConnectionForSql_NoSmartRouting()
         {
             using var _ = HConsoleForTest();
