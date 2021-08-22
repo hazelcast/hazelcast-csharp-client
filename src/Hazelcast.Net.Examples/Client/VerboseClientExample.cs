@@ -38,11 +38,11 @@ namespace Hazelcast.Examples.Client
             var h = new object();
             using var _ = HConsole.Capture(options => options
                 .ClearAll()
-                .Set(x => x.SetLevel(1))
-                .Set(h, x => x.SetPrefix("PROGRAM"))
-                .Set<AsyncContext>(x => x.Quiet())
-                .Set("Hazelcast.Networking.SocketConnectionBase", x => x.SetIndent(1).SetLevel(0).SetPrefix("SOCKET"))
-                .Set("Hazelcast.Clustering.MemberConnection", x => x.SetLevel(1))
+                .Configure().SetLevel(1)
+                .Configure(h).SetPrefix("PROGRAM")
+                .Configure<AsyncContext>().SetMinLevel()
+                .Configure("Hazelcast.Networking.SocketConnectionBase").SetIndent(1).SetLevel(0).SetPrefix("SOCKET")
+                .Configure("Hazelcast.Clustering.MemberConnection").SetLevel(1)
             );
 
             var options = new HazelcastOptionsBuilder()

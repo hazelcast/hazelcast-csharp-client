@@ -18,9 +18,31 @@ namespace Hazelcast.Networking
 {
     internal interface IDns
     {
+        /// <summary>
+        /// Gets the host name of the local computer.
+        /// </summary>
+        /// <returns>A string that contains the DNS host name of the local computer.</returns>
         string GetHostName();
+
+        /// <summary>
+        /// Resolves a host name or IP address to an <see cref="IPHostEntry"/> instance.
+        /// </summary>
+        /// <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
+        /// <returns>An <see cref="IPHostEntry"/> that contains address information about the host specified in <paramref name="hostNameOrAddress"/>.</returns>
         IPHostEntry GetHostEntry(string hostNameOrAddress);
+
+        /// <summary>
+        /// Resolves an IP address to an <see cref="IPHostEntry"/> instance.
+        /// </summary>
+        /// <param name="address">The IP address to resolve.</param>
+        /// <returns>An <see cref="IPHostEntry"/> that contains address information about the host specified in <paramref name="address"/>.</returns>
         IPHostEntry GetHostEntry(IPAddress address);
+
+        /// <summary>
+        /// Returns the IP addresses for the specified host.
+        /// </summary>
+        /// <param name="hostNameOrAddress">The host name or IP address to resolve.</param>
+        /// <returns>An array of <see cref="IPAddress"/> that contains the IP addresses for the host specified in <paramref name="hostNameOrAddress"/>.</returns>
         IPAddress[] GetHostAddresses(string hostNameOrAddress);
     }
 }

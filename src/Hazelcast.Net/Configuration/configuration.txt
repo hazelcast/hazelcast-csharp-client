@@ -1,0 +1,105 @@
+﻿
+CONFIGURATION
+
+The .NET Client configuration relies on the Microsoft.Extensions.Configuration abstractions. It provides
+a default way of handling options which is documented below. Of course, this is entirely re-configureable.
+
+
+We have custom configuration sources & providers in Hazelcast.Configuration for:
+- CommandLine
+- EnvironmentVariables
+- MemoryConfiguration
+
+CommandLine: the separator is ':' and various syntaxes are possible. The custom provider also accepts '.'
+as a separator for Hazelcast options (exclusively), and replaces it with a ':'.
+
+    # standard 
+    hazelcast:clusterName=my_cluster
+    /hazelcast:clusterName=my_cluster
+    /hazelcast:clusterName my_cluster
+    --hazelcast:clusterName=my_cluster
+    --hazelcast:clusterName my_cluster
+
+    # note that this is not valid
+    hazelcast:clusterName my_cluster
+
+    # hazelcast extension
+    hazelcast.clusterName=my_cluster
+    /hazelcast.clusterName=my_cluster
+    /hazelcast.clusterName my_cluster
+    --hazelcast.clusterName=my_cluster
+    --hazelcast.clusterName my_cluster
+
+Single-dash options a.k.a. switch mappings are not defined/used by Hazelcast. They can be used to define
+alternate, short option keys for existing keys (see the documentation). You can define custom mappings 
+in your code:
+
+    var mappings = new Dictionary<string, string>
+    {
+        // both source and target in this dictionary *must* use the ':' separator, and 
+        // *cannot* use the '.' separator, even though the '.' separator support in the
+        // options is provided by the hazelcast extensions
+
+        { "-hz:cn", "hazelcast:clustername" }
+    };
+
+    // registe
+
+    # standard
+    -hz:cn=my_cluster
+    -hz:cn my_cluster
+
+    # hazelcast
+    -hz.cn=my_cluster
+    -hz.cn my_cluster
+
+    # note: the '.' separator works exclusively with mappings to 'hazelcast:' options.
+
+EnvironmentVariables: the separator is ':' however it doesn't work with environment variable hierarchical
+keys on all platforms. '__', the double underscore, is supported by all platforms (e.g. bash) and automatically
+replaced by a ':'. The custom provider also accepts '.' as a separator for Hazelcast options (exclusively),
+where it is supported, and replaces it with a ':'.
+
+    # standard 
+    HAZELCAST:CLUSTERNAME=my_cluster
+
+    # hazelcast extension
+    HAZELCAST.CLUSTERNAME=my_cluster
+
+MemoryConfiguration: the separator is ':'. The custom provider also accepts '.' as a separator for Hazelcast 
+options (exclusively), and replaces it with a ':'.
+
+    # standard
+    { "hazelcast:clusterName", "my_cluster" }
+
+    # hazelcast extension
+    { "hazelcast.clusterName", "my_cluster" }
+
+Note that the Hazelcast extensions only apply to Hazelcast arguments -- all other arguments must respect
+the standard syntax. For instance, 'Logging:LogLevel:Default' is valid, but 'Logging.LogLevel.Default'
+would *not* be recognized.
+
+// TODO: consider dropping these extensions in v5.
+
+We have a custom ConfigurationBinder in Hazelcast.Configuration.Binding, which is a copy of the
+original ConfigurationBinder with additional support for BinderIgnore and BinderName attributes,
+allowing for marking some properties as ignored, and setting the name of other properties. This
+binder has HzBind methods to avoid confusion with the original Bind methods.
+
+An HazelcastOptions instance is built with:
+
+    new HazelcastOptionsBuilder()
+        .With(...)
+        .Build();
+
+Where Build essentially returns HazelcastOptions.Build(...), which ends up doing:
+
+    var builder = new ConfigurationBuilder();
+    setup(builder); // adds the Hazelcast providers (see above)
+    var configuration = builder.Build();
+
+    var options = new HazelcastOptions();
+    configuration.HzBind("hazelcast"", options);
+    return options;
+
+For DI scenarios (either with a simple container, or in a hosted situation), 
