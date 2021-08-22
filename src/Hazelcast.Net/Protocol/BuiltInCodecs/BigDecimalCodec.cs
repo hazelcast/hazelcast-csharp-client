@@ -17,7 +17,7 @@ using System.Collections.Generic;
 using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {

@@ -13,7 +13,7 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {

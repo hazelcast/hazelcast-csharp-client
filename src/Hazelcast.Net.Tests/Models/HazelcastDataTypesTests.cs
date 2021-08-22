@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Globalization;
-using Hazelcast.Sql;
+using Hazelcast.Models;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests.Sql
+namespace Hazelcast.Tests.Models
 {
     [TestFixture]
-    public class SqlDataTypesTests
+    public class HazelcastDataTypesTests
     {
         private static readonly CultureInfo Culture = CultureInfo.InvariantCulture;
 
