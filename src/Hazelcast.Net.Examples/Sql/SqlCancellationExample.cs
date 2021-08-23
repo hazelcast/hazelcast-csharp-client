@@ -29,10 +29,10 @@ namespace Hazelcast.Examples.Sql
                 .With("Logging:LogLevel:Hazelcast.Examples", "Information")
                 .Build();
 
-            var logger = options.LoggerFactory.Service.CreateLogger<SqlBasicQueryExample>();
-
             // create a Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+
+            var logger = client.Options.LoggerFactory.CreateLogger<SqlCancellationExample>();
 
             // FIXME? [Oleksii] clarify if below is correct and OK
             // We will use Jet to emulate long-running query.

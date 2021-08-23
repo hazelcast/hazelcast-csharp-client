@@ -44,7 +44,6 @@ namespace Hazelcast
         private readonly DistributedObjectFactory _distributedOjects;
         private readonly NearCacheManager _nearCacheManager;
         private readonly MetricsPublisher _metricsPublisher;
-        private readonly SqlService _sqlService;
 
         private int _disposed;
 
@@ -138,7 +137,7 @@ namespace Hazelcast
         /// <inheritdoc />
         // yes this is not really thread-safe but we don't care
         public HazelcastOptions Options => _optionsClone ??= _options.Clone();
-        
+
         /// <inheritdoc />
         public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.GetMembers().ToList();
 

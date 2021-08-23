@@ -31,10 +31,10 @@ namespace Hazelcast.Examples.Sql
                 .With("Logging:LogLevel:Hazelcast.Examples", "Information")
                 .Build();
 
-            var logger = options.LoggerFactory.Service.CreateLogger<SqlBasicQueryExample>();
-
             // create a Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+
+            var logger = client.Options.LoggerFactory.CreateLogger<SqlBasicQueryExample>();
 
             // get the distributed map from the cluster and populate it
             await using var map = await client.GetMapAsync<int, string>(nameof(SqlBasicQueryExample));
