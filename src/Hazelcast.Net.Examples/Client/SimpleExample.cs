@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.Client
@@ -53,7 +54,7 @@ namespace Hazelcast.Examples.Client
         //   command line
         //     hazelcast:networking:addresses:0=server:port (standard .NET)
         //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
-        // 
+        //
         // the simplest way to run this example is to build the code:
         //  ./hz.ps1 build
         //
@@ -104,7 +105,18 @@ namespace Hazelcast.Examples.Client
                 }
 
                 logger.LogInformation($"Run {i+1}...");
-                await worker.RunAsync().ConfigureAwait(false);
+                try
+                {
+                    await worker.RunAsync().ConfigureAwait(false);
+                }
+                catch (ClientOfflineException)
+                {
+                    logger.LogWarning("Worker has failed, client is offline.");
+                }
+                catch (Exception e)
+                {
+                    logger.LogError(e, "Worker has failed.");
+                }
             }
 
             // end

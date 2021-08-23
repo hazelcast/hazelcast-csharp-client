@@ -25,20 +25,21 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Represents the queue of members that need to be connected.
     /// </summary>
-    internal class MemberConnectionQueue : IAsyncEnumerable<(MemberInfo, CancellationToken)>, IAsyncDisposable
+    internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>, IAsyncDisposable
     {
-        private readonly AsyncQueue<MemberInfo> _members = new AsyncQueue<MemberInfo>();
-        private readonly Dictionary<Guid, bool> _removed = new Dictionary<Guid, bool>();
+        private readonly AsyncQueue<MemberConnectionRequest> _requests = new AsyncQueue<MemberConnectionRequest>();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
-        private readonly SemaphoreSlim _resume = new SemaphoreSlim(0);
-        private readonly SemaphoreSlim _enumerate = new SemaphoreSlim(1);
+
+        private readonly SemaphoreSlim _resume = new SemaphoreSlim(0); // blocks the queue when it is suspended
+        private readonly SemaphoreSlim _enumerate = new SemaphoreSlim(1); // ensures there can be only 1 concurrent enumerator
+
         private readonly object _mutex = new object();
 
         private readonly ILogger _logger;
 
         private volatile bool _disposed;
-        private CancellationTokenSource _itemCancel;
-        private int _suspend;
+        private MemberConnectionRequest _request;
+        private bool _suspended;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnectionQueue"/> class.
@@ -52,34 +53,49 @@ namespace Hazelcast.Clustering
             HConsole.Configure(x => x.Configure<MemberConnectionQueue>().SetPrefix("MBRQ"));
         }
 
+        public event EventHandler<MemberInfo> ConnectionFailed;
+
         /// <summary>
         /// Suspends the queue.
         /// </summary>
-        public void Suspend()
+        /// <returns>A <see cref="ValueTask"/> that will be completed when the queue is suspended.</returns>
+        /// <remarks>
+        /// <para>If an item is being processed, this waits for the processing to complete.</para>
+        /// <para>When the queue is suspended, calls to the enumerator's MoveNextAsync() method blocks.</para>
+        /// </remarks>
+        public ValueTask SuspendAsync()
         {
             lock (_mutex)
             {
-                if (_disposed) return; // nothing to suspend - but no need to throw about it
+                if (_disposed) return default; // nothing to suspend - but no need to throw about it
 
-                // cancel any current item
-                if (++_suspend == 1) _itemCancel?.Cancel();
+                _logger.IfDebug()?.LogDebug("Suspend the members connection queue.");
+                _suspended = true;
+
+                // _request is a struct and cannot be null
+                // the default MemberConnectionRequest's Completion is the default ValueTask
+                // otherwise, is used to ensure that the request is completed before actually being suspended
+                return _request.Completion;
             }
         }
 
         /// <summary>
         /// Resumes the queue.
         /// </summary>
+        /// <remarks>
+        /// <para>If <paramref name="drain"/> is <c>true</c>, de-queues and ignores all queued items.</para>
+        /// <para>Unblocks calls to the enumerator MoveNextAsync() method.</para>
+        /// </remarks>
         public void Resume(bool drain = false)
         {
             lock (_mutex)
             {
                 if (_disposed) return; // nothing to resume - but no need to throw about it
-
-                if (_suspend == 0) throw new InvalidOperationException("Not suspended.");
-
-                if (drain) _members.Drain();
-
-                if (--_suspend == 0) _resume.Release();
+                if (!_suspended) throw new InvalidOperationException("Not suspended.");
+                _logger.IfDebug()?.LogDebug($"{(drain?"Drain and resume":"Resume")} the members connection queue.");
+                if (drain) _requests.Drain();
+                _suspended = false;
+                _resume.Release();
             }
         }
 
@@ -91,21 +107,40 @@ namespace Hazelcast.Clustering
         {
             if (_disposed) return; // no need to add - no need to throw about it
 
-            if (_members.TryWrite(member)) return;
-
-            lock (_mutex) _removed[member.Id] = false;
-
-            // that should not happen, but log to be sure
-            _logger.LogWarning($"Failed to add a member ({member}).");
+            lock (_mutex)
+            {
+                if (!_requests.TryWrite(new MemberConnectionRequest(member)))
+                {
+                    // that should not happen, but log to be sure
+                    _logger.LogWarning($"Failed to add member ({member.Id.ToShortString()}).");
+                }
+                else
+                {
+                    _logger.LogDebug($"Added member {member.Id.ToShortString()}");
+                }
+            }
         }
 
+        // when receiving members from the cluster... if a member is gone,
+        // we need to remove it from the queue, no need to ever try to connect
+        // to it again - so it remains in the _members async queue, but we
+        // flag it so that when we dequeue it, we can ignore it
+
+        /// <summary>
+        /// Removes a member.
+        /// </summary>
+        /// <param name="memberId">The identifier of the member.</param>
         public void Remove(Guid memberId)
         {
-            lock (_mutex) if (_removed.ContainsKey(memberId)) _removed[memberId] = true;
+            // cancel all corresponding requests
+            lock (_mutex) _requests.ForEach(m =>
+            {
+                if (m.Member.Id == memberId) m.Cancel();
+            });
         }
 
         /// <inheritdoc />
-        public IAsyncEnumerator<(MemberInfo, CancellationToken)> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        public IAsyncEnumerator<MemberConnectionRequest> GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
             if (_disposed) throw new ObjectDisposedException(nameof(MemberConnectionQueue));
 
@@ -113,11 +148,11 @@ namespace Hazelcast.Clustering
             return new AsyncEnumerator(this, _cancel.Token, cancellationToken);
         }
 
-        private class AsyncEnumerator : IAsyncEnumerator<(MemberInfo, CancellationToken)>
+        private class AsyncEnumerator : IAsyncEnumerator<MemberConnectionRequest>
         {
             private readonly MemberConnectionQueue _queue;
             private readonly CancellationTokenSource _cancellation;
-            private IAsyncEnumerator<MemberInfo> _queueEnumerator;
+            private IAsyncEnumerator<MemberConnectionRequest> _queueRequestsEnumerator;
 
             public AsyncEnumerator(MemberConnectionQueue queue, CancellationToken cancellationToken1, CancellationToken cancellationToken2)
             {
@@ -130,77 +165,47 @@ namespace Hazelcast.Clustering
                 if (_cancellation.IsCancellationRequested) return false;
 
                 // only one enumerator at a time
-                if (_queueEnumerator == null)
+                if (_queueRequestsEnumerator == null)
                 {
                     var acquired = await _queue._enumerate.WaitAsync(TimeSpan.Zero, default).CfAwait();
                     if (!acquired) throw new InvalidOperationException("Can only enumerate once at a time.");
-                    _queueEnumerator = _queue._members.GetAsyncEnumerator(_cancellation.Token);
-                }
-
-                // when suspending:
-                // - current item, if any, is canceled
-                // - everything else is blocked until resumed
-
-                lock (_queue._mutex)
-                {
-                    if (_queue._suspend == 0)
-                    {
-                        _queue._itemCancel?.Dispose();
-                        _queue._itemCancel = null;
-                    }
+                    _queueRequestsEnumerator = _queue._requests.GetAsyncEnumerator(_cancellation.Token);
                 }
 
                 while (!_cancellation.IsCancellationRequested)
                 {
-                    // this is blocking and returns true once a member is available,
-                    // or false if the queue enumerator is complete (no more members)
-                    if (!await _queueEnumerator.MoveNextAsync().CfAwait())
+                    if (!await _queueRequestsEnumerator.MoveNextAsync().CfAwait())
                         return false;
 
-                    var member = _queueEnumerator.Current;
-
-                    // skip nulls, go wait for another member
-                    if (member == null)
-                        continue;
-
-                    // we have a candidate member
                     while (!_cancellation.IsCancellationRequested)
                     {
-                        // if not suspended, return, else wait and try again
                         lock (_queue._mutex)
                         {
-                            if (_queue._suspend == 0)
+                            if (!_queue._suspended)
                             {
-                                if (_queue._removed.TryGetValue(member.Id, out var removed))
-                                {
-                                    _queue._removed.Remove(member.Id);
-                                    if (removed) break;
-                                }
-
-                                HConsole.WriteLine(this, $"Member {member.Uuid.ToShortString()}: connect");
-                                _queue._itemCancel = new CancellationTokenSource();
+                                var request = _queueRequestsEnumerator.Current;
+                                if (request.Member == null || request.Cancelled) continue;
+                                request.Failed += (r, _) => _queue.ConnectionFailed?.Invoke(_queue, ((MemberConnectionRequest)r).Member);
+                                _queue._request = request;
                                 return true;
                             }
                         }
 
                         await _queue._resume.WaitAsync(_cancellation.Token).CfAwaitCanceled();
                     }
-
-                    if (!_cancellation.IsCancellationRequested)
-                        HConsole.WriteLine(this, $"Member {member.Uuid.ToShortString()}: skip");
                 }
 
                 return false;
             }
 
             /// <inheritdoc />
-            public (MemberInfo, CancellationToken) Current => (_queueEnumerator.Current, _queue._itemCancel.Token);
+            public MemberConnectionRequest Current => _queue._request;
 
             public async ValueTask DisposeAsync()
             {
-                if (_queueEnumerator != null)
+                if (_queueRequestsEnumerator != null)
                 {
-                    await _queueEnumerator.DisposeAsync().CfAwait();
+                    await _queueRequestsEnumerator.DisposeAsync().CfAwait();
                     _queue._enumerate.Release();
                 }
 
@@ -219,7 +224,7 @@ namespace Hazelcast.Clustering
                 _disposed = true;
             }
 
-            _members.Complete();
+            _requests.Complete();
             _cancel.Cancel();
             _cancel.Dispose();
 

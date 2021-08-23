@@ -198,7 +198,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            // fail fast
+            // fail fast, if the cluster is not active
             _clusterState.ThrowIfNotActive();
 
             // assign a unique identifier to the message
@@ -227,6 +227,13 @@ namespace Hazelcast.Clustering
             // immediately without waiting for more synchronous operations to take place
             await Task.Yield();
 
+            // NOTE: *every* invocation sent to the cluster goes through the code below
+
+            // if the client is active but not connected, we are going to retry the invocation for a while (assuming it
+            // is retryable) and then timeout and bubble the invocation to the user - and we do *not* have a way to sort
+            // of suspend the whole client waiting for it to reconnect, because... what sense does it make? That would
+            // be the "sync" reconnect mode - TODO: figure this out
+
             while (true)
             {
                 try
@@ -240,8 +247,9 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception exception)
                 {
-                    // if the cluster is down, die
-                    // if it's just temp disconnected, retry
+                    // if the client is not active, die - an active client is starting, started, connected or
+                    // disconnected - but attempting to reconnect - whereas a non-active client is down and
+                    // will not go back up
                     _clusterState.ThrowIfNotActive(exception);
 
                     // if the invocation is not retryable, throw

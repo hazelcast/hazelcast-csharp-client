@@ -30,7 +30,6 @@ namespace Hazelcast.Tests.Clustering
     public class ConnectMembersTests
     {
         [Test]
-        [KnownIssue(0, "Breaks on GitHub Actions")]
         public async Task Test()
         {
             var addresses = new List<NetworkAddress>();
@@ -43,18 +42,21 @@ namespace Hazelcast.Tests.Clustering
 
             var queue = new MemberConnectionQueue(new NullLoggerFactory());
 
-            // background task that connect members
+            // background task that pretend to connect members
             async Task ConnectMembers(MemberConnectionQueue memberConnectionQueue, CancellationToken cancellationToken)
             {
-                await foreach (var (member, token) in memberConnectionQueue.WithCancellation(cancellationToken))
+                await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
                 {
                     await mutex.WaitAsync().CfAwait();
-                    if (!token.IsCancellationRequested) addresses.Add(member.Address);
+                    addresses.Add(request.Member.Address);
+                    request.Complete(true);
                     mutex.Release();
                 }
             }
 
-            var connecting = ConnectMembers(queue, default);
+            var cancellation = new CancellationTokenSource();
+            var connecting = ConnectMembers(queue, cancellation.Token);
+
 
             // -- connects
 
@@ -68,16 +70,17 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:2")));
             }, 2000, 200);
 
+
             // -- can suspend while waiting
 
-            queue.Suspend(); // suspend
+            await queue.SuspendAsync(); // suspend
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:3")));
 
             await Task.Delay(500);
             Assert.That(addresses.Count, Is.EqualTo(2)); // nothing happened
 
-            queue.Resume(); // resume => will process
+            queue.Resume(); // resume => processes the queue
 
             await AssertEx.SucceedsEventually(() =>
             {
@@ -85,35 +88,47 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:3")));
             }, 2000, 200);
 
-            // -- can suspend while connecting
 
-            await mutex.WaitAsync(); // block
+            // -- suspending waits for the current connection
+
+            await mutex.WaitAsync(); // blocks the connections
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:4")));
             await Task.Delay(500);
 
-            queue.Suspend();
-            mutex.Release(); // resume => should cancel current connect
+            var task = queue.SuspendAsync();
+            Assert.That(task.IsCompleted, Is.False);
 
-            Assert.That(addresses.Count, Is.EqualTo(3));
+            await Task.Delay(500);
+            Assert.That(task.IsCompleted, Is.False);
+
+            await Task.Delay(500);
+            Assert.That(task.IsCompleted, Is.False); // still waiting for suspension
+
+            mutex.Release(); // resume => should enable suspend
+            await task;
+
+            Assert.That(addresses.Count, Is.EqualTo(4)); // the pending connection happened
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:5")));
 
             await Task.Delay(500);
-            Assert.That(addresses.Count, Is.EqualTo(3));
+            Assert.That(addresses.Count, Is.EqualTo(4)); // but a new one waits
 
-            queue.Resume();
+            queue.Resume(); // until we resume
 
             await AssertEx.SucceedsEventually(() =>
             {
-                Assert.That(addresses.Count, Is.EqualTo(4));
+                Assert.That(addresses.Count, Is.EqualTo(5));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:5")));
             }, 2000, 200);
 
+
             // -- can drain empty
 
-            queue.Suspend();
+            await queue.SuspendAsync();
             queue.Resume(true);
+
 
             // -- can drain non-empty
 
@@ -124,19 +139,21 @@ namespace Hazelcast.Tests.Clustering
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:8")));
             await Task.Delay(500);
 
-            queue.Suspend();
+            task = queue.SuspendAsync();
             mutex.Release();
+            await task;
 
             queue.Resume(true);
 
-            Assert.That(addresses.Count, Is.EqualTo(4));
+            Assert.That(addresses.Count, Is.EqualTo(6)); // one of them goes in
+
 
             // -- drained
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:9")));
 
             await Task.Delay(500);
-            Assert.That(addresses.Count, Is.EqualTo(5)); // FIXME how could this be 6?! and yet it happened
+            Assert.That(addresses.Count, Is.EqualTo(7));
             Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:9")));
 
             // -- the end

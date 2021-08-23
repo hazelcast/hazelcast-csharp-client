@@ -351,7 +351,6 @@ namespace Hazelcast.Clustering
             var clientState = ClientState;
             if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
             return new ClientOfflineException(clientState);
-
         }
 
         /// <summary>

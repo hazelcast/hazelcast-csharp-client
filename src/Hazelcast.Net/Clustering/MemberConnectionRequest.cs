@@ -1,0 +1,72 @@
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Models;
+
+namespace Hazelcast.Clustering
+{
+    internal class MemberConnectionRequest
+    {
+        private readonly object _mutex = new object();
+        private TaskCompletionSource<object> _completionSource;
+        private bool _completed;
+
+        public MemberConnectionRequest(MemberInfo member)
+        {
+            Member = member;
+            Cancelled = false;
+            _completionSource = null;
+            _completed = false;
+        }
+
+        public MemberInfo Member { get; }
+
+        public event EventHandler Failed;
+
+        public bool Cancelled { get; private set; }
+
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+
+        public void Complete(bool success)
+        {
+            // trigger before completing
+            // (completing can unlock a suspend wait)
+            if (!success) Failed?.Invoke(this, default);
+
+            lock (_mutex)
+            {
+                _completed = true;
+                _completionSource?.TrySetResult(null);
+            }
+        }
+
+        public ValueTask Completion
+        {
+            get
+            {
+                lock (_mutex)
+                {
+                    if (_completed) return default;
+                    _completionSource = new TaskCompletionSource<object>();
+                }
+                return new ValueTask(_completionSource.Task);
+            }
+        }
+    }
+}

@@ -34,6 +34,7 @@ namespace Hazelcast.Tests.Remote
                 .ClearAll()
                 .Configure().SetMinLevel()
                 .Configure<HConsoleLoggerProvider>().SetMaxLevel()
+                .Configure<ReconnectTests>().SetPrefix("TEST").SetMaxLevel()
             );
 
         [Test]
@@ -61,6 +62,8 @@ namespace Hazelcast.Tests.Remote
                     o.Networking.ConnectionRetry.Jitter = 0; // exactly
                     o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 240_000; // give up after 4mn
 
+                    o.Messaging.RetryTimeoutSeconds = 4; // ok to retry invocations for a few s then fail w/ TaskTimeoutException
+
                     o.AddSubscriber(events => events
                         .StateChanged((sender, args) =>
                         {
@@ -87,7 +90,7 @@ namespace Hazelcast.Tests.Remote
             // and the client is frantically trying to reconnect
 
             HConsole.WriteLine(this, "Use client");
-            await AssertEx.ThrowsAsync<ClientOfflineException>(async () =>
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
             {
                 await map.GetAsync("key");
             });

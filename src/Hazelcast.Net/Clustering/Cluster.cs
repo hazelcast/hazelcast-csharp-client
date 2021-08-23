@@ -80,7 +80,7 @@ namespace Hazelcast.Clustering
 
             // wire members
             Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { Members.AddConnection(conn, isNewCluster); return default; };
-            Connections.ConnectionClosed += conn => { Members.RemoveConnectionAsync(conn); return default; };
+            Connections.ConnectionClosed += async conn => { await Members.RemoveConnectionAsync(conn).CfAwait(); };
 
             // wire events
             // connection created = wire connection.ReceivedEvent -> Events.OnReceivedEvent in order to handle events
