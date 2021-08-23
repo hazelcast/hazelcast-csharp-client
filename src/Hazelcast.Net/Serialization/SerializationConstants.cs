@@ -73,6 +73,10 @@ namespace Hazelcast.Serialization
         public const int JavaDefaultTypeSynchronousQueue = -47;
         public const int JavaDefaultTypeLinkedTransferQueue = -48;
         public const int JavaDefaultTypePriorityQueue = -49;
+        public const int JavaDefaultTypeLocalDate = -51;
+        public const int JavaDefaultTypeLocalTime = -52;
+        public const int JavaDefaultTypeLocalDateTime = -53;
+        public const int JavaDefaultTypeOffsetDateTime = -54;
 
         // ------------------------------------------------------------
         // JAVA SERIALIZATION
