@@ -14,6 +14,7 @@
 
 using System;
 using System.Diagnostics;
+using Hazelcast.Models;
 
 namespace Hazelcast.Core
 {
@@ -129,7 +130,38 @@ namespace Hazelcast.Core
             }
         }
 
+        public static HLocalDate ReadLocalDate(this byte[] bytes, int position)
+        {
+            var year = bytes.ReadIntL(position);
+            var month = bytes.ReadByte(position + SizeOfInt);
+            var date = bytes.ReadByte(position + SizeOfInt + SizeOfByte);
 
+            return new HLocalDate(year, month, date);
+        }
+
+        public static HLocalTime ReadLocalTime(this byte[] bytes, int position)
+        {
+            var hour = bytes.ReadByte(position);
+            var minute = bytes.ReadByte(position + SizeOfByte);
+            var second = bytes.ReadByte(position + SizeOfByte * 2);
+            var nano = bytes.ReadIntL(position + SizeOfByte * 3);
+
+            return new HLocalTime(hour, minute, second, nano);
+        }
+
+        public static HLocalDateTime ReadLocalDateTime(this byte[] bytes, int position)
+        {
+            var date = ReadLocalDate(bytes, position);
+            var time = ReadLocalTime(bytes, position + SizeOfLocalDate);
+            return new HLocalDateTime(date, time);
+        }
+
+        public static HOffsetDateTime ReadOffsetDateTime(this byte[] bytes, int position)
+        {
+            var localDateTime = ReadLocalDateTime(bytes, position);
+            var offsetSeconds = ReadIntL(bytes, position + SizeOfLocalDateTime);
+            return new HOffsetDateTime(localDateTime, TimeSpan.FromSeconds(offsetSeconds));
+        }
 
         /// <summary>
         /// Reads a <see cref="float"/> value from an array of bytes.
