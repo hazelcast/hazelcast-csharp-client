@@ -164,21 +164,6 @@ while (await result.MoveNextAsync())
     Console.WriteLine(result.Current.GetColumn<string>("Name"));
 ```
 
-You can also get instance of `IEnumerable<>` by calling `EnumerateOnce()` method. Code below uses `IEnumerable<>` to iterate rows:
-
-```csharp
-foreach (var row in result.EnumerateOnce())
-    Console.WriteLine(row.GetColumn<string>("Name"));
-```
-
-LINQ can also be used once over obtained `IEnumerable<>`:
-
-```csharp
-var namesByAge = result.EnumerateOnce()
-    .Select(r => (name: r.GetColumn<string>("Name"), age: r.GetColumn<int>("Age")))
-    .ToLookup(e => e.age, e => e.name);
-```
-
 For async enumeration via `IAsyncEnumerable<>` you can call `EnumerateOnceAsync()`:
 
 ```csharp
@@ -188,7 +173,7 @@ await foreach (var row in result.EnumerateOnceAsync())
 
 Using LINQ over `IAsyncEnumerable` requires installing separate [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package.
 
-Note, that invoking any of these methods after enumeration has started will throw `InvalidOperationException`. Reusing obtained `IAsyncEnumerable<>` or `IEnumerable<>` instances does not restart enumeration and can lead to unpredictable results.
+Note, that invoking any of these methods after enumeration has started will throw `InvalidOperationException`. Reusing obtained `IAsyncEnumerable<>` instance does not restart enumeration and can lead to unpredictable results.
 
 ### Disposing or cancelling the query
 

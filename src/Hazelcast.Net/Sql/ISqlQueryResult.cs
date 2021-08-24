@@ -37,20 +37,5 @@ namespace Hazelcast.Sql
         /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
         /// <exception cref="InvalidOperationException">Enumeration has already started.</exception>
         IAsyncEnumerable<SqlRow> EnumerateOnceAsync();
-
-        /// <summary>
-        /// <para>
-        /// Creates a one-off <see cref="IEnumerable{T}"/> around <see cref="SqlRow"/>s in row set.
-        /// </para>
-        /// <para>
-        /// Invoking this method again after enumeration has started, will throw <see cref="System.InvalidOperationException"/>.
-        /// </para>
-        /// <para>
-        /// Reusing obtained enumerable may lead to unpredictable results.
-        /// </para>
-        /// </summary>
-        /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
-        /// <exception cref="InvalidOperationException">Enumeration has already started.</exception>
-        IEnumerable<SqlRow> EnumerateOnce();
     }
 }

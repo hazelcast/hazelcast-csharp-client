@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Sql
             await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{count}))");
 
             var expectedValues = Enumerable.Range(1, count);
-            var resultValues = result.EnumerateOnce().Select(r => r.GetColumn<int>("v"));
+            var resultValues = await result.EnumerateOnceAsync().Select(r => r.GetColumn<int>("v")).ToListAsync();
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Sql
             await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_stream({speed}))");
 
             var expectedValues = Enumerable.Range(0, take).Select(i => (long)i).ToArray();
-            var resultValues = result.EnumerateOnce().Take(take).Select(r => r.GetColumn<long>("v")).ToArray();
+            var resultValues = await result.EnumerateOnceAsync().Take(take).Select(r => r.GetColumn<long>("v")).ToListAsync();
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
@@ -132,7 +132,7 @@ namespace Hazelcast.Tests.Sql
             await using var map = await CreateIntMapAsync(count);
 
             await using var result = Client.Sql.ExecuteQuery($"SELECT COUNT(*) FROM {map.Name}");
-            var selectCount = result.EnumerateOnce().Select(r => r.GetColumn<long>(0)).Single();
+            var selectCount = await result.EnumerateOnceAsync().Select(r => r.GetColumn<long>(0)).SingleAsync();
 
             Assert.AreEqual(expected: count, selectCount);
         }
@@ -144,7 +144,7 @@ namespace Hazelcast.Tests.Sql
             await using var map = await CreateIntMapAsync(count);
 
             await using var result = Client.Sql.ExecuteQuery($"SELECT SUM(__key) FROM {map.Name}");
-            var selectSum = result.EnumerateOnce().Select(r => r.GetColumn<long>(0)).Single();
+            var selectSum = await result.EnumerateOnceAsync().Select(r => r.GetColumn<long>(0)).SingleAsync();
 
             var expectedSum = GenerateIntMapValues(count).Sum(p => p.Key);
             Assert.AreEqual(expectedSum, selectSum);
@@ -157,7 +157,7 @@ namespace Hazelcast.Tests.Sql
             await using var map = await CreateIntMapAsync(count);
 
             await using var result = Client.Sql.ExecuteQuery($"SELECT MAX(__key) FROM {map.Name}");
-            var selectSum = result.EnumerateOnce().Select(r => r.GetColumn<int>(0)).Single();
+            var selectSum = await result.EnumerateOnceAsync().Select(r => r.GetColumn<int>(0)).SingleAsync();
 
             var expectedSum = GenerateIntMapValues(count).Max(p => p.Key);
             Assert.AreEqual(expectedSum, selectSum);

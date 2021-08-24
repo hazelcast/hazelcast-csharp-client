@@ -34,7 +34,6 @@ namespace Hazelcast.Tests.Sql
             await result.DisposeAsync();
 
             Assert.ThrowsAsync<ObjectDisposedException>(async () => await result.MoveNextAsync());
-            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnce());
             Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
         }
 
@@ -46,7 +45,6 @@ namespace Hazelcast.Tests.Sql
             await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.MoveNextAsync();
 
-            Assert.Throws<InvalidOperationException>(() => result.EnumerateOnce());
             Assert.Throws<InvalidOperationException>(() => result.EnumerateOnceAsync());
         }
 

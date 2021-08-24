@@ -96,21 +96,6 @@ namespace Hazelcast.Sql
             return Enumerate();
         }
 
-        /// <inheritdoc/>
-        public IEnumerable<SqlRow> EnumerateOnce()
-        {
-            IEnumerable<SqlRow> Enumerate()
-            {
-                // FIXME [Oleksii] discuss synchronous approach
-                while (MoveNextAsync().GetAwaiter().GetResult())
-                    yield return Current;
-            }
-
-            ThrowIfDisposed();
-            ThrowIfEnumerationStarted();
-            return Enumerate();
-        }
-
         private void ThrowIfEnumerationStarted()
         {
             if (_enumerationStarted)
