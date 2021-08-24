@@ -139,9 +139,19 @@ namespace Hazelcast.Tests.Clustering
         }
 
         [Test]
-        public void FindMemberOfLargerSameVersionGroup()
+        public void GetMemberForSql()
         {
             using var _ = HConsoleForTest();
+
+            var options = new HazelcastOptionsBuilder()
+                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.UsePublicAddresses = false)
+                .Build();
+
+            var loggerFactory = NullLoggerFactory.Instance;
+
+            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactory));
 
             foreach (var members in new[]
             {
@@ -153,16 +163,17 @@ namespace Hazelcast.Tests.Clustering
                 var allMembersLite = members.All(m => m.IsLiteMember);
 
                 var membersTable = new MemberTable(1, members);
+                clusterMembers.Accessor().Members = membersTable;
 
                 if (allMembersLite)
                 {
-                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup(), null);
-                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup(), null);
+                    Assert.AreEqual(clusterMembers.GetMemberForSql(), null);
+                    Assert.AreEqual(clusterMembers.GetMemberForSql(), null);
                 }
                 else
                 {
-                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup().IsLiteMember, false);
-                    Assert.AreEqual(membersTable.FindMemberOfLargerSameVersionGroup()?.IsLiteMember, false);
+                    Assert.AreEqual(clusterMembers.GetMemberForSql().IsLiteMember, false);
+                    Assert.AreEqual(clusterMembers.GetMemberForSql()?.IsLiteMember, false);
                 }
             }
         }
