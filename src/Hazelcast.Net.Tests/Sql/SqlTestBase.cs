@@ -27,7 +27,7 @@ namespace Hazelcast.Tests.Sql
         protected virtual bool EnableJet => false;
 
         protected override string RcClusterConfiguration => EnableJet
-            ? Hazelcast.Testing.Remote.Resources.jet_enabled
+            ? Resources.jet_enabled
             : base.RcClusterConfiguration;
 
         protected async Task<IHMap<int, string>> CreateIntMapAsync(int size)
