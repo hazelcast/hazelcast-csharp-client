@@ -34,6 +34,7 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
         }
 
+        /// <inheritdoc/>
         public ISqlQueryResult ExecuteQuery(string sql, object[] parameters = null, SqlStatementOptions options = null)
         {
             parameters ??= Array.Empty<object>();
@@ -42,12 +43,13 @@ namespace Hazelcast.Sql
 
             return new SqlQueryResult(
                 _serializationService,
-                FetchFirstPageAsync(queryId, sql, parameters, options),
-                () => FetchNextPageAsync(queryId, options.CursorBufferSize),
+                ct => FetchFirstPageAsync(queryId, sql, parameters, options, ct),
+                сt => FetchNextPageAsync(queryId, options.CursorBufferSize, сt),
                 () => CloseAsync(queryId)
             );
         }
 
+        /// <inheritdoc/>
         public ISqlCommandResult ExecuteCommand(string sql, object[] parameters = null, SqlStatementOptions options = null)
         {
             parameters ??= Array.Empty<object>();
@@ -98,9 +100,9 @@ namespace Hazelcast.Sql
         }
 
         private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options)
+            string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken);
             if (result.RowMetadata == null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
@@ -111,10 +113,10 @@ namespace Hazelcast.Sql
             return (new SqlRowMetadata(result.RowMetadata), result.RowPage);
         }
 
-        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize)
+        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, CancellationToken cancellationToken)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken);
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
             if (response.Error is { } sqlError)

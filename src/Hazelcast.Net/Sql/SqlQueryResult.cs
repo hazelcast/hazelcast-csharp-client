@@ -14,92 +14,93 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
-    // FIXME [Oleksii] Clarify if should be thread safe
     internal class SqlQueryResult : SqlResult, ISqlQueryResult
     {
         private readonly SerializationService _serializationService;
-        private readonly Task _initTask;
-        private readonly Func<Task<SqlPage>> _nextFunc;
+        private readonly Func<CancellationToken, Task<(SqlRowMetadata rowMetadata, SqlPage page)>> _initFunc;
+        private readonly Func<CancellationToken, Task<SqlPage>> _nextFunc;
 
         private SqlRowMetadata _rowMetadata;
         private SqlPageEnumerator _pageEnumerator;
 
-        private bool _enumerationStarted;
+        private bool _initStarted;
+        private bool _initFinished;
 
         public SqlRow Current => _pageEnumerator?.Current;
 
         internal SqlQueryResult(
             SerializationService serializationService,
-            Task<(SqlRowMetadata rowMetadata, SqlPage page)> initTask,
-            Func<Task<SqlPage>> nextFunc,
+            Func<CancellationToken, Task<(SqlRowMetadata rowMetadata, SqlPage page)>> initFunc,
+            Func<CancellationToken, Task<SqlPage>> nextFunc,
             Func<Task> closeAction) : base(closeAction)
         {
             _serializationService = serializationService;
-            _initTask = initTask.ContinueWith(InitFromTaskAsync).Unwrap();
+            _initFunc = initFunc;
             _nextFunc = nextFunc;
-
-            // Mark exception in initial task as handled in case if query cancelled
-            _initTask.ContinueWith(t => t.Exception?.Handle(
-                e => Disposed && e is HazelcastSqlException { ErrorCode: (int)SqlErrorCode.CancelledByUser }
-            ));
         }
 
-        private async Task InitFromTaskAsync(Task<(SqlRowMetadata rowMetadata, SqlPage page)> initTask)
+        private async ValueTask InitAsync(CancellationToken cancellationToken)
         {
-            var (rowMetadata, page) = await initTask; // Ensure task succeeded or forward exception
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if (_initFinished) return;
+            _initStarted = true;
+
+            var (rowMetadata, page) = await _initFunc(cancellationToken);
             _rowMetadata = rowMetadata;
             UpdateCurrentPage(page);
+
+            _initFinished = true;
         }
 
         private void UpdateCurrentPage(SqlPage page) => _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
 
-        // Require closing unless we fetched last page in query
-        protected override bool CloseRequired => !(_pageEnumerator is { IsLastPage: true });
+        // Require closing if we have sent any request and didn't fetch last page in query
+        protected override bool CloseRequired => _initStarted && !(_pageEnumerator is { IsLastPage: true });
 
-        public async ValueTask<bool> MoveNextAsync()
+        ValueTask<bool> IAsyncEnumerator<SqlRow>.MoveNextAsync() => MoveNextAsync(default);
+
+        private async ValueTask<bool> MoveNextAsync(CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
-            _enumerationStarted = true;
+            await InitAsync(cancellationToken);
 
-            await _initTask.CfAwait();
-
+            cancellationToken.ThrowIfCancellationRequested();
             if (_pageEnumerator.MoveNext())
                 return true;
 
             if (_pageEnumerator.IsLastPage)
                 return false;
 
-            var page = await _nextFunc().CfAwait();
+            var page = await _nextFunc(cancellationToken).CfAwait();
             UpdateCurrentPage(page);
 
             return _pageEnumerator.MoveNext();
         }
 
         /// <inheritdoc/>
-        public IAsyncEnumerable<SqlRow> EnumerateOnceAsync()
+        public IAsyncEnumerable<SqlRow> EnumerateOnceAsync(CancellationToken cancellationToken = default)
         {
-            async IAsyncEnumerable<SqlRow> Enumerate()
-            {
-                while (await MoveNextAsync().CfAwait())
-                    yield return Current;
-            }
-
             ThrowIfDisposed();
-            ThrowIfEnumerationStarted();
-            return Enumerate();
+
+            // separate method is needed to make this one throw on invocation
+            // otherwise it will only throw when enumeration has started (first MoveNextAsync is called)
+            return EnumerateOnceAsyncInternal(cancellationToken);
         }
 
-        private void ThrowIfEnumerationStarted()
+        private async IAsyncEnumerable<SqlRow> EnumerateOnceAsyncInternal([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            if (_enumerationStarted)
-                throw new InvalidOperationException("Result enumeration already started");
+            while (await MoveNextAsync(cancellationToken).CfAwait())
+                yield return Current;
         }
     }
 }

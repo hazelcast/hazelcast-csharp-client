@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Threading;
 
 namespace Hazelcast.Sql
 {
@@ -28,14 +29,12 @@ namespace Hazelcast.Sql
         /// Creates a one-off <see cref="IAsyncEnumerable{T}"/> around <see cref="SqlRow"/>s in row set.
         /// </para>
         /// <para>
-        /// Invoking this method again after enumeration has started, will throw <see cref="System.InvalidOperationException"/>.
-        /// </para>
-        /// <para>
-        /// Reusing obtained enumerable may lead to unpredictable results.
+        /// Reusing obtained enumerable or invoking this method again
+        /// will continue previous enumeration instead of starting a new one.
         /// </para>
         /// </summary>
+        /// <param name="cancellationToken">Optional <see cref="CancellationToken"/> to cancel enumeration in progress.</param>
         /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
-        /// <exception cref="InvalidOperationException">Enumeration has already started.</exception>
-        IAsyncEnumerable<SqlRow> EnumerateOnceAsync();
+        IAsyncEnumerable<SqlRow> EnumerateOnceAsync(CancellationToken cancellationToken = default);
     }
 }

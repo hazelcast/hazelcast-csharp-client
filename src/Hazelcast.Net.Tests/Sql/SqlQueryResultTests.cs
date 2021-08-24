@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Sql;
 using NUnit.Framework;
@@ -42,10 +44,63 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateIntMapAsync(size: 10);
 
-            await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
-            await result.MoveNextAsync();
+            await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} ORDER BY 1");
 
-            Assert.Throws<InvalidOperationException>(() => result.EnumerateOnceAsync());
+            var values1 = await result.EnumerateOnceAsync().Take(5).ToListAsync();
+            var values2 = await result.EnumerateOnceAsync().Take(5).ToListAsync();
+
+            CollectionAssert.AreEqual(
+                expected: GenerateIntMapValues(size: 10).Keys.OrderBy(v => v).ToList(),
+                actual: values1.Concat(values2).Select(r => r.GetColumn<int>(0))
+            );
+
+            var values3 = await result.EnumerateOnceAsync().ToListAsync();
+
+            CollectionAssert.IsEmpty(values3);
+        }
+
+        [Test]
+        public async Task EnumerateCancellation()
+        {
+            ISqlQueryResult result;
+            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            {
+                var ex = Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                {
+                    using var cancellationSource = new CancellationTokenSource(50);
+                    await foreach (var row in result.EnumerateOnceAsync(cancellationSource.Token))
+                    {
+                        if (row.GetColumn<long>(0) > 100)
+                            break;
+                    }
+                });
+
+                Console.WriteLine(ex);
+            }
+
+            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
+        }
+
+        [Test]
+        public async Task EnumerateWithCancellation()
+        {
+            ISqlQueryResult result;
+            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            {
+                var ex = Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                {
+                    using var cancellationSource = new CancellationTokenSource(50);
+                    await foreach (var row in result.EnumerateOnceAsync().WithCancellation(cancellationSource.Token))
+                    {
+                        if (row.GetColumn<long>(0) > 100)
+                            break;
+                    }
+                });
+
+                Console.WriteLine(ex);
+            }
+
+            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
         }
 
         [Test]
