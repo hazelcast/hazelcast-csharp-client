@@ -541,6 +541,9 @@ namespace Hazelcast.Clustering
             return connection;
         }
 
+        /// <summary>
+        /// Gets connection to execute SQL queries/statements.
+        /// </summary>
         public MemberConnection GetConnectionForSql()
         {
             if (_clusterState.IsSmartRouting)
@@ -550,7 +553,7 @@ namespace Hazelcast.Clustering
                 // we might be lucky...
                 for (var i = 0; i < SqlConnectionRandomAttempts; i++)
                 {
-                    var member = _members.FindMemberOfLargerSameVersionGroup();
+                    var member = GetMemberForSql();
                     if (member == null) break;
 
                     if (TryGetConnection(member.Id, out var memberConnection))
@@ -572,8 +575,78 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            // Failed to get a connection to a data member
+            // Failed to get a connection to a data member, return first lite member instead
+            // Lite members support DDL but note DML statements
+            // https://docs.hazelcast.com/hazelcast/5.0-SNAPSHOT/sql/sql-statements.html
             return firstConnection;
+        }
+
+        /// <summary>
+        /// Finds a larger same-version group of data members from a collection of members.
+        /// Otherwise returns a random member from the group. If the same-version
+        /// groups have the same size, returns a member from the newer group.
+        /// </summary>
+        /// <returns><see cref="MemberInfo"/> if one is found or <c>null</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">If there are more than 2 distinct member versions found.</exception>
+        public MemberInfo GetMemberForSql()
+        {
+            (MemberVersion version0, MemberVersion version1) = (null, null);
+            var (count0, count1) = (0, 0);
+
+            foreach (var member in _members.Members)
+            {
+                if (member.IsLiteMember)
+                    continue;
+
+                var memberVersion = member.Version;
+
+                if (version0 == null || version0.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version0 = memberVersion;
+                    count0++;
+                }
+                else if (version1 == null || version1.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version1 = memberVersion;
+                    count1++;
+                }
+                else
+                {
+                    var strVersion0 = version0.ToString(ignorePatchVersion: true);
+                    var strVersion1 = version1.ToString(ignorePatchVersion: true);
+                    var strVersion = memberVersion.ToString(ignorePatchVersion: true);
+
+                    throw new InvalidOperationException(
+                        $"More than 2 distinct member versions found: {strVersion0}, {strVersion1}, {strVersion}"
+                    );
+                }
+            }
+
+            // no data members
+            if (count0 == 0)
+                return null;
+
+            int count;
+            MemberVersion version;
+
+            if (count0 > count1 || (count0 == count1 && version0 > version1))
+                (count, version) = (count0, version0);
+            else
+                (count, version) = (count1, version1);
+
+            // otherwise return a random member from the larger group
+            var randomIndex = RandomProvider.Next(count);
+            foreach (var member in _members.Members)
+            {
+                if (!member.IsLiteMember && member.Version.Equals(version, ignorePatchVersion: true))
+                {
+                    randomIndex--;
+                    if (randomIndex < 0)
+                        return member;
+                }
+            }
+
+            throw new Exception($"Reached unexpected state in {nameof(GetMemberForSql)}.");
         }
 
         /// <summary>
