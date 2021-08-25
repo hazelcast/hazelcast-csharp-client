@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 namespace Hazelcast.Sql
 {
     /// <summary>
-    /// Base class for wrapping SQL query results.
+    /// Base class for wrapping SQL query/statement results.
     /// Provides query closing in <see cref="IAsyncDisposable.DisposeAsync"/>.
     /// </summary>
     internal abstract class SqlResult : IAsyncDisposable

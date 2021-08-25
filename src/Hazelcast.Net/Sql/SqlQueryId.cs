@@ -61,7 +61,6 @@ namespace Hazelcast.Sql
             (LocalIdHigh, LocalIdLow) = (BitConverter.ToInt64(localBytes, 0), BitConverter.ToInt64(localBytes, sizeof(long)));
         }
 
-        // FIXME [Oleksii] clarify naming - client or member?
         public static SqlQueryId FromMemberId(Guid clientId)
         {
             var localId = Guid.NewGuid();

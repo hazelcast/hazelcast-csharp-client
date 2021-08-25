@@ -19,7 +19,6 @@ namespace Hazelcast.Sql
 {
     public class HazelcastSqlException : HazelcastException
     {
-        // FIXME [Oleksii] clarify naming - client or member
         public Guid ClientId { get; }
 
         internal int ErrorCode { get; }

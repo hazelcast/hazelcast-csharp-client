@@ -31,8 +31,7 @@ namespace Hazelcast.Sql
 
         public bool IsLast { get; }
 
-        // FIXME [Oleksii] check if at least 1 row is guaranteed
-        public int RowCount => _data[0].Count;
+        public int RowCount => _data.Length > 0 ? _data[0].Count : 0;
         public int ColumnCount => _data.Length;
 
         public object this[int row, int column] => _data[column][row];

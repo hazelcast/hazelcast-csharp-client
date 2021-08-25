@@ -106,7 +106,7 @@ namespace Hazelcast.Sql
             if (result.RowMetadata == null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
-                    "Expected row set in response but got update count." // FIXME [Oleksii] review error message
+                    "Expected row set in the response but got update count."
                 );
             }
 
@@ -133,7 +133,7 @@ namespace Hazelcast.Sql
             if (result.RowMetadata != null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
-                    "Expected update count in response but got row set." // FIXME [Oleksii] review error message
+                    "Expected update count in the response but got row set."
                 );
             }
 
