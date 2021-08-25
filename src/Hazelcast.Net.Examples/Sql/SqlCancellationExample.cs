@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 
@@ -34,10 +35,9 @@ namespace Hazelcast.Examples.Sql
 
             var logger = client.Options.LoggerFactory.CreateLogger<SqlCancellationExample>();
 
-            // FIXME? [Oleksii] clarify if below is correct and OK
             // We will use Jet to emulate long-running query.
             // To run this example you will need to enable Jet in the cluster configuration via '<jet enabled="true"></jet>'.
-            // Below is a simple example of such setup:
+            // Below is a simple example of such config:
             // "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" +
             // <hazelcast xmlns="http://www.hazelcast.com/schema/config
             //   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance
@@ -45,64 +45,59 @@ namespace Hazelcast.Examples.Sql
             //   <jet enabled="true"></jet>" +
             // </hazelcast>;
 
-            // cancel after timeout
-            {
-                var timeout = TimeSpan.FromSeconds(10);
-                logger.LogInformation("Generating values for {Timeout}", timeout);
-
-                // infinite stream that will generate 1 sequential long value about every second
-                await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
-
-                var cancellationTask = Task.Delay(timeout);
-
-                while (!cancellationTask.IsCompleted)
-                {
-                    var moveNext = result.MoveNextAsync().AsTask();
-
-                    if (await Task.WhenAny(moveNext, cancellationTask) == cancellationTask)
-                        break;
-
-                    if (await moveNext)
-                        logger.LogInformation("{Value}", result.Current.GetColumn<long>(0));
-                    else
-                        break;
-                }
-            } // result will dispose here, leading to executing query being cancelled
-
-            // cancel after user action
-            {
-                var timeout = TimeSpan.FromSeconds(10);
-                logger.LogInformation("Generating values until user action", timeout);
-
-                // infinite stream that will generate 1 sequential long value about every second
-                await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
-
-                var cancellationSource = new TaskCompletionSource<object>();
-                var cancellationTask = cancellationSource.Task;
-
-                // listening for console input to emulate action, but any other event can be used
-                _ = Task.Run(() =>
-                {
-                    logger.LogInformation("Press Enter to stop");
-                    Console.ReadLine();
-                    cancellationSource.SetResult(null);
-                });
-
-                while (!cancellationTask.IsCompleted)
-                {
-                    var moveNext = result.MoveNextAsync().AsTask();
-
-                    if (await Task.WhenAny(moveNext, cancellationTask) == cancellationTask)
-                        break;
-
-                    if (await moveNext)
-                        logger.LogInformation("{Value}", result.Current.GetColumn<long>(0));
-                    else
-                        break;
-                }
-            } // result will dispose here, leading to executing query being cancelled
+            await CancelAfterTimeout(client, logger);
+            await CancelAfterUserAction(client, logger);
 
             logger.LogInformation("Finished");
         }
+
+        private static async Task CancelAfterTimeout(IHazelcastClient client, ILogger logger)
+        {
+            var timeout = TimeSpan.FromSeconds(5);
+            logger.LogInformation("Generating values for {Timeout}", timeout);
+
+            // infinite stream that will generate 1 sequential long value about every second
+            await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
+
+            using var cancellationSource = new CancellationTokenSource(timeout);
+
+            try
+            {
+                await foreach (var row in result.WithCancellation(cancellationSource.Token))
+                    logger.LogInformation("{Value}", row.GetColumn<long>(0));
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogInformation("Enumeration was cancelled after {Timeout}", timeout);
+            }
+        } // result will dispose here, freeing resources used by the query
+
+        private static async Task CancelAfterUserAction(IHazelcastClient client, ILogger logger)
+        {
+            var timeout = TimeSpan.FromSeconds(10);
+            logger.LogInformation("Generating values until user action", timeout);
+
+            // infinite stream that will generate 1 sequential long value about every second
+            await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
+
+            using var cancellationSource = new CancellationTokenSource();
+
+            Console.WriteLine(@"Press Ctrl/Command+C to stop");
+            Console.CancelKeyPress += (sender, args) =>
+            {
+                cancellationSource.Cancel();
+                args.Cancel = true; // wait for iteration to end
+            };
+
+            try
+            {
+                await foreach (var row in result.WithCancellation(cancellationSource.Token))
+                    logger.LogInformation("{Value}", row.GetColumn<long>(0));
+            }
+            catch (OperationCanceledException)
+            {
+                logger.LogInformation("Enumeration was cancelled by the user");
+            }
+        } // result will dispose here, freeing resources used by the query
     }
 }
