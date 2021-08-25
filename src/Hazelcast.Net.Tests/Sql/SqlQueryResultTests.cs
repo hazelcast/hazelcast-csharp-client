@@ -70,7 +70,7 @@ namespace Hazelcast.Tests.Sql
                     using var cancellationSource = new CancellationTokenSource(50);
                     await foreach (var row in result.EnumerateOnceAsync(cancellationSource.Token))
                     {
-                        if (row.GetColumn<long>(0) > 100)
+                        if (row.GetColumn<long>(0) > 5)
                             break;
                     }
                 });
@@ -92,7 +92,7 @@ namespace Hazelcast.Tests.Sql
                     using var cancellationSource = new CancellationTokenSource(50);
                     await foreach (var row in result.EnumerateOnceAsync().WithCancellation(cancellationSource.Token))
                     {
-                        if (row.GetColumn<long>(0) > 100)
+                        if (row.GetColumn<long>(0) > 5)
                             break;
                     }
                 });
