@@ -33,6 +33,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterMembers : IAsyncDisposable
     {
+        const int SqlConnectionRandomAttempts = 10;
+
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
@@ -537,6 +539,115 @@ namespace Hazelcast.Clustering
 
             // may be null
             return connection;
+        }
+
+        /// <summary>
+        /// Gets connection to execute SQL queries/statements.
+        /// </summary>
+        public MemberConnection GetConnectionForSql()
+        {
+            if (_clusterState.IsSmartRouting)
+            {
+                // There might be a race - the chosen member might be just connected or disconnected - try a
+                // couple of times, the memberOfLargerSameVersionGroup returns a random connection,
+                // we might be lucky...
+                for (var i = 0; i < SqlConnectionRandomAttempts; i++)
+                {
+                    var member = GetMemberForSql();
+                    if (member == null) break;
+
+                    if (TryGetConnection(member.Id, out var memberConnection))
+                        return memberConnection;
+                }
+            }
+
+            // Otherwise iterate over connections and return the first one that's not to a lite member
+            MemberConnection firstConnection = null;
+
+            lock (_mutex)
+            {
+                foreach (var (memberId, connection) in _connections)
+                {
+                    firstConnection ??= connection;
+
+                    if (_members.TryGetMember(memberId, out var member) && !member.IsLiteMember)
+                        return connection;
+                }
+            }
+
+            // Failed to get a connection to a data member, return first lite member instead
+            // Lite members support DDL but note DML statements
+            // https://docs.hazelcast.com/hazelcast/5.0-SNAPSHOT/sql/sql-statements.html
+            return firstConnection;
+        }
+
+        /// <summary>
+        /// Finds a larger same-version group of data members from a collection of members.
+        /// Otherwise returns a random member from the group. If the same-version
+        /// groups have the same size, returns a member from the newer group.
+        /// </summary>
+        /// <returns><see cref="MemberInfo"/> if one is found or <c>null</c> otherwise.</returns>
+        /// <exception cref="InvalidOperationException">If there are more than 2 distinct member versions found.</exception>
+        public MemberInfo GetMemberForSql()
+        {
+            (MemberVersion version0, MemberVersion version1) = (null, null);
+            var (count0, count1) = (0, 0);
+
+            foreach (var member in _members.Members)
+            {
+                if (member.IsLiteMember)
+                    continue;
+
+                var memberVersion = member.Version;
+
+                if (version0 == null || version0.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version0 = memberVersion;
+                    count0++;
+                }
+                else if (version1 == null || version1.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version1 = memberVersion;
+                    count1++;
+                }
+                else
+                {
+                    var strVersion0 = version0.ToString(ignorePatchVersion: true);
+                    var strVersion1 = version1.ToString(ignorePatchVersion: true);
+                    var strVersion = memberVersion.ToString(ignorePatchVersion: true);
+
+                    throw new InvalidOperationException(
+                        $"More than 2 distinct member versions found: {strVersion0}, {strVersion1}, {strVersion}"
+                    );
+                }
+            }
+
+            // no data members
+            if (count0 == 0)
+                return null;
+
+            int count;
+            MemberVersion version;
+
+            if (count0 > count1 || (count0 == count1 && version0 > version1))
+                (count, version) = (count0, version0);
+            else
+                (count, version) = (count1, version1);
+
+            // otherwise return a random member from the larger group
+            var randomIndex = RandomProvider.Next(count);
+            foreach (var member in _members.Members)
+            {
+                if (!member.IsLiteMember && member.Version.Equals(version, ignorePatchVersion: true))
+                {
+                    randomIndex--;
+                    if (randomIndex < 0)
+                        return member;
+                }
+            }
+
+            // should never get here
+            throw new HazelcastException($"Reached unexpected state in {nameof(GetMemberForSql)}.");
         }
 
         /// <summary>
