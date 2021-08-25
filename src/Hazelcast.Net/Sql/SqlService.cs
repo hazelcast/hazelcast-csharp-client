@@ -90,7 +90,7 @@ namespace Hazelcast.Sql
                 queryId
             );
 
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
             if (response.Error is { } sqlError)
@@ -102,7 +102,7 @@ namespace Hazelcast.Sql
         private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,
             string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken).CfAwait();
             if (result.RowMetadata == null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
@@ -116,7 +116,7 @@ namespace Hazelcast.Sql
         private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, CancellationToken cancellationToken)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
             if (response.Error is { } sqlError)
@@ -129,7 +129,7 @@ namespace Hazelcast.Sql
             string sql, object[] parameters, SqlStatementOptions options,
             CancellationToken cancellationToken = default)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken);
+            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken).CfAwait();
             if (result.RowMetadata != null)
             {
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,

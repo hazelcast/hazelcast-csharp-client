@@ -56,7 +56,7 @@ namespace Hazelcast.Sql
             if (_initFinished) return;
             _initStarted = true;
 
-            var (rowMetadata, page) = await _initFunc(cancellationToken);
+            var (rowMetadata, page) = await _initFunc(cancellationToken).CfAwait();
             _rowMetadata = rowMetadata;
             UpdateCurrentPage(page);
 
@@ -74,7 +74,7 @@ namespace Hazelcast.Sql
         {
             ThrowIfDisposed();
 
-            await InitAsync(cancellationToken);
+            await InitAsync(cancellationToken).CfAwait();
 
             cancellationToken.ThrowIfCancellationRequested();
             if (_pageEnumerator.MoveNext())
