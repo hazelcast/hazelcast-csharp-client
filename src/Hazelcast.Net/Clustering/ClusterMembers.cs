@@ -646,7 +646,8 @@ namespace Hazelcast.Clustering
                 }
             }
 
-            throw new Exception($"Reached unexpected state in {nameof(GetMemberForSql)}.");
+            // should never get here
+            throw new HazelcastException($"Reached unexpected state in {nameof(GetMemberForSql)}.");
         }
 
         /// <summary>
