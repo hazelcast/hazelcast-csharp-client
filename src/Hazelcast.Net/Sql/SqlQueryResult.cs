@@ -23,7 +23,8 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     /// <inheritdoc cref="ISqlQueryResult"/>
-    internal class SqlQueryResult : SqlResult, ISqlQueryResult
+    internal class SqlQueryResult : SqlResult, ISqlQueryResult,
+        IAsyncEnumerator<SqlRow>
     {
         private readonly SerializationService _serializationService;
         private readonly Func<CancellationToken, Task<(SqlRowMetadata rowMetadata, SqlPage page)>> _initFunc;

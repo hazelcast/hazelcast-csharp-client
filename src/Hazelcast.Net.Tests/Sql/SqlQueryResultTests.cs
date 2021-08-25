@@ -35,7 +35,6 @@ namespace Hazelcast.Tests.Sql
             var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
             await result.DisposeAsync();
 
-            Assert.ThrowsAsync<ObjectDisposedException>(async () => await result.MoveNextAsync());
             Assert.Throws<ObjectDisposedException>(() => result.GetAsyncEnumerator());
         }
 
@@ -120,13 +119,13 @@ namespace Hazelcast.Tests.Sql
                 CursorBufferSize = 1
             });
 
-            var moveNextTask = result.MoveNextAsync().AsTask();
+            var enumerator = result.GetAsyncEnumerator();
+            var moveNextTask = enumerator.MoveNextAsync();
 
-            // wait for query to reach server
-            await Task.Delay(millisecondsDelay: 10);
+            await Task.Delay(millisecondsDelay: 10); // wait for query to reach the server
             await result.DisposeAsync();
 
-            Assert.ThrowsAsync<HazelcastSqlException>(() => moveNextTask);
+            Assert.ThrowsAsync<HazelcastSqlException>(() => moveNextTask.AsTask());
         }
     }
 }

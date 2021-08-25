@@ -35,7 +35,6 @@ namespace Hazelcast.Sql
     /// Executing it's method in parallel may lead to unpredictable results.
     /// </para>
     /// </summary>
-    public interface ISqlQueryResult : IAsyncEnumerator<SqlRow>, IAsyncEnumerable<SqlRow>,
-        IAsyncDisposable
+    public interface ISqlQueryResult : IAsyncEnumerable<SqlRow>, IAsyncDisposable
     { }
 }
