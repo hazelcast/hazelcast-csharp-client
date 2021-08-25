@@ -9,7 +9,8 @@
     - ["SELECT *" Queries](#select--queries)
   - [Special characters in names](#special-characters-in-names)
   - [Enumerating query result](#enumerating-query-result)
-  - [Disposing or cancelling the query](#disposing-or-cancelling-the-query)
+  - [Disposing query/command result](#disposing-querycommand-result)
+  - [Cancelling query enumeration](#cancelling-query-enumeration)
 - [Data Types](#data-types)
   - [Decimal String Format](#decimal-string-format)
   - [Date String Format](#date-string-format)
@@ -151,31 +152,24 @@ SELECT * FROM "2map"
 ```
 
 ### Enumerating query result
-`ISqlService.ExecuteQuery` returns `Hazelcast.Sql.ISqlQueryResult` which provides methods to enumerate or cancel the running query:
+`ISqlService.ExecuteQuery` returns `Hazelcast.Sql.ISqlQueryResult` which provides methods to manage current query:
 
 ```csharp
 await using var result = client.Sql.ExecuteQuery("SELECT Name, Age FROM employee");
 ```
 
-It represents one-off stream of rows, implements `IAsyncEnumerator` and can be iterated via `MoveNextAsync()` implementation. Invoking it will either advance row on the last fetched page, or make an asynchronous query for the next one. Below is an example of enumeration via `MoveNextAsync()`:
+It implements `IAsyncEnumerable<SqlRow>` as one-off stream of rows and can be enumerated via regular `foreach` cycle:
 
 ```csharp
-while (await result.MoveNextAsync())
-    Console.WriteLine(result.Current.GetColumn<string>("Name"));
-```
-
-For async enumeration via `IAsyncEnumerable<>` you can call `EnumerateOnceAsync()`:
-
-```csharp
-await foreach (var row in result.EnumerateOnceAsync())
+await foreach (var row in result)
     Console.WriteLine(row.GetColumn<string>("Name"));
 ```
 
-Using LINQ over `IAsyncEnumerable` requires installing separate [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package.
+Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package. See [SqlLinqEnumerationExample](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs) as an example.
 
-Note, that invoking any of these methods after enumeration has started will throw `InvalidOperationException`. Reusing obtained `IAsyncEnumerable<>` instance does not restart enumeration and can lead to unpredictable results.
+> **NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.**
 
-### Disposing or cancelling the query
+### Disposing query/command result
 
 Both `ISqlQueryResult` and `ISqlCommandResult` implements `IAsyncDisposable`. Their `DisposeAsync` implementation will make sure to cancel the query and free used server resources.
 
@@ -193,9 +187,13 @@ await using var result = Client.Sql.ExecuteCommand("INSERT INTO MyMap VALUES (1,
 //...
 ```
 
-To cancel the query by client-side timeout, user action or other reasons you can invoke `DisposeAsync` any time, even during execution. See `SqlCancellationExample` in *Hazelcast.Net.Examples* project for examples. `ISqlQueryResult.MoveNextAsync()` or `ISqlQueryCommand.Execution` may throw `HazelcastSqlException` if query is cancelled while they are running.
+### Cancelling query enumeration
 
-> **NOTE: Currently `HazelcastSqlException` provides no simple way to identify if it was caused by client-side cancellation or other error apart from parsing exception message. This may be improved in future versions.**
+You can cancel enumeration of `ISqlQueryResult`, via [WithCancellation](https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskasyncenumerableextensions.withcancellation) extension method, see [SqlCancellationExample](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlCancellationExample.cs).
+
+If you're using System.Linq.Async package, you can also pass `CancellationToken` to `ToListAsync`, `ToArrayAsync` and related methods.
+
+> **NOTE: At the moment cancellation doesn't work during server query itself. Cancellation will stop the enumeration before fetching next page or switching to the next row of the current page, but won't stop executing request. This will be fixed in the later versions.**
 
 ## Data Types
 
