@@ -97,6 +97,20 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
+        public async Task EnumerateToListCancellation()
+        {
+            ISqlQueryResult result;
+            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            {
+                Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                {
+                    using var cancellationSource = new CancellationTokenSource(50);
+                    await result.Take(5).ToListAsync(cancellationSource.Token);
+                });
+            }
+        }
+
+        [Test]
         public async Task DisposeMultipleTimes()
         {
             await using var map = await CreateIntMapAsync(size: 10);
