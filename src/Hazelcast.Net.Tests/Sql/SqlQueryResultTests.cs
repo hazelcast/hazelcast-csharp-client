@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.Sql
             await result.DisposeAsync();
 
             Assert.ThrowsAsync<ObjectDisposedException>(async () => await result.MoveNextAsync());
-            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
+            Assert.Throws<ObjectDisposedException>(() => result.GetAsyncEnumerator());
         }
 
         [Test]
@@ -46,21 +46,21 @@ namespace Hazelcast.Tests.Sql
 
             await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} ORDER BY 1");
 
-            var values1 = await result.EnumerateOnceAsync().Take(5).ToListAsync();
-            var values2 = await result.EnumerateOnceAsync().Take(5).ToListAsync();
+            var values1 = await result.Take(5).ToListAsync();
+            var values2 = await result.Take(5).ToListAsync();
 
             CollectionAssert.AreEqual(
                 expected: GenerateIntMapValues(size: 10).Keys.OrderBy(v => v).ToList(),
                 actual: values1.Concat(values2).Select(r => r.GetColumn<int>(0))
             );
 
-            var values3 = await result.EnumerateOnceAsync().ToListAsync();
+            var values3 = await result.ToListAsync();
 
             CollectionAssert.IsEmpty(values3);
         }
 
         [Test]
-        public async Task EnumerateCancellation()
+        public async Task EnumeratorCancellation()
         {
             ISqlQueryResult result;
             await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
@@ -68,8 +68,10 @@ namespace Hazelcast.Tests.Sql
                 Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
                     using var cancellationSource = new CancellationTokenSource(50);
-                    await foreach (var row in result.EnumerateOnceAsync(cancellationSource.Token))
+                    var enumerator = result.GetAsyncEnumerator(cancellationSource.Token);
+                    while (await enumerator.MoveNextAsync())
                     {
+                        var row = enumerator.Current;
                         if (row.GetColumn<long>(0) > 5)
                             break;
                     }
@@ -86,7 +88,7 @@ namespace Hazelcast.Tests.Sql
                 Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
                     using var cancellationSource = new CancellationTokenSource(50);
-                    await foreach (var row in result.EnumerateOnceAsync().WithCancellation(cancellationSource.Token))
+                    await foreach (var row in result.WithCancellation(cancellationSource.Token))
                     {
                         if (row.GetColumn<long>(0) > 5)
                             break;

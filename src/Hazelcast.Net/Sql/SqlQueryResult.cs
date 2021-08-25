@@ -22,6 +22,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
+    /// <inheritdoc cref="ISqlQueryResult"/>
     internal class SqlQueryResult : SqlResult, ISqlQueryResult
     {
         private readonly SerializationService _serializationService;
@@ -87,17 +88,17 @@ namespace Hazelcast.Sql
             return _pageEnumerator.MoveNext();
         }
 
-        /// <inheritdoc/>
-        public IAsyncEnumerable<SqlRow> EnumerateOnceAsync(CancellationToken cancellationToken = default)
+        IAsyncEnumerator<SqlRow> IAsyncEnumerable<SqlRow>.GetAsyncEnumerator(CancellationToken cancellationToken)
         {
             ThrowIfDisposed();
 
             // separate method is needed to make this one throw on invocation
             // otherwise it will only throw when enumeration has started (first MoveNextAsync is called)
-            return EnumerateOnceAsyncInternal(cancellationToken);
+            // CancellationToken will be forwarded from GetAsyncEnumerator by .NET "magic", so no need to pass it as a parameter
+            return EnumerateInternal(CancellationToken.None).GetAsyncEnumerator(cancellationToken);
         }
 
-        private async IAsyncEnumerable<SqlRow> EnumerateOnceAsyncInternal([EnumeratorCancellation] CancellationToken cancellationToken = default)
+        private async IAsyncEnumerable<SqlRow> EnumerateInternal([EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             while (await MoveNextAsync(cancellationToken).CfAwait())
                 yield return Current;

@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Sql
             );
 
             var expectedValues = GenerateIntMapValues(total);
-            var resultValues = await result.EnumerateOnceAsync().ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
+            var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }
@@ -54,7 +54,7 @@ namespace Hazelcast.Tests.Sql
             var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} WHERE __key >= ?", minValue);
 
             var expectedValues = GenerateIntMapValues(total).Where(p => p.Key >= minValue);
-            var resultValues = await result.EnumerateOnceAsync().ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
+            var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
         }

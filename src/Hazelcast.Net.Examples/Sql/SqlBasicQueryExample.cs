@@ -45,7 +45,7 @@ namespace Hazelcast.Examples.Sql
                 await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name}");
 
                 var count = 1;
-                await foreach (var row in result.EnumerateOnceAsync())
+                await foreach (var row in result)
                     logger.LogInformation("Row #{RowCount}: {RowKey}, {RowValue}", count++, row.GetKey<int>(), row.GetValue<string>());
             }
 
@@ -57,7 +57,7 @@ namespace Hazelcast.Examples.Sql
                 await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} ORDER BY __key DESC");
 
                 var count = 1;
-                await foreach (var row in result.EnumerateOnceAsync())
+                await foreach (var row in result)
                     logger.LogInformation("Row (sorted) #{RowCount}: {RowKey}, {RowValue}", count++, row.GetKey<int>(), row.GetValue<string>());
             }
 
@@ -70,7 +70,7 @@ namespace Hazelcast.Examples.Sql
                 );
 
                 var count = 1;
-                await foreach (var row in result.EnumerateOnceAsync())
+                await foreach (var row in result)
                     logger.LogInformation("Row (filtered) #{RowCount}: {RowKey}, {RowValue}", count++, row.GetKey<int>(), row.GetValue<string>());
             }
         }

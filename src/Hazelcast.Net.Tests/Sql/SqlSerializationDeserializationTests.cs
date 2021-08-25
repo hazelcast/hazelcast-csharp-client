@@ -338,7 +338,7 @@ namespace Hazelcast.Tests.Sql
                 FROM {map.Name}"
             );
 
-            var objects = await fieldsQuery.EnumerateOnceAsync().Select(r => new PortableObject(
+            var objects = await fieldsQuery.Select(r => new PortableObject(
                 r.GetColumn<int>(nameof(PortableObject.IntValue)),
                 r.GetColumn<string>(nameof(PortableObject.StringValue)),
                 r.GetColumn<bool>(nameof(PortableObject.BoolValue))
@@ -366,7 +366,7 @@ namespace Hazelcast.Tests.Sql
         private async Task AssertSqlResultMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
         {
             await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} ORDER BY __key");
-            var resultValues = await result.EnumerateOnceAsync().Select(r => r.GetValue<TValue>()).ToListAsync();
+            var resultValues = await result.Select(r => r.GetValue<TValue>()).ToListAsync();
 
             CollectionAssert.AreEqual(expectedValues, resultValues);
         }
@@ -376,7 +376,7 @@ namespace Hazelcast.Tests.Sql
             foreach (var expectedValue in expectedValues)
             {
                 await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
-                var resultValues = await result.EnumerateOnceAsync().Select(r => r.GetValue<TValue>()).ToListAsync();
+                var resultValues = await result.Select(r => r.GetValue<TValue>()).ToListAsync();
 
                 CollectionAssert.AreEqual(new[] { expectedValue }, resultValues);
             }

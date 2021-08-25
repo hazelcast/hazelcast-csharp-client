@@ -14,27 +14,28 @@
 
 using System;
 using System.Collections.Generic;
-using System.Threading;
 
 namespace Hazelcast.Sql
 {
     /// <summary>
+    /// <para>
     /// Represents SQL query (SELECT ...).
     /// Provides methods to enumerate queried rows or cancel/dispose the query.
+    /// </para>
+    /// <para>
+    /// Query result serves as one-off <see cref="IAsyncEnumerable{T}"/> of <see cref="SqlRow"/>s, meaning it can be enumerated only once.
+    /// Trying to iterate rows multiple times will continue previous enumeration instead of starting a new one.
+    /// </para>
+    /// <para>
+    /// This object implements <see cref="IAsyncDisposable"/> and should be disposed when not needed.
+    /// Recommended way is to wrap execution into <c>await using</c> statement.
+    /// </para>
+    /// <para>
+    /// This object is stateful and not thread-safe.
+    /// Executing it's method in parallel may lead to unpredictable results.
+    /// </para>
     /// </summary>
-    public interface ISqlQueryResult: IAsyncEnumerator<SqlRow>, IAsyncDisposable
-    {
-        /// <summary>
-        /// <para>
-        /// Creates a one-off <see cref="IAsyncEnumerable{T}"/> around <see cref="SqlRow"/>s in row set.
-        /// </para>
-        /// <para>
-        /// Reusing obtained enumerable or invoking this method again
-        /// will continue previous enumeration instead of starting a new one.
-        /// </para>
-        /// </summary>
-        /// <param name="cancellationToken">Optional <see cref="CancellationToken"/> to cancel enumeration in progress.</param>
-        /// <exception cref="ObjectDisposedException">SQL result was disposed.</exception>
-        IAsyncEnumerable<SqlRow> EnumerateOnceAsync(CancellationToken cancellationToken = default);
-    }
+    public interface ISqlQueryResult : IAsyncEnumerator<SqlRow>, IAsyncEnumerable<SqlRow>,
+        IAsyncDisposable
+    { }
 }
