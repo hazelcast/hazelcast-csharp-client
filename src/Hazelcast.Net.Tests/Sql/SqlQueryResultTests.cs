@@ -65,7 +65,7 @@ namespace Hazelcast.Tests.Sql
             ISqlQueryResult result;
             await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
             {
-                var ex = Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
                     using var cancellationSource = new CancellationTokenSource(50);
                     await foreach (var row in result.EnumerateOnceAsync(cancellationSource.Token))
@@ -74,11 +74,7 @@ namespace Hazelcast.Tests.Sql
                             break;
                     }
                 });
-
-                Console.WriteLine(ex);
             }
-
-            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
         }
 
         [Test]
@@ -87,7 +83,7 @@ namespace Hazelcast.Tests.Sql
             ISqlQueryResult result;
             await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
             {
-                var ex = Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
                     using var cancellationSource = new CancellationTokenSource(50);
                     await foreach (var row in result.EnumerateOnceAsync().WithCancellation(cancellationSource.Token))
@@ -96,11 +92,7 @@ namespace Hazelcast.Tests.Sql
                             break;
                     }
                 });
-
-                Console.WriteLine(ex);
             }
-
-            Assert.Throws<ObjectDisposedException>(() => result.EnumerateOnceAsync());
         }
 
         [Test]
