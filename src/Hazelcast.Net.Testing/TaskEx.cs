@@ -21,20 +21,30 @@ namespace Hazelcast.Testing
     public static class TaskEx
     {
         /// <summary>
-        /// Runs <paramref name="action"/> in <paramref name="count"/> concurrent tasks.
+        /// Runs <paramref name="func"/> in <paramref name="count"/> concurrent tasks and returns all results.
         /// </summary>
-        public static async Task RunConcurrently(Func<int, Task> action, int count)
+        public static async Task<T[]> RunConcurrently<T>(Func<int, Task<T>> func, int count)
         {
             var starter = new TaskCompletionSource<object>();
-            var tasks = Enumerable.Range(0, count).Select(async i =>
+            var tasks = Enumerable.Range(0, count).Select(i => Task.Run(async () =>
             {
                 await starter.Task;
-                await action(i);
-            });
+                return await func(i);
+            }));
 
             starter.SetResult(null);
-            await Task.WhenAll(tasks);
+            return await Task.WhenAll(tasks);
         }
+
+        /// <summary>
+        /// Runs <paramref name="action"/> in <paramref name="count"/> concurrent tasks.
+        /// </summary>
+        public static Task RunConcurrently(Func<int, Task> action, int count) =>
+            RunConcurrently<object>(async i =>
+            {
+                await action(i);
+                return null;
+            }, count);
 
         /// <inheritdoc cref="RunConcurrently(Func{int, Task},int)"/>
         public static Task RunConcurrently(Action<int> action, int count) =>
@@ -43,22 +53,6 @@ namespace Hazelcast.Testing
                 action(i);
                 return Task.CompletedTask;
             }, count);
-
-        /// <summary>
-        /// Runs <paramref name="func"/> in <paramref name="count"/> concurrent tasks and returns all results.
-        /// </summary>
-        public static async Task<T[]> RunConcurrently<T>(Func<int, Task<T>> func, int count)
-        {
-            var starter = new TaskCompletionSource<object>();
-            var tasks = Enumerable.Range(0, count).Select(async i =>
-            {
-                await starter.Task;
-                return await func(i);
-            });
-
-            starter.SetResult(null);
-            return await Task.WhenAll(tasks);
-        }
 
         /// <inheritdoc cref="RunConcurrently{T}(Func{int, Task{T}},int)"/>
         public static Task<T[]> RunConcurrently<T>(Func<int, T> func, int count) =>
