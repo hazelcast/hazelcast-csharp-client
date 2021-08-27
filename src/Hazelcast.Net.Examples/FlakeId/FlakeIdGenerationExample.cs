@@ -48,7 +48,7 @@ namespace Hazelcast.Examples.FlakeId
             var (id1, id2, id3) = (await generator.GetNewIdAsync(), await generator.GetNewIdAsync(), await generator.GetNewIdAsync());
             Console.WriteLine($"Generated ids: {id1}, {id2}, {id3}");
 
-            // wait for batch to become outdated
+            // wait for the batch to become outdated
             var validityPeriod = client.Options.GetFlakeIdGeneratorOptions(generator.Name).PrefetchValidityPeriod;
             Console.WriteLine($"Waiting for {validityPeriod}");
             await Task.Delay(validityPeriod);
