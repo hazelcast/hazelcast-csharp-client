@@ -33,7 +33,7 @@ namespace Hazelcast.FlakeId
 
         public async Task<long> GetNextIdAsync(CancellationToken cancellationToken = default)
         {
-            while (true) // If batch is finished, repeat the process with the next batch
+            while (true) // If batch is finished, get next and repeat the process
             {
                 var nextBatchLazyTask = _nextBatchLazyTask;
                 var nextBatchTask = nextBatchLazyTask.Value;
@@ -45,16 +45,18 @@ namespace Hazelcast.FlakeId
                     return id;
 
                 // Set new task only if it didn't change during method execution
-                Interlocked.CompareExchange(ref _nextBatchLazyTask, NewBatchLazyTask(), nextBatchLazyTask);
+                if (_nextBatchLazyTask == nextBatchLazyTask)
+                    Interlocked.CompareExchange(ref _nextBatchLazyTask, NewBatchLazyTask(), nextBatchLazyTask);
 
-                // Ensure any exception is forwarded to the caller
-                // But only AFTER we changed lazy invocation to uses next batch, to avoid being stuck on exception
+                // This ensures any exception is forwarded to the caller
+                // but does it AFTER lazy task is updated to fetch the next batch
+                // to avoid state being stuck on exception
                 await nextBatchTask;
             }
         }
 
-        // Async/await wrapping instead of just passing supplier is needed
+        // Async/await wrapping instead of just passing '_supplier' is needed
         // to ensure exception is thrown in 'await Value' stage, not when calling 'Value'
-        private Lazy<Task<Batch>> NewBatchLazyTask() => new Lazy<Task<Batch>>(async () => await _supplier());
+        private Lazy<Task<Batch>> NewBatchLazyTask() => new Lazy<Task<Batch>>(async () => await _supplier().CfAwait());
     }
 }

@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.FlakeId
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // get the Flake Id Generator from the cluster
-            var generator = await client.GetFlakeIdGeneratorAsync("flakeid-gen-1");
+            await using var generator = await client.GetFlakeIdGeneratorAsync("flakeid-gen-1");
 
             // get first batch with ids
             var (id1, id2, id3) = (await generator.GetNewIdAsync(), await generator.GetNewIdAsync(), await generator.GetNewIdAsync());
@@ -56,6 +56,9 @@ namespace Hazelcast.Examples.FlakeId
             // next batch will be fetched here
             var (id4, id5, id6) = (await generator.GetNewIdAsync(), await generator.GetNewIdAsync(), await generator.GetNewIdAsync());
             Console.WriteLine($"Generated ids: {id4}, {id5}, {id6}");
+
+            // destroy this instance on the server
+            await generator.DestroyAsync();
         }
     }
 }
