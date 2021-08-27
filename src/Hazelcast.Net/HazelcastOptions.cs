@@ -18,6 +18,7 @@ using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.FlakeId;
 using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 
@@ -65,6 +66,10 @@ namespace Hazelcast
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.Select(kvp
                 => new KeyValuePair<string, NearCacheOptions>(kvp.Key, kvp.Value.Clone()))
+                .ToDictionary();
+
+            FlakeIdGenerators = other.FlakeIdGenerators.Select(kvp
+                => new KeyValuePair<string, FlakeIdGeneratorOptions>(kvp.Key, kvp.Value.Clone()))
                 .ToDictionary();
         }
 

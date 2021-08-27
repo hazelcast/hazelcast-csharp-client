@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
+using Hazelcast.FlakeId;
 using Hazelcast.Models;
 using Hazelcast.Sql;
 using Hazelcast.Transactions;
@@ -110,7 +111,7 @@ namespace Hazelcast
         /// options used by the client, nor on the behavior of the client.</para>
         /// </remarks>
         HazelcastOptions Options { get; }
-        
+
         /// <summary>
         /// Gets a snapshot of the members that the cluster declared to this client.
         /// </summary>
@@ -251,5 +252,16 @@ namespace Hazelcast
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name);
+
+        /// <summary>
+        /// Gets an <see cref="IFlakeIdGenerator"/> with the specified name.
+        /// </summary>
+        /// <param name="name">The unique name of the Flake Id Generator.</param>
+        /// <returns>The Flake Id Generator that was retrieved or created.</returns>
+        /// <remarks>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object is created.</para>
+        /// </remarks>
+        Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name);
     }
 }
