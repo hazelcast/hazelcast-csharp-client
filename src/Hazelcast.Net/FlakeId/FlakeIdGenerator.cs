@@ -14,6 +14,7 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -52,7 +53,7 @@ namespace Hazelcast.FlakeId
         private async Task<Batch> GetNewBatchAsync()
         {
             var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(Name, _options.PrefetchCount);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
 
             return new Batch(
