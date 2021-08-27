@@ -25,6 +25,7 @@ namespace Hazelcast.FlakeId
     internal sealed class FlakeIdGenerator: DistributedObjectBase, IFlakeIdGenerator
     {
         private readonly FlakeIdGeneratorOptions _options;
+        private readonly AutoBatcher _autoBatcher;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FlakeIdGenerator"/> class.
@@ -42,15 +43,22 @@ namespace Hazelcast.FlakeId
             : base(ServiceNames.FlakeIdGenerator, name, factory, cluster, serializationService, loggerFactory)
         {
             _options = options.GetFlakeIdGeneratorOptions(name) ?? FlakeIdGeneratorOptions.Default;
+            _autoBatcher = new AutoBatcher(GetNewBatchAsync);
         }
 
         /// <inheritdoc />
-        public async Task<long> GetNewIdAsync()
+        public Task<long> GetNewIdAsync() => _autoBatcher.GetNextIdAsync();
+
+        private async Task<Batch> GetNewBatchAsync()
         {
             var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(Name, _options.PrefetchCount);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage);
             var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
-            return response.Base;
+
+            return new Batch(
+                @base: response.Base, increment: response.Increment, batchSize: response.BatchSize,
+                validityPeriod: _options.PrefetchValidityPeriod
+            );
         }
     }
 }
