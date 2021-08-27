@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.FlakeId
@@ -44,7 +45,7 @@ namespace Hazelcast.FlakeId
     /// Uniqueness after the restart will be preserved thanks to the timestamp component.
     /// </para>
     /// </remarks>
-    public interface IFlakeIdGenerator
+    public interface IFlakeIdGenerator: IDistributedObject
     {
         /// <summary>
         /// Generates and returns a cluster-wide unique ID.
