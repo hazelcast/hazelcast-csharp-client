@@ -61,7 +61,7 @@ namespace Hazelcast.Tests.FlakeId
         [Test]
         [TestCase(5, 5)]
         [TestCase(100, 10)]
-        public async Task GetNextId_Concurrent_Exception(int batchSize, int batchesCount)
+        public async Task GetNextId_Exception(int batchSize, int batchesCount)
         {
             var supplyCallCount = 0;
             var context = new AsyncLocal<bool>();
