@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.FlakeId;
 using Hazelcast.Logging;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
@@ -79,6 +80,25 @@ namespace Hazelcast
 
             var key = PatternMatcher.Matches(NearCaches.Keys, name);
             return key == null ? null : NearCaches[key];
+        }
+
+        /// <summary>
+        /// Gets the dictionary which contains the <see cref="FlakeIdGeneratorOptions"/> for each Flake Id Generator.
+        /// </summary>
+        public IDictionary<string, FlakeIdGeneratorOptions> FlakeIdGenerators { get; } = new Dictionary<string, FlakeIdGeneratorOptions>();
+
+        /// <summary>
+        /// Gets options for a Flake Id Generator.
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>Options for the Flake Id Generator matching the specified <paramref name="name"/>.</returns>
+        public FlakeIdGeneratorOptions GetFlakeIdGeneratorOptions(string name)
+        {
+            if (FlakeIdGenerators.TryGetValue(name, out var configuration))
+                return configuration;
+
+            var key = PatternMatcher.Matches(FlakeIdGenerators.Keys, name);
+            return key == null ? null : FlakeIdGenerators[key];
         }
     }
 }

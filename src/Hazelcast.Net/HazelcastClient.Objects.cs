@@ -19,6 +19,7 @@ using Hazelcast.Core;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Impl;
+using Hazelcast.FlakeId;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
@@ -184,6 +185,24 @@ namespace Hazelcast
             var task = _distributedOjects.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.Topic, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
