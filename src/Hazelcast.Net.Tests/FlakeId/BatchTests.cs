@@ -44,11 +44,7 @@ namespace Hazelcast.Tests.FlakeId
         {
             var timeUnit = TimeSpan.FromMilliseconds(50);
 
-            var batch = new Batch(0, 1, int.MaxValue, timeUnit + timeUnit);
-            Assert.IsTrue(batch.TryGetNextId(out _));
-            Assert.IsTrue(batch.TryGetNextId(out _));
-
-            await Task.Delay(timeUnit);
+            var batch = new Batch(0, 1, int.MaxValue, timeUnit);
             Assert.IsTrue(batch.TryGetNextId(out _));
             Assert.IsTrue(batch.TryGetNextId(out _));
 
