@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateIntMapAsync(total);
 
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} ORDER BY __key",
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} ORDER BY __key",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
 
@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateIntMapAsync(total);
 
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} WHERE __key >= ?", minValue);
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key >= ?", minValue);
 
             var expectedValues = GenerateIntMapValues(total).Where(p => p.Key >= minValue);
             var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
@@ -147,7 +148,16 @@ namespace Hazelcast.Tests.Sql
         {
             await using var map = await CreateNewMap<HBigDecimal>();
 
-            var expectedDecimals = expectedValues.Select(HBigDecimal.Parse).ToList();
+            static HBigDecimal HBigDecimalParse(string s)
+            {
+                // both ways of parsing should succeed
+                var d1 = HBigDecimal.Parse(s.Replace(".", CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator));
+                var d2 = HBigDecimal.Parse(s, CultureInfo.InvariantCulture);
+                Assert.That(d1, Is.EqualTo(d2));
+                return d1;
+            }
+
+            var expectedDecimals = expectedValues.Select(HBigDecimalParse).ToList();
 
             var populateScript = $@"var map = instance_0.getMap(""{map.Name}"");" +
                 string.Join(";", expectedValues.Select((val, index) =>
@@ -333,7 +343,7 @@ namespace Hazelcast.Tests.Sql
 
             await AssertSqlResultMatchAsync(map.Name, expectedObjects);
 
-            await using var fieldsQuery = Client.Sql.ExecuteQuery($@"
+            await using var fieldsQuery = await Client.Sql.ExecuteQueryAsync($@"
                 SELECT {nameof(PortableObject.IntValue)}, {nameof(PortableObject.StringValue)}, {nameof(PortableObject.BoolValue)}
                 FROM {map.Name}"
             );
@@ -365,7 +375,7 @@ namespace Hazelcast.Tests.Sql
 
         private async Task AssertSqlResultMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
         {
-            await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} ORDER BY __key");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT this FROM {mapName} ORDER BY __key");
             var resultValues = await result.Select(r => r.GetValue<TValue>()).ToListAsync();
 
             CollectionAssert.AreEqual(expectedValues, resultValues);
@@ -375,7 +385,7 @@ namespace Hazelcast.Tests.Sql
         {
             foreach (var expectedValue in expectedValues)
             {
-                await using var result = Client.Sql.ExecuteQuery($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
+                await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT this FROM {mapName} WHERE this = ?", expectedValue);
                 var resultValues = await result.Select(r => r.GetValue<TValue>()).ToListAsync();
 
                 CollectionAssert.AreEqual(new[] { expectedValue }, resultValues);

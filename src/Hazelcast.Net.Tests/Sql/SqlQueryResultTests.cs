@@ -17,6 +17,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Sql;
+using Hazelcast.Core;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -28,71 +30,74 @@ namespace Hazelcast.Tests.Sql
         protected override bool EnableJet => true;
 
         [Test]
-        public async Task EnumerateAfterDispose()
+        public async Task EnumerateAfterDisposeThrows()
         {
             await using var map = await CreateIntMapAsync(size: 10);
 
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name}");
             await result.DisposeAsync();
 
             Assert.Throws<ObjectDisposedException>(() => result.GetAsyncEnumerator());
         }
 
         [Test]
-        public async Task EnumerateMultipleTimes()
+        public async Task CannotEnumerateResultMoreThanOnce()
         {
             await using var map = await CreateIntMapAsync(size: 10);
 
-            await using var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name} ORDER BY 1");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} ORDER BY 1");
 
-            var values1 = await result.Take(5).ToListAsync();
-            var values2 = await result.Take(5).ToListAsync();
+            // enumerate once
+            _ = await result.Take(5).ToListAsync();
 
-            CollectionAssert.AreEqual(
-                expected: GenerateIntMapValues(size: 10).Keys.OrderBy(v => v).ToList(),
-                actual: values1.Concat(values2).Select(r => r.GetColumn<int>(0))
-            );
-
-            var values3 = await result.ToListAsync();
-
-            CollectionAssert.IsEmpty(values3);
+            // cannot enumerate twice
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () => await result.Take(5).ToListAsync());
         }
 
         [Test]
-        public async Task EnumeratorCancellation()
+        public async Task CancelEnumeratorEnumerationThrows()
         {
-            ISqlQueryResult result;
-            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            await using var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))");
+            using var cancellationSource = new CancellationTokenSource(50);
+
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                var enumerator = result.GetAsyncEnumerator(cancellationSource.Token);
+                while (await enumerator.MoveNextAsync())
                 {
-                    using var cancellationSource = new CancellationTokenSource(50);
-                    var enumerator = result.GetAsyncEnumerator(cancellationSource.Token);
-                    while (await enumerator.MoveNextAsync())
-                    {
-                        var row = enumerator.Current;
-                        if (row.GetColumn<long>(0) > 5)
-                            break;
-                    }
-                });
-            }
+                    var row = enumerator.Current;
+                    if (row.GetColumn<long>(0) > 5)
+                        break;
+                }
+            });
         }
 
         [Test]
-        public async Task EnumerateWithCancellation()
+        public async Task CancelEnumerableEnumerationThrows()
         {
-            ISqlQueryResult result;
-            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            await using var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))");
+            using var cancellationSource = new CancellationTokenSource(50);
+
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                await foreach (var row in result.WithCancellation(cancellationSource.Token))
                 {
-                    using var cancellationSource = new CancellationTokenSource(50);
-                    await foreach (var row in result.WithCancellation(cancellationSource.Token))
-                    {
-                        if (row.GetColumn<long>(0) > 5)
-                            break;
-                    }
-                });
+                    if (row.GetColumn<long>(0) > 5)
+                        break;
+                }
+            });
+        }
+
+        [Test]
+        public async Task CancelEnumerableEnumerationDoesNotThrow()
+        {
+            await using var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))");
+            using var cancellationSource = new CancellationTokenSource(50);
+
+            await foreach (var row in result.WithCancellation(cancellationSource.Token, throwOnCancel: false))
+            {
+                if (row.GetColumn<long>(0) > 5)
+                    break;
             }
         }
 
@@ -100,7 +105,7 @@ namespace Hazelcast.Tests.Sql
         public async Task EnumerateToListCancellation()
         {
             ISqlQueryResult result;
-            await using (result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))"))
+            await using (result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))"))
             {
                 Assert.ThrowsAsync<OperationCanceledException>(async () =>
                 {
@@ -111,24 +116,21 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
-        public async Task DisposeMultipleTimes()
+        public async Task CanDisposeResultMultipleTimes()
         {
             await using var map = await CreateIntMapAsync(size: 10);
 
-            var result = Client.Sql.ExecuteQuery($"SELECT * FROM {map.Name}");
-            await result.DisposeAsync();
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name}");
 
-            Assert.DoesNotThrowAsync(async () =>
-            {
-                await result.DisposeAsync();
-                await result.DisposeAsync();
-            });
+            await result.DisposeAsync();
+            await result.DisposeAsync();
+            await result.DisposeAsync();
         }
 
         [Test]
         public async Task DisposeDuringQuery()
         {
-            var result = Client.Sql.ExecuteQuery("SELECT * FROM TABLE(generate_stream(10))", new SqlStatementOptions
+            var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))", new SqlStatementOptions
             {
                 CursorBufferSize = 1
             });

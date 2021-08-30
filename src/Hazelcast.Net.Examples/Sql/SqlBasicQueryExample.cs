@@ -42,7 +42,7 @@ namespace Hazelcast.Examples.Sql
 
             // query and print all rows
             {
-                await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name}");
+                await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name}");
 
                 var count = 1;
                 await foreach (var row in result)
@@ -54,7 +54,7 @@ namespace Hazelcast.Examples.Sql
                 // index must be added to be able to sort by attribute
                 await map.AddIndexAsync(IndexType.Sorted, "__key");
 
-                await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} ORDER BY __key DESC");
+                await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name} ORDER BY __key DESC");
 
                 var count = 1;
                 await foreach (var row in result)
@@ -64,7 +64,7 @@ namespace Hazelcast.Examples.Sql
             // query and print rows filtered via parameters
             {
                 var (min, max) = (3, 7);
-                await using var result = client.Sql.ExecuteQuery(
+                await using var result = await client.Sql.ExecuteQueryAsync(
                     $"SELECT __key, this FROM {map.Name} WHERE __key >= ? and __key <= ?",
                     min, max
                 );

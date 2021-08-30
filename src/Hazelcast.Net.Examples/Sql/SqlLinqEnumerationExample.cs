@@ -45,7 +45,7 @@ namespace Hazelcast.Examples.Sql
             // Or add directly to the project file, see Hazelcast.Net.Examples.csproj for example:
             // <PackageReference Include="System.Linq.Async" Version="5.0.0"
 
-            await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name}");
+            await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name}");
 
             // Get first 5 results
             var batchOf5 = await result

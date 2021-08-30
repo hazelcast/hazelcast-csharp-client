@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Sql
         public async Task GenerateSeries()
         {
             var count = 10;
-            await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_series(1,{count}))");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT v FROM TABLE(generate_series(1,{count}))");
 
             var expectedValues = Enumerable.Range(1, count);
             var resultValues = await result.Select(r => r.GetColumn<int>("v")).ToListAsync();
@@ -40,7 +40,7 @@ namespace Hazelcast.Tests.Sql
         public async Task GenerateStream()
         {
             var (speed, take) = (10, 15);
-            await using var result = Client.Sql.ExecuteQuery($"SELECT v FROM TABLE(generate_stream({speed}))");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT v FROM TABLE(generate_stream({speed}))");
 
             var expectedValues = Enumerable.Range(0, take).Select(i => (long)i).ToArray();
             var resultValues = await result.Take(take).Select(r => r.GetColumn<long>("v")).ToListAsync();
@@ -54,18 +54,16 @@ namespace Hazelcast.Tests.Sql
             var mapName = GenerateMapName();
             var insertRow = (key: 1, value: -1);
 
-            await using var createCommand= Client.Sql.ExecuteCommand(
+            var createRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"CREATE MAPPING {mapName} (__key INTEGER, this INTEGER) TYPE IMap OPTIONS (
                     'keyFormat'='integer',
                     'valueFormat'='integer')"
             );
-            var createRowsCount = await createCommand.Execution;
             Assert.AreEqual(expected: 0, createRowsCount);
 
-            await using var insertCommand = Client.Sql.ExecuteCommand(
+            var insertRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"INSERT INTO {mapName} VALUES ({insertRow.key}, {insertRow.value})"
             );
-            var insertRowsCount = await insertCommand.Execution;
             //Assert.AreEqual(expected: 1, insertRowsCount);
 
             await using var map = await Client.GetMapAsync<int, int>(mapName);
@@ -87,10 +85,9 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
 
-            await using var command = Client.Sql.ExecuteCommand(
+            var updateRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"UPDATE {map.Name} SET this = {update.value} WHERE __key = {update.key}"
             );
-            var updateRowsCount = await command.Execution;
             //Assert.AreEqual(expected: 1, updateRowsCount);
 
             values[update.key] = update.value;
@@ -113,10 +110,9 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
 
-            await using var command = Client.Sql.ExecuteCommand(
+            var deleteRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"DELETE FROM {map.Name} WHERE __key = {deleteKey}"
             );
-            var deleteRowsCount = await command.Execution;
             //Assert.AreEqual(expected: 1, deleteRowsCount);
 
             values.Remove(deleteKey);
@@ -131,7 +127,7 @@ namespace Hazelcast.Tests.Sql
             var count = 10;
             await using var map = await CreateIntMapAsync(count);
 
-            await using var result = Client.Sql.ExecuteQuery($"SELECT COUNT(*) FROM {map.Name}");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT COUNT(*) FROM {map.Name}");
             var selectCount = await result.Select(r => r.GetColumn<long>(0)).SingleAsync();
 
             Assert.AreEqual(expected: count, selectCount);
@@ -143,7 +139,7 @@ namespace Hazelcast.Tests.Sql
             var count = 10;
             await using var map = await CreateIntMapAsync(count);
 
-            await using var result = Client.Sql.ExecuteQuery($"SELECT SUM(__key) FROM {map.Name}");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT SUM(__key) FROM {map.Name}");
             var selectSum = await result.Select(r => r.GetColumn<long>(0)).SingleAsync();
 
             var expectedSum = GenerateIntMapValues(count).Sum(p => p.Key);
@@ -156,7 +152,7 @@ namespace Hazelcast.Tests.Sql
             var count = 10;
             await using var map = await CreateIntMapAsync(count);
 
-            await using var result = Client.Sql.ExecuteQuery($"SELECT MAX(__key) FROM {map.Name}");
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT MAX(__key) FROM {map.Name}");
             var selectSum = await result.Select(r => r.GetColumn<int>(0)).SingleAsync();
 
             var expectedSum = GenerateIntMapValues(count).Max(p => p.Key);

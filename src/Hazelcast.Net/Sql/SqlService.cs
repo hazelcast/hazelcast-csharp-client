@@ -35,31 +35,28 @@ namespace Hazelcast.Sql
         }
 
         /// <inheritdoc/>
-        public ISqlQueryResult ExecuteQuery(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        public async Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
             parameters ??= Array.Empty<object>();
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            return new SqlQueryResult(
-                _serializationService,
-                ct => FetchFirstPageAsync(queryId, sql, parameters, options, ct),
-                сt => FetchNextPageAsync(queryId, options.CursorBufferSize, сt),
-                () => CloseAsync(queryId)
-            );
+            var (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+
+            return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, cancellationToken);
         }
 
         /// <inheritdoc/>
-        public ISqlCommandResult ExecuteCommand(string sql, object[] parameters = null, SqlStatementOptions options = null)
+        public async Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
             parameters ??= Array.Empty<object>();
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            return new SqlCommandResult(
-                FetchUpdateCountAsync(queryId, sql, parameters, options),
-                () => CloseAsync(queryId)
-            );
+            // commands self-close when returning = no need to close anything
+            // and... in case token is cancelled, it's pretty much the same
+
+            return await FetchUpdateCountAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
         }
 
         private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
@@ -93,22 +90,16 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
-            if (response.Error is { } sqlError)
-                throw new HazelcastSqlException(sqlError);
+            if (response.Error != null) throw new HazelcastSqlException(response.Error);
 
             return response;
         }
 
-        private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
+        private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId, string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
         {
             var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken).CfAwait();
             if (result.RowMetadata == null)
-            {
-                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
-                    "Expected row set in the response but got update count."
-                );
-            }
+                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic, "Expected row set in the response but got update count.");
 
             return (new SqlRowMetadata(result.RowMetadata), result.RowPage);
         }
@@ -119,23 +110,16 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
-            if (response.Error is { } sqlError)
-                throw new HazelcastSqlException(sqlError);
+            if (response.Error != null) throw new HazelcastSqlException(response.Error);
 
             return response.RowPage;
         }
 
-        private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId,
-            string sql, object[] parameters, SqlStatementOptions options,
-            CancellationToken cancellationToken = default)
+        private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId, string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken = default)
         {
             var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken).CfAwait();
             if (result.RowMetadata != null)
-            {
-                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic,
-                    "Expected update count in the response but got row set."
-                );
-            }
+                throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic, "Expected update count in the response but got row set.");
 
             return result.UpdateCount;
         }
@@ -144,7 +128,7 @@ namespace Hazelcast.Sql
         {
             var requestMessage = SqlCloseCodec.EncodeRequest(queryId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = SqlCloseCodec.DecodeResponse(responseMessage);
+            _ = SqlCloseCodec.DecodeResponse(responseMessage);
         }
     }
 }

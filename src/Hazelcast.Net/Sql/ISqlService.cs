@@ -12,46 +12,83 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Threading;
+using System.Threading.Tasks;
+
 namespace Hazelcast.Sql
 {
     public interface ISqlService
     {
-        /// <summary>
-        /// Executes SQL query (SELECT ...).
-        /// </summary>
-        /// <param name="sql">SQL query to execute.</param>
-        /// <param name="parameters">
-        /// <para>Ordered list of parameters to be substituted in the query.</para>
-        /// <para>
-        /// Parameter placeholder can be specified via "?".
-        /// Each occurrence of "?" will use next parameter in the list.
-        /// </para>
-        /// </param>
-        /// <param name="options">
-        /// <see cref="SqlStatementOptions"/> to use with the query.
-        /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
-        /// </param>
-        /// <returns>
-        /// <see cref="ISqlQueryResult"/> representing set of rows returned from this query.
-        /// </returns>
-        ISqlQueryResult ExecuteQuery(string sql, object[] parameters = null, SqlStatementOptions options = null);
+        // FIXME turn this into proper documentation
+        //
+        // how cancellation works:
+        //
+        // for queries:
+        // - if token1 is passed to ExecuteQueryAsync, this token1 is passed over to the ISqlQueryResult
+        // - the ISqlQueryResult *must* be disposed in order to close the server-side query
+        // - when enumerated (await foreach) the enumerator is disposed (always)
+        //   disposing the enumerator disposes the result as well
+        // - ISqlQueryResult is IAsyncEnumerable<SqlRow> which means one can either
+        //   - GetAsyncEnumerator(token2) on it
+        //   - foreach .WithCancellation(token2) on it
+        //   in both cases, it will enumerate with a token which is either token1, token2, or a combination of both
+        //   if any token is cancelled, the enumeration is cancelled, and throws a OperationCancelledException
+        //
+        // - the actual server operations (query first page, query next page) are being passed
+        //   cancellation tokens (token1, token, token1) resp.
+        //
+        // for commands, there is no result, so it's only:
+        // - if token is passed to ExecuteCommandAsync, this token is passed to the actual server operation
+        //   (execute command)
+        //
+        // at server operation level, the token ends up being passed to:
+        // - _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+        // - SendAsyncInternal(invocation, cancellationToken).CfAwait();
+        // - connection.SendAsync(invocation).CfAwait();
+        //
+        // in case connection.SendAsync fails, goes invocation.WaitRetryAsync which honors the cancellationToken
+        // but other than that,
+        //
+        //   connection.SendAsync(invocation) -> .SendAsyncInternal(CancellationToken.None)
+        //   and that token
+        //   - can cancel waiting on a response from the server (once the request has been sent)
+        //   - is passed to _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
+        //     where it can cancel sending the request - but the request goes out as a whole
+        //   so, as of now, we *cannot* cancel for instance getting the first page...
+        //
+        // if we change:
+        // - connection.SendAsync(invocation, token) -> .SendAsyncInternal(token)
+        // - the token will be propagated, including the SQL token
+        // - we can cancel getting the first page, or running a command
+        //
+        // DONE => see Hazelcast.Tests.Networking.NetworkingTests.CanCancel
 
         /// <summary>
-        /// Executes SQL command (CREATE/UPDATE/DELETE ...).
+        /// Executes a SQL query.
         /// </summary>
-        /// <param name="sql">SQL command to execute.</param>
-        /// <param name="parameters">
-        /// <para>Ordered list of parameters to be substituted in the query.</para>
-        /// <para>
-        /// Parameter placeholder can be specified via "?".
-        /// Each occurrence of "?" will use next parameter in the list.
-        /// </para>
-        /// </param>
-        /// <param name="options">
-        /// <see cref="SqlStatementOptions"/> to use with the query.
-        /// <see cref="SqlStatementOptions.Default"/> is used if not specified.
-        /// </param>
-        /// <returns><see cref="ISqlCommandResult"/> containing command execution status and affected rows count.</returns>
-        ISqlCommandResult ExecuteCommand(string sql, object[] parameters = null, SqlStatementOptions options = null);
+        /// <param name="sql">The SQL query text to execute.</param>
+        /// <param name="parameters">Parameters for the SQL query.</param>
+        /// <param name="options">Options for the SQL query (defaults to <see cref="SqlStatementOptions.Default"/>).</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>An <see cref="ISqlQueryResult"/> instance that represents the result of the query.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="sql"/> query text can contain parameter placeholders, specified via a '?' character. Each
+        /// occurrence of the '?' character is replaced by the next parameter from the <paramref name="parameters"/> ordered list.</para>
+        /// </remarks>
+        Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Executes a SQL command.
+        /// </summary>
+        /// <param name="sql">The SQL command text to execute.</param>
+        /// <param name="parameters">Parameters for the SQL command.</param>
+        /// <param name="options">Options for the SQL command (defaults to <see cref="SqlStatementOptions.Default"/>).</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The number of rows affected byt the command.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="sql"/> query text can contain parameter placeholders, specified via a '?' character. Each
+        /// occurrence of the '?' character is replaced by the next parameter from the <paramref name="parameters"/> ordered list.</para>
+        /// </remarks>
+        Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default);
     }
 }

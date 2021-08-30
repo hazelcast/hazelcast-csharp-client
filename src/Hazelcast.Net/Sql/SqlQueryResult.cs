@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -23,86 +22,155 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Sql
 {
     /// <inheritdoc cref="ISqlQueryResult"/>
-    internal class SqlQueryResult : SqlResult, ISqlQueryResult,
-        IAsyncEnumerator<SqlRow>
+    internal class SqlQueryResult : ISqlQueryResult
     {
+        private readonly SqlQueryId _queryId;
+        private readonly Func<SqlQueryId, Task> _closeQuery;
         private readonly SerializationService _serializationService;
-        private readonly Func<CancellationToken, Task<(SqlRowMetadata rowMetadata, SqlPage page)>> _initFunc;
-        private readonly Func<CancellationToken, Task<SqlPage>> _nextFunc;
+        private readonly CancellationToken _cancellationToken;
+        private readonly Func<SqlQueryId, int, CancellationToken, Task<SqlPage>> _getNextPage;
+        private readonly SqlRowMetadata _metadata;
+        private readonly int _cursorBufferSize;
+        private CancellationTokenSource _combinedCancellation;
+        private bool _disposed;
 
-        private SqlRowMetadata _rowMetadata;
-        private SqlPageEnumerator _pageEnumerator;
+        // enumeration variables
+        // having them here allows for Enumerator to be a readonly struct
+        private bool _enumerated;
+        private SqlPage _page;
+        private SqlRow _currentRow;
+        private int _currentRowIndex;
 
-        private bool _initStarted;
-        private bool _initFinished;
-
-        public SqlRow Current => _pageEnumerator?.Current;
 
         internal SqlQueryResult(
             SerializationService serializationService,
-            Func<CancellationToken, Task<(SqlRowMetadata rowMetadata, SqlPage page)>> initFunc,
-            Func<CancellationToken, Task<SqlPage>> nextFunc,
-            Func<Task> closeAction) : base(closeAction)
+            SqlRowMetadata metadata, SqlPage firstPage,
+            int cursorBufferSize,
+            Func<SqlQueryId, int, CancellationToken, Task<SqlPage>> getNextPage,
+            SqlQueryId queryId,
+            Func<SqlQueryId, Task> closeQuery,
+            CancellationToken cancellationToken)
         {
+            _queryId = queryId;
+            _closeQuery = closeQuery;
             _serializationService = serializationService;
-            _initFunc = initFunc;
-            _nextFunc = nextFunc;
+            _cursorBufferSize = cursorBufferSize;
+            _metadata = metadata;
+            _page = firstPage;
+            _getNextPage = getNextPage;
+            _cancellationToken = cancellationToken;
         }
 
-        private async ValueTask InitAsync(CancellationToken cancellationToken)
+        public IAsyncEnumerator<SqlRow> GetAsyncEnumerator(CancellationToken cancellationToken)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            if (_disposed) throw new ObjectDisposedException(nameof(SqlQueryResult));
 
-            if (_initFinished) return;
-            _initStarted = true;
+            // cannot enumerate more than once, this is consistent with e.g. EF
+            if (_enumerated) throw new InvalidOperationException("The result of a query cannot be enumerated more than once.");
+            _enumerated = true;
 
-            var (rowMetadata, page) = await _initFunc(cancellationToken).CfAwait();
-            _rowMetadata = rowMetadata;
-            UpdateCurrentPage(page);
+            // combine cancellation tokens if needed
+            if (cancellationToken == default)
+            {
+                cancellationToken = _cancellationToken;
+            }
+            else if (_cancellationToken != default)
+            {
+                _combinedCancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken, cancellationToken);
+                cancellationToken = _combinedCancellation.Token;
+            }
 
-            _initFinished = true;
+            return new Enumerator(this, cancellationToken);
         }
 
-        private void UpdateCurrentPage(SqlPage page) => _pageEnumerator = new SqlPageEnumerator(_serializationService, _rowMetadata, page);
-
-        // Require closing if we have sent any request and didn't fetch last page in query
-        protected override bool CloseRequired => _initStarted && !(_pageEnumerator is { IsLastPage: true });
-
-        ValueTask<bool> IAsyncEnumerator<SqlRow>.MoveNextAsync() => MoveNextAsync(default);
-
-        private async ValueTask<bool> MoveNextAsync(CancellationToken cancellationToken)
+        private readonly struct Enumerator : IAsyncEnumerator<SqlRow>
         {
-            ThrowIfDisposed();
+            private readonly SqlQueryResult _result;
+            private readonly CancellationToken _cancellationToken;
 
-            await InitAsync(cancellationToken).CfAwait();
+            public Enumerator(SqlQueryResult result, CancellationToken cancellationToken)
+            {
+                _result = result;
+                _cancellationToken = cancellationToken;
+                _result._currentRowIndex = -1;
+            }
 
-            cancellationToken.ThrowIfCancellationRequested();
-            if (_pageEnumerator.MoveNext())
-                return true;
+            public async ValueTask<bool> MoveNextAsync()
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
 
-            if (_pageEnumerator.IsLastPage)
+                while (_result._page != null)
+                {
+                    _cancellationToken.ThrowIfCancellationRequested();
+
+                    // no more current row
+                    _result._currentRow = null;
+
+                    // try to increment index within the current page, return if successful
+                    if (++_result._currentRowIndex < _result._page.RowCount) return true;
+
+                    // reached end of current page, if there is no further page stop enumerating
+                    if (_result._page.IsLast)
+                    {
+                        _result._page = null;
+                        return false;
+                    }
+
+                    // otherwise, try to retrieve the next page
+                    _result._page = await _result._getNextPage(_result._queryId, _result._cursorBufferSize, _cancellationToken).CfAwait();
+                    _result._currentRowIndex = -1;
+                }
+
                 return false;
+            }
 
-            var page = await _nextFunc(cancellationToken).CfAwait();
-            UpdateCurrentPage(page);
+            public SqlRow Current
+            {
+                get
+                {
+                    // ensure it is valid to get the current row
+                    if (_cancellationToken.IsCancellationRequested || _result._currentRowIndex < 0 || _result._currentRowIndex >= _result._page.RowCount) 
+                        throw new InvalidOperationException();
 
-            return _pageEnumerator.MoveNext();
+                    // if the current row has already been hydrated, return it
+                    if (_result._currentRow != null) return _result._currentRow;
+
+                    // otherwise, hydrate the current row, cache it, and return it
+                    var columns = new List<object>(_result._page.ColumnCount);
+                    for (var columnIndex = 0; columnIndex < _result._page.ColumnCount; columnIndex++)
+                        columns.Add(_result._serializationService.ToObject(_result._page[_result._currentRowIndex, columnIndex]));
+                    return _result._currentRow = new SqlRow(columns, _result._metadata);
+                }
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                // the enumerator is disposed by 'await foreach' and why not use this opportunity to dispose the result as well?
+                return _result.DisposeAsync();
+            }
         }
 
-        IAsyncEnumerator<SqlRow> IAsyncEnumerable<SqlRow>.GetAsyncEnumerator(CancellationToken cancellationToken)
+        public async ValueTask DisposeAsync()
         {
-            ThrowIfDisposed();
+            if (_disposed) return;
+            _disposed = true;
 
-            // separate method is needed to make this one throw on invocation
-            // otherwise it will only throw when enumeration has started (first MoveNextAsync is called)
-            // CancellationToken will be forwarded from GetAsyncEnumerator by .NET "magic", so no need to pass it as a parameter
-            return EnumerateInternal(CancellationToken.None).GetAsyncEnumerator(cancellationToken);
-        }
+            // if _page is null, or _page.IsLast, we have retrieved the very last page from the server, and
+            // the server has closed the query, and there is nothing we need to do anymore
+            if (_page == null || _page.IsLast) return;
 
-        private async IAsyncEnumerable<SqlRow> EnumerateInternal([EnumeratorCancellation] CancellationToken cancellationToken = default)
-        {
-            while (await MoveNextAsync(cancellationToken).CfAwait())
-                yield return Current;
+            // otherwise, the server is still running the query and we need to close it
+            try
+            {
+                await _closeQuery(_queryId).CfAwait();
+            }
+            catch
+            {
+                // TODO: do better
+            }
+
+            // dispose the combined cancellation if it has been created
+            _combinedCancellation?.Dispose();
         }
     }
 }

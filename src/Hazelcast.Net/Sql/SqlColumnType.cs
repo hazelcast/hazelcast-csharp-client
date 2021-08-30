@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Models;
+
+#pragma warning disable CA1720 // Identifier contains type name - on purpose
+
 namespace Hazelcast.Sql
 {
     /// <summary>
@@ -30,6 +34,8 @@ namespace Hazelcast.Sql
         Boolean = 1,
 
         // FIXME [Oleksii] discuss sign preservation
+        // TINYINT is signed whereas byte is not = ?!
+
         /// <summary>
         /// <c>TINYINT</c> type, represented by <c>java.lang.Byte</c> in Java and by <see cref="byte"/> in .NET.
         /// </summary>

@@ -57,7 +57,7 @@ namespace Hazelcast.Examples.Sql
             logger.LogInformation("Generating values for {Timeout}", timeout);
 
             // infinite stream that will generate 1 sequential long value about every second
-            await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
+            await using var result = await client.Sql.ExecuteQueryAsync("SELECT * from TABLE(generate_stream(1))");
 
             using var cancellationSource = new CancellationTokenSource(timeout);
 
@@ -78,7 +78,7 @@ namespace Hazelcast.Examples.Sql
             logger.LogInformation("Generating values until user action", timeout);
 
             // infinite stream that will generate 1 sequential long value about every second
-            await using var result = client.Sql.ExecuteQuery("SELECT * from TABLE(generate_stream(1))");
+            await using var result = await client.Sql.ExecuteQueryAsync("SELECT * from TABLE(generate_stream(1))");
 
             using var cancellationSource = new CancellationTokenSource();
 
