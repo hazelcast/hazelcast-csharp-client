@@ -200,7 +200,7 @@ namespace Hazelcast
 #endif
         Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name)
         {
-            var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.Topic, name, true,
+            var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.FlakeIdGenerator, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options));
 
