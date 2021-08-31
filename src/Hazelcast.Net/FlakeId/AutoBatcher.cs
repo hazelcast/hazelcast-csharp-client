@@ -31,7 +31,17 @@ namespace Hazelcast.FlakeId
             _nextBatchLazyTask = NewBatchLazyTask();
         }
 
-        public async ValueTask<long> GetNextIdAsync(CancellationToken cancellationToken = default)
+        public ValueTask<long> GetNextIdAsync(CancellationToken cancellationToken = default)
+        {
+            // Avoid using async state machine if possible
+            var nextBatchTask = _nextBatchLazyTask.Value;
+            if (nextBatchTask.IsCompletedSuccessfully() && nextBatchTask.Result.TryGetNextId(out var id))
+                return new ValueTask<long>(id);
+
+            return GetNextIdInternalAsync(cancellationToken);
+        }
+
+        private async ValueTask<long> GetNextIdInternalAsync(CancellationToken cancellationToken)
         {
             while (true) // If batch is finished, get next and repeat the process
             {
