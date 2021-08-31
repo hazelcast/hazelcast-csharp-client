@@ -31,7 +31,7 @@ namespace Hazelcast.FlakeId
             _nextBatchLazyTask = NewBatchLazyTask();
         }
 
-        public async Task<long> GetNextIdAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<long> GetNextIdAsync(CancellationToken cancellationToken = default)
         {
             while (true) // If batch is finished, get next and repeat the process
             {

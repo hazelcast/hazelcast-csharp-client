@@ -48,7 +48,7 @@ namespace Hazelcast.FlakeId
         }
 
         /// <inheritdoc />
-        public Task<long> GetNewIdAsync() => _autoBatcher.GetNextIdAsync();
+        public ValueTask<long> GetNewIdAsync() => _autoBatcher.GetNextIdAsync();
 
         private async Task<Batch> GetNewBatchAsync()
         {

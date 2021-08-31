@@ -68,6 +68,6 @@ namespace Hazelcast.FlakeId
         /// <exception cref="NotSupportedException">
         /// If the cluster version is below 3.10.
         /// </exception>
-        Task<long> GetNewIdAsync();
+        ValueTask<long> GetNewIdAsync();
     }
 }
