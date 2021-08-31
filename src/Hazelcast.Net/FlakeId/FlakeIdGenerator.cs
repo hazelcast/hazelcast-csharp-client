@@ -39,11 +39,11 @@ namespace Hazelcast.FlakeId
         /// <param name="options">A client options.</param>
         public FlakeIdGenerator(string name, DistributedObjectFactory factory, Cluster cluster,
             SerializationService serializationService, ILoggerFactory loggerFactory,
-            HazelcastOptions options
+            FlakeIdGeneratorOptions options = null
         )
             : base(ServiceNames.FlakeIdGenerator, name, factory, cluster, serializationService, loggerFactory)
         {
-            _options = options.GetFlakeIdGeneratorOptions(name) ?? FlakeIdGeneratorOptions.Default;
+            _options = options ?? FlakeIdGeneratorOptions.Default;
             _autoBatcher = new AutoBatcher(GetNewBatchAsync);
         }
 

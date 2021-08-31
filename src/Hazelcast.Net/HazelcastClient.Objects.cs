@@ -202,7 +202,7 @@ namespace Hazelcast
         {
             var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.FlakeIdGenerator, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options));
+                    => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options.GetFlakeIdGeneratorOptions(n)));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
