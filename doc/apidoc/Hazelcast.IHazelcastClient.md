@@ -8,7 +8,7 @@ in order to properly release its resources. For example:
 
 ```csharp
 var options = new HazelcastOptionsBuilder.Build();
-var client = await HazelcastClientFactory.StartNewClientAsync();
+var client = await HazelcastClientFactory.StartNewClientAsync(options);
 // ... use the client ...
 await client.DisposeAsync();
 ```

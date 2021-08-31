@@ -33,7 +33,7 @@ The client can, at times, become disconnected from the cluster, for instance in 
 ## Connection Timeout
 
 The connection timeout is controlled by the `hazelcast.networking.connectionTimeoutMilliseconds` configuration option. It is the timeout value in milliseconds for a member to accept the client connection requests. More precisely, it is the client socket connection timeout for connecting to a member.
-If the member does not respond within the timeout, the client will retry to connect as many as `ClientNetworkConfig.GetConnectionAttemptPeriod()` times. FIXME?
+If the member does not respond within the timeout, the client will retry to connect as many as `ClientNetworkConfig.GetConnectionAttemptPeriod()` times.
 
 This timeout is also used to control other socket connections such as Cloud Discovery.
 
@@ -44,7 +44,7 @@ The default value is `5000` milliseconds.
 > [!NOTE]
 > This do not apply to version 4 and above of the client. It is kept here for reference only until we document how to achieve the same result in version 4 and above.
 
-If a member does not accept a connection within the specified timeout, the client will retries a specified amount of times waiting for some amount of time  between each tries. Ddefault value for attempts is `2`, and for delay is 3000ms.
+If a member does not accept a connection within the specified timeout, the client will retry a specified amount of times waiting for some amount of time  between each tries. Default value for attempts is `2`, and for delay is 3000ms.
 
 ## TLS/SSL
 

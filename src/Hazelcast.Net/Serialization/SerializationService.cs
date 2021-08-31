@@ -617,7 +617,7 @@ namespace Hazelcast.Serialization
             var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
             var partitionKey = partitioningStrategy?.GetPartitionKey(obj);
 
-            // returning 0 here means that we're going to create an HeapData that:
+            // returning 0 here means that we're going to create a HeapData that:
             // - has HasPartitionHash == false
             // - returns PartitionHash = GetHashCode() which is overriden with a Murmur3 hasher
 

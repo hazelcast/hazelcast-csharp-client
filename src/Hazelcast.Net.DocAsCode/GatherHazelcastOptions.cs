@@ -40,13 +40,13 @@ namespace Hazelcast.Net.DocAsCode
                 => modelKey.StartsWith("~/obj/dev/api/") &&
                    modelKey.EndsWith("Options.yml");
 
-            Logger.LogInfo(" Gathering option classes.");
+            Logger.LogInfo("Gathering option classes.");
             State.OptionFiles.AddRange(models.Where(x => IsOptionsModel(x.Key)));
 
             foreach (var optionFile in State.OptionFiles)
-                Logger.LogInfo($" Gathering: {Path.GetFileNameWithoutExtension(optionFile.Key)}.");
+                Logger.LogInfo($"Gathering: {Path.GetFileNameWithoutExtension(optionFile.Key)}.");
 
-            Logger.LogInfo($" Gathered {State.OptionFiles.Count} option classes.");
+            Logger.LogInfo($"Gathered {State.OptionFiles.Count} option classes.");
 
             State.Gathered.Set();
 

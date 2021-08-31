@@ -40,8 +40,8 @@ This will determine the application environment (`<env>`) from the `DOTNET_ENVIR
 
 The Hazelcast-specific sources for environment variables and command line arguments only exist to support the non-standard dot separator, and complement the original sources.
 
-The @Hazelcast.HazelcastOptions.Build method supports overriding the name and location of the `hazelcast.json` and
-`hazelcast.<env>.json` files, overriding the `<env>` environment name, and providing optional in-memory key/values. This can also be achived, in a more fluent way, with the @HazelcastOptionsBuilder.
+The @HazelcastOptionsBuilder provides ways to override the name and location of the `hazelcast.json` and
+`hazelcast.<env>.json` files, the `<env>` environment name, and accepts optional in-memory key/values.
 
 Every Hazelcast option can therefore be specified via the traditional .NET Core methods. For instance, specifying one
 cluster server address can be done via the following Json fragment in any of the Json files:
