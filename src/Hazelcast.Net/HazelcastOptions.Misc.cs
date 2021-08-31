@@ -73,14 +73,7 @@ namespace Hazelcast
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>Options for the Near Cache matching the specified <paramref name="name"/>.</returns>
-        public NearCacheOptions GetNearCacheOptions(string name)
-        {
-            if (NearCaches.TryGetValue(name, out var configuration))
-                return configuration;
-
-            var key = PatternMatcher.Matches(NearCaches.Keys, name);
-            return key == null ? null : NearCaches[key];
-        }
+        public NearCacheOptions GetNearCacheOptions(string name) => PatternMatcher.FindValue(NearCaches, name);
 
         /// <summary>
         /// Gets the dictionary which contains the <see cref="FlakeIdGeneratorOptions"/> for each Flake Id Generator.
