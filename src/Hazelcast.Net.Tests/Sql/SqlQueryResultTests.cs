@@ -107,7 +107,7 @@ namespace Hazelcast.Tests.Sql
             ISqlQueryResult result;
             await using (result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))"))
             {
-                Assert.ThrowsAsync<OperationCanceledException>(async () =>
+                Assert.ThrowsAsync<TaskCanceledException>(async () =>
                 {
                     using var cancellationSource = new CancellationTokenSource(50);
                     await result.Take(5).ToListAsync(cancellationSource.Token);
