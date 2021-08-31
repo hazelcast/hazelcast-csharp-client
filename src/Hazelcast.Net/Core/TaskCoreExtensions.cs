@@ -148,6 +148,23 @@ namespace Hazelcast.Core
             => new ConfiguredValueTaskNoThrowAwaitable(task);
 
         /// <summary>
+        /// Configures an awaiter used to await this <see cref="ValueTask{T}"/>, continuing on
+        /// any synchronization context, and not throwing any exception.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <param name="exceptionValue">The value to return in case of an exception.</param>
+        /// <returns>An object used to await this <see cref="ValueTask{T}"/>.</returns>
+        /// <remarks>
+        /// <para>This is equivalent to <c>ConfigureAwait(false)</c>, and in addition
+        /// any exception thrown by the task is swallowed and observed (in order not
+        /// to become an unobserved exception) and the <paramref name="exceptionValue"/> is
+        /// returned.</para>
+        /// </remarks>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static ConfiguredValueTaskNoThrowAwaitable<T> CfAwaitNoThrow<T>(this ValueTask<T> task, T exceptionValue)
+            => new ConfiguredValueTaskNoThrowAwaitable<T>(task, exceptionValue);
+
+        /// <summary>
         /// Configures an awaiter used to await this <see cref="Task"/>, continuing on
         /// any synchronization context, and not throwing an exception if the task is
         /// canceled.
@@ -534,6 +551,81 @@ namespace Hazelcast.Core
             }
 
             // see notes in ConfiguredTaskNoThrowAwaitable
+
+            /// <summary>
+            /// Schedules the continuation onto the <see cref="Task"/> associated with this <see cref="TaskAwaiter"/>.
+            /// </summary>
+            /// <param name="continuation">The action to invoke when the await operation completes.</param>
+            public void OnCompleted(Action continuation)
+                => _task.ConfigureAwait(false).GetAwaiter().OnCompleted(continuation);
+
+            /// <summary>
+            /// Schedules the continuation onto the <see cref="Task"/> associated with this <see cref="TaskAwaiter"/>.
+            /// </summary>
+            /// <param name="continuation">The action to invoke when the await operation completes.</param>
+            public void UnsafeOnCompleted(Action continuation)
+                => _task.ConfigureAwait(false).GetAwaiter().OnCompleted(continuation);
+        }
+
+        /// <summary>
+        /// Provides an awaitable object that allows for configured awaits on <see cref="ValueTask{T}"/>.
+        /// </summary>
+        public readonly struct ConfiguredValueTaskNoThrowAwaitable<T> : ICriticalNotifyCompletion
+        {
+            private readonly ValueTask<T> _task;
+            private readonly T _exceptionValue;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ConfiguredTaskNoThrowAwaitable{T}"/> struct.
+            /// </summary>
+            /// <param name="task">The <see cref="Task{T}"/>.</param>
+            /// <param name="exceptionValue">The value to return in case of an exception.</param>
+            internal ConfiguredValueTaskNoThrowAwaitable([NotNull] ValueTask<T> task, T exceptionValue)
+            {
+                _task = task;
+                _exceptionValue = exceptionValue;
+            }
+
+            /// <summary>
+            /// Gets the awaiter for this awaitable.
+            /// </summary>
+            /// <returns>The awaiter.</returns>
+            public ConfiguredValueTaskNoThrowAwaitable<T> GetAwaiter() => this;
+
+            /// <summary>
+            /// Gets whether the task being awaited is completed.
+            /// </summary>
+            /// <returns>Whether the task being awaited is completed.</returns>
+            public bool IsCompleted
+                => _task.IsCompleted;
+
+            /// <summary>Ends the await on the completed <see cref="Task"/>.</summary>
+            // [StackTraceHidden] is framework-internal
+            public T GetResult()
+            {
+                // this is where we swallowed the task's possible exception
+                // still, must observe the exception else it remains unobserved
+                if (_task.IsCompletedSuccessfully()) return _task.GetAwaiter().GetResult();
+                _ = _task.AsTask().Exception;
+                return _exceptionValue;
+            }
+
+            // ConfiguredTaskAwaitable is a simple class that just returns a
+            // ConfiguredTaskAwaitable.ConfiguredTaskAwaiter for GetAwaiter()
+            //
+            // That awaiter invokes the TaskAwaiter.OnCompletedInternal method
+            // for OnCompleted and UnsafeOnCompleted - that is all - but that
+            // method is internal, so the only way for us to invoke it is
+            // through a ConfiguredTaskAwaiter - which only has an internal ctor,
+            // so through a ConfiguredTaskAwaitable.
+            //
+            // so, the methods below use ConfigureAwait(false) to create the
+            // correct ConfiguredTaskAwaitable.ConfiguredTaskAwaiter, and get
+            // it to complete as expected.
+            //
+            // references:
+            // https://github.com/dotnet/runtime/issues/22144
+            // https://github.com/dotnet/runtime/issues/27723
 
             /// <summary>
             /// Schedules the continuation onto the <see cref="Task"/> associated with this <see cref="TaskAwaiter"/>.
