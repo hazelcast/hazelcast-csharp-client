@@ -92,13 +92,6 @@ namespace Hazelcast
         /// </summary>
         /// <param name="name">The name.</param>
         /// <returns>Options for the Flake Id Generator matching the specified <paramref name="name"/>.</returns>
-        public FlakeIdGeneratorOptions GetFlakeIdGeneratorOptions(string name)
-        {
-            if (FlakeIdGenerators.TryGetValue(name, out var configuration))
-                return configuration;
-
-            var key = PatternMatcher.Matches(FlakeIdGenerators.Keys, name);
-            return key == null ? null : FlakeIdGenerators[key];
-        }
+        public FlakeIdGeneratorOptions GetFlakeIdGeneratorOptions(string name) => PatternMatcher.FindValue(FlakeIdGenerators, name);
     }
 }
