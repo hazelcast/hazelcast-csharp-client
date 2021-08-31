@@ -78,9 +78,7 @@ namespace Hazelcast
                 => new KeyValuePair<string, NearCacheOptions>(kvp.Key, kvp.Value.Clone()))
                 .ToDictionary();
 
-            FlakeIdGenerators = other.FlakeIdGenerators.Select(kvp
-                => new KeyValuePair<string, FlakeIdGeneratorOptions>(kvp.Key, kvp.Value.Clone()))
-                .ToDictionary();
+            FlakeIdGenerators = other.FlakeIdGenerators.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
         }
 
         /// <summary>
