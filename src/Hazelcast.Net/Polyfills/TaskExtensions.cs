@@ -37,5 +37,29 @@ namespace System.Threading.Tasks
             return task.IsCompletedSuccessfully;
 #endif
         }
+
+        /// <inheritdoc cref="IsCompletedSuccessfully(Task)"/>>
+        public static bool IsCompletedSuccessfully(this ValueTask task)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+#if NET462 || NETSTANDARD2_0
+            return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
+#endif
+#if NETSTANDARD2_1
+            return task.IsCompletedSuccessfully;
+#endif
+        }
+
+        /// <inheritdoc cref="IsCompletedSuccessfully(Task)"/>>
+        public static bool IsCompletedSuccessfully<T>(this ValueTask<T> task)
+        {
+            if (task == null) throw new ArgumentNullException(nameof(task));
+#if NET462 || NETSTANDARD2_0
+            return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
+#endif
+#if NETSTANDARD2_1
+            return task.IsCompletedSuccessfully;
+#endif
+        }
     }
 }
