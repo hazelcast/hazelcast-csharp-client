@@ -74,9 +74,7 @@ namespace Hazelcast
             Metrics = other.Metrics.Clone();
 
             NearCache = other.NearCache.Clone();
-            NearCaches = other.NearCaches.Select(kvp
-                => new KeyValuePair<string, NearCacheOptions>(kvp.Key, kvp.Value.Clone()))
-                .ToDictionary();
+            NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
 
             FlakeIdGenerators = other.FlakeIdGenerators.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
         }
