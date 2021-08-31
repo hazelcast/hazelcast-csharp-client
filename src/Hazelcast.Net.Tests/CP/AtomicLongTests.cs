@@ -29,6 +29,8 @@ namespace Hazelcast.Tests.CP
             await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
 
             Assert.That(await along.GetAsync(), Is.EqualTo(0));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -38,6 +40,8 @@ namespace Hazelcast.Tests.CP
 
             await along.SetAsync(1);
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -49,6 +53,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.IncrementAndGetAsync(), Is.EqualTo(2));
             Assert.That(await along.GetAsync(), Is.EqualTo(2));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -60,6 +66,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.GetAndIncrementAsync(), Is.EqualTo(1));
             Assert.That(await along.GetAsync(), Is.EqualTo(2));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -71,6 +79,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(2));
             Assert.That(await along.DecrementAndGetAsync(), Is.EqualTo(1));
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -82,6 +92,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(2));
             Assert.That(await along.GetAndDecrementAsync(), Is.EqualTo(2));
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -93,6 +105,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.AddAndGetAsync(3), Is.EqualTo(4));
             Assert.That(await along.GetAsync(), Is.EqualTo(4));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -104,6 +118,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.GetAndAddAsync(3), Is.EqualTo(1));
             Assert.That(await along.GetAsync(), Is.EqualTo(4));
+
+            await along.DestroyAsync();
         }
 
         [TestCase(2, 3, false)]
@@ -116,6 +132,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.CompareAndSetAsync(comparand, value), Is.EqualTo(result));
             Assert.That(await along.GetAsync(), Is.EqualTo(result ? value : 1));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -127,6 +145,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await along.GetAsync(), Is.EqualTo(1));
             Assert.That(await along.GetAndSetAsync(3), Is.EqualTo(1));
             Assert.That(await along.GetAsync(), Is.EqualTo(3));
+
+            await along.DestroyAsync();
         }
 
         [Test]
@@ -136,6 +156,8 @@ namespace Hazelcast.Tests.CP
             await using var along = await Client.CPSubsystem.GetAtomicLongAsync(name);
 
             Assert.That(along.Name, Is.EqualTo(name));
+
+            await along.DestroyAsync();
         }
 
         [Test]

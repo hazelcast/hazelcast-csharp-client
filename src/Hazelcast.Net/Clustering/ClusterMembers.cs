@@ -386,10 +386,15 @@ namespace Hazelcast.Clustering
 
                 // remove connections that don't match a member
                 var d = members.ToDictionary(x => x.Id, x => x);
+                var r = new List<MemberConnection>();
                 foreach (var c in _connections.Values)
                 {
-                    if (d.TryGetValue(c.MemberId, out var m) && m.ConnectAddress == c.Address) continue;
+                    if (!d.TryGetValue(c.MemberId, out var m) || m.ConnectAddress != c.Address)
+                        r.Add(c);
+                }
 
+                foreach (var c in r)
+                {
                     _logger.LogDebug($"Set members: remove orphaned connection {c.Id.ToShortString()} to {c.MemberId.ToShortString()} at {c.Address}.");
                     _connections.Remove(c.MemberId);
                     _terminateConnections.Add(c);
