@@ -458,7 +458,8 @@ function ensure-server-version {
         Die "Server: could not find a version starting with '$version' on Maven"
     }
 
-    $version2 = $nodes[0].innerText
+    $versions = $nodes | sort-object -descending -property innerText
+    $version2 = $versions[0].innerText
 
     Write-Output "Server: found version $version2 on Maven, using this version"
     $script:hzVersion = $version2
