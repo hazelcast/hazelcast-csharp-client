@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.FlakeId
             });
 
             var ids = await TaskEx.RunConcurrently(
-                _ => autoBatcher.GetNextIdAsync(),
+                _ => autoBatcher.GetNextIdAsync().AsTask(),
                 batchesCount * batchSize
             );
 
