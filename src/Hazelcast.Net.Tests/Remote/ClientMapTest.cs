@@ -246,7 +246,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task TestEntrySetPredicate()
+        public async Task EntrySetWithSqlPredicate()
         {
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
@@ -260,6 +260,41 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(tempDict.TryGetValue("key1", out var value));
             Assert.That(value, Is.EqualTo("value1"));
+        }
+
+        [Test]
+        public async Task EntrySetWithInPredicate()
+        {
+            var map = await Client.GetMapAsync<string, HazelcastJsonValue>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(map);
+
+            for (var i = 1; i < 30; i++)
+            {
+                await map.SetAsync("key-" + i, new HazelcastJsonValue($"{{ \"key\": \"key-{i}\", \"i-value\": {i}, \"s-value\": \"{i}\" }}"));
+            }
+
+            var result = await map.GetEntriesAsync(Predicates.In("i-value", 1, 2, 3));
+            Assert.That(result.Count, Is.EqualTo(3));
+
+            result = await map.GetEntriesAsync(Predicates.In("s-value", 1, 2, 3));
+            Assert.That(result.Count, Is.EqualTo(3));
+
+            result = await map.GetEntriesAsync(Predicates.In("s-value", "1", "2", "3"));
+            Assert.That(result.Count, Is.EqualTo(3));
+
+            result = await map.GetEntriesAsync(Predicates.In("x-value", "1", "2", "3"));
+            Assert.That(result.Count, Is.EqualTo(0));
+
+            // it must work also if we pass only 1 argument that is an IEnumerable<T>
+            // this used to fail (see issue #496) before we added the proper overload to Predicates.In
+            var values = new List<int> { 1, 2, 3 };
+            var query = Predicates.In("i-value", values);
+            result = await map.GetEntriesAsync(query);
+            Assert.That(result.Count, Is.EqualTo(3));
+
+            query = Predicates.In("i-value", values.Cast<object>().ToArray());
+            result = await map.GetEntriesAsync(query);
+            Assert.That(result.Count, Is.EqualTo(3));
         }
 
         [Test]
