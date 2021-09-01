@@ -92,14 +92,17 @@ namespace Hazelcast.Clustering
         // determines whether at least one member is connected.
         private bool IsAnyMemberConnected()
         {
-            return _members.Members.Any(HasConnectionForMember);
+            lock (_mutex) return _members.Members.Any(HasConnectionForMemberLocked);
         }
+
+        private bool HasConnectionForMemberLocked(MemberInfo member)
+            => _connections.TryGetValue(member.Id, out var connection) &&
+               connection.Address == member.ConnectAddress;
 
         // determines whether we have a connection for a member
         private bool HasConnectionForMember(MemberInfo member)
         {
-            return _connections.TryGetValue(member.Id, out var connection) &&
-                   connection.Address == member.ConnectAddress;
+            lock (_mutex) return HasConnectionForMemberLocked(member);
         }
 
         // registers a connection for termination
@@ -661,7 +664,7 @@ namespace Hazelcast.Clustering
         /// <returns>The oldest active connection, or <c>null</c> if no connection is active.</returns>
         public MemberConnection GetOldestConnection()
         {
-            return _connections.Values
+            lock (_mutex) return _connections.Values
                 .Where(x => x.Active)
                 .OrderBy(x => x.ConnectTime)
                 .FirstOrDefault();
@@ -684,11 +687,23 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="liteOnly">Whether to only return lite members.</param>
         /// <returns>The current members.</returns>
-        public IEnumerable<MemberInfo> GetMembers(bool liteOnly = false)
+        public IEnumerable<MemberInfoState> GetMembersAndState(bool liteOnly = false)
         {
             IEnumerable<MemberInfo> members = _members.Members;
             if (liteOnly) members = members.Where(x => x.IsLiteMember);
-            return members;
+
+            lock (_mutex) return members.Select(x => new MemberInfoState(x, HasConnectionForMemberLocked(x))).ToList();
+        }
+
+        /// <summary>
+        /// Gets information about each member.
+        /// </summary>
+        /// <param name="liteOnly">Whether to only return lite members.</param>
+        /// <returns>The current members.</returns>
+        public IEnumerable<MemberInfo> GetMembers(bool liteOnly = false)
+        {
+            IEnumerable<MemberInfo> members = _members.Members;
+            return liteOnly ? members.Where(x => x.IsLiteMember).ToList() : members;
         }
 
         /// <summary>

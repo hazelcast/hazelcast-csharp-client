@@ -22,6 +22,7 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Events;
 using Hazelcast.Metrics;
+using Hazelcast.Models;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -135,13 +136,16 @@ namespace Hazelcast
         public HazelcastOptions Options => _optionsClone ??= _options.Clone();
         
         /// <inheritdoc />
-        public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.GetMembers().ToList();
+        public IReadOnlyCollection<MemberInfoState> Members => Cluster.Members.GetMembersAndState().ToList();
 
         /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;
 
         /// <inheritdoc />
         public bool IsConnected => Cluster.IsConnected;
+
+        /// <inheritdoc />
+        public ClientState State => Cluster.State.ClientState;
 
         /// <summary>
         /// Gets the <see cref="SerializationService"/>.
