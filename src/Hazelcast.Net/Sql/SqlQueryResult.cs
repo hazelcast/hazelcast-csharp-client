@@ -36,11 +36,10 @@ namespace Hazelcast.Sql
 
         // enumeration variables
         // having them here allows for Enumerator to be a readonly struct
-        private bool _enumerated;
+        private bool _enumerateStarted;
         private SqlPage _page;
         private SqlRow _currentRow;
         private int _currentRowIndex;
-
 
         internal SqlQueryResult(
             SerializationService serializationService,
@@ -66,8 +65,8 @@ namespace Hazelcast.Sql
             if (_disposed) throw new ObjectDisposedException(nameof(SqlQueryResult));
 
             // cannot enumerate more than once, this is consistent with e.g. EF
-            if (_enumerated) throw new InvalidOperationException("The result of a query cannot be enumerated more than once.");
-            _enumerated = true;
+            if (_enumerateStarted) throw new InvalidOperationException("The result of a query cannot be enumerated more than once.");
+            _enumerateStarted = true;
 
             // combine cancellation tokens if needed
             if (cancellationToken == default)
@@ -129,7 +128,7 @@ namespace Hazelcast.Sql
                 get
                 {
                     // ensure it is valid to get the current row
-                    if (_cancellationToken.IsCancellationRequested || _result._currentRowIndex < 0 || _result._currentRowIndex >= _result._page.RowCount) 
+                    if (_cancellationToken.IsCancellationRequested || _result._currentRowIndex < 0 || _result._currentRowIndex >= _result._page.RowCount)
                         throw new InvalidOperationException();
 
                     // if the current row has already been hydrated, return it
