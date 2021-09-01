@@ -41,7 +41,11 @@ namespace Hazelcast
         /// <param name="cancellationToken">An optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>Options are built via HazelcastOptions.Build method.</para>
+        /// <para>Options are built via the <see cref="HazelcastOptionsBuilder.Build()"/> method.</para>
+        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken = default)
             => StartNewClientAsync(HazelcastOptions.Build(), cancellationToken);
@@ -53,8 +57,12 @@ namespace Hazelcast
         /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>Options are built via the <see cref="HazelcastOptions.Build(string[], System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{string,string}}, string, string, string, Action{IConfiguration, HazelcastOptions})"/>
-        /// method and passed to the <paramref name="configure"/> method, where they can be refined and adjusted, before being used to create the client.</para>
+        /// <para>Options are built via the <see cref="HazelcastOptionsBuilder.Build()"/> method and passed to the <paramref name="configure"/> method,
+        /// where they can be refined and adjusted, before being used to create the client.</para>
+        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastOptions> configure, CancellationToken cancellationToken = default)
             => StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
@@ -65,6 +73,12 @@ namespace Hazelcast
         /// <param name="options">Options.</param>
         /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
+        /// <remarks>
+        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.</para>
+        /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
