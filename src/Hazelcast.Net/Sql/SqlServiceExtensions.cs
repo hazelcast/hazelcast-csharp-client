@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Sql
@@ -23,9 +24,22 @@ namespace Hazelcast.Sql
         /// </summary>
         /// <param name="service">The <see cref="ISqlService"/> which executes the query.</param>
         /// <param name="sql">The SQL query text to execute.</param>
-        /// <param name="options">Options for the SQL query.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>An <see cref="ISqlQueryResult"/> instance that represents the result of the query.</returns>
-        public static Task<ISqlQueryResult> ExecuteQueryAsync(this ISqlService service, string sql, SqlStatementOptions options) =>
+        public static Task<ISqlQueryResult> ExecuteQueryAsync(this ISqlService service, string sql,
+            CancellationToken cancellationToken) =>
+            service?.ExecuteQueryAsync(sql, cancellationToken: cancellationToken) ?? throw new ArgumentNullException(nameof(service));
+
+        /// <summary>
+        /// Executes a SQL query.
+        /// </summary>
+        /// <param name="service">The <see cref="ISqlService"/> which executes the query.</param>
+        /// <param name="sql">The SQL query text to execute.</param>
+        /// <param name="options">Options for the SQL query.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>An <see cref="ISqlQueryResult"/> instance that represents the result of the query.</returns>
+        public static Task<ISqlQueryResult> ExecuteQueryAsync(this ISqlService service, string sql, SqlStatementOptions options,
+            CancellationToken cancellationToken = default) =>
             service?.ExecuteQueryAsync(sql, options: options) ?? throw new ArgumentNullException(nameof(service));
 
         /// <summary>
@@ -44,8 +58,10 @@ namespace Hazelcast.Sql
         /// <param name="service">The <see cref="ISqlService"/> which executes the command.</param>
         /// <param name="sql">The SQL command text to execute.</param>
         /// <param name="options">Options for the SQL command.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The number of rows affected byt the command.</returns>
-        public static Task<long> ExecuteCommandAsync(this ISqlService service, string sql, SqlStatementOptions options) =>
-            service?.ExecuteCommandAsync(sql, options: options) ?? throw new ArgumentNullException(nameof(service));
+        public static Task<long> ExecuteCommandAsync(this ISqlService service, string sql, SqlStatementOptions options,
+            CancellationToken cancellationToken = default) =>
+            service?.ExecuteCommandAsync(sql, options: options, cancellationToken: cancellationToken) ?? throw new ArgumentNullException(nameof(service));
     }
 }
