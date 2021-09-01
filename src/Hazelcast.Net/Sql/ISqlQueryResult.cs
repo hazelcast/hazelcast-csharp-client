@@ -24,7 +24,7 @@ namespace Hazelcast.Sql
     /// </para>
     /// <para>
     /// Query result serves as one-off <see cref="IAsyncEnumerable{T}"/> of <see cref="SqlRow"/>s, meaning it can be enumerated only once.
-    /// Trying to iterate rows multiple times will continue previous enumeration instead of starting a new one.
+    /// Trying to iterate rows multiple times will throw <see cref="InvalidOperationException"/>.
     /// </para>
     /// <para>
     /// This object implements <see cref="IAsyncDisposable"/> and should be disposed when not needed.

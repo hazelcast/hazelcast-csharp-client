@@ -9,7 +9,7 @@
     - ["SELECT *" Queries](#select--queries)
   - [Special characters in names](#special-characters-in-names)
   - [Enumerating query result](#enumerating-query-result)
-  - [Disposing query/command result](#disposing-querycommand-result)
+  - [Disposing query result](#disposing-query-result)
   - [Cancelling query enumeration](#cancelling-query-enumeration)
 - [Data Types](#data-types)
   - [Decimal String Format](#decimal-string-format)
@@ -169,22 +169,17 @@ Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing [
 
 > **NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.**
 
-### Disposing query/command result
+### Disposing query result
 
-Both `ISqlQueryResult` and `ISqlCommandResult` implements `IAsyncDisposable`. Their `DisposeAsync` implementation will make sure to cancel the query and free used server resources.
+`ISqlQueryResult` implements `IAsyncDisposable`. It's `DisposeAsync` implementation will make sure to cancel the query and free used server resources.
 
-Because of this, it is recommended to wrap operations with query or command into `await using` statement. This will ensure to send Cancel request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:
+Because of this, it is recommended to wrap operations with query into `await using` statement. This will ensure to send Cancel request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:
 
 ```csharp
 await using (var result = client.Sql.ExecuteQuery("SELECT * FROM MyMap"))
 {
     //...
 }
-```
-
-```csharp
-await using var result = Client.Sql.ExecuteCommand("INSERT INTO MyMap VALUES (1, 2)");
-//...
 ```
 
 ### Cancelling query enumeration
@@ -323,7 +318,7 @@ FROM table_name [ [ AS ] table_alias ]
 
 ### Description
 
-The `SELECT` command retrieves rows from a table. A row is a sequence of expressions defined after the `SELECT` keyword. Expressions may have optional aliases.
+The `SELECT` query retrieves rows from a table. A row is a sequence of expressions defined after the `SELECT` keyword. Expressions may have optional aliases.
 
 `table_name` refers to a single `IHMap` data structure. A table may have an optional alias.
 
