@@ -392,13 +392,13 @@ namespace Hazelcast.Tests.Core
             var guid = Guid.NewGuid();
             var values = guid.ToByteArray();
 
-            // endianness is not an options for guids
+            // endianness is not an option for guids
             bytes.WriteGuidL(2, guid);
             AssertBytes(bytes, 0, 0, 0,
-                values[6], values[7], values[4], values[5],
-                values[0], values[1], values[2], values[3],
-                values[15], values[14], values[13], values[12],
-                values[11], values[10], values[9], values[8]);
+                values[3], values[2], values[1], values[0],
+                values[5], values[4], values[7], values[6],
+                values[8], values[9], values[10], values[11],
+                values[12], values[13], values[14], values[15]);
         }
 
         [Test]
@@ -407,10 +407,10 @@ namespace Hazelcast.Tests.Core
             var guid = Guid.NewGuid();
             var values = guid.ToByteArray();
             var bytes = new byte[] { 0, 0, 0,
-                values[6], values[7], values[4], values[5],
-                values[0], values[1], values[2], values[3],
-                values[15], values[14], values[13], values[12],
-                values[11], values[10], values[9], values[8] };
+                values[3], values[2], values[1], values[0],
+                values[5], values[4], values[7], values[6],
+                values[8], values[9], values[10], values[11],
+                values[12], values[13], values[14], values[15] };
             Assert.That(bytes.ReadGuidL(2), Is.EqualTo(guid));
 
             bytes = new byte[] { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
