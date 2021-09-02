@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Support
             // HConsole.WriteLine(this, $"!! key:{key?.Value.ToString()} value:{value?.Value.ToString()} old:{oldValue?.Value.ToString()} merge:{mergingValue?.Value.ToString()}");
 
             var options = new HazelcastOptionsBuilder()
-                .With(o =>
+                .With((c, o) =>
                 {
                     // our test environment provides a cluster, and we need to configure the client accordingly
                     o.ClusterName = RcCluster.Id;
