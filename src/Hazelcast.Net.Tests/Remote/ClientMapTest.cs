@@ -968,6 +968,28 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
+        public async Task TestRemovedEventArgs()
+        {
+            var map = await Client.GetMapAsync<string, string>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(map);
+
+            MapEntryRemovedEventArgs<string, string> args = default;
+
+            var id = await map.SubscribeAsync(events => events
+                .EntryRemoved((m, a) => args = a));
+
+            await map.SetAsync("key1", "value1");
+            await map.RemoveAsync("key1");
+
+            await AssertEx.SucceedsEventually(async () =>
+            {
+                Assert.That(args, Is.Not.Null);
+                Assert.That(args.Key, Is.EqualTo("key1"));
+                Assert.That(args.OldValue, Is.EqualTo("value1"));
+            }, 4000, 200);
+        }
+
+        [Test]
         public async Task TestLock()
         {
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());

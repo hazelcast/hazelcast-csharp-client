@@ -26,6 +26,7 @@ namespace Hazelcast.Tests.Support
 {
     // https://github.com/hazelcast/hazelcast-csharp-client/issues/501
 
+    [Support]
     public class Issue501 : SingleMemberRemoteTestBase
     {
         // log to HConsole
