@@ -35,5 +35,21 @@ namespace Hazelcast.Tests.Remote
 
             await client.DisposeAsync();
         }
+
+        [Test]
+        public async Task ClientCanConnectAsync()
+        {
+            // most basic test just to ensure that a client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var clientStart = HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
+            var client = clientStart.Client;
+
+            await clientStart.Task;
+
+            await client.DisposeAsync();
+        }
     }
 }
