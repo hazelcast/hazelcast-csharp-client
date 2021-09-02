@@ -31,7 +31,7 @@ TLS/SSL for the Hazelcast .NET client can be configured using the `SslOptions` c
     sslOptions.SslProtocol = SslProtocols.Tls12;
 ```
 
-Of course these can also be configured via command-line options or environment variables, or via the Hazelcast configuration file. See the [configuration](configuration.md) page for details.
+Of course these can also be configured via command-line options or environment variables, or via the Hazelcast configuration file. See the [configuration](../configuration.md) page for details.
 
 ### Enabling TLS/SSL
 

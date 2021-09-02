@@ -1,7 +1,7 @@
 # AtomicLong
 
 > [!NOTE]
-> IAtomicLong is a member of CP Subsystem API. For detailed information, see the [CP SubSystem documentation](cpsubsystem.md).
+> IAtomicLong is a member of CP Subsystem API. For detailed information, see the [CP SubSystem documentation](../cpsubsystem.md).
 
 Hazelcast @Hazelcast.CP.IAtomicLong is the distributed implementation of `java.util.concurrent.atomic.AtomicLong` and offers most of its operations such as Get, Set, GetAndSet, CompareAndSet and IncrementAndGet. You can also think of it as implementing most of @System.Interlocked methods for `long` (`System.Int64`) distributed values. Since @Hazelcast.CP.IAtomicLong is a distributed implementation, these operations involve remote calls and thus their performances differ from local, in-memory, atomic longs.
 

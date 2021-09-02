@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
+using System.IO;
 using System.Linq;
 using Microsoft.DocAsCode.Build.Common;
 using Microsoft.DocAsCode.Build.ManagedReference;
@@ -28,7 +29,7 @@ namespace Hazelcast.Net.DocAsCode
     public class GatherHazelcastOptions : BaseDocumentBuildStep
     {
         public override string Name => nameof(GatherHazelcastOptions);
-        public override int BuildOrder => State.GatherBuilderOrder;
+        public override int BuildOrder => Constants.BuildOrder.GatherOptions;
 
         [Import]
         public HazelcastOptionsState State { get; set; }
@@ -39,12 +40,13 @@ namespace Hazelcast.Net.DocAsCode
                 => modelKey.StartsWith("~/obj/dev/api/") &&
                    modelKey.EndsWith("Options.yml");
 
-            Logger.LogInfo("Gathering options.");
+            Logger.LogInfo("Gathering option classes.");
             State.OptionFiles.AddRange(models.Where(x => IsOptionsModel(x.Key)));
-            Logger.LogInfo($"Gathered {State.OptionFiles.Count} options.");
 
             foreach (var optionFile in State.OptionFiles)
-                Logger.LogInfo($"Options: {optionFile.Key}");
+                Logger.LogInfo($"Gathering: {Path.GetFileNameWithoutExtension(optionFile.Key)}.");
+
+            Logger.LogInfo($"Gathered {State.OptionFiles.Count} option classes.");
 
             State.Gathered.Set();
 

@@ -1122,3 +1122,27 @@ article h5{
 .devwarn .sidetoc{
   top: 200px;
 }
+
+.footer {
+    border: none;
+    background: #000;
+    color: #fff;
+    font-size:80%;
+    padding:5px;
+}
+
+.breadcrumb {
+    font-size: 80%;
+    padding-top: 5px;
+}
+
+.brandcrumb {
+    padding-top: 5px;
+    font-weight: bold;
+    margin-right: 42px;
+    font-size: 80%;
+    float: left;
+    margin-left: 6px;
+}
+
+#autocollapse { background: #000; }

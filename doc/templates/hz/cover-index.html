@@ -14,7 +14,7 @@
     <link rel="stylesheet" type="text/css" href="index/css/dotcover.report.gen.css">
     <link rel="stylesheet" type="text/css" href="index/css/jquery.dynatree.css">
     
-    <link rel="shortcut icon" href="../../images/favicon.png">
+    <link rel="shortcut icon" href="../../images/favicon.ico">
     <link rel="stylesheet" href="../../styles/docfx.vendor.css">
     <link rel="stylesheet" href="../../styles/docfx.css">
     <link rel="stylesheet" href="../../styles/main.css">
@@ -24,13 +24,15 @@
     <meta property="docfx:rel" content="">
     
     <style>
-        div.footer { height:revert; width:revert; text-align:revert; padding-top: 15px; }
+        div.footer { height:revert; width:revert; text-align:revert; }
         .article { margin-top: 80px; margin-bottom: 20px; }
         .col-md-10 { width: 100%; }
         #sourceCode { border: 1px solid #dddddd; }
         #coverageTree { border: 1px solid #dddddd; }
         div.content ul.dynatree-container { background-color: white; }
         span.p { height: 15px; }
+        html { margin:0; padding: 0; }
+        header .navbar { min-height: 1px; background: transparent; }
     </style>
         
   </head>
@@ -49,15 +51,16 @@
               </button>
               
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" src="../../images/hazelcast-logo.png" alt="">
-                <span>Hazelcast .NET</span>
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
               </a>
-            </div>
-            <div class="collapse navbar-collapse" id="navbar">
-              <div style="padding-top:15px;padding-bottom:15px;margin-left:240px;">Tests Coverage</div>
             </div>
           </div>
         </nav>
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Test Coverage</div>
+          </div>
+        </div>
       </header>
         
       <div role="main" class="container body-content hide-when-search">
@@ -97,7 +100,7 @@
 
     <script type="text/javascript">
       function resizeContent() {
-            var contentHeight = ($(window).height() - 172) + "px";
+            var contentHeight = ($(window).height() - 148) + "px";
             $("#content").css("height", contentHeight);
       }
       $(window).unbind("resize").bind("resize",  resizeContent);

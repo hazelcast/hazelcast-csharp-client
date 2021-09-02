@@ -13,18 +13,17 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Composition;
-using System.Threading;
-using Microsoft.DocAsCode.Plugins;
 
 namespace Hazelcast.Net.DocAsCode
 {
-    [Export]
-    [Shared] // singleton
-    public class HazelcastOptionsState
+    public static class Extensions
     {
-        public List<FileModel> OptionFiles { get; } = new List<FileModel>();
-
-        public ManualResetEventSlim Gathered { get; } = new ManualResetEventSlim();
+        public static bool TryGetValue<T>(this Dictionary<string, object> dictionary, string key, out T value)
+        {
+            value = default;
+            if (!dictionary.TryGetValue(key, out var obj) || !(obj is T v)) return false;
+            value = v;
+            return true;
+        }
     }
 }
