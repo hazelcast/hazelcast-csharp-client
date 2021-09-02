@@ -92,7 +92,7 @@ function Write-Usage ( $params, $actions ) {
             $infos = $action.desc
             if ($action.alias -ne $null) {
                 $alias = [string]::Join(", ", ($action.alias.Replace(" ", "").Split(',')))
-                $infos = "$infos (alias: $alias)" 
+                $infos = "$infos (alias: $alias)"
             }
             if ($action.note -ne $null) {
                 $infos = "$infos`n$($action.note)"
@@ -106,7 +106,7 @@ function Write-Usage ( $params, $actions ) {
     Write-Output "  Options:"
 
     $params | `
-        foreach-object { 
+        foreach-object {
             $param = $_
             $name = "    -$($param.name)"
             if ($param.parm -ne $null) {
@@ -115,7 +115,7 @@ function Write-Usage ( $params, $actions ) {
             $infos = $param.desc
             if ($param.alias -ne $null) {
                 $alias = [string]::Join(", ", ($param.alias.Replace(" ", "").Split(',') | foreach-object { "-$_" }))
-                $infos = "$infos (alias: $alias)" 
+                $infos = "$infos (alias: $alias)"
             }
             if ($param.note -ne $null) {
                 $infos = "$infos`n$($param.note)"
@@ -145,12 +145,23 @@ function Parse-Commands ( $commands, $actions ) {
 
     $actions | foreach-object { $_.run = $false }
 
+    $actionx = @{}
+    $actions | foreach-object {
+        $a = $_
+        $actionx[$a.name] = $a
+        if ($a.alias -is [string]) {
+          $a.alias.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | foreach-object {
+            $actionx[$_.Trim()] = $a
+          }
+        }
+    }
+
     # else handle Commands
     $commands | foreach-object {
 
         if ($err -is [string]) { return }
 
-        $action = get-action $actions $_
+        $action = $actionx[$_]
         if ($action -eq $null) {
             $err = "unknown command `'$_`'"
             return
@@ -158,15 +169,15 @@ function Parse-Commands ( $commands, $actions ) {
 
         if ($action.uniq) {
 
-            if ($count -ne 0) { 
+            if ($count -ne 0) {
 
-                $err = "Command '$($action.name)' cannot be mixed with other commands." 
+                $err = "Command '$($action.name)' cannot be mixed with other commands."
                 return
             }
             $uniq = $action.name
         }
-        elseif ($uniq -ne $null) { 
-        
+        elseif ($uniq -ne $null) {
+
             $err = "Command '$uniq' cannot be mixed with other commands."
             return
         }
@@ -181,17 +192,17 @@ function Parse-Commands ( $commands, $actions ) {
 # parse arguments: (args, params) -> options
 # because pwsh args are bonkers
 function Parse-Args ( $argx, $params ) {
-  
+
   # create default options
-  $options = @{} 
+  $options = @{}
   $params | foreach-object {
     $options[$_.name] = $_.default
   }
 
-  # add default commands and commargs  
+  # add default commands and commargs
   $options.commands = [string[]] @()
   $options.commargs = [object[]] @()
-  
+
   # create params hashtable
   $paramx = @{}
   $params | foreach-object {
@@ -211,10 +222,10 @@ function Parse-Args ( $argx, $params ) {
 
   # handle arguments
   $argx | foreach-object {
-    
+
     # if $options is an error string, skip all
     if ($options -is [string]) { return }
-    
+
     $arg = $_
 
     # value of a valid param
@@ -231,7 +242,7 @@ function Parse-Args ( $argx, $params ) {
       $param = $null
       return # continue foreach-object
     }
-    
+
     # enter raw block?
     # when invoking ./hz.ps1 from pwsh, use --- to isolate commargs else we think they are hz.ps1 params
     # when invoking ./hs.sh from bash, use --- for the same reason, and it's converted to --% (pwsh's own thing)
@@ -243,7 +254,7 @@ function Parse-Args ( $argx, $params ) {
 
     # -xxx in non-raw block, should be a valid parameter
     if (-not $justRaw -and $arg -is [string] -and $arg.StartsWith('-')) {
-      $param = $paramx[$arg]    
+      $param = $paramx[$arg]
       if ($param -eq $null) {
         $options = "unknown parameter `'$arg`'"
         return # continue foreach-object
@@ -259,12 +270,12 @@ function Parse-Args ( $argx, $params ) {
       }
       return # continue foreach-object
     }
-    
+
     # array can be commands
     if ($arg -is [array]) {
       if ($canBeCommand -and $options.commands.Count -eq 0) {
         $arg | foreach-object {
-          
+
           # if $options is an error string, skip all
           if ($options -is [string]) { return }
 
@@ -300,7 +311,7 @@ function Parse-Args ( $argx, $params ) {
       $comma = $_.EndsWith(',')
       return # continue foreach-object
     }
-    
+
     # just commargs
     # will not rebuild arrays there as pwsh would do
     $options.commargs += $arg
@@ -357,7 +368,7 @@ function Get-TopologicalSort {
 
       # Take this time to convert them to a HashSet for faster operation
       $currentDestinationNodes = New-Object -TypeName System.Collections.Generic.HashSet[object] -ArgumentList (,[object[]] $currentDestinationNodes )
-      [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)        
+      [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)
   }
 
   # Now let's reconcile by adding empty dependencies for source nodes they didn't tell us about
@@ -370,7 +381,7 @@ function Get-TopologicalSort {
 
   $currentEdgeList = $fasterEdgeList
 
-  while($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {        
+  while($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {
       $currentNode = $setOfAllNodesWithNoIncomingEdges.Dequeue()
       [void] $currentEdgeList.Remove($currentNode)
       [void] $topologicallySortedElements.Add($currentNode)
@@ -382,7 +393,7 @@ function Get-TopologicalSort {
 
               if($currentNodeDestinations.Count -eq 0) {
                   [void] $setOfAllNodesWithNoIncomingEdges.Enqueue($currentEdgeSourceNode)
-              }                
+              }
           }
       }
   }
@@ -407,21 +418,24 @@ function invoke-web-request($url, $dest) {
         $args.OutFile = $dest
         $args.PassThru = $true
     }
-    
+
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
 
     if (PowerShell-IsAtLeast("7.0.0")) {
         $args.SkipHttpErrorCheck = $true
     }
-    
+
+    # on repository.hazelcast.com the default user-agent (mozilla) returns html content
+    $args.UserAgent = "hz"
+
     try {
         $r = invoke-webRequest @args
-        if ($null -ne $r) { 
+        if ($null -ne $r) {
             if ($r.StatusCode -ne 200) {
                 Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
             }
-            return $r 
+            return $r
         }
         return @{ StatusCode = 999; StatusDescription = "Error" }
     }

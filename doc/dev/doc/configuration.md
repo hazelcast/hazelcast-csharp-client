@@ -9,26 +9,12 @@ var options = new HazelcastOptions();
 
 For anything more realistic though, different approaches are available, as detailed below.
 
-To get an overview of all the different configuration options, refer to the [Options](options.md) page.
+This page does not document the options themselves. Options that can be configured are fully documented on the [Options](options.md) page.
 
 ### Simple Environment
 
 In a simple, non-hosted environment without dependency injection, options need to be *built* using the
-@Hazelcast.HazelcastOptions.Build methods. 
-
-```csharp
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        var options = HazelcastOptions.Build(args);
-        
-        // ... use options ...
-    }
-}
-```
-
-Alternatively, a fluent builder is available:
+@Hazelcast.HazelcastOptionsBuilder:
 
 ```csharp
 public class Program
@@ -73,7 +59,8 @@ cluster server address can be done via the following Json fragment in any of the
 It can alternatively be specified by setting an environment variable (note that the dotted format may not be supported on every platform):
 
 ```sh
-hazelcast__networking__addresses__0=server:port
+hazelcast__networking__addresses__0=server:port   ## supported on all platforms
+hazelcast:networking:addresses:0=server:port      ## not supported on all platforms
 hazelcast.networking.addresses.0=server:port
 ```
 
@@ -84,7 +71,7 @@ $ myApp hazelcast:networking:addresses:0=server:port
 $ myApp hazelcast.networking.addresses.0=server:port
 ```
 
-All the .NET Core supported formats are supported (i.e. `/arg value`, `/arg=value`, `-arg value`, etc.). See
+All the .NET Core supported formats are supported (i.e. `/arg value`, `/arg=value`, `--arg value`, etc.). See
 the [documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#command-line) for details.
 
 Finally, the method supports direct, in-memory key/values, where values can use either the dot or colon separator:

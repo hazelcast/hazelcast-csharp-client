@@ -22,7 +22,7 @@
 $ErrorActionPreference='Continue'
 
 # prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be ./build/
+$scriptRoot = "$PSScriptRoot"
 $slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
 $srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
 $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
@@ -58,7 +58,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "4.0-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
+    @{ name = "server";          type = [string];  default = "4.1-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -68,7 +68,7 @@ $params = @(
        desc = "the framework to build (default is all)";
        note = "The framework <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
     },
-    @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"      
+    @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"
        parm = "<config>";
        desc = "the build configuration";
        note = "Configuration is 'Release' by default but can be forced to be 'Debug'."
@@ -95,7 +95,7 @@ $params = @(
     @{ name = "cover";           type = [switch];  default = $false;
        desc = "whether to run test coverage during tests"
     },
-    @{ name = "version";         type = [string];  default = $null;  
+    @{ name = "version";         type = [string];  default = $null;
        parm = "<version>";
        desc = "the version to build, set, tag, etc.";
        note = "The <version> must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2. If no value is specified then the version is obtained from src/Directory.Build.props."
@@ -112,7 +112,7 @@ $params = @(
     },
     @{ name = "classpath";       type = [string];  default = $null;       alias = "cp";
        parm = "<classpath>";
-       desc = "define an additional classpath"; 
+       desc = "define an additional classpath";
        info = "The classpath is appended to the default remote controller or server classpath." },
     @{ name = "reproducible";    type = [switch];  default = $false;      alias = "repro";
        desc = "build reproducible assemblies" },
@@ -131,17 +131,17 @@ $params = @(
 # first one is the default one
 # order is important as they will run in the specified order
 $actions = @(
-    @{ name = "help"; 
+    @{ name = "help";
        desc = "display this help"
     },
     @{ name = "clean";
        desc = "cleans the solution"
     },
-    @{ name = "set-version"; 
+    @{ name = "set-version";
        desc = "sets the version";
        note = "Updates the version in src/Directory.Build.props with the specified version."
     },
-    @{ name = "verify-version"; 
+    @{ name = "verify-version";
        desc = "verifies the version";
        note = "Ensures that the version in src/Directory.Build.prop matches the -version option."
     },
@@ -149,24 +149,24 @@ $actions = @(
        desc = "tags a release";
        note = "Create a vX.Y.Z tag corresponding to the version in src/Directory.Build.Props, or the version specified via the -version option."
     },
-    @{ name = "build"; 
+    @{ name = "build";
        desc = "builds the solution";
        need = @( "git", "dotnet-complete", "build-proj", "can-sign" )
     },
-    @{ name = "test"; 
+    @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "server-version", "build-proj", "enterprise-key" ) 
+       need = @( "git", "dotnet-complete", "java", "server-files", "server-version", "build-proj", "enterprise-key" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
        note = "Building the documentation is not supported on non-Windows platforms as DocFX requires .NET Framework.";
        need = @( "git", "build-proj", "docfx" )
     },
-    @{ name = "git-docs"; 
+    @{ name = "git-docs";
        desc = "prepares the documentation release Git commit";
        note = "The commit still needs to be pushed to GitHub pages."
     },
-    @{ name = "pack-nuget"; 
+    @{ name = "pack-nuget";
        desc = "packs the NuGet packages";
        need = @( "dotnet-minimal" )
     },
@@ -180,7 +180,7 @@ $actions = @(
        note = "This command downloads the required JARs and configuration file.";
        need = @( "java", "server-files", "server-version", "enterprise-key" )
     },
-    @{ name = "run-server"; 
+    @{ name = "run-server";
        uniq = $true;
        desc = "runs a server for tests";
        note = "This command downloads the required JARs and configuration file.";
@@ -283,7 +283,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 
 # set versions and configure
 $hzVersion = $options.server
-$hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
+$hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
 # determine java code repositories for tests
@@ -424,43 +424,50 @@ function ensure-command($command) {
 # or contains a valid -SNAPSHOT version, by updating the version if necessary,
 # e.g. '4.0-SNAPSHOT' may become '4.0.4-SNAPSHOT'
 function ensure-server-version {
-    
+
     $version = $script:hzVersion
+
+    # set server version (to filter tests)
+    $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
 
     if (-not ($version.EndsWith("-SNAPSHOT"))) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
         return;
     }
-        
+
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
         return;
     }
-    
+
     Write-Output "Server: could not find $version on Maven"
-    
+
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
     $response2 = invoke-web-request $url2
     if ($response2.StatusCode -ne 200) {
         Die "Error: could not download metadata from Maven"
     }
-    
+
     $metadata = [xml] $response2.Content
     $version = $version.SubString(0, $version.Length - "-SNAPSHOT".Length)
     $nodes = $metadata.SelectNodes("//version [starts-with(., '$version')]")
-    
+
     if ($nodes.Count -lt 1) {
         Die "Server: could not find a version starting with '$version' on Maven"
     }
-    
-    $version2 = $nodes[0].innerText
-    
-    Write-Output "Server: found version $version2 on Maven, using this version"
+
+    # sort-object does not return an array, it enumerates results, and if there
+    # are more than one, PS creates an array, otherwise we just get the one object,
+    # and somebody thought it would make sense ;()
+    $node = $nodes | sort-object -descending -property innerText `
+                   | select-object -first 1 # so this is required
+    $version2 = $node.innerText
+
     $script:hzVersion = $version2
 
-    # set server version (to filter tests)
+    # update server version
     $env:HAZELCAST_SERVER_VERSION=$version2.TrimEnd("-SNAPSHOT")
 }
 
@@ -474,7 +481,13 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
             Die "Failed to download $url ($($response.StatusCode))"
         }
 
-        $metadata = [xml] $response.Content
+        try {
+            $metadata = [xml] $response.Content
+        }
+        catch {
+            Die "Invalid metadata content at $url."
+        }
+
         $xpath = "//snapshotVersion [extension='jar'"
         if (![System.String]::IsNullOrWhiteSpace($classifier)) {
             $xpath += " and classifier='$classifier'"
@@ -483,7 +496,11 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
             $xpath += " and not(classifier)"
         }
         $xpath += "]"
-        $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
+        $node = $metadata.SelectNodes($xpath)[0]
+        if ($node -eq $null) {
+            Die "Incomplete metadata at $url."
+        }
+        $jarVersion = "-" + $node.value
     }
     else {
         $jarVersion = "-" + $jversion
@@ -544,12 +561,12 @@ function ensure-server-files {
     if ($options.enterprise) {
 
         # ensure we have the hazelcast enterprise server + test jar
-        ensure-jar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
+        ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
         ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } else {
 
         # ensure we have the hazelcast server jar
-        ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+        ensure-jar "hazelcast-all-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${hzVersion}"
     }
 
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
@@ -626,7 +643,7 @@ function get-dotnet-sdk ( $sdks, $v, $preview ) {
         | Where-Object { ($preview -and $_.Contains('-')) -or (-not $preview -and -not $_.Contains('-')) } `
         | Select-Object -last 1
 
-    if ($null -eq $sdk) { return "n/a" } 
+    if ($null -eq $sdk) { return "n/a" }
     else { return $sdk.ToString() }
 }
 
@@ -639,23 +656,23 @@ function require-dotnet ( $full ) {
     $dotnetVersion = (&dotnet --version)
     Write-Output "  Version $dotnetVersion"
 
-    if ($pre) {
-        Write-Output "  (global.json does not allow pre-release versions)"
-    }
-    else {
-        Write-Output "  (global.json is missing or allows pre-release versions)"
-    }
-
+    $allowPrerelease = $true
     if (test-path "$slnRoot/global.json") {
         $json = (get-content "$slnRoot/global.json" -raw) | convertFrom-json
-        $pre = $true
         if ($json.sdk -ne $null -and $json.sdk.allowPrerelease -ne $null) {
-            $pre = $json.sdk.allowPrerelease
+            $allowPrerelease = $json.sdk.allowPrerelease
         }
     }
 
+    if ($allowPrerelease) {
+        Write-Output "  (global.json is missing or allows pre-release versions)"
+    }
+    else {
+        Write-Output "  (global.json does not allow pre-release versions)"
+    }
+
     $sdks = (&dotnet --list-sdks)
-    
+
     $v21 = get-dotnet-sdk $sdks "2.1" $false
     if ($full -and $null -eq $v21) {
         Write-Output ""
@@ -680,12 +697,12 @@ function require-dotnet ( $full ) {
         Die "Could not find dotnet SDK version 5.0.200+"
     }
     $v60 = get-dotnet-sdk $sdks "6.0" $false # 6.0 is not required
-    
+
     $v50preview = get-dotnet-sdk $sdks "5.0" $true
     $v60preview = get-dotnet-sdk $sdks "6.0" $true
 
-    if ($pre) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
-    if ($pre) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v50preview)" }
+    if ($allowPrerelease) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
+    if ($allowPrerelease) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v60preview)" }
 
     Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 
@@ -980,14 +997,14 @@ function hz-build {
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
     Write-Output ""
-    
+
     Write-Output "Resolve projects..."
     $projs = Get-ChildItem -path $srcDir -recurse -depth 1 -include *.csproj
     $t = @{}
     $sc = [System.IO.Path]::DirectorySeparatorChar
     $projs | Foreach-Object {
         $proj = $_
-        
+
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
 
         # exclude
@@ -998,8 +1015,8 @@ function hz-build {
             Write-Output "  $(get-project-name $k) -> (excluded) "
             return  # continue
         }
-        
-        $x = [xml] (Get-Content $proj); 
+
+        $x = [xml] (Get-Content $proj);
         $n = $x.SelectNodes("//ProjectReference/@Include");
         if ($t[$k] -eq $null) { $t[$k] = @() }
 
@@ -1015,7 +1032,7 @@ function hz-build {
             }
         }
     }
-    
+
     Write-Output ""
     Write-Output "Order projects..."
     $projs = Get-TopologicalSort $t
@@ -1054,12 +1071,12 @@ function hz-build {
         $buildArgs += "-p:VersionPrefix=$versionPrefix"
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
-    
+
     $projs | foreach {
         Write-Output ""
         Write-Output "> dotnet build "$srcDir\$_" $buildArgs"
         dotnet build "$srcDir\$_" $buildArgs
-        
+
         # if it failed, we can stop here
         if ($LASTEXITCODE) {
             Die "Build failed, aborting."
@@ -1533,7 +1550,7 @@ function hz-test {
         Write-Output "Tests Coverage"
         Write-Output "  Filter         : $($options.coverageFilter)"
         Write-Output "  Reports & logs : $tmpDir/tests/cover"
-    }   
+    }
 
     # run tests
     $script:testResults = @()
@@ -1599,7 +1616,7 @@ function hz-test {
                 "  $($fwk.PadRight(16)) :  FAILED (no test report)."
         }
     }
-    
+
     if (!$testsSuccess) {
 
         Die "Some tests have failed"
@@ -1733,7 +1750,9 @@ function hz-verify-version {
 function hz-run-example {
 
     if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
-    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx.exe"
+    $ext = ""
+    if ($isWindows) { $ext = ".exe" }
+    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
     if (-not (test-path $hx)) {
         Die "Could not find the examples executable. Did you build the solution?"
     }
@@ -1783,7 +1802,7 @@ $ensuredDotnet = $false
 # define needs - ordered!
 $needs = new-object Collections.Specialized.OrderedDictionary
 function register-needs { $args | foreach-object { $script:needs[$_] = $false } }
-register-needs git 
+register-needs git
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
 register-needs build-proj can-sign docfx
 register-needs java server-version server-files # ensure server files *after* server version!
@@ -1826,7 +1845,7 @@ Write-Output "Client version $($options.version)$s"
 # this goes first
 $clean = get-action $actions clean
 if ($clean.run) {
-    hz-clean 
+    hz-clean
     $clean.run = $false
 }
 
