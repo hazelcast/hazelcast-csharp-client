@@ -20,6 +20,8 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal delegate T DecodeDelegate<out T>(IEnumerator<Frame> iterator);
 
+    internal delegate T DecodeBytesDelegate<out T>(byte[] bytes, int position);
+
     internal static class CodecUtil
     {
         public static void EncodeNullable<T>(ClientMessage clientMessage, T value, Action<ClientMessage, T> encode)

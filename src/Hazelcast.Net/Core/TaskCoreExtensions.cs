@@ -25,12 +25,12 @@ namespace Hazelcast.Core
 {
     /// <summary>
     /// Provides extension method to the <see cref="Task"/> and <see cref="Task{TResult}"/> classes,
-    /// and the <see cref="ValueTask"/> and <see cref="ValueTask{TResult}"/> structs.
+    /// and to the <see cref="ValueTask"/> and <see cref="ValueTask{TResult}"/> structs.
     /// </summary>
     /// <remarks>
     /// <para>See: https://devblogs.microsoft.com/dotnet/configureawait-faq/.</para>
     /// </remarks>
-    internal static class TaskCoreExtensions
+    internal static partial class TaskCoreExtensions
     {
         // NOTES
         //
@@ -454,7 +454,7 @@ namespace Hazelcast.Core
                 // this is where we swallowed the task's possible exception
                 // still, must observe the exception else it remains unobserved
                 if (_task.IsCompletedSuccessfully()) return _task.GetAwaiter().GetResult();
-                _ = _task.Exception; 
+                _ = _task.Exception;
                 return _exceptionValue;
             }
 

@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -31,6 +32,7 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -38,6 +40,27 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
 {
+    using NetworkingTests_;
+    namespace NetworkingTests_
+    {
+        internal static class Extensions
+        {
+            public static ValueTask<bool> SendResponseAsync(this ClientMessageConnection connection, ClientMessage requestMessage, ClientMessage responseMessage)
+            {
+                responseMessage.CorrelationId = requestMessage.CorrelationId;
+                responseMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                return connection.SendAsync(responseMessage);
+            }
+
+            public static ValueTask<bool> SendEventAsync(this ClientMessageConnection connection, ClientMessage requestMessage, ClientMessage eventMessage)
+            {
+                eventMessage.CorrelationId = requestMessage.CorrelationId;
+                eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+                return connection.SendAsync(eventMessage);
+            }
+        }
+    }
+
     [TestFixture]
     public class NetworkingTests : HazelcastTestBase
     {
@@ -52,25 +75,10 @@ namespace Hazelcast.Tests.Networking
         private string GetText(ClientMessage message)
             => Encoding.UTF8.GetString(message.FirstFrame.Next.Bytes);
 
+        // basic handler that handles authentication and member views
         private async Task HandleAsync(Server server, ClientMessageConnection connection, ClientMessage requestMessage,
             Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler)
         {
-            var correlationId = requestMessage.CorrelationId;
-
-            async Task SendResponseAsync(ClientMessage response)
-            {
-                response.CorrelationId = requestMessage.CorrelationId;
-                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await connection.SendAsync(response).CfAwait();
-            }
-
-            async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
-            {
-                eventMessage.CorrelationId = correlationId;
-                eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await connection.SendAsync(eventMessage).CfAwait();
-            }
-
             switch (requestMessage.MessageType)
             {
                 // handle authentication
@@ -80,7 +88,7 @@ namespace Hazelcast.Tests.Networking
                         var responseMessage = ClientAuthenticationServerCodec.EncodeResponse(
                             0, server.Address, server.MemberId, SerializationService.SerializerVersion,
                             "4.0", 1, server.ClusterId, false);
-                        await SendResponseAsync(responseMessage).CfAwait();
+                        await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
                         break;
                     }
 
@@ -89,16 +97,15 @@ namespace Hazelcast.Tests.Networking
                     {
                         var request = ClientAddClusterViewListenerServerCodec.DecodeRequest(requestMessage);
                         var responseMessage = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await SendResponseAsync(responseMessage).CfAwait();
+                        await connection.SendResponseAsync(requestMessage, responseMessage).CfAwait();
 
                         _ = Task.Run(async () =>
                         {
                             await Task.Delay(500).CfAwait();
-                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[]
-                            {
-                            new MemberInfo(server.MemberId, server.Address, new MemberVersion(4, 0, 0), false, new Dictionary<string, string>()),
-                        });
-                            await SendEventAsync(eventMessage, correlationId).CfAwait();
+                            var memberVersion = new MemberVersion(4, 0, 0);
+                            var memberInfo = new MemberInfo(server.MemberId, server.Address, memberVersion, false, new Dictionary<string, string>());
+                            var eventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(1, new[] { memberInfo });
+                            await connection.SendEventAsync(requestMessage, eventMessage).CfAwait();
                         });
                         break;
                     }
@@ -153,9 +160,104 @@ namespace Hazelcast.Tests.Networking
             return ErrorsServerCodec.EncodeResponse(errorHolders);
         }
 
+        private IDisposable HConsoleForTest(Action<HConsoleOptions> configure = null)
+        {
+            void Configure(HConsoleOptions options)
+            {
+                options
+                    .ClearAll()
+                    .Configure().SetMinLevel()
+                    .Configure<HConsoleLoggerProvider>().SetMaxLevel();
+
+                configure?.Invoke(options);
+            }
+
+            return HConsole.Capture(Configure);
+        }
+
+
+        [Test]
+        [Timeout(30_000)]
+        public async Task CanCancel()
+        {
+            var address = NetworkAddress.Parse("127.0.0.1:11001");
+
+            using var console = HConsoleForTest(x => x.Configure(this).SetIndent(0).SetMaxLevel().SetPrefix("TEST"));
+            HConsole.WriteLine(this, "Begin");
+
+            // gate the ping response
+            var gate = new SemaphoreSlim(0);
+
+            // configure server
+            await using var server = new Server(address, async (xSvr, xConnection, xRequestMessage)
+                => await HandleAsync(xSvr, xConnection, xRequestMessage, async (svr, connection, requestMessage) =>
+                {
+                    switch (requestMessage.MessageType)
+                    {
+                        // handle ping (gated)
+                        case ClientPingServerCodec.RequestMessageType:
+                            var pingRequest = ClientPingServerCodec.DecodeRequest(requestMessage);
+                            var pingResponseMessage = ClientPingServerCodec.EncodeResponse();
+                            _ = Task.Run(async () =>
+                            {
+                                await gate.WaitAsync();
+                                await connection.SendResponseAsync(requestMessage, pingResponseMessage);
+                            });
+                            break;
+
+                        // err everything else
+                        default:
+                            HConsole.WriteLine(svr, "Respond with error.");
+                            var errorResponseMessage = CreateErrorMessage(RemoteError.Undefined);
+                            await connection.SendResponseAsync(requestMessage, errorResponseMessage).CfAwait();
+                            break;
+                    }
+                }), LoggerFactory);
+
+            // start server
+            await server.StartAsync().CfAwait();
+
+            // start client
+            HConsole.WriteLine(this, "Start client");
+            var options = new HazelcastOptionsBuilder()
+                .With(options =>
+                    {
+                        options.Networking.Addresses.Add("127.0.0.1:11001");
+                        options.Heartbeat.PeriodMilliseconds = -1; // infinite: we don't want heartbeat pings interfering with the test
+                    })
+                .WithHConsoleLogger()
+                .Build();
+            var client = (HazelcastClient)await HazelcastClientFactory.StartNewClientAsync(options);
+
+            // send ping request - which should be canceled before completing
+            HConsole.WriteLine(this, "Send ping request");
+            var message = ClientPingServerCodec.EncodeRequest();
+            using var cancel = new CancellationTokenSource(1000);
+
+            HConsole.WriteLine(this, "Wait for cancellation");
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async ()
+                => await client.Cluster.Messaging.SendAsync(message, cancel.Token).CfAwait());
+
+            // release the gate
+            HConsole.WriteLine(this, "Release the gate");
+            gate.Release();
+
+            // the server is going to respond, and a warning will be logged
+            // "Received message for unknown invocation ...:..."
+            // which is a good thing - yet we don't have instrumentation in our code to wait on that
+            // warning... so we cannot *assert* that we get it... so we just wait a bit to see the
+            // warning in the log...
+            await Task.Delay(1000);
+
+            // tear down client and server
+            HConsole.WriteLine(this, "Teardown");
+            await client.DisposeAsync().CfAwait();
+            await server.DisposeAsync().CfAwait();
+        }
+
         [Test]
         [Timeout(10_000)]
-        [KnownIssue(0, "Breaks on GitHub Actions")]
+        [KnownIssue(0, "Breaks on GitHub Actions")] // TODO we should deal with this
         public async Task CanRetryAndTimeout()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");

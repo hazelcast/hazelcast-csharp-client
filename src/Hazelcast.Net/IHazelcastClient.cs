@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
+using Hazelcast.Sql;
 using Hazelcast.Transactions;
 
 namespace Hazelcast
@@ -57,6 +58,14 @@ namespace Hazelcast
         /// Gets the CP subsystem.
         /// </summary>
         ICPSubsystem CPSubsystem { get; }
+
+        /// <summary>
+        /// Returns a service to execute distributed SQL queries.
+        /// </summary>
+        ///<remarks>
+        /// The service is in beta state. Behavior and API might be changed in future releases.
+        /// </remarks>
+        ISqlService Sql { get; }
 
         // TODO: consider implementing client.ClusterId
         /*

@@ -14,11 +14,13 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
@@ -759,6 +761,228 @@ namespace Hazelcast.Tests.DotNet
 
             cancel2.Cancel();
             Assert.Throws<OperationCanceledException>(() => token.ThrowIfCancellationRequested());
+        }
+
+        [Test]
+        public async Task AsyncEnumerationTest()
+        {
+            var v = 0;
+
+            // get an IAsyncEnumerable<> that does not throw when the enumeration is canceled
+            var asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 }, throwOnCancel: false);
+
+            // can enumerate
+            await foreach (var i in asyncEnumerable)
+            {
+                Console.WriteLine(v = i);
+            }
+            Assert.That(v, Is.EqualTo(4));
+            Console.WriteLine("/");
+
+            // canceling does not throw
+            var cancel = new CancellationTokenSource();
+            await foreach (var i in asyncEnumerable.WithCancellation(cancel.Token))
+            {
+                Console.WriteLine(v = i);
+                if (i == 3) cancel.Cancel();
+            }
+            Assert.That(v, Is.EqualTo(3));
+            Console.WriteLine("/");
+
+            // get an IAsyncEnumerable<> that throws when the enumeration is canceled
+            asyncEnumerable = new AsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
+
+            // can enumerate
+            await foreach (var i in asyncEnumerable)
+            {
+                Console.WriteLine(v = i);
+            }
+            Assert.That(v, Is.EqualTo(4));
+            Console.WriteLine("/");
+
+            // cancelling throws
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
+            {
+                cancel = new CancellationTokenSource();
+                await foreach (var i in asyncEnumerable.WithCancellation(cancel.Token))
+                {
+                    Console.WriteLine(v = i);
+                    if (i == 3) cancel.Cancel();
+                }
+            });
+            Assert.That(v, Is.EqualTo(3));
+            Console.WriteLine("/");
+
+            // can cancel without throwing
+            cancel = new CancellationTokenSource();
+            await foreach (var i in asyncEnumerable.WithCancellation(cancel.Token, throwOnCancel: false))
+            {
+                Console.WriteLine(v = i);
+                if (i == 3) cancel.Cancel();
+            }
+            Assert.That(v, Is.EqualTo(3));
+            Console.WriteLine("/");
+
+            // repeat with bare enumerable
+            var bareEnumerable = new BareAsyncEnumerable<int>(new[] { 1, 2, 3, 4 });
+
+            // can enumerate
+            await foreach (var i in bareEnumerable)
+            {
+                Console.WriteLine(v = i);
+            }
+            Assert.That(v, Is.EqualTo(4));
+            Console.WriteLine("/");
+
+            // cancelling throws
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
+            {
+                cancel = new CancellationTokenSource();
+                await foreach (var i in bareEnumerable.WithCancellation(cancel.Token))
+                {
+                    Console.WriteLine(v = i);
+                    if (i == 3) cancel.Cancel();
+                }
+            });
+            Assert.That(v, Is.EqualTo(3));
+            Console.WriteLine("/");
+
+            // can cancel without throwing
+            cancel = new CancellationTokenSource();
+            await foreach (var i in bareEnumerable.WithCancellation(cancel.Token, false))
+            {
+                Console.WriteLine(v = i);
+                if (i == 3) cancel.Cancel();
+            }
+            Assert.That(v, Is.EqualTo(3));
+            Console.WriteLine("/");
+
+        }
+
+        // provides something that can be async-enumerated without implementing IAsyncEnumerable<>
+        // by default, throws if the enumeration is canceled
+        public readonly struct BareAsyncEnumerable<T>
+        {
+            private readonly IReadOnlyList<T> _values;
+            private readonly bool _throwOnCancel;
+            private readonly CancellationToken _cancellationToken;
+
+            public BareAsyncEnumerable(IReadOnlyList<T> values)
+            {
+                _values = values;
+                _throwOnCancel = true;
+                _cancellationToken = default;
+            }
+
+            private BareAsyncEnumerable(IReadOnlyList<T> values, bool throwOnCancel, CancellationToken cancellationToken)
+            {
+                _values = values;
+                _throwOnCancel = throwOnCancel;
+                _cancellationToken = cancellationToken;
+            }
+
+            public BareAsyncEnumerable<T> WithCancellation(CancellationToken cancellationToken, bool throwOnCancel = true)
+                => new BareAsyncEnumerable<T>(_values, throwOnCancel, cancellationToken);
+
+            public Enumerator GetAsyncEnumerator() => new Enumerator(_values, _throwOnCancel, _cancellationToken);
+
+            public class Enumerator
+            {
+                private readonly IReadOnlyList<T> _values;
+                private readonly bool _throwOnCancel;
+                private readonly CancellationToken _cancellationToken;
+                private int _index;
+
+                public Enumerator(IReadOnlyList<T> values, bool throwOnCancel, CancellationToken cancellationToken)
+                {
+                    _values = values;
+                    _throwOnCancel = throwOnCancel;
+                    _cancellationToken = cancellationToken;
+                    _index = -1;
+                }
+
+                public ValueTask<bool> MoveNextAsync()
+                {
+                    if (_throwOnCancel) _cancellationToken.ThrowIfCancellationRequested();
+                    else if (_cancellationToken.IsCancellationRequested) return new ValueTask<bool>(false);
+
+                    return new ValueTask<bool>(++_index < _values.Count);
+                }
+
+                public T Current
+                {
+                    get
+                    {
+                        if (_cancellationToken.IsCancellationRequested || _index < 0 || _index >= _values.Count) throw new InvalidOperationException();
+                        return _values[_index];
+                    }
+                }
+
+                // this is not *required* but it's invoked if it exists
+                public ValueTask DisposeAsync()
+                {
+                    Console.WriteLine("dispose");
+                    return default;
+                }
+            }
+        }
+
+        // provides a true IAsyncEnumerable<> implementation
+        // by default, throws if the enumeration is canceled
+        public readonly struct AsyncEnumerable<T> : IAsyncEnumerable<T>
+        {
+            private readonly IReadOnlyList<T> _values;
+            private readonly bool _throwOnCancel;
+
+            public AsyncEnumerable(IReadOnlyList<T> values, bool throwOnCancel = true)
+            {
+                _values = values;
+                _throwOnCancel = throwOnCancel;
+            }
+
+            public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+            {
+                return new AsyncEnumerator(_values, _throwOnCancel, cancellationToken);
+            }
+
+            private class AsyncEnumerator : IAsyncEnumerator<T>
+            {
+                private readonly IReadOnlyList<T> _values;
+                private readonly bool _throwOnCancel;
+                private readonly CancellationToken _cancellationToken;
+                private int _index;
+
+                public AsyncEnumerator(IReadOnlyList<T> values, bool throwOnCancel, CancellationToken cancellationToken)
+                {
+                    _values = values;
+                    _throwOnCancel = throwOnCancel;
+                    _cancellationToken = cancellationToken;
+                    _index = -1;
+                }
+
+                public ValueTask<bool> MoveNextAsync()
+                {
+                    if (_throwOnCancel) _cancellationToken.ThrowIfCancellationRequested();
+                    else if (_cancellationToken.IsCancellationRequested) return new ValueTask<bool>(false);
+
+                    return new ValueTask<bool>(++_index < _values.Count);
+                }
+
+                public T Current
+                {
+                    get
+                    {
+                        if (_cancellationToken.IsCancellationRequested || _index < 0 || _index >= _values.Count) throw new InvalidOperationException();
+                        return _values[_index];
+                    }
+                }
+
+                public ValueTask DisposeAsync()
+                {
+                    Console.WriteLine("dispose");
+                    return default;
+                }
+            }
         }
     }
 }

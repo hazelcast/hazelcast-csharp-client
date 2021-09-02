@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -19,6 +20,7 @@ using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
@@ -26,12 +28,12 @@ namespace Hazelcast
     internal partial class HazelcastClient // Distributed Objects
     {
         private readonly ISequence<long> _lockReferenceIdSequence = new Int64Sequence();
-        private ICPSubsystem _cpSubsystem;
 
-        /// <summary>
-        /// Gets the CP subsystem.
-        /// </summary>
-        public ICPSubsystem CPSubsystem => _cpSubsystem ??= new CPSubsystem(Cluster, SerializationService);
+        /// <inheritdoc />
+        public ICPSubsystem CPSubsystem { get; }
+
+        /// <inheritdoc />
+        public ISqlService Sql { get; }
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync(IDistributedObject o)

@@ -19,11 +19,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Events;
 using Hazelcast.Metrics;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 using MemberInfo = Hazelcast.Models.MemberInfo;
 
@@ -62,6 +64,8 @@ namespace Hazelcast
 
             _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
+            CPSubsystem = new CPSubsystem(cluster, serializationService);
+            Sql = new SqlService(cluster, serializationService);
 
             if (options.Metrics.Enabled)
             {
@@ -133,7 +137,7 @@ namespace Hazelcast
         /// <inheritdoc />
         // yes this is not really thread-safe but we don't care
         public HazelcastOptions Options => _optionsClone ??= _options.Clone();
-        
+
         /// <inheritdoc />
         public IReadOnlyCollection<MemberInfo> Members => Cluster.Members.GetMembers().ToList();
 

@@ -273,5 +273,20 @@ namespace Hazelcast.Tests {
                 return ResourceManager.GetString("HazelcastOptions", resourceCulture);
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
+        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
+        ///           http://www.hazelcast.com/schema/config/hazelcast-config-5.0.xsd&quot;&gt;
+        ///  &lt;jet enabled=&quot;true&quot;&gt;&lt;/jet&gt;
+        ///&lt;/hazelcast&gt;.
+        /// </summary>
+        internal static string jet_enabled {
+            get {
+                return ResourceManager.GetString("jet_enabled", resourceCulture);
+            }
+        }
     }
 }
