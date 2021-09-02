@@ -12,7 +12,7 @@ namespace Hazelcast.Tests.Serialization
     /// Checks that object is deserialized server-side (Java) to the same value as was serialized client-side (.NET).
     /// </summary>
     [TestFixture]
-    public class ServerDeserializationTests : SingleMemberClientRemoteTestBase
+    public class ServerCompatibilityTests : SingleMemberClientRemoteTestBase
     {
         [Test]
         public async Task GuidTest()
