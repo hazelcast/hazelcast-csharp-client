@@ -268,19 +268,20 @@ namespace Hazelcast.Tests.Remote
             var map = await Client.GetMapAsync<string, HazelcastJsonValue>(CreateUniqueName());
             await using var _ = DestroyAndDispose(map);
 
-            for (var i = 1; i < 30; i++)
-            {
-                await map.SetAsync("key-" + i, new HazelcastJsonValue($"{{ \"key\": \"key-{i}\", \"i-value\": {i}, \"s-value\": \"{i}\" }}"));
-            }
+            await map.SetAllAsync(Enumerable.Range(0, 30).ToDictionary(
+                x => $"key-{x}",
+                x => new HazelcastJsonValue($"{{ \"key\": \"key-{x}\", \"i-value\": {x}, \"s-value\": \"{x}\" }}")));
+
+            var expected = new[] { 1, 2, 3 };
 
             var result = await map.GetEntriesAsync(Predicates.In("i-value", 1, 2, 3));
-            Assert.That(result.Count, Is.EqualTo(3));
+            CollectionAssert.AreEquivalent(expected, result);
 
             result = await map.GetEntriesAsync(Predicates.In("s-value", 1, 2, 3));
-            Assert.That(result.Count, Is.EqualTo(3));
+            CollectionAssert.AreEquivalent(expected, result);
 
             result = await map.GetEntriesAsync(Predicates.In("s-value", "1", "2", "3"));
-            Assert.That(result.Count, Is.EqualTo(3));
+            CollectionAssert.AreEquivalent(expected, result);
 
             result = await map.GetEntriesAsync(Predicates.In("x-value", "1", "2", "3"));
             Assert.That(result.Count, Is.EqualTo(0));
@@ -290,11 +291,11 @@ namespace Hazelcast.Tests.Remote
             var values = new List<int> { 1, 2, 3 };
             var query = Predicates.In("i-value", values);
             result = await map.GetEntriesAsync(query);
-            Assert.That(result.Count, Is.EqualTo(3));
+            CollectionAssert.AreEquivalent(expected, result);
 
             query = Predicates.In("i-value", values.Cast<object>().ToArray());
             result = await map.GetEntriesAsync(query);
-            Assert.That(result.Count, Is.EqualTo(3));
+            CollectionAssert.AreEquivalent(expected, result);
         }
 
         [Test]
