@@ -272,16 +272,16 @@ namespace Hazelcast.Tests.Remote
                 x => $"key-{x}",
                 x => new HazelcastJsonValue($"{{ \"key\": \"key-{x}\", \"i-value\": {x}, \"s-value\": \"{x}\" }}")));
 
-            var expected = new[] { 1, 2, 3 };
+            var expected = Enumerable.Range(1, 3).Select(x => $"key-{x}").ToList();
 
             var result = await map.GetEntriesAsync(Predicates.In("i-value", 1, 2, 3));
-            CollectionAssert.AreEquivalent(expected, result);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
 
             result = await map.GetEntriesAsync(Predicates.In("s-value", 1, 2, 3));
-            CollectionAssert.AreEquivalent(expected, result);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
 
             result = await map.GetEntriesAsync(Predicates.In("s-value", "1", "2", "3"));
-            CollectionAssert.AreEquivalent(expected, result);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
 
             result = await map.GetEntriesAsync(Predicates.In("x-value", "1", "2", "3"));
             Assert.That(result.Count, Is.EqualTo(0));
@@ -291,11 +291,11 @@ namespace Hazelcast.Tests.Remote
             var values = new List<int> { 1, 2, 3 };
             var query = Predicates.In("i-value", values);
             result = await map.GetEntriesAsync(query);
-            CollectionAssert.AreEquivalent(expected, result);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
 
             query = Predicates.In("i-value", values.Cast<object>().ToArray());
             result = await map.GetEntriesAsync(query);
-            CollectionAssert.AreEquivalent(expected, result);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
         }
 
         [Test]
