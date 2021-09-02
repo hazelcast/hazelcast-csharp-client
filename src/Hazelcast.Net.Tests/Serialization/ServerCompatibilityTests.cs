@@ -17,31 +17,20 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public async Task GuidTest()
         {
-            var expected = Guid.NewGuid();
-            var actualStr = await GetAsServerString(expected);
+            var originalValue = Guid.NewGuid();
+            var serverValueStr = await GetAsServerString(originalValue);
 
-            Assert.AreEqual(expected, Guid.Parse(actualStr));
+            Assert.That(Guid.TryParse(serverValueStr, out var serverValue));
+            Assert.That(originalValue, Is.EqualTo(serverValue));
         }
 
-        private async Task<string> GetAsServerString<T>(T value, [CallerMemberName] string callerName = default)
+        private async Task<string> GetAsServerString<T>(T value)
         {
-            var (mapName, key) = (callerName, 0);
+            var (mapName, key) = (CreateUniqueName(), 0);
             await using var map = await Client.GetMapAsync<int, T>(mapName);
             await map.SetAsync(key, value);
 
-            var script = $@"
-            function foo() {{
-                var map = instance_0.getMap(""{mapName}"");
-                var res = map.get({key});
-                if (res.getClass().isArray()) {{
-                    return Java.from(res);
-                }} else {{
-                    return res;
-                }}
-            }}
-            result = """"+foo();
-            ";
-
+            var script = $"result = \"\" + instance_0.getMap(\"{mapName}\").get({key})";
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
             return Encoding.UTF8.GetString(response.Result, 0, response.Result.Length);
         }
