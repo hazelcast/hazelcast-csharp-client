@@ -458,10 +458,13 @@ function ensure-server-version {
         Die "Server: could not find a version starting with '$version' on Maven"
     }
 
-    $versions = $nodes | sort-object -descending -property innerText
-    $version2 = $versions[0].innerText
+    # sort-object does not return an array, it enumerates results, and if there
+    # are more than one, PS creates an array, otherwise we just get the one object,
+    # and somebody thought it would make sense ;()
+    $node = $nodes | sort-object -descending -property innerText `
+                   | select-object -first 1 # so this is required
+    $version2 = $node.innerText
 
-    Write-Output "Server: found version $version2 on Maven, using this version"
     $script:hzVersion = $version2
 
     # update server version
