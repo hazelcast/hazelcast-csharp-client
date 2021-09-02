@@ -104,15 +104,13 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task EnumerateToListCancellation()
         {
-            ISqlQueryResult result;
-            await using (result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))"))
+            await using var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))");
+
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                Assert.ThrowsAsync<TaskCanceledException>(async () =>
-                {
-                    using var cancellationSource = new CancellationTokenSource(50);
-                    await result.Take(5).ToListAsync(cancellationSource.Token);
-                });
-            }
+                using var cancellationSource = new CancellationTokenSource(50);
+                await result.Take(5).ToListAsync(cancellationSource.Token);
+            });
         }
 
         [Test]
@@ -141,7 +139,7 @@ namespace Hazelcast.Tests.Sql
             await Task.Delay(millisecondsDelay: 10); // wait for query to reach the server
             await result.DisposeAsync();
 
-            Assert.ThrowsAsync<HazelcastSqlException>(() => moveNextTask.AsTask());
+            await AssertEx.ThrowsAsync<HazelcastSqlException>(async () => await moveNextTask);
         }
     }
 }
