@@ -135,7 +135,7 @@ The `ObjectDestroyed` event triggers whenever the server notifies the client tha
 
 ## Distributed Objects Events
 
-Each type of distributed object exposes events specific to the type. For instance, @Hazelcast.DistributedObjects.IHList\`1 exposes the `ItemAdded` event:
+Each type of distributed object exposes events specific to the type. For instance, @Hazelcast.DistributedObjects.IHList`1 exposes the `ItemAdded` event:
 
 ```csharp
 var list = await client.GetListAsync("my-list");
