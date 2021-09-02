@@ -19,6 +19,12 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
 {
+    // TODO: avoid boxing?
+    // this predicate and others, by treating their args as object, cause boxing.
+    // we could (should) have InPredicate<T> treating args as T and avoiding
+    // boxing, but then this would require an output.WriteObject<T>(T o) method
+    // and, deep down, that the serializers don't box as they do today.
+
     internal class InPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
