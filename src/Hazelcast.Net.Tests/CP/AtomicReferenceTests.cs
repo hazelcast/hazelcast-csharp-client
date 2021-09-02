@@ -17,6 +17,8 @@ namespace Hazelcast.Tests.CP
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(name);
 
             Assert.That(aref.Name, Is.EqualTo(name));
+
+            await aref.DestroyAsync();
         }
 
         [Test]
@@ -25,6 +27,8 @@ namespace Hazelcast.Tests.CP
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 
             Assert.That(await aref.GetAsync(), Is.Null);
+
+            await aref.DestroyAsync();
         }
 
         [Test]
@@ -35,6 +39,8 @@ namespace Hazelcast.Tests.CP
 
             await aref.SetAsync(value);
             Assert.That(await aref.GetAsync(), Is.EqualTo(value));
+
+            await aref.DestroyAsync();
         }
 
         [Test]
@@ -48,6 +54,8 @@ namespace Hazelcast.Tests.CP
 
             await aref.SetAsync(null);
             Assert.That(await aref.GetAsync(), Is.Null);
+
+            await aref.DestroyAsync();
         }
 
         [Test]
@@ -60,6 +68,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await aref.GetAsync(), Is.EqualTo(value1));
             Assert.That(await aref.GetAndSetAsync(value2), Is.EqualTo(value1));
             Assert.That(await aref.GetAsync(), Is.EqualTo(value2));
+
+            await aref.DestroyAsync();
         }
 
         [TestCase("1", "22", "333", false)]
@@ -72,6 +82,8 @@ namespace Hazelcast.Tests.CP
             Assert.That(await aref.GetAsync(), Is.EqualTo(initial));
             Assert.That(await aref.CompareAndSetAsync(comparand, value), Is.EqualTo(result));
             Assert.That(await aref.GetAsync(), Is.EqualTo(result ? value : initial));
+
+            await aref.DestroyAsync();
         }
 
         [Test]
