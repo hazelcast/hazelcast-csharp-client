@@ -246,7 +246,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task TestEntrySetPredicate()
+        public async Task EntrySetWithSqlPredicate()
         {
             var dictionary = await Client.GetMapAsync<string, string>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
@@ -260,6 +260,42 @@ namespace Hazelcast.Tests.Remote
 
             Assert.That(tempDict.TryGetValue("key1", out var value));
             Assert.That(value, Is.EqualTo("value1"));
+        }
+
+        [Test]
+        public async Task EntrySetWithInPredicate()
+        {
+            var map = await Client.GetMapAsync<string, HazelcastJsonValue>(CreateUniqueName());
+            await using var _ = DestroyAndDispose(map);
+
+            await map.SetAllAsync(Enumerable.Range(0, 30).ToDictionary(
+                x => $"key-{x}",
+                x => new HazelcastJsonValue($"{{ \"key\": \"key-{x}\", \"i-value\": {x}, \"s-value\": \"{x}\" }}")));
+
+            var expected = Enumerable.Range(1, 3).Select(x => $"key-{x}").ToList();
+
+            var result = await map.GetEntriesAsync(Predicates.In("i-value", 1, 2, 3));
+            CollectionAssert.AreEquivalent(expected, result.Keys);
+
+            result = await map.GetEntriesAsync(Predicates.In("s-value", 1, 2, 3));
+            CollectionAssert.AreEquivalent(expected, result.Keys);
+
+            result = await map.GetEntriesAsync(Predicates.In("s-value", "1", "2", "3"));
+            CollectionAssert.AreEquivalent(expected, result.Keys);
+
+            result = await map.GetEntriesAsync(Predicates.In("x-value", "1", "2", "3"));
+            Assert.That(result.Count, Is.EqualTo(0));
+
+            // it must work also if we pass only 1 argument that is an IEnumerable<T>
+            // this used to fail (see issue #496) before we added the proper overload to Predicates.In
+            var values = new List<int> { 1, 2, 3 };
+            var query = Predicates.In("i-value", values);
+            result = await map.GetEntriesAsync(query);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
+
+            query = Predicates.In("i-value", values.Cast<object>().ToArray());
+            result = await map.GetEntriesAsync(query);
+            CollectionAssert.AreEquivalent(expected, result.Keys);
         }
 
         [Test]
