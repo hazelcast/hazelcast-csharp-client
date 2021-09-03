@@ -14,18 +14,15 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Core;
-using Hazelcast.DistributedObjects;
-using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.FlakeId
+namespace Hazelcast.DistributedObjects.Impl
 {
     /// <inheritdoc cref="IFlakeIdGenerator"/>
     internal sealed class FlakeIdGenerator: DistributedObjectBase, IFlakeIdGenerator
     {
-        private readonly FlakeIdGeneratorOptions _options;
+        private static readonly FlakeIdGeneratorOptions DefaultOptions = new FlakeIdGeneratorOptions();
         private readonly AutoBatcher _autoBatcher;
 
         /// <summary>
@@ -43,23 +40,10 @@ namespace Hazelcast.FlakeId
         )
             : base(ServiceNames.FlakeIdGenerator, name, factory, cluster, serializationService, loggerFactory)
         {
-            _options = options ?? FlakeIdGeneratorOptions.Default;
-            _autoBatcher = new AutoBatcher(GetNewBatchAsync);
+            _autoBatcher = new AutoBatcher(name, options ?? DefaultOptions, cluster.Messaging);
         }
 
         /// <inheritdoc />
         public ValueTask<long> GetNewIdAsync() => _autoBatcher.GetNextIdAsync();
-
-        private async Task<Batch> GetNewBatchAsync()
-        {
-            var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(Name, _options.PrefetchCount);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
-
-            return new Batch(
-                @base: response.Base, increment: response.Increment, batchSize: response.BatchSize,
-                validityPeriod: _options.PrefetchValidityPeriod
-            );
-        }
     }
 }

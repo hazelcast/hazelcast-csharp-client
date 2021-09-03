@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.FlakeId;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;

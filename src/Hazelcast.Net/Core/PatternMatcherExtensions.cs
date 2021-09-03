@@ -16,7 +16,7 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Core
 {
-    public static class PatternMatcherExtensions
+    internal static class PatternMatcherExtensions
     {
         public static T FindValue<T>(this IPatternMatcher patternMatcher, IDictionary<string, T> dictionary, string pattern)
         {

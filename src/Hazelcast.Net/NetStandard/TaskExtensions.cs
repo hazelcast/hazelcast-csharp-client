@@ -39,10 +39,16 @@ namespace System.Threading.Tasks
 #endif
         }
 
-        /// <inheritdoc cref="IsCompletedSuccessfully(Task)"/>>
+        /// <summary>
+        /// Determines whether the task ran to successful completion.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>true if the task ran to successful completion, otherwise false.</returns>
+        /// <remarks>
+        /// <para>Built-in task.IsCompletedSuccessfully property is introduced in netstandard2.1.</para>
+        /// </remarks>
         public static bool IsCompletedSuccessfully(this ValueTask task)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
 #if NET462 || NETSTANDARD2_0
             return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
 #endif
@@ -51,10 +57,16 @@ namespace System.Threading.Tasks
 #endif
         }
 
-        /// <inheritdoc cref="IsCompletedSuccessfully(Task)"/>>
+        /// <summary>
+        /// Determines whether the task ran to successful completion.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>true if the task ran to successful completion, otherwise false.</returns>
+        /// <remarks>
+        /// <para>Built-in task.IsCompletedSuccessfully property is introduced in netstandard2.1.</para>
+        /// </remarks>
         public static bool IsCompletedSuccessfully<T>(this ValueTask<T> task)
         {
-            if (task == null) throw new ArgumentNullException(nameof(task));
 #if NET462 || NETSTANDARD2_0
             return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
 #endif

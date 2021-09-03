@@ -14,7 +14,7 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.FlakeId;
+using Hazelcast.DistributedObjects;
 
 // ReSharper disable LocalizableElement
 

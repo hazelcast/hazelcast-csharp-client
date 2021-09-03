@@ -17,11 +17,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.FlakeId;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
-namespace Hazelcast.Tests.FlakeId
+namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
     public class FlakeIdGeneratorTests: SingleMemberClientRemoteTestBase
@@ -45,29 +45,33 @@ namespace Hazelcast.Tests.FlakeId
         public async Task Name()
         {
             var name = CreateUniqueName();
+
             await using var generator = await Client.GetFlakeIdGeneratorAsync(name);
+            await using var _ = DestroyAndDispose(generator);
 
             Assert.That(generator.Name, Is.EqualTo(name));
-
-            await generator.DestroyAsync();
         }
 
         [Test]
         public async Task GetNewId()
         {
             await using var generator = await Client.GetFlakeIdGeneratorAsync(CreateUniqueName());
+            await using var _ = DestroyAndDispose(generator);
 
             var ids = new ConcurrentBag<long>();
-            await TaskEx.RunConcurrently(async _ =>
+            const int batchCount = 10;
+            await TaskEx.Parallel(async _ =>
             {
                 ids.Add(await generator.GetNewIdAsync());
-            }, BatchSize * 10);
+            }, BatchSize * batchCount);
 
             var batches = ids.OrderBy(x => x).Batch(BatchSize).ToList();
 
             IList<long> prevBatch = null;
             foreach (var batch in batches)
             {
+                if (prevBatch != null) Assert.That(batch[0], Is.GreaterThan(prevBatch[^1]));
+
                 var increment = batch[1] - batch[0];
 
                 CollectionAssert.AreEqual(
@@ -77,8 +81,6 @@ namespace Hazelcast.Tests.FlakeId
 
                 prevBatch = batch;
             }
-
-            await generator.DestroyAsync();
         }
     }
 }

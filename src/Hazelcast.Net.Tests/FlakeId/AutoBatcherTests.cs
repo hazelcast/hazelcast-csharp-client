@@ -17,82 +17,630 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.FlakeId;
+using Hazelcast.Core;
+using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.FlakeId
 {
     [TestFixture]
-    public class AutoBatcherTests
+    public class AutoBatcherOriginalTests
     {
-        [Test]
         [TestCase(1, 10)]
         [TestCase(10, 1)]
         [TestCase(5, 5)]
         [TestCase(100, 10)]
-        public async Task GetNextId_Concurrent(int batchSize, int batchesCount)
+        public async Task GetNextId_Concurrent(int batchSize, int batchCount)
         {
-            Batch[] BatchesFactory() => Enumerable.Range(0, batchesCount)
-                .Select(i => new Batch(i * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan))
-                .ToArray();
+            var fetchedBatches = 0;
+            int GetNextBatchNumber() => Interlocked.Increment(ref fetchedBatches) - 1;
 
-            var batches = BatchesFactory();
-            var supplyCallCount = 0;
-
-            var autoBatcher = new AutoBatcher(() =>
+            var batcher = new AutoBatcherOriginal(() =>
             {
-                var callNumber = Interlocked.Increment(ref supplyCallCount) - 1;
-                return Task.FromResult(batches[callNumber]);
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return Task.FromResult(batch);
             });
 
-            var ids = await TaskEx.RunConcurrently(
-                _ => autoBatcher.GetNextIdAsync().AsTask(),
-                batchesCount * batchSize
-            );
+            Task<long> GetNextId(int _) => batcher.GetNextIdAsync().AsTask();
 
-            Assert.AreEqual(batchesCount, supplyCallCount);
-            CollectionAssert.AreEquivalent(
-                expected: BatchesFactory().SelectMany(b => b.Enumerate()),
-                actual: ids
-            );
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatches, Is.EqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
         }
 
-        [Test]
         [TestCase(5, 5)]
         [TestCase(100, 10)]
-        public async Task GetNextId_Exception(int batchSize, int batchesCount)
+        public async Task GetNextId_SyncException(int batchSize, int batchCount)
         {
-            var supplyCallCount = 0;
-            var context = new AsyncLocal<bool>();
+            var fetchedBatchCount = 0;
+            var failedBatches = new HashSet<int>();
+            var mutex = new object();
+            var exceptionCount = 0;
 
-            var autoBatcher = new AutoBatcher(() =>
+            int GetNextBatchNumber()
             {
-                var callNumber = Interlocked.Increment(ref supplyCallCount) - 1;
-                if (callNumber % 2 == 0) throw new Exception($"Test exception on call #{callNumber}");
-
-                return Task.FromResult(new Batch(0, 1, batchSize, Timeout.InfiniteTimeSpan));
-            });
-
-            var ids = new List<long>();
-            var exceptions = new List<Exception>();
-            for (var i = 0; i < batchesCount * batchSize;)
-            {
-                try
+                lock (mutex)
                 {
-                    ids.Add(await autoBatcher.GetNextIdAsync());
-                    i++;
-                }
-                catch (Exception exception)
-                {
-                    exceptions.Add(exception);
-                    i += batchSize; // skip one single batch
+                    if (failedBatches.Contains(fetchedBatchCount))
+                        return fetchedBatchCount++;
+
+                    failedBatches.Add(fetchedBatchCount);
+                    throw new Exception($"Fail to get batch #{fetchedBatchCount}.");
                 }
             }
 
-            Assert.AreEqual(batchesCount, supplyCallCount);
-            Assert.AreEqual((batchesCount + 1) / 2, exceptions.Count);
-            Assert.AreEqual(batchSize * (batchesCount - exceptions.Count), ids.Count);
+            var batcher = new AutoBatcherOriginal(() =>
+            {
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return Task.FromResult(batch);
+            });
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatchCount, Is.EqualTo(batchCount));
+
+            // sync exceptions = each batch fetch has throw and get caught exactly once before succeeding
+            // NOTE: can raise more exceptions than needed => test that >=
+            Assert.That(exceptionCount, Is.GreaterThanOrEqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_AsyncException(int batchSize, int batchCount)
+        {
+            var fetchedBatchCount = 0;
+            var failedBatches = new HashSet<int>();
+            var mutex = new object();
+            var exceptionCount = 0;
+
+            int GetNextBatchNumber()
+            {
+                lock (mutex)
+                {
+                    if (failedBatches.Contains(fetchedBatchCount))
+                        return fetchedBatchCount++;
+
+                    failedBatches.Add(fetchedBatchCount);
+                    throw new Exception($"Fail to get batch #{fetchedBatchCount}.");
+                }
+            }
+
+            var batcher = new AutoBatcherOriginal(async () =>
+            {
+                await Task.Yield();
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return batch;
+            });
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatchCount, Is.EqualTo(batchCount));
+
+            // async exceptions = each batch fetch has throw exactly once before succeeding, but
+            // potentially the task has been awaited multiple times, so exceptionCount is greater
+            Assert.That(exceptionCount, Is.GreaterThanOrEqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        private class AutoBatcherOriginal
+        {
+            private readonly Func<Task<Batch>> _supplier;
+
+            private Lazy<Task<Batch>> _nextBatchLazyTask;
+
+            public AutoBatcherOriginal(Func<Task<Batch>> supplier)
+            {
+                _supplier = supplier;
+                _nextBatchLazyTask = NewBatchLazyTask();
+            }
+
+            public ValueTask<long> GetNextIdAsync(CancellationToken cancellationToken = default)
+            {
+                // Avoid using async state machine if possible
+                var nextBatchTask = _nextBatchLazyTask.Value;
+                if (nextBatchTask.IsCompletedSuccessfully() && nextBatchTask.Result.TryGetNextId(out var id))
+                    return new ValueTask<long>(id);
+
+                return GetNextIdInternalAsync(cancellationToken);
+            }
+
+            private async ValueTask<long> GetNextIdInternalAsync(CancellationToken cancellationToken)
+            {
+                while (true) // If batch is finished, get next and repeat the process
+                {
+                    var nextBatchLazyTask = _nextBatchLazyTask;
+                    var nextBatchTask = nextBatchLazyTask.Value;
+
+                    cancellationToken.ThrowIfCancellationRequested();
+                    await nextBatchTask.CfAwaitNoThrow();
+
+                    if (nextBatchTask.IsCompletedSuccessfully() && nextBatchTask.Result.TryGetNextId(out var id))
+                        return id;
+
+                    // Set new task only if it didn't change during method execution
+                    if (_nextBatchLazyTask == nextBatchLazyTask)
+                        Interlocked.CompareExchange(ref _nextBatchLazyTask, NewBatchLazyTask(), nextBatchLazyTask);
+
+                    // This ensures any exception is forwarded to the caller
+                    // but does it AFTER lazy task is updated to fetch the next batch
+                    // to avoid state being stuck on exception
+                    await nextBatchTask;
+                }
+            }
+
+            // Async/await wrapping instead of just passing '_supplier' is needed
+            // to ensure exception is thrown in 'await Value' stage, not when calling 'Value'
+            private Lazy<Task<Batch>> NewBatchLazyTask() => new Lazy<Task<Batch>>(async () => await _supplier().CfAwait());
+        }
+    }
+
+    [TestFixture]
+    public class AutoBatcher1Tests
+    {
+        [TestCase(1, 10)]
+        [TestCase(10, 1)]
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_Concurrent(int batchSize, int batchCount)
+        {
+            var fetchedBatches = 0;
+            int GetNextBatchNumber() => Interlocked.Increment(ref fetchedBatches) - 1;
+
+            var batcher = new AutoBatcher1(() =>
+            {
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return Task.FromResult(batch);
+            });
+
+            Task<long> GetNextId(int _) => batcher.GetNextIdAsync().AsTask();
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatches, Is.EqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_SyncException(int batchSize, int batchCount)
+        {
+            var fetchedBatchCount = 0;
+            var failedBatches = new HashSet<int>();
+            var mutex = new object();
+            var exceptionCount = 0;
+
+            int GetNextBatchNumber()
+            {
+                lock (mutex)
+                {
+                    if (failedBatches.Contains(fetchedBatchCount))
+                        return fetchedBatchCount++;
+
+                    failedBatches.Add(fetchedBatchCount);
+                    throw new Exception($"Fail to get batch #{fetchedBatchCount}.");
+                }
+            }
+
+            var batcher = new AutoBatcher1(() =>
+            {
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return Task.FromResult(batch);
+            });
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatchCount, Is.EqualTo(batchCount));
+
+            // sync exceptions = each batch fetch has throw and get caught exactly once before succeeding
+            // NOTE: can raise more exceptions than needed => test that >=
+            Assert.That(exceptionCount, Is.EqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_AsyncException(int batchSize, int batchCount)
+        {
+            var fetchedBatchCount = 0;
+            var failedBatches = new HashSet<int>();
+            var mutex = new object();
+            var exceptionCount = 0;
+
+            int GetNextBatchNumber()
+            {
+                lock (mutex)
+                {
+                    if (failedBatches.Contains(fetchedBatchCount))
+                        return fetchedBatchCount++;
+
+                    failedBatches.Add(fetchedBatchCount);
+                    throw new Exception($"Fail to get batch #{fetchedBatchCount}.");
+                }
+            }
+
+            var batcher = new AutoBatcher1(async () =>
+            {
+                await Task.Yield();
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * batchSize, 1, batchSize, Timeout.InfiniteTimeSpan);
+                return batch;
+            });
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(fetchedBatchCount, Is.EqualTo(batchCount));
+
+            // async exceptions = each batch fetch has throw exactly once before succeeding, but
+            // potentially the task has been awaited multiple times, so exceptionCount is greater
+            Assert.That(exceptionCount, Is.GreaterThanOrEqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        private class AutoBatcher1
+        {
+            private readonly Func<Task<Batch>> _fetchBatch;
+            private readonly object _mutex = new object();
+
+            private volatile Task<Batch> _fetchingBatch;
+            private volatile Batch _batch;
+
+            public AutoBatcher1(Func<Task<Batch>> fetchBatch)
+            {
+                _fetchBatch = fetchBatch;
+            }
+
+            public ValueTask<long> GetNextIdAsync(CancellationToken cancellationToken = default)
+            {
+                // synchronously return next identifier if possible, else trigger the async operation
+
+                var batch = _batch;
+                return batch != null && batch.TryGetNextId(out var id)
+                    ? new ValueTask<long>(id)
+                    : GetNextIdAsync2(cancellationToken);
+            }
+
+            // async method that returns a batch *and* assigns _batch - this is important: because _batch is assigned
+            // by the fetching task, it's assigned only once and always assigned before tha task completes, thus
+            // avoiding having to lock
+            private async Task<Batch> FetchBatch()
+            {
+                return _batch = await _fetchBatch().CfAwait();
+            }
+
+            private async ValueTask<long> GetNextIdAsync2(CancellationToken cancellationToken)
+            {
+                while (true)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    var fetchingBatch = _fetchingBatch;
+
+                    if (fetchingBatch != null)
+                    {
+                        // await fetchingBatch - this may throw, in which case we raise the exception to the
+                        // caller, but before that we make sure to clear _fetchingBatch so that FetchBatch()
+                        // will be tried again next time - also, ensure we raise only once (i.e. only to the
+                        // original caller) through _mutex
+                        try
+                        {
+                            var batch = await fetchingBatch.CfAwait();
+                            if (batch.TryGetNextId(out var id)) return id;
+                        }
+                        catch
+                        {
+                            lock (_mutex) if (_fetchingBatch == fetchingBatch) { _fetchingBatch = null; throw; }
+                        }
+                    }
+
+                    lock (_mutex)
+                    {
+                        // if no other thread has updated _fetchingBatch yet, do it - calling _fetchBatch() may
+                        // throw immediately, in which case we raise the exception to the caller but before that
+                        // we make sure to clear _fetchingBatch
+                        if (_fetchingBatch != fetchingBatch) continue;
+
+                        try
+                        {
+                            _fetchingBatch = FetchBatch();
+                        }
+                        catch
+                        {
+                            _fetchingBatch = null;
+                            throw;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    [TestFixture]
+    public class AutoBatcherImproved2Tests
+    {
+        [TestCase(1, 10)]
+        [TestCase(10, 1)]
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_Concurrent(int batchSize, int batchCount)
+        {
+            var batcher = new AutoBatcherTester(batchCount, batchSize);
+
+            Task<long> GetNextId(int _) => batcher.GetNextIdAsync().AsTask();
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(batcher.FetchedBatchCount, Is.EqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_SyncException(int batchSize, int batchCount)
+        {
+            var exceptionCount = 0;
+
+            var batcher = new AutoBatcherTesterSyncException(batchCount, batchSize);
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(batcher.FetchedBatchCount, Is.EqualTo(batchCount));
+
+            // sync exceptions = each batch fetch has throw and get caught exactly once before succeeding
+            Assert.That(exceptionCount, Is.EqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        [TestCase(5, 5)]
+        [TestCase(100, 10)]
+        public async Task GetNextId_AsyncException(int batchSize, int batchCount)
+        {
+            var exceptionCount = 0;
+
+            var batcher = new AutoBatcherTesterAsyncException(batchCount, batchSize);
+
+            async Task<long> GetNextId(int _)
+            {
+                while (true)
+                {
+                    try
+                    {
+                        return await batcher.GetNextIdAsync().CfAwait();
+                    }
+                    catch (Exception e)
+                    {
+                        if (!e.Message.StartsWith("Fail to get batch")) throw;
+                        Interlocked.Increment(ref exceptionCount);
+                    }
+                }
+            }
+
+            var ids = await TaskEx.Parallel(GetNextId, batchCount * batchSize);
+
+            Assert.That(batcher.FetchedBatchCount, Is.EqualTo(batchCount));
+
+            // async exceptions = each batch fetch has throw exactly once before succeeding, but
+            // potentially the task has been awaited multiple times, so exceptionCount is greater
+            Assert.That(exceptionCount, Is.GreaterThanOrEqualTo(batchCount));
+
+            var expected = Enumerable.Range(0, batchCount * batchSize).ToList();
+            CollectionAssert.AreEquivalent(expected, ids);
+        }
+
+        internal sealed class AutoBatcherTester : AutoBatcherBase
+        {
+            private readonly int _batchCount, _batchSize;
+            private int _fetchedBatchCount;
+
+            public AutoBatcherTester(int batchCount, int batchSize)
+            {
+                _batchCount = batchCount;
+                _batchSize = batchSize;
+            }
+
+            public int FetchedBatchCount => _fetchedBatchCount;
+
+            private int GetNextBatchNumber()
+            {
+                return Interlocked.Increment(ref _fetchedBatchCount) - 1;
+            }
+
+            protected override Task<Batch> FetchBatch()
+            {
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
+                SetBatch(batch);
+                return Task.FromResult(batch);
+            }
+        }
+
+        internal sealed class AutoBatcherTesterSyncException : AutoBatcherBase
+        {
+            private readonly int _batchCount, _batchSize;
+            private readonly object _mutex = new object();
+            private readonly HashSet<int> _failedBatches = new HashSet<int>();
+            private int _fetchedBatchCount;
+
+            public AutoBatcherTesterSyncException(int batchCount, int batchSize)
+            {
+                _batchCount = batchCount;
+                _batchSize = batchSize;
+            }
+
+            public int FetchedBatchCount => _fetchedBatchCount;
+
+            private int GetNextBatchNumber()
+            {
+                lock (_mutex)
+                {
+                    if (_failedBatches.Contains(_fetchedBatchCount))
+                        return _fetchedBatchCount++;
+
+                    _failedBatches.Add(_fetchedBatchCount);
+#pragma warning disable CA2201 // Do not raise reserved exception types - ok here
+                    throw new Exception($"Fail to get batch #{_fetchedBatchCount}.");
+#pragma warning restore CA2201
+                }
+            }
+
+            protected override Task<Batch> FetchBatch()
+            {
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
+                SetBatch(batch);
+                return Task.FromResult(batch);
+            }
+        }
+
+        internal sealed class AutoBatcherTesterAsyncException : AutoBatcherBase
+        {
+            private readonly int _batchCount, _batchSize;
+            private readonly object _mutex = new object();
+            private readonly HashSet<int> _failedBatches = new HashSet<int>();
+            private int _fetchedBatchCount;
+
+            public AutoBatcherTesterAsyncException(int batchCount, int batchSize)
+            {
+                _batchCount = batchCount;
+                _batchSize = batchSize;
+            }
+
+            public int FetchedBatchCount => _fetchedBatchCount;
+
+            private int GetNextBatchNumber()
+            {
+                lock (_mutex)
+                {
+                    if (_failedBatches.Contains(_fetchedBatchCount))
+                        return _fetchedBatchCount++;
+
+                    _failedBatches.Add(_fetchedBatchCount);
+#pragma warning disable CA2201 // Do not raise reserved exception types - ok here
+                    throw new Exception($"Fail to get batch #{_fetchedBatchCount}.");
+#pragma warning restore CA2201
+                }
+            }
+
+            protected override async Task<Batch> FetchBatch()
+            {
+                await Task.Yield();
+                var batchNumber = GetNextBatchNumber();
+                if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
+                var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
+                SetBatch(batch);
+                return batch;
+            }
         }
     }
 }

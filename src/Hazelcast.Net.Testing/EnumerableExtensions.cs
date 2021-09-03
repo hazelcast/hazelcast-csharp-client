@@ -22,7 +22,7 @@ namespace Hazelcast.Testing
     {
         public static IEnumerable<IList<T>> Batch<T>(this IEnumerable<T> source, int batchSize)
         {
-            if (batchSize <= 0) throw new ArgumentException(@"Batch size must be positive.", nameof(batchSize));
+            if (batchSize <= 0) throw new ArgumentException("Batch size must be positive.", nameof(batchSize));
 
             List<T> batch = null;
             foreach (var elem in source)

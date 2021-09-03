@@ -18,9 +18,7 @@ using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.FlakeId;
 using Hazelcast.Metrics;
-using Hazelcast.NearCaching;
 
 namespace Hazelcast
 {
