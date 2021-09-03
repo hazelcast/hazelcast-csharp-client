@@ -210,7 +210,7 @@ namespace Hazelcast.Clustering
             var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
                              targetPartitionId >= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
                              targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
-                                   new Invocation(message, _clusterState.Options.Messaging);
+                             new Invocation(message, _clusterState.Options.Messaging);
 
             return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
         }
@@ -232,7 +232,7 @@ namespace Hazelcast.Clustering
                 try
                 {
                     var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
-                    return await connection.SendAsync(invocation).CfAwait();
+                    return await connection.SendAsync(invocation, cancellationToken).CfAwait();
                 }
                 catch (TaskCanceledException)
                 {

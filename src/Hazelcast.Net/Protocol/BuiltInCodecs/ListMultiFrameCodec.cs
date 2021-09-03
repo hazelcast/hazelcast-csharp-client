@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
 
-        public static List<T> DecodeContainsNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction) where T : class
+        public static List<T> DecodeContainsNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction) where T: class
         {
             var result = new List<T>();
             //begin frame, list
@@ -95,7 +95,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return result;
         }
 
-        public static List<T> DecodeNullable<T>(ref IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
+        public static List<T> DecodeNullable<T>(IEnumerator<Frame> iterator, DecodeDelegate<T> decodeFunction)
         {
             return iterator.SkipNull() ? null : Decode(iterator, decodeFunction);
         }

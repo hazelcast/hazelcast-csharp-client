@@ -56,7 +56,7 @@ namespace Hazelcast.Messaging
 
                 var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
 
-                text.AppendLine($"{prefix}  corr: {message.CorrelationId}");
+                text.AppendLine($"{prefix} [{message.CorrelationId}]");
                 text.Append($"TYPE 0x{message.MessageType:x} {name}");
             }
 

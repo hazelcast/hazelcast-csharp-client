@@ -133,6 +133,16 @@ namespace Hazelcast.Core
             => source.ToDictionary(x => x.Key, x => x.Value);
 
         /// <summary>
+        /// Enumerates <paramref name="source"/> to a new <see cref="List{T}"/> starting from <paramref name="initialCapacity"/> size.
+        /// This allows to avoid or minimize list resizing if number of elements is known fully or approximately.
+        /// </summary>
+        public static List<T> ToList<T>(this IEnumerable<T> source, int initialCapacity)
+        {
+            var list = new List<T>(initialCapacity);
+            list.AddRange(source);
+            return list;
+        }
+
         /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
         /// </summary>
         /// <typeparam name="T">The type of the items.</typeparam>

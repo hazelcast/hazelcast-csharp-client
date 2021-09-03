@@ -58,7 +58,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "4.1-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
+    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -594,38 +594,61 @@ function ensure-server-files {
 
         $v = $hzVersion
         if ($v.EndsWith('-SNAPSHOT')) { $v = $v.SubString(0, $v.Length - '-SNAPSHOT'.Length)}
+        Write-Output "Downloading hazelcast-default.xml -> hazelcast-$hzVersion.xml..."
+        $found = $false
 
-        if ($v -eq $hzVersion) {
-            Write-Output "Downloading hazelcast-$hzVersion.xml ..."
-        }
-        else {
-            Write-Output "Downloading hazelcast-$v.xml -> hazelcast-$hzVersion.xml ..."
-        }
-
+        # try tag eg 'v4.2.1' or 'v4.3'
         $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
         $dest = "$buildDir\hazelcast-$hzVersion.xml"
         $response = invoke-web-request $url $dest
 
-        if ($response.StatusCode -eq 404) {
-            Write-Output "Failed to download hazelcast-$v.xml (404) from tag v$v"
+        if ($response.StatusCode -ne 200) {
+            Write-Output "Failed to download hazelcast-default.xml (404) from tag v$v"
             if (test-path $dest) { rm $dest }
+        }
+        else {
+            Write-Output "Found hazelcast-default.xml from tag v$v"
+            $found = $true
+        }
+
+        if (-not $found) {
             $p0 = $v.IndexOf('.')
             $p1 = $v.LastIndexOf('.')
             if ($p0 -ne $p1) {
-                $v = $v.SubString(0, $p1) + ".z"
-                Write-Output "Downloading from branch $v ..."
-                $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
-                $response = invoke-web-request $url $dest
+                $v = $v.SubString($p0, $p1); # 4.2.1 -> 4.2 but 4.3 remains 4.3
+            }
 
-                if ($response.StatusCode -ne 200) {
-                    if (test-path $dest) { rm $dest }
-                    Die "Failed to download $url ($($response.StatusCode))"
-                }
+            # try branch eg '4.2.z' or '4.3.z'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v.z/hazelcast/src/main/resources/hazelcast-default.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml (404) from branch $v.z"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from branch $v.z"
+                $found = $true
             }
         }
-        elseif ($response.StatusCode -ne 200) {
-            if (test-path $dest) { rm $dest }
-            Die "Failed to download $url ($($response.StatusCode))"
+
+        if (-not $found) {
+            # try branch eg '4.3' because '5.0' exists but not '5.0.z'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml (404) from branch $v"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from branch $v"
+                $found = $true
+            }
+        }
+
+        if (-not $found) {
+            Die "Running out of options... failed to download hazelcast-default.xml."
         }
 
         $options.serverConfig = "$buildDir\hazelcast-$hzVersion.xml"

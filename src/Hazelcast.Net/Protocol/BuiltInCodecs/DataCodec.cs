@@ -41,5 +41,10 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         {
             return Decode(iterator.Take());
         }
+
+        public static IData DecodeNullable(IEnumerator<Frame> iterator)
+        {
+            return iterator.SkipNull() ? null : Decode(iterator);
+        }
     }
 }

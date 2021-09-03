@@ -18,6 +18,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
@@ -72,6 +73,20 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static EndpointQualifier CreateEndpointQualifier(int type, string identifier)
         {
             return new EndpointQualifier((ProtocolType) type, identifier);
+        }
+
+        public static SqlColumnMetadata CreateSqlColumnMetadata(string name, int type, bool isNullableExists, bool nullable)
+        {
+            if (!Enum.IsDefined(typeof(SqlColumnType), type))
+                throw new NotSupportedException($"Column type #{type} is not supported.");
+
+            var sqlColumnType = (SqlColumnType)type;
+
+            return new SqlColumnMetadata(name, sqlColumnType,
+                // By default, columns are nullable
+                // The column becomes non-nullable only if NOT NULL modifier applied during table creation or if an expression is selected
+                nullable || !isNullableExists
+            );
         }
     }
 }

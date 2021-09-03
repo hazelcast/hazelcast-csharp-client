@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.Core
 {
@@ -33,5 +35,17 @@ namespace Hazelcast.Core
             if (source == null) throw new ArgumentNullException(nameof(source));
             return source.Remove(new KeyValuePair<TKey, TValue>(key, value));
         }
+
+        /// <summary>
+        /// Returns read-only wrapper for <paramref name="list"/>
+        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/>.
+        /// </summary>
+        public static IReadOnlyList<T> AsReadOnly<T>(this IList<T> list) => list as IReadOnlyList<T> ?? new ReadOnlyCollection<T>(list);
+
+        /// <summary>
+        /// Returns read-only wrapper for <paramref name="list"/> where each element is returned as <see cref="object"/> with boxing performed as needed
+        /// or <paramref name="list"/> itself if it already implements <see cref="IReadOnlyList{T}"/> with <c>T</c> being <see cref="object"/>.
+        /// </summary>
+        public static IReadOnlyList<object> AsReadOnlyObjectList<T>(this IList<T> list) => list as IReadOnlyList<object> ?? new ReadOnlyObjectList<T>(list);
     }
 }
