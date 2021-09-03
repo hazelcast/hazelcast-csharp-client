@@ -231,7 +231,6 @@ namespace Hazelcast.Networking
             _streamReadCancellationTokenSource.Cancel();
 
             // ensure everything is down by awaiting the other task
-            // FIXME why could this be null ?!
             var otherTask = task == _pipeReading ? _pipeWriting : _pipeReading;
             if (otherTask != null) await otherTask.CfAwait();
 
