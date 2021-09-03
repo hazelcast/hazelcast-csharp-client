@@ -13,15 +13,29 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.FlakeId;
+using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.FlakeId
 {
+    using BatchTests_;
+    namespace BatchTests_
+    {
+        internal static class BatchExtensions
+        {
+            public static IEnumerable<long> Enumerate(this Batch batch)
+            {
+                while (batch.TryGetNextId(out var id))
+                    yield return id;
+            }
+        }
+    }
+
     [TestFixture]
     public class BatchTests
     {
@@ -65,7 +79,7 @@ namespace Hazelcast.Tests.FlakeId
             Batch BatchFactory() => new Batch(0, 1, batchSize, Timeout.InfiniteTimeSpan);
 
             var batch = BatchFactory();
-            var ids = await TaskEx.RunConcurrently(
+            var ids = await TaskEx.Parallel(
                 _ => batch.TryGetNextId(out var id) ? id : (long?)null,
                 batchSize
             );

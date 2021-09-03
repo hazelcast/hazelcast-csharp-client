@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
-using Hazelcast.FlakeId;
 using Hazelcast.Models;
 using Hazelcast.Sql;
 using Hazelcast.Transactions;
@@ -254,7 +253,7 @@ namespace Hazelcast
         Task<IHRingBuffer<T>> GetRingBufferAsync<T>(string name);
 
         /// <summary>
-        /// Gets an <see cref="IFlakeIdGenerator"/> with the specified name.
+        /// Gets an <see cref="IFlakeIdGenerator"/> distributed object.
         /// </summary>
         /// <param name="name">The unique name of the Flake Id Generator.</param>
         /// <returns>The Flake Id Generator that was retrieved or created.</returns>

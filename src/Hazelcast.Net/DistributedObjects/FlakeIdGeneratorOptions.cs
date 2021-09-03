@@ -15,19 +15,13 @@
 using System;
 using System.Threading;
 
-namespace Hazelcast.FlakeId
+namespace Hazelcast.DistributedObjects
 {
     /// <summary>
     /// Represents options for <see cref="IFlakeIdGenerator"/>.
     /// </summary>
     public class FlakeIdGeneratorOptions
     {
-        /// <summary>
-        /// Default instance of <see cref="FlakeIdGeneratorOptions"/>.
-        /// This is equivalent to <c>new FlakeIdGeneratorOptions()</c> but doesn't allocate additional memory.
-        /// </summary>
-        public static FlakeIdGeneratorOptions Default { get; } = new FlakeIdGeneratorOptions();
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FlakeIdGeneratorOptions"/> class.
         /// </summary>
@@ -45,13 +39,15 @@ namespace Hazelcast.FlakeId
         }
 
         /// <summary>
-        /// Defines how many IDs are pre-fetched on the background when a new flake id is requested from the cluster.
-        /// Allowed values are between <c>1</c> and <c>100000</c> inclusive.
-        /// Default value is <c>100</c>.
+        /// Gets the number of identifiers that are pre-fetched when a new id is requested from the cluster.
         /// </summary>
+        /// <remarks>
+        /// <para>Allowed values are between <c>1</c> and <c>100000</c> inclusive, default value is <c>100</c>.</para>
+        /// </remarks>
         public int PrefetchCount { get; set; } = 100;
 
         /// <summary>
+        /// Gets the
         /// <para>
         /// Defines for how long the pre-fetched IDs can be used.
         /// If this time elapsed, a new batch of IDs will be fetched.
@@ -63,6 +59,9 @@ namespace Hazelcast.FlakeId
         /// If you don't care about ordering, set this value to <see cref="Timeout.InfiniteTimeSpan"/> for unlimited ID validity.
         /// </para>
         /// </summary>
+        /// <remarks>
+        /// <para>FIXME</para>
+        /// </remarks>
         public TimeSpan PrefetchValidityPeriod { get; set; } = TimeSpan.FromMinutes(10);
 
         /// <summary>
