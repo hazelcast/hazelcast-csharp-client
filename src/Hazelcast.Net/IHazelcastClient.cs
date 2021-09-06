@@ -98,6 +98,11 @@ namespace Hazelcast
         bool IsConnected { get; }
 
         /// <summary>
+        /// Gets the client state.
+        /// </summary>
+        ClientState State { get; }
+
+        /// <summary>
         /// Gets the options that were used to configure this client.
         /// </summary>
         /// <remarks>
@@ -107,9 +112,9 @@ namespace Hazelcast
         HazelcastOptions Options { get; }
         
         /// <summary>
-        /// Gets a snapshot of the members this client is currently connected to.
+        /// Gets a snapshot of the members that the cluster declared to this client.
         /// </summary>
-        IReadOnlyCollection<MemberInfo> Members { get; }
+        IReadOnlyCollection<MemberInfoState> Members { get; }
 
         /// <summary>
         /// Begins a new transaction.
