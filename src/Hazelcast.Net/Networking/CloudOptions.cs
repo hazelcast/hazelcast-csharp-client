@@ -39,6 +39,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Whether Hazelcast Cloud is enabled.
         /// </summary>
+        /// <remarks>This property is read-only and is set automatically when <see cref="DiscoveryToken"/> is not null nor empty.</remarks>
         public bool Enabled => !string.IsNullOrWhiteSpace(DiscoveryToken);
 
         /// <summary>

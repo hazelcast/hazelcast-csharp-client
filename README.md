@@ -1,17 +1,14 @@
 <p align="center">
-    <a href="https://github.com/hazelcast/hazelcast-csharp-client/">
-        <img src="https://3l0wd94f0qdd10om8642z9se-wpengine.netdna-ssl.com/images/logos/hazelcast-logo-horz_md.png" />
-    </a>
-    <h2 align="center">Hazelcast .NET Client</h2>
+    <img src="./doc/images/hazelcast-black-240.png" />
+    <h2 align="center">.NET Client</h2>
 </p>
 
-
 Hazelcast .NET brings the full power of the [Hazelcast](https://hazelcast.com) high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The 
-[Hazelcast .NET Client](https://hazelcast.org/imdg/clients-languages/dotnet/) allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
+[Hazelcast .NET Client](https://hazelcast.com/clients/dotnet/) allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
 
 Documentation for the client is provided on the [documentation site](http://hazelcast.github.io/hazelcast-csharp-client/), with examples, guides and FAQs, and a complete reference documentation for the public API.
 
-The .NET client itself is distributed via NuGet as a package named [Hazelcast.NET](https://www.nuget.org/packages/Hazelcast.Net/). It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager. Note that Hazelcast is composed of two parts: the server, and the client. Browse to [Hazelcast IMDG](https://hazelcast.org/imdg/) to find out how to obtain and run the server part.
+The .NET client itself is distributed via NuGet as a package named [Hazelcast.NET](https://www.nuget.org/packages/Hazelcast.Net/). It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager. Note that Hazelcast is composed of two parts: the server, and the client. Browse to [Hazelcast In-Memory Computing](https://hazelcast.com/products/in-memory-computing/) to find out how to obtain and run the server part.
 
 The Hazelcast .NET solution is Open Source, released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and welcomes contributions. The project lives here on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client), where you can obtain the source code, report issues, and interract with the community. Contributions are welcome!
 

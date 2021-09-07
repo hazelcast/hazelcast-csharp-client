@@ -1,7 +1,5 @@
 # Getting Started
 
-## Hazelcast client
-
 The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.
 
 For example:
@@ -17,19 +15,12 @@ A client is a heavy enough, multi-threaded object. Although a factory can create
 Here, the client is configured by default, which means by configuration files and environment variables. For more control, the client can be initialized with an @Hazelcast.HazelcastOptions instance, which represents the complete set of options of the Hazelcast client. In fact, the above example is equivalent to:
 
 ```csharp
-var options = HazelcastOptions.Build();
+var options = new HazelcastOptionsBuilder().Build();
 var client = await HazelcastClientFactory.StartNewClientAsync(options);
 // ...
 ```
 
-
-Refer to the [Configuration](configuration.md) page for details on the various ways to build an @Hazelcast.HazelcastOptions instance, including handling command-line parameters, and to the @Hazelcast.HazelcastOptions reference for a list of all the configurable elements.
-
-## Logging
-
-The Hazelcast .NET client uses the logging abstractions proposed by the [Microsoft.Extensions.Logging](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging) namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.
-
-See the [Logging](logging.md) documentation for details.
+Refer to the [Configuration](configuration.md) page for details on the various ways to build an @Hazelcast.HazelcastOptions instance, including handling command-line parameters, as well as a list of all the configurable elements.
 
 ## Distributed Objects
 
@@ -60,31 +51,15 @@ var map = await client.GetMapAsync<string, string>("dict-name");
 await client.DestroyAsync(map);
 ```
 
-## Transactions
+## Examples
 
-The client is responsible for creating transactions. Transactions by default follow the Microsoft's transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.
+Complete, working examples are provided in source form in the [Hazelcast.Net.Examples](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples) project, with instruction in the [Examples](examples.md) page.
 
-For example:
+## Logging
 
-```csharp
-await using (var transaction = await client.BeginTransactionAsync())
-{
-    // ... do transaction work ...
-    transaction.Complete();
-}
-```
+The Hazelcast .NET client uses the logging abstractions proposed by the [Microsoft.Extensions.Logging](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging) namespace. By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.
 
-Here, the transaction will commit when `transaction` is disposed, because it has been completed. Had it not been completed, it would have rolled back. Note that the explicit pattern is also supported, although less recommended:
-
-```csharp
-var transaction = await client.BeginTransactionAsync();
-// ... do transaction work ...
-await transactionContext.CommitAsync();  // commmit, or...
-await transactionContext.DisposeAsync(); // roll back
-await transaction.DisposeAsync();
-```
-
-Refer to the [Transactions](transactions.md) page for details.
+See the [Logging](logging.md) documentation for details.
 
 ## Events
 
@@ -128,3 +103,21 @@ var success = await dict.UnsubscribeAsync(subscriptionId);
 ```
 
 Refer to the [Events](events.md) page for details.
+
+## Transactions
+
+The client is responsible for creating transactions. Transactions by default follow the Microsoft's transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.
+
+For example:
+
+```csharp
+await using (var transaction = await client.BeginTransactionAsync())
+{
+    var map = await transaction.GetMapAsync<string, string>("my-map");
+    await map.PutAsync("key", "value");
+    transaction.Complete();
+}
+```
+
+Refer to the [Transactions](transactions.md) page for details.
+

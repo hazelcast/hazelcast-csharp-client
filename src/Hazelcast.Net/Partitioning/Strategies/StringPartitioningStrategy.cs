@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Partitioning.Strategies
 {
     /// <summary>
@@ -29,6 +31,11 @@ namespace Hazelcast.Partitioning.Strategies
         /// <param name="s">The string value.</param>
         /// <returns>The partition key of the string value.</returns>
         public static string GetPartitionKey(string s)
-            => s?.TrimStart('@');
+        {
+            if (s == null) return null;
+
+            var pos = s.IndexOf('@', StringComparison.Ordinal);
+            return pos < 0 ? s : s[(pos + 1)..];
+        }
     }
 }

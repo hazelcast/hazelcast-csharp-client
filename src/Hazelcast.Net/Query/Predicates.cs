@@ -13,7 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Exceptions;
 
 namespace Hazelcast.Query
@@ -126,6 +128,15 @@ namespace Hazelcast.Query
         /// <returns>A new predicate.</returns>
         public static IPredicate In(string name, params object[] values)
             => new InPredicate(name, values);
+
+        /// <summary>
+        /// Succeeds if the target value is equal to one of the specified values.
+        /// </summary>
+        /// <param name="name">The name of the target.</param>
+        /// <param name="values">The values.</param>
+        /// <returns>A new predicate.</returns>
+        public static IPredicate In<T>(string name, IEnumerable<T> values)
+            => new InPredicate(name, values.Cast<object>().ToList());
 
         /// <summary>
         /// Succeeds if the target value is equal to the specified value.

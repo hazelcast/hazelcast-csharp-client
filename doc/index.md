@@ -1,7 +1,7 @@
 # Welcome!
 
 Hazelcast .NET brings the full power of the [Hazelcast](https://hazelcast.com) high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The 
-[Hazelcast .NET Client](https://hazelcast.org/imdg/clients-languages/dotnet/) allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
+[Hazelcast .NET Client](https://hazelcast.com/clients/dotnet/) allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
 
 This site provides a complete [documentation](doc-index.md) with examples, guides and FAQs. It also provides a complete [reference documentation](api-index.md) for the public API, generated from source-code-level comments, and complemented with additional content.
 

@@ -202,7 +202,8 @@ namespace Hazelcast.Core
             var type = source?.GetType();
             while (type != null && !config.IsComplete)
             {
-                if (_typeConfigs.TryGetValue(type, out var c)) config = config.Merge(c);
+                if (_typeConfigs.TryGetValue(type, out var typeConfig)) config = config.Merge(typeConfig);
+                if (type.IsGenericType && _typeConfigs.TryGetValue(type.GetGenericTypeDefinition(), out var gendefConfig)) config = config.Merge(gendefConfig);
                 type = type.BaseType;
             }
 

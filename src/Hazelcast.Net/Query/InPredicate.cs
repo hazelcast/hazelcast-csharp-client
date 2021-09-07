@@ -13,18 +13,30 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
 {
+    // TODO: avoid boxing?
+    // this predicate and others, by treating their args as object, cause boxing.
+    // we could (should) have InPredicate<T> treating args as T and avoiding
+    // boxing, but then this would require an output.WriteObject<T>(T o) method
+    // and, deep down, that the serializers don't box as they do today.
+
     internal class InPredicate : IPredicate, IIdentifiedDataSerializable
     {
         private string _attributeName;
-        private object[] _values;
+        private ICollection<object> _values;
 
         public InPredicate()
+        { }
+
+        public InPredicate(string attributeName, ICollection<object> values)
         {
+            _attributeName = attributeName;
+            _values = values ?? throw new ArgumentNullException(nameof(values));
         }
 
         public InPredicate(string attributeName, params object[] values)
@@ -40,17 +52,18 @@ namespace Hazelcast.Query
         {
             _attributeName = input.ReadString();
             var size = input.ReadInt();
-            _values = new object[size];
+            var values = new object[size];
             for (var i = 0; i < size; i++)
             {
-                _values[i] = input.ReadObject<object>();
+                values[i] = input.ReadObject<object>();
             }
+            _values = values;
         }
 
         public void WriteData(IObjectDataOutput output)
         {
             output.WriteString(_attributeName);
-            output.WriteInt(_values.Length);
+            output.WriteInt(_values.Count);
             foreach (var value in _values)
             {
                 output.WriteObject(value);

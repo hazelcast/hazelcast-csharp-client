@@ -232,7 +232,7 @@ namespace Hazelcast.Metrics
             var prevText = "";
 
             // sorted dictionary is ordered by natural order of its keys
-            // FIXME why would the order matter?!
+            // so that delta-processing is efficient
             foreach (var (stringText, stringId) in _strings)
             {
                 // this should have been checked earlier, this is a safety check

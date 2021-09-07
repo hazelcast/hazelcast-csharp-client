@@ -50,7 +50,7 @@ namespace Hazelcast.Clustering
             _terminateConnections = terminateConnections;
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>(); // FIXME with client ID?
+            _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
 
@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
                 _period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture),
                 _timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture));
 
-            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT")); // FIXME with client ID?
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
 
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);

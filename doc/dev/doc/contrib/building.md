@@ -4,7 +4,7 @@
 
 For day to day development, the solution builds in Visual Studio or Rider. However, it is possible to build it entirely via our custom PowerShell script. 
 
-The minimal requires are:
+The minimal requirements are:
 * PowerShell 6.2+
 * .NET 2.1, 3.1 and 5.0 SDKs
 * Java runtime, if you want to run tests
@@ -52,13 +52,13 @@ To list all options and command, run `./hz.[sh|ps1] help`.
 Examples of valid usages:
 
 ```powershell
-./hz.ps1 build                                 # builds the code
-./hz.ps1 build,test                            # builds the code and run the tests
-./hz.ps1 -cover test                           # runs the tests with test coverage
-./hz.ps1 test -cover                           # same
-./hz.ps1 set-version -version 1.2.3            # updates the version
-./hz.ps1 run-remote-controller                 # runs a remote controller for tests
-./hz.ps1 run-server -server 4.2                # runs version 4.2 of the server
+./hz.ps1 build                        # builds the code
+./hz.ps1 build,test                   # builds the code and run the tests
+./hz.ps1 -cover test                  # runs the tests with test coverage
+./hz.ps1 test -cover                  # same
+./hz.ps1 set-version -version 1.2.3   # updates the version
+./hz.ps1 run-remote-controller        # runs a remote controller for tests
+./hz.ps1 run-server -server 4.2       # runs version 4.2 of the server
 ./hz.ps1 run-example ~Soak1 --- --hazelcast.   # runs an example
 ```
 

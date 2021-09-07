@@ -31,7 +31,7 @@ namespace Hazelcast.Net.DocAsCode
     public class BuildHazelcastOptions : BaseDocumentBuildStep
     {
         public override string Name => nameof(BuildHazelcastOptions);
-        public override int BuildOrder => State.BuildBuilderOrder;
+        public override int BuildOrder => Constants.BuildOrder.BuildOptions;
 
         [Import]
         public HazelcastOptionsState State { get; set; }
@@ -40,32 +40,27 @@ namespace Hazelcast.Net.DocAsCode
         {
             State.Gathered.Wait();
 
-            Logger.LogInfo($"State has {State.OptionFiles.Count} options");
-
-            static bool TryGetValue<T>(Dictionary<string, object> dictionary, string key, out T value)
-            {
-                value = default;
-                if (!dictionary.TryGetValue(key, out var o)) return false;
-                if (!(o is T v)) return false;
-                value = v;
-                return true;
-            }
+            var built = false;
 
             foreach (var model in models)
             {
                 if (model.Type != DocumentType.Article) continue;
 
-                if (!(model.Content is Dictionary<string, object> dict)) continue;
-                if (!TryGetValue<string>(dict, State.ConceptualKey, out var text)) continue;
-                if (!TryGetValue<bool>(dict, State.BuildOptionsKey, out var build) || !build) continue;
+                if (!(model.Content is Dictionary<string, object> dict) ||
+                    !dict.TryGetValue<string>(Constants.ConceptualKey, out var text) ||
+                    !dict.TryGetValue<bool>(Constants.BuildOptionsKey, out var build) ||
+                    !build) continue;
 
-                Logger.LogInfo($"Processing {model.Key}");
+                Logger.LogInfo($" Built options page: {model.Key}.");
+                built = true;
 
-                // have to update conceptual during pre-build,
-                // during build it is too late, Markdown has been processed already
+                // have to update conceptual during pre-build: during build it is too late, Markdown has been processed already
 
-                dict[State.ConceptualKey] = UpdateMarkdown(text);
+                dict[Constants.ConceptualKey] = UpdateMarkdown(text);
             }
+
+            if (!built)
+                Logger.LogWarning(" Found no options page to build.");
 
             return models;
         }
@@ -184,6 +179,9 @@ namespace Hazelcast.Net.DocAsCode
 
                 textBuilder.Append("> ");
                 for (var i = 0; i < 2 + depth; i++) textBuilder.Append("#");
+                textBuilder.Append(" <a name=\"");
+                textBuilder.Append(item.Name.ToLowerInvariant());
+                textBuilder.Append("\" />");
                 textBuilder.AppendLine(item.Name);
                 textBuilder.AppendLine("> ");
                 textBuilder.Append("> Access @");
