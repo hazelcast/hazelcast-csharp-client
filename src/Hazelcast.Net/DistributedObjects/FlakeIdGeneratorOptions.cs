@@ -47,10 +47,9 @@ namespace Hazelcast.DistributedObjects
         public int PrefetchCount { get; set; } = 100;
 
         /// <summary>
-        /// Gets the
         /// <para>
-        /// Defines for how long the pre-fetched IDs can be used.
-        /// If this time elapsed, a new batch of IDs will be fetched.
+        /// Gets the duration for which the pre-fetched IDs can be used.
+        /// If this time is elapsed, a new batch will be fetched.
         /// Default value is <c>10 minutes</c>.
         /// </para>
         /// <para>
@@ -59,9 +58,6 @@ namespace Hazelcast.DistributedObjects
         /// If you don't care about ordering, set this value to <see cref="Timeout.InfiniteTimeSpan"/> for unlimited ID validity.
         /// </para>
         /// </summary>
-        /// <remarks>
-        /// <para>FIXME</para>
-        /// </remarks>
         public TimeSpan PrefetchValidityPeriod { get; set; } = TimeSpan.FromMinutes(10);
 
         /// <summary>
