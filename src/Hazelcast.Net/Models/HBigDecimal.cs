@@ -64,8 +64,8 @@ namespace Hazelcast.Models
             Scale = scale;
         }
 
-        public static explicit operator decimal(HBigDecimal bigDecimal) => bigDecimal.ToDecimal();
-        public static explicit operator HBigDecimal(decimal @decimal) => new HBigDecimal(@decimal);
+        public static explicit operator decimal(HBigDecimal value) => value.ToDecimal();
+        public static explicit operator HBigDecimal(decimal value) => new HBigDecimal(value);
 
         public bool TryToDecimal(out decimal value)
         {
@@ -91,6 +91,8 @@ namespace Hazelcast.Models
 
         public string ToString(CultureInfo cultureInfo)
         {
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+
             var separator = cultureInfo.NumberFormat.NumberDecimalSeparator;
             var unscaledString = UnscaledValue.ToString("G", NoSignFormat) ?? "0";
             var unsignedString = Scale switch
@@ -108,10 +110,14 @@ namespace Hazelcast.Models
 
         public static bool TryParse(string s, CultureInfo cultureInfo, out HBigDecimal bigDecimal)
         {
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+            
             bigDecimal = default;
-            var separator = cultureInfo.NumberFormat.NumberDecimalSeparator;
+            if (s == null)
+                return false;
 
-            if (!BigInteger.TryParse(s.Replace(separator, ""), NumberStyles.Integer, cultureInfo, out var unscaled))
+            var separator = cultureInfo.NumberFormat.NumberDecimalSeparator;
+            if (!BigInteger.TryParse(s.Replace(separator, "", StringComparison.Ordinal), NumberStyles.Integer, cultureInfo, out var unscaled))
                 return false;
 
             var scale = 0;
@@ -133,7 +139,7 @@ namespace Hazelcast.Models
 
         public static HBigDecimal Parse(string s) => Parse(s, CultureInfo.CurrentCulture);
 
-        private BigInteger Pow10(int power) => BigInteger.Pow(new BigInteger(10), power);
+        private static BigInteger Pow10(int power) => BigInteger.Pow(new BigInteger(10), power);
 
         /// <summary>
         /// Returns equivalent <see cref="HBigDecimal"/> value but with <see cref="Scale"/> guaranteed to be non-negative.

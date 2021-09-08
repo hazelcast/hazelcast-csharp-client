@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
@@ -82,8 +83,8 @@ namespace Hazelcast.Models
         {
             return Offset switch
             {
-                var s when s < TimeSpan.Zero => LocalDateTime + "-" + Offset.ToString(@"hh\:mm"),
-                var s when s > TimeSpan.Zero => LocalDateTime + "+" + Offset.ToString(@"hh\:mm"),
+                var s when s < TimeSpan.Zero => LocalDateTime + "-" + Offset.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
+                var s when s > TimeSpan.Zero => LocalDateTime + "+" + Offset.ToString(@"hh\:mm", CultureInfo.InvariantCulture),
                 _ => LocalDateTime + "Z"
             };
         }

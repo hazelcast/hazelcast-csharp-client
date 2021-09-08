@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Sql
             await using var result = await Client.Sql.ExecuteQueryAsync("SELECT * FROM TABLE(generate_stream(10))");
             using var cancellationSource = new CancellationTokenSource(50);
 
-            await foreach (var row in result.WithCancellation(cancellationSource.Token, throwOnCancel: false))
+            await foreach (var row in result.WithCancellation(throwOnCancel: false, cancellationSource.Token))
             {
                 if (row.GetColumn<long>(0) > 5)
                     break;

@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Formatters.Binary;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
@@ -43,6 +46,57 @@ namespace Hazelcast.Tests.DotNet
             Assert.AreEqual(0x0d, a[13]);
             Assert.AreEqual(0x0e, a[14]);
             Assert.AreEqual(0x0f, a[15]);
+        }
+
+        [Test]
+        public void SerializationInfoSupports()
+        {
+            var thing = new SerializableThing
+            {
+                GuidValue = Guid.NewGuid()
+            };
+
+            var bytes = SerializeToBytes(thing);
+            var result = DeserializeFromBytes<SerializableThing>(bytes);
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result.GuidValue, Is.EqualTo(thing.GuidValue));
+        }
+
+        private static byte[] SerializeToBytes<T>(T e)
+            where T : ISerializable
+        {
+            using var stream = new MemoryStream();
+            new BinaryFormatter().Serialize(stream, e);
+            return stream.GetBuffer();
+        }
+
+        private static T DeserializeFromBytes<T>(byte[] bytes)
+            where T : ISerializable
+        {
+            using var stream = new MemoryStream(bytes);
+            return (T) new BinaryFormatter().Deserialize(stream);
+        }
+
+        [Serializable]
+        private class SerializableThing : ISerializable
+        {
+            public SerializableThing()
+            { }
+
+            public Guid GuidValue { get; set; }
+
+            protected SerializableThing(SerializationInfo info, StreamingContext context)
+            {
+                GuidValue = (Guid) (info.GetValue(nameof(GuidValue), typeof(Guid)) ?? throw new SerializationException());
+            }
+
+            public void GetObjectData(SerializationInfo info, StreamingContext context)
+            {
+                if (info == null) throw new ArgumentNullException(nameof(info));
+
+                info.AddValue(nameof(GuidValue), GuidValue);
+            }
         }
     }
 }

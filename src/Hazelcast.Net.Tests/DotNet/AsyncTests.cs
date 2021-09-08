@@ -814,7 +814,7 @@ namespace Hazelcast.Tests.DotNet
 
             // can cancel without throwing
             cancel = new CancellationTokenSource();
-            await foreach (var i in asyncEnumerable.WithCancellation(cancel.Token, throwOnCancel: false))
+            await foreach (var i in asyncEnumerable.WithCancellation(throwOnCancel: false, cancel.Token))
             {
                 Console.WriteLine(v = i);
                 if (i == 3) cancel.Cancel();
