@@ -1,4 +1,4 @@
-# SQL <!-- omit in toc -->
+# SQL
 
 - [Example: How to Query an IHMap using SQL](#example-how-to-query-an-ihmap-using-sql)
 - [Querying IHMap](#querying-ihmap)

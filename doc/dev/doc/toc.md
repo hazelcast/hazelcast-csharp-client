@@ -23,6 +23,8 @@
 # [Distributed Computing](distributedComputing.md)
 # [Distributed Query](distributedQuery.md)
 # [CP SubSystem](cpsubsystem.md)
+# [SQL](sql.md)
+# [Canceling](canceling.md)
 # [Logging](logging.md)
 # [Locking](locking.md)
 # [Monitoring](monitoring.md)

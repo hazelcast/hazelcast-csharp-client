@@ -240,7 +240,11 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="connection">The connection.</param>
         /// <returns>A task that will complete when the shutdown has been handled.</returns>
+#pragma warning disable IDE0079 // Remove unnecessary suppression - false positive ?!
+#pragma warning disable CA1801 // Parameter is never used.
         private async ValueTask OnSocketShutdown(SocketConnectionBase connection)
+#pragma warning restore CA1801
+#pragma warning restore IDE0079
         {
             await DisposeAsync().CfAwait();
         }
@@ -251,7 +255,11 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         /// <param name="message">The message.</param>
         /// <returns>A task that will complete when the message has been handled.</returns>
+#pragma warning disable IDE0079 // Remove unnecessary suppression - false positive ?!
+#pragma warning disable CA1801 // Parameter is never used.
         private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+#pragma warning restore CA1801
+#pragma warning restore IDE0079
         {
             // proceed, regardless of _active, because why not?
 

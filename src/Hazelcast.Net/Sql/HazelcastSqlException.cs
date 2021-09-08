@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
+using Hazelcast.Core;
 
 namespace Hazelcast.Sql
 {
@@ -27,6 +28,8 @@ namespace Hazelcast.Sql
     {
         // NOTE: as per CA1032 we implement all constructors, but... keep them private/internal.
         #pragma warning disable IDE0051 // Remove unused private members - of course
+
+        // TODO: consider adding values to Data["..."] the way RemoteException does?
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
@@ -54,17 +57,33 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
-        internal HazelcastSqlException(Guid clientId, int errorCode, string message)
+        private HazelcastSqlException(Guid clientId, int errorCode, string message)
             : base(message)
         {
             ClientId = clientId;
             ErrorCode = errorCode;
         }
 
+        // FIXME [Oleksii] what is ClientId?
+        //
+        // the 1st ctor below is used for client-side detected anomalies, i.e. a member
+        // is not involved, and then the id is the client id
+        //
+        // the 2nd ctor below is used when the response to a request contains an error,
+        // in which case the error is deserialized by the codec and it contains the
+        // originating member id, ie the id of the member on which the error occurred
+        //
+        // so ClientId can be two totally different things and that is wrong. besides,
+        // these client/member identifiers could be used outside of SQL
+        // - would it make sense for HazelcastException to always include client id?
+        // - would it make sense for some exceptions to always include member id?
+        //   that would be for RemoteException, really, which is the other remote
+        //   error that the server can raise
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
-        internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message) // FIXME here it is _cluster.ClientID = a *client* ID
+        internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message)
             : this(clientId, (int)errorCode, message)
         { }
 
@@ -72,7 +91,7 @@ namespace Hazelcast.Sql
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
         internal HazelcastSqlException(SqlError error)
-            : this(error.OriginatingMemberId, error.Code, error.Message) // FIXME here it is OriginatingMemberId = a *member* ID
+            : this(error.OriginatingMemberId, error.Code, error.Message)
         { }
 
         /// <summary>
@@ -83,7 +102,7 @@ namespace Hazelcast.Sql
         protected HazelcastSqlException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            ClientId = (Guid) info.GetValue(nameof(ClientId), typeof(Guid));
+            ClientId = info.GetGuid(nameof(ClientId));
             ErrorCode = info.GetInt32(nameof(ErrorCode));
         }
 

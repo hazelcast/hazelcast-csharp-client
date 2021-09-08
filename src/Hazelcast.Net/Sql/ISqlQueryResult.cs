@@ -18,23 +18,16 @@ using System.Collections.Generic;
 namespace Hazelcast.Sql
 {
     /// <summary>
-    /// <para>
-    /// Represents SQL query (SELECT ...).
-    /// Provides methods to enumerate queried rows or cancel/dispose the query.
-    /// </para>
-    /// <para>
-    /// Query result serves as one-off <see cref="IAsyncEnumerable{T}"/> of <see cref="SqlRow"/>s, meaning it can be enumerated only once.
-    /// Trying to iterate rows multiple times will throw <see cref="InvalidOperationException"/>.
-    /// </para>
-    /// <para>
-    /// This object implements <see cref="IAsyncDisposable"/> and should be disposed when not needed.
-    /// Recommended way is to wrap execution into <c>await using</c> statement.
-    /// </para>
-    /// <para>
-    /// This object is stateful and not thread-safe.
-    /// Executing it's method in parallel may lead to unpredictable results.
-    /// </para>
+    /// Represents the result of a SQL query (SELECT ...).
     /// </summary>
+    /// <remarks>
+    /// <para>The result of a SQL query is a one-off <see cref="IAsyncEnumerable{T}"/> of <see cref="SqlRow"/>s. It can be enumerated
+    /// only once. Trying to iterate rows multiple times will throw <see cref="InvalidOperationException"/>.</para>
+    /// <para>This class implements <see cref="IAsyncDisposable"/> and instances should be disposed when not needed in order to free
+    /// server-side resources. Failing to dispose instances may impact performances on the server. Recommended way is to wrap
+    /// execution in to an <c>await using</c> statement.</para>
+    /// <para>This class is stateful and not thread-safe, executing its method in parallel may lead to unpredictable results.</para>
+    /// </remarks>
     public interface ISqlQueryResult : IAsyncEnumerable<SqlRow>, IAsyncDisposable
     { }
 }

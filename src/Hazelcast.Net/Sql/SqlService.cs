@@ -41,7 +41,21 @@ namespace Hazelcast.Sql
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            var (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+            SqlRowMetadata metadata;
+            SqlPage firstPage;
+
+            try
+            {
+                (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+            }
+            catch (TaskCanceledException)
+            {
+                // maybe, the server is running the query, so better notify it
+                // for any other exception: assume that the query did not start
+
+                await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
+                throw;
+            }
 
             return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, cancellationToken);
         }
