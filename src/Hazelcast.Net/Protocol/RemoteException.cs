@@ -15,6 +15,7 @@
 using System;
 using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
+using Hazelcast.Core;
 using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Protocol
@@ -35,12 +36,22 @@ namespace Hazelcast.Protocol
         //
         private RemoteError _error;
         private bool _retryable;
+        private Guid _memberId;
+        private string _serverStackTrace;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
         /// </summary>
         public RemoteException()
-            : base("Remote Exception")
+            : this(Guid.Empty, RemoteError.Undefined, "Remote Exception", null)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
+        public RemoteException(Guid memberId)
+            : this(memberId, RemoteError.Undefined, "Remote Exception", null)
         { }
 
         /// <summary>
@@ -48,7 +59,16 @@ namespace Hazelcast.Protocol
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         public RemoteException(string message)
-            : base(message)
+            : this(Guid.Empty, RemoteError.Undefined, message, null)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
+        /// <param name="message">The message that describes the error.</param>
+        public RemoteException(Guid memberId, string message)
+            : this(memberId, RemoteError.Undefined, message, null)
         { }
 
         /// <summary>
@@ -57,63 +77,71 @@ namespace Hazelcast.Protocol
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception.</param>
         public RemoteException(string message, Exception innerException)
-            : base(message, innerException)
+            : this(Guid.Empty, RemoteError.Undefined, message, innerException)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
+        /// <param name="message">The message that describes the error.</param>
+        /// <param name="innerException">The exception that is the cause of the current exception.</param>
+        public RemoteException(Guid memberId, string message, Exception innerException)
+            : this(memberId, RemoteError.Undefined, message, innerException)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastException"/> class.
+        /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
         /// <param name="error">The client protocol error.</param>
-        public RemoteException(RemoteError error, bool retryable = false)
-            : base(error.ToString())
-        {
-            Error = error;
-            Retryable = retryable;
-        }
+        public RemoteException(Guid memberId, RemoteError error, bool retryable = false)
+            : this(memberId, error, error.ToString(), null, retryable: retryable)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with a specified error message.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="error">The client protocol error.</param>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public RemoteException(RemoteError error, string message, bool retryable = false)
-            : base(message)
-        {
-            Error = error;
-            Retryable = retryable;
-        }
+        public RemoteException(Guid memberId, RemoteError error, string message, bool retryable = false)
+            : this(memberId, error, message, null, retryable: retryable)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with a reference to
         /// the inner exception that is the cause of this exception.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="error">The client protocol error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public RemoteException(RemoteError error, Exception innerException, bool retryable = false)
-            : base(error.ToString(), innerException)
-        {
-            Error = error;
-            Retryable = retryable;
-        }
+        public RemoteException(Guid memberId, RemoteError error, Exception innerException, bool retryable = false)
+            : this(memberId, error, error.ToString(), innerException, retryable: retryable)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="error">The client protocol error.</param>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="innerException">The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.</param>
+        /// <param name="serverStackTrace">A string representation of the frames on the server call stack.</param>
         /// <param name="retryable">Whether the operation that threw the exception can be retried.</param>
-        public RemoteException(RemoteError error, string message, Exception innerException, bool retryable = false)
+        public RemoteException(Guid memberId, RemoteError error, string message, Exception innerException, string serverStackTrace = "", bool retryable = false)
             : base(message, innerException)
         {
+            MemberId = memberId;
             Error = error;
             Retryable = retryable;
+            ServerStackTrace = serverStackTrace;
         }
 
         /// <summary>
@@ -126,8 +154,19 @@ namespace Hazelcast.Protocol
         private RemoteException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
-            Error = (RemoteError) info.GetInt32("error");
-            Retryable = info.GetBoolean("retryable");
+            MemberId = info.GetGuid(nameof(MemberId));
+            Error = (RemoteError) info.GetInt32(nameof(Error));
+            Retryable = info.GetBoolean(nameof(Retryable));
+            ServerStackTrace = info.GetString(nameof(ServerStackTrace));
+        }
+
+        /// <summary>
+        /// Gets the unique identifier of the member which threw the exception.
+        /// </summary>
+        public Guid MemberId
+        {
+            get => _memberId;
+            set => Data[nameof(MemberId)] = _memberId = value;
         }
 
         /// <summary>
@@ -136,11 +175,7 @@ namespace Hazelcast.Protocol
         public RemoteError Error
         {
             get => _error;
-            set
-            {
-                _error = value;
-                Data["error"] = value;
-            }
+            set => Data[nameof(Error)] = _error = value;
         }
 
         /// <summary>
@@ -149,11 +184,16 @@ namespace Hazelcast.Protocol
         public bool Retryable
         {
             get => _retryable;
-            set
-            {
-                _retryable = value;
-                Data["retryable"] = value;
-            }
+            set => Data[nameof(Retryable)] = _retryable = value;
+        }
+
+        /// <summary>
+        /// Gets a string representation of the frames on the server call stack.
+        /// </summary>
+        public string ServerStackTrace
+        {
+            get => _serverStackTrace;
+            set => Data[nameof(ServerStackTrace)] = _serverStackTrace = value;
         }
 
         /// <inheritdoc />
@@ -161,8 +201,10 @@ namespace Hazelcast.Protocol
         {
             if (info == null) throw new ArgumentNullException(nameof(info));
 
-            info.AddValue("error", Error);
-            info.AddValue("retryable", Retryable);
+            info.AddValue(nameof(MemberId), MemberId);
+            info.AddValue(nameof(Error), Error);
+            info.AddValue(nameof(Retryable), Retryable);
+            info.AddValue(nameof(ServerStackTrace), ServerStackTrace);
             base.GetObjectData(info, context);
         }
 
@@ -186,13 +228,12 @@ namespace Hazelcast.Protocol
             }
 
             var stackTrace = StackTrace;
-            //var stackTrace = Data["server"];
             if (stackTrace != null)
             {
                 s += Environment.NewLine + stackTrace;
             }
 
-            var serverStackTrace = Data["server"];
+            var serverStackTrace = ServerStackTrace;
             if (serverStackTrace != null)
             {
                 s = s + Environment.NewLine + InnerExceptionPrefix + Error + Environment.NewLine + serverStackTrace + Environment.NewLine +

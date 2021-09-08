@@ -16,6 +16,7 @@ using System;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
+using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
@@ -88,7 +89,7 @@ namespace Hazelcast.Tests.DotNet
 
             protected SerializableThing(SerializationInfo info, StreamingContext context)
             {
-                GuidValue = (Guid) (info.GetValue(nameof(GuidValue), typeof(Guid)) ?? throw new SerializationException());
+                GuidValue = info.GetGuid(nameof(GuidValue));
             }
 
             public void GetObjectData(SerializationInfo info, StreamingContext context)
