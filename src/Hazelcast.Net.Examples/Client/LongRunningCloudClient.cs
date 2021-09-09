@@ -51,8 +51,6 @@ namespace Hazelcast.Examples.Client
             options.Networking.Cloud.DiscoveryToken = "***";
             //options.Networking.Cloud.Url = new Uri("https://...");
 
-            options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-
             Console.WriteLine("Get and connect client...");
             Console.WriteLine($"Connect to cluster \"{options.ClusterName}\"{(options.Networking.Cloud.Enabled ? " (cloud)" : "")}");
             if (options.Networking.Cloud.Enabled) Console.WriteLine($"Cloud Discovery Url: {options.Networking.Cloud.Url}");

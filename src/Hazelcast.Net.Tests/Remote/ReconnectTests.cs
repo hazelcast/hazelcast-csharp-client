@@ -56,7 +56,6 @@ namespace Hazelcast.Tests.Remote
                     o.Networking.Addresses.Clear();
                     o.Networking.Addresses.Add("127.0.0.1:5701");
 
-                    o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
                     o.Networking.ConnectionRetry.InitialBackoffMilliseconds = 1_000; // initially wait for 1s
                     o.Networking.ConnectionRetry.Multiplier = 1; // and keep waiting for 1s
                     o.Networking.ConnectionRetry.Jitter = 0; // exactly

@@ -506,9 +506,10 @@ namespace Hazelcast.Tests.Networking
             await Task.Delay(100).CfAwait();
         }
 
-        [Test]
+        [TestCase(true)]
+        [TestCase(false)]
         [Timeout(10_000)]
-        public async Task ServerShutdown()
+        public async Task ServerShutdown(bool reconnect)
         {
             var address = NetworkAddress.Parse("127.0.0.1:11000");
 
@@ -523,12 +524,14 @@ namespace Hazelcast.Tests.Networking
             var options = new HazelcastOptionsBuilder().With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11000");
+                options.Messaging.RetryTimeoutSeconds = 1; // fail fast!
+                options.Networking.Reconnect = reconnect;
             }).Build();
 
             HConsole.WriteLine(this, "Start client 1");
             await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
-            HConsole.WriteLine(this, "Send message 1 to client 1");
+            HConsole.WriteLine(this, "Send message 1 from client 1");
             var message = CreateMessage("ping");
             var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
@@ -538,9 +541,19 @@ namespace Hazelcast.Tests.Networking
             await server.StopAsync().CfAwait();
             await Task.Delay(1000).CfAwait();
 
-            HConsole.WriteLine(this, "Send message 2 to client 1");
+            HConsole.WriteLine(this, "Send message 2 from client 1");
             message = CreateMessage("ping");
-            Assert.ThrowsAsync<ClientOfflineException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait());
+
+            if (reconnect)
+            {
+                // client is going to try to reconnect and the invocation times out
+                Assert.ThrowsAsync<TaskTimeoutException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait());
+            }
+            else
+            {
+                // client goes offline and everything ends
+                Assert.ThrowsAsync<ClientOfflineException>(async () => await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait());
+            }
 
             HConsole.WriteLine(this, "End");
             await Task.Delay(100).CfAwait();

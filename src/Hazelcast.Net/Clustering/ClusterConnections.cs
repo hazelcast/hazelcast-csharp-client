@@ -241,33 +241,21 @@ namespace Hazelcast.Clustering
             }
 
             // the cluster is disconnected, but not down
-            _logger.LogInformation("Disconnected (reconnect mode == {ReconnectMode} => {ReconnectAction})",
-                _clusterState.Options.Networking.ReconnectMode,
-                _clusterState.Options.Networking.ReconnectMode switch
-                {
-                    ReconnectMode.DoNotReconnect => "shut down",
-                    ReconnectMode.ReconnectSync => "reconnect synchronously",
-                    ReconnectMode.ReconnectAsync => "reconnect asynchronously",
-                    _ => "meh?"
-                });
+            _logger.LogInformation("Disconnected (reconnect == {Reconnect} => {ReconnectAction})",
+#pragma warning disable CA1308 // Normalize strings to uppercase - we are not normalizing here
+                _clusterState.Options.Networking.Reconnect.ToString().ToLowerInvariant(),
+#pragma warning restore CA1308
+                _clusterState.Options.Networking.Reconnect ? "reconnect" : "shut down");
 
-            // what we do next depends on options
-            switch (_clusterState.Options.Networking.ReconnectMode)
+            if (_clusterState.Options.Networking.Reconnect)
             {
-                case ReconnectMode.DoNotReconnect:
-                    // DoNotReconnect = the cluster shuts down
-                    _clusterState.RequestShutdown();
-                    break;
-
-                case ReconnectMode.ReconnectSync:
-                case ReconnectMode.ReconnectAsync:
-                    // Reconnect Sync or Async = the cluster reconnects via a background task
-                    // operations will either block or fail
-                    _reconnect = BackgroundTask.Run(ReconnectAsync);
-                    break;
-
-                default:
-                    throw new NotSupportedException();
+                // reconnect via a background task
+                // operations will either retry until timeout, or fail
+                _reconnect = BackgroundTask.Run(ReconnectAsync);
+            }
+            else
+            {
+                _clusterState.RequestShutdown();
             }
 
             return default;

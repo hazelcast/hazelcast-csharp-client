@@ -33,6 +33,8 @@ namespace Hazelcast.Messaging
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
             RetryTimeoutSeconds = other.RetryTimeoutSeconds;
+            RetryOnClientReconnecting = other.RetryOnClientReconnecting;
+            RetryOnConnectionLost = other.RetryOnConnectionLost;
         }
 
         /// <summary>
@@ -55,6 +57,34 @@ namespace Hazelcast.Messaging
         /// try can run for as long as the connection that supports it remains open.</para>
         /// </remarks>
         public int RetryTimeoutSeconds { get; set; } = 120;
+
+        /// <summary>
+        /// Whether to retry an invocation that has failed because the client was offline
+        /// but still active and reconnecting.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is <c>true</c> by default, i.e. if the client got disconnected and is reconnecting,
+        /// invocations will be retried until they reach their timeout, or the client reconnects. Set this
+        /// to <c>false</c> if you want invocations to fail immediately in case the client gets
+        /// disconnected, even if it is trying to reconnect.</para>
+        /// <para>Note that this options is AND-ed with <see cref="Networking.NetworkingOptions.RedoOperations"/>,
+        /// i.e. global operations retry must be enabled for this option to be active.</para>
+        /// </remarks>
+        public bool RetryOnClientReconnecting { get; set; } = true;
+
+        /// <summary>
+        /// Whether to retry an invocation that has failed because the underlying socket connection
+        /// was lost.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is <c>true</c> by default, i.e. if the underlying socket connection was lost,
+        /// invocations will be retried on another connection until they reach their timeout, or a
+        /// connection stays up long enough. Set this to <c>false</c> if you want invocations to fail
+        /// immediately if the underlying socket connection was lost.</para>
+        /// <para>Note that this options is AND-ed with <see cref="Networking.NetworkingOptions.RedoOperations"/>,
+        /// i.e. global operations retry must be enabled for this option to be active.</para>
+        /// </remarks>
+        public bool RetryOnConnectionLost { get; set; } = true;
 
         /// <summary>
         /// Clones the options.

@@ -174,12 +174,24 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="exception">The exception.</param>
         /// <param name="retryOnTargetDisconnected">Whether to retry on <see cref="TargetDisconnectedException"/>.</param>
+        /// <param name="retryOnClientOffline">Whether to retry on <see cref="ClientOfflineException"/>.</param>
         /// <returns>true if the invocation should be retried; otherwise false.</returns>
         /// <remarks>
         /// <para>If it is determined that the invocation should be retried, it does not necessarily
         /// mean that it can be retried, and that will be determined by <see cref="WaitRetryAsync"/>.</para>
+        /// <para>If the underlying socket connection is disconnected while the invocation is running, an
+        /// <see cref="TargetDisconnectedException"/> is thrown. If <paramref name="retryOnTargetDisconnected"/>
+        /// is true, the invocation can be retried, on another connection. Otherwise, the invocation fails
+        /// immediately.</para>
+        /// <para>If the client goes offline while the invocation is running, and <see cref="ClientOfflineException"/>
+        /// exception is thrown. If the client has shutdown, there is no chance it can come back online, and the
+        /// invocation fails immediately. On the other hand, if the client is still active and trying to reconnect,
+        /// and <paramref name="retryOnClientOffline"/>, the invocation can be retried. Otherwise, the invocation
+        /// fails immediately.</para>
+        /// <para>Note that in all cases, the invocation is retried only until its timeout is reached, and then
+        /// it fails.</para>
         /// </remarks>
-        public bool IsRetryable(Exception exception, bool retryOnTargetDisconnected)
+        public bool IsRetryable(Exception exception, bool retryOnTargetDisconnected, bool retryOnClientOffline)
         {
             switch (exception)
             {
@@ -192,7 +204,7 @@ namespace Hazelcast.Clustering
 
                 // offline client, but still active = we can retry (should come back online)
                 case ClientOfflineException clientOfflineException when clientOfflineException.State.IsActiveState():
-                    return true;
+                    return retryOnClientOffline;
 
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message

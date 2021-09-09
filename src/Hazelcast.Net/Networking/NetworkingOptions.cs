@@ -37,7 +37,7 @@ namespace Hazelcast.Networking
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
-            ReconnectMode = other.ReconnectMode;
+            Reconnect = other.Reconnect;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             UsePublicAddresses = other.UsePublicAddresses;
 
@@ -99,9 +99,14 @@ namespace Hazelcast.Networking
         public bool RedoOperations { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
+        /// Whether to attempt to automatically reconnect a client that has been disconnected.
         /// </summary>
-        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+        /// <remarks>
+        /// <para>This is <c>true</c> by default, i.e. a client that has been disconnected but is
+        /// still active will try to reconnect to the cluster. Set this to <c>false</c> if you
+        /// want it to shut down and never reconnect.</para>
+        /// </remarks>
+        public bool Reconnect { get; set; } = true;
 
         /// <summary>
         /// Whether to use the public addresses of members.
