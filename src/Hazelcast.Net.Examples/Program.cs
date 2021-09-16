@@ -53,10 +53,10 @@ namespace Hazelcast.Examples
 
             var exampleName = args[0];
 
-#if NETCOREAPP
-            if (exampleName.StartsWith('~'))
-#else
+#if NETFRAMEWORK
             if (exampleName.StartsWith("~"))
+#else
+            if (exampleName.StartsWith('~'))
 #endif
             {
                 // approx type name is a regex because, why not?
@@ -143,7 +143,7 @@ namespace Hazelcast.Examples
             GC.WaitForPendingFinalizers();
 
             // clear unobserved exceptions
-#if NETCOREAPP
+#if !NETFRAMEWORK
             UnobservedExceptions.Clear();
 #else
             while (UnobservedExceptions.TryDequeue(out _)) { }

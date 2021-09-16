@@ -434,7 +434,7 @@ namespace Hazelcast.Clustering
             try
             {
                 // propagate the cancellationToken to the invocation
-#if NETSTANDARD2_1
+#if !NETSTANDARD2_0
                 await
 #endif
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);

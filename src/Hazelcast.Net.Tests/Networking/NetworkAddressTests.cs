@@ -187,8 +187,10 @@ namespace Hazelcast.Tests.Networking
             Assert.Throws<ArgumentNullException>(() => _ = new NetworkAddress((IPAddress) null));
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = new NetworkAddress(ipAddress, -1));
 
-            ipEndpoint.Address = null;
+#if !NET5_0_OR_GREATER
+            ipEndpoint.Address = null; // this is not even legal in NET 5+
             Assert.Throws<ArgumentException>(() => _ = new NetworkAddress(ipEndpoint));
+#endif
 
             Assert.Throws<ArgumentNullException>(() => _ = new NetworkAddress((NetworkAddress)null, 5701));
             Assert.Throws<ArgumentOutOfRangeException>(() => _ = new NetworkAddress(address, -1));

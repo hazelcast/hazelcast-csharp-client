@@ -40,10 +40,10 @@ namespace Hazelcast.Projection
             {
                 if (string.IsNullOrWhiteSpace(attributePath))
                     throw new ArgumentException("No attribute path can be null nor empty.", nameof(attributePaths));
-#if NETSTANDARD2_1
-                if (attributePath.Contains("[any]", StringComparison.OrdinalIgnoreCase))
-#else
+#if NETFRAMEWORK
                 if (attributePath.Contains("[any]"))
+#else
+                if (attributePath.Contains("[any]", StringComparison.OrdinalIgnoreCase))
 #endif
                     throw new ArgumentException("No attribute path can contain the '[any]' operator.", nameof(attributePaths));
             }

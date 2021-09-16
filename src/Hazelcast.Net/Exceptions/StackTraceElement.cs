@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if NETSTANDARD2_1
+#if NETFRAMEWORK || NETSTANDARD2_0
+#else
 using System;
 #endif
 
@@ -92,7 +93,7 @@ namespace Hazelcast.Exceptions
         /// <inheritdoc />
         public override int GetHashCode()
         {
-#if NET462 || NETSTANDARD2_0
+#if NETFRAMEWORK || NETSTANDARD2_0
             unchecked
             {
                 var hashCode = (ClassName != null ? ClassName.GetHashCode() : 0);
@@ -101,8 +102,7 @@ namespace Hazelcast.Exceptions
                 hashCode = (hashCode * 397) ^ LineNumber;
                 return hashCode;
             }
-#endif
-#if NETSTANDARD2_1
+#else
             return HashCode.Combine(ClassName, MethodName, FileName, LineNumber);
 #endif
         }

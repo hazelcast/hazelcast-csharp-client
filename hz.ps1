@@ -352,17 +352,28 @@ else {
     $docMessage = "Version $($options.version) documentation"
 }
 
-# determine framework(s)
-$frameworks = @( "net462", "netcoreapp2.1", "netcoreapp3.1" )
+# determine framework(s) - for building and running tests
+$frameworks = @( "net462", "net48", "netcoreapp3.1", "net5.0" )
 if (-not $isWindows) {
-    $frameworks = @( "netcoreapp2.1", "netcoreapp3.1" )
+    $frameworks = @( "netcoreapp3.1", "net5.0" )
 }
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
     $framework = $options.framework.ToLower()
-    if (-not $frameworks.Contains($framework)) {
-        Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
+    if ($framework.Contains(',')) {
+        $fwks = $framework.Split(',')
+        foreach ($fwk in $fwks) {
+            if (-not $frameworks.Contains($fwk)) {
+                Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
+            }
+        }
+        $frameworks = $fwks
     }
-    $frameworks = @( $framework )
+    else {
+        if (-not $frameworks.Contains($framework)) {
+            Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
+        }
+        $frameworks = @( $framework )
+    }
 }
 
 # ensure we have the enterprise key for testing

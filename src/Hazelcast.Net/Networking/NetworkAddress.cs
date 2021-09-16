@@ -228,8 +228,7 @@ namespace Hazelcast.Networking
 #if NETSTANDARD2_0
                 if (!int.TryParse(span[(colon2 + 1)..].ToString(), out port))
                     return false;
-#endif
-#if NETSTANDARD2_1
+#else
                 if (!int.TryParse(span.Slice(colon2 + 1), out port))
                     return false;
 #endif
@@ -266,10 +265,9 @@ namespace Hazelcast.Networking
 
             string hostNameString;
 
-#if NET462 || NETSTANDARD2_0
+#if NETSTANDARD2_0
             if (IPAddress.TryParse(hostName.ToString(), out var ipAddress))
-#endif
-#if NETSTANDARD2_1
+#else
             if (IPAddress.TryParse(hostName, out var ipAddress))
 #endif
             {

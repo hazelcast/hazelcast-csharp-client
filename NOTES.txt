@@ -1,0 +1,56 @@
+This file contains important notes regarding
+- our build targets (which framework version we are building for)
+- our NuGet dependencies
+
+TARGETS
+-------
+
+References:
+  https://docs.microsoft.com/en-us/dotnet/standard/frameworks
+  https://github.com/dotnet/designs/blob/main/accepted/2020/net5/net5.md
+
+Our tooling:
+
+  ExpectedObjects
+    dll: netstandard2.0 (tooling)
+    
+  Hazelcast.Net.DocAsCode
+    dll: net48 (tooling, net48 required by DocFX 2.x)
+  
+  Hazelcast.Net.Testing
+    dll: netstandard2.0;netstandard2.1 (tooling)
+  
+  Hazelcast.Net.JetBrainsAnnotations
+    dll: netstandard2.0 (tooling)
+  
+Our tests and benchmarks:  
+  
+  Hazelcast.Net.Benchmarks
+    exe: netcoreapp5.0 (test)
+  
+  Hazelcast.Net.Tests
+    dll: net462;net48;netcoreapp3.1;net5.0 (test)
+    
+  Hazelcast.Net.Examples
+    dll: net462;net48;netcoreapp3.1;net5.0 (test)
+  
+The 3 packages we ship:  
+  
+  Hazelcast.Net
+    dll: netstandard2.0;netstandard2.1;net5.0 (ship)
+
+  Hazelcast.Net.DependencyInjection
+    dll: netstandard2.0;netstandard2.1;net5.0 (ship) 
+      
+  Hazelcast.Net.Win32
+    dll: netstandard2.0;netstandard2.1;net5.0 (ship)
+    
+NUGET
+-----
+
+  Do *NOT* upgrade these packages without understanding what you do:
+  - System.Composition 1.0.31 in Hazelcast.Net.DocAsCode required by DocFX
+  - NUnit 3.12.0 in Hazelcast.Net.Tests as long as https://github.com/nunit/nunit3-vs-adapter/issues/780 is not fixed!
+  - NUnit3TestAdapter 3.16.1 same as above
+  
+/

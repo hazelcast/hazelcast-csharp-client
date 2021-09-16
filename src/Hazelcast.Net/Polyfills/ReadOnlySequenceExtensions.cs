@@ -38,8 +38,7 @@ namespace System.Buffers
         {
 #if NET462 || NETSTANDARD2_0
             return sequence.First.Span;
-#endif
-#if NETSTANDARD2_1
+#else
             return sequence.FirstSpan;
 #endif
         }
