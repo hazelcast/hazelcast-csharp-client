@@ -26,7 +26,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.SoakTests
 {
-    // FIXME this is temporary code while troubleshooting
+    // FIXME this is temporary code while troubleshooting tests
     public class KubeTemp
     {
         private static bool _cancelKeyInstalled;

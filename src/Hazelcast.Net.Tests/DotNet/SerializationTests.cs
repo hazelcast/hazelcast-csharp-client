@@ -64,19 +64,25 @@ namespace Hazelcast.Tests.DotNet
             Assert.That(result.GuidValue, Is.EqualTo(thing.GuidValue));
         }
 
+        // this is a test, it's OK to use BinaryFormatter here
+
         private static byte[] SerializeToBytes<T>(T e)
             where T : ISerializable
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             using var stream = new MemoryStream();
             new BinaryFormatter().Serialize(stream, e);
             return stream.GetBuffer();
+#pragma warning restore SYSLIB0011
         }
 
         private static T DeserializeFromBytes<T>(byte[] bytes)
             where T : ISerializable
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             using var stream = new MemoryStream(bytes);
             return (T) new BinaryFormatter().Deserialize(stream);
+#pragma warning restore SYSLIB0011
         }
 
         [Serializable]

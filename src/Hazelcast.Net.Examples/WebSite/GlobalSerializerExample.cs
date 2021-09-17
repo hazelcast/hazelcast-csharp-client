@@ -26,18 +26,24 @@ namespace Hazelcast.Examples.WebSite
         public void Dispose()
         { }
 
+        // TODO: this example should avoid using the obsolete BinaryFormatter
+
         public object Read(IObjectDataInput input)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             var formatter = new BinaryFormatter();
             var stream = new MemoryStream(input.ReadByteArray());
             return formatter.Deserialize(stream);
+#pragma warning restore SYSLIB0011
         }
 
         public void Write(IObjectDataOutput output, object obj)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             var formatter = new BinaryFormatter();
             var stream = new MemoryStream();
             formatter.Serialize(stream, obj);
+#pragma warning restore SYSLIB0011
             output.WriteByteArray(stream.GetBuffer());
         }
     }

@@ -123,8 +123,11 @@ namespace Hazelcast.Tests.Serialization
         public void Dispose()
         { }
 
+        // this is a test, it's OK to use BinaryFormatter here
+
         public void Write(IObjectDataOutput output, CustomSerializableType t)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             byte[] array;
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -135,10 +138,12 @@ namespace Hazelcast.Tests.Serialization
 
             output.WriteInt(array.Length);
             output.Write(array);
+#pragma warning restore SYSLIB0011
         }
 
         public CustomSerializableType Read(IObjectDataInput input)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             var bf = new BinaryFormatter();
             var len = input.ReadInt();
 
@@ -151,6 +156,7 @@ namespace Hazelcast.Tests.Serialization
                 result = (CustomSerializableType) bf.Deserialize(ms);
             }
             return result;
+#pragma warning restore SYSLIB0011
         }
     }
 

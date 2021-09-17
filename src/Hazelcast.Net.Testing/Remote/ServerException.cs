@@ -22,6 +22,7 @@ using Thrift.Protocol.Utilities;
 #pragma warning disable IDE0079  // remove unnecessary pragmas
 #pragma warning disable IDE1006  // parts of the code use IDL spelling
 #pragma warning disable IDE0083  // pattern matching "that is not SomeType" requires net5.0 but we still support earlier versions
+#pragma warning disable CS0114   // member hides inherited member
 
 namespace Hazelcast.Testing.Remote
 {

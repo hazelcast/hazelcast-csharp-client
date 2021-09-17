@@ -84,7 +84,11 @@ namespace Hazelcast.Security.Win32
             SecStatus status;
             string strValue = null;
 
+            // see https://github.com/dotnet/docs/blob/main/docs/fundamentals/syslib-diagnostics/syslib0004.md
+            // this only exists in .NET Framework and has been obsoleted
+#if NETFRAMEWORK
             RuntimeHelpers.PrepareConstrainedRegions();
+#endif
             try { }
             finally
             {
@@ -309,7 +313,11 @@ namespace Hazelcast.Security.Win32
 
             SecStatus result;
 
+// see https://github.com/dotnet/docs/blob/main/docs/fundamentals/syslib-diagnostics/syslib0004.md
+// this only exists in .NET Framework and has been obsoleted
+#if NETFRAMEWORK
             RuntimeHelpers.PrepareConstrainedRegions();
+#endif
             try { }
             finally
             {
