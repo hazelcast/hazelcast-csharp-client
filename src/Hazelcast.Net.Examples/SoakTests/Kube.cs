@@ -26,8 +26,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Examples.SoakTests
 {
-    // FIXME this is temporary code while troubleshooting Ali's tests
-    public class KubeAli
+    // FIXME this is temporary code while troubleshooting
+    public class KubeTemp
     {
         private static bool _cancelKeyInstalled;
         private static bool _cancelKeyPressed;
@@ -61,7 +61,6 @@ namespace Hazelcast.Examples.SoakTests
             var options = new HazelcastOptionsBuilder().Build();
             Console.WriteLine("Reconnect mode is set");
 
-            options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
             //options.Networking.Addresses.Add("hz-hazelcast");
             options.Networking.Addresses.Add("192.168.1.200:5701");
 
@@ -212,10 +211,11 @@ namespace Hazelcast.Examples.SoakTests
             var msg0 = "";
             do
             {
-                // FIXME we need a better way to "freeze" this global state + fix Members2
+                // NOTE that there is a race condition here between client.State, client.IsConnected and client.Members, but
+                // we are not going to introduce more locks in the client just for the sake of these tests
 
                 var msg = $"Client: {client.State} {(client.IsActive ? "+" : "-")}active {(client.IsConnected ? "+" : "-")}connected "
-                          + string.Join(",", client.Members2.Select(x => $"{x.Item1.PublicAddress}{(x.Item2 ? "*" : "")}"));
+                          + string.Join(",", client.Members.Select(x => $"{x.Member.PublicAddress}{(x.IsConnected ? "*" : "")}"));
                 if (msg != msg0)
                     logger.LogInformation(msg0 = msg);
 
@@ -361,9 +361,9 @@ namespace Hazelcast.Examples.SoakTests
             // introduce some delay...
             await CancellableDelay(TimeSpan.FromSeconds(2), cancel.Token);
 
-            // FIXME what shall we do with 'startingClient'?
-            // could the task be owned by the client? no, we want to get rid of it asap
-            // if it fails (eg timeout) the client shuts down - all WaitWhile below abort on cancel.Token
+            // an HazelcastClientStart.Task cannot be entirely "fire and forget", it's important to do something
+            // about it - here, we observe its completion and make sure we handle and log the exception, if
+            // any
             _ = clientStart.Task.ContinueWith(t =>
             {
                 if (t.Status == TaskStatus.RanToCompletion)
@@ -376,26 +376,26 @@ namespace Hazelcast.Examples.SoakTests
             await kc.StartMember();
 
             // wait until notified about the second member being added, *and* connected to it
-            await WaitWhile(() => client.Members2.Count(x => x.Item2) < 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
+            await WaitWhile(() => client.Members.Count(x => x.IsConnected) < 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
             await WaitWhile(() => !_mapWorks, TimeSpan.FromMilliseconds(2000), cancel.Token);
 
             // stop the second member
             await kc.StopMember();
 
             // wait until disconnected from the second member
-            await WaitWhile(() => client.Members2.Count(x => x.Item2) == 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
+            await WaitWhile(() => client.Members.Count(x => x.IsConnected) == 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
             await WaitWhile(() => !_mapWorks, TimeSpan.FromMilliseconds(2000), cancel.Token);
 
             // wait until notified about the second member being removed
             // note: can take ages for the first member to figure it out
-            await WaitWhile(() => client.Members2.Count() == 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
+            await WaitWhile(() => client.Members.Count() == 2, TimeSpan.FromMilliseconds(1000), cancel.Token);
             await WaitWhile(() => !_mapWorks, TimeSpan.FromMilliseconds(2000), cancel.Token);
 
             // stop the first member
             await kc.StopMember();
 
             // wait until disconnected from the first member
-            await WaitWhile(() => client.Members2.Count(x => x.Item2) == 1, TimeSpan.FromMilliseconds(1000), cancel.Token);
+            await WaitWhile(() => client.Members.Count(x => x.IsConnected) == 1, TimeSpan.FromMilliseconds(1000), cancel.Token);
             await WaitWhile(() => _mapWorks, TimeSpan.FromMilliseconds(2000), cancel.Token);
 
             // wait until notified about the first member being removed
