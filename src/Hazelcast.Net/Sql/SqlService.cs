@@ -104,7 +104,7 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) throw new HazelcastSqlException(response.Error);
+            if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
             return response;
         }
@@ -124,7 +124,7 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) throw new HazelcastSqlException(response.Error);
+            if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
             return response.RowPage;
         }

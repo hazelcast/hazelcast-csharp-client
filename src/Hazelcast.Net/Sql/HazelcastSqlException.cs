@@ -57,41 +57,26 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
-        private HazelcastSqlException(Guid clientId, int errorCode, string message)
+        private HazelcastSqlException(Guid clientId, Guid memberId, int errorCode, string message)
             : base(message)
         {
             ClientId = clientId;
+            MemberId = memberId;
             ErrorCode = errorCode;
         }
-
-        // FIXME [Oleksii] what is ClientId?
-        //
-        // the 1st ctor below is used for client-side detected anomalies, i.e. a member
-        // is not involved, and then the id is the client id
-        //
-        // the 2nd ctor below is used when the response to a request contains an error,
-        // in which case the error is deserialized by the codec and it contains the
-        // originating member id, ie the id of the member on which the error occurred
-        //
-        // so ClientId can be two totally different things and that is wrong. besides,
-        // these client/member identifiers could be used outside of SQL
-        // - would it make sense for HazelcastException to always include client id?
-        // - would it make sense for some exceptions to always include member id?
-        //   that would be for RemoteException, really, which is the other remote
-        //   error that the server can raise
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
         internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message)
-            : this(clientId, (int)errorCode, message)
+            : this(clientId, Guid.Empty, (int)errorCode, message)
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class.
         /// </summary>
-        internal HazelcastSqlException(SqlError error)
-            : this(error.OriginatingMemberId, error.Code, error.Message)
+        internal HazelcastSqlException(Guid clientId, SqlError error)
+            : this(clientId, error.OriginatingMemberId, error.Code, error.Message)
         { }
 
         /// <summary>
@@ -103,6 +88,7 @@ namespace Hazelcast.Sql
             : base(info, context)
         {
             ClientId = info.GetGuid(nameof(ClientId));
+            MemberId = info.GetGuid(nameof(MemberId));
             ErrorCode = info.GetInt32(nameof(ErrorCode));
         }
 
@@ -112,14 +98,20 @@ namespace Hazelcast.Sql
             if (info == null) throw new ArgumentNullException(nameof(info));
 
             info.AddValue(nameof(ClientId), ClientId);
+            info.AddValue(nameof(MemberId), MemberId);
             info.AddValue(nameof(ErrorCode), ErrorCode);
             base.GetObjectData(info, context);
         }
 
         /// <summary>
-        /// Get the identifier of the FIXME - see above, is this a client or member ID?
+        /// Get the identifier of the <see cref="IHazelcastClient"/> that caused the exception.
         /// </summary>
         public Guid ClientId { get; }
+
+        /// <summary>
+        /// Gets the identifier of the member that reported the exception.
+        /// </summary>
+        public Guid MemberId { get; }
 
         /// <summary>
         /// Gets the code representing the error that occurred.
