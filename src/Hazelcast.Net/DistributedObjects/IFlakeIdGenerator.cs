@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects
     /// <para>The timestamp component is composed of 41 bits representing milliseconds since Jan. 1st, 2018 00:00UTC.
     /// This caps the useful lifespan of the generator to little less that 70 years, i.e. until ~2088.</para>
     /// <para>The sequence component is composed of 6 bits. If more than 64 identifiers are requested in a single
-    /// milliseconds, identifiers will gracefully overflow to the next milliseconds while still guaranteeing uniqueness. FIXME how?</para>
+    /// milliseconds, identifiers will gracefully overflow to the next milliseconds while still guaranteeing uniqueness.</para>
     /// <para>The member-side implementation does not allow overflowing by more than 15 seconds, and if identifiers are
     /// requested at a higher rate, calls will block. Note that however clients are able to generate identifiers faster,
     /// because each call goes to a different (random) member and the 64 identifiers/ms limit is for one single member.</para>
