@@ -65,8 +65,11 @@ namespace Hazelcast.Examples.DistributedObjects
         public void Dispose()
         { }
 
+        // TODO: this example should avoid using the obsolete BinaryFormatter
+
         public void Write(IObjectDataOutput output, Person t)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             byte[] array;
             var bf = new BinaryFormatter();
             using (var ms = new MemoryStream())
@@ -74,6 +77,7 @@ namespace Hazelcast.Examples.DistributedObjects
                 bf.Serialize(ms, t);
                 array = ms.ToArray();
             }
+#pragma warning restore SYSLIB0011
 
             output.WriteInt(array.Length);
             output.Write(array);
@@ -81,6 +85,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
         public Person Read(IObjectDataInput input)
         {
+#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
             var bf = new BinaryFormatter();
             var len = input.ReadInt();
 
@@ -89,6 +94,7 @@ namespace Hazelcast.Examples.DistributedObjects
 
             using var ms = new MemoryStream(buffer);
             return (Person) bf.Deserialize(ms);
+#pragma warning restore SYSLIB0011
         }
     }
 

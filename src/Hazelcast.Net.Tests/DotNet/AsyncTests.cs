@@ -36,78 +36,143 @@ namespace Hazelcast.Tests.DotNet
 
         [TestCase(true)]
         [TestCase(false)]
-        public async Task CompletionSourceCompletesResultAsynchronously(bool runAsync)
+        public async Task CompletionSourceCompletesResultAsynchronously(bool completeAsync)
         {
             var steps = new Steps();
-            var control = new SemaphoreSlim(0);
-            var control2 = new SemaphoreSlim(0);
 
-            steps.Add("main.start");
+            var mainThreadId = steps.Add("main.start");
 
-            var options = runAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
+            // create the task completion source - either sync or async
+            var options = completeAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
             var taskCompletionSource = new TaskCompletionSource<int>(options);
+
+            var taskThreadId = -1;
+            var resultSet = false;
             var task = Task.Run(() =>
             {
-                steps.Add("task.start");
+                // this has started on another thread
+                taskThreadId = steps.Add("task.start");
 
-                // some delay to ensure we do not SetResult before awaiting the task completion source,
-                // thus forcing the await on that task to actually await asynchronously
-                //await control.WaitAsync().CfAwait();
-                control.Wait();
-                //await Task.Delay(2000).CfAwait();
+                // some delay - on the same thread
+                // we want some long-enough delay to ensure that we do not SetResult before awaiting the
+                // task completion source, thus forcing the await on that task to actually await synchronously
                 Thread.Sleep(2000);
 
-                steps.Add("task.complete");
+                // now set the result, thus unblocking the awaited task
+                // all of this happens on the same thread
+                Assert.That(steps.Add("task.complete"), Is.EqualTo(taskThreadId));
                 taskCompletionSource.SetResult(42);
-                steps.Add("task.continue");
+                resultSet = true;
+                Assert.That(steps.Add("task.continue"), Is.EqualTo(taskThreadId));
 
-                // keep running for a while - on the same thread!
-                //await Task.Delay(200).CfAwait();
-                Thread.Sleep(200);
-
-                steps.Add("task.end");
+                // some more delay - on the same thread
+                Thread.Sleep(500);
+                Assert.That(steps.Add("task.end"), Is.EqualTo(taskThreadId));
             });
 
-            steps.Add("main.wait");
-            control.Release();
+            // going to wait on the task until it sets the taskCompletionSource result
+            Assert.That(steps.Add("main.wait"), Is.EqualTo(mainThreadId));
             await taskCompletionSource.Task.CfAwait();
-            steps.Add("main.resume");
 
-            // keep running for a while - on the same thread!
-            //await Task.Delay(200).CfAwait();
+            // resume after the task has completed
+            var resumedThreadId = steps.Add("main.resume");
+
+            // just to be sure: main and task run on different threads
+            Assert.That(taskThreadId, Is.Not.EqualTo(mainThreadId));
+
+            if (completeAsync)
+            {
+                // if the task completion source completed asynchronously, the the task kept running - we are a different thread
+                // which does not have to be mainThreadId since we awaited, but nevertheless - it is not taskThreadId either
+                Assert.That(resumedThreadId, Is.Not.EqualTo(taskThreadId));
+
+                // after some delay (on the same thread)
+                Thread.Sleep(500);
+                Assert.That(Thread.CurrentThread.ManagedThreadId, Is.EqualTo(resumedThreadId));
+
+                // the task has resumed
+                Assert.That(resultSet, Is.True);
+
+                // this is OK
+                task.GetAwaiter().GetResult(); // 'await' on this thread
+            }
+            else
+            {
+                // if the task completion source completed synchronously, then it's the task thread which is running this code
+                Assert.That(resumedThreadId, Is.EqualTo(taskThreadId));
+
+                // after some delay (on the same thread)
+                Thread.Sleep(500);
+                Assert.That(Thread.CurrentThread.ManagedThreadId, Is.EqualTo(taskThreadId));
+
+                // the task will not resume until *we* are done
+                Assert.That(resultSet, Is.False);
+
+                // this is NOT OK - hangs, since we are hanging on the task's thread
+                //task.GetAwaiter().GetResult(); // 'await' on this thread
+                Assert.That(task.Status, Is.EqualTo(TaskStatus.Running));
+            }
+
+            var threadId = Thread.CurrentThread.ManagedThreadId;
+
+            // some delay (on the same thread)
             Thread.Sleep(200);
+            Assert.That(steps.Add("main.continue"), Is.EqualTo(threadId));
 
-            steps.Add("main.continue");
+            // some delay (on the same thread)
+            Thread.Sleep(200);
+            Assert.That(steps.Add("main.continue"), Is.EqualTo(threadId));
 
-            await Task.Yield();
-            await task.CfAwait();
+            if (completeAsync)
+            {
+                // some delay (on the same thread)
+                Thread.Sleep(200);
+                Assert.That(steps.Add("main.end"), Is.EqualTo(threadId));
+            }
+            else
+            {
+                // we are still hanging on the task's thread so it cannot complete
+                Assert.That(task.Status, Is.EqualTo(TaskStatus.Running));
 
-            steps.Add("main.end");
+                // release this thread
+                await Task.Yield();
 
+                // this is now OK
+                task.GetAwaiter().GetResult(); // 'await' on this thread
+
+                // can be on any thread
+                steps.Add("main.end");
+            }
+
+
+            // trace
             Console.WriteLine(steps);
 
-            // FIXME why does it *have* to be "not same thread"? this test can fail on some occasions
-            // task.complete thread 18 == main.resume thread 18 -- for runAsync = true
-
-            // task.complete and task.continue always run on same thread
-            // task.complete and main.wait always run on different threads
-            steps.AssertSameThread("task.complete", "task.continue");
-            steps.AssertNotSameThread("task.complete", "main.wait");
-
-            // task.complete and main.resume
-            if (runAsync)
-                steps.AssertNotSameThread("task.complete", "main.resume"); // run on different threads
-            else
-                steps.AssertSameThread("task.complete", "main.resume"); // run on same thread
-
-            // FIXME if async, order here is not specified!
-            //if (runAsync)
-            //    steps.AssertOrder("task.continue", "main.resume"); // main.resume after task.continue since different thread
-            //else
-            if (!runAsync)
-                steps.AssertOrder("main.resume", "task.continue"); // main.resume before task.continue since same thread
-
-            steps.AssertOrder("main.resume", "main.end");
+            // what should be traced:
+            //
+            // synchronous:
+            // 00[22] main.start
+            // 01[22] main.wait
+            // 02[04] task.start
+            // 03[04] task.complete
+            // 04[04] main.resume    << main resumes and continues on task's thread
+            // 05[04] main.continue  << main is holding task's thread
+            // 06[04] main.continue
+            // 07[04] task.continue  << until it yields, and then the task resumes
+            // 08[04] task.end
+            // 09[10] main.end
+            //
+            // asynchronous:
+            // 00[22] main.start
+            // 01[22] main.wait
+            // 02[10] task.start
+            // 03[10] task.complete
+            // 04[10] task.continue  << task continues and ends on its own thread
+            // 05[06] main.resume    << main resumes and continues on another thread
+            // 06[10] task.end
+            // 07[06] main.continue
+            // 08[06] main.continue
+            // 09[06] main.end
         }
 
         [Test]
@@ -324,8 +389,12 @@ namespace Hazelcast.Tests.DotNet
         {
             private readonly ConcurrentQueue<Step> _steps = new ConcurrentQueue<Step>();
 
-            public void Add(string message)
-                => _steps.Enqueue(new Step(message));
+            public int Add(string message)
+            {
+                var threadId = Thread.CurrentThread.ManagedThreadId;
+                _steps.Enqueue(new Step(message, threadId));
+                return threadId;
+            }
 
             public int GetThreadId(string message)
                 => _steps.FirstOrDefault(x => x.Message == message)?.ManagedThreadId ?? 0;
@@ -380,10 +449,10 @@ namespace Hazelcast.Tests.DotNet
 
         private class Step
         {
-            public Step(string message)
+            public Step(string message, int threadId)
             {
-                ManagedThreadId = Thread.CurrentThread.ManagedThreadId;
                 Message = message;
+                ManagedThreadId = threadId;
             }
 
             public int ManagedThreadId { get; }
