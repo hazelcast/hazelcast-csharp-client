@@ -110,8 +110,9 @@ namespace Hazelcast.Models
 
         public static bool TryParse(string s, CultureInfo cultureInfo, out HBigDecimal bigDecimal)
         {
+            // s can be null and we'll return false
             if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
-            
+
             bigDecimal = default;
             if (s == null)
                 return false;

@@ -29,6 +29,11 @@ namespace Hazelcast.Core
         /// <param name="name">The name of the value to retrieve.</param>
         /// <returns>A <see cref="Guid"/> value.</returns>
         public static Guid GetGuid(this SerializationInfo info, string name)
-            => (Guid)(info?.GetValue(name, typeof(Guid)) ?? throw new SerializationException());
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
+            // GetValue either returns a Guid or throws, so the cast is safe
+            return (Guid) info.GetValue(name, typeof (Guid));
+        }
     }
 }

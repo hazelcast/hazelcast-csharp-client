@@ -32,12 +32,7 @@ namespace Hazelcast.Protocol
         //
         // NUnit for instance does not rely on ToString() but has its own way of
         // displaying exceptions, which omits the Error and Retryable properties,
-        // unless we also store them as data
-        //
-        private RemoteError _error;
-        private bool _retryable;
-        private Guid _memberId;
-        private string _serverStackTrace;
+        // unless we also store them as data in Data[] !!
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastException"/> class.
@@ -165,8 +160,8 @@ namespace Hazelcast.Protocol
         /// </summary>
         public Guid MemberId
         {
-            get => _memberId;
-            set => Data[nameof(MemberId)] = _memberId = value;
+            get => (Guid) Data[nameof(MemberId)];
+            set => Data[nameof(MemberId)] = value;
         }
 
         /// <summary>
@@ -174,8 +169,8 @@ namespace Hazelcast.Protocol
         /// </summary>
         public RemoteError Error
         {
-            get => _error;
-            set => Data[nameof(Error)] = _error = value;
+            get => (RemoteError) Data[nameof(Error)];
+            set => Data[nameof(Error)] = value;
         }
 
         /// <summary>
@@ -183,8 +178,8 @@ namespace Hazelcast.Protocol
         /// </summary>
         public bool Retryable
         {
-            get => _retryable;
-            set => Data[nameof(Retryable)] = _retryable = value;
+            get => (bool) Data[nameof(Retryable)];
+            set => Data[nameof(Retryable)] = value;
         }
 
         /// <summary>
@@ -192,8 +187,8 @@ namespace Hazelcast.Protocol
         /// </summary>
         public string ServerStackTrace
         {
-            get => _serverStackTrace;
-            set => Data[nameof(ServerStackTrace)] = _serverStackTrace = value;
+            get => (string) Data[nameof(ServerStackTrace)];
+            set => Data[nameof(ServerStackTrace)] = value;
         }
 
         /// <inheritdoc />
