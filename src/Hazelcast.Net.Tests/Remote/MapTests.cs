@@ -418,8 +418,10 @@ namespace Hazelcast.Tests.Remote
 
             Assert.AreEqual(0, s.Count);
 
-            // TODO: is there a way to get 'all'?
-            //var all = await map.GetAsync().CAF();
+            var allEntries = await map.GetEntriesAsync().CfAwait();
+            Assert.That(allEntries.Count, Is.EqualTo(100));
+            foreach (var (key, value) in allEntries)
+                Assert.That(key, Is.EqualTo($"key{value}"));
         }
 
         [Test]
