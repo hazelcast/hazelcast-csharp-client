@@ -39,7 +39,7 @@ If the result is enumerated with `await foreach`, the pattern guarantees that th
 With other patterns, it is important to ensure that, in the event of a cancellation, the result is always disposed. This can be achieved by wrapping the `ISqlQueryResult` in a `using` block:
 
 ```csharp
-await using result = await client.Sql.ExecuteQueryAsync(...);
+await using var result = await client.Sql.ExecuteQueryAsync(...);
 ```
 
 ### Sql Commands
