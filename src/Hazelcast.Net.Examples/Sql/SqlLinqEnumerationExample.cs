@@ -47,25 +47,28 @@ namespace Hazelcast.Examples.Sql
 
             await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name}");
 
-            // Get first 5 results
-            var batchOf5 = await result
+            var items = await result
                 .Select(row => (key: row.GetKey<int>(), value: row.GetValue<string>()))
-                .Take(5)
                 .ToListAsync();
 
             var count = 0;
-            foreach (var (key, value) in batchOf5)
+            foreach (var (key, value) in items)
                 logger.LogInformation("Row #{RowCount}: {RowKey}, {RowValue}", ++count, key, value);
 
-            // Get next 5 results
-            // ISqlQueryResult doesn't support restarting enumeration,
-            // so it will continue where previous one ended
-            batchOf5 = await result
-                .Select(row => (key: row.GetKey<int>(), value: row.GetValue<string>()))
-                .ToListAsync();
+            // note: one might want to do something link:
 
-            foreach (var (key, value) in batchOf5)
-                logger.LogInformation("Row #{RowCount}: {RowKey}, {RowValue}", ++count, key, value);
+            //// Get first 5 results
+            //var batchOf5 = await result
+            //    .Select(row => (key: row.GetKey<int>(), value: row.GetValue<string>()))
+            //    .Take(5)
+            //    .ToListAsync();
+            //
+            //// Get next 5 results
+            //batchOf5 = await result
+            //    .Select(row => (key: row.GetKey<int>(), value: row.GetValue<string>()))
+            //    .ToListAsync();
+            //
+            // BUT: this cannot work because the result of a query cannot be enumerated more than once.
         }
     }
 }
