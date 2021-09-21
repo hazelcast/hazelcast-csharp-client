@@ -91,7 +91,9 @@ namespace Hazelcast.Examples
                 var type = Type.GetType(typeName1) ?? Type.GetType(typeName2);
                 if (type == null)
                 {
-                    Console.WriteLine($"Error: could not find type {typeName1} nor {typeName2}.");
+                    Console.WriteLine(!typeName1.EndsWith("Example")
+                        ? $"Error: could not find type {typeName1} nor {typeName2}."
+                        : $"Error: could not find type {typeName1}.");
                     return;
                 }
 
