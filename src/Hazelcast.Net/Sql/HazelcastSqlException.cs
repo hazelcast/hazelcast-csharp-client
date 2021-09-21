@@ -104,13 +104,16 @@ namespace Hazelcast.Sql
         }
 
         /// <summary>
-        /// Get the identifier of the <see cref="IHazelcastClient"/> that caused the exception.
+        /// Get the identifier of the <see cref="IHazelcastClient"/>.
         /// </summary>
         public Guid ClientId { get; }
 
         /// <summary>
-        /// Gets the identifier of the member that reported the exception.
+        /// Gets the identifier of the member that reported the exception, if any, or <c>Guid.Empty</c>.
         /// </summary>
+        /// <remarks>
+        /// <para>If the exception was thrown by the client and not reported by a member, then the value is <c>Guid.Empty</c>.</para>
+        /// </remarks>
         public Guid MemberId { get; }
 
         /// <summary>
