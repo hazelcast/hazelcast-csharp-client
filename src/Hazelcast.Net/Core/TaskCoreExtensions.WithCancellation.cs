@@ -23,8 +23,8 @@ namespace Hazelcast.Core
 {
     internal static partial class TaskCoreExtensions
     {
-        public static ConfiguredCancelableAsyncEnumerable<T> WithCancellation<T>(this IAsyncEnumerable<T> enumerable, CancellationToken cancellationToken, bool throwOnCancel)
-            => new ConfiguredCancelableAsyncEnumerable<T>(enumerable, continueOnCapturedContext: true, cancellationToken, throwOnCancel);
+        public static ConfiguredCancelableAsyncEnumerable<T> WithCancellation<T>(this IAsyncEnumerable<T> enumerable, bool throwOnCancel, CancellationToken cancellationToken)
+            => new ConfiguredCancelableAsyncEnumerable<T>(enumerable, continueOnCapturedContext: true, throwOnCancel, cancellationToken);
 
         // this is a direct copy of ConfiguredAsyncEnumerable<T>
         // with added support for 'throwOnCancel'
@@ -38,7 +38,7 @@ namespace Hazelcast.Core
             private readonly bool _continueOnCapturedContext;
             public readonly bool _throwOnCancel;
 
-            internal ConfiguredCancelableAsyncEnumerable(IAsyncEnumerable<T> enumerable, bool continueOnCapturedContext, CancellationToken cancellationToken, bool throwOnCancel)
+            internal ConfiguredCancelableAsyncEnumerable(IAsyncEnumerable<T> enumerable, bool continueOnCapturedContext, bool throwOnCancel, CancellationToken cancellationToken)
             {
                 _enumerable = enumerable;
                 _continueOnCapturedContext = continueOnCapturedContext;
@@ -51,14 +51,14 @@ namespace Hazelcast.Core
             /// <returns>The configured enumerable.</returns>
             /// <remarks>This will replace any previous value set by <see cref="ConfigureAwait(bool)"/> for this iteration.</remarks>
             public ConfiguredCancelableAsyncEnumerable<T> ConfigureAwait(bool continueOnCapturedContext) =>
-                new ConfiguredCancelableAsyncEnumerable<T>(_enumerable, continueOnCapturedContext, _cancellationToken, _throwOnCancel);
+                new ConfiguredCancelableAsyncEnumerable<T>(_enumerable, continueOnCapturedContext, _throwOnCancel, _cancellationToken);
 
             /// <summary>Sets the <see cref="CancellationToken"/> to be passed to <see cref="IAsyncEnumerable{T}.GetAsyncEnumerator(CancellationToken)"/> when iterating.</summary>
             /// <param name="cancellationToken">The <see cref="CancellationToken"/> to use.</param>
             /// <returns>The configured enumerable.</returns>
             /// <remarks>This will replace any previous <see cref="CancellationToken"/> set by <see cref="WithCancellation(CancellationToken)"/> for this iteration.</remarks>
             public ConfiguredCancelableAsyncEnumerable<T> WithCancellation(CancellationToken cancellationToken) =>
-                new ConfiguredCancelableAsyncEnumerable<T>(_enumerable, _continueOnCapturedContext, cancellationToken, throwOnCancel: true);
+                new ConfiguredCancelableAsyncEnumerable<T>(_enumerable, _continueOnCapturedContext, throwOnCancel: true, cancellationToken);
 
             public Enumerator GetAsyncEnumerator() =>
                 // as with other "configured" awaitable-related type in CompilerServices, we don't null check to defend against

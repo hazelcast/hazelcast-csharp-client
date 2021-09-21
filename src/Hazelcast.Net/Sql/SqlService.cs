@@ -41,7 +41,21 @@ namespace Hazelcast.Sql
             options ??= SqlStatementOptions.Default;
             var queryId = SqlQueryId.FromMemberId(_cluster.ClientId);
 
-            var (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+            SqlRowMetadata metadata;
+            SqlPage firstPage;
+
+            try
+            {
+                (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+            }
+            catch (TaskCanceledException)
+            {
+                // maybe, the server is running the query, so better notify it
+                // for any other exception: assume that the query did not start
+
+                await CloseAsync(queryId).CfAwaitNoThrow(); // swallow the exception, nothing we can do really
+                throw;
+            }
 
             return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, cancellationToken);
         }
@@ -90,7 +104,7 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) throw new HazelcastSqlException(response.Error);
+            if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
             return response;
         }
@@ -110,7 +124,7 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) throw new HazelcastSqlException(response.Error);
+            if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
             return response.RowPage;
         }

@@ -21,8 +21,8 @@ namespace Hazelcast.Models
     /// </summary>
     public readonly struct HLocalDateTime : IEquatable<HLocalDateTime>
     {
-        public static HLocalDateTime Min = new HLocalDateTime(HLocalDate.Min, HLocalTime.Min);
-        public static HLocalDateTime Max = new HLocalDateTime(HLocalDate.Max, HLocalTime.Max);
+        public static readonly HLocalDateTime Min = new HLocalDateTime(HLocalDate.Min, HLocalTime.Min);
+        public static readonly HLocalDateTime Max = new HLocalDateTime(HLocalDate.Max, HLocalTime.Max);
 
         /// <summary>
         /// Date part represented as <see cref="HLocalDate"/>.
@@ -98,6 +98,8 @@ namespace Hazelcast.Models
         public static bool TryParse(string s, out HLocalDateTime localDateTime)
         {
             localDateTime = default;
+            if (s == null) 
+                return false;
 
             var parts = s.Split(new[] { 'T', 't' }, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length != 2)

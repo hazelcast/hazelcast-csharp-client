@@ -24,7 +24,7 @@ namespace Hazelcast.Sql
         /// </summary>
         public static readonly SqlStatementOptions Default = new SqlStatementOptions();
 
-        private string _schema = null;
+        private string _schema;
         private TimeSpan _timeout = TimeSpan.Zero;
         private int _cursorBufferSize = 4096;
 
@@ -47,7 +47,10 @@ namespace Hazelcast.Sql
             get => _schema;
             set
             {
+#pragma warning disable CA1508 // Avoid dead conditional code
+                // false positive, https://github.com/dotnet/roslyn-analyzers/issues/3685 (?)
                 if (value != null && string.IsNullOrWhiteSpace(value))
+#pragma warning restore CA1508
                     throw new ArgumentException("Empty or whitespace schema is not allowed.");
 
                 _schema = value;

@@ -46,21 +46,23 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Creates a C# exception that represents an exception that was thrown remotely on a server.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="errorHolders">Server errors.</param>
         /// <returns>An exception representing the specified server errors.</returns>
-        internal static RemoteException CreateException(IEnumerable<ErrorHolder> errorHolders)
+        internal static RemoteException CreateException(Guid memberId, IEnumerable<ErrorHolder> errorHolders)
         {
             if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
 
-            return CreateException(errorHolders.GetEnumerator());
+            return CreateException(memberId, errorHolders.GetEnumerator());
         }
 
         /// <summary>
         /// Create a C# exception that represents an exception that was thrown remotely on a server.
         /// </summary>
+        /// <param name="memberId">The unique identifier of the member that threw the exception.</param>
         /// <param name="errorHolders">Server errors.</param>
         /// <returns>An exception representing the specified server errors.</returns>
-        private static RemoteException CreateException(IEnumerator<ErrorHolder> errorHolders)
+        private static RemoteException CreateException(Guid memberId, IEnumerator<ErrorHolder> errorHolders)
         {
             if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
 
@@ -68,28 +70,24 @@ namespace Hazelcast.Clustering
                 return null;
 
             var errorHolder = errorHolders.Current;
-            if (errorHolder == null) return new RemoteException(RemoteError.Undefined);
+            if (errorHolder == null) return new RemoteException(memberId, RemoteError.Undefined);
 
-            var innerException = CreateException(errorHolders);
+            var innerException = CreateException(memberId, errorHolders);
 
             var error = RemoteError.Undefined;
             if (Enum.IsDefined(typeof(RemoteError), errorHolder.ErrorCode))
                 error = (RemoteError) errorHolder.ErrorCode;
-
             var retryable = RetryableExceptions.Contains(error);
-            var exception = new RemoteException(error, errorHolder.Message, innerException, retryable);
 
-            var sb = new StringBuilder();
+            var serverStackTrace = new StringBuilder();
             var first = true;
             foreach (var stackTraceElement in errorHolder.StackTraceElements)
             {
-                if (first) first = false;
-                else sb.AppendLine();
-                sb.Append("   ").Append(stackTraceElement);
+                if (first) first = false; else serverStackTrace.AppendLine();
+                serverStackTrace.Append("   ").Append(stackTraceElement);
             }
 
-            exception.Data.Add("server", sb.ToString());
-            return exception;
+            return new RemoteException(memberId, error, errorHolder.Message, innerException, serverStackTrace.ToString(), retryable);
         }
     }
 }

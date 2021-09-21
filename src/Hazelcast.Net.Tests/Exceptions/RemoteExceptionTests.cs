@@ -32,13 +32,13 @@ namespace Hazelcast.Tests.Exceptions
             _ = new RemoteException();
             _ = new RemoteException("exception");
             _ = new RemoteException("exception", new Exception("bang"));
-            _ = new RemoteException(RemoteError.Undefined, true);
-            _ = new RemoteException(RemoteError.Undefined, "exception");
-            _ = new RemoteException(RemoteError.Undefined, "exception", true);
-            _ = new RemoteException(RemoteError.Undefined, new Exception("bang"));
-            _ = new RemoteException(RemoteError.Undefined, "exception", new Exception("bang"));
-            _ = new RemoteException(RemoteError.Undefined, new Exception("bang"), true);
-            var e = new RemoteException(RemoteError.AccessControl, "exception", new Exception("bang"), true);
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, true);
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, "exception");
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, "exception", true);
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, new Exception("bang"));
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, "exception", new Exception("bang"));
+            _ = new RemoteException(Guid.Empty, RemoteError.Undefined, new Exception("bang"), true);
+            var e = new RemoteException(Guid.Empty, RemoteError.AccessControl, "exception", new Exception("bang"), "", true);
 
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
@@ -182,7 +182,7 @@ namespace Hazelcast.Tests.Exceptions
 
             var errorHolder = new ErrorHolder((int) error, "className", "message", stackTraceElements);
 
-            var exception = RemoteExceptions.CreateException(new[] { errorHolder });
+            var exception = RemoteExceptions.CreateException(Guid.Empty, new[] { errorHolder });
 
             throw exception;
         }
@@ -195,7 +195,7 @@ namespace Hazelcast.Tests.Exceptions
 
             var errorHolder = new ErrorHolder((int)error, "className", "message", stackTraceElements);
 
-            var exception = RemoteExceptions.CreateException(new[] { errorHolder, errorHolder });
+            var exception = RemoteExceptions.CreateException(Guid.Empty, new[] { errorHolder, errorHolder });
 
             throw exception;
         }

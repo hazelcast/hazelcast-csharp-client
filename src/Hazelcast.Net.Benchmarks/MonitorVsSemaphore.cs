@@ -22,7 +22,10 @@ namespace Hazelcast.Benchmarks
     {
         private readonly object _lock = new object();
         private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1);
-        private int i;
+
+#pragma warning disable IDE0052 // Remove unread private members - still, we want it
+        private int _i;
+#pragma warning restore IDE0052
 
         // so... semaphore would be 3x slower that plain lock
         // but plain lock cannot contain async code ;(
@@ -32,7 +35,7 @@ namespace Hazelcast.Benchmarks
         {
             lock (_lock)
             {
-                i++;
+                _i++;
             }
 
             return Task.CompletedTask;
@@ -41,8 +44,8 @@ namespace Hazelcast.Benchmarks
         [Benchmark]
         public async Task Semaphore()
         {
-            await _semaphore.WaitAsync(); //.CAF();
-            i++;
+            await _semaphore.WaitAsync(); //.CfAwait();
+            _i++;
             _semaphore.Release();
         }
     }

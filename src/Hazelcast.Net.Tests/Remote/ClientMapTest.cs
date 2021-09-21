@@ -581,15 +581,15 @@ namespace Hazelcast.Tests.Remote
             //     Assert.AreEqual(mm[pair.Key] , pair.Value);
             // }
             //
-            foreach (var pair in mm)
+            foreach (var (key, value) in mm)
             {
-                if (all.TryGetValue(pair.Key, out var val))
+                if (all.TryGetValue(key, out var val))
                 {
-                    Assert.AreEqual(val, pair.Value);
+                    Assert.AreEqual(val, value);
                 }
                 else
                 {
-                    Assert.Fail($"{pair.Key} is missing in the result");
+                    Assert.Fail($"{key} is missing in the result");
                 }
             }
         }

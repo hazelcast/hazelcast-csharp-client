@@ -17,15 +17,19 @@ using System.Linq;
 
 namespace Hazelcast.Sql
 {
+    /// <summary>
+    /// Represents columns metadata for a <see cref="SqlRow"/>.
+    /// </summary>
     public class SqlRowMetadata
     {
-        private const int ColumnNotFound = -1;
-
         private readonly IList<SqlColumnMetadata> _columns;
-
         private readonly Dictionary<string, int> _indexByName;
 
-        public SqlRowMetadata(IList<SqlColumnMetadata> columns)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="SqlRowMetadata"/> class.
+        /// </summary>
+        /// <param name="columns">All columns metadata.</param>
+        internal SqlRowMetadata(IList<SqlColumnMetadata> columns)
         {
             _columns = columns;
 
@@ -35,8 +39,23 @@ namespace Hazelcast.Sql
                 .ToDictionary(i => _columns[i].Name, i => i);
         }
 
+        /// <summary>
+        /// Gets metadata for the column at the specified index.
+        /// </summary>
+        /// <param name="index">The index.</param>
+        /// <returns>Metadata for the column at the specified index.</returns>
         public SqlColumnMetadata this[int index] => _columns[index];
-        public int GetColumnIndexByName(string name) => _indexByName[name];
+
+        /// <summary>
+        /// Gets the index of a column identified by its name.
+        /// </summary>
+        /// <param name="name">The name of the column.</param>
+        /// <returns>The index of the column matching the specified name, or -1 if no column exists with that name.</returns>
+        public int GetColumnIndexByName(string name) => _indexByName.TryGetValue(name, out var index) ? index : -1;
+
+        /// <summary>
+        /// Gets all columns metadata.
+        /// </summary>
         public IEnumerable<SqlColumnMetadata> Columns => _columns;
     }
 }
