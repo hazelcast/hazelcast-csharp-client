@@ -26,11 +26,19 @@ namespace Hazelcast.Core
     /// </summary>
     internal static class SocketExtensions
     {
+        // our own extension, not provided by any framework
+
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
             => socket.ConnectAsync(endPoint, timeoutMilliseconds, default);
 
+        // that one is provided starting with .NET 5
+
+#if !NET5_0_OR_GREATER
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
             => socket.ConnectAsync(endPoint, -1, cancellationToken);
+#endif
+
+        // our own extension, not provided by any framework
 
         public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
         {

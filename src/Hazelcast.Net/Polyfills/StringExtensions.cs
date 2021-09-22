@@ -15,9 +15,9 @@
 // ReSharper disable once CheckNamespace
 namespace System
 {
-    internal static class StringNetStandardExtensions
+    internal static class StringExtensions
     {
-#if NET462 || NETSTANDARD2_0
+#if NETFRAMEWORK || NETSTANDARD2_0
 #pragma warning disable CA1801 // Review unused parameters - we need them
 #pragma warning disable IDE0060 // Remove unused parameter
 
@@ -32,6 +32,9 @@ namespace System
 
         public static bool Contains(this string s, string value, StringComparison comparisonType)
             => s.Contains(value);
+
+        public static bool Contains(this string s, char value)
+            => s.Contains(value.ToString());
 
 #pragma warning restore CA1801
 #pragma warning restore IDE0060

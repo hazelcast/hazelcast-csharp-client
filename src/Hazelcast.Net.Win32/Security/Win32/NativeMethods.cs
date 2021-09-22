@@ -230,11 +230,7 @@ namespace Hazelcast.Security.Win32
             {
                 if (cBuffers <= 0)
                 {
-#if NETSTANDARD
                     return Array.Empty<byte>();
-#else
-                    return new byte[0];
-#endif
                 }
 
                 var bufferList = new List<byte[]>();

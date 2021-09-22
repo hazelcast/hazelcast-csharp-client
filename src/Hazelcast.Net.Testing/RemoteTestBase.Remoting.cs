@@ -13,15 +13,14 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Networking;
 using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-
-#if !NETFRAMEWORK
-using Hazelcast.Networking;
-using Hazelcast.Core;
-#endif
+using Thrift;
 
 namespace Hazelcast.Testing
 {
@@ -33,11 +32,7 @@ namespace Hazelcast.Testing
         /// Connects to the remote controller.
         /// </summary>
         /// <returns>A new remote controller client.</returns>
-        protected
-#if !NETFRAMEWORK
-            async
-#endif
-        Task<IRemoteControllerClient> ConnectToRemoteControllerAsync()
+        protected async Task<IRemoteControllerClient> ConnectToRemoteControllerAsync()
         {
             // assume we can start the RC, else mark the test as inconclusive without even trying
             // so... if starting the RC fails once, we probably have a problem (is it even running?)
@@ -46,22 +41,16 @@ namespace Hazelcast.Testing
 
             try
             {
-#if NETFRAMEWORK
-                var transport = new Thrift.Transport.TFramedTransport(new Thrift.Transport.TSocket("localhost", 9701));
-                transport.Open();
-                var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
-                return Task.FromResult(RemoteControllerClient.Create(protocol));
-#else
                 var rcHostAddress = NetworkAddress.GetIPAddressByName("localhost");
-                var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, 9701);
+                var configuration = new TConfiguration();
+                var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, 9701, configuration);
                 var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
                 if (!transport.IsOpen)
                 {
-                    await transport.OpenAsync().CfAwait();
+                    await transport.OpenAsync(CancellationToken.None).CfAwait();
                 }
                 var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
                 return RemoteControllerClient.Create(protocol);
-#endif
             }
             catch (Exception e)
             {

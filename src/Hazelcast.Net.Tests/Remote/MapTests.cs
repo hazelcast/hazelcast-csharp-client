@@ -298,11 +298,11 @@ namespace Hazelcast.Tests.Remote
             // and does not return anything
             // NOTE: no way to know whether it added or replaced?
 
-            await map.SetAsync("key", 42, TimeSpan.FromSeconds(1)).CfAwait();
+            await map.SetAsync("key", 42, TimeSpan.FromSeconds(2)).CfAwait();
             var value = await map.GetAsync("key").CfAwait();
             Assert.AreEqual(42, value);
 
-            await Task.Delay(1500); // wait for 1.5 second
+            await Task.Delay(3000); // wait for 3 second
 
             Assert.That(await map.GetAsync("key"), Is.Zero);
 

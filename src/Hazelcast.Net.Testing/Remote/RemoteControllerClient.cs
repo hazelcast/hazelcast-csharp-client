@@ -79,132 +79,62 @@ namespace Hazelcast.Testing.Remote
 
         /// <inheritdoc />
         public Task<bool> PingAsync(CancellationToken cancellationToken = default)
-            => WithLock(pingAsync, cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> pingAsync(CancellationToken cancellationToken)
-            => Task.FromResult(ping());
-#endif
+            => WithLock(ping, cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> CleanAsync(CancellationToken cancellationToken = default)
-            => WithLock(cleanAsync, cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> cleanAsync(CancellationToken cancellationToken)
-            => Task.FromResult(clean());
-#endif
+            => WithLock(clean, cancellationToken);
 
         /// <inheritdoc />
         public async Task<bool> ExitAsync(CancellationToken cancellationToken = default)
         {
-            var result = await WithLock(exitAsync, cancellationToken).CfAwait();
+            var result = await WithLock(exit, cancellationToken).CfAwait();
             InputProtocol?.Transport?.Close();
             return result;
         }
 
-#if NETFRAMEWORK
-        private Task<bool> exitAsync(CancellationToken cancellationToken)
-            => Task.FromResult(exit());
-#endif
-
         /// <inheritdoc />
         public Task<Cluster> CreateClusterAsync(string hzVersion, string xmlconfig, CancellationToken cancellationToken = default)
-            => WithLock(token => createClusterAsync(hzVersion, xmlconfig, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<Cluster> createClusterAsync(string hzVersion, string xmlconfig, CancellationToken cancellationToken)
-            => Task.FromResult(createCluster(hzVersion, xmlconfig));
-#endif
+            => WithLock(token => createCluster(hzVersion, xmlconfig, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<Member> StartMemberAsync(string clusterId, CancellationToken cancellationToken = default)
-            => WithLock(token => startMemberAsync(clusterId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<Member> startMemberAsync(string clusterId, CancellationToken cancellationToken)
-            => Task.FromResult(startMember(clusterId));
-#endif
+            => WithLock(token => startMember(clusterId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> ShutdownMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => shutdownMemberAsync(clusterId, memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> shutdownMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(shutdownMember(clusterId, memberId));
-#endif
+            => WithLock(token => shutdownMember(clusterId, memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> TerminateMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => terminateMemberAsync(clusterId, memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> terminateMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(terminateMember(clusterId, memberId));
-#endif
+            => WithLock(token => terminateMember(clusterId, memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> SuspendMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => suspendMemberAsync(clusterId, memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> suspendMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(suspendMember(clusterId, memberId));
-#endif
+            => WithLock(token => suspendMember(clusterId, memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> ResumeMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => resumeMemberAsync(clusterId, memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> resumeMemberAsync(string clusterId, string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(resumeMember(clusterId, memberId));
-#endif
+            => WithLock(token => resumeMember(clusterId, memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> ShutdownClusterAsync(string clusterId, CancellationToken cancellationToken = default)
-            => WithLock(token => shutdownClusterAsync(clusterId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> shutdownClusterAsync(string clusterId, CancellationToken cancellationToken)
-            => Task.FromResult(shutdownCluster(clusterId));
-#endif
+            => WithLock(token => shutdownCluster(clusterId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<bool> TerminateClusterAsync(string clusterId, CancellationToken cancellationToken = default)
-            => WithLock(token => terminateClusterAsync(clusterId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<bool> terminateClusterAsync(string clusterId, CancellationToken cancellationToken)
-            => Task.FromResult(terminateCluster(clusterId));
-#endif
+            => WithLock(token => terminateCluster(clusterId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<Cluster> SplitMemberFromClusterAsync(string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => splitMemberFromClusterAsync(memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<Cluster> splitMemberFromClusterAsync(string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(splitMemberFromCluster(memberId));
-#endif
+            => WithLock(token => splitMemberFromCluster(memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<Cluster> MergeMemberToClusterAsync(string clusterId, string memberId, CancellationToken cancellationToken = default)
-            => WithLock(token => mergeMemberToClusterAsync(clusterId, memberId, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<Cluster> mergeMemberToClusterAsync(string clusterId, string memberId, CancellationToken cancellationToken)
-            => Task.FromResult(mergeMemberToCluster(clusterId, memberId));
-#endif
+            => WithLock(token => mergeMemberToCluster(clusterId, memberId, token), cancellationToken);
 
         /// <inheritdoc />
         public Task<Response> ExecuteOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken = default)
-            => WithLock(token => executeOnControllerAsync(clusterId, script, lang, token), cancellationToken);
-
-#if NETFRAMEWORK
-        private Task<Response> executeOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken)
-            => Task.FromResult(executeOnController(clusterId, script, lang));
-#endif
+            => WithLock(token => executeOnController(clusterId, script, lang, token), cancellationToken);
     }
 }
