@@ -1,5 +1,30 @@
 # Getting Started
 
+## Download and Install
+
+Refer to the [Download and Install](download-install.md) to find out where to download the Hazelcast .NET Client, and how to install it.
+
+In addition, when installing in a **.NET Framework** project, some binding redirects are currently required. Although we try hard to align all our dependencies, some inconsistencies even within Microsoft's own packages mean that it is not possible to avoid redirects entirely. You can enable `<AutoGenerateBindingRedirects>` in your project file, and Visual Studio should populate your application config files with the appropriate binding redirects.
+
+Alternatively, those redirects *should* be sufficient at the moment:
+
+```xml
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Buffers" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+    <bindingRedirect oldVersion="0.0.0.0-4.0.3.0" newVersion="4.0.3.0" />
+  </dependentAssembly>
+</assemblyBinding>
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+   <bindingRedirect oldVersion="0.0.0.0-5.0.0.0" newVersion="5.0.0.0" />
+  </dependentAssembly>
+</assemblyBinding>
+```
+
+## Using the client
+
 The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static @Hazelcast.HazelcastClientFactory. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.
 
 For example:

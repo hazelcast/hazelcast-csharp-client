@@ -1,4 +1,4 @@
-# Getting Started
+# Download and Install
 
 Hazelcast is composed of two parts: the server, and the client. The client requires a working Hazelcast cluster, composed of one or more servers, in order to run. This cluster handles storage and manipulation of the user data. The client is a library which connects to the cluster, and gives access to such data.
 
@@ -33,6 +33,10 @@ Or manually added to the project as a package reference:
 ```
 <PackageReference Include="Hazelcast.NET" Version="4.0.0" />
 ```
+
+### Binding Redirects
+
+When including the `Hazelcast.NET` package in a .NET Framework project, be aware that some binding redirects may be required. Please check the [Getting Started](getting-started.md) page for details.
 
 ## Hazelcast Server
 
