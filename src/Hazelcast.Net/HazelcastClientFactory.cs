@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Runtime.InteropServices.ComTypes;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
@@ -146,10 +145,12 @@ namespace Hazelcast
             => GetNewStartingClient(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
 
         /// <summary>
+        /// Gets a new starting <see cref="IHazelcastClient"/> instance with options.
         /// </summary>
         /// <param name="options">Options.</param>
         /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A <see cref="HazelcastClientStart"/> instance which exposes the <see cref="IHazelcastClient"/> itself,
+        /// along with a <see cref="Task"/> representing the start operation.</returns>
         /// <remarks>
         /// <para>The <see cref="IHazelcastClient"/> instance is starting, but not started yet. Its start operation is represented by the returned
         /// <see cref="Task"/>, which will complete when the client has started, or when starting has failed. Trying to use the client before the

@@ -191,7 +191,7 @@ namespace Hazelcast.Clustering
                     return true;
 
                 // offline client, but still active = we can retry (should come back online)
-                case ClientOfflineException { IsActive: true }:
+                case ClientOfflineException clientOfflineException when clientOfflineException.State.IsActiveState():
                     return true;
 
                 // target disconnected protocol error is not automatically retryable,

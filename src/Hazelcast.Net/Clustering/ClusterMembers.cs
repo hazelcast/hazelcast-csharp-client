@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterMembers : IAsyncDisposable
     {
-        const int SqlConnectionRandomAttempts = 10;
+        private const int SqlConnectionRandomAttempts = 10;
 
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
@@ -720,14 +720,6 @@ namespace Hazelcast.Clustering
         {
             IEnumerable<MemberInfo> members = _members.Members;
             return liteOnly ? members.Where(x => x.IsLiteMember).ToList() : members;
-        }
-
-        // FIXME
-        public IEnumerable<(MemberInfo, bool)> GetMembers2(bool liteOnly = false)
-        {
-            IEnumerable<MemberInfo> members = _members.Members;
-            if (liteOnly) members = members.Where(x => x.IsLiteMember);
-            return members.Select(x => (x, _connections.ContainsKey(x.Id))).ToList();
         }
 
         /// <summary>

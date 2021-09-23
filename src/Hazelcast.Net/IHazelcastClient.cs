@@ -116,9 +116,6 @@ namespace Hazelcast
         /// </summary>
         IReadOnlyCollection<MemberInfoState> Members { get; }
 
-        // FIXME
-        IReadOnlyCollection<(MemberInfo, bool)> Members2 { get; }
-
         /// <summary>
         /// Begins a new transaction.
         /// </summary>

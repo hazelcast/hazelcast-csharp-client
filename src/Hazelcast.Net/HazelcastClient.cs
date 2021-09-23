@@ -142,9 +142,6 @@ namespace Hazelcast
         /// <inheritdoc />
         public IReadOnlyCollection<MemberInfoState> Members => Cluster.Members.GetMembersAndState().ToList();
 
-        // FIXME
-        public IReadOnlyCollection<(MemberInfo, bool)> Members2 => Cluster.Members.GetMembers2().ToList();
-
         /// <inheritdoc />
         public bool IsActive => Cluster.IsActive;
 

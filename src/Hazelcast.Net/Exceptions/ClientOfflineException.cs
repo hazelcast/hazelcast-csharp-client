@@ -148,13 +148,5 @@ namespace Hazelcast.Exceptions
         /// Gets the client state.
         /// </summary>
         public ClientState State { get; }
-
-        /// <summary>
-        /// Whether the <see cref="State"/> is an active state.
-        /// </summary>
-        public bool IsActive => State == ClientState.Starting ||
-                                State == ClientState.Started ||
-                                State == ClientState.Connected ||
-                                State == ClientState.Disconnected;
     }
 }
