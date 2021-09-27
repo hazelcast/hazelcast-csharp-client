@@ -48,10 +48,9 @@ namespace System.Threading.Tasks
         /// </remarks>
         public static bool IsCompletedSuccessfully(this ValueTask task)
         {
-#if NET462 || NETSTANDARD2_0
+#if NETFRAMEWORK || NETSTANDARD2_0
             return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
-#endif
-#if NETSTANDARD2_1
+#else
             return task.IsCompletedSuccessfully;
 #endif
         }
@@ -66,10 +65,9 @@ namespace System.Threading.Tasks
         /// </remarks>
         public static bool IsCompletedSuccessfully<T>(this ValueTask<T> task)
         {
-#if NET462 || NETSTANDARD2_0
+#if NETFRAMEWORK || NETSTANDARD2_0
             return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
-#endif
-#if NETSTANDARD2_1
+#else
             return task.IsCompletedSuccessfully;
 #endif
         }

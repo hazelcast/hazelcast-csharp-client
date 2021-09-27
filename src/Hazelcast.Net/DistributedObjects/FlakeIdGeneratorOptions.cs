@@ -39,28 +39,26 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <summary>
-        /// Gets the number of identifiers that are pre-fetched when a new id is requested from the cluster.
+        /// Gets or sets the number of identifiers in a pre-fetch batch.
         /// </summary>
         /// <remarks>
         /// <para>Allowed values are between <c>1</c> and <c>100000</c> inclusive, default value is <c>100</c>.</para>
+        /// <para>When an identifier is initially requested, an entire batch of identifiers is fetched from the cluster,
+        /// and this option configures the number of identifiers in such a batch.</para>
         /// </remarks>
         public int PrefetchCount { get; set; } = 100;
 
         /// <summary>
-        /// Gets the
-        /// <para>
-        /// Defines for how long the pre-fetched IDs can be used.
-        /// If this time elapsed, a new batch of IDs will be fetched.
-        /// Default value is <c>10 minutes</c>.
-        /// </para>
-        /// <para>
-        /// The IDs contain timestamp component, which ensures rough global ordering of IDs.
-        /// If an ID is assigned to an object that was created much later, it will be much out of order.
-        /// If you don't care about ordering, set this value to <see cref="Timeout.InfiniteTimeSpan"/> for unlimited ID validity.
-        /// </para>
+        /// Gets or sets the validity period of identifier batches.
         /// </summary>
         /// <remarks>
-        /// <para>FIXME</para>
+        /// <para>When an identifier is initially requested, an entire batch of identifier is fetched from the cluster.
+        /// This option configures how long these identifiers can be used, before the batch is dropped and a new
+        /// batch is fetched.</para>
+        /// <para>Fetched identifiers contain a timestamp component which ensures rough global ordering of identifiers.
+        /// If an identifier is used a long time after it was fetched, the chances it is highly out-of-order increase. Set
+        /// this option according your usage pattern. If you do not care about ordering, set this option to
+        /// <see cref="Timeout.InfiniteTimeSpan" /> to achieve infinite validty.</para>
         /// </remarks>
         public TimeSpan PrefetchValidityPeriod { get; set; } = TimeSpan.FromMinutes(10);
 
