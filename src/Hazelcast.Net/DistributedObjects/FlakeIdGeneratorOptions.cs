@@ -58,7 +58,7 @@ namespace Hazelcast.DistributedObjects
         /// <para>Fetched identifiers contain a timestamp component which ensures rough global ordering of identifiers.
         /// If an identifier is used a long time after it was fetched, the chances it is highly out-of-order increase. Set
         /// this option according your usage pattern. If you do not care about ordering, set this option to
-        /// <see cref="Timeout.InfiniteTimeSpan" /> to achieve infinite validty.</para>
+        /// <see cref="Timeout.InfiniteTimeSpan" /> to achieve infinite validity.</para>
         /// </remarks>
         public TimeSpan PrefetchValidityPeriod { get; set; } = TimeSpan.FromMinutes(10);
 
