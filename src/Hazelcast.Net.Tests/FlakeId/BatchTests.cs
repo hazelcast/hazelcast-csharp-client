@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Testing;
 using NUnit.Framework;
@@ -53,20 +54,31 @@ namespace Hazelcast.Tests.FlakeId
             Assert.IsFalse(batch.TryGetNextId(out _));
         }
 
-        [Test]
-        public async Task TryGetNextId_ValidityPeriod()
+        private class TestClockSource: IClockSource
         {
-            var timeUnit = TimeSpan.FromMilliseconds(50);
+            public DateTime Now { get; set; }
+        }
+
+        [Test]
+        public void TryGetNextId_ValidityPeriod()
+        {
+            var timeUnit = TimeSpan.FromMilliseconds(1000);
+
+            var clock = new TestClockSource();
+            using var clockOverride = Clock.Override(clock);
+
+            clock.Now = DateTime.UtcNow;
 
             var batch = new Batch(0, 1, int.MaxValue, timeUnit);
             Assert.IsTrue(batch.TryGetNextId(out _));
             Assert.IsTrue(batch.TryGetNextId(out _));
 
-            await Task.Delay(timeUnit);
+            clock.Now += timeUnit;
+            clock.Now += TimeSpan.FromMilliseconds(1);
             Assert.IsFalse(batch.TryGetNextId(out _));
             Assert.IsFalse(batch.TryGetNextId(out _));
 
-            await Task.Delay(timeUnit);
+            clock.Now += TimeSpan.FromMilliseconds(1);
             Assert.IsFalse(batch.TryGetNextId(out _));
             Assert.IsFalse(batch.TryGetNextId(out _));
         }

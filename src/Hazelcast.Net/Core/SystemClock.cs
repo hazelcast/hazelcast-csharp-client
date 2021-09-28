@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 
-namespace Hazelcast.Testing
+namespace Hazelcast.Core
 {
-    public class Disposable : IDisposable
+    /// <summary>
+    /// Implements an <see cref="IClockSource"/> using the system clock.
+    /// </summary>
+    internal class SystemClock : IClockSource
     {
-        private readonly Action _action;
-
-        public Disposable(Action action)
-        {
-            _action = action;
-        }
-
-        public void Dispose()
-        {
-            _action();
-        }
+        public DateTime Now => DateTime.UtcNow;
     }
 }
