@@ -180,16 +180,13 @@ namespace Hazelcast.Clustering
                         _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
                         _connected = true;
                     }
-                    else
+                    else if (_logger.IsEnabled(LogLevel.Debug))
                     {
-                        if (_logger.IsEnabled(LogLevel.Debug))
-                        {
-                            var msg = $"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}";
-                            msg += existingConnection == null
-                                ? "."
-                                : $", replacing connection {existingConnection.Id.ToShortString()} at {existingConnection.Address}.";
-                            _logger.LogDebug(msg);
-                        }
+                        var msg = $"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}";
+                        msg += existingConnection == null
+                            ? "."
+                            : $", replacing connection {existingConnection.Id.ToShortString()} at {existingConnection.Address}.";
+                        _logger.LogDebug(msg);
                     }
                 }
                 else
