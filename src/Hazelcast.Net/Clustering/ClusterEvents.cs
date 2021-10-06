@@ -413,13 +413,12 @@ namespace Hazelcast.Clustering
 
         #endregion
 
-        #region Cluster Views
+        #region Cluster Members/Partitions Views
 
         /// <summary>
         /// Clears the connection currently supporting the cluster view event, if it matches the specified <paramref name="connection"/>.
         /// </summary>
         /// <param name="connection">A connection.</param>
-        /// <returns><c>true</c> if the current connection matched the specified connection, and was cleared; otherwise <c>false</c>.</returns>
         /// <remarks>
         /// <para>If <paramref name="connection"/> was supporting the cluster view event, and was not the last connection,
         /// this starts a background task to assign another connection to support the cluster view event.</para>
@@ -439,7 +438,7 @@ namespace Hazelcast.Clustering
                 _correlatedSubscriptions.TryRemove(_clusterViewsCorrelationId, out _);
                 _clusterViewsCorrelationId = 0;
 
-                HConsole.WriteLine(this, "ClusterViews: no connection.");
+                _logger.IfDebug()?.LogDebug($"Cleared cluster views connection (was {connection.Id.ToShortString()}).");
 
                 // assign another connection (async)
                 _clusterViewsTask ??= AssignClusterViewsConnectionAsync(null, _cancel.Token);
@@ -540,7 +539,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            HConsole.WriteLine(this, "subscribe");
+            _logger.IfDebug()?.LogDebug($"Subscribe to cluster views on connection {connection.Id.ToShortString()}.");
 
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)
@@ -555,14 +554,21 @@ namespace Hazelcast.Clustering
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
-                HConsole.WriteLine(this, "Subscribed to cluster views");
+                _logger.IfDebug()?.LogDebug($"Subscribed to cluster views on connection {connection.Id.ToShortString()}.");
                 return true;
+            }
+            catch (TargetDisconnectedException)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                // if the connection has died... and that can happen when switching members... no need to worry the
+                // user with a warning, a debug message should be enough
+                _logger.IfDebug()?.LogDebug($"Failed to subscribe to cluster views on connection {connection.Id.ToShortString()} (disconnected), may retry.");
+                return false;
             }
             catch (Exception e)
             {
-                HConsole.WriteLine(this, "failed " + e);
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
-                _logger.LogWarning(e, "Failed to subscribe to cluster events, may retry.");
+                _logger.IfWarning()?.LogWarning(e, $"Failed to subscribe to cluster views on connection {connection.Id.ToShortString()}, may retry.");
                 return false;
             }
         }

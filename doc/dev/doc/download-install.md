@@ -36,7 +36,7 @@ Or manually added to the project as a package reference:
 
 ### Binding Redirects
 
-When including the `Hazelcast.NET` package in a .NET Framework project, be aware that some binding redirects may be required. Please check the [Getting Started](getting-started.md) page for details.
+When including the `Hazelcast.NET` package in a **.NET Framework** project, be aware that some binding redirects may be required. Please check the [Getting Started](getting-started.md) page for details.
 
 ## Hazelcast Server
 

@@ -72,6 +72,7 @@ namespace Hazelcast.Clustering
 #pragma warning restore CA1308
             _initialBackOffMilliseconds = initialBackOffMilliseconds;
             _maxBackOffMilliseconds = maxBackOffMilliseconds;
+            _currentBackOffMilliseconds = initialBackOffMilliseconds;
             _multiplier = multiplier;
             _timeoutMilliseconds = timeoutMilliseconds;
             _jitter = jitter;
@@ -89,6 +90,8 @@ namespace Hazelcast.Clustering
             _attempts++;
 
             var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
+
+            _logger.IfDebug()?.LogDebug($"Elapsed {elapsed}ms, timeout={_timeoutMilliseconds}ms, back-off={_currentBackOffMilliseconds}ms ({_initialBackOffMilliseconds}-{_maxBackOffMilliseconds}, m={_multiplier}, j={_jitter})");
 
             if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
             {

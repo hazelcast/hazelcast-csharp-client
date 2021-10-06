@@ -21,6 +21,8 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 using MemberInfo = Hazelcast.Models.MemberInfo;
@@ -39,7 +41,7 @@ namespace Hazelcast.Clustering
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
 
-        // address -> connection
+        // member id -> connection
         // TODO: consider we are duplicating this with members?
         private readonly ConcurrentDictionary<Guid, MemberConnection> _connections = new ConcurrentDictionary<Guid, MemberConnection>();
 
@@ -79,17 +81,16 @@ namespace Hazelcast.Clustering
 
         #region Connect Members
 
-        private async Task<(bool, bool, Exception)> EnsureConnectionInternalAsync(MemberInfo member, CancellationToken token, CancellationToken cancellationToken)
+        private async Task<(bool, bool, Exception)> EnsureConnectionInternalAsync(MemberInfo member, CancellationToken cancellationToken)
         {
             Exception exception = null;
             var wasCanceled = false;
 
-            using var source = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, token);
-
             try
             {
-                var attempt = await EnsureConnectionAsync(member, source.Token).CfAwait();
+                var attempt = await EnsureConnectionAsync(member, cancellationToken).CfAwait();
                 if (attempt) return (true, false, null);
+                exception = attempt.Exception;
             }
             catch (OperationCanceledException)
             {
@@ -106,12 +107,18 @@ namespace Hazelcast.Clustering
         // background task that connect members
         private async Task ConnectMembers(CancellationToken cancellationToken)
         {
-            await foreach(var (member, token) in _clusterMembers.MembersToConnect.WithCancellation(cancellationToken))
+            await foreach(var connectionRequest in _clusterMembers.MemberConnectionRequests.WithCancellation(cancellationToken))
             {
+                var member = connectionRequest.Member;
+
                 _logger.LogDebug($"Ensure client {_clusterState.ClientName} is connected to member {member.Id.ToShortString()} at {member.ConnectAddress}.");
 
-                var (ensured, wasCanceled, exception) = await EnsureConnectionInternalAsync(member, token, cancellationToken).CfAwait();
-                if (ensured) continue;
+                var (success, wasCanceled, exception) = await EnsureConnectionInternalAsync(member, cancellationToken).CfAwait();
+                if (success)
+                {
+                    connectionRequest.Complete(success: true);
+                    continue;
+                }
 
                 if (_disposed > 0)
                 {
@@ -120,10 +127,22 @@ namespace Hazelcast.Clustering
                 else
                 {
                     var details = wasCanceled ? "canceled" : "failed";
+                    if (exception is RemoteException { Error : RemoteError.HazelcastInstanceNotActive })
+                    {
+                        exception = null;
+                        details = "failed (member is not active)";
+                    }
+                    else if (exception is TimeoutException)
+                    {
+                        exception = null;
+                        details = "failed (socket timeout)";
+                    }
+                    else if (exception != null)
+                        details = $"failed ({exception.GetType()}: {exception.Message})";
                     _logger.LogWarning(exception, $"Could not connect to member {member.Id.ToShortString()} at {member.ConnectAddress}: {details}.");
-
-                    _clusterMembers.FailedToConnect(member);
                 }
+
+                connectionRequest.Complete(success: false);
             }
         }
 
@@ -260,14 +279,31 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         private async ValueTask OnConnectionClosed(MemberConnection connection)
         {
+            _logger.IfDebug()?.LogDebug($"Connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address} closed.");
+
             TaskCompletionSource<object> connectCompletion;
             lock (_mutex)
             {
                 // if the connection was not added yet, ignore
-                if (!_connections.TryRemove(connection.MemberId, out _))
+                if (!_connections.TryGetValue(connection.MemberId, out var existing))
+                {
+                    _logger.IfDebug()?.LogDebug($"Found no connection to member {connection.MemberId.ToShortString()}, ignore.");
                     return;
+                }
 
-                // else get its 'connect' completion source
+                // must be matching, might have been replaced
+                if (existing.Id == connection.Id)
+                {
+                    // else remove (safe, mutex)
+                    _connections.TryRemove(connection.MemberId, out _);
+                    _logger.IfDebug()?.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}.");
+                }
+                else
+                {
+                    _logger.IfDebug()?.LogDebug($"Connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} already replaced by {existing.Id.ToShortString()}.");
+                }
+
+                // and get its 'connect' completion source
                 _completions.TryGetValue(connection, out connectCompletion);
             }
 
@@ -455,10 +491,25 @@ namespace Hazelcast.Clustering
 
                         if (attempt.HasException) // else gather exceptions
                         {
-                            exceptions ??= new List<Exception>();
-                            exceptions.Add(attempt.Exception);
+                            if (attempt.Exception is RemoteException { Error: RemoteError.HazelcastInstanceNotActive })
+                            {
+                                _logger.LogDebug($"Failed to connect to address {address} (member is not active).");
+                            }
+                            else if (attempt.Exception is TimeoutException)
+                            {
+                                _logger.LogDebug($"Failed to connect to address {address} (socket timeout).");
+                            }
+                            else
+                            {
+                                exceptions ??= new List<Exception>();
+                                exceptions.Add(attempt.Exception);
 
-                            _logger.LogDebug(attempt.Exception, "Connection attempt has thrown.");
+                                _logger.LogDebug(attempt.Exception, $"Failed to connect to address {address}.");
+                            }
+                        }
+                        else
+                        {
+                            _logger.LogDebug($"Failed to connect to address {address}.");
                         }
                     }
                 }
@@ -494,7 +545,7 @@ namespace Hazelcast.Clustering
 
             } while (canRetry);
 
-            var aggregate = new AggregateException(exceptions);
+            var aggregate = exceptions == null ? null : new AggregateException(exceptions);
 
             // canceled exception?
             if (cancellationToken.IsCancellationRequested)
@@ -560,14 +611,11 @@ namespace Hazelcast.Clustering
 
                 if (connection.Address == member.ConnectAddress)
                 {
-                    // TODO: wherever we LogDebug an interpolated $"" string we *must* do this check, for performances reasons!
-                    if (_logger.IsDebugEnabled())
-                        _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}.");
+                    _logger.IfDebug()?.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}.");
                     return Attempt.If(active, connection);
                 }
 
-                if (_logger.IsDebugEnabled())
-                    _logger.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}, but member address is {member.ConnectAddress}.");
+                _logger.IfDebug()?.LogDebug($"Found {(active ? "" : "non-")}active connection {connection.Id.ToShortString()} from client {_clusterState.ClientName} to member {member.Id.ToShortString()} at {connection.Address}, but member address is {member.ConnectAddress}.");
             }
 
             // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
@@ -582,8 +630,7 @@ namespace Hazelcast.Clustering
             {
                 // else actually connect
                 // this may throw
-                if (_logger.IsDebugEnabled())
-                    _logger.LogDebug($"Client {_clusterState.ClientName} is not connected to member {member.Id.ToShortString()} at {member.ConnectAddress}, connecting.");
+                _logger.IfDebug()?.LogDebug($"Client {_clusterState.ClientName} is not connected to member {member.Id.ToShortString()} at {member.ConnectAddress}, connecting.");
 
 #pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
                 var memberConnection = await ConnectAsync(member.ConnectAddress, cancellationToken).CfAwait();
@@ -717,6 +764,7 @@ namespace Hazelcast.Clustering
                 // finally, add the connection
                 if (accepted)
                 {
+                    _logger.IfDebug()?.LogDebug($"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}.");
                     _connections[connection.MemberId] = connection;
                     _completions[connection] = new TaskCompletionSource<object>(TaskCreationOptions.RunContinuationsAsynchronously);
                 }

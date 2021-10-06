@@ -326,10 +326,7 @@ namespace Hazelcast.Clustering
         /// connected. It may make sense to retry operations that fail, because they
         /// should succeed when the cluster is eventually connected.</para>
         /// </remarks>
-        public bool IsActive => ClientState == ClientState.Starting ||
-                                ClientState == ClientState.Started ||
-                                ClientState == ClientState.Connected ||
-                                ClientState == ClientState.Disconnected;
+        public bool IsActive => ClientState.IsActiveState();
 
         /// <summary>
         /// Throws a <see cref="ClientOfflineException"/> if the cluster is not active.
@@ -351,7 +348,6 @@ namespace Hazelcast.Clustering
             var clientState = ClientState;
             if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
             return new ClientOfflineException(clientState);
-
         }
 
         /// <summary>

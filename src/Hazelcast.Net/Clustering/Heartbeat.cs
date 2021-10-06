@@ -65,13 +65,11 @@ namespace Hazelcast.Clustering
             {
                 var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
                 _logger.LogWarning("Heartbeat timeout {Timeout}ms is <= period {Period}ms, falling back to a {Value}ms timeout.",
-                    _timeout, _period.TotalMilliseconds, timeout);
+                    (int)_timeout.TotalMilliseconds, (int)_period.TotalMilliseconds, (int)timeout.TotalMilliseconds);
                 _timeout = timeout;
             }
 
-            _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout",
-                _period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture),
-                _timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture));
+            _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", (int)_period.TotalMilliseconds, (int)_timeout.TotalMilliseconds);
 
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
 
@@ -130,7 +128,7 @@ namespace Hazelcast.Clustering
             {
                 await Task.Delay(_period, cancellationToken).CfAwait();
                 if (cancellationToken.IsCancellationRequested) break;
-                HConsole.WriteLine(this, $"Run with period={(int)_period.TotalSeconds}s, timeout={(int)_timeout.TotalSeconds}s");
+                HConsole.WriteLine(this, $"Run with period={_period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}, timeout={_timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}");
                 await RunAsync(cancellationToken).CfAwait();
             }
         }
@@ -197,7 +195,7 @@ namespace Hazelcast.Clustering
             // this should trigger a read when we receive the response
             if (writeElapsed > _period)
             {
-                _logger.LogDebug("Ping client {ClientId}", connection.Id.ToShortString());
+                _logger.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
 

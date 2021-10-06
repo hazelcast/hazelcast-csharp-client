@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
@@ -33,6 +34,12 @@ namespace Hazelcast.Core
         private T _current;
         private bool _completed;
 
+        // it is possible that
+        // 1. WaitAsync returns true, and an item is made current
+        // 2. the queue is drained
+        // 3. current is processed
+        // in other words, draining only removes items that have not been waited already
+
         /// <summary>
         /// Drains the queue.
         /// </summary>
@@ -44,8 +51,10 @@ namespace Hazelcast.Core
         /// </remarks>
         public void Drain()
         {
+            // lock writes
             lock (_lock)
             {
+                // dequeue all items
                 while (_items.TryDequeue(out _))
                 { }
             }
@@ -60,16 +69,20 @@ namespace Hazelcast.Core
         {
             TaskCompletionSource<bool> waiting = null;
 
+            // lock writes
             lock (_lock)
             {
                 if (_completed) return false;
 
                 if (_waiting == null)
                 {
+                    // if not waiting for an item, just enqueue it
                     _items.Enqueue(item);
                 }
                 else
                 {
+                    // if waiting for an item, make the item the current item
+                    // and succeed the wait
                     _current = item;
                     waiting = _waiting;
                     _waiting = null;
@@ -91,6 +104,7 @@ namespace Hazelcast.Core
         {
             TaskCompletionSource<bool> waiting;
 
+            // lock writes
             lock (_lock)
             {
                 _completed = true;
@@ -99,7 +113,22 @@ namespace Hazelcast.Core
                 _reg.Dispose();
             }
 
+            // in case we were waiting, fail the wait
             waiting?.TrySetResult(false);
+        }
+
+        /// <summary>
+        /// Applies an action to each item in the queue.
+        /// </summary>
+        /// <param name="action">The action to apply.</param>
+        /// <remarks>
+        /// <para>The queue is locked while the action is applied: no items can be added, nor removed. </para>
+        /// </remarks>
+        public void ForEach(Action<T> action)
+        {
+            lock (_lock) // FIXME current item?
+                foreach (var item in _items)
+                    action(item);
         }
 
         // there is going to be only 1 reader pumping items out and processing them
@@ -114,17 +143,22 @@ namespace Hazelcast.Core
         /// <returns><c>true</c> if an item is available; otherwise (the queue is complete) <c>false</c>.</returns>
         public ValueTask<bool> WaitAsync(CancellationToken cancellationToken = default)
         {
+            // if there is an item in the queue, return it immediately and synchronously
             if (_items.TryDequeue(out _current))
                 return new ValueTask<bool>(true);
 
+            // else, lock writes
             lock (_lock)
             {
+                // (again)
                 if (_items.TryDequeue(out _current))
                     return new ValueTask<bool>(true);
 
+                // if completed, fail
                 if (_completed)
                     return new ValueTask<bool>(false);
 
+                // create the waiting task
                 _waiting = new TaskCompletionSource<bool>();
                 _reg = cancellationToken.Register(() => _waiting.TrySetCanceled());
                 return new ValueTask<bool>(_waiting.Task);
@@ -132,9 +166,9 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Reads the available item.
+        /// Reads the last available item.
         /// </summary>
-        /// <returns>The available item, or <c>default(T)</c> if no item is available.</returns>
+        /// <returns>The last available item, if any, or <c>default(T)</c>.</returns>
         public T Read()
         {
             return _current;

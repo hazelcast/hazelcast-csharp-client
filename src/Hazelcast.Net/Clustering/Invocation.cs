@@ -190,6 +190,10 @@ namespace Hazelcast.Clustering
                 case RemoteException { Retryable: true }:
                     return true;
 
+                // offline client, but still active = we can retry (should come back online)
+                case ClientOfflineException clientOfflineException when clientOfflineException.State.IsActiveState():
+                    return true;
+
                 // target disconnected protocol error is not automatically retryable,
                 // because we need to perform more checks on the client and message
                 case RemoteException { Error: RemoteError.TargetDisconnected }:
@@ -215,7 +219,8 @@ namespace Hazelcast.Clustering
             cancellationToken.ThrowIfCancellationRequested();
 
             // fast fail on timeout
-            if (Clock.Milliseconds - StartTime > _messagingOptions.RetryTimeoutSeconds * 1000)
+            var elapsedMilliseconds = (int) (Clock.Milliseconds - StartTime);
+            if (elapsedMilliseconds > _messagingOptions.RetryTimeoutSeconds * 1000)
                 throw new TaskTimeoutException($"Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).");
 
             _attemptsCount += 1;
@@ -230,17 +235,24 @@ namespace Hazelcast.Clustering
                 return default;
             }
 
-            return WaitRetryAsync2(cancellationToken);
+            return WaitRetryAsync2(elapsedMilliseconds, cancellationToken);
         }
 
-        private async ValueTask WaitRetryAsync2(CancellationToken cancellationToken)
+        private async ValueTask WaitRetryAsync2(int elapsedMilliseconds, CancellationToken cancellationToken)
         {
             // otherwise, slow retry (delay)
 
             // implement some rudimentary increasing delay based on the number of attempts
             // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
-            // we *may* want to tweak this? and use an IRetryStrategy?
+            // TODO: this is the original v4 implementation, can we do better (use an IRetryStrategy)?
             var delayMilliseconds = Math.Max(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
+
+            // but no more than the remaining milliseconds before timeout (if any)
+            var remainingMilliseconds = _messagingOptions.RetryTimeoutSeconds * 1000 - elapsedMilliseconds;
+            if (remainingMilliseconds <= 0)
+                throw new TaskTimeoutException($"Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).");
+            delayMilliseconds = Math.Min(delayMilliseconds, remainingMilliseconds);
+
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, cancellationToken).CfAwait(); // throws if cancelled
 
             InitializeNewCompletionSource();
