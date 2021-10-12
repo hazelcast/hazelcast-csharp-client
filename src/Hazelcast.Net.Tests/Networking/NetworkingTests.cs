@@ -506,10 +506,9 @@ namespace Hazelcast.Tests.Networking
             await Task.Delay(100).CfAwait();
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
+        [Test]
         [Timeout(10_000)]
-        public async Task ServerShutdown(bool reconnect)
+        public async Task ServerShutdown([Values] bool reconnect, [Values] bool previewOptions)
         {
             var address = NetworkAddress.Parse("127.0.0.1:11000");
 
@@ -523,9 +522,19 @@ namespace Hazelcast.Tests.Networking
 
             var options = new HazelcastOptionsBuilder().With(options =>
             {
+                if (previewOptions)
+                {
+                    options.Preview.EnableNewReconnectOptions = true;
+                    options.Preview.EnableNewRetryOptions = true;
+                    options.Networking.Reconnect = reconnect;
+                }
+                else
+                {
+                    if (reconnect) options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                }
+
                 options.Networking.Addresses.Add("127.0.0.1:11000");
                 options.Messaging.RetryTimeoutSeconds = 1; // fail fast!
-                options.Networking.Reconnect = reconnect;
             }).Build();
 
             HConsole.WriteLine(this, "Start client 1");

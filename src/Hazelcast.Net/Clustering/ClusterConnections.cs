@@ -241,13 +241,35 @@ namespace Hazelcast.Clustering
             }
 
             // the cluster is disconnected, but not down
-            _logger.LogInformation("Disconnected (reconnect == {Reconnect} => {ReconnectAction})",
+            bool reconnect;
+            if (_clusterState.Options.Networking.Preview.EnableNewReconnectOptions)
+            {
+                reconnect = _clusterState.Options.Networking.Reconnect;
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
 #pragma warning disable CA1308 // Normalize strings to uppercase - we are not normalizing here
-                _clusterState.Options.Networking.Reconnect.ToString().ToLowerInvariant(),
+                    var option = _clusterState.Options.Networking.Reconnect.ToString().ToLowerInvariant();
 #pragma warning restore CA1308
-                _clusterState.Options.Networking.Reconnect ? "reconnect" : "shut down");
+                    var action = reconnect ? "reconnect" : "shut down";
+                    _logger.LogInformation($"Disconnected (reconnect == {option} => {action})");
+                }
+            }
+            else
+            {
+                reconnect = _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectAsync ||
+                            _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectSync;
+                _logger.LogInformation("Disconnected (reconnect mode == {ReconnectMode} => {ReconnectAction})",
+                    _clusterState.Options.Networking.ReconnectMode,
+                    _clusterState.Options.Networking.ReconnectMode switch
+                    {
+                        ReconnectMode.DoNotReconnect => "shut down",
+                        ReconnectMode.ReconnectSync => "reconnect (synchronously)",
+                        ReconnectMode.ReconnectAsync => "reconnect (asynchronously)",
+                        _ => "meh?"
+                    });
+            }
 
-            if (_clusterState.Options.Networking.Reconnect)
+            if (reconnect)
             {
                 // reconnect via a background task
                 // operations will either retry until timeout, or fail

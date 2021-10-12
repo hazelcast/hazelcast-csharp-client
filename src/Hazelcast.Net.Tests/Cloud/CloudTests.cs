@@ -65,8 +65,9 @@ namespace Hazelcast.Tests.Cloud
         private const int IterationCount = 60;
         private const int IterationPauseMilliseconds = 100;
 
-        [Test]
-        public async Task SampleClient()
+        [TestCase(true)]
+        [TestCase(false)]
+        public async Task SampleClient(bool previewOptions)
         {
             using var _ = HConsoleForTest();
 
@@ -85,6 +86,17 @@ namespace Hazelcast.Tests.Cloud
 
             // enable metrics
             options.Metrics.Enabled = true;
+
+            // enable reconnection
+            if (previewOptions)
+            {
+                options.Preview.EnableNewReconnectOptions = true;
+                options.Preview.EnableNewRetryOptions = true;
+            }
+            else
+            {
+                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+            }
 
             // instead of using Visual Studio secrets, configuration via code is
             // possible, by uncommenting some of the blocks below - however, this

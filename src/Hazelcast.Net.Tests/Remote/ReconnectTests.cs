@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -20,6 +21,7 @@ using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Configuration;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
@@ -37,20 +39,42 @@ namespace Hazelcast.Tests.Remote
                 .Configure<ReconnectTests>().SetPrefix("TEST").SetMaxLevel()
             );
 
+        private readonly List<Member> _members = new List<Member>();
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            // TODO: this should be built-in
+            //await RcClient.StopAllMembersAsync(RcCluster);
+            foreach (var member in _members)
+                await RcClient.StopMemberAsync(RcCluster, member);
+        }
+
         [Test]
-        public async Task ReconnectAsync()
+        public async Task ReconnectAsync([Values] bool previewOptions)
         {
             using var _ = HConsoleForTest();
 
             // add one member
 
             var member = await RcClient.StartMemberAsync(RcCluster);
+            _members.Add(member);
 
             // connect & use a client
 
             var options = new HazelcastOptionsBuilder()
                 .With((configuration, o) =>
                 {
+                    if (previewOptions)
+                    {
+                        o.Preview.EnableNewReconnectOptions = true;
+                        o.Preview.EnableNewRetryOptions = true;
+                    }
+                    else
+                    {
+                        o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                    }
+
                     o.ClusterName = RcCluster.Id;
 
                     o.Networking.Addresses.Clear();
@@ -84,6 +108,7 @@ namespace Hazelcast.Tests.Remote
 
             HConsole.WriteLine(this, "Stop member");
             await RcClient.StopMemberWaitClosedAsync(client, RcCluster, member);
+            _members.Remove(member);
 
             // using the client throws
             // and the client is frantically trying to reconnect
@@ -99,6 +124,7 @@ namespace Hazelcast.Tests.Remote
 
             HConsole.WriteLine(this, "Start member");
             member = await RcClient.StartMemberAsync(RcCluster);
+            _members.Add(member);
 
             // use the client
             // initially, it should keep throwing, but eventually it should work
@@ -118,3 +144,4 @@ namespace Hazelcast.Tests.Remote
         }
     }
 }
+
