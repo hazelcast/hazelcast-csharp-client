@@ -132,7 +132,9 @@ namespace Hazelcast.Clustering
         /// <param name="memberId">The identifier of the member.</param>
         public void Remove(Guid memberId)
         {
-            // cancel all corresponding requests
+            // cancel all corresponding requests - see notes in AsyncQueue, this is best-effort,
+            // a member that we want to remove *may* end up being enumerated, and we're going to
+            // to to connect to it, and either fail, or drop the connection - accepted tradeoff
             lock (_mutex) _requests.ForEach(m =>
             {
                 if (m.Member.Id == memberId) m.Cancel();
@@ -164,7 +166,7 @@ namespace Hazelcast.Clustering
             {
                 if (_cancellation.IsCancellationRequested) return false;
 
-                // only one enumerator at a time
+                // if this is the first call, validate that we are only enumerating once at a time & create the enumerator
                 if (_queueRequestsEnumerator == null)
                 {
                     var acquired = await _queue._enumerate.WaitAsync(TimeSpan.Zero, default).CfAwait();
@@ -172,25 +174,38 @@ namespace Hazelcast.Clustering
                     _queueRequestsEnumerator = _queue._requests.GetAsyncEnumerator(_cancellation.Token);
                 }
 
+                // there is only one consumer, and the consumer *must* complete a request before picking a new one
+                if (_queue._request != null && !_queue._request.Completed)
+                {
+                    throw new InvalidOperationException("Cannot move to next request if previous request has not completed.");
+                }
+
+                // loop until we have a valid request to return, because we may dequeue nulls or cancelled members
                 while (!_cancellation.IsCancellationRequested)
                 {
+                    // dequeue a request
                     if (!await _queueRequestsEnumerator.MoveNextAsync().CfAwait())
                         return false;
 
                     while (!_cancellation.IsCancellationRequested)
                     {
+                        // if not suspended, make that request the current one and return - this request is not in the queue
+                        // anymore, it's going to be processed no matter what even if the queue is drained or the member is
+                        // removed, and then the established connection (if any) will be dropped
                         lock (_queue._mutex)
                         {
                             if (!_queue._suspended)
                             {
                                 var request = _queueRequestsEnumerator.Current;
-                                if (request.Member == null || request.Cancelled) continue;
+                                if (request.Member == null || request.Cancelled) break; // that request is to be skipped
                                 request.Failed += (r, _) => _queue.ConnectionFailed?.Invoke(_queue, ((MemberConnectionRequest)r).Member);
                                 _queue._request = request;
                                 return true;
                             }
                         }
 
+                        // if we reach this point, we did not return nor break = the queue was suspended, wait until it is released
+                        // and then loop within the nested while => the dequeued request will be considered again
                         await _queue._resume.WaitAsync(_cancellation.Token).CfAwaitCanceled();
                     }
                 }

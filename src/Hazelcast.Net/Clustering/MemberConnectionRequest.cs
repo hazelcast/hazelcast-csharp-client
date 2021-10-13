@@ -22,14 +22,13 @@ namespace Hazelcast.Clustering
     {
         private readonly object _mutex = new object();
         private TaskCompletionSource<object> _completionSource;
-        private bool _completed;
 
         public MemberConnectionRequest(MemberInfo member)
         {
             Member = member;
             Cancelled = false;
+            Completed = false;
             _completionSource = null;
-            _completed = false;
         }
 
         public MemberInfo Member { get; }
@@ -37,6 +36,8 @@ namespace Hazelcast.Clustering
         public event EventHandler Failed;
 
         public bool Cancelled { get; private set; }
+
+        public bool Completed { get; private set; }
 
         public void Cancel()
         {
@@ -51,7 +52,7 @@ namespace Hazelcast.Clustering
 
             lock (_mutex)
             {
-                _completed = true;
+                Completed = true;
                 _completionSource?.TrySetResult(null);
             }
         }
@@ -62,7 +63,7 @@ namespace Hazelcast.Clustering
             {
                 lock (_mutex)
                 {
-                    if (_completed) return default;
+                    if (Completed) return default;
                     _completionSource = new TaskCompletionSource<object>();
                 }
                 return new ValueTask(_completionSource.Task);
