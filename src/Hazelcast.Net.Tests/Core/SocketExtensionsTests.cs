@@ -117,7 +117,8 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ConnectAsyncTimeout1()
         {
-            var endpoint = NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint;
+            // use an external IP that is not going to answer on port 5701
+            var endpoint = NetworkAddress.Parse("8.8.8.8:5701").IPEndPoint;
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Assert.ThrowsAsync<TimeoutException>(async () =>
@@ -130,7 +131,8 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ConnectAsyncTimeout2()
         {
-            var endpoint = NetworkAddress.Parse("www.hazelcast.com:5701").IPEndPoint;
+            // use an external IP that is not going to answer on port 5701
+            var endpoint = NetworkAddress.Parse("8.8.8.8:5701").IPEndPoint;
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             Assert.ThrowsAsync<TimeoutException>(async () =>

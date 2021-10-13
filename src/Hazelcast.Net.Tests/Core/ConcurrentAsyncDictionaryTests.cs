@@ -321,7 +321,7 @@ namespace Hazelcast.Tests.Core
                 }
                 catch (Exception e)
                 {
-                    exception++;
+                    Interlocked.Increment(ref exception);
                     Assert.That(e.Message, Is.EqualTo("bogus"));
                 }
             });
@@ -335,7 +335,7 @@ namespace Hazelcast.Tests.Core
                 }
                 catch (Exception e)
                 {
-                    exception++;
+                    Interlocked.Increment(ref exception);
                     Assert.That(e.Message, Is.EqualTo("bogus"));
                 }
             });

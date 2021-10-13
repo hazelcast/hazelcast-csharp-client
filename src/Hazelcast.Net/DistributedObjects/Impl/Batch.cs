@@ -14,6 +14,7 @@
 
 using System;
 using System.Threading;
+using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
@@ -43,7 +44,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             _expires = timeout == Timeout.InfiniteTimeSpan
                 ? DateTime.MaxValue
-                : DateTime.UtcNow + timeout;
+                : Clock.Now + timeout;
         }
 
         public bool TryGetNextId(out long id)
@@ -51,7 +52,7 @@ namespace Hazelcast.DistributedObjects.Impl
             id = default;
 
             // fail if the batch has expired
-            if (_expires != DateTime.MaxValue && _expires < DateTime.UtcNow)
+            if (_expires != DateTime.MaxValue && _expires < Clock.Now)
                 return false;
 
             // fail if the batch has been fully used
