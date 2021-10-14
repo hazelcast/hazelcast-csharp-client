@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Networking;
+using Hazelcast.Testing;
 using Hazelcast.Testing.Networking;
 using NUnit.Framework;
 
@@ -59,7 +60,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncConnectionRefused1()
+        public async Task ConnectAsyncConnectionRefused1()
         {
             var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
 
@@ -70,7 +71,7 @@ namespace Hazelcast.Tests.Core
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
 
-            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
+            await AssertEx.ThrowsAsync<SocketException>(async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, -1);
@@ -78,7 +79,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncConnectionRefused2()
+        public async Task ConnectAsyncConnectionRefused2()
         {
             var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
 
@@ -89,7 +90,7 @@ namespace Hazelcast.Tests.Core
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
 
-            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
+            await AssertEx.ThrowsAsync<SocketException>(async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, -1, CancellationToken.None);
@@ -97,7 +98,7 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncConnectionRefused3()
+        public async Task ConnectAsyncConnectionRefused3()
         {
             var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
 
@@ -107,7 +108,7 @@ namespace Hazelcast.Tests.Core
             // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
             // which derives from SocketException - use a constraint so NUnit is happy
 
-            Assert.ThrowsAsync(Is.InstanceOf<SocketException>(), async () =>
+            await AssertEx.ThrowsAsync<SocketException>(async () =>
             {
                 // socket exception, connection refused
                 await socket.ConnectAsync(endpoint, CancellationToken.None);
@@ -115,13 +116,13 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncTimeout1()
+        public async Task ConnectAsyncTimeout1()
         {
             // use an external IP that is not going to answer on port 5701
             var endpoint = NetworkAddress.Parse("8.8.8.8:5701").IPEndPoint;
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<TimeoutException>(async () =>
+            await AssertEx.ThrowsAsync<TimeoutException>(async () =>
             {
                 // no time for connection to be refused, timeout exception
                 await socket.ConnectAsync(endpoint, 1);
@@ -129,13 +130,13 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void ConnectAsyncTimeout2()
+        public async Task ConnectAsyncTimeout2()
         {
             // use an external IP that is not going to answer on port 5701
             var endpoint = NetworkAddress.Parse("8.8.8.8:5701").IPEndPoint;
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            Assert.ThrowsAsync<TimeoutException>(async () =>
+            await AssertEx.ThrowsAsync<TimeoutException>(async () =>
             {
                 // no time for connection to be refused, timeout exception
                 await socket.ConnectAsync(endpoint, 1, CancellationToken.None);
