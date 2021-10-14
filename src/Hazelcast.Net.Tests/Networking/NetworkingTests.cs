@@ -537,10 +537,10 @@ namespace Hazelcast.Tests.Networking
                 options.Messaging.RetryTimeoutSeconds = 1; // fail fast!
             }).Build();
 
-            HConsole.WriteLine(this, "Start client 1");
+            HConsole.WriteLine(this, "Start client");
             await using var client1 = (HazelcastClient) await HazelcastClientFactory.StartNewClientAsync(options);
 
-            HConsole.WriteLine(this, "Send message 1 from client 1");
+            HConsole.WriteLine(this, "Send message 1 from client");
             var message = CreateMessage("ping");
             var response = await client1.Cluster.Messaging.SendAsync(message, CancellationToken.None).CfAwait();
 
@@ -550,7 +550,7 @@ namespace Hazelcast.Tests.Networking
             await server.StopAsync().CfAwait();
             await Task.Delay(1000).CfAwait();
 
-            HConsole.WriteLine(this, "Send message 2 from client 1");
+            HConsole.WriteLine(this, "Send message 2 from client");
             message = CreateMessage("ping");
 
             if (reconnect)

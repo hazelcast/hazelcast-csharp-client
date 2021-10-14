@@ -47,7 +47,7 @@ namespace Hazelcast
         /// of sense. And, reconnection is disabled by default.</para>
         /// <para>When the new reconnect options are enabled, this option is ignored, and replaced by the
         /// <see cref="Networking.NetworkingOptions.Reconnect"/> option, which is a boolean and indicates whether to
-        /// reconnect or now. It is <c>true</c> by default. Invocations that fail because the client is reconnecting
+        /// reconnect or not. It is <c>true</c> by default. Invocations that fail because the client is reconnecting
         /// will be retried (all of them, reads and writes) until the client is reconnected, or the invocation times
         /// out.</para>
         /// </remarks>
