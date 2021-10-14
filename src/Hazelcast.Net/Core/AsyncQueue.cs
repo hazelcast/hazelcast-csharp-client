@@ -34,20 +34,17 @@ namespace Hazelcast.Core
         private T _current;
         private bool _completed;
 
-        // it is possible that
-        // 1. WaitAsync returns true, and an item is made current
-        // 2. the queue is drained
-        // 3. current is processed
-        // in other words, draining only removes items that have not been waited already
-
         /// <summary>
         /// Drains the queue.
         /// </summary>
         /// <remarks>
-        /// <para>Removes all the items that are in the queue (while blocking writes)
-        /// and have not yet been waited for with <see cref="WaitAsync"/>. If an item
-        /// has been waited for, but not yet retrieved with <see cref="Read"/>, it is
-        /// not drained.</para>
+        /// <para>Removes (while blocking writes) all the items that are in the queue and have not yet been waited
+        /// for with <see cref="WaitAsync"/>. If an item has been waited for, and is 'current', it is not drained,
+        /// even if it has not yet been retrieved with <see cref="Read"/>. Because writes are blocked, no new items
+        /// can be added to the queue while draining, so the queue is guaranteed to end up empty.</para>
+        /// <para>This method races with the enumeration, so some items present in the queue may be enumerated
+        /// even after this method has started. It is the responsibility of the caller to deal with the situation,
+        /// by suspending enumeration, or any other mean.</para>
         /// </remarks>
         public void Drain()
         {
@@ -118,15 +115,23 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
-        /// Applies an action to each item in the queue.
+        /// Applies an action to each item in the queue (see notes in method).
         /// </summary>
         /// <param name="action">The action to apply.</param>
-        /// <remarks>
-        /// <para>The queue is locked while the action is applied: no items can be added, nor removed. </para>
-        /// </remarks>
         public void ForEach(Action<T> action)
         {
-            lock (_lock) // FIXME current item?
+            // the action executes within the lock, which means that no new item can be queued, and the queue cannot
+            // be drained - however, items *can* be dequeued, and the 'current' item, if any, is not processed.
+            //
+            // enumerating the ConcurrentQueue is a snapshot operation, i.e. all items present in the queue at the
+            // moment the snapshot is taken are going to be processed, even though they may be dequeued by the time
+            // their action runs.
+            //
+            // this is used by MemberConnectionQueue to cancel members in the queue. this means that members may
+            // be dequeued that should have been canceled - we're going to try to connect, and then the connection
+            // will be rejected - this is an accepted tradeoff.
+
+            lock (_lock)
                 foreach (var item in _items)
                     action(item);
         }
