@@ -69,5 +69,11 @@ namespace Hazelcast.Clustering
                 return new ValueTask(_completionSource.Task);
             }
         }
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            return $"(MemberConnectionRequest Member = {Member}, Cancelled = {Cancelled}, Completed = {Completed})";
+        }
     }
 }

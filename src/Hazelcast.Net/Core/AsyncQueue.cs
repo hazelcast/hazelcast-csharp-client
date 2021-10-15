@@ -35,29 +35,6 @@ namespace Hazelcast.Core
         private bool _completed;
 
         /// <summary>
-        /// Drains the queue.
-        /// </summary>
-        /// <remarks>
-        /// <para>Removes (while blocking writes) all the items that are in the queue and have not yet been waited
-        /// for with <see cref="WaitAsync"/>. If an item has been waited for, and is 'current', it is not drained,
-        /// even if it has not yet been retrieved with <see cref="Read"/>. Because writes are blocked, no new items
-        /// can be added to the queue while draining, so the queue is guaranteed to end up empty.</para>
-        /// <para>This method races with the enumeration, so some items present in the queue may be enumerated
-        /// even after this method has started. It is the responsibility of the caller to deal with the situation,
-        /// by suspending enumeration, or any other mean.</para>
-        /// </remarks>
-        public void Drain()
-        {
-            // lock writes
-            lock (_lock)
-            {
-                // dequeue all items
-                while (_items.TryDequeue(out _))
-                { }
-            }
-        }
-
-        /// <summary>
         /// Tries to write an item to the queue.
         /// </summary>
         /// <param name="item">The item.</param>
@@ -120,20 +97,17 @@ namespace Hazelcast.Core
         /// <param name="action">The action to apply.</param>
         public void ForEach(Action<T> action)
         {
-            // the action executes within the lock, which means that no new item can be queued, and the queue cannot
-            // be drained - however, items *can* be dequeued, and the 'current' item, if any, is not processed.
-            //
-            // enumerating the ConcurrentQueue is a snapshot operation, i.e. all items present in the queue at the
-            // moment the snapshot is taken are going to be processed, even though they may be dequeued by the time
-            // their action runs.
-            //
-            // this is used by MemberConnectionQueue to cancel members in the queue. this means that members may
-            // be dequeued that should have been canceled - we're going to try to connect, and then the connection
-            // will be rejected - this is an accepted tradeoff.
+            // this is a "best effort" approach: items can be queued after we take the snapshot of the queue,
+            // and they won't be processed, and items can be de-queued before we take the snapshot of the queue,
+            // and they won't be processed either, so ... we just do our best ... this is used to cancel some
+            // member connection requests, and if a request fails to cancel and goes through and we connect to
+            // the member, the connection will simply be rejected and discarded.
 
-            lock (_lock)
-                foreach (var item in _items)
-                    action(item);
+            var current = _current;
+            foreach (var item in _items) // snapshot items and run the action
+                action(item);
+            if (current != null) // also run the action on whatever was the "current" item
+                action(current);
         }
 
         // there is going to be only 1 reader pumping items out and processing them

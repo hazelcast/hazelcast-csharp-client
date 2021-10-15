@@ -93,7 +93,7 @@ namespace Hazelcast.Clustering
                 if (_disposed) return; // nothing to resume - but no need to throw about it
                 if (!_suspended) throw new InvalidOperationException("Not suspended.");
                 _logger.IfDebug()?.LogDebug($"{(drain?"Drain and resume":"Resume")} the members connection queue.");
-                if (drain) _requests.Drain();
+                if (drain) _requests.ForEach(request => request.Cancel());
                 _suspended = false;
                 _resume.Release();
             }
