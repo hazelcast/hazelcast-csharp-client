@@ -25,18 +25,23 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
         /// </summary>
-        public NetworkingOptions()
-        { }
+        public NetworkingOptions(PreviewOptions preview = null)
+        {
+            Preview = preview ?? new PreviewOptions();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
         /// </summary>
-        private NetworkingOptions(NetworkingOptions other)
+        private NetworkingOptions(NetworkingOptions other, PreviewOptions preview)
         {
+            Preview = preview;
+
             Addresses = new List<string>(other.Addresses);
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
             RedoOperations = other.RedoOperations;
+            Reconnect = other.Reconnect;
             ReconnectMode = other.ReconnectMode;
             ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
             UsePublicAddresses = other.UsePublicAddresses;
@@ -46,6 +51,11 @@ namespace Hazelcast.Networking
             Socket = other.Socket.Clone();
             ConnectionRetry = other.ConnectionRetry.Clone();
         }
+
+        /// <summary>
+        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
+        /// </summary>
+        internal PreviewOptions Preview { get; }
 
         /// <summary>
         /// Gets the default Hazelcast server port.
@@ -95,13 +105,22 @@ namespace Hazelcast.Networking
         /// operations this is harmless, but for non idempotent ones retrying can cause
         /// undesirable effects. Also note that the redo can perform on any member.</para>
         /// </remarks>
-
         public bool RedoOperations { get; set; } = true;
 
         /// <summary>
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
         public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+
+        /// <summary>
+        /// Whether to attempt to automatically reconnect a client that has been disconnected.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is <c>true</c> by default, i.e. a client that has been disconnected but is
+        /// still active will try to reconnect to the cluster. Set this to <c>false</c> if you
+        /// want it to shut down and never reconnect.</para>
+        /// </remarks>
+        public bool Reconnect { get; set; } = true;
 
         /// <summary>
         /// Whether to use the public addresses of members.
@@ -150,6 +169,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal NetworkingOptions Clone() => new NetworkingOptions(this);
+        internal NetworkingOptions Clone(PreviewOptions preview = null) => new NetworkingOptions(this, preview ?? Preview.Clone());
     }
 }

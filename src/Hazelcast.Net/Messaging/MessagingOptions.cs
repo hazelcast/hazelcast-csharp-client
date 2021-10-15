@@ -22,18 +22,29 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingOptions"/> class.
         /// </summary>
-        public MessagingOptions()
-        { }
+        public MessagingOptions(PreviewOptions preview = null)
+        {
+            Preview = preview ?? new PreviewOptions();
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingOptions"/> class.
         /// </summary>
-        private MessagingOptions(MessagingOptions other)
+        private MessagingOptions(MessagingOptions other, PreviewOptions preview)
         {
+            Preview = preview;
+
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
             RetryTimeoutSeconds = other.RetryTimeoutSeconds;
+            RetryUnsafeOperations = other.RetryUnsafeOperations;
+            RetryOnClientReconnecting = other.RetryOnClientReconnecting;
         }
+
+        /// <summary>
+        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
+        /// </summary>
+        internal PreviewOptions Preview { get; }
 
         /// <summary>
         /// Gets or sets the max fast invocation count.
@@ -44,6 +55,20 @@ namespace Hazelcast.Messaging
         /// Gets or sets the min retry delay.
         /// </summary>
         public int MinRetryDelayMilliseconds { get; set; } = 1_000;
+
+        /// <summary>
+        /// Whether to retry all operations including unsafe operations.
+        /// </summary>
+        /// <remarks>
+        /// <para>Operations can fail due to various reasons. Read-only operations are retried by
+        /// default. If you want to enable retry for all operations, set this property to <c>true</c>.</para>
+        /// <para>However, note that a failed operation leaves the cluster in an undecided state. The
+        /// cluster may have received the request and executed the operation, but failed to respond
+        /// to the client. For idempotent operations this is harmless, but for non idempotent ones retrying
+        /// can cause undesirable effects. Also note that the redo can perform on any member.</para>
+        /// <para>For these reasons, this is <c>false</c> by default.</para>
+        /// </remarks>
+        public bool RetryUnsafeOperations { get; set; }
 
         /// <summary>
         /// Gets or sets the invocation timeout.
@@ -57,8 +82,23 @@ namespace Hazelcast.Messaging
         public int RetryTimeoutSeconds { get; set; } = 120;
 
         /// <summary>
+        /// Whether to retry an invocation that has failed to start because the client was offline
+        /// but still active and reconnecting.
+        /// </summary>
+        /// <remarks>
+        /// <para>This is <c>true</c> by default, i.e. if the client got disconnected and is reconnecting,
+        /// invocations will be retried until they reach their timeout, or the client reconnects. Set this
+        /// to <c>false</c> if you want invocations to fail immediately in case the client gets
+        /// disconnected, even if it is trying to reconnect.</para>
+        /// <para>Note that this only applies to invocation that failed to start, and therefore this is
+        /// safe for all invocations. See <see cref="RetryUnsafeOperations"/> for what happens once the
+        /// invocation has started.</para>
+        /// </remarks>
+        public bool RetryOnClientReconnecting { get; set; } = true;
+
+        /// <summary>
         /// Clones the options.
         /// </summary>
-        internal MessagingOptions Clone() => new MessagingOptions(this);
+        internal MessagingOptions Clone(PreviewOptions preview = null) => new MessagingOptions(this, preview ?? Preview.Clone());
     }
 }

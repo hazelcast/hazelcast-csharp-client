@@ -253,7 +253,20 @@ namespace Hazelcast.Clustering
                     _clusterState.ThrowIfNotActive(exception);
 
                     // if the invocation is not retryable, throw
-                    if (!invocation.IsRetryable(exception, _clusterState.Options.Networking.RedoOperations))
+                    bool retryUnsafeOperations, retryOnClientReconnecting;
+                    if (_clusterState.Options.Messaging.Preview.EnableNewRetryOptions)
+                    {
+                        // use the new set of options
+                        retryUnsafeOperations = _clusterState.Options.Messaging.RetryUnsafeOperations;
+                        retryOnClientReconnecting = _clusterState.Options.Messaging.RetryOnClientReconnecting;
+                    }
+                    else
+                    {
+                        // use the v4 set of options
+                        retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
+                        retryOnClientReconnecting = true;
+                    }
+                    if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
                         throw;
 
                     // else, wait for retrying

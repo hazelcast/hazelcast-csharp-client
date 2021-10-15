@@ -157,6 +157,15 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
+        public void PreviewOptionsSection()
+        {
+            var options = ReadResource(Resources.HazelcastOptions).Preview;
+
+            Assert.That(options.EnableNewReconnectOptions, Is.False);
+            Assert.That(options.EnableNewRetryOptions, Is.False);
+        }
+
+        [Test]
         public void NetworkingOptionsSection()
         {
             var options = ReadResource(Resources.HazelcastOptions).Networking;
@@ -168,6 +177,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsFalse(options.SmartRouting);
             Assert.IsFalse(options.RedoOperations);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
+            Assert.IsTrue(options.Reconnect);
             Assert.IsFalse(options.ShuffleAddresses);
 
             var sslOptions = options.Ssl;

@@ -51,6 +51,11 @@ namespace Hazelcast.Examples.Client
             options.Networking.Cloud.DiscoveryToken = "***";
             //options.Networking.Cloud.Url = new Uri("https://...");
 
+            // make sure we reconnect
+            //
+            // note: this can also be achieved with preview options
+            // options.Preview.EnableNewReconnectOptions = true;
+            //
             options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
 
             Console.WriteLine("Get and connect client...");
