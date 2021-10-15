@@ -149,14 +149,30 @@ namespace Hazelcast.Tests.Clustering
             // this should first drain everything from the queue then resume
             queue.Resume(true);
 
-            Assert.That(addresses.Count, Is.EqualTo(6)); // one of them goes in
+            //Assert.That(addresses.Count, Is.EqualTo(6)); // one of them goes in
+            var count = addresses.Count;
+            if (count != 6)
+            {
+                foreach (var a in addresses) Console.WriteLine(a);
+                Assert.Fail($"Got {count} expected 6");
+            }
 
             // -- drained
 
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:9")));
 
+            // FIXME still can fail on (always) GibHub Ubuntu with 8 instead of 7 below - with only this test running
+            // would mean we *had* 6 above, then added a member and waited.. and suddenly we have 8
+            // or, more probably: resuming unlocked 2 but only one had time to be processed = explains why sometimes we have a 7/6 error above
+
             await Task.Delay(500);
-            Assert.That(addresses.Count, Is.EqualTo(7));
+            //Assert.That(addresses.Count, Is.EqualTo(7)); // FIXME
+            count = addresses.Count;
+            if (count != 7)
+            {
+                foreach (var a in addresses) Console.WriteLine(a);
+                Assert.Fail($"Got {count} expected 7");
+            }
             Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:9")));
 
             // -- the end
