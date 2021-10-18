@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
 
-namespace Hazelcast.Testing
+namespace Hazelcast.Core
 {
-    public class Disposable : IDisposable
+    internal static class PatternMatcherExtensions
     {
-        private readonly Action _action;
-
-        public Disposable(Action action)
+        public static T FindValue<T>(this IPatternMatcher patternMatcher, IDictionary<string, T> dictionary, string pattern)
         {
-            _action = action;
-        }
+            if (dictionary.TryGetValue(pattern, out var configuration))
+                return configuration;
 
-        public void Dispose()
-        {
-            _action();
+            var key = patternMatcher.Matches(dictionary.Keys, pattern);
+            return key == null ? default : dictionary[key];
         }
     }
 }

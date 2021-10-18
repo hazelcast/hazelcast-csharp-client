@@ -29,6 +29,29 @@ namespace Hazelcast.Core
 
         private static int _initialized;
         private static long _offsetMilliseconds;
+        private static IClockSource _clockSource = new SystemClock();
+
+        /// <summary>
+        /// (internal for tests only)
+        /// Overrides the default static implementation with a temporary alternate implementation.
+        /// </summary>
+        /// <param name="clockSource">The alternate <see cref="IClockSource"/> implementation.</param>
+        /// <returns>An object that must be disposed in order to restore the original static implementation.</returns>
+        internal static IDisposable Override(IClockSource clockSource)
+        {
+            var saved = _clockSource;
+            _clockSource = clockSource;
+            return new DisposeAction(() => _clockSource = saved);
+        }
+
+        /// <summary>
+        /// (for tests only) Gets or sets the clock offset.
+        /// </summary>
+        internal static long Offset
+        {
+            get => _offsetMilliseconds;
+            set => _offsetMilliseconds = value;
+        }
 
         /// <summary>
         /// Initializes the clock.
@@ -62,6 +85,9 @@ namespace Hazelcast.Core
         /// <remarks>The epoch time in milliseconds.</remarks>
         public static long Milliseconds
             => ToEpoch(DateTime.UtcNow);
+
+        public static DateTime Now
+            => _clockSource.Now;
 
         /// <summary>
         /// Gets a number (-1) representing 'never'.

@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -184,6 +183,24 @@ namespace Hazelcast
             var task = _distributedOjects.GetOrCreateAsync<IHRingBuffer<T>, HRingBuffer<T>>(ServiceNames.RingBuffer, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
                     => new HRingBuffer<T>(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task<IFlakeIdGenerator> GetFlakeIdGeneratorAsync(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync<IFlakeIdGenerator, FlakeIdGenerator>(ServiceNames.FlakeIdGenerator, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new FlakeIdGenerator(n, factory, cluster, serializationService, loggerFactory, _options.GetFlakeIdGeneratorOptions(n)));
 
 #if HZ_OPTIMIZE_ASYNC
             return task;

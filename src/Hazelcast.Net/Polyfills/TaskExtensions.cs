@@ -37,5 +37,39 @@ namespace System.Threading.Tasks
             return task.IsCompletedSuccessfully;
 #endif
         }
+
+        /// <summary>
+        /// Determines whether the task ran to successful completion.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>true if the task ran to successful completion, otherwise false.</returns>
+        /// <remarks>
+        /// <para>Built-in task.IsCompletedSuccessfully property is introduced in netstandard2.1.</para>
+        /// </remarks>
+        public static bool IsCompletedSuccessfully(this ValueTask task)
+        {
+#if NETFRAMEWORK || NETSTANDARD2_0
+            return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
+#else
+            return task.IsCompletedSuccessfully;
+#endif
+        }
+
+        /// <summary>
+        /// Determines whether the task ran to successful completion.
+        /// </summary>
+        /// <param name="task">The task.</param>
+        /// <returns>true if the task ran to successful completion, otherwise false.</returns>
+        /// <remarks>
+        /// <para>Built-in task.IsCompletedSuccessfully property is introduced in netstandard2.1.</para>
+        /// </remarks>
+        public static bool IsCompletedSuccessfully<T>(this ValueTask<T> task)
+        {
+#if NETFRAMEWORK || NETSTANDARD2_0
+            return task.IsCompleted && !(task.IsFaulted || task.IsCanceled);
+#else
+            return task.IsCompletedSuccessfully;
+#endif
+        }
     }
 }
