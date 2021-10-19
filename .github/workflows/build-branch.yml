@@ -3,7 +3,13 @@
 #
 
 name: Build Branch
-on: 
+on:
+  # trigger on schedule, to the default branch only
+  # see https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows
+  schedule:
+    # everyday at 4:27 UTC
+    - cron: '27 4 * * *'
+  # trigger on push to any branch
   push:
     branches-ignore:
       - 'release/*'
@@ -32,7 +38,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           # ubuntu-latest does not have proper git installed so we have to install it
           sudo apt-get install --yes --no-install-recommends \
             git
@@ -70,7 +76,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '11'
-          
+
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
@@ -125,7 +131,7 @@ jobs:
           path: './temp/tests/cover/' # entire directory
 
       # publish to codecov
-      - name: Publish to Codecov 
+      - name: Publish to Codecov
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
