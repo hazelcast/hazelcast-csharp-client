@@ -37,6 +37,7 @@ namespace Hazelcast.Serialization
 
         public override object Read(IObjectDataInput input)
         {
+#pragma warning disable SYSLIB0011
             var formatter = new BinaryFormatter();
             using var stream = new MemoryStream(input.ReadByteArray());
 #pragma warning disable CA2300 // Do not use insecure deserializer BinaryFormatter - see note above
@@ -44,14 +45,17 @@ namespace Hazelcast.Serialization
             return formatter.Deserialize(stream);
 #pragma warning restore CA2300
 #pragma warning restore CA2301
+#pragma warning restore SYSLIB0011
         }
 
         public override void Write(IObjectDataOutput output, object obj)
         {
+#pragma warning disable SYSLIB0011
             var formatter = new BinaryFormatter();
             using var stream = new MemoryStream();
             formatter.Serialize(stream, obj);
             output.WriteByteArray(stream.GetBuffer());
+#pragma warning restore SYSLIB0011
         }
     }
 }
