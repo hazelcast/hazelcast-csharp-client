@@ -30,6 +30,7 @@ namespace Hazelcast.Tests.Clustering
     public class ConnectMembersTests
     {
         [Test]
+        [Repeat(64)] // FIXME trying to get it to fail
         public async Task Test()
         {
             var addresses = new List<NetworkAddress>();
@@ -43,10 +44,12 @@ namespace Hazelcast.Tests.Clustering
             var queue = new MemberConnectionQueue(new NullLoggerFactory());
 
             // background task that pretend to connect members
+            var dequeuedRequests = 0;
             async Task ConnectMembers(MemberConnectionQueue memberConnectionQueue, CancellationToken cancellationToken)
             {
                 await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
                 {
+                    dequeuedRequests++;
                     await mutex.WaitAsync().CfAwait();
                     addresses.Add(request.Member.Address);
                     request.Complete(true);
@@ -132,22 +135,29 @@ namespace Hazelcast.Tests.Clustering
 
             // -- can drain non-empty
 
+            var dr = dequeuedRequests;
+
             // acquire the mutex - the first item we enqueue will be picked but processing will hang
             await mutex.WaitAsync();
 
-            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:6")));
-            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:7")));
-            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:8")));
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:6"))); // that one should be picked immediately
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:7"))); // that one goes to the queue because the previous one hangs
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:8"))); // same
             await Task.Delay(500);
-
-            // at that point, we're hanging on :6
 
             task = queue.SuspendAsync();  // this can only complete after :6 has been processed to completion
             mutex.Release();              // which requires that we release the mutex
             await task;                   // and then we can be suspended
 
+            Assert.That(dequeuedRequests, Is.EqualTo(dr + 1));
+            await Task.Delay(500);
+            Assert.That(dequeuedRequests, Is.EqualTo(dr + 1));
+
             // this should first drain everything from the queue then resume
             queue.Resume(true);
+            Assert.That(dequeuedRequests, Is.EqualTo(dr + 1));
+            await Task.Delay(500);
+            Assert.That(dequeuedRequests, Is.EqualTo(dr + 1));
 
             Assert.That(addresses.Count, Is.EqualTo(6)); // one of them goes in
 
