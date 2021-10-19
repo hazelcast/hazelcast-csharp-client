@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Configuration.Binding;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
@@ -32,8 +33,15 @@ namespace Hazelcast.DependencyInjection
         /// </summary>
         /// <param name="name">The name of the options.</param>
         /// <param name="configuration">The configuration.</param>
-        public HazelcastNamedConfigureFromConfigurationOptions(string name, IConfiguration configuration)
-            : base(name, configuration.HzBind)
+        /// <param name="serviceProvider">The service provider.</param>
+        public HazelcastNamedConfigureFromConfigurationOptions(string name, IConfiguration configuration, IServiceProvider serviceProvider)
+            : base(name, options => Configure(options, configuration, serviceProvider))
         { }
+
+        private static void Configure(HazelcastOptions options, IConfiguration configuration, IServiceProvider serviceProvider)
+        {
+            configuration.HzBind(options);
+            options.ServiceProvider = serviceProvider;
+        }
     }
 }

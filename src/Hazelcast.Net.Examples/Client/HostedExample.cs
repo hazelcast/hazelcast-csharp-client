@@ -15,7 +15,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
 using Hazelcast.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -69,17 +68,10 @@ namespace Hazelcast.Examples.Client
             await CreateHostBuilder(args).Build().RunAsync(cancel.Token);
         }
 
+        // note: CreateDefaultBuilder registers a default logging setup
         private static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((hostingContext, builder) =>
-                {
-                    // inserts Hazelcast-specific configuration
-                    // (default configuration has been added by the host)
-                    builder.AddHazelcast(args);
-
-                    // example: change the hazelcast options file name
-                    //builder.AddHazelcast(args, optionsFileName: "special.json");
-                })
+                .ConfigureHazelcast(args)
                 .ConfigureServices((hostingContext, services) =>
                 {
                     // add Hazelcast services

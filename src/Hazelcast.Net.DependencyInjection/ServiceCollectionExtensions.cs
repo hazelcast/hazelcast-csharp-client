@@ -36,18 +36,12 @@ namespace Hazelcast.DependencyInjection
             // wire the Hazelcast-specific configuration
             services.AddOptions();
             services.AddSingleton<IOptionsChangeTokenSource<HazelcastOptions>>(new ConfigurationChangeTokenSource<HazelcastOptions>(string.Empty, configuration));
-            services.AddSingleton<IConfigureOptions<HazelcastOptions>>(new HazelcastNamedConfigureFromConfigurationOptions(string.Empty, configuration));
 
-            // wire the HazelcastOptions which will be injected in the HazelcastClientFactory.
-            // the main library is not DI-aware and therefore does not expose a constructor
-            // accepting IOptions<>, and in addition we want to inject the service provider in
-            // the options so that service factory creators can use it.
-            services.AddSingleton(provider =>
-            {
-                var options = provider.GetRequiredService<IOptions<HazelcastOptions>>().Value;
-                options.ServiceProvider = provider; // required by factories
-                return options;
-            });
+            // register the HazelcastOptions, making sure that (1) HzBind is used to bind them, and (2) the
+            // service provider is assigned so that service factories that require it (see logging below) can
+            // use it
+            services.AddSingleton<IConfigureOptions<HazelcastOptions>>(provider =>
+                new HazelcastNamedConfigureFromConfigurationOptions(string.Empty, configuration, provider));
 
             // wire creators
             services.Configure<HazelcastOptions>(options =>
