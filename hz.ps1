@@ -1323,6 +1323,18 @@ function hz-git-docs-on-windows {
     cp "$docs/*.yml" "$pages"
 
     &git -C "$pages" add -A
+
+    # create a symlink for latest docs -- but only if we are updating the latest docs, if we are building
+    # a development release then leave 'latest' alone - note that 'latest' is checked out as a file on Windows
+    # because Git has issues with symlinks there, but that is fine - just don't touch the file
+    if ($versionPrefix -eq "") {
+        # see https://stackoverflow.com/questions/5917249/git-symlinks-in-windows
+        if (test-path "$pages/latest") {
+            rm -force "$pages/latest" # going to be a file on Windows, a symlink on Linux: remove anyways
+        }
+        &git -C "$pages" update-index --add --cacheinfo 120000 "$(echo "$versionPrefix" | git hash-object -w --stdin)" "latest"
+    }
+
     &git -C "$pages" commit -m "$docMessage"
 
     Write-Output "Doc release is ready, but NOT pushed."
