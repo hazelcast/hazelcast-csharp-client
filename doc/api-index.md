@@ -6,11 +6,12 @@ For extra details, including all code comments, you may want to browse the [sour
 
 # Current version
 
-* **[4.1.0](xref:api-index-4-1-0)**
+* **[5.0.0](xref:api-index-5-0-0)**
 * <!--DEVDOC_API-->
 
 ### Previous versions
 
+* [4.1.0](xref:api-index-4-1-0)
 * [4.0.2](xref:api-index-4-0-2)
 * [4.0.1](xref:api-index-4-0-1)
 * [4.0.0](xref:api-index-4-0-0)
