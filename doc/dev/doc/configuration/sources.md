@@ -122,7 +122,7 @@ public class MyService
 
     public async Task DoSomethingAsync()
     {
-        await using var client = HazelcastClientFactory.StartNewClientAsync(options);
+        await using var client = HazelcastClientFactory.StartNewClientAsync(_options);
         // ...
     }
 }
@@ -137,7 +137,7 @@ services.Configure<HazelcastOptions>(options =>
 });
 ```
 
-Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
+Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the [Hazelcast.Net.DependencyInjection](https://www.nuget.org/packages/Hazelcast.Net.DependencyInjection/) project (on NuGet).
 
 ### Hosted Environment
 
@@ -147,16 +147,38 @@ For example:
 
 ```csharp
 Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration((hostingContext, builder) =>
-    {
-        builder.AddHazelcast(args);
-    })
+    .ConfigureHazelcast(args) // configure Hazelcast services
     .ConfigureServices((hostingContext, services) =>
     {
-        services.AddHazelcast(hostingContext.Configuration);
+        services.AddHazelcast(hostingContext.Configuration); // register Hazelcast services
     });
 ```
 
-Just as with the previous container environment, configuration keys will be gathered from the same sources and in the same order as before, and options will be registered in the service container, and available via dependency injection
+Just as with the previous container environment, configuration keys will be gathered from the same sources and in the same order as before, and options will be registered in the service container, and available via dependency injection.
 
-Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the Hazelcast.Net.DependencyInjection project which is only provided in [source form](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.DependencyInjection).
+In a typical WebAPI application, this means that the `Program` class would probably contain code similar to:
+
+```csharp
+public static IHostBuilder CreateHostBuilder(string[] args) =>
+    Host.CreateDefaultBuilder(args)
+        .ConfigureHazelcast(args) // configure Hazelcast services
+        .ConfigureWebHostDefaults(webBuilder =>
+        {
+            webBuilder.UseStartup<Startup>(); 
+        });
+```
+
+And the `Startup` class would probably contain code similar to:
+
+```csharp
+// This method gets called by the runtime. Use this method to add services to the container.
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddControllers();
+    services.AddHazelcast(Configuration); // register Hazelcast services
+
+    // ... add more services ...
+}
+```
+
+Note: The required extension methods are not part of the Hazelcast.Net NuGet packages, but are provided as part of the [Hazelcast.Net.DependencyInjection](https://www.nuget.org/packages/Hazelcast.Net.DependencyInjection/) project (on NuGet).
