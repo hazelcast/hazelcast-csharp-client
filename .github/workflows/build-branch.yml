@@ -119,6 +119,14 @@ jobs:
           path: temp/tests/cover
           sha: ${{ github.sha }}
 
+      # upload test results artifact
+      - name: Upload test results artifact
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Results (${{ matrix.os }})
+          path: './temp/tests/results/*.trx'
+
       # upload test coverage artifact
       - name: Upload test coverage artifact
         uses: actions/upload-artifact@v2
