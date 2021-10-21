@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlRow.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+
+namespace Hazelcast.Sql
+{
+    public class SqlRow
+    {
+        private const string KeyColumnName = &quot;__key&quot;;
+        private const string ValueColumnName = &quot;this&quot;;
+
+        private readonly IList&lt;object&gt; _values;
+
+        public SqlRowMetadata Metadata { get; }
+
+        public SqlRow(IList&lt;object&gt; values, SqlRowMetadata metadata)
+        {
+            _values = values;
+            Metadata = metadata;
+        }
+
+        public T GetColumn&lt;T&gt;(int index) =&gt; (T)_values[index];
+        public T GetColumn&lt;T&gt;(string name) =&gt; GetColumn&lt;T&gt;(Metadata.GetColumnIndexByName(name));
+        public T GetKey&lt;T&gt;() =&gt; GetColumn&lt;T&gt;(KeyColumnName);
+        public T GetValue&lt;T&gt;() =&gt; GetColumn&lt;T&gt;(ValueColumnName);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,42,26,46,1],[28,9,28,69,1],[30,13,30,30,1],[31,13,31,33,1],[32,9,32,10,1],[34,45,34,62,1],[35,47,35,96,1],[36,33,36,60,1],[37,35,37,64,1]]);
+    </script>
+  </body>
+</html>

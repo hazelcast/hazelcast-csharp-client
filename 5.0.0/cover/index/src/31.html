@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Transactions\TransactionOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Transactions
+{
+    /// &lt;summary&gt;Contains the configuration for a transaction&lt;/summary&gt;
+    public sealed class TransactionOptions
+    {
+        private int _durability = 1;
+
+#pragma warning disable CA1008 // Enums should have zero value - no, &quot;default&quot; is not a valid value
+        public enum TransactionType
+#pragma warning restore CA1008
+        {
+            /// &lt;summary&gt;
+            /// Commits the transaction in two distinct phases.
+            /// &lt;/summary&gt;
+            /// &lt;remarks&gt;
+            /// &lt;para&gt;Two-phase commits commits in two phases: the first phase tries to prepare the commit, and fails in
+            /// case of conflicts. The second phase actually writes the changes. If the first phase succeeded, then the
+            /// second phase is guaranteed to succeed.&lt;/para&gt;
+            /// &lt;para&gt;Hazelcast also provides three phases transactions, by automatically copying the backlog to another
+            /// member so that in case of failure during a commit, another member can result the commit from backup.&lt;/para&gt;
+            /// &lt;/remarks&gt;
+            TwoPhase = 1,
+
+            /// &lt;summary&gt;
+            /// Commits the transaction in one single final phase.
+            /// &lt;/summary&gt;
+            /// &lt;remarks&gt;
+            /// &lt;para&gt;Because there is no preparation of the transaction, conflicts are not detected. If there is a conflict,
+            /// then when the transaction commits, some of the changes are written while others are not, leaving the system
+            /// in a potentially permanent inconsistent state.&lt;/para&gt;
+            /// &lt;/remarks&gt;
+            OnePhase = 2
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the transaction durability.
+        /// &lt;/summary&gt;
+        public int Durability
+        {
+            get =&gt; _durability;
+            set
+            {
+                if (value &lt; 0) throw new ArgumentOutOfRangeException(nameof(value), &quot;Value must be positive.&quot;);
+                _durability = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the transaction timeout.
+        /// &lt;/summary&gt;
+        // TODO: what happens when timeout is -1 (infinite)?
+        public TimeSpan Timeout { get; set; } = TimeSpan.FromMinutes(2);
+
+        /// &lt;summary&gt;
+        /// Gets or sets the type of the transaction.
+        /// &lt;/summary&gt;
+        public TransactionType Type { get; set; } = TransactionType.TwoPhase;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,9,22,37,1],[56,20,56,31,1],[59,17,59,31,1],[59,32,59,112,1],[60,17,60,37,0],[61,13,61,14,0],[68,35,68,39,1],[68,40,68,44,1],[68,49,68,72,1],[73,39,73,43,1],[73,44,73,48,1],[73,53,73,77,1]]);
+    </script>
+  </body>
+</html>

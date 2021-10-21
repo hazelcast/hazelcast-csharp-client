@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\CommonNearCacheOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.NearCaching
+{
+    /// &lt;summary&gt;
+    /// Represents the advanced Near Cache options.
+    /// &lt;/summary&gt;
+    public class CommonNearCacheOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CommonNearCacheOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public CommonNearCacheOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CommonNearCacheOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private CommonNearCacheOptions(CommonNearCacheOptions other)
+        {
+            ReconciliationIntervalSeconds = other.ReconciliationIntervalSeconds;
+            MinReconciliationIntervalSeconds = other.MinReconciliationIntervalSeconds;
+            MaxToleratedMissCount = other.MaxToleratedMissCount;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the reconciliation interval.
+        /// &lt;/summary&gt;
+        public int ReconciliationIntervalSeconds { get; set; } = 60;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the minimum reconciliation interval.
+        /// &lt;/summary&gt;
+        public int MinReconciliationIntervalSeconds { get; set; } = 30;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the maximum tolerated miss count.
+        /// &lt;/summary&gt;
+        public int MaxToleratedMissCount { get; set; } = 10;
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal CommonNearCacheOptions Clone() =&gt; new CommonNearCacheOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,40,1],[26,11,26,12,1],[31,9,31,69,1],[33,13,33,81,1],[34,13,34,87,1],[35,13,35,65,1],[36,9,36,10,1],[41,52,41,56,1],[41,57,41,61,1],[41,66,41,68,1],[41,66,41,68,1],[46,55,46,59,1],[46,60,46,64,1],[46,69,46,71,1],[46,69,46,71,1],[51,44,51,48,1],[51,49,51,53,1],[51,58,51,60,1],[51,58,51,60,1],[56,52,56,84,1]]);
+    </script>
+  </body>
+</html>

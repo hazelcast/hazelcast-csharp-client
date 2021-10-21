@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\DictStreamSerializerBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+
+namespace Hazelcast.Serialization.DefaultSerializers
+{
+    // TODO: BigDecimal
+
+    internal abstract class DictStreamSerializerBase&lt;DType&gt; : IStreamSerializer&lt;DType&gt;
+            where DType : IDictionary&lt;object, object&gt;
+        {
+            public abstract int TypeId { get; }
+
+            public virtual void Dispose()
+            { }
+
+            public abstract DType Read(IObjectDataInput input);
+
+            public void Write(IObjectDataOutput output, DType obj)
+            {
+                var size = obj.Count;
+                output.WriteInt(size);
+                if (size &gt; 0)
+                {
+                    foreach (var kvp in obj)
+                    {
+                        output.WriteObject(kvp.Key);
+                        output.WriteObject(kvp.Value);
+                    }
+                }
+            }
+
+            protected static DType DeserializeEntries(IObjectDataInput input, int size, DType result)
+            {
+                for (int i = 0; i &lt; size; i++)
+                {
+                    result.Add(input.ReadObject&lt;object&gt;(), input.ReadObject&lt;object&gt;());
+                }
+                return result;
+            }
+        }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,15,27,16,0],[33,17,33,38,0],[34,17,34,39,0],[35,17,35,30,0],[37,30,37,37,0],[37,38,37,40,0],[37,41,37,44,0],[39,25,39,53,0],[40,25,40,55,0],[43,13,43,14,0],[47,22,47,31,0],[47,33,47,41,0],[47,43,47,46,0],[49,21,49,88,0],[51,17,51,31,0]]);
+    </script>
+  </body>
+</html>

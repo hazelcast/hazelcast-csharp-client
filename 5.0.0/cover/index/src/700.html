@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\AddressLocker.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Networking;
+
+namespace Hazelcast.Clustering
+{
+    internal class AddressLocker
+    {
+        private readonly Dictionary&lt;NetworkAddress, LockInfo&gt; _locks
+            = new Dictionary&lt;NetworkAddress, LockInfo&gt;();
+
+        private readonly object _lock = new object();
+
+        private class LockInfo : IDisposable
+        {
+            private readonly AddressLocker _addressLocker;
+
+            public LockInfo(AddressLocker addressLocker, NetworkAddress address)
+            {
+                _addressLocker = addressLocker;
+
+                Address = address;
+                Semaphore = new SemaphoreSlim(1);
+            }
+
+            public NetworkAddress Address { get; }
+
+            public int ReferenceCount { get; set; }
+
+            public SemaphoreSlim Semaphore { get; }
+
+            public void Dispose()
+            {
+                Semaphore.Release();
+                _addressLocker.Return(this);
+            }
+        }
+
+        private LockInfo GetLockInfo(NetworkAddress address)
+        {
+            LockInfo lockInfo;
+
+            lock (_lock)
+            {
+                if (!_locks.TryGetValue(address, out lockInfo))
+                    lockInfo = _locks[address] = new LockInfo(this, address);
+                lockInfo.ReferenceCount++;
+            }
+
+            return lockInfo;
+        }
+
+        private void Return(LockInfo lockInfo)
+        {
+            lock (_lock)
+            {
+                lockInfo.ReferenceCount--;
+                if (lockInfo.ReferenceCount == 0)
+                    _locks.Remove(lockInfo.Address);
+            }
+        }
+
+        public async Task&lt;IDisposable&gt; LockAsync(NetworkAddress address)
+        {
+            var lockInfo = GetLockInfo(address);
+            await lockInfo.Semaphore.WaitAsync().CfAwait();
+            return lockInfo;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,27,58,0],[29,9,29,54,0],[35,13,35,81,0],[37,17,37,48,0],[39,17,39,35,0],[40,17,40,50,0],[41,13,41,14,0],[43,45,43,49,0],[45,41,45,45,0],[45,46,45,50,0],[47,46,47,50,0],[51,17,51,37,0],[52,17,52,45,0],[53,13,53,14,0],[60,13,60,25,0],[62,17,62,64,0],[63,21,63,78,0],[64,17,64,43,0],[65,13,65,14,0],[67,13,67,29,0],[72,13,72,25,0],[74,17,74,43,0],[75,17,75,50,0],[76,21,76,53,0],[77,13,77,14,0],[78,9,78,10,0],[82,13,82,49,0],[83,13,83,60,0],[84,13,84,29,0],[85,9,85,10,0]]);
+    </script>
+  </body>
+</html>

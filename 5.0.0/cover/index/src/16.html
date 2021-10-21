@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.Build.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Configuration.Binding;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast
+{
+    public partial class HazelcastOptions // Build
+    {
+        /// &lt;summary&gt;
+        /// Gets the Hazelcast configuration section name, which is &lt;c&gt;&quot;hazelcast&quot;&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The Hazelcast configuration section name, which is &lt;c&gt;&quot;hazelcast&quot;&lt;/c&gt;.&lt;/returns&gt;
+        internal const string Hazelcast = &quot;hazelcast&quot;;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Builds Hazelcast options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;setup&quot;&gt;An &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; setup delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;Optional &lt;see cref=&quot;HazelcastOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;returns&gt;Hazelcast options.&lt;/returns&gt;
+        internal static HazelcastOptions Build(Action&lt;IConfigurationBuilder&gt; setup, Action&lt;IConfiguration, HazelcastOptions&gt; configure = null)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            var builder = new ConfigurationBuilder();
+            setup(builder);
+            var configuration = builder.Build();
+
+            return Build(configuration, configure);
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Builds Hazelcast options, using an alternate key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;setup&quot;&gt;An &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; setup delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;An &lt;see cref=&quot;HazelcastOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;altKey&quot;&gt;An alternate key.&lt;/param&gt;
+        /// &lt;returns&gt;Hazelcast options.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is used in tests only and not meant to be public. If &lt;paramref name=&quot;altKey&quot;/&gt; is not
+        /// &lt;c&gt;null&lt;/c&gt;, options starting with that key will bind after those starting with &quot;hazelcast&quot; and
+        /// override them. This allows one json file to contain several configuration sets, which is
+        /// convenient for instance when using the &quot;user secrets&quot; during tests.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal static HazelcastOptions Build(Action&lt;IConfigurationBuilder&gt; setup, Action&lt;IConfiguration, HazelcastOptions&gt; configure, string altKey)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            var builder = new ConfigurationBuilder();
+            setup(builder);
+            var configuration = builder.Build();
+
+            return Build(configuration, configure, altKey);
+        }
+
+        // builds options, no alternate keys
+        private static HazelcastOptions Build(IConfiguration configuration, Action&lt;IConfiguration, HazelcastOptions&gt; configure = null)
+            =&gt; Build(configuration, configure, null);
+
+        // builds options, optionally binding alternate keys
+        private static HazelcastOptions Build(IConfiguration configuration, Action&lt;IConfiguration, HazelcastOptions&gt; configure, string altKey)
+        {
+            // must HzBind here and not simply Bind because we use our custom
+            // binder which handles more situations such as ignoring and/or
+            // renaming properties
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(Hazelcast, options);
+
+            if (altKey != null &amp;&amp; altKey != Hazelcast)
+                configuration.HzBind(altKey, options);
+
+            configure?.Invoke(configuration, options);
+            return options;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,13,37,31,1],[37,32,37,79,1],[39,13,39,54,0],[40,13,40,28,0],[41,13,41,49,0],[43,13,43,52,0],[61,13,61,31,1],[61,32,61,79,1],[63,13,63,54,1],[64,13,64,28,1],[65,13,65,49,1],[67,13,67,60,1],[72,16,72,53,0],[81,13,81,50,1],[82,13,82,54,1],[84,13,84,55,1],[85,17,85,55,1],[87,13,87,55,1],[88,13,88,28,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListIntegerGuidCodec.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
+
+namespace Hazelcast.Protocol.BuiltInCodecs
+{
+    internal static class EntryListIntegerUUIDCodec
+    {
+        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfGuid;
+
+        public static void Encode(ClientMessage clientMessage, ICollection&lt;KeyValuePair&lt;int, Guid&gt;&gt; collection)
+        {
+            var itemCount = collection.Count;
+            var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
+
+            var i = 0;
+            foreach (var kvp in collection)
+            {
+                frame.Bytes.WriteIntL(i * EntrySizeInBytes, kvp.Key);
+                frame.Bytes.WriteGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
+                i++;
+            }
+            clientMessage.Append(frame);
+        }
+
+        public static IList&lt;KeyValuePair&lt;int, Guid&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        {
+            var frame = iterator.Take();
+            var itemCount = frame.Bytes.Length / EntrySizeInBytes;
+            var result = new List&lt;KeyValuePair&lt;int, Guid&gt;&gt;();
+            for (var i = 0; i &lt; itemCount; i++)
+            {
+                var key = frame.Bytes.ReadIntL(i * EntrySizeInBytes);
+                var value = frame.Bytes.ReadGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
+                result.Add(new KeyValuePair&lt;int, Guid&gt;(key, value));
+            }
+            return result;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,13,28,46,0],[29,13,29,75,0],[31,13,31,23,0],[32,22,32,29,0],[32,30,32,32,0],[32,33,32,43,0],[34,17,34,70,0],[35,17,35,101,0],[36,17,36,21,0],[38,13,38,41,0],[39,9,39,10,0],[43,13,43,41,0],[44,13,44,67,0],[45,13,45,62,0],[46,18,46,27,0],[46,29,46,42,0],[46,44,46,47,0],[48,17,48,70,0],[49,17,49,101,0],[50,17,50,69,0],[52,13,52,27,0]]);
+    </script>
+  </body>
+</html>

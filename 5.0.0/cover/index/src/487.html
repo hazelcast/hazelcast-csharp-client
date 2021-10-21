@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.NearCaching
+{
+    /// &lt;summary&gt;
+    /// Provides a base class for Near Caches.
+    /// &lt;/summary&gt;
+    internal abstract class NearCacheBase : IAsyncDisposable
+    {
+        private readonly int _evictionPercentage;
+        private readonly int _cleanupInterval;
+
+        private readonly ConcurrentAsyncDictionary&lt;IData, NearCacheEntry&gt; _entries;
+        private readonly EvictionPolicy _evictionPolicy;
+        private readonly long _maxIdleMilliseconds;
+        private readonly int _maxSize;
+        private readonly long _timeToLive;
+        private readonly IComparer&lt;NearCacheEntry&gt; _evictionComparer;
+
+        private int _expiring;
+        private int _evicting;
+        private long _lastExpire; // last time expiration ran
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheBase&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name of the cache.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;The cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;The localization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        /// &lt;param name=&quot;nearCacheOptions&quot;&gt;NearCache options.&lt;/param&gt;
+        protected NearCacheBase(string name, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, NearCacheOptions nearCacheOptions)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
+            Name = name;
+            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            Options = nearCacheOptions ?? throw new ArgumentNullException(nameof(nearCacheOptions));
+
+            _entries = new ConcurrentAsyncDictionary&lt;IData, NearCacheEntry&gt;();
+            Statistics = new NearCacheStatistics(name);
+
+            _lastExpire = Clock.Never;
+
+            _maxSize = nearCacheOptions.MaxSize;
+            _maxIdleMilliseconds = nearCacheOptions.MaxIdleSeconds * 1000;
+            InMemoryFormat = nearCacheOptions.InMemoryFormat;
+            _timeToLive = nearCacheOptions.TimeToLiveSeconds * 1000;
+            _evictionPolicy = nearCacheOptions.EvictionPolicy;
+            _evictionComparer = GetEvictionComparer(_evictionPolicy);
+            _evictionPercentage = nearCacheOptions.EvictionPercentage;
+            _cleanupInterval = nearCacheOptions.CleanupPeriodSeconds * 1000;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the name of the cache.
+        /// &lt;/summary&gt;
+        public string Name { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the options for this cache.
+        /// &lt;/summary&gt;
+        protected NearCacheOptions Options { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the cluster.
+        /// &lt;/summary&gt;
+        protected Cluster Cluster { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the in-memory format.
+        /// &lt;/summary&gt;
+        public InMemoryFormat InMemoryFormat { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the serialization service.
+        /// &lt;/summary&gt;
+        public SerializationService SerializationService { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the logger factory.
+        /// &lt;/summary&gt;
+        protected ILoggerFactory LoggerFactory { get; }
+
+        /// &lt;summary&gt;
+        /// Gets statistics
+        /// &lt;/summary&gt;
+        public NearCacheStatistics Statistics { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the raw entries count.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _entries.Count;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Gets a snapshot of the cache entries.
+        /// &lt;/summary&gt;
+        internal async Task&lt;List&lt;NearCacheEntry&gt;&gt; SnapshotEntriesAsync()
+        {
+            var list = new List&lt;NearCacheEntry&gt;();
+            await foreach (var e in _entries)
+                list.Add(e.Value);
+            return list;
+        }
+
+        #region Initialize &amp; Destroy
+
+        /// &lt;summary&gt;
+        /// Initializes the cache.
+        /// &lt;/summary&gt;
+        public abstract ValueTask InitializeAsync();
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            await DisposeAsyncCore().CfAwait();
+            _entries.Clear();
+        }
+
+        /// &lt;summary&gt;
+        /// Performs &lt;see cref=&quot;DisposeAsync&quot;/&gt; in inherited classes.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        protected virtual ValueTask DisposeAsyncCore() =&gt; default;
+
+        #endregion
+
+        #region Add, Get, Contains, Remove &amp; Clear
+
+        /// &lt;summary&gt;
+        /// Tries to add a value to the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the value could be added; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public async Task&lt;bool&gt; TryAddAsync(IData keyData, IData valueData)
+        {
+            // kick eviction policy if needed
+            if (_evictionPolicy != EvictionPolicy.None &amp;&amp; _entries.Count &gt;= _maxSize)
+                await EvictEntries().CfAwait();
+
+            // cannot add if the cache is full
+            if (_evictionPolicy == EvictionPolicy.None &amp;&amp; _entries.Count &gt;= _maxSize)
+                return false;
+
+            ValueTask&lt;NearCacheEntry&gt; CreateEntry(IData _, CancellationToken __)
+            {
+                return new ValueTask&lt;NearCacheEntry&gt;(CreateCacheEntry(keyData, ToCachedValue(valueData)));
+            }
+
+            // if we put an async entry in an async dictionary and the factory throws,
+            // then the entry will be removed from the dictionary - and also, when
+            // TryAddAsync completes, the value has been added (the factory has completed
+            // too) - so, there is no need to remove anything from the cache in case
+            // of an exception
+            //
+            // likewise, the dictionary treats null values as invalid and CreateCacheEntry
+            // returns null if the cached value (ValueObject) is null - all in all, safe
+
+            try
+            {
+                var added = await _entries.TryAddAsync(keyData, CreateEntry).CfAwait();
+                if (added) Statistics.NotifyEntryAdded();
+                return added;
+            }
+            catch
+            {
+                // ignore - should we log?
+                return false;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to get a value from, or add a value to, the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueFactory&quot;&gt;A factory that accepts the key data and returns the value data.&lt;/param&gt;
+        /// &lt;returns&gt;An attempt at getting or adding a value to the cache.&lt;/returns&gt;
+        public async Task&lt;Attempt&lt;object&gt;&gt; TryGetOrAddAsync(IData keyData, Func&lt;IData, Task&lt;IData&gt;&gt; valueFactory)
+        {
+            // if it&#39;s in the cache already, return it
+            // (and TryGetAsync counts a hit)
+            // (otherwise, TryGetAsync counts a miss, so we don&#39;t have to do it here)
+            var (hasEntry, valueObject) = await TryGetAsync(keyData).CfAwait();
+            if (hasEntry) return valueObject;
+
+            // kick eviction policy if needed
+            if (_evictionPolicy != EvictionPolicy.None &amp;&amp; _entries.Count &gt;= _maxSize)
+                await EvictEntries().CfAwait();
+
+            // if the cache is full, directly return the un-cached value
+            if (_evictionPolicy == EvictionPolicy.None &amp;&amp; _entries.Count &gt;= _maxSize &amp;&amp; !await _entries.ContainsKeyAsync(keyData).CfAwait())
+                return Attempt.Fail(ToCachedValue(await valueFactory(keyData).CfAwait()));
+
+            async ValueTask&lt;NearCacheEntry&gt; CreateEntry(IData _, CancellationToken __)
+            {
+                var valueData = await valueFactory(keyData).CfAwait();
+                var cachedValue = ToCachedValue(valueData);
+
+                return CreateCacheEntry(keyData, cachedValue); // null if cachedValue is null
+            }
+
+            var entry = await _entries.GetOrAddAsync(keyData, CreateEntry).CfAwait();
+            if (entry != null) // null if ValueObject would have been null
+            {
+
+                Statistics.NotifyEntryAdded();
+                return entry.ValueObject;
+            }
+
+            // the entry will not stick in _entries
+            // and we haven&#39;t notified statistics
+
+            return Attempt.Failed;
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to get a value from the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;hit&quot;&gt;Whether to hit the entry or not.&lt;/param&gt;
+        /// &lt;returns&gt;An attempt at getting the value for the specified key.&lt;/returns&gt;
+        public async ValueTask&lt;Attempt&lt;object&gt;&gt; TryGetAsync(IData keyData, bool hit = true)
+        {
+            await ExpireEntries().CfAwait();
+
+            // it is not possible to get a null entry, nor an entry with a null ValueObject
+            var (hasEntry, entry) = await _entries.TryGetAsync(keyData).CfAwait();
+
+            if (!hasEntry)
+            {
+                Statistics.NotifyMiss();
+                return Attempt.Failed;
+            }
+
+            if (IsStaleRead(entry))
+            {
+                Remove(keyData);
+                Statistics.NotifyMiss();
+                Statistics.NotifyStaleRead();
+                return Attempt.Failed;
+            }
+
+            if (IsExpired(entry))
+            {
+                Remove(keyData);
+                Statistics.NotifyMiss();
+                Statistics.NotifyExpiration();
+                return Attempt.Failed;
+            }
+
+            if (hit)
+            {
+                entry.NotifyHit();
+                Statistics.NotifyHit();
+            }
+
+            return entry.ValueObject;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the cache contains an entry.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;hit&quot;&gt;Whether to hit the entry or not.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the cache contains an entry with the specified key.&lt;/returns&gt;
+        public async ValueTask&lt;bool&gt; ContainsKeyAsync(IData keyData, bool hit = true)
+        {
+            var (contains, _) = await TryGetAsync(keyData, hit).CfAwait();
+            return contains;
+        }
+
+        /// &lt;summary&gt;
+        /// Removes an entry from the cache.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;returns&gt;Whether an entry was removed.&lt;/returns&gt;
+        public bool Remove(IData keyData)
+        {
+            if (!_entries.TryRemove(keyData))
+                return false;
+
+            Statistics.NotifyEntryRemoved();
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the cache.
+        /// &lt;/summary&gt;
+        public void Clear()
+        {
+            _entries.Clear();
+            Statistics.ResetEntryCount();
+        }
+
+        /// &lt;summary&gt;
+        /// Creates a new cache entry.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueObject&quot;&gt;The value object, which is either &lt;see cref=&quot;IData&quot;/&gt; or the actual &lt;see cref=&quot;object&quot;/&gt;.&lt;/param&gt;
+        /// &lt;returns&gt;A new cache entry, if &lt;paramref name=&quot;valueObject&quot;/&gt; is not &lt;c&gt;null&lt;/c&gt;, otherwise &lt;c&gt;null&lt;/c&gt;.&lt;/returns&gt;
+        protected virtual NearCacheEntry CreateCacheEntry(IData keyData, object valueObject)
+        {
+            return valueObject == null ? null : new NearCacheEntry(keyData, valueObject, _timeToLive);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether a cached entry is stale.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entry&quot;&gt;The entry.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the entry is stale.&lt;/returns&gt;
+        protected virtual bool IsStaleRead(NearCacheEntry entry) =&gt; false;
+
+        /// &lt;summary&gt;
+        /// Converts a value &lt;see cref=&quot;IData&quot;/&gt; to the internal cached value format.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;Value data.&lt;/param&gt;
+        /// &lt;returns&gt;Internal cached value.&lt;/returns&gt;
+        protected virtual object ToCachedValue(IData valueData)
+        {
+            return InMemoryFormat.Equals(InMemoryFormat.Binary)
+                ? valueData
+                : SerializationService.ToObject&lt;object&gt;(valueData);
+        }
+
+        #endregion
+
+        #region Evict &amp; Expire
+
+        // entries are evicted on each add (TryAdd, TryGetOrAdd)
+        // entries are expired on each get (TryGetValue)
+
+        /// &lt;summary&gt;
+        /// Evicts entries if not already evicting.
+        /// &lt;/summary&gt;
+        private async ValueTask EvictEntries()
+        {
+            try
+            {
+                // only one at a time please
+                if (Interlocked.CompareExchange(ref _evicting, 1, 0) == 1)
+                    return;
+
+                await DoEvictEntries().CfAwait();
+            }
+            finally
+            {
+                // make sure to release the lock
+                Interlocked.Exchange(ref _evicting, 0);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Evicts entries.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        private async ValueTask DoEvictEntries()
+        {
+            if (_evictionPolicy == EvictionPolicy.None || _entries.Count &lt; _maxSize)
+                return;
+
+            var entries = new SortedSet&lt;NearCacheEntry&gt;(_evictionComparer);
+            await foreach (var (_, value) in _entries)
+                entries.Add(value);
+
+            var evictCount = entries.Count * _evictionPercentage / 100;
+            if (evictCount &lt; 1)
+                return;
+
+            var count = 0;
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var entry in entries)
+            {
+                if (!_entries.TryRemove(entry.KeyData))
+                    continue;
+
+                Statistics.NotifyEntryRemoved();
+                Statistics.NotifyEviction();
+
+                if (++count &gt; evictCount)
+                    break;
+            }
+
+            // original code would repeat if (_entries.Count &gt;= _maxSize)
+            // but that can potentially lead to endless loops - removing
+        }
+
+        /// &lt;summary&gt;
+        /// Expires entries if not already expiring.
+        /// &lt;/summary&gt;
+        private async ValueTask ExpireEntries()
+        {
+            // run when it is time to run
+            if (Clock.Milliseconds &lt; _lastExpire + _cleanupInterval)
+                return;
+
+            try
+            {
+                // only one at a time please
+                if (Interlocked.CompareExchange(ref _expiring, 1, 0) == 1)
+                    return;
+
+                _lastExpire = Clock.Milliseconds;
+
+                await DoExpireEntries().CfAwait();
+            }
+            finally
+            {
+                // make sure to release the lock
+                Interlocked.Exchange(ref _expiring, 0);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Expire entries.
+        /// &lt;/summary&gt;
+        private async ValueTask DoExpireEntries()
+        {
+            await foreach (var (key, entry) in _entries)
+            {
+                if (!IsExpired(entry)) continue;
+
+                Remove(key);
+                Statistics.NotifyExpiration();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the record comparer corresponding to an eviction policy.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;policy&quot;&gt;The eviction policy.&lt;/param&gt;
+        /// &lt;returns&gt;The record comparer corresponding to the specified eviction policy.&lt;/returns&gt;
+        private static IComparer&lt;NearCacheEntry&gt; GetEvictionComparer(EvictionPolicy policy)
+        {
+            return policy switch
+            {
+                EvictionPolicy.Lfu =&gt; new LfuComparer(),
+                EvictionPolicy.Lru =&gt; new LruComparer(),
+                EvictionPolicy.None =&gt; new DefaultComparer(),
+                EvictionPolicy.Random =&gt; new RandomComparer(),
+                _ =&gt; throw new NotSupportedException()
+            };
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether a record has expired.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entry&quot;&gt;The record.&lt;/param&gt;
+        /// &lt;returns&gt;true if the record has expired; false otherwise.&lt;/returns&gt;
+        private bool IsExpired(NearCacheEntry entry)
+        {
+            var now = Clock.Milliseconds;
+            return entry.IsExpiredAt(now) || entry.IsIdleAt(_maxIdleMilliseconds, now);
+        }
+
+        #endregion
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[54,9,54,170,1],[56,13,56,49,1],[56,50,56,123,0],[57,13,57,25,1],[58,13,58,83,1],[59,13,59,122,1],[60,13,60,101,1],[61,13,61,101,1],[63,13,63,79,1],[64,13,64,56,1],[66,13,66,39,1],[68,13,68,49,1],[69,13,69,75,1],[70,13,70,62,1],[71,13,71,69,1],[72,13,72,63,1],[73,13,73,70,1],[74,13,74,71,1],[75,13,75,77,1],[76,9,76,10,1],[81,30,81,34,1],[86,46,86,50,1],[91,37,91,41,1],[96,48,96,52,1],[101,60,101,64,1],[106,50,106,54,1],[111,49,111,53,1],[116,29,116,43,1],[124,13,124,51,1],[125,28,125,33,1],[125,34,125,36,1],[125,37,125,45,1],[126,17,126,35,1],[127,13,127,25,1],[128,9,128,10,1],[140,13,140,48,1],[141,13,141,30,1],[142,9,142,10,1],[148,59,148,66,0],[163,13,163,86,1],[164,17,164,48,0],[167,13,167,86,1],[168,17,168,30,1],[172,17,172,107,1],[186,17,186,88,1],[187,17,187,27,1],[187,28,187,58,1],[188,17,188,30,1],[190,13,190,18,0],[193,17,193,30,0],[195,9,195,10,1],[208,13,208,80,1],[209,13,209,26,1],[209,27,209,46,1],[212,13,212,86,1],[213,17,213,48,1],[216,13,216,141,1],[217,17,217,91,0],[221,17,221,71,1],[222,17,222,60,1],[224,17,224,63,1],[225,13,225,14,1],[227,13,227,86,1],[228,13,228,31,1],[231,17,231,47,1],[232,17,232,42,1],[238,13,238,35,1],[239,9,239,10,1],[249,13,249,45,1],[252,13,252,83,1],[254,13,254,27,1],[256,17,256,41,1],[257,17,257,39,1],[260,13,260,36,1],[262,17,262,33,0],[263,17,263,41,0],[264,17,264,46,0],[265,17,265,39,0],[268,13,268,34,1],[270,17,270,33,1],[271,17,271,41,1],[272,17,272,47,1],[273,17,273,39,1],[276,13,276,21,1],[278,17,278,35,1],[279,17,279,40,1],[282,13,282,38,1],[283,9,283,10,1],[293,13,293,75,1],[294,13,294,29,1],[295,9,295,10,1],[304,13,304,46,1],[305,17,305,30,1],[307,13,307,45,1],[308,13,308,25,1],[316,13,316,30,1],[317,13,317,42,1],[318,9,318,10,1],[328,13,328,103,1],[336,69,336,74,0],[345,13,347,68,1],[365,17,365,75,1],[366,21,366,28,0],[368,17,368,50,1],[369,13,369,14,1],[373,17,373,56,1],[375,9,375,10,1],[383,13,383,85,1],[384,17,384,24,0],[386,13,386,76,1],[387,28,387,42,1],[387,43,387,45,1],[387,46,387,54,1],[388,17,388,36,1],[390,13,390,72,1],[391,13,391,32,1],[392,17,392,24,0],[394,13,394,27,1],[397,22,397,31,1],[397,32,397,34,1],[397,35,397,42,1],[399,17,399,56,1],[402,17,402,49,1],[403,17,403,45,1],[405,17,405,42,1],[411,9,411,10,1],[419,13,419,69,1],[420,17,420,24,1],[425,17,425,75,1],[426,21,426,28,1],[428,17,428,50,1],[430,17,430,51,1],[431,13,431,14,1],[435,17,435,56,1],[437,9,437,10,1],[444,28,444,44,1],[444,45,444,47,1],[444,48,444,56,1],[446,17,446,39,1],[448,17,448,29,0],[449,17,449,47,0],[451,9,451,10,1],[460,13,462,39,1],[462,39,462,56,1],[462,56,463,39,1],[463,39,463,56,1],[463,56,464,40,1],[464,40,464,61,1],[464,61,465,42,1],[465,42,465,62,0],[465,62,466,22,1],[466,22,466,55,0],[466,55,467,15,1],[477,13,477,42,1],[478,13,478,88,1]]);
+    </script>
+  </body>
+</html>

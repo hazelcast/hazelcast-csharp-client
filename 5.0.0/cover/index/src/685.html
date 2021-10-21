@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\TaskCoreExtensions.WithCancellation.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    internal static partial class TaskCoreExtensions
+    {
+        public static ConfiguredCancelableAsyncEnumerable&lt;T&gt; WithCancellation&lt;T&gt;(this IAsyncEnumerable&lt;T&gt; enumerable, bool throwOnCancel, CancellationToken cancellationToken)
+            =&gt; new ConfiguredCancelableAsyncEnumerable&lt;T&gt;(enumerable, continueOnCapturedContext: true, throwOnCancel, cancellationToken);
+
+        // this is a direct copy of ConfiguredAsyncEnumerable&lt;T&gt;
+        // with added support for &#39;throwOnCancel&#39;
+
+        /// &lt;summary&gt;Provides an awaitable async enumerable that enables cancelable iteration and configured awaits.&lt;/summary&gt;
+        [StructLayout(LayoutKind.Auto)]
+        public readonly struct ConfiguredCancelableAsyncEnumerable&lt;T&gt;
+        {
+            private readonly IAsyncEnumerable&lt;T&gt; _enumerable;
+            private readonly CancellationToken _cancellationToken;
+            private readonly bool _continueOnCapturedContext;
+            public readonly bool _throwOnCancel;
+
+            internal ConfiguredCancelableAsyncEnumerable(IAsyncEnumerable&lt;T&gt; enumerable, bool continueOnCapturedContext, bool throwOnCancel, CancellationToken cancellationToken)
+            {
+                _enumerable = enumerable;
+                _continueOnCapturedContext = continueOnCapturedContext;
+                _cancellationToken = cancellationToken;
+                _throwOnCancel = throwOnCancel;
+            }
+
+            /// &lt;summary&gt;Configures how awaits on the tasks returned from an async iteration will be performed.&lt;/summary&gt;
+            /// &lt;param name=&quot;continueOnCapturedContext&quot;&gt;Whether to capture and marshal back to the current context.&lt;/param&gt;
+            /// &lt;returns&gt;The configured enumerable.&lt;/returns&gt;
+            /// &lt;remarks&gt;This will replace any previous value set by &lt;see cref=&quot;ConfigureAwait(bool)&quot;/&gt; for this iteration.&lt;/remarks&gt;
+            public ConfiguredCancelableAsyncEnumerable&lt;T&gt; ConfigureAwait(bool continueOnCapturedContext) =&gt;
+                new ConfiguredCancelableAsyncEnumerable&lt;T&gt;(_enumerable, continueOnCapturedContext, _throwOnCancel, _cancellationToken);
+
+            /// &lt;summary&gt;Sets the &lt;see cref=&quot;CancellationToken&quot;/&gt; to be passed to &lt;see cref=&quot;IAsyncEnumerable{T}.GetAsyncEnumerator(CancellationToken)&quot;/&gt; when iterating.&lt;/summary&gt;
+            /// &lt;param name=&quot;cancellationToken&quot;&gt;The &lt;see cref=&quot;CancellationToken&quot;/&gt; to use.&lt;/param&gt;
+            /// &lt;returns&gt;The configured enumerable.&lt;/returns&gt;
+            /// &lt;remarks&gt;This will replace any previous &lt;see cref=&quot;CancellationToken&quot;/&gt; set by &lt;see cref=&quot;WithCancellation(CancellationToken)&quot;/&gt; for this iteration.&lt;/remarks&gt;
+            public ConfiguredCancelableAsyncEnumerable&lt;T&gt; WithCancellation(CancellationToken cancellationToken) =&gt;
+                new ConfiguredCancelableAsyncEnumerable&lt;T&gt;(_enumerable, _continueOnCapturedContext, throwOnCancel: true, cancellationToken);
+
+            public Enumerator GetAsyncEnumerator() =&gt;
+                // as with other &quot;configured&quot; awaitable-related type in CompilerServices, we don&#39;t null check to defend against
+                // misuse like `default(ConfiguredCancelableAsyncEnumerable&lt;T&gt;).GetAsyncEnumerator()`, which will null ref by design.
+                new Enumerator(_enumerable.GetAsyncEnumerator(_cancellationToken), _continueOnCapturedContext, _throwOnCancel);
+
+            /// &lt;summary&gt;Provides an awaitable async enumerator that enables cancelable iteration and configured awaits.&lt;/summary&gt;
+            [StructLayout(LayoutKind.Auto)]
+            public readonly struct Enumerator
+            {
+                private readonly IAsyncEnumerator&lt;T&gt; _enumerator;
+                private readonly bool _continueOnCapturedContext;
+                private readonly bool _throwOnCancel;
+
+                internal Enumerator(IAsyncEnumerator&lt;T&gt; enumerator, bool continueOnCapturedContext, bool throwOnCancel)
+                {
+                    _enumerator = enumerator;
+                    _continueOnCapturedContext = continueOnCapturedContext;
+                    _throwOnCancel = throwOnCancel;
+                }
+
+                /// &lt;summary&gt;Advances the enumerator asynchronously to the next element of the collection.&lt;/summary&gt;
+                /// &lt;returns&gt;
+                /// A &lt;see cref=&quot;ValueTask{Boolean}&quot;/&gt; that will complete with a result of &lt;c&gt;true&lt;/c&gt;
+                /// if the enumerator was successfully advanced to the next element, or &lt;c&gt;false&lt;/c&gt; if the enumerator has
+                /// passed the end of the collection.
+                /// &lt;/returns&gt;
+                //public ConfiguredValueTaskAwaitable2&lt;bool&gt; MoveNextAsync()
+                public async ValueTask&lt;bool&gt; MoveNextAsync()
+                {
+                    // was: _enumerator.MoveNextAsync().ConfigureAwait(_continueOnCapturedContext);
+                    //
+                    // must return anything that can be awaited ie has a GetAwaiter() method
+                    // this probably is OK *but* it creates an async state machine + try/catch
+                    // we&#39;d rather want to implement our own ConfiguredValueTaskAwaitable
+                    // but - that beast is tricky now?
+                    //
+                    // TODO: ?
+
+                    try
+                    {
+                        return await _enumerator.MoveNextAsync().ConfigureAwait(_continueOnCapturedContext);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        if (_throwOnCancel) throw;
+                        return false;
+                    }
+                }
+
+                /// &lt;summary&gt;Gets the element in the collection at the current position of the enumerator.&lt;/summary&gt;
+                public T Current =&gt; _enumerator.Current;
+
+                /// &lt;summary&gt;
+                /// Performs application-defined tasks associated with freeing, releasing, or
+                /// resetting unmanaged resources asynchronously.
+                /// &lt;/summary&gt;
+                public ConfiguredValueTaskAwaitable DisposeAsync() =&gt;
+                    _enumerator.DisposeAsync().ConfigureAwait(_continueOnCapturedContext);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,16,27,137,1],[43,17,43,42,1],[44,17,44,72,1],[45,17,45,56,1],[46,17,46,48,1],[47,13,47,14,1],[54,17,54,135,0],[61,17,61,140,0],[66,17,66,127,1],[78,21,78,46,1],[79,21,79,76,1],[80,21,80,52,1],[81,17,81,18,1],[103,25,103,109,1],[105,21,105,55,1],[107,25,107,44,1],[107,45,107,51,0],[108,25,108,38,1],[110,17,110,18,1],[113,37,113,56,1],[120,21,120,90,1]]);
+    </script>
+  </body>
+</html>

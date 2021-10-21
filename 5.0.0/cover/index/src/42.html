@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlServiceExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Sql
+{
+    public static class SqlServiceExtensions
+    {
+        // NOTE: these are convenient extension methods, and the C# compiler is clever enough to figure
+        // things out between the various overloads, including the &#39;params object[]&#39; overload.
+
+        /// &lt;summary&gt;
+        /// Executes a SQL query.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;service&quot;&gt;The &lt;see cref=&quot;ISqlService&quot;/&gt; which executes the query.&lt;/param&gt;
+        /// &lt;param name=&quot;sql&quot;&gt;The SQL query text to execute.&lt;/param&gt;
+        /// &lt;param name=&quot;parameters&quot;&gt;Parameters for the SQL query.&lt;/param&gt;
+        /// &lt;returns&gt;An &lt;see cref=&quot;ISqlQueryResult&quot;/&gt; instance that represents the result of the query.&lt;/returns&gt;
+        public static Task&lt;ISqlQueryResult&gt; ExecuteQueryAsync(this ISqlService service, string sql, params object[] parameters) 
+            =&gt; service?.ExecuteQueryAsync(sql, parameters) ?? throw new ArgumentNullException(nameof(service));
+
+        /// &lt;summary&gt;
+        /// Executes a SQL query.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;service&quot;&gt;The &lt;see cref=&quot;ISqlService&quot;/&gt; which executes the query.&lt;/param&gt;
+        /// &lt;param name=&quot;sql&quot;&gt;The SQL query text to execute.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;An &lt;see cref=&quot;ISqlQueryResult&quot;/&gt; instance that represents the result of the query.&lt;/returns&gt;
+        public static Task&lt;ISqlQueryResult&gt; ExecuteQueryAsync(this ISqlService service, string sql, CancellationToken cancellationToken) 
+            =&gt; service?.ExecuteQueryAsync(sql, cancellationToken: cancellationToken) ?? throw new ArgumentNullException(nameof(service));
+
+        /// &lt;summary&gt;
+        /// Executes a SQL query.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;service&quot;&gt;The &lt;see cref=&quot;ISqlService&quot;/&gt; which executes the query.&lt;/param&gt;
+        /// &lt;param name=&quot;sql&quot;&gt;The SQL query text to execute.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options for the SQL query.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;An &lt;see cref=&quot;ISqlQueryResult&quot;/&gt; instance that represents the result of the query.&lt;/returns&gt;
+        public static Task&lt;ISqlQueryResult&gt; ExecuteQueryAsync(this ISqlService service, string sql, SqlStatementOptions options, CancellationToken cancellationToken = default) 
+            =&gt; service?.ExecuteQueryAsync(sql, options: options, cancellationToken: cancellationToken) ?? throw new ArgumentNullException(nameof(service));
+
+        /// &lt;summary&gt;
+        /// Executes an SQL command.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;service&quot;&gt;The &lt;see cref=&quot;ISqlService&quot;/&gt; which executes the command.&lt;/param&gt;
+        /// &lt;param name=&quot;sql&quot;&gt;The SQL command text to execute.&lt;/param&gt;
+        /// &lt;param name=&quot;parameters&quot;&gt;Parameters for the SQL command.&lt;/param&gt;
+        /// &lt;returns&gt;The number of rows affected byt the command.&lt;/returns&gt;
+        public static Task&lt;long&gt; ExecuteCommandAsync(this ISqlService service, string sql, params object[] parameters) 
+            =&gt; service?.ExecuteCommandAsync(sql, parameters) ?? throw new ArgumentNullException(nameof(service));
+
+        /// &lt;summary&gt;
+        /// Executes an SQL command.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;service&quot;&gt;The &lt;see cref=&quot;ISqlService&quot;/&gt; which executes the command.&lt;/param&gt;
+        /// &lt;param name=&quot;sql&quot;&gt;The SQL command text to execute.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options for the SQL command.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The number of rows affected byt the command.&lt;/returns&gt;
+        public static Task&lt;long&gt; ExecuteCommandAsync(this ISqlService service, string sql, SqlStatementOptions options, CancellationToken cancellationToken = default) 
+            =&gt; service?.ExecuteCommandAsync(sql, options: options, cancellationToken: cancellationToken) ?? throw new ArgumentNullException(nameof(service));
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[20,16,20,111,1],[30,16,30,137,0],[41,16,41,155,1],[51,16,51,113,0],[62,16,62,157,0]]);
+    </script>
+  </body>
+</html>

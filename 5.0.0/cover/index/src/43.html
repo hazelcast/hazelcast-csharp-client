@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlStatementOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Sql
+{
+    public class SqlStatementOptions
+    {
+        /// &lt;summary&gt;
+        /// Default &lt;see cref=&quot;SqlStatementOptions&quot;/&gt;.
+        /// Equivalent to &lt;c&gt;new SqlStatementOptions()&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        public static readonly SqlStatementOptions Default = new SqlStatementOptions();
+
+        private string _schema;
+        private TimeSpan _timeout = TimeSpan.Zero;
+        private int _cursorBufferSize = 4096;
+
+        /// &lt;summary&gt;
+        /// The schema name.
+        /// The default value is &lt;c&gt;null&lt;/c&gt; meaning only the default search path is used.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;
+        /// The engine will try to resolve the non-qualified object identifiers from the statement in the
+        /// given schema. If not found, the default search path will be used, which looks for objects in the predefined
+        /// schemas &#39;partitioned&#39; and &#39;public&#39;.
+        /// &lt;/para&gt;
+        /// &lt;para&gt;
+        /// The schema name is case sensitive. For example, &#39;foo&#39; and &#39;Foo&#39; are different schemas
+        /// &lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public string Schema
+        {
+            get =&gt; _schema;
+            set
+            {
+#pragma warning disable CA1508 // Avoid dead conditional code
+                // false positive, https://github.com/dotnet/roslyn-analyzers/issues/3685 (?)
+                if (value != null &amp;&amp; string.IsNullOrWhiteSpace(value))
+#pragma warning restore CA1508
+                    throw new ArgumentException(&quot;Empty or whitespace schema is not allowed.&quot;);
+
+                _schema = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// &lt;para&gt;
+        /// Statement execution timeout.
+        /// If the timeout is reached for a running statement, it will be cancelled forcefully.
+        /// Defaults to &lt;see cref=&quot;TimeSpan.Zero&quot;/&gt;.
+        /// &lt;/para&gt;
+        /// &lt;para&gt;
+        /// &lt;see cref=&quot;TimeSpan.Zero&quot;/&gt; means that the timeout in server config will be used.
+        /// &lt;see cref=&quot;System.Threading.Timeout.InfiniteTimeSpan&quot;/&gt; means no timeout.
+        /// &lt;/para&gt;
+        /// &lt;/summary&gt;
+        public TimeSpan Timeout
+        {
+            get =&gt; _timeout;
+            set
+            {
+                if (value &lt; TimeSpan.Zero &amp;&amp; value != System.Threading.Timeout.InfiniteTimeSpan)
+                    throw new ArgumentException(&quot;Negative timeouts apart from Timeout.InfiniteTimeSpan are not allowed.&quot;);
+
+                _timeout = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// The cursor buffer size (measured in the number of rows).
+        /// Only positive values are allowed.
+        /// Defaults to &lt;c&gt;4096&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;
+        /// When a statement is submitted for execution, a &lt;see cref=&quot;SqlQueryResult&quot;/&gt; is returned as a result. When rows are ready to be
+        /// consumed, they are put into an internal buffer of the cursor. This parameter defines the maximum number of rows in
+        /// that buffer. When the threshold is reached, the backpressure mechanism will slow down the execution, possibly to a
+        /// complete halt, to prevent out-of-memory.
+        /// &lt;/para&gt;
+        /// &lt;para&gt;
+        /// The default value is expected to work well for most workloads. A bigger buffer size may give you a slight performance
+        /// boost for queries with large result sets at the cost of increased memory consumption.
+        /// &lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int CursorBufferSize
+        {
+            get =&gt; _cursorBufferSize;
+            set
+            {
+                if (value &lt;= 0)
+                    throw new ArgumentException(&quot;Cursor buffer size must be positive.&quot;);
+
+                _cursorBufferSize = value;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,88,1],[28,9,28,51,1],[29,9,29,46,1],[47,20,47,27,1],[52,17,52,71,0],[54,21,54,95,0],[56,17,56,33,0],[57,13,57,14,0],[73,20,73,28,1],[76,17,76,97,0],[77,21,77,123,0],[79,17,79,34,0],[80,13,80,14,0],[102,20,102,37,1],[105,17,105,32,1],[106,21,106,89,0],[108,17,108,43,1],[109,13,109,14,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.Setting.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HMapWithCache&lt;TKey, TValue&gt; // Setting
+    {
+        /// &lt;inheritdoc /&gt;
+        protected override async Task SetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
+            // which would populate the cache with the wrong value - so we clear *after* the value has effectively
+            // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
+            // eventually all reads will get the correct value
+            await base.SetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
+            _cache.Remove(keyData);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;TValue&gt; GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
+        {
+            // if we Remove before AddOrUpdate then we could get a read after Remove and before AddOrUpdate,
+            // which would populate the cache with the wrong value - so we clear *after* the value has effectively
+            // changed on the server - so a read between AddOrUpdate and Remove would get the old value, but
+            // eventually all reads will get the correct value
+            var value = await base.GetAndSetAsync(keyData, valueData, timeToLive, maxIdle).CfAwait();
+            _cache.Remove(keyData);
+            return value;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task SetAsync(Dictionary&lt;Guid, Dictionary&lt;int, List&lt;KeyValuePair&lt;IData, IData&gt;&gt;&gt;&gt; ownerEntries, CancellationToken cancellationToken)
+        {
+            // see comments on the base Map class
+            // this should be no different except for this entry invalidation method,
+            // added as a continuation to each task that is being created
+
+            void InvalidateEntries(IEnumerable&lt;KeyValuePair&lt;IData, IData&gt;&gt; list)
+            {
+                foreach (var (key, _) in list)
+                    _cache.Remove(key);
+            }
+
+            var tasks = new List&lt;Task&gt;();
+            foreach (var (ownerId, part) in ownerEntries)
+            {
+                foreach (var (partitionId, list) in part)
+                {
+                    if (list.Count == 0) continue;
+
+                    var requestMessage = MapPutAllCodec.EncodeRequest(Name, list, false);
+                    requestMessage.PartitionId = partitionId;
+                    var ownerTask = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken)
+                        .ContinueWith(_ =&gt; InvalidateEntries(list), default, default, TaskScheduler.Current);
+                    tasks.Add(ownerTask);
+                }
+            }
+
+            var task = Task.WhenAll(tasks);
+
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;bool&gt; TrySetAsync(IData keyData, IData valueData, TimeSpan serverTimeout, CancellationToken cancellationToken)
+        {
+            var added = await base.TrySetAsync(keyData, valueData, serverTimeout, cancellationToken).CfAwait();
+            if (added) _cache.Remove(keyData);
+            return added;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task&lt;TValue&gt; GetOrAdd(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        {
+            _cache.Remove(keyData);
+            var task = base.GetOrAdd(keyData, valueData, timeToLive, maxIdle, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task SetTransientAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle, CancellationToken cancellationToken)
+        {
+            _cache.Remove(keyData);
+            var task = base.SetTransientAsync(keyData, valueData, timeToLive, maxIdle, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,13,34,84,1],[35,13,35,36,1],[36,9,36,10,1],[45,13,45,102,0],[46,13,46,36,0],[47,13,47,26,0],[48,9,48,10,0],[63,26,63,38,0],[63,39,63,41,0],[63,42,63,46,0],[64,21,64,40,0],[65,13,65,14,0],[67,13,67,42,0],[68,22,68,41,0],[68,42,68,44,0],[68,45,68,57,0],[70,26,70,49,0],[70,50,70,52,0],[70,53,70,57,0],[72,21,72,41,0],[74,21,74,90,0],[75,21,75,62,0],[76,21,77,44,0],[77,44,77,67,0],[77,67,77,110,0],[78,21,78,42,0],[82,13,82,44,0],[88,13,88,34,0],[90,9,90,10,0],[95,13,95,112,0],[96,13,96,23,0],[96,24,96,47,0],[97,13,97,26,0],[98,9,98,10,0],[107,13,107,36,0],[108,13,108,98,0],[113,13,113,41,0],[115,9,115,10,0],[124,13,124,36,0],[125,13,125,107,0],[130,13,130,34,0],[132,9,132,10,0]]);
+    </script>
+  </body>
+</html>

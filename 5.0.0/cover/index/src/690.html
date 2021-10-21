@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastCommandLineConfigurationProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.CommandLine;
+
+namespace Hazelcast.Configuration
+{
+    /// &lt;summary&gt;
+    /// A command line based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class HazelcastCommandLineConfigurationProvider : CommandLineConfigurationProvider
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastCommandLineConfigurationProvider&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;args&quot;&gt;The command line args.&lt;/param&gt;
+        /// &lt;param name=&quot;switchMappings&quot;&gt;The switch mappings.&lt;/param&gt;
+        public HazelcastCommandLineConfigurationProvider(IEnumerable&lt;string&gt; args, IDictionary&lt;string, string&gt; switchMappings = null)
+            : base(FilterArgs(args, switchMappings), switchMappings)
+        { }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Filters arguments.
+        /// &lt;/summary&gt;
+        internal static IEnumerable&lt;string&gt; FilterArgs(IEnumerable&lt;string&gt; args, IDictionary&lt;string, string&gt; switchMappings)
+        {
+            var hazelcastAndKeyDelimiter = &quot;hazelcast&quot; + ConfigurationPath.KeyDelimiter;
+
+            using var enumerator = args.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var arg = enumerator.Current;
+                if (string.IsNullOrWhiteSpace(arg)) continue;
+
+                int pos;
+
+                if (switchMappings != null &amp;&amp; arg.StartsWith(&quot;-&quot;, StringComparison.Ordinal))
+                {
+                    string argk, argv;
+                    if ((pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                    {
+                        argk = arg[..pos];
+                        argv = arg[(pos + 1)..];
+                    }
+                    else
+                    {
+                        argk = arg;
+                        argv = null;
+                    }
+
+                    argk = argk.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                    if (switchMappings.TryGetValue(argk, out var argm) &amp;&amp; 
+                        argm.StartsWith(hazelcastAndKeyDelimiter, StringComparison.Ordinal))
+                    {
+                        // yield the key
+                        yield return &quot;--&quot; + argm;
+
+                        // yield the value
+#pragma warning disable CA1508 // Avoid dead conditional code - false positive due to range operator?!
+                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
+                        if (argv != null) yield return argv;
+#pragma warning restore CA1508 
+                        else if (enumerator.MoveNext()) yield return enumerator.Current;
+                        continue; // next!
+                    }
+                }
+
+                if (arg.StartsWith(&quot;/hazelcast.&quot;, StringComparison.Ordinal) ||
+                    arg.StartsWith(&quot;--hazelcast.&quot;, StringComparison.Ordinal))
+                {
+                    if ((pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                    {
+                        // yield the key
+                        yield return arg[..pos].Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                        // yield the value
+                        yield return arg[(pos + 1)..];
+                    }
+                    else
+                    {
+                        // yield the key
+                        yield return arg.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                        // yield the value
+                        if (enumerator.MoveNext()) yield return enumerator.Current;
+                    }
+                }
+                else if (arg.StartsWith(&quot;hazelcast.&quot;, StringComparison.Ordinal) &amp;&amp;
+                         (pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                {
+                    // yield the key
+                    yield return &quot;--&quot; + arg[..pos].Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                    // yield the value
+                    yield return arg[(pos + 1)..];
+                }
+
+                // else ignore that arg (handled by the default command line provider)
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,15,36,69,1],[37,11,37,12,1],[45,13,45,89,1],[47,13,47,57,1],[48,13,48,42,1],[50,17,50,46,1],[51,17,51,52,1],[55,17,55,93,1],[58,21,58,80,0],[60,25,60,43,0],[61,25,61,49,0],[65,25,65,36,0],[66,25,66,37,0],[69,21,69,104,0],[71,21,72,93,0],[75,25,75,50,0],[80,25,80,42,0],[80,43,80,61,0],[82,30,82,56,0],[82,57,82,89,0],[83,25,83,34,0],[85,17,85,18,0],[87,17,88,78,1],[90,21,90,80,1],[93,25,93,120,1],[96,25,96,55,1],[101,25,101,113,1],[104,25,104,51,1],[104,52,104,84,1],[107,22,108,81,1],[111,21,111,123,1],[114,21,114,51,1],[118,13,118,14,1],[119,9,119,10,1]]);
+    </script>
+  </body>
+</html>
