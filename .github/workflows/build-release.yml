@@ -55,7 +55,7 @@ jobs:
           echo "Triggered by ${{ github.ref }} at ${{ github.sha }}"
           HZREF="${{ github.ref }}"
           HZBRANCH=${HZREF#refs/heads/}
-          
+
           if [ "$HZBRANCH" != "$HZREF" ]; then # it is a branch push
             HZVERSION=${HZBRANCH#release/}
             if [ "$HZVERSION" != "$HZBRANCH" ]; then # it is a release branch push
@@ -134,13 +134,13 @@ jobs:
         os: [ ubuntu-latest, windows-latest ]
 
     steps:
-      
+
       # Install Linux utilities
       - name: Install utilities (Linux only)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           # ubuntu-latest does not have proper git installed so we have to install it
           sudo apt-get install --yes --no-install-recommends \
             git
@@ -159,10 +159,6 @@ jobs:
           sudo apt-get install -y powershell
 
       # Install .NET (complete)
-      - name: Install .NET 2.1.x
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.1.x'
       - name: Install .NET 3.1.x
         uses: actions/setup-dotnet@v1
         with:
@@ -178,7 +174,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '11'
-          
+
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
@@ -206,7 +202,7 @@ jobs:
         id: getsnk
         shell: bash
         run: |
-          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk 
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
           ls -l ./build/hazelcast.snk
 
       # build signed and reproducible assemblies + docs (skipped on Linux)
@@ -283,7 +279,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: Examples
-          path: './temp/examples/*.zip'        
+          path: './temp/examples/*.zip'
 
       # git the docs, create the patch
       - name: Create docs patch
@@ -321,7 +317,7 @@ jobs:
       - name: Install Utilities (Linux only)
         shell: bash
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           # ubuntu-latest does not have proper git installed so we have to install it
           sudo apt-get install --yes --no-install-recommends \
             git
@@ -434,7 +430,7 @@ jobs:
       - name: Install Utilities (Linux only)
         shell: bash
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           # ubuntu-latest does not have proper git installed so we have to install it
           sudo apt-get install --yes --no-install-recommends \
             git
@@ -474,7 +470,7 @@ jobs:
           git config user.name "GitHub Actions (Build Release)"
 
       # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
-      # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different 
+      # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
       # repository that is private you will need to provide your own PAT."
       - name: Checkout devops
         uses: actions/checkout@v2

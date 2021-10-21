@@ -3,7 +3,7 @@ const github = require('@actions/github');
 const fs = require('fs').promises;
 
 async function run() {
-    
+
   try {
 
     core.info('Begin');
@@ -14,39 +14,40 @@ async function run() {
     const path = core.getInput('path', { required: true });
     const sha = core.getInput('sha', { required: true });
     const version = core.getInput('version', { required: false });
-    
+
     // get the REST api
     const octokit = github.getOctokit(token);
     const rest = octokit.rest;
-    
-    // get the context, the workflow, etc.
+
+    // get context
     const context = github.context;
-    const workflow = context.workflow;
-    const repository = context.payload.repository;
-    
-    // get the ref 
+    //const repository = context.payload.repository;
+    //const owner = repository.owner.login
+    //const repo = repository.name
+    const { owner, repo } = context.repo;
+
+    // get the ref
     // TODO: ref vs sha ?!
     const ref = getSha(context);
     if (!ref) {
       core.error(`Context: ${JSON.stringify(context, null, 2)}`);
       return process.exit(1);
     }
-    
+
     // create an in-progress check run
     // TODO: could we have 1 run for both linux & windows?
     const created = await rest.checks.create({
-        // TODO: ...context.repository syntax?
-        owner: repository.owner.login,
-        repo: repository.name,
+        owner: owner,
+        repo: repo,
         name: name,
         head_sha: ref,
-        status: 'in_progress', // queued, in_progress, completed        
+        status: 'in_progress', // queued, in_progress, completed
     });
-    
+
     // gather values
     var failed = false;
     var summary = `${name}:`;
-    
+
     try {
         const fpath = process.cwd() + '/' + path;
         const files = await fs.readdir(fpath, { withFileTypes: true});
@@ -85,7 +86,7 @@ async function run() {
         summary = `Failed: ${error.message}`;
         failed = true;
     }
-    
+
     // create failure annotation in case we failed
     var annotations = [];
     if (failed) {
@@ -99,22 +100,22 @@ async function run() {
             // raw_details (string)
         }];
     }
-    
+
     // update the check run
     const r_update = await rest.checks.update({
-        owner: repository.owner.login,
-        repo: repository.name,
+        owner: owner,
+        repo: repo,
         check_run_id: created.data.id,
         status: 'completed',
         conclusion: failed ? 'failure' : 'success', // success, failure, neutral, cancelled, timed_out, action_required, skipped
-        output: { 
-            title: `Test Coverage`, 
-            summary: summary, 
+        output: {
+            title: `Test Coverage`,
+            summary: summary,
             //text: '...details...',
             annotations
         }
     });
-   
+
     core.info('Completed.');
   }
   catch (error) {

@@ -57,10 +57,6 @@ jobs:
           sudo apt-get install -y powershell
 
       # Install .NET (complete)
-      - name: Install .NET 2.1.x
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.1.x'
       - name: Install .NET 3.1.x
         uses: actions/setup-dotnet@v1
         with:

@@ -27,7 +27,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          sudo apt-get update 
+          sudo apt-get update
           # ubuntu-latest does not have proper git installed so we have to install it
           sudo apt-get install --yes --no-install-recommends \
             git
@@ -46,10 +46,6 @@ jobs:
           sudo apt-get install -y powershell
 
       # Install .NET (complete)
-      - name: Install .NET 2.1.x
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '2.1.x'
       - name: Install .NET 3.1.x
         uses: actions/setup-dotnet@v1
         with:
@@ -65,7 +61,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: '11'
-          
+
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
@@ -92,7 +88,7 @@ jobs:
           if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
           ./hz.ps1 @a
 
-      # test results & coverage: we cannot report here as this workflow doesn't have 
+      # test results & coverage: we cannot report here as this workflow doesn't have
       # the required permissions nor tokens to write back to our resources (since it runs
       # on a PR) - so we upload everything as artifacts, and the report-pr workflow will
       # take care of reporting

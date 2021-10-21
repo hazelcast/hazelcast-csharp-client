@@ -29,9 +29,10 @@ The client version e.g. `1.2.3` or `1.2.3-preview.44`.
 This is how we use it in our own `build-release.yml` workflow:
 
 ```
-uses: ./.github/actions/test-action
+uses: ./.github/actions/dotcover-report
 with:
 	name: Test Coverage (${{ matrix.os }})
 	path: temp/tests/cover
 	version: ${{ needs.analyze.outputs.version }}
+	sha: ${{ github.sha }}
 ```
