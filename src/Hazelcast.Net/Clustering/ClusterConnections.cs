@@ -361,6 +361,7 @@ namespace Hazelcast.Clustering
                 // to the cluster views event, and then we should receive a members view,
                 // which in turn should change the state to Connected - unless something
                 // goes wrong
+                // TODO: consider *not* waiting for this and running directly on the member we're connected to?
                 var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
 
                 HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
