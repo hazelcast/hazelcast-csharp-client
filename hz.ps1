@@ -570,14 +570,22 @@ function ensure-server-files {
     ensure-jar "hazelcast-${hzVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}:jar:tests"
 
     if ($options.enterprise) {
-
-        # ensure we have the hazelcast enterprise server + test jar
-        ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
+		# ensure we have the hazelcast enterprise server + test jar
+		if(${hzVersion} -lt "5.0"){
+			ensure-jar "hazelcast-enterprise-all-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${hzVersion}"
+		}
+		else {
+			ensure-jar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
+		}		
         ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } else {
-
         # ensure we have the hazelcast server jar
-        ensure-jar "hazelcast-all-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${hzVersion}"
+		if(${hzVersion} -lt "5.0"){
+			ensure-jar "hazelcast-all-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${hzVersion}"
+		}
+		else {
+			ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+		}        
     }
 
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
