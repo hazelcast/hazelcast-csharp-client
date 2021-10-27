@@ -11,7 +11,7 @@
       "dest": "obj/dev/api",
       "disableGitFeatures": true,
       "disableDefaultFilter": false,
-      "properties": { "TargetFramework":  "netstandard2.0" }
+      "properties": { "TargetFramework": "netstandard2.0" }
     }
   ],
   "build": {
@@ -27,7 +27,7 @@
       {
         "src": "dev",
         "dest": "__DEST__",
-        "files": [ "api/index.md", "toc.yml", "doc/**.md", "cover/index.md" ]
+        "files": [ "index.md", "versions.md", "api/index.md", "toc.yml", "doc/**.md", "cover/index.md" ]
       }
     ],
     "resource": [ { "files": [ "images/**" ] } ],
@@ -42,6 +42,10 @@
     "fileMetadata": {
       "build-options": {
         "dev/doc/configuration/options.md": true
+      },
+      "_version": {
+        "dev/**/*": "__VERSION__",
+        "obj/**/*":  "__VERSION__"
       }
     },
     "dest": "../temp/docfx.out",

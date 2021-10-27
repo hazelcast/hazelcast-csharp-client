@@ -1,6 +1,7 @@
 - name: Documentation
-  href: /
-  homepage: doc-index.md
+  href: /latest/doc/index.html
 - name: Api Reference
+  href: /latest/api/index.html
+- name: All Versions
   href: /
-  homepage: api-index.md
+  homepage: versions.md

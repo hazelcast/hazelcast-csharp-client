@@ -1161,7 +1161,9 @@ function hz-build-docs-on-windows {
 
     # prepare docfx.json
     get-content "$docDir/_docfx.json" |
-        foreach-object { $_ -replace "__DEST__", $docDstDir } |
+        foreach-object {
+            $_ -replace "__DEST__", $docDstDir `
+               -replace "__VERSION__", $options.version } |
         set-content "$docDir/docfx.json"
 
     # build
@@ -1179,16 +1181,13 @@ function hz-build-docs-on-windows {
         $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
                           "Its content is not final and remains subject to changes.</div>"
         $devwarnClass = "devwarn"
-        $devdoc_doc = "<li>development / in-progress version <a href=`"dev/doc/index.html`">$($options.version)</a></li>"
-        $devdoc_api = "<li>development / in-progress version <a href=`"dev/api/index.html`">$($options.version)</a></li>"
     }
     else {
         $devwarnMessage = ""
         $devwarnClass = ""
-        $devdoc_doc = ""
-        $devdoc_api = ""
     }
 
+    # set or clear the DEVWARN header in documentation files
     get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
         foreach-object {
             $text = get-content -path $_
@@ -1198,14 +1197,25 @@ function hz-build-docs-on-windows {
             set-content -path $_ -value $text
         }
 
-    get-childitem -path "$tmpDir/docfx.out" -filter "*-index.html" |
+    # change the TOC link - probably can be done directly in DocFX but meh
+    get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
         foreach-object {
             $text = get-content -path $_
             $text = $text `
-              -replace "<li><!--DEVDOC_DOC--></li>", $devdoc_doc `
-              -replace "<li><!--DEVDOC_API--></li>", $devdoc_api
+                -replace "(?s-m)\<meta property=`"docfx:navrel`" content=`"../(.*)toc.html`"\>", "<meta property=`"docfx:navrel`" content=`"`${1}toc.html`">"
             set-content -path $_ -value $text
         }
+
+    # add link to public development documentation, if version has a suffix
+    $path = "$tmpDir/docfx.out/versions.html"
+    $text = get-content -path $path
+    $repl = "n/a"
+    if ($versionSuffix -ne "")
+    {
+        $repl = "$($options.version)`${1}"
+    }
+    $text = $text -replace '(?s-m)\<devdoc\>\$version(.*)\</devdoc\>', $repl # s-m enables single-line, disables multi-lines
+    set-content -path $path -value $text
 
     $text = get-content "$tmpDir/docfx.out/404.html"
     $text = $text -replace "<head>", "<head>`n    <base href=`"/hazelcast-csharp-client/`">"
@@ -1324,16 +1334,7 @@ function hz-git-docs-on-windows {
 
     &git -C "$pages" add -A
 
-    # create a symlink for latest docs -- but only if we are updating the latest docs, if we are building
-    # a development release then leave 'latest' alone - note that 'latest' is checked out as a file on Windows
-    # because Git has issues with symlinks there, but that is fine - just don't touch the file
-    if ($versionPrefix -eq "") {
-        # see https://stackoverflow.com/questions/5917249/git-symlinks-in-windows
-        if (test-path "$pages/latest") {
-            rm -force "$pages/latest" # going to be a file on Windows, a symlink on Linux: remove anyways
-        }
-        &git -C "$pages" update-index --add --cacheinfo 120000 "$(echo "$versionPrefix" | git hash-object -w --stdin)" "latest"
-    }
+    # create a symlink for latest docs -- NO! this is a release process task, see build-release.yml
 
     &git -C "$pages" commit -m "$docMessage"
 

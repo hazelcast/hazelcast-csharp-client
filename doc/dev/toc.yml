@@ -1,0 +1,6 @@
+- name: Documentation
+  href: doc/index.html
+- name: Api Reference
+  href: api/index.html
+- name: All Versions
+  href: /versions.html
