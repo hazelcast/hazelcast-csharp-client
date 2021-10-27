@@ -1143,6 +1143,22 @@ article h5{
     font-size: 80%;
     float: left;
     margin-left: 6px;
+    text-align: center;
 }
 
 #autocollapse { background: #000; }
+
+table.table-bordered.hz-welcome {
+  margin: 0 0 32px 0;
+}
+
+table.table-bordered.hz-welcome td {
+  width: 33%;
+  padding: 4px 4px 16px 4px;
+  border: 16px solid white;
+  border-bottom: 1px solid black;
+}
+
+.navbar {
+  font-size: 12px;
+}
