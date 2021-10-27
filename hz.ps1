@@ -576,6 +576,7 @@ function ensure-server-files {
 	}
 	else {
 	    ensure-jar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
+	    ensure-jar "hazelcast-sql-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${hzVersion}"
 	}		
         ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
     } 
@@ -586,6 +587,7 @@ function ensure-server-files {
 	}
 	else {
 	    ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+	    ensure-jar "hazelcast-sql-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${hzVersion}"
 	}        
     }
 
