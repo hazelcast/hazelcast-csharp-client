@@ -1210,7 +1210,7 @@ function hz-build-docs-on-windows {
     $path = "$tmpDir/docfx.out/versions.html"
     $text = get-content -path $path
     $repl = "n/a"
-    if ($versionSuffix -ne "")
+    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix))
     {
         $repl = "$($options.version)`${1}"
     }
