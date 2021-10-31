@@ -48,16 +48,16 @@ namespace Hazelcast.Sql
                 // C# 'sbyte' is an 8-bit unsigned integer (from 0 to +255, inclusive) number.
                 { typeof (sbyte), "byte" },
                 { typeof (sbyte?), "java.lang.Byte" },
-                { typeof (byte), "byte" },
-                { typeof (byte?), "java.lang.Byte" },
+                { typeof (byte), "short" },
+                { typeof (byte?), "java.lang.Short" },
 
                 // Java 'short' is a 16-bit signed integer (from -32,768 to 32,767, inclusive) number.
                 // C# 'short' is a 16-bit signed integer (from -32,768 to 32,767, inclusive) number.
                 // C# 'ushort' is a 16-bit unsigned integer (from 0 to 65,535, inclusive) number.
                 { typeof (short), "short" },
                 { typeof (short?), "java.lang.Short" },
-                { typeof (ushort), "short" },
-                { typeof (ushort?), "java.lang.Short" },
+                { typeof (ushort), "int" },
+                { typeof (ushort?), "java.lang.Integer" },
 
                 // Java 'int' is a 32-bit signed integer (from -2^31 to 2^31-1, inclusive) number.
                 // Java 'Integer' is the corresponding reference type (nullable) number.
@@ -65,8 +65,8 @@ namespace Hazelcast.Sql
                 // C# 'uint' is a 32-bit unsigned integer (from 0 to 2^32-1, inclusive) number.
                 { typeof (int), "int" },
                 { typeof (int?), "java.lang.Integer" },
-                { typeof (uint), "int"},
-                { typeof (uint?), "java.lang.Integer" },
+                { typeof (uint), "long"},
+                { typeof (uint?), "java.lang.Long" },
 
                 // Java 'long' is a 64-bit signed integer (from -2^63 to 2^63-1, inclusive) number.
                 // Java 'Long' is the corresponding reference type (nullable) number.
@@ -74,8 +74,8 @@ namespace Hazelcast.Sql
                 // C# 'ulong' is a 64-bit unsigned integer (from 0 to 2^64-1, inclusive) number.
                 { typeof (long), "long" },
                 { typeof (long?), "java.lang.Long" },
-                { typeof (ulong), "java.math.long" },
-                { typeof (ulong?), "java.math.Long" },
+                { typeof (ulong), "java.math.BigInteger" },
+                { typeof (ulong?), "java.math.BigInteger" },
 
                 // Java 'float' is a single-precision 32-bit IEEE 754 floating point number.
                 // Java 'double' is a double-precision 64-bit IEEE 754 floating point number.
