@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMultiMapGetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapValuesWithPredicateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the collection of values associated with the key.
+    /// Queries the map based on the specified predicate and returns the values of matching entries.Specified predicate
+    /// runs on all members in parallel. The collection is NOT backed by the map, so changes to the map are NOT reflected
+    /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw
+    /// a QueryResultSizeExceededException if query result size limit is configured.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMultiMapGetServerCodec
+    internal static class TransactionalMapValuesWithPredicateServerCodec
 #else
-    internal static class TransactionalMultiMapGetCodec
+    internal static class TransactionalMapValuesWithPredicateCodec
 #endif
     {
-        public const int RequestMessageType = 983552; // 0x0F0200
-        public const int ResponseMessageType = 983553; // 0x0F0201
+        public const int RequestMessageType = 921856; // 0x0E1100
+        public const int ResponseMessageType = 921857; // 0x0E1101
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
@@ -69,12 +72,12 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Name of the Transactional Multi Map
+            /// Name of the Transactional Map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// ID of the transaction
+            /// ID of the this transaction operation
             ///&lt;/summary&gt;
             public Guid TxnId { get; set; }
 
@@ -84,18 +87,18 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// The key whose associated values are returned
+            /// Specified query criteria.
             ///&lt;/summary&gt;
-            public IData Key { get; set; }
+            public IData Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData predicate)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMultiMap.Get&quot;
+                OperationName = &quot;TransactionalMap.ValuesWithPredicate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -104,7 +107,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
+            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -117,7 +120,7 @@ namespace Hazelcast.Protocol.Codecs
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -126,7 +129,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The collection of the values associated with the key
+            /// Result value collection of the query.
             ///&lt;/summary&gt;
             public IList&lt;IData&gt; Response { get; set; }
         }
@@ -157,7 +160,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,75,1],[94,13,94,81,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,50,1],[98,13,98,34,1],[121,44,121,48,1],[121,49,121,53,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,29,1],[141,13,141,88,1],[142,13,142,29,1],[143,9,143,10,1]]);
+      highlightRanges([[88,13,92,15,1],[93,13,93,123,1],[94,13,94,104,1],[95,13,95,88,1],[96,13,96,75,1],[97,13,97,81,1],[98,13,98,48,1],[99,13,99,53,1],[100,13,100,56,1],[101,13,101,34,1],[124,44,124,48,1],[124,49,124,53,1],[141,13,141,64,1],[142,13,142,53,1],[143,13,143,29,1],[144,13,144,88,1],[145,13,145,29,1],[146,9,146,10,1]]);
     </script>
   </body>
 </html>

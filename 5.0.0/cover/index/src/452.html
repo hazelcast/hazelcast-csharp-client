@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListLongCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListIntCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,42 +23,41 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ListLongCodec
+    internal static class ListIntegerCodec
     {
-        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;long&gt; collection)
+        public static void Encode(ClientMessage clientMessage, ICollection&lt;int&gt; collection)
         {
-            var itemCount = collection.Count();
-            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfLong]);
+            var itemCount = collection.Count;
+            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfInt]);
 
             var i = 0;
             foreach (var value in collection)
             {
-                frame.Bytes.WriteLongL(i * BytesExtensions.SizeOfLong, value);
+                frame.Bytes.WriteIntL(i* BytesExtensions.SizeOfInt, value);
                 i++;
             }
 
             clientMessage.Append(frame);
         }
 
-        public static List&lt;long&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static IList&lt;int&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
         {
             return Decode(iterator.Take());
         }
 
-        public static List&lt;long&gt; Decode(Frame frame)
+        public static IList&lt;int&gt; Decode(Frame frame)
         {
             // frame.Bytes is never null
-            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfLong;
-            var result = new List&lt;long&gt;(itemCount);
+            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfInt;
+            var result = new List&lt;int&gt;(itemCount);
             for (var i = 0; i &lt; itemCount; i++)
             {
-                result.Add(frame.Bytes.ReadLongL(i * BytesExtensions.SizeOfLong));
+                result.Add(frame.Bytes.ReadIntL(i * BytesExtensions.SizeOfInt));
             }
             return result;
         }
@@ -67,7 +66,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[26,13,26,48,0],[27,13,27,85,0],[29,13,29,23,0],[30,22,30,31,0],[30,32,30,34,0],[30,35,30,45,0],[32,17,32,79,0],[33,17,33,21,0],[36,13,36,41,0],[37,9,37,10,0],[41,13,41,44,0],[47,13,47,77,0],[48,13,48,52,0],[49,18,49,27,0],[49,29,49,42,0],[49,44,49,47,0],[51,17,51,83,0],[53,13,53,27,0]]);
+      highlightRanges([[25,13,25,46,1],[26,13,26,84,1],[28,13,28,23,1],[29,22,29,31,1],[29,32,29,34,1],[29,35,29,45,1],[31,17,31,76,1],[32,17,32,21,1],[35,13,35,41,1],[36,9,36,10,1],[40,13,40,44,1],[46,13,46,76,1],[47,13,47,51,1],[48,18,48,27,1],[48,29,48,42,1],[48,44,48,47,1],[50,17,50,81,1],[52,13,52,27,1]]);
     </script>
   </body>
 </html>

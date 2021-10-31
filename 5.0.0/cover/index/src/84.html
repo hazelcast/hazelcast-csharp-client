@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\DictStreamSerializerBase.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\DefaultSerializerDefinitions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,50 +22,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Numerics;
+using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    // TODO: BigDecimal
-
-    internal abstract class DictStreamSerializerBase&lt;DType&gt; : IStreamSerializer&lt;DType&gt;
-            where DType : IDictionary&lt;object, object&gt;
+    internal class DefaultSerializerDefinitions : ISerializerDefinitions
+    {
+        public void AddSerializers(SerializationService service)
         {
-            public abstract int TypeId { get; }
+            //TODO: proper support for generic types
+            service.AddConstantSerializer&lt;JavaClass&gt;(new JavaClassSerializer());
+            service.AddConstantSerializer&lt;DateTime&gt;(new DateSerializer());
+            service.AddConstantSerializer&lt;BigInteger&gt;(new BigIntegerSerializer());
 
-            public virtual void Dispose()
-            { }
+            service.AddConstantSerializer&lt;object[]&gt;(new ArrayStreamSerializer());
 
-            public abstract DType Read(IObjectDataInput input);
+            //TODO map server side collection types.
+            service.AddConstantSerializer&lt;List&lt;object&gt;&gt;(new ListSerializer&lt;object&gt;());
+            service.AddConstantSerializer&lt;LinkedList&lt;object&gt;&gt;(new LinkedListSerializer&lt;object&gt;());
 
-            public void Write(IObjectDataOutput output, DType obj)
-            {
-                var size = obj.Count;
-                output.WriteInt(size);
-                if (size &gt; 0)
-                {
-                    foreach (var kvp in obj)
-                    {
-                        output.WriteObject(kvp.Key);
-                        output.WriteObject(kvp.Value);
-                    }
-                }
-            }
+            service.AddConstantSerializer&lt;Dictionary&lt;object, object&gt;&gt;(new HashMapStreamSerializer());
+            service.AddConstantSerializer&lt;ConcurrentDictionary&lt;object, object&gt;&gt;(new ConcurrentHashMapStreamSerializer());
 
-            protected static DType DeserializeEntries(IObjectDataInput input, int size, DType result)
-            {
-                for (int i = 0; i &lt; size; i++)
-                {
-                    result.Add(input.ReadObject&lt;object&gt;(), input.ReadObject&lt;object&gt;());
-                }
-                return result;
-            }
+            service.AddConstantSerializer&lt;HashSet&lt;object&gt;&gt;(new HashSetStreamSerializer());
+
+            service.AddConstantSerializer&lt;HazelcastJsonValue&gt;(new HazelcastJsonValueSerializer());
+
+            service.AddConstantSerializer&lt;HLocalDate&gt;(new HLocalDateSerializer());
+            service.AddConstantSerializer&lt;HLocalTime&gt;(new HLocalTimeSerializer());
+            service.AddConstantSerializer&lt;HLocalDateTime&gt;(new HLocalDateTimeSerializer());
+            service.AddConstantSerializer&lt;HOffsetDateTime&gt;(new HOffsetDateTimeSerializer());
+
+            service.AddConstantSerializer&lt;HBigDecimal&gt;(new HBigDecimalSerializer());
         }
+    }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,15,27,16,0],[33,17,33,38,0],[34,17,34,39,0],[35,17,35,30,0],[37,30,37,37,0],[37,38,37,40,0],[37,41,37,44,0],[39,25,39,53,0],[40,25,40,55,0],[43,13,43,14,0],[47,22,47,31,0],[47,33,47,41,0],[47,43,47,46,0],[49,21,49,88,0],[51,17,51,31,0]]);
+      highlightRanges([[29,13,29,81,1],[30,13,30,75,1],[31,13,31,83,1],[33,13,33,82,1],[36,13,36,87,1],[37,13,37,99,1],[39,13,39,102,1],[40,13,40,122,1],[42,13,42,91,1],[44,13,44,99,1],[46,13,46,83,1],[47,13,47,83,1],[48,13,48,91,1],[49,13,49,93,1],[51,13,51,85,1],[52,9,52,10,1]]);
     </script>
   </body>
 </html>

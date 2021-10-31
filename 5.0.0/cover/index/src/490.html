@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheManager.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,101 +22,291 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
+using Hazelcast.Metrics;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.NearCaching
 {
-    /// &lt;summary&gt;
-    /// Represents the options for one Near Cache.
-    /// &lt;/summary&gt;
-    public class NearCacheOptions
-    {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        public NearCacheOptions()
-        { }
+    // NOTES
+    // each &#39;client&#39; has a NearCache manager
+    // this is &#39;above&#39; the cluster, not part of it, but it uses the cluster
+    // = can have a ref to the cluster?
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        private NearCacheOptions(NearCacheOptions other)
+    internal class NearCacheManager : IAsyncEnumerable&lt;NearCache&gt;, IAsyncDisposable, IMetricAsyncSource
+    {
+        private readonly ILogger _logger;
+
+        private readonly ConcurrentAsyncDictionary&lt;string, NearCache&gt; _caches = new ConcurrentAsyncDictionary&lt;string, NearCache&gt;();
+
+        private readonly Cluster _cluster;
+        private readonly SerializationService _serializationService;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly long _reconciliationIntervalMillis;
+        private readonly CommonNearCacheOptions _options;
+
+        private Task _repairing;
+        private CancellationTokenSource _repairingCancellation;
+
+        private long _lastAntiEntropyRunMillis;
+        private volatile int _running;
+
+        public NearCacheManager(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory, CommonNearCacheOptions options)
         {
-            EvictionPolicy = other.EvictionPolicy;
-            EvictionPercentage = other.EvictionPercentage;
-            InMemoryFormat = other.InMemoryFormat;
-            MaxIdleSeconds = other.MaxIdleSeconds;
-            CleanupPeriodSeconds = other.CleanupPeriodSeconds;
-            MaxSize = other.MaxSize;
-            TimeToLiveSeconds = other.TimeToLiveSeconds;
-            InvalidateOnChange = other.InvalidateOnChange;
+            _cluster = cluster;
+            _serializationService = serializationService;
+            _loggerFactory = loggerFactory;
+            _logger = loggerFactory.CreateLogger&lt;NearCacheManager&gt;();
+            _options = options;
+
+            _reconciliationIntervalMillis = GetReconciliationIntervalSeconds() * 1000;
+        }
+
+        public async ValueTask&lt;NearCache&lt;TValue&gt;&gt; GetOrCreateNearCacheAsync&lt;TValue&gt;(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
+            =&gt; new NearCache&lt;TValue&gt;(await GetOrCreateNearCacheAsync(name, options, cancellationToken).CfAwait());
+
+        public async ValueTask&lt;NearCache&gt; GetOrCreateNearCacheAsync(string name, NearCacheOptions options, CancellationToken cancellationToken = default)
+        {
+            return await _caches.GetOrAddAsync(name, async (n, token) =&gt;
+            {
+                var nearCache = new NearCache(n, _cluster, _serializationService, _loggerFactory, options, GetMaxToleratedMissCount());
+                await InitializeNearCache(nearCache).CfAwait();
+                return nearCache;
+            }, cancellationToken).CfAwait();
+        }
+
+        private int GetMaxToleratedMissCount()
+        {
+            var value = _options.MaxToleratedMissCount;
+            if (value &lt; 0)
+                throw new ConfigurationException(&quot;Option &#39;MaxToleratedMissCount&#39; cannot be &lt; 0.&quot;);
+            return value;
         }
 
         /// &lt;summary&gt;
-        /// Gets or sets the eviction policy.
+        /// Fetches and processes meta data for all managed caches.
         /// &lt;/summary&gt;
-        public EvictionPolicy EvictionPolicy { get; set; } = EvictionPolicy.Lru;
+        private async ValueTask FetchMetadataAsync()
+        {
+            var names = new List&lt;string&gt;();
+
+            await foreach (var (_, value) in _caches)
+                names.Add(value.Name);
+
+            if (names.Count == 0)
+                return;
+
+            await foreach (var (member, metadata) in FetchMetadataAsync(names))
+            {
+                try
+                {
+                    await RepairGuids(metadata.PartitionUuidList).CfAwait();
+                    await RepairSequences(metadata.NamePartitionSequenceList).CfAwait();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, $&quot;An exception was thrown while processing invalidation meta data from address {member.Address}.&quot;);
+                }
+            }
+        }
 
         /// &lt;summary&gt;
-        /// Gets or sets the eviction percentage.
+        /// Fetches metadata for specified caches.
         /// &lt;/summary&gt;
-        internal int EvictionPercentage { get; set; } = 20;
+        /// &lt;param name=&quot;names&quot;&gt;The names of the caches.&lt;/param&gt;
+        private async IAsyncEnumerable&lt;(MemberInfo, MapFetchNearCacheInvalidationMetadataCodec.ResponseParameters)&gt; FetchMetadataAsync(ICollection&lt;string&gt; names)
+        {
+            foreach (var member in _cluster.Members.GetMembers(true))
+            {
+                var requestMessage = MapFetchNearCacheInvalidationMetadataCodec.EncodeRequest(names, member.Id);
+                var responseMessage = await _cluster.Messaging.SendToMemberAsync(requestMessage, member.Id).CfAwait();
+                var response = MapFetchNearCacheInvalidationMetadataCodec.DecodeResponse(responseMessage);
 
-        /// &lt;summary&gt;
-        /// Gets or sets the in-memory format.
-        /// &lt;/summary&gt;
-        public InMemoryFormat InMemoryFormat { get; set; } = InMemoryFormat.Binary;
+                yield return (member, response);
+            }
+        }
 
-        /// &lt;summary&gt;
-        /// Gets or sets the maximum number of seconds an entry can stay in the cache untouched before being evicted.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;zero means forever.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public int MaxIdleSeconds { get; set; }
+        // Marks relevant data as stale if missed invalidation event count is above the max tolerated miss count.
+        private async ValueTask FixSequenceGaps()
+        {
+            await foreach (var (_, cache) in _caches)
+            {
+                cache.RepairingHandler?.FixSequenceGap();
+            }
+        }
 
-        /// &lt;summary&gt;
-        /// Gets or sets the period of the cleanup.
-        /// &lt;/summary&gt;
-        internal int CleanupPeriodSeconds { get; set; } = 5;
+        private int GetReconciliationIntervalSeconds()
+        {
+            var reconciliationIntervalSeconds =_options.ReconciliationIntervalSeconds;
+            if (reconciliationIntervalSeconds &lt; 0)
+                throw new ConfigurationException(&quot;Option &#39;ReconciliationIntervalSeconds&#39; cannot be &lt; 0.&quot;);
 
-        /// &lt;summary&gt;
-        /// Gets or sets the maximum size of the cache before entries get evicted.
-        /// &lt;/summary&gt;
-        public int MaxSize { get; set; } = int.MaxValue;
+            var minReconciliationIntervalSeconds = _options.MinReconciliationIntervalSeconds;
+            if (minReconciliationIntervalSeconds &lt; 0)
+                throw new ConfigurationException(&quot;Option &#39;MinReconciliationIntervalSeconds&#39; cannot be &lt; 0.&quot;);
 
-        /// &lt;summary&gt;
-        /// Gets or sets the number of seconds entries stay in the cache before being evicted.
-        /// &lt;/summary&gt;
-        public int TimeToLiveSeconds { get; set; }
+            if (reconciliationIntervalSeconds &gt; 0 &amp;&amp; reconciliationIntervalSeconds &lt; minReconciliationIntervalSeconds)
+                throw new ConfigurationException(&quot;When it is &gt; 0, option &#39;ReconciliationIntervalSeconds&#39; &quot; +
+                                    &quot;must be &gt;= option &#39;MinReconciliationIntervalSeconds&#39;.&quot;);
 
-        /// &lt;summary&gt;
-        /// Whether to invalidate entries when entries in the backing data structure are changed.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;When true, the cache listens for cluster-wide changes and invalidate entries accordingly.&lt;/para&gt;
-        /// &lt;para&gt;Changes to the local Hazelcast instance always invalidate the cache immediately.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool InvalidateOnChange { get; set; } = true;
+            return reconciliationIntervalSeconds;
+        }
+
+        private async ValueTask InitializeNearCache(NearCache nearCache)
+        {
+            await nearCache.InitializeAsync().CfAwait();
+
+            if (!nearCache.IsInvalidating)
+                return;
+
+            var repairingHandler = nearCache.RepairingHandler;
+            if (repairingHandler == null) return; // though that should never happen
+
+            // initialize
+            await foreach (var (member, metadata) in FetchMetadataAsync(new[] { nearCache.Name }))
+            {
+                try
+                {
+                    repairingHandler.InitializeGuids(metadata.PartitionUuidList);
+                    repairingHandler.InitializeSequences(metadata.NamePartitionSequenceList);
+                }
+                catch (Exception e)
+                {
+                    _logger.LogWarning(e, $&quot;An exception was thrown while processing invalidation meta data from address {member.Address}.&quot;);
+                }
+            }
+
+            // start repairing task if not started
+            if (Interlocked.CompareExchange(ref _running, 1, 0) == 0)
+            {
+                _repairingCancellation = new CancellationTokenSource();
+                _repairing = Repair(_repairingCancellation.Token).AsTask();
+
+                Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
+            }
+        }
+
+        // body of the background repairing task
+        // runs until cancelled - and then, it may simply stop, or throw
+        private async ValueTask Repair(CancellationToken cancellationToken)
+        {
+            while (true)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                try
+                {
+                    await FixSequenceGaps().CfAwait();
+                    await RunAntiEntropyIfNeededAsync().CfAwait();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, &quot;Caught an exception while repairing NearCache.&quot;);
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                    return;
+
+                // TODO: this should be a constant
+                await Task.Delay(1000, cancellationToken).CfAwait();
+            }
+        }
+
+        private async ValueTask RepairGuids(IList&lt;KeyValuePair&lt;int, Guid&gt;&gt; guids)
+        {
+            foreach (var (partitionId, newUuid) in guids)
+            {
+                await foreach (var (_, cache) in _caches)
+                {
+                    cache?.RepairingHandler?.UpdateUuid(partitionId, newUuid);
+                }
+            }
+        }
+
+        private async ValueTask RepairSequences(IList&lt;KeyValuePair&lt;string, IList&lt;KeyValuePair&lt;int, long&gt;&gt;&gt;&gt; namePartitionSequenceList)
+        {
+            foreach (var (name, newSequences) in namePartitionSequenceList)
+            {
+                foreach (var (partitionId, newSequence) in newSequences)
+                {
+                    var (hasCache, cache) = await _caches.TryGetAsync(name).CfAwait();
+                    if (!hasCache) continue;
+
+                    cache.RepairingHandler?.UpdateSequence(partitionId, newSequence, true);
+                }
+            }
+        }
+
+        // Periodically sends generic operations to cluster members to get latest invalidation metadata.
+        private async ValueTask RunAntiEntropyIfNeededAsync()
+        {
+            if (_reconciliationIntervalMillis == 0)
+                return;
+
+            // if this thread-safe?
+            var lastAntiEntropyRunMillis = Interlocked.Read(ref _lastAntiEntropyRunMillis);
+            var sinceLastRun = Clock.Milliseconds - lastAntiEntropyRunMillis;
+            if (sinceLastRun &gt;= _reconciliationIntervalMillis)
+            {
+                await FetchMetadataAsync().CfAwait();
+                Interlocked.Exchange(ref _lastAntiEntropyRunMillis, Clock.Milliseconds);
+            }
+        }
 
         /// &lt;inheritdoc /&gt;
-        public override string ToString()
+        public async IAsyncEnumerator&lt;NearCache&gt; GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
         {
-            var text = new StringBuilder(&quot;NearCacheConfig{&quot;);
-            return text.ToString();
+            await foreach (var entry in _caches) yield return entry.Value;
         }
 
-        /// &lt;summary&gt;
-        /// Clones the options.
-        /// &lt;/summary&gt;
-        internal NearCacheOptions Clone() =&gt; new NearCacheOptions(this);
+        /// &lt;inheritdoc /&gt;
+        public async IAsyncEnumerable&lt;Metric&gt; PublishMetrics()
+        {
+            await foreach (var cache in this)
+                foreach (var metric in cache.Statistics.PublishMetrics())
+                    yield return metric;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _running, 0, 1) == 0)
+                return;
+
+            if (_repairingCancellation != null)
+            {
+                _repairingCancellation.Cancel();
+                try
+                {
+                    await _repairing.CfAwait();
+                }
+                catch (OperationCanceledException) { /* expected */ }
+
+                _repairingCancellation.Dispose();
+            }
+
+            await foreach (var (name, cache) in _caches)
+            {
+                _caches.TryRemove(name); // ok with concurrent dictionary
+                await cache.DisposeAsync().CfAwait();
+            }
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,9,28,34,1],[29,11,29,12,1],[34,9,34,57,1],[36,13,36,51,1],[37,13,37,59,1],[38,13,38,51,1],[39,13,39,51,1],[40,13,40,63,1],[41,13,41,37,1],[42,13,42,57,1],[43,13,43,59,1],[44,9,44,10,1],[49,48,49,52,1],[49,53,49,57,1],[49,62,49,80,1],[49,62,49,80,1],[54,43,54,47,1],[54,48,54,52,1],[54,57,54,59,1],[54,57,54,59,1],[59,48,59,52,1],[59,53,59,57,1],[67,37,67,41,1],[67,42,67,46,1],[72,45,72,49,1],[72,50,72,54,1],[72,59,72,60,1],[72,59,72,60,1],[77,30,77,34,1],[77,35,77,39,1],[77,44,77,56,1],[77,44,77,56,1],[82,40,82,44,1],[82,45,82,49,1],[91,42,91,46,1],[91,47,91,51,1],[91,56,91,60,1],[91,56,91,60,1],[96,13,96,62,0],[97,13,97,36,0],[103,46,103,72,1]]);
+      highlightRanges([[39,9,39,132,1],[53,9,53,154,1],[55,13,55,32,1],[56,13,56,58,1],[57,13,57,44,1],[58,13,58,70,1],[59,13,59,32,1],[61,13,61,87,1],[62,9,62,10,1],[65,16,65,114,1],[69,13,71,17,1],[71,17,71,136,1],[71,136,72,17,1],[72,17,72,64,1],[72,64,73,17,1],[73,17,73,34,1],[73,34,74,13,1],[74,13,74,14,1],[74,14,74,45,1],[75,9,75,10,1],[79,13,79,56,1],[80,13,80,27,1],[81,17,81,99,0],[82,13,82,26,1],[90,13,90,44,0],[92,28,92,42,0],[92,43,92,45,0],[92,46,92,53,0],[93,17,93,39,0],[95,13,95,34,0],[96,17,96,24,0],[98,28,98,50,0],[98,51,98,53,0],[98,54,98,79,0],[102,21,102,77,0],[103,21,103,89,0],[104,17,104,18,0],[105,17,105,36,0],[107,21,107,142,0],[108,17,108,18,0],[109,13,109,14,0],[110,9,110,10,0],[118,22,118,32,0],[118,33,118,35,1],[118,36,118,69,1],[120,17,120,113,0],[121,17,121,119,0],[122,17,122,107,0],[124,17,124,49,0],[125,13,125,14,0],[126,9,126,10,1],[131,28,131,42,1],[131,43,131,45,1],[131,46,131,53,1],[133,17,133,58,1],[135,9,135,10,1],[139,13,139,87,1],[140,13,140,51,1],[141,17,141,107,0],[143,13,143,94,1],[144,13,144,54,1],[145,17,145,110,0],[147,13,147,119,1],[148,17,149,94,0],[151,13,151,50,1],[156,13,156,57,1],[158,13,158,43,1],[159,17,159,24,1],[161,13,161,63,1],[162,13,162,42,1],[162,43,162,50,0],[165,28,165,50,0],[165,51,165,53,1],[165,54,165,98,1],[169,21,169,82,0],[170,21,170,94,0],[171,17,171,18,0],[172,17,172,36,0],[174,21,174,142,0],[175,17,175,18,0],[179,13,179,70,1],[181,17,181,72,1],[182,17,182,76,1],[184,17,184,89,1],[186,9,186,10,1],[192,13,192,25,1],[194,17,194,63,1],[195,21,195,28,0],[199,21,199,55,1],[200,21,200,67,1],[201,17,201,18,1],[202,17,202,36,0],[204,21,204,91,0],[205,17,205,18,0],[207,17,207,63,1],[208,21,208,28,0],[211,17,211,69,1],[213,9,213,10,0],[217,22,217,48,0],[217,49,217,51,0],[217,52,217,57,0],[219,32,219,46,0],[219,47,219,49,0],[219,50,219,57,0],[221,21,221,79,0],[223,13,223,14,0],[224,9,224,10,0],[228,22,228,46,0],[228,47,228,49,0],[228,50,228,75,0],[230,26,230,56,0],[230,57,230,59,0],[230,60,230,72,0],[232,21,232,87,0],[233,21,233,35,0],[235,21,235,92,0],[237,13,237,14,0],[238,9,238,10,0],[243,13,243,52,1],[244,17,244,24,0],[247,13,247,92,1],[248,13,248,78,1],[249,13,249,63,1],[251,17,251,54,0],[252,17,252,89,0],[254,9,254,10,1],[259,28,259,37,0],[259,38,259,40,0],[259,41,259,48,0],[259,50,259,75,0],[260,9,260,10,0],[265,28,265,37,0],[265,38,265,40,0],[265,41,265,45,0],[266,26,266,36,0],[266,37,266,39,0],[266,40,266,73,0],[267,21,267,41,0],[268,9,268,10,0],[273,13,273,70,1],[274,17,274,24,1],[276,13,276,48,1],[278,17,278,49,1],[281,21,281,48,1],[282,17,282,18,0],[283,17,283,51,1],[283,69,283,70,1],[285,17,285,50,1],[288,28,288,45,1],[288,46,288,48,1],[288,49,288,56,1],[290,17,290,41,1],[291,17,291,54,1],[293,9,293,10,1]]);
     </script>
   </body>
 </html>

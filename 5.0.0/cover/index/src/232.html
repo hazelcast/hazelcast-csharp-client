@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAddPartitionLostListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAddNearCacheInvalidationListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,38 +49,42 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds a MapPartitionLostListener. The addPartitionLostListener returns a register-id. This id is needed to remove
-    /// the MapPartitionLostListener using the removePartitionLostListener(String) method.
-    /// There is no check for duplicate registrations, so if you register the listener twice, it will get events twice.
-    /// IMPORTANT: Please see com.hazelcast.partition.PartitionLostListener for weaknesses.
-    /// IMPORTANT: Listeners registered from HazelcastClient may miss some of the map partition lost events due
-    /// to design limitations.
+    /// Adds listener to map. This listener will be used to listen near cache invalidation events.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapAddPartitionLostListenerServerCodec
+    internal static class MapAddNearCacheInvalidationListenerServerCodec
 #else
-    internal static class MapAddPartitionLostListenerCodec
+    internal static class MapAddNearCacheInvalidationListenerCodec
 #endif
     {
-        public const int RequestMessageType = 72448; // 0x011B00
-        public const int ResponseMessageType = 72449; // 0x011B01
-        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 81664; // 0x013F00
+        public const int ResponseMessageType = 81665; // 0x013F01
+        private const int RequestListenerFlagsFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestLocalOnlyFieldOffset = RequestListenerFlagsFieldOffset + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventMapPartitionLostPartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventMapPartitionLostUuidFieldOffset = EventMapPartitionLostPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventMapPartitionLostInitialFrameSize = EventMapPartitionLostUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventMapPartitionLostMessageType = 72450; // 0x011B02
+        private const int EventIMapInvalidationSourceUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventIMapInvalidationPartitionUuidFieldOffset = EventIMapInvalidationSourceUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventIMapInvalidationSequenceFieldOffset = EventIMapInvalidationPartitionUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventIMapInvalidationInitialFrameSize = EventIMapInvalidationSequenceFieldOffset + BytesExtensions.SizeOfLong;
+        private const int EventIMapInvalidationMessageType = 81666; // 0x013F02
+        private const int EventIMapBatchInvalidationInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventIMapBatchInvalidationMessageType = 81667; // 0x013F03
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// name of map
+            /// name of the map
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// flags of enabled listeners.
+            ///&lt;/summary&gt;
+            public int ListenerFlags { get; set; }
 
             /// &lt;summary&gt;
             /// if true fires events that originated from this node only, otherwise fires all events
@@ -89,16 +93,17 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, int listenerFlags, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.AddPartitionLostListener&quot;
+                OperationName = &quot;Map.AddNearCacheInvalidationListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestListenerFlagsFieldOffset, listenerFlags);
             initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
@@ -111,6 +116,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
+            request.ListenerFlags = initialFrame.Bytes.ReadIntL(RequestListenerFlagsFieldOffset);
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
@@ -121,7 +127,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// returns the registration id for the MapPartitionLostListener.
+            /// A unique string which is used as a key to remove the listener.
             ///&lt;/summary&gt;
             public Guid Response { get; set; }
         }
@@ -148,29 +154,56 @@ namespace Hazelcast.Protocol.Codecs
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeMapPartitionLostEvent(int partitionId, Guid uuid)
+        public static ClientMessage EncodeIMapInvalidationEvent(IData key, Guid sourceUuid, Guid partitionUuid, long sequence)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventMapPartitionLostInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventMapPartitionLostMessageType);
+            var initialFrame = new Frame(new byte[EventIMapInvalidationInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventIMapInvalidationMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EventMapPartitionLostPartitionIdFieldOffset, partitionId);
-            initialFrame.Bytes.WriteGuidL(EventMapPartitionLostUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteGuidL(EventIMapInvalidationSourceUuidFieldOffset, sourceUuid);
+            initialFrame.Bytes.WriteGuidL(EventIMapInvalidationPartitionUuidFieldOffset, partitionUuid);
+            initialFrame.Bytes.WriteLongL(EventIMapInvalidationSequenceFieldOffset, sequence);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
+            CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
+            return clientMessage;
+        }
+        public static ClientMessage EncodeIMapBatchInvalidationEvent(ICollection&lt;IData&gt; keys, ICollection&lt;Guid&gt; sourceUuids, ICollection&lt;Guid&gt; partitionUuids, ICollection&lt;long&gt; sequences)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventIMapBatchInvalidationInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventIMapBatchInvalidationMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            ListMultiFrameCodec.Encode(clientMessage, keys, DataCodec.Encode);
+            ListUUIDCodec.Encode(clientMessage, sourceUuids);
+            ListUUIDCodec.Encode(clientMessage, partitionUuids);
+            ListLongCodec.Encode(clientMessage, sequences);
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;int, Guid, object, ValueTask&gt; handleMapPartitionLostEventAsync, object state, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;IData, Guid, Guid, long, object, ValueTask&gt; handleIMapInvalidationEventAsync, Func&lt;IList&lt;IData&gt;, IList&lt;Guid&gt;, IList&lt;Guid&gt;, IList&lt;long&gt;, object, ValueTask&gt; handleIMapBatchInvalidationEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventMapPartitionLostMessageType)
+            if (messageType == EventIMapInvalidationMessageType)
             {
                 var initialFrame = iterator.Take();
-                var partitionId =  initialFrame.Bytes.ReadIntL(EventMapPartitionLostPartitionIdFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuidL(EventMapPartitionLostUuidFieldOffset);
-                return handleMapPartitionLostEventAsync(partitionId, uuid, state);
+                var sourceUuid =  initialFrame.Bytes.ReadGuidL(EventIMapInvalidationSourceUuidFieldOffset);
+                var partitionUuid =  initialFrame.Bytes.ReadGuidL(EventIMapInvalidationPartitionUuidFieldOffset);
+                var sequence =  initialFrame.Bytes.ReadLongL(EventIMapInvalidationSequenceFieldOffset);
+                var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+                return handleIMapInvalidationEventAsync(key, sourceUuid, partitionUuid, sequence, state);
+            }
+            if (messageType == EventIMapBatchInvalidationMessageType)
+            {
+                iterator.Take(); // empty initial frame
+                var keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+                var sourceUuids = ListUUIDCodec.Decode(iterator);
+                var partitionUuids = ListUUIDCodec.Decode(iterator);
+                var sequences = ListLongCodec.Decode(iterator);
+                return handleIMapBatchInvalidationEventAsync(keys, sourceUuids, partitionUuids, sequences, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
             return default;
@@ -180,7 +213,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[84,13,88,15,0],[89,13,89,123,0],[90,13,90,104,0],[91,13,91,88,0],[92,13,92,83,0],[93,13,93,48,0],[94,13,94,53,0],[95,13,95,34,0],[116,36,116,40,0],[116,41,116,45,0],[133,13,133,64,0],[134,13,134,53,0],[135,13,135,48,0],[136,13,136,91,0],[137,13,137,29,0],[138,9,138,10,0],[156,13,156,64,0],[157,13,157,57,0],[158,13,158,65,0],[160,17,160,52,0],[161,17,161,109,0],[162,17,162,96,0],[163,17,163,83,0],[165,13,165,137,0],[166,13,166,28,0],[167,9,167,10,0]]);
+      highlightRanges([[88,13,92,15,1],[93,13,93,123,1],[94,13,94,104,1],[95,13,95,88,1],[96,13,96,90,1],[97,13,97,83,1],[98,13,98,48,1],[99,13,99,53,1],[100,13,100,34,1],[122,36,122,40,1],[122,41,122,45,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,48,1],[142,13,142,91,1],[143,13,143,29,1],[144,9,144,10,1],[178,13,178,64,1],[179,13,179,57,1],[180,13,180,65,1],[182,17,182,52,1],[183,17,183,108,1],[184,17,184,114,1],[185,17,185,104,1],[186,17,186,80,1],[187,17,187,106,1],[189,13,189,70,0],[191,17,191,33,0],[192,17,192,83,0],[193,17,193,66,0],[194,17,194,69,0],[195,17,195,64,0],[196,17,196,115,0],[198,13,198,137,0],[199,13,199,28,0],[200,9,200,10,1]]);
     </script>
   </body>
 </html>

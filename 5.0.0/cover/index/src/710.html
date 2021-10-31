@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterState.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterMessaging.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,400 +23,312 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Partitioning;
-using Microsoft.Extensions.Logging;
+using Hazelcast.Messaging;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Clustering
 {
     /// &lt;summary&gt;
-    /// Represents the state of the cluster.
+    /// Provides the messaging services of a cluster.
     /// &lt;/summary&gt;
-    internal class ClusterState : IAsyncDisposable
+    internal class ClusterMessaging
     {
-        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
-        private readonly object _mutex = new object();
-        private readonly StateChangeQueue _stateChangeQueue;
-
-        private Action _shutdownRequested;
-        private volatile bool _readonlyProperties;
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMembers _clusterMembers;
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ClusterState&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterMessaging&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
+        /// &lt;param name=&quot;clusterState&quot;&gt;The cluster state.&lt;/param&gt;
+        /// &lt;param name=&quot;clusterMembers&quot;&gt;The cluster members.&lt;/param&gt;
+        public ClusterMessaging(ClusterState clusterState, ClusterMembers clusterMembers)
         {
-            Options = options;
-            ClusterName = clusterName;
-            ClientName = clientName;
-            Partitioner = partitioner;
-            LoggerFactory = loggerFactory;
+            _clusterState = clusterState;
+            _clusterMembers = clusterMembers;
 
-            _stateChangeQueue = new StateChangeQueue(loggerFactory);
-
-            HConsole.Configure(x=&gt; x.Configure&lt;ClusterState&gt;().SetPrefix(&quot;CLUST.STATE&quot;));
-        }
-
-        #region Events
-
-        /// &lt;summary&gt;
-        /// Triggers when the state changes.
-        /// &lt;/summary&gt;
-        public Func&lt;ClientState, ValueTask&gt; StateChanged
-        {
-            get =&gt; _stateChangeQueue.StateChanged;
-            set
-            {
-                ThrowIfPropertiesAreReadOnly();
-                _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
-            }
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterMessaging&gt;().SetPrefix(&quot;MSGING&quot;));
         }
 
         /// &lt;summary&gt;
-        /// Triggers when shutdown is requested.
+        /// Sends a message to a random member.
         /// &lt;/summary&gt;
-        public Action ShutdownRequested
-        {
-            get =&gt; _shutdownRequested;
-            set
-            {
-                ThrowIfPropertiesAreReadOnly();
-                _shutdownRequested = value;
-            }
-        }
-
-        #endregion
-
-        #region Readonly Properties
-
-        /// &lt;summary&gt;
-        /// Throws an &lt;see cref=&quot;InvalidOperationException&quot;/&gt; if properties (On...) are read-only.
-        /// &lt;/summary&gt;
-        public void ThrowIfPropertiesAreReadOnly()
-        {
-            if (_readonlyProperties) throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
-        }
-
-        /// &lt;summary&gt;
-        /// Sets properties (On...) as read-only.
-        /// &lt;/summary&gt;
-        public void SetPropertiesReadOnly()
-        {
-            _readonlyProperties = true;
-        }
-
-        #endregion
-
-        #region Infos
-
-        /// &lt;summary&gt;
-        /// Gets the unique identifier of the cluster, as assigned by the client.
-        /// &lt;/summary&gt;
-        public Guid ClientId { get; } = Guid.NewGuid();
-
-        /// &lt;summary&gt;
-        /// Gets the name of the cluster client, as assigned by the client.
-        /// &lt;/summary&gt;
-        public string ClientName { get; }
-
-        /// &lt;summary&gt;
-        /// Gets the name of the cluster server.
-        /// &lt;/summary&gt;
-        public string ClusterName { get; }
-
-        #endregion
-
-        #region ClientState
-
-        // NOTE: the initial ClientState is the default value, i.e. zero
-        // we don&#39;t make it ClientState.Unknown because we don&#39;t want it
-        // to be publicly visible, as this is a purely internal state
-
-        /// &lt;summary&gt;
-        /// Gets the client state.
-        /// &lt;/summary&gt;
-        public ClientState ClientState { get; private set; }
-
-        /// &lt;summary&gt;
-        /// Changes the state, and pushes the change to the events queue.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        public void ChangeState(ClientState newState)
-        {
-            lock (_mutex)
-            {
-                if (ClientState == newState)
-                    return;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
-                _stateChangeQueue.Add(newState);
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Changes the state if it is as expected, and pushes the change to the events queue.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;param name=&quot;expectedState&quot;&gt;The expected state.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool ChangeState(ClientState newState, ClientState expectedState)
-        {
-            lock (_mutex)
-            {
-                if (ClientState != expectedState)
-                    return false;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
-                _stateChangeQueue.Add(newState);
-                return true;
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Changes the state if it is as expected, and pushes the change to the events queue.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;param name=&quot;expectedStates&quot;&gt;The expected states.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool ChangeState(ClientState newState, params ClientState[] expectedStates)
-        {
-            lock (_mutex)
-            {
-                if (!expectedStates.Contains(ClientState))
-                    return false;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
-                _stateChangeQueue.Add(newState);
-                return true;
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Changes the state if it is as expected, and pushes the change to the events queue,
-        /// then waits for the event to be handled.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the state change event has been handled.&lt;/returns&gt;
-        public async Task ChangeStateAndWait(ClientState newState)
-        {
-            Task wait;
-            lock (_mutex)
-            {
-                if (ClientState == newState)
-                    return;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
-                wait = _stateChangeQueue.AddAndWait(newState);
-            }
-
-            await wait.CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Changes the state if it is as expected, and pushes the change to the events queue,
-        /// then waits for the event to be handled.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;param name=&quot;expectedState&quot;&gt;The expected state.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed, and the corresponding
-        /// event has been handled; otherwise (not changed) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public async Task&lt;bool&gt; ChangeStateAndWait(ClientState newState, ClientState expectedState)
-        {
-            Task wait;
-            lock (_mutex)
-            {
-                if (ClientState != expectedState)
-                    return false;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $&quot;{ClientName} state -&gt; {ClientState}&quot;);
-                wait = _stateChangeQueue.AddAndWait(newState);
-            }
-
-            await wait.CfAwait();
-            return true;
-        }
-
-        /// &lt;summary&gt;
-        /// Changes the state if it is as expected, and pushes the change to the events queue,
-        /// then waits for the event to be handled.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;newState&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;param name=&quot;expectedStates&quot;&gt;The expected states.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the state was as expected, and thus changed, and the corresponding
-        /// event has been handled; otherwise (not changed) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public async Task&lt;bool&gt; ChangeStateAndWait(ClientState newState, params ClientState[] expectedStates)
-        {
-            Task wait;
-            lock (_mutex)
-            {
-                if (!expectedStates.Contains(ClientState))
-                    return false;
-
-                ClientState = newState;
-                wait = _stateChangeQueue.AddAndWait(newState);
-            }
-
-            await wait.CfAwait();
-            return true;
-        }
-
-        /// &lt;summary&gt;
-        /// Waits until connected, or it becomes impossible to connect.
-        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
         /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if connected; otherwise &lt;c&gt;false&lt;/c&gt; meaning it has become impossible to connect.&lt;/returns&gt;
-        public ValueTask&lt;bool&gt; WaitForConnectedAsync(CancellationToken cancellationToken)
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
         {
-            lock (_mutex)
-            {
-                // already connected
-                if (ClientState == ClientState.Connected) return new ValueTask&lt;bool&gt;(true);
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
-                // never going to be connected
-                if (ClientState != ClientState.Started &amp;&amp; ClientState != ClientState.Disconnected) return new ValueTask&lt;bool&gt;(false);
-            }
-
-            return WaitForConnectedAsync2(cancellationToken);
-        }
-
-        private async ValueTask&lt;bool&gt; WaitForConnectedAsync2(CancellationToken cancellationToken)
-        {
-            TaskCompletionSource&lt;ClientState&gt; wait;
-            CancellationTokenRegistration reg;
-
-            lock (_mutex)
-            {
-                // already connected
-                if (ClientState == ClientState.Connected) return true;
-
-                // never going to be connected
-                if (ClientState != ClientState.Started &amp;&amp; ClientState != ClientState.Disconnected) return false;
-
-                // must wait
-                wait = new TaskCompletionSource&lt;ClientState&gt;();
-                reg = cancellationToken.Register(() =&gt; wait.TrySetCanceled());
-                _stateChangeQueue.StateChanged += x =&gt;
-                {
-                    // either connected, or never going to be connected
-                    if (x != ClientState.Started &amp;&amp; x != ClientState.Disconnected)
-                        wait.TrySetResult(x);
-
-                    // keep waiting
-                    return default;
-                };
-            }
-
-            ClientState state;
-            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
-
-            reg.Dispose();
-
-            return state == ClientState.Connected;
+            return await SendAsyncInternal(message, null, -1, default, cancellationToken).CfAwait();
         }
 
         /// &lt;summary&gt;
-        /// Whether the cluster is connected.
+        /// Sends a message to a member.
         /// &lt;/summary&gt;
-        public bool IsConnected =&gt; ClientState == ClientState.Connected;
-
-        /// &lt;summary&gt;
-        /// Whether the cluster is active i.e. connected or connecting.
-        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;When the cluster is active it is either connected, or trying to get
-        /// connected. It may make sense to retry operations that fail, because they
-        /// should succeed when the cluster is eventually connected.&lt;/para&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;memberId&quot;/&gt; is the default value, sends the message to a random member. If it
+        /// is an unknown member, sends the message to a random number too.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        public bool IsActive =&gt; ClientState.IsActiveState();
-
-        /// &lt;summary&gt;
-        /// Throws a &lt;see cref=&quot;ClientOfflineException&quot;/&gt; if the cluster is not active.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;innerException&quot;&gt;An optional inner exception.&lt;/param&gt;
-        public void ThrowIfNotActive(Exception innerException = null)
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken = default)
         {
-            if (!IsActive) throw new ClientOfflineException(innerException, ClientState);
-        }
+            if (message == null) throw new ArgumentNullException(nameof(message));
 
-        #endregion
-
-        public Exception ThrowClientOfflineException()
-        {
-            // due to a race condition between ClusterMembers potentially removing all its connections,
-            // and ClusterConnections figuring we are now disconnected and changing the state, the state
-            // here could still be ClientState.Connected - fix it.
-
-            var clientState = ClientState;
-            if (clientState == ClientState.Connected) clientState = ClientState.Disconnected;
-            return new ClientOfflineException(clientState);
+            return await SendAsyncInternal(message, null, -1, memberId, cancellationToken).CfAwait();
         }
 
         /// &lt;summary&gt;
-        /// Requests that the client shuts down.
+        /// Sends a message to a member.
         /// &lt;/summary&gt;
-        public void RequestShutdown()
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default)
         {
-            _shutdownRequested?.Invoke();
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
+
+            return await SendAsyncInternal(message, memberConnection, -1, default, cancellationToken).CfAwait();
         }
 
         /// &lt;summary&gt;
-        /// Gets the options.
+        /// Sends a message to a member.
         /// &lt;/summary&gt;
-        public IClusterOptions Options { get; }
-
-        /// &lt;summary&gt;
-        /// Whether smart routing is enabled.
-        /// &lt;/summary&gt;
-        public bool IsSmartRouting =&gt; Options.Networking.SmartRouting;
-
-        /// &lt;summary&gt;
-        /// Gets the partitioner.
-        /// &lt;/summary&gt;
-        public Partitioner Partitioner { get; }
-
-        /// &lt;summary&gt;
-        /// Gets the logger factory.
-        /// &lt;/summary&gt;
-        public ILoggerFactory LoggerFactory { get; }
-
-        /// &lt;summary&gt;
-        /// Gets the cluster instrumentation.
-        /// &lt;/summary&gt;
-        public ClusterInstrumentation Instrumentation { get; } = new ClusterInstrumentation();
-
-        /// &lt;summary&gt;
-        /// Gets the correlation identifier sequence.
-        /// &lt;/summary&gt;
-        public ISequence&lt;long&gt; CorrelationIdSequence { get; } = new Int64Sequence();
-
-        /// &lt;summary&gt;
-        /// Gets the next correlation identifier.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;The next correlation identifier.&lt;/returns&gt;
-        public long GetNextCorrelationId() =&gt; CorrelationIdSequence.GetNext();
-
-        /// &lt;summary&gt;
-        /// &lt;inheritdoc /&gt;
-        public async ValueTask DisposeAsync()
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, long correlationId, CancellationToken cancellationToken = default)
         {
-            await _stateChangeQueue.DisposeAsync().CfAwait();
-            _clusterCancellation.Dispose();
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
+
+            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to the member owning a key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var partitionId = _clusterState.Partitioner.GetPartitionId(key.PartitionHash);
+            if (partitionId &lt; 0) throw new ArgumentException(&quot;Could not get a partition for this key.&quot;, nameof(key));
+
+            message.PartitionId = partitionId;
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to the member owning a partition.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (partitionId &lt; 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
+
+            message.PartitionId = partitionId;
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;An optional target client.&lt;/param&gt;
+        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        private
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken = default)
+        {
+            var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;An optional target member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The response message.&lt;/returns&gt;
+        private async Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // fail fast, if the cluster is not active
+            _clusterState.ThrowIfNotActive();
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = correlationId;
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
+                             targetPartitionId &gt;= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
+                             targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
+                             new Invocation(message, _clusterState.Options.Messaging);
+
+            return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends an invocation request message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The response message.&lt;/returns&gt;
+        private async Task&lt;ClientMessage&gt; SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        {
+            // yield now, so the caller gets a task that can bubble up to user&#39;s code
+            // immediately without waiting for more synchronous operations to take place
+            await Task.Yield();
+
+            // NOTE: *every* invocation sent to the cluster goes through the code below
+
+            // if the client is active but not connected, we are going to retry the invocation for a while (assuming it
+            // is retryable) and then timeout and bubble the invocation to the user - and we do *not* have a way to sort
+            // of suspend the whole client waiting for it to reconnect, because... what sense does it make? That would
+            // be the &quot;sync&quot; reconnect mode - TODO: figure this out
+
+            while (true)
+            {
+                try
+                {
+                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
+                    return await connection.SendAsync(invocation, cancellationToken).CfAwait();
+                }
+                catch (TaskCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    // if the client is not active, die - an active client is starting, started, connected or
+                    // disconnected - but attempting to reconnect - whereas a non-active client is down and
+                    // will not go back up
+                    _clusterState.ThrowIfNotActive(exception);
+
+                    // if the invocation is not retryable, throw
+                    bool retryUnsafeOperations, retryOnClientReconnecting;
+                    if (_clusterState.Options.Messaging.Preview.EnableNewRetryOptions)
+                    {
+                        // use the new set of options
+                        retryUnsafeOperations = _clusterState.Options.Messaging.RetryUnsafeOperations;
+                        retryOnClientReconnecting = _clusterState.Options.Messaging.RetryOnClientReconnecting;
+                    }
+                    else
+                    {
+                        // use the v4 set of options
+                        retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
+                        retryOnClientReconnecting = true;
+                    }
+                    if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
+                        throw;
+
+                    // else, wait for retrying
+                    // this will throw if it cannot retry
+                    await invocation.WaitRetryAsync(() =&gt; _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
+
+                    HConsole.WriteLine(this, &quot;Retrying...&quot;);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a connection for an invocation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
+        /// &lt;returns&gt;A connection for the invocation.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ClientOfflineException&quot;&gt;Occurs when no connection could be found.&lt;/exception&gt;
+        private MemberConnection GetInvocationConnection(Invocation invocation)
+        {
+            // try the target connection
+            var connection = invocation.TargetClientConnection;
+            if (connection != null) return connection;
+
+            // try the partition
+            if (invocation.TargetPartitionId &gt;= 0)
+            {
+                var memberId = _clusterState.Partitioner.GetPartitionOwner(invocation.TargetPartitionId);
+                if (_clusterMembers.TryGetConnection(memberId, out connection))
+                    return connection;
+            }
+
+            // try the member
+            if (invocation.TargetMemberId != default)
+            {
+                if (_clusterMembers.TryGetConnection(invocation.TargetMemberId, out connection))
+                    return connection;
+            }
+
+            // fall over to random client
+            connection = _clusterMembers.GetRandomConnection();
+            if (connection != null)
+                return connection;
+
+            // fail
+            throw _clusterState.ThrowClientOfflineException();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[31,9,31,103,1],[32,9,32,55,1],[41,9,41,147,1],[43,13,43,31,1],[44,13,44,39,1],[45,13,45,37,1],[46,13,46,39,1],[47,13,47,43,1],[49,13,49,69,1],[52,9,52,10,1],[61,20,61,50,1],[64,17,64,48,1],[65,17,65,106,1],[66,13,66,14,1],[74,20,74,38,1],[77,17,77,48,1],[78,17,78,44,1],[79,13,79,14,1],[91,13,91,37,1],[91,38,91,115,0],[92,9,92,10,1],[99,13,99,40,1],[100,9,100,10,1],[109,32,109,36,1],[109,41,109,55,1],[114,36,114,40,1],[119,37,119,41,1],[132,42,132,46,1],[132,47,132,59,1],[140,13,140,26,0],[142,17,142,45,0],[143,21,143,28,0],[145,17,145,40,0],[147,17,147,49,0],[148,13,148,14,0],[149,9,149,10,0],[159,13,159,26,1],[161,17,161,50,1],[162,21,162,34,1],[164,17,164,40,1],[166,17,166,49,1],[167,17,167,29,1],[169,9,169,10,1],[179,13,179,26,1],[181,17,181,59,1],[182,21,182,34,0],[184,17,184,40,1],[186,17,186,49,1],[187,17,187,29,1],[189,9,189,10,1],[200,13,200,26,1],[202,17,202,45,1],[203,21,203,28,0],[205,17,205,40,1],[207,17,207,63,1],[208,13,208,14,1],[210,13,210,34,1],[211,9,211,10,1],[224,13,224,26,1],[226,17,226,50,1],[227,21,227,34,0],[229,17,229,40,1],[231,17,231,63,1],[232,13,232,14,1],[234,13,234,34,1],[235,13,235,25,1],[236,9,236,10,1],[249,13,249,26,0],[251,17,251,59,0],[252,21,252,34,0],[254,17,254,40,0],[255,17,255,63,0],[256,13,256,14,0],[258,13,258,34,0],[259,13,259,25,0],[260,9,260,10,0],[269,13,269,26,1],[272,17,272,58,1],[272,59,272,92,1],[275,17,275,99,1],[275,100,275,134,0],[276,13,276,14,1],[278,13,278,62,1],[279,9,279,10,1],[286,13,286,26,1],[289,17,289,58,1],[289,59,289,71,0],[292,17,292,99,1],[292,100,292,113,0],[295,17,295,64,1],[296,17,296,56,1],[296,56,296,77,0],[296,77,296,79,1],[297,17,300,21,1],[300,21,300,83,1],[300,83,301,25,1],[301,25,301,46,1],[301,46,304,21,1],[304,21,304,36,1],[304,36,305,19,1],[306,13,306,14,1],[309,19,309,54,1],[309,55,309,56,1],[309,57,309,62,0],[309,66,309,76,0],[309,77,309,78,0],[311,13,311,27,1],[313,13,313,51,1],[314,9,314,10,1],[319,36,319,72,1],[329,33,329,60,1],[337,13,337,27,1],[337,28,337,90,1],[338,9,338,10,1],[348,13,348,43,1],[349,13,349,54,1],[349,55,349,94,0],[350,13,350,60,1],[358,13,358,42,1],[359,9,359,10,1],[364,42,364,46,1],[369,39,369,70,1],[374,42,374,46,1],[379,47,379,51,1],[384,57,384,61,1],[384,66,384,94,1],[389,56,389,60,1],[389,65,389,84,1],[395,47,395,78,1],[401,13,401,62,1],[402,13,402,44,1],[403,9,403,10,1]]);
+      highlightRanges([[38,9,38,90,1],[40,13,40,42,1],[41,13,41,46,1],[44,9,44,10,1],[54,13,54,33,1],[54,34,54,83,0],[56,13,56,101,1],[57,9,57,10,1],[72,13,72,33,1],[72,34,72,83,0],[74,13,74,102,1],[75,9,75,10,1],[86,13,86,33,1],[86,34,86,83,0],[87,13,87,42,1],[87,43,87,101,0],[89,13,89,113,1],[90,9,90,10,1],[102,13,102,33,1],[102,34,102,83,0],[103,13,103,42,1],[103,43,103,101,0],[105,13,105,128,1],[106,9,106,10,1],[121,13,121,33,1],[121,34,121,83,0],[122,13,122,29,1],[122,30,122,75,0],[124,13,124,91,1],[125,13,125,33,1],[125,34,125,118,0],[127,13,127,47,1],[128,13,128,98,1],[133,13,133,41,1],[135,9,135,10,1],[150,13,150,33,1],[150,34,150,83,0],[151,13,151,33,1],[151,34,151,93,0],[153,13,153,47,1],[154,13,154,98,1],[159,13,159,41,1],[161,9,161,10,1],[178,13,178,155,1],[183,13,183,41,1],[185,9,185,10,1],[199,13,199,33,1],[199,34,199,83,0],[202,13,202,46,1],[206,13,206,51,1],[207,13,207,96,1],[210,13,213,87,1],[215,13,215,85,1],[216,9,216,10,1],[228,13,228,32,1],[241,21,241,74,1],[242,21,242,96,1],[244,17,244,46,1],[246,21,246,27,1],[253,21,253,63,1],[257,21,257,87,1],[260,25,260,103,1],[261,25,261,111,1],[266,25,266,97,1],[267,25,267,58,1],[269,21,269,110,1],[270,25,270,31,1],[274,21,274,59,1],[274,59,274,95,1],[274,95,274,126,1],[277,17,277,18,1],[279,9,279,10,1],[290,13,290,64,1],[291,13,291,36,1],[291,37,291,55,1],[294,13,294,51,1],[296,17,296,106,1],[297,17,297,80,1],[298,21,298,39,1],[302,13,302,54,1],[304,17,304,97,0],[305,21,305,39,0],[309,13,309,64,1],[310,13,310,36,1],[311,17,311,35,1],[314,13,314,63,1]]);
     </script>
   </body>
 </html>

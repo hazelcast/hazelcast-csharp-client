@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapKeySetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapIsEmptyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,23 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns a lazy Set view of the key contained in this map. A LazySet is optimized for querying speed
-    /// (preventing eager deserialization and hashing on HashSet insertion) and does NOT provide all operations.
-    /// Any kind of mutating function will throw an UNSUPPORTED_OPERATION. Same is true for operations
-    /// like java.util.Set#contains(Object) and java.util.Set#containsAll(java.util.Collection) which would result in
-    /// very poor performance if called repeatedly (for example, in a loop). If the use case is different from querying
-    /// the data, please copy the resulting set into a new java.util.HashSet.
+    /// Return true if this map contains no key-value mappings
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ReplicatedMapKeySetServerCodec
+    internal static class ReplicatedMapIsEmptyServerCodec
 #else
-    internal static class ReplicatedMapKeySetCodec
+    internal static class ReplicatedMapIsEmptyCodec
 #endif
     {
-        public const int RequestMessageType = 855808; // 0x0D0F00
-        public const int ResponseMessageType = 855809; // 0x0D0F01
+        public const int RequestMessageType = 852736; // 0x0D0300
+        public const int ResponseMessageType = 852737; // 0x0D0301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -83,7 +79,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;ReplicatedMap.KeySet&quot;
+                OperationName = &quot;ReplicatedMap.IsEmpty&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -108,19 +104,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// A lazy set view of the keys contained in this map.
+            /// &lt;tt&gt;True&lt;/tt&gt; if this map contains no key-value mappings
             ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -129,8 +125,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -139,7 +135,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[73,13,77,15,1],[78,13,78,123,1],[79,13,79,104,1],[80,13,80,88,1],[81,13,81,48,1],[82,13,82,53,1],[83,13,83,34,1],[103,44,103,48,1],[103,49,103,53,1],[120,13,120,64,1],[121,13,121,53,1],[122,13,122,29,1],[123,13,123,88,1],[124,13,124,29,1],[125,9,125,10,1]]);
+      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,36,99,40,1],[99,41,99,45,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,48,1],[119,13,119,91,1],[120,13,120,29,1],[121,9,121,10,1]]);
     </script>
   </body>
 </html>

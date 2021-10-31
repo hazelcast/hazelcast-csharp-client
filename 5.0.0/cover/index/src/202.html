@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListAddAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\FlakeIdGeneratorNewIdBatchCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,52 +49,52 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Appends all of the elements in the specified collection to the end of this list, in the order that they are
-    /// returned by the specified collection&#39;s iterator (optional operation).
-    /// The behavior of this operation is undefined if the specified collection is modified while the operation is in progress.
-    /// (Note that this will occur if the specified collection is this list, and it&#39;s nonempty.)
+    /// Fetches a new batch of ids for the given flake id generator.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ListAddAllServerCodec
+    internal static class FlakeIdGeneratorNewIdBatchServerCodec
 #else
-    internal static class ListAddAllCodec
+    internal static class FlakeIdGeneratorNewIdBatchCodec
 #endif
     {
-        public const int RequestMessageType = 329216; // 0x050600
-        public const int ResponseMessageType = 329217; // 0x050601
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 1835264; // 0x1C0100
+        public const int ResponseMessageType = 1835265; // 0x1C0101
+        private const int RequestBatchSizeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestBatchSizeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseBaseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseIncrementFieldOffset = ResponseBaseFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseBatchSizeFieldOffset = ResponseIncrementFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = ResponseBatchSizeFieldOffset + BytesExtensions.SizeOfInt;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the List
+            /// Name of the flake id generator.
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Collection containing elements to be added to this list
+            /// Number of ids that will be fetched on one call.
             ///&lt;/summary&gt;
-            public IList&lt;IData&gt; ValueList { get; set; }
+            public int BatchSize { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; valueList)
+        public static ClientMessage EncodeRequest(string name, int batchSize)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;List.AddAll&quot;
+                IsRetryable = true,
+                OperationName = &quot;FlakeIdGenerator.NewIdBatch&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestBatchSizeFieldOffset, batchSize);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            ListMultiFrameCodec.Encode(clientMessage, valueList, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -103,9 +103,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.BatchSize = initialFrame.Bytes.ReadIntL(RequestBatchSizeFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -114,18 +114,30 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this list changed as a result of the call, false otherwise
+            /// First id in the batch.
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public long Base { get; set; }
+
+            /// &lt;summary&gt;
+            /// Increment for the next id in the batch.
+            ///&lt;/summary&gt;
+            public long Increment { get; set; }
+
+            /// &lt;summary&gt;
+            /// Number of ids in the batch.
+            ///&lt;/summary&gt;
+            public int BatchSize { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(long @base, long increment, int batchSize)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseBaseFieldOffset, @base);
+            initialFrame.Bytes.WriteLongL(ResponseIncrementFieldOffset, increment);
+            initialFrame.Bytes.WriteIntL(ResponseBatchSizeFieldOffset, batchSize);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -136,7 +148,9 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Base = initialFrame.Bytes.ReadLongL(ResponseBaseFieldOffset);
+            response.Increment = initialFrame.Bytes.ReadLongL(ResponseIncrementFieldOffset);
+            response.BatchSize = initialFrame.Bytes.ReadIntL(ResponseBatchSizeFieldOffset);
             return response;
         }
 
@@ -145,7 +159,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,84,1],[88,13,88,34,1],[109,36,109,40,1],[109,41,109,45,1],[126,13,126,64,1],[127,13,127,53,1],[128,13,128,48,1],[129,13,129,91,1],[130,13,130,29,1],[131,9,131,10,1]]);
+      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,82,1],[86,13,86,48,1],[87,13,87,53,1],[88,13,88,34,1],[109,32,109,36,1],[109,37,109,41,1],[114,37,114,41,1],[114,42,114,46,1],[119,36,119,40,1],[119,41,119,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,83,1],[142,13,142,93,1],[143,13,143,92,1],[144,13,144,29,1],[145,9,145,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\ClientMessage+FrameEnumerator.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SocketConnectionBase+ReadPipeState.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,86 +22,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections;
-using System.Collections.Generic;
+using System;
+using System.Buffers;
+using System.IO.Pipelines;
+using System.Runtime.ExceptionServices;
+using Hazelcast.Core;
 
-namespace Hazelcast.Messaging
+namespace Hazelcast.Networking
 {
-    internal partial class ClientMessage // FrameEnumerator
+    internal abstract partial class SocketConnectionBase
     {
         /// &lt;summary&gt;
-        /// Represents an enumerator of frames.
+        /// (internal for tests only)
+        /// Represents the state of the reading loop.
         /// &lt;/summary&gt;
-        private class FrameEnumerator : IEnumerator&lt;Frame&gt;
+        internal sealed class ReadPipeState : IBufferReference&lt;ReadOnlySequence&lt;byte&gt;&gt;
         {
-            private readonly ClientMessage _message;
-            private bool _started;
-#if DEBUG
-            private int _index;
-#endif
+            /// &lt;summary&gt;
+            /// Gets or sets the pipe reader.
+            /// &lt;/summary&gt;
+            public PipeReader Reader { get; set; }
 
             /// &lt;summary&gt;
-            /// Initialize a new instance of the &lt;see cref=&quot;FrameEnumerator&quot;/&gt; class.
+            /// Gets or sets the current buffer.
             /// &lt;/summary&gt;
-            /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
-            public FrameEnumerator(ClientMessage message)
+            public ReadOnlySequence&lt;byte&gt; Buffer { get; set; }
+
+            /// &lt;summary&gt;
+            /// Determines whether reading has failed.
+            /// &lt;/summary&gt;
+            public bool Failed { get; private set; }
+
+            /// &lt;summary&gt;
+            /// Gets the optional exception that caused the failure.
+            /// &lt;/summary&gt;
+            public ExceptionDispatchInfo Exception { get; private set; }
+
+            /// &lt;summary&gt;
+            /// Captures an exception and registers the failure.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;e&quot;&gt;The exception.&lt;/param&gt;
+            public void CaptureExceptionAndFail(Exception e)
             {
-                _message = message;
-#if DEBUG
-                _index = -1;
-#endif
-            }
+                // this should never happen, and we cannot do much about it
+                // (has already failed... should not be notified again)
+                if (Exception != null) return;
 
-            /// &lt;inheritdoc /&gt;
-            public bool MoveNext()
-            {
-                if (!_started)
-                {
-                    _started = true;
-                    Current = _message.FirstFrame;
-#if DEBUG
-                    _index = 0;
-#endif
-                }
-                else
-                {
-#if DEBUG
-                    if (Current != null) _index++;
-#endif
-                    Current = Current?.Next;
-                }
-
-                return Current != null;
-            }
-
-            /// &lt;inheritdoc /&gt;
-            public void Reset()
-            {
-                Current = null;
-                _started = false;
-#if DEBUG
-                _index = -1;
-#endif
-            }
-
-            /// &lt;inheritdoc /&gt;
-            public Frame Current { get; private set; }
-
-            /// &lt;inheritdoc /&gt;
-            object IEnumerator.Current =&gt; Current;
-
-            /// &lt;inheritdoc /&gt;
-            public void Dispose()
-            { }
-
-            /// &lt;inheritdoc /&gt;
-            public override string ToString()
-            {
-#if DEBUG
-                return $&quot;Enumerator at frame[{_index}]: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
-#else
-                return $&quot;Enumerator at frame: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
-#endif
+                Failed = true;
+                if (e != null) Exception = ExceptionDispatchInfo.Capture(e);
             }
         }
     }
@@ -109,7 +77,7 @@ namespace Hazelcast.Messaging
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[37,13,37,58,1],[39,17,39,36,1],[43,13,43,14,1],[48,17,48,31,1],[50,21,50,37,1],[51,21,51,51,1],[61,21,61,45,1],[64,17,64,40,1],[70,17,70,32,1],[71,17,71,34,1],[75,13,75,14,1],[78,36,78,40,1],[78,41,78,53,1],[81,43,81,50,1],[85,15,85,16,1],[93,17,93,100,1]]);
+      highlightRanges([[34,40,34,44,1],[34,45,34,49,1],[39,52,39,56,1],[39,57,39,61,1],[44,34,44,38,1],[44,39,44,51,1],[49,54,49,58,1],[49,59,49,71,1],[59,17,59,39,1],[59,40,59,47,1],[61,17,61,31,1],[62,17,62,31,1],[62,32,62,77,1],[63,13,63,14,1]]);
     </script>
   </body>
 </html>

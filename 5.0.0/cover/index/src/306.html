@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapIsLockedCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapGetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Checks the lock for the specified key. If the lock is acquired, this method returns true, else it returns false.
+    /// Returns the collection of values associated with the key. The collection is NOT backed by the map, so changes to
+    /// the map are NOT reflected in the collection, and vice-versa.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapIsLockedServerCodec
+    internal static class MultiMapGetServerCodec
 #else
-    internal static class MultiMapIsLockedCodec
+    internal static class MultiMapGetCodec
 #endif
     {
-        public const int RequestMessageType = 135680; // 0x021200
-        public const int ResponseMessageType = 135681; // 0x021201
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 131584; // 0x020200
+        public const int ResponseMessageType = 131585; // 0x020201
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -73,22 +74,28 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Key to lock to be checked.
+            /// The key whose associated values are to be returned
             ///&lt;/summary&gt;
             public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;MultiMap.IsLocked&quot;
+                OperationName = &quot;MultiMap.Get&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -100,7 +107,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             return request;
@@ -111,19 +119,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if the lock acquired,false otherwise
+            /// The collection of the values associated with the key.
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -132,8 +140,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -142,7 +150,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,53,1],[84,13,84,50,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
+      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,81,1],[89,13,89,48,1],[90,13,90,53,1],[91,13,91,50,1],[92,13,92,34,1],[114,44,114,48,1],[114,49,114,53,1],[131,13,131,64,1],[132,13,132,53,1],[133,13,133,29,1],[134,13,134,88,1],[135,13,135,29,1],[136,9,136,10,1]]);
     </script>
   </body>
 </html>

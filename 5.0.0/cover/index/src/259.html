@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapIsEmptyCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapGetEntryViewCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this map contains no key-value mappings.
+    /// Returns the EntryView for the specified key.
+    /// This method returns a clone of original mapping, modifying the returned value does not change the actual value
+    /// in the map. One should put modified value back to make changes visible to all nodes.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapIsEmptyServerCodec
+    internal static class MapGetEntryViewServerCodec
 #else
-    internal static class MapIsEmptyCodec
+    internal static class MapGetEntryViewCodec
 #endif
     {
-        public const int RequestMessageType = 76544; // 0x012B00
-        public const int ResponseMessageType = 76545; // 0x012B01
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 72960; // 0x011D00
+        public const int ResponseMessageType = 72961; // 0x011D01
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseMaxIdleFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseMaxIdleFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -71,21 +74,33 @@ namespace Hazelcast.Protocol.Codecs
             /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// the key of the entry.
+            ///&lt;/summary&gt;
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Map.IsEmpty&quot;
+                OperationName = &quot;Map.GetEntryView&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -94,8 +109,10 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -104,19 +121,25 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if this map contains no key-value mappings
+            /// Entry view of the specified key.
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public Hazelcast.Models.MapEntryStats&lt;IData, IData&gt; Response { get; set; }
+
+            /// &lt;summary&gt;
+            /// Last set max idle in millis.
+            ///&lt;/summary&gt;
+            public long MaxIdle { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(Hazelcast.Models.MapEntryStats&lt;IData, IData&gt; response, long maxIdle)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseMaxIdleFieldOffset, maxIdle);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, SimpleEntryViewCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -126,7 +149,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.MaxIdle = initialFrame.Bytes.ReadLongL(ResponseMaxIdleFieldOffset);
+            response.Response = CodecUtil.DecodeNullable(iterator, SimpleEntryViewCodec.Decode);
             return response;
         }
 
@@ -135,7 +159,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,36,99,40,1],[99,41,99,45,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,48,1],[119,13,119,91,1],[120,13,120,29,1],[121,9,121,10,1]]);
+      highlightRanges([[82,13,86,15,1],[87,13,87,123,1],[88,13,88,104,1],[89,13,89,88,1],[90,13,90,81,1],[91,13,91,48,1],[92,13,92,53,1],[93,13,93,50,1],[94,13,94,34,1],[116,76,116,80,1],[116,81,116,85,1],[121,35,121,39,0],[121,40,121,44,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,48,1],[142,13,142,89,1],[143,13,143,97,1],[144,13,144,29,1],[145,9,145,10,1]]);
     </script>
   </body>
 </html>

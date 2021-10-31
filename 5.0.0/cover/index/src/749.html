@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableContext+ClassDefinitionContext.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\NumberAverageAggregator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,94 +22,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Concurrent;
+using Hazelcast.Serialization;
 
-namespace Hazelcast.Serialization
+namespace Hazelcast.Aggregation
 {
-    internal sealed partial class PortableContext // ClassDefinitionContext
+    /// &lt;summary&gt;
+    /// Represents an aggregator that averages the input values.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Null input values are not accepted.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal sealed class NumberAverageAggregator : AggregatorBase&lt;double&gt;
     {
-        private sealed class ClassDefinitionContext
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NumberAverageAggregator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public NumberAverageAggregator()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NumberAverageAggregator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
+        public NumberAverageAggregator(string attributePath)
+            : base(attributePath)
+        { }
+
+        /// &lt;inheritdoc /&gt;
+        protected override void ReadAggregatorData(IObjectDataInput input)
         {
-            private readonly ConcurrentDictionary&lt;int, int&gt; _currentClassVersions = new ConcurrentDictionary&lt;int, int&gt;();
-            private readonly int _factoryId;
-            private readonly PortableContext _portableContext;
-
-            private readonly ConcurrentDictionary&lt;long, IClassDefinition&gt; _versionedDefinitions =
-                new ConcurrentDictionary&lt;long, IClassDefinition&gt;();
-
-            internal ClassDefinitionContext(PortableContext portableContext, int factoryId)
-            {
-                _portableContext = portableContext;
-                _factoryId = factoryId;
-            }
-
-            private static long CombineToLong(int x, int y)
-            {
-                return unchecked(((long)x &lt;&lt; 32) | (y &amp; 0xFFFFFFFFL));
-            }
-
-            internal int GetClassVersion(int classId)
-            {
-                var hasValue = _currentClassVersions.TryGetValue(classId, out var version);
-                return hasValue ? version : -1;
-            }
-
-            internal IClassDefinition Lookup(int classId, int version)
-            {
-                var versionedClassId = CombineToLong(classId, version);
-                _versionedDefinitions.TryGetValue(versionedClassId, out var cd);
-                return cd;
-            }
-
-            internal IClassDefinition Register(IClassDefinition cd)
-            {
-                if (cd == null)
-                {
-                    return null;
-                }
-                if (cd.FactoryId != _factoryId)
-                {
-                    throw new SerializationException(&quot;Invalid factory-id! &quot; + _factoryId + &quot; -&gt; &quot; + cd);
-                }
-                if (cd is ClassDefinition cdImpl)
-                {
-                    cdImpl.SetVersionIfNotSet(_portableContext.GetVersion());
-                }
-                var versionedClassId = CombineToLong(cd.ClassId, cd.Version);
-                var currentCd = _versionedDefinitions.GetOrAdd(versionedClassId, cd);
-                if (Equals(currentCd, cd))
-                {
-                    return cd;
-                }
-                if (currentCd is ClassDefinition)
-                {
-                    if (!currentCd.Equals(cd))
-                    {
-                        throw new SerializationException(
-                            &quot;Incompatible class-definitions with same class-id: &quot; + cd + &quot; VS &quot; + currentCd);
-                    }
-                    return currentCd;
-                }
-                _versionedDefinitions.AddOrUpdate(versionedClassId, cd, (key, oldValue) =&gt; cd);
-                return cd;
-            }
-
-            internal void SetClassVersion(int classId, int version)
-            {
-                var hasAdded = _currentClassVersions.TryAdd(classId, version);
-                if (!hasAdded &amp;&amp; _currentClassVersions[classId] != version)
-                {
-                    throw new ArgumentException(&quot;Class-id: &quot; + classId + &quot; is already registered!&quot;);
-                }
-            }
+            input.ReadDouble(); // member side field not used on client
+            input.ReadLong(); // member side field not used on client
         }
+
+        /// &lt;inheritdoc /&gt;
+        protected override void WriteAggregatorData(IObjectDataOutput output)
+        {
+            output.WriteDouble(0D); // member side field not used on client
+            output.WriteLong(0L); // member side field not used on client
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override int ClassId =&gt; AggregatorDataSerializerHook.NumberAvg;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,13,24,122,1],[28,13,29,68,1],[31,13,31,92,1],[33,17,33,52,1],[34,17,34,40,1],[35,13,35,14,1],[39,17,39,71,1],[44,17,44,92,1],[45,17,45,48,1],[50,17,50,72,1],[51,17,51,81,1],[52,17,52,27,1],[57,17,57,32,1],[59,21,59,33,0],[61,17,61,48,1],[63,21,63,105,0],[65,17,65,50,1],[67,21,67,78,1],[69,17,69,78,1],[70,17,70,86,1],[71,17,71,43,1],[73,21,73,31,1],[75,17,75,50,0],[77,21,77,47,0],[79,25,80,110,0],[82,21,82,38,0],[84,17,84,92,0],[84,92,84,94,0],[84,94,84,96,0],[85,17,85,27,0],[90,17,90,79,1],[91,17,91,76,1],[93,21,93,101,0],[95,13,95,14,1]]);
+      highlightRanges([[30,9,30,41,1],[31,11,31,12,1],[38,15,38,34,1],[39,11,39,12,1],[44,13,44,32,1],[45,13,45,30,1],[46,9,46,10,1],[51,13,51,36,1],[52,13,52,34,1],[53,9,53,10,1],[56,40,56,78,1]]);
     </script>
   </body>
 </html>

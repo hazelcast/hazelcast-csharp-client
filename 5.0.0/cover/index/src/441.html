@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNDoubleCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNDataCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,23 +23,31 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ListCNDoubleCodec
+    /// &lt;summary&gt;
+    /// Codec for the list of data which allows optional items.
+    /// &lt;/summary&gt;
+    internal static class ListCNDataCodec
     {
-        public static IList&lt;double&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;IData&gt; collection)
         {
-            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfDouble, BytesExtensions.ReadDoubleL);
+            ListMultiFrameCodec.Encode(clientMessage, collection, DataCodec.EncodeNullable);
+        }
+
+        public static IList&lt;IData&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        {
+            return ListMultiFrameCodec.Decode(iterator, DataCodec.DecodeNullable);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,13,25,124,1]]);
+      highlightRanges([[28,13,28,93,0],[29,9,29,10,0],[33,13,33,83,0]]);
     </script>
   </body>
 </html>

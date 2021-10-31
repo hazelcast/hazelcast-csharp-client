@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNFloatCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNFixedSizeCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,24 +22,74 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ListCNFloatCodec
+    internal static class ListCNFixedSizeCodec
     {
-        public static IList&lt;float&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        private const int TypeNullOnly = 1;
+        private const int TypeNotNullOnly = 2;
+        private const int TypeMixed = 3;
+        private const int HeaderSize = BytesExtensions.SizeOfByte + BytesExtensions.SizeOfInt;
+        private const int ItemsPerBitmask = 8;
+
+        public static IList&lt;T&gt; Decode&lt;T&gt;(Frame frame, int itemSizeInBytes, DecodeBytesDelegate&lt;T&gt; decodeFunc)
         {
-            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfFloat, BytesExtensions.ReadFloatL);
+            var type = frame.Bytes.ReadByte(0);
+            var count = frame.Bytes.ReadInt(1, Endianness.LittleEndian);
+
+            return type switch
+            {
+                TypeNullOnly =&gt; new List&lt;T&gt;(count),
+                TypeNotNullOnly =&gt; DecodeNotNullOnly(frame.Bytes, itemSizeInBytes, decodeFunc, count),
+                TypeMixed =&gt; DecodeMixed(frame.Bytes, itemSizeInBytes, decodeFunc, count),
+                _ =&gt; throw new NotSupportedException($&quot;Type #{type} is not supported&quot;)
+            };
+        }
+
+        private static IList&lt;T&gt; DecodeNotNullOnly&lt;T&gt;(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate&lt;T&gt; decodeFunc, int count)
+        {
+            var res = new List&lt;T&gt;(count);
+            for (var i = 0; i &lt; count; i++)
+                res.Add(decodeFunc(bytes, HeaderSize + i * itemSizeInBytes));
+
+            return res;
+        }
+
+        private static IList&lt;T&gt; DecodeMixed&lt;T&gt;(byte[] bytes, int itemSizeInBytes, DecodeBytesDelegate&lt;T&gt; decodeFunc, int count)
+        {
+            var position = HeaderSize;
+            var readCount = 0;
+
+            var res = new List&lt;T&gt;(count);
+            while (readCount &lt; count)
+            {
+                var bitmask = bytes.ReadByte(position);
+                for (var i = 0; i &lt; ItemsPerBitmask &amp;&amp; readCount &lt; count; i++)
+                {
+                    var mask = 1 &lt;&lt; i;
+                    if ((bitmask &amp; mask) == mask)
+                    {
+                        res[readCount] = decodeFunc(bytes, position);
+                        position += itemSizeInBytes;
+                    }
+
+                    readCount++;
+                }
+            }
+
+            return res;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,13,25,122,1]]);
+      highlightRanges([[32,13,32,48,1],[33,13,33,73,1],[35,13,37,33,1],[37,33,37,51,1],[37,51,38,36,1],[38,36,38,102,1],[38,102,39,30,1],[39,30,39,90,0],[39,90,40,22,1],[40,22,40,87,0],[40,87,41,15,1],[46,13,46,42,1],[47,18,47,27,1],[47,29,47,38,1],[47,40,47,43,1],[48,17,48,78,1],[50,13,50,24,1],[55,13,55,39,0],[56,13,56,31,0],[58,13,58,42,0],[59,13,59,38,0],[61,17,61,56,0],[62,22,62,31,0],[62,33,62,73,0],[62,75,62,78,0],[64,21,64,39,0],[65,21,65,50,0],[67,25,67,70,0],[68,25,68,53,0],[71,21,71,33,0],[75,13,75,24,0]]);
     </script>
   </body>
 </html>

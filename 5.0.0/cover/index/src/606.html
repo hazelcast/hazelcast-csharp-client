@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.Removing.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,91 +22,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Query;
+using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HMapWithCache&lt;TKey, TValue&gt; // Removing
+    /// &lt;summary&gt;
+    /// Implements a caching version of &lt;see cref=&quot;IHMap{TKey,TValue}&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+    internal partial class HMapWithCache&lt;TKey, TValue&gt; : HMap&lt;TKey, TValue&gt;
     {
-        /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;bool&gt; TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
+        private readonly NearCache&lt;TValue&gt; _cache;
+
+        /// &lt;summary&gt;
+        /// Initializes a new version of the &lt;see cref=&quot;HMapWithCache{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;lockReferenceIdSequence&quot;&gt;A lock reference identifiers sequence.&lt;/param&gt;
+        /// &lt;param name=&quot;cache&quot;&gt;A cache.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence&lt;long&gt; lockReferenceIdSequence, NearCache&lt;TValue&gt; cache, ILoggerFactory loggerFactory)
+            : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
         {
-            var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CfAwait();
-            if (removed) _cache.Remove(keyData);
-            return removed;
+            _cache = cache;
         }
 
-        /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;TValue&gt; GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
-            }
-            finally
-            {
-                _cache.Remove(keyData);
-            }
-        }
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Gets the near cache.
+        /// &lt;/summary&gt;
+        internal NearCache&lt;TValue&gt; NearCache =&gt; _cache;
+
+        // TODO: consider invalidating in a continuation?
+        // TODO: not every methods are overriden, and then what?
+        // TODO: OnInitialize, OnShutdown, PostDestroy and IDisposable?
+        // TODO: refactor Map and CachedMap, so we don&#39;t need to serialize key to keyData all the time!
+        //       generally, Map+NearCache can be greatly optimized, but we&#39;ll do that later
 
         /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;bool&gt; RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
+        protected override async ValueTask DisposeAsyncCore()
         {
-            try
-            {
-                return await base.RemoveAsync(keyData, valueData, cancellationToken).CfAwait();
-            }
-            finally
-            {
-                _cache.Remove(keyData);
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        protected override Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
-        {
-            try
-            {
-                return base.RemoveAsync(predicate, cancellationToken);
-            }
-            finally
-            {
-                // not exactly pretty, but we cannot run the predicate locally
-                _cache.Clear();
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        protected override async Task RemoveAsync(IData keyData, CancellationToken cancellationToken)
-        {
-            try
-            {
-                await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
-            }
-            finally
-            {
-                _cache.Remove(keyData);
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        protected override async Task ClearAsync(CancellationToken cancellationToken)
-        {
-            await base.ClearAsync(cancellationToken)
-                .ContinueWith(_ =&gt; _cache.Clear(), default, default, TaskScheduler.Current)
-                .CfAwait();
+            await _cache.DisposeAsync().CfAwait();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,13,29,103,0],[30,13,30,25,0],[30,26,30,49,0],[31,13,31,28,0],[32,9,32,10,0],[39,17,39,91,0],[43,17,43,40,0],[45,9,45,10,0],[52,17,52,96,0],[56,17,56,40,0],[58,9,58,10,0],[65,17,65,71,1],[70,17,70,32,1],[71,13,71,14,1],[72,9,72,10,1],[79,17,79,84,1],[80,13,80,14,1],[83,17,83,40,1],[85,9,85,10,1],[90,13,92,28,1],[91,36,91,50,1],[93,9,93,10,1]]);
+      highlightRanges([[43,15,43,105,1],[45,13,45,28,1],[46,9,46,10,1],[52,49,52,55,1],[63,13,63,51,1],[64,9,64,10,1]]);
     </script>
   </body>
 </html>

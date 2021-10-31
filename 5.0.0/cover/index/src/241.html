@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEntrySetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEntriesWithPredicateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns a Set clone of the mappings contained in this map.
-    /// The collection is NOT backed by the map, so changes to the map are NOT reflected in the collection, and vice-versa.
-    /// This method is always executed by a distributed query, so it may throw a QueryResultSizeExceededException
-    /// if query result size limit is configured.
+    /// Queries the map based on the specified predicate and returns the matching entries.Specified predicate
+    /// runs on all members in parallel. The collection is NOT backed by the map, so changes to the map are NOT reflected
+    /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw a
+    /// QueryResultSizeExceededException if query result size limit is configured.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapEntrySetServerCodec
+    internal static class MapEntriesWithPredicateServerCodec
 #else
-    internal static class MapEntrySetCodec
+    internal static class MapEntriesWithPredicateCodec
 #endif
     {
-        public const int RequestMessageType = 75008; // 0x012500
-        public const int ResponseMessageType = 75009; // 0x012501
+        public const int RequestMessageType = 75776; // 0x012800
+        public const int ResponseMessageType = 75777; // 0x012801
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -73,21 +73,27 @@ namespace Hazelcast.Protocol.Codecs
             /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// specified query criteria.
+            ///&lt;/summary&gt;
+            public IData Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData predicate)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Map.EntrySet&quot;
+                OperationName = &quot;Map.EntriesWithPredicate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -98,6 +104,7 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -106,7 +113,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// a set clone of the keys mappings in this map
+            /// result key-value entry collection of the query.
             ///&lt;/summary&gt;
             public IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; Response { get; set; }
         }
@@ -137,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[71,13,75,15,1],[76,13,76,123,1],[77,13,77,104,1],[78,13,78,88,1],[79,13,79,48,1],[80,13,80,53,1],[81,13,81,34,1],[101,65,101,69,1],[101,70,101,74,1],[118,13,118,64,1],[119,13,119,53,1],[120,13,120,29,1],[121,13,121,101,1],[122,13,122,29,1],[123,9,123,10,1]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,48,1],[85,13,85,53,1],[86,13,86,56,1],[87,13,87,34,1],[108,65,108,69,1],[108,70,108,74,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,29,1],[128,13,128,101,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

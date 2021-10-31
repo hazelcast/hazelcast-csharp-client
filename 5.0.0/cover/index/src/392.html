@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapContainsValueCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapContainsKeyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this map contains an entry for the specified value.
+    /// Returns true if this map contains an entry for the specified key.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapContainsValueServerCodec
+    internal static class TransactionalMapContainsKeyServerCodec
 #else
-    internal static class TransactionalMapContainsValueCodec
+    internal static class TransactionalMapContainsKeyCodec
 #endif
     {
-        public const int RequestMessageType = 922112; // 0x0E1200
-        public const int ResponseMessageType = 922113; // 0x0E1201
+        public const int RequestMessageType = 917760; // 0x0E0100
+        public const int ResponseMessageType = 917761; // 0x0E0101
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
@@ -85,18 +85,18 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// The specified value.
+            /// The specified key.
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public IData Key { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData @value)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.ContainsValue&quot;
+                OperationName = &quot;TransactionalMap.ContainsKey&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -118,7 +118,7 @@ namespace Hazelcast.Protocol.Codecs
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -158,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[86,13,90,15,0],[91,13,91,123,0],[92,13,92,104,0],[93,13,93,88,0],[94,13,94,75,0],[95,13,95,81,0],[96,13,96,48,0],[97,13,97,53,0],[98,13,98,53,0],[99,13,99,34,0],[122,36,122,40,0],[122,41,122,45,0],[139,13,139,64,0],[140,13,140,53,0],[141,13,141,48,0],[142,13,142,91,0],[143,13,143,29,0],[144,9,144,10,0]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,75,1],[95,13,95,81,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,50,1],[99,13,99,34,1],[122,36,122,40,1],[122,41,122,45,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,48,1],[142,13,142,91,1],[143,13,143,29,1],[144,9,144,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueDrainToMaxSizeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueDrainToCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes at most the given number of available elements from this queue and adds them to the given collection.
-    /// A failure encountered while attempting to add elements to collection may result in elements being in neither,
-    /// either or both collections when the associated exception is thrown. Attempts to drain a queue to itself result in
-    /// ILLEGAL_ARGUMENT. Further, the behavior of this operation is undefined if the specified collection is
-    /// modified while the operation is in progress.
+    /// Removes all available elements from this queue and adds them to the given collection.  This operation may be more
+    /// efficient than repeatedly polling this queue.  A failure encountered while attempting to add elements to
+    /// collection c may result in elements being in neither, either or both collections when the associated exception is
+    /// thrown. Attempts to drain a queue to itself result in ILLEGAL_ARGUMENT. Further, the behavior of
+    /// this operation is undefined if the specified collection is modified while the operation is in progress.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class QueueDrainToMaxSizeServerCodec
+    internal static class QueueDrainToServerCodec
 #else
-    internal static class QueueDrainToMaxSizeCodec
+    internal static class QueueDrainToCodec
 #endif
     {
-        public const int RequestMessageType = 199168; // 0x030A00
-        public const int ResponseMessageType = 199169; // 0x030A01
-        private const int RequestMaxSizeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestMaxSizeFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 198912; // 0x030900
+        public const int ResponseMessageType = 198913; // 0x030901
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -75,25 +74,19 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the Queue
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// The maximum number of elements to transfer
-            ///&lt;/summary&gt;
-            public int MaxSize { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, int maxSize)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Queue.DrainToMaxSize&quot;
+                OperationName = &quot;Queue.DrainTo&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(RequestMaxSizeFieldOffset, maxSize);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -104,8 +97,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.MaxSize = initialFrame.Bytes.ReadIntL(RequestMaxSizeFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
@@ -115,7 +107,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// list of all removed data in result of this method
+            /// list of all removed data in queue
             ///&lt;/summary&gt;
             public IList&lt;IData&gt; Response { get; set; }
         }
@@ -146,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[78,13,82,15,1],[83,13,83,123,1],[84,13,84,104,1],[85,13,85,88,1],[86,13,86,78,1],[87,13,87,48,1],[88,13,88,53,1],[89,13,89,34,1],[110,44,110,48,1],[110,49,110,53,1],[127,13,127,64,1],[128,13,128,53,1],[129,13,129,29,1],[130,13,130,88,1],[131,13,131,29,1],[132,9,132,10,1]]);
+      highlightRanges([[72,13,76,15,1],[77,13,77,123,1],[78,13,78,104,1],[79,13,79,88,1],[80,13,80,48,1],[81,13,81,53,1],[82,13,82,34,1],[102,44,102,48,0],[102,49,102,53,0],[119,13,119,64,0],[120,13,120,53,0],[121,13,121,29,0],[122,13,122,88,0],[123,13,123,29,0],[124,9,124,10,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\BigIntegerSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ArrayStreamSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,34 +22,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Numerics;
-
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class BigIntegerSerializer : SingletonSerializerBase&lt;BigInteger&gt;
+    internal class ArrayStreamSerializer : SingletonSerializerBase&lt;object[]&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeBigInteger;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeArray;
 
-        public override BigInteger Read(IObjectDataInput input)
+        public override object[] Read(IObjectDataInput input)
         {
-            var bytes = input.ReadByteArray();
-            Array.Reverse(bytes);
-            return new BigInteger(bytes);
+            var length = input.ReadInt();
+            var objects = new object[length];
+            for (var i = 0; i &lt; length; i++)
+            {
+                objects[i] = input.ReadObject&lt;object&gt;();
+            }
+            return objects;
         }
 
-        public override void Write(IObjectDataOutput output, BigInteger obj)
+        public override void Write(IObjectDataOutput output, object[] obj)
         {
-            var bytes = obj.ToByteArray();
-            Array.Reverse(bytes);
-            output.WriteByteArray(bytes);
+            output.WriteInt(obj.Length);
+            foreach (var t in obj)
+            {
+                output.WriteObject(t);
+            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,39,22,87,1],[26,13,26,47,1],[27,13,27,34,1],[28,13,28,42,1],[33,13,33,43,1],[34,13,34,34,1],[35,13,35,42,1],[36,9,36,10,1]]);
+      highlightRanges([[19,39,19,82,1],[23,13,23,42,0],[24,13,24,46,0],[25,18,25,27,0],[25,29,25,39,0],[25,41,25,44,0],[27,17,27,57,0],[29,13,29,28,0],[34,13,34,41,0],[35,22,35,27,0],[35,28,35,30,0],[35,31,35,34,0],[37,17,37,39,0],[39,9,39,10,0]]);
     </script>
   </body>
 </html>

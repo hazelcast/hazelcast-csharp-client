@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HList.Getting.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\ClientMessage+FrameEnumerator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,100 +22,94 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
 using System.Collections.Generic;
-using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.Protocol.Codecs;
-using Hazelcast.Serialization.Collections;
 
-namespace Hazelcast.DistributedObjects.Impl
+namespace Hazelcast.Messaging
 {
-    internal partial class HList&lt;T&gt; // Getting
+    internal partial class ClientMessage // FrameEnumerator
     {
-        /// &lt;inheritdoc /&gt;
-        public override async Task&lt;IReadOnlyList&lt;T&gt;&gt; GetAllAsync()
+        /// &lt;summary&gt;
+        /// Represents an enumerator of frames.
+        /// &lt;/summary&gt;
+        private class FrameEnumerator : IEnumerator&lt;Frame&gt;
         {
-            var requestMessage = ListGetAllCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = ListGetAllCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;T&gt;(response, SerializationService);
-        }
+            private readonly ClientMessage _message;
+            private bool _started;
+#if DEBUG
+            private int _index;
+#endif
 
-        /// &lt;inheritdoc /&gt;
-        public async Task&lt;T&gt; GetAsync(int index)
-        {
-            var requestMessage = ListGetCodec.EncodeRequest(Name, index);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = ListGetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;T&gt;(response);
-        }
+            /// &lt;summary&gt;
+            /// Initialize a new instance of the &lt;see cref=&quot;FrameEnumerator&quot;/&gt; class.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
+            public FrameEnumerator(ClientMessage message)
+            {
+                _message = message;
+#if DEBUG
+                _index = -1;
+#endif
+            }
 
-        /// &lt;inheritdoc /&gt;
-        public async Task&lt;IReadOnlyList&lt;T&gt;&gt; GetSublistAsync(int fromIndex, int toIndex)
-        {
-            var requestMessage = ListSubCodec.EncodeRequest(Name, fromIndex, toIndex);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = ListSubCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;T&gt;(response, SerializationService);
-        }
+            /// &lt;inheritdoc /&gt;
+            public bool MoveNext()
+            {
+                if (!_started)
+                {
+                    _started = true;
+                    Current = _message.FirstFrame;
+#if DEBUG
+                    _index = 0;
+#endif
+                }
+                else
+                {
+#if DEBUG
+                    if (Current != null) _index++;
+#endif
+                    Current = Current?.Next;
+                }
 
-        /// &lt;inheritdoc /&gt;
-        public async Task&lt;int&gt; IndexOfAsync(T item)
-        {
-            var itemData = ToSafeData(item);
-            var requestMessage = ListIndexOfCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListIndexOfCodec.DecodeResponse(responseMessage).Response;
-        }
+                return Current != null;
+            }
 
-        /// &lt;inheritdoc /&gt;
-        public async Task&lt;int&gt; LastIndexOfAsync(T item)
-        {
-            var itemData = ToSafeData(item);
-            var requestMessage = ListLastIndexOfCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListLastIndexOfCodec.DecodeResponse(responseMessage).Response;
-        }
+            /// &lt;inheritdoc /&gt;
+            public void Reset()
+            {
+                Current = null;
+                _started = false;
+#if DEBUG
+                _index = -1;
+#endif
+            }
 
-        /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; ContainsAsync(T item)
-        {
-            var itemData = ToSafeData(item);
-            var requestMessage = ListContainsCodec.EncodeRequest(Name, itemData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListContainsCodec.DecodeResponse(responseMessage).Response;
-        }
+            /// &lt;inheritdoc /&gt;
+            public Frame Current { get; private set; }
 
-        /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
-        {
-            var itemsData = ToSafeData(items);
-            var requestMessage = ListContainsAllCodec.EncodeRequest(Name, itemsData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListContainsAllCodec.DecodeResponse(responseMessage).Response;
-        }
+            /// &lt;inheritdoc /&gt;
+            object IEnumerator.Current =&gt; Current;
 
-        /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; IsEmptyAsync()
-        {
-            var requestMessage = ListIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListIsEmptyCodec.DecodeResponse(responseMessage).Response;
-        }
+            /// &lt;inheritdoc /&gt;
+            public void Dispose()
+            { }
 
-        /// &lt;inheritdoc /&gt;
-        public override async Task&lt;int&gt; GetSizeAsync()
-        {
-            var requestMessage = ListSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListSizeCodec.DecodeResponse(responseMessage).Response;
+            /// &lt;inheritdoc /&gt;
+            public override string ToString()
+            {
+#if DEBUG
+                return $&quot;Enumerator at frame[{_index}]: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
+#else
+                return $&quot;Enumerator at frame: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
+#endif
+            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,13,28,70,1],[29,13,29,124,1],[30,13,30,85,1],[31,13,31,76,1],[32,9,32,10,1],[37,13,37,74,1],[38,13,38,124,1],[39,13,39,82,1],[40,13,40,42,1],[41,9,41,10,1],[46,13,46,87,1],[47,13,47,124,1],[48,13,48,82,1],[49,13,49,76,1],[50,9,50,10,1],[55,13,55,45,1],[56,13,56,81,1],[57,13,57,124,1],[58,13,58,78,1],[59,9,59,10,1],[64,13,64,45,1],[65,13,65,85,1],[66,13,66,124,1],[67,13,67,82,1],[68,9,68,10,1],[73,13,73,45,1],[74,13,74,82,1],[75,13,75,124,1],[76,13,76,79,1],[77,9,77,10,1],[82,13,82,47,1],[83,13,83,86,1],[84,13,84,124,1],[85,13,85,82,1],[86,9,86,10,1],[91,13,91,71,1],[92,13,92,124,1],[93,13,93,78,1],[94,9,94,10,1],[99,13,99,68,1],[100,13,100,124,1],[101,13,101,75,1],[102,9,102,10,1]]);
+      highlightRanges([[37,13,37,58,1],[39,17,39,36,1],[43,13,43,14,1],[48,17,48,31,1],[50,21,50,37,1],[51,21,51,51,1],[61,21,61,45,1],[64,17,64,40,1],[70,17,70,32,1],[71,17,71,34,1],[75,13,75,14,1],[78,36,78,40,1],[78,41,78,53,1],[81,43,81,50,1],[85,15,85,16,1],[93,17,93,100,1]]);
     </script>
   </body>
 </html>

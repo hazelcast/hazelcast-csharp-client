@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\Strategies\PartitionAwarePartitioningStragegy.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\Strategies\NullPartitioningStrategy.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -25,19 +25,19 @@
 namespace Hazelcast.Partitioning.Strategies
 {
     /// &lt;summary&gt;
-    /// Implements an &lt;see cref=&quot;IPartitioningStrategy&quot;/&gt; that relies on &lt;see cref=&quot;IPartitionAware&quot;/&gt; when possible, else returns null.
+    /// Implements an &lt;see cref=&quot;IPartitioningStrategy&quot;/&gt; that always returns null, forcing fallback to the default strategy.
     /// &lt;/summary&gt;
-    internal sealed class PartitionAwarePartitioningStragegy : IPartitioningStrategy
+    internal sealed class NullPartitioningStrategy : IPartitioningStrategy
     {
         /// &lt;inheritdoc /&gt;
         public object GetPartitionKey(object o)
-            =&gt; o is IPartitionAware aware ? aware.GetPartitionKey() : null;
+            =&gt; null;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,16,24,75,1]]);
+      highlightRanges([[24,16,24,20,1]]);
     </script>
   </body>
 </html>

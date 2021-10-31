@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutTransientWithMaxIdleCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutTransientCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -50,20 +50,19 @@ namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
     /// Same as put except that MapStore, if defined, will not be called to store/persist the entry.
-    /// If ttl and maxIdle are 0, then the entry lives forever.
+    /// If ttl is 0, then the entry lives forever.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapPutTransientWithMaxIdleServerCodec
+    internal static class MapPutTransientServerCodec
 #else
-    internal static class MapPutTransientWithMaxIdleCodec
+    internal static class MapPutTransientCodec
 #endif
     {
-        public const int RequestMessageType = 83200; // 0x014500
-        public const int ResponseMessageType = 83201; // 0x014501
+        public const int RequestMessageType = 68864; // 0x010D00
+        public const int ResponseMessageType = 68865; // 0x010D01
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestMaxIdleFieldOffset = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestInitialFrameSize = RequestMaxIdleFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -81,7 +80,7 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// Value for the map entry.
+            /// New value for the map entry.
             ///&lt;/summary&gt;
             public IData Value { get; set; }
 
@@ -94,28 +93,21 @@ namespace Hazelcast.Protocol.Codecs
             /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
             ///&lt;/summary&gt;
             public long Ttl { get; set; }
-
-            /// &lt;summary&gt;
-            /// The duration of maximum idle for this entry.
-            /// Milliseconds of idle, after which this entry shall be deleted. O means infinite.
-            ///&lt;/summary&gt;
-            public long MaxIdle { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
+        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.PutTransientWithMaxIdle&quot;
+                OperationName = &quot;Map.PutTransient&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
-            initialFrame.Bytes.WriteLongL(RequestMaxIdleFieldOffset, maxIdle);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -131,7 +123,6 @@ namespace Hazelcast.Protocol.Codecs
             var initialFrame = iterator.Take();
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
-            request.MaxIdle = initialFrame.Bytes.ReadLongL(RequestMaxIdleFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
@@ -141,21 +132,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// old value of the entry
-            ///&lt;/summary&gt;
-            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -165,7 +150,6 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -174,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[98,13,102,15,0],[103,13,103,123,0],[104,13,104,104,0],[105,13,105,88,0],[106,13,106,81,0],[107,13,107,71,0],[108,13,108,79,0],[109,13,109,48,0],[110,13,110,53,0],[111,13,111,50,0],[112,13,112,53,0],[113,13,113,34,0],[138,37,138,41,0],[138,42,138,46,0],[155,13,155,64,0],[156,13,156,53,0],[157,13,157,29,0],[158,13,158,86,0],[159,13,159,29,0],[160,9,160,10,0]]);
+      highlightRanges([[91,13,95,15,1],[96,13,96,123,1],[97,13,97,104,1],[98,13,98,88,1],[99,13,99,81,1],[100,13,100,71,1],[101,13,101,48,1],[102,13,102,53,1],[103,13,103,50,1],[104,13,104,53,1],[105,13,105,34,1],[140,13,140,64,0],[141,13,141,53,0],[142,13,142,29,0],[143,13,143,29,0],[144,9,144,10,0]]);
     </script>
   </body>
 </html>

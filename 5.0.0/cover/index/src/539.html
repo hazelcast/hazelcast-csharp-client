@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\ConnectionClosedEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\TaskTimeoutException.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,34 +22,92 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Clustering;
+using System;
+using System.Runtime.Serialization;
+using System.Threading.Tasks;
 
-namespace Hazelcast.Events
+namespace Hazelcast.Exceptions
 {
     /// &lt;summary&gt;
-    /// Represents event data for the connection closed event.
+    /// Represents the exception that is throw when an async task times out.
     /// &lt;/summary&gt;
-    internal class ConnectionClosedEventArgs
+    [Serializable] // CA2237
+    public sealed class TaskTimeoutException : HazelcastException
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionClosedEventArgs&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;TaskTimeoutException&quot;/&gt; class with a specified error message and the task that timed out.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;connection&quot;&gt;The connection that was closed.&lt;/param&gt;
-        public ConnectionClosedEventArgs(MemberConnection connection)
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;task&quot;&gt;The task that timed out.&lt;/param&gt;
+        public TaskTimeoutException(string message, Task task)
+            : base(string.IsNullOrWhiteSpace(message) ? ExceptionMessages.Timeout : message)
         {
-            Connection = connection;
+            Task = task ?? throw new ArgumentNullException(nameof(task));
         }
 
         /// &lt;summary&gt;
-        /// Gets the connection that was closed.
+        /// Gets the task that timed out (and may still be executing).
         /// &lt;/summary&gt;
-        public MemberConnection Connection { get; }
+        public Task Task { get; }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TaskTimeoutException&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This constructor method is provided to comply with CA1032 and ensure that the
+        /// exception class is a good .NET citizen. It is not meant to be used in code.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TaskTimeoutException()
+            : base(ExceptionMessages.Timeout)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TaskTimeoutException&quot;/&gt; with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This constructor method is provided to comply with CA1032 and ensure that the
+        /// exception class is a good .NET citizen. It is not meant to be used in code.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TaskTimeoutException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TaskTimeoutException&quot;/&gt; with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This constructor method is provided to comply with CA1032 and ensure that the
+        /// exception class is a good .NET citizen. It is not meant to be used in code.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TaskTimeoutException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This constructor method is provided to comply with CA2229 and ensure that the
+        /// exception class is a good .NET citizen. It is not meant to be used in code.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private TaskTimeoutException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,9,28,70,1],[30,13,30,37,1],[31,9,31,10,1],[36,46,36,50,0]]);
+      highlightRanges([[33,15,33,93,1],[35,13,35,74,1],[36,9,36,10,1],[41,28,41,32,1],[51,15,51,46,1],[52,11,52,12,1],[63,15,63,28,1],[64,11,64,12,1],[78,15,78,44,1],[79,11,79,12,1],[93,15,93,34,1],[94,11,94,12,1]]);
     </script>
   </body>
 </html>

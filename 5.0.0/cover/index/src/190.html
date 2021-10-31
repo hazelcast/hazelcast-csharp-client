@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientDeployClassesCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientCreateProxyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Deploys the list of classes to cluster
-    /// Each item is a Map.Entry&lt;String, byte[]&gt; in the list.
-    /// key of entry is full class name, and byte[] is the class definition.
+    /// Creates a cluster-wide proxy with the given name and service.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientDeployClassesServerCodec
+    internal static class ClientCreateProxyServerCodec
 #else
-    internal static class ClientDeployClassesCodec
+    internal static class ClientCreateProxyCodec
 #endif
     {
-        public const int RequestMessageType = 3328; // 0x000D00
-        public const int ResponseMessageType = 3329; // 0x000D01
+        public const int RequestMessageType = 1024; // 0x000400
+        public const int ResponseMessageType = 1025; // 0x000401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -69,24 +67,45 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// list of class definitions
+            /// The distributed object name for which the proxy is being created for.
             ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;string, byte[]&gt;&gt; ClassDefinitions { get; set; }
+            public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// The name of the service. Possible service names are:
+            /// &quot;hz:impl:listService&quot;
+            /// &quot;hz:impl:queueService&quot;
+            /// &quot;hz:impl:setService&quot;
+            /// &quot;hz:impl:idGeneratorService&quot;
+            /// &quot;hz:impl:executorService&quot;
+            /// &quot;hz:impl:mapService&quot;
+            /// &quot;hz:impl:multiMapService&quot;
+            /// &quot;hz:impl:splitBrainProtectionService&quot;
+            /// &quot;hz:impl:replicatedMapService&quot;
+            /// &quot;hz:impl:ringbufferService&quot;
+            /// &quot;hz:core:proxyService&quot;
+            /// &quot;hz:impl:reliableTopicService&quot;
+            /// &quot;hz:impl:topicService&quot;
+            /// &quot;hz:core:txManagerService&quot;
+            /// &quot;hz:impl:xaService&quot;
+            ///&lt;/summary&gt;
+            public string ServiceName { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(ICollection&lt;KeyValuePair&lt;string, byte[]&gt;&gt; classDefinitions)
+        public static ClientMessage EncodeRequest(string name, string serviceName)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Client.DeployClasses&quot;
+                OperationName = &quot;Client.CreateProxy&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
-            EntryListCodec.Encode(clientMessage, classDefinitions, StringCodec.Encode, ByteArrayCodec.Encode);
+            StringCodec.Encode(clientMessage, name);
+            StringCodec.Encode(clientMessage, serviceName);
             return clientMessage;
         }
 
@@ -96,7 +115,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
-            request.ClassDefinitions = EntryListCodec.Decode(iterator, StringCodec.Decode, ByteArrayCodec.Decode);
+            request.Name = StringCodec.Decode(iterator);
+            request.ServiceName = StringCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -129,7 +149,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[70,13,74,15,0],[75,13,75,123,0],[76,13,76,104,0],[77,13,77,88,0],[78,13,78,48,0],[79,13,79,111,0],[80,13,80,34,0],[111,13,111,64,0],[112,13,112,53,0],[113,13,113,29,0],[114,13,114,29,0],[115,9,115,10,0]]);
+      highlightRanges([[88,13,92,15,1],[93,13,93,123,1],[94,13,94,104,1],[95,13,95,88,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,60,1],[99,13,99,34,1],[131,13,131,64,0],[132,13,132,53,0],[133,13,133,29,0],[134,13,134,29,0],[135,9,135,10,0]]);
     </script>
   </body>
 </html>

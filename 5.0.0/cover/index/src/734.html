@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\AggregatorDataSerializerHook.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\AggregatorBase.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,64 +23,82 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Exceptions;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Aggregation
 {
     /// &lt;summary&gt;
-    /// Provides an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for aggregators.
+    /// Provides a base class for all &lt;see cref=&quot;IAggregator{TResult}&quot;/&gt; implementations.
     /// &lt;/summary&gt;
-    internal class AggregatorDataSerializerHook : IDataSerializerHook
+    internal abstract class AggregatorBase&lt;TResult&gt; : IAggregator&lt;TResult&gt;, IIdentifiedDataSerializable
     {
-        public const int FactoryIdConst = FactoryIds.AggregatorDsFactoryId;
-        public const int BigDecimalAvg = 0;
-        public const int BigDecimalSum = 1;
-        public const int BigIntAvg = 2;
-        public const int BigIntSum = 3;
-        public const int Count = 4;
-        public const int DistinctValues = 5;
-        public const int DoubleAvg = 6;
-        public const int DoubleSum = 7;
-        public const int FixedSum = 8;
-        public const int FloatingPointSum = 9;
-        public const int IntAvg = 10;
-        public const int IntSum = 11;
-        public const int LongAvg = 12;
-        public const int LongSum = 13;
-        public const int Max = 14;
-        public const int Min = 15;
-        public const int NumberAvg = 16;
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AggregatorBase{TResult}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        protected AggregatorBase()
+        { }
 
-        private const int Len = NumberAvg + 1;
-
-        /// &lt;inheritdoc /&gt;
-        public IDataSerializableFactory CreateFactory()
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AggregatorBase{TResult}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
+        protected AggregatorBase(string attributePath)
         {
-            var constructors = new Func&lt;IIdentifiedDataSerializable&gt;[Len];
-            constructors[BigIntSum] = () =&gt; new BigIntegerSumAggregator();
-            constructors[Count] = () =&gt; new CountAggregator();
-            constructors[DoubleAvg] = () =&gt; new DoubleAverageAggregator();
-            constructors[DoubleSum] = () =&gt; new DoubleSumAggregator();
-            constructors[FixedSum] = () =&gt; new FixedSumAggregator();
-            constructors[FloatingPointSum] = () =&gt; new FloatingPointSumAggregator();
-            constructors[IntAvg] = () =&gt; new IntegerAverageAggregator();
-            constructors[IntSum] = () =&gt; new IntegerSumAggregator();
-            constructors[LongAvg] = () =&gt; new LongAverageAggregator();
-            constructors[LongSum] = () =&gt; new LongSumAggregator();
-            constructors[Max] = () =&gt; new MaxAggregator&lt;object&gt;();
-            constructors[Min] = () =&gt; new MinAggregator&lt;object&gt;();
-            constructors[NumberAvg] = () =&gt; new NumberAverageAggregator();
-            return new ArrayDataSerializableFactory(constructors);
+            if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
+            AttributePath = attributePath;
         }
 
+        public string AttributePath { get; set; }
+
         /// &lt;inheritdoc /&gt;
-        public int FactoryId =&gt; FactoryIdConst;
+        public void ReadData(IObjectDataInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
+            AttributePath = input.ReadString();
+            ReadAggregatorData(input);
+        }
+
+        /// &lt;summary&gt;
+        /// Deserializes the aggregator by reading from an &lt;see cref=&quot;IObjectDataInput&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;input&quot;&gt;The input serialized data.&lt;/param&gt;
+        /// &lt;remarks&gt;The attribute path has already been deserialized.&lt;/remarks&gt;
+        protected abstract void ReadAggregatorData(IObjectDataInput input);
+
+        /// &lt;inheritdoc /&gt;
+        public void WriteData(IObjectDataOutput output)
+        {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
+            output.WriteString(AttributePath);
+            WriteAggregatorData(output);
+        }
+
+        /// &lt;summary&gt;
+        /// Serializes the object by writing to an &lt;see cref=&quot;IObjectDataOutput&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;output&quot;&gt;The output serialized data.&lt;/param&gt;
+        /// &lt;remarks&gt;The attribute path has already been serialized.&lt;/remarks&gt;
+        protected abstract void WriteAggregatorData(IObjectDataOutput output);
+
+        /// &lt;inheritdoc /&gt;
+        public int FactoryId =&gt; FactoryIds.AggregatorDsFactoryId;
+
+        /// &lt;inheritdoc /&gt;
+        public abstract int ClassId { get; }
     }
+
+    // TODO: implement BigDecimalAverageAggregator
+    // TODO: implement BigDecimalSumAggregator
+    // TODO: implement BigIntegerAverageAggregator
+    // TODO: implement DistinctValuesAggregator (returns java serializable)
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[49,13,49,75,1],[50,13,50,45,1],[50,45,50,74,1],[50,74,50,75,1],[51,13,51,41,1],[51,41,51,62,1],[51,62,51,63,1],[52,13,52,45,1],[52,45,52,74,1],[52,74,52,75,1],[53,13,53,45,1],[53,45,53,70,1],[53,70,53,71,1],[54,13,54,44,1],[54,44,54,68,1],[54,68,54,69,1],[55,13,55,52,1],[55,52,55,84,1],[55,84,55,85,1],[56,13,56,42,1],[56,42,56,72,1],[56,72,56,73,1],[57,13,57,42,1],[57,42,57,68,1],[57,68,57,69,1],[58,13,58,43,1],[58,43,58,70,1],[58,70,58,71,1],[59,13,59,43,1],[59,43,59,66,1],[59,66,59,67,1],[60,13,60,39,1],[60,39,60,66,1],[60,66,60,67,1],[61,13,61,39,1],[61,39,61,66,1],[61,66,61,67,1],[62,13,62,45,1],[62,45,62,74,1],[62,74,62,75,1],[63,13,63,67,1],[67,33,67,47,1]]);
+      highlightRanges([[29,9,29,35,1],[30,11,30,12,1],[36,9,36,55,1],[38,13,38,58,1],[38,59,38,141,1],[39,13,39,43,1],[40,9,40,10,1],[42,39,42,43,1],[42,44,42,48,1],[47,13,47,31,1],[47,32,47,79,1],[49,13,49,48,1],[50,13,50,39,1],[51,9,51,10,1],[63,13,63,32,1],[63,33,63,81,1],[65,13,65,47,1],[66,13,66,41,1],[67,9,67,10,1],[77,33,77,65,1]]);
     </script>
   </body>
 </html>

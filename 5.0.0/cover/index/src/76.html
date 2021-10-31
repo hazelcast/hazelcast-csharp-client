@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SingletonSerializerBase.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializerOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,24 +22,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using Hazelcast.Configuration;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+
 namespace Hazelcast.Serialization
 {
-    internal abstract class SingletonSerializerBase&lt;T&gt; : IStreamSerializer&lt;T&gt;
+    /// &lt;summary&gt;
+    /// Configures a serializer for a type.
+    /// &lt;/summary&gt;
+    public class SerializerOptions : SingletonServiceFactory&lt;ISerializer&gt;
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SerializerOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        protected SerializerOptions(SerializerOptions other, bool shallow)
+            : base(other, shallow)
         {
-            public virtual void Dispose()
-            { }
-
-            public abstract int TypeId { get; }
-
-            public abstract T Read(IObjectDataInput input);
-
-            public abstract void Write(IObjectDataOutput output, T obj);
+            SerializedType = other.SerializedType;
         }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the type being serialized.
+        /// &lt;/summary&gt;
+        [BinderIgnore]
+        public Type SerializedType { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the type being serialized.
+        /// &lt;/summary&gt;
+        [BinderIgnore(false)]
+        private string SerializedTypeName
+        {
+            get =&gt; default;
+            set =&gt; SerializedType = Type.GetType(value) ?? throw new ConfigurationException($&quot;Unknown serialized type \&quot;{value}\&quot;.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal new SerializerOptions Clone(bool shallow = true) =&gt; new SerializerOptions(this, shallow);
+    }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[20,15,20,16,1]]);
+      highlightRanges([[30,9,30,35,1],[31,11,31,12,1],[37,15,37,35,0],[39,13,39,51,0],[40,9,40,10,0],[46,38,46,42,1],[46,43,46,47,1],[54,20,54,27,0],[55,20,55,133,0],[61,70,61,106,0]]);
     </script>
   </body>
 </html>

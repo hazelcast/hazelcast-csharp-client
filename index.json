@@ -5372,7 +5372,7 @@
   "5.0.0/api/Hazelcast.Sql.html": {
     "href": "5.0.0/api/Hazelcast.Sql.html",
     "title": "Hazelcast.Sql Namespace | Hazelcast .NET Documentation",
-    "keywords": "Hazelcast.Sql Namespace Classes HazelcastSqlException Represents the exception that is thrown by the SQL service in case of an error. SqlColumnMetadata SQL column metadata. SqlRow SqlRowMetadata Represents columns metadata for a SqlRow . SqlServiceExtensions SqlStatementOptions Interfaces ISqlQueryResult Represents the result of a SQL query (SELECT ...). ISqlService Represents the Hazelcast SQL service. Enums SqlColumnType SQL column type."
+    "keywords": "Hazelcast.Sql Namespace Classes HazelcastSqlException Represents the exception that is thrown by the SQL service in case of an error. SqlColumnMetadata SQL column metadata. SqlRow Represents a row in an ISqlQueryResult . SqlRowMetadata Represents columns metadata for a SqlRow . SqlServiceExtensions SqlStatementOptions Interfaces ISqlQueryResult Represents the result of a SQL query (SELECT ...). ISqlService Represents the Hazelcast SQL service. Enums SqlColumnType SQL column type."
   },
   "5.0.0/api/Hazelcast.Sql.ISqlQueryResult.html": {
     "href": "5.0.0/api/Hazelcast.Sql.ISqlQueryResult.html",
@@ -5432,32 +5432,32 @@
   "5.0.0/api/Hazelcast.Sql.SqlRow.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.-ctor.html",
     "title": "SqlRow Constructor | Hazelcast .NET Documentation",
-    "keywords": "SqlRow Constructor SqlRow(IList<Object>, SqlRowMetadata) Declaration public SqlRow(IList<object> values, SqlRowMetadata metadata) Parameters IList < Object > values SqlRowMetadata metadata"
+    "keywords": "SqlRow Constructor SqlRow(IList<Object>, SqlRowMetadata) Initializes a new instance of the SqlRow class. Declaration public SqlRow(IList<object> values, SqlRowMetadata metadata) Parameters IList < Object > values SqlRowMetadata metadata"
   },
   "5.0.0/api/Hazelcast.Sql.SqlRow.GetColumn.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.GetColumn.html",
     "title": "GetColumn Method | Hazelcast .NET Documentation",
-    "keywords": "GetColumn Method GetColumn<T>(Int32) Declaration public T GetColumn<T>(int index) Parameters Int32 index Returns T Type Parameters T GetColumn<T>(String) Declaration public T GetColumn<T>(string name) Parameters String name Returns T Type Parameters T"
+    "keywords": "GetColumn Method GetColumn<T>(Int32) Gets th Declaration public T GetColumn<T>(int index) Parameters Int32 index Returns T Type Parameters T GetColumn<T>(String) Gets the value of a column identified by its name. Declaration public T GetColumn<T>(string name) Parameters String name The name of the column. Returns T The value of the column with the specified name. Type Parameters T The expected type of the value."
   },
   "5.0.0/api/Hazelcast.Sql.SqlRow.GetKey.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.GetKey.html",
     "title": "GetKey Method | Hazelcast .NET Documentation",
-    "keywords": "GetKey Method GetKey<T>() Declaration public T GetKey<T>() Returns T Type Parameters T"
+    "keywords": "GetKey Method GetKey<T>() Gets the key of the row. Declaration public T GetKey<T>() Returns T The key of the row. Type Parameters T The expected type of the key."
   },
   "5.0.0/api/Hazelcast.Sql.SqlRow.GetValue.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.GetValue.html",
     "title": "GetValue Method | Hazelcast .NET Documentation",
-    "keywords": "GetValue Method GetValue<T>() Declaration public T GetValue<T>() Returns T Type Parameters T"
+    "keywords": "GetValue Method GetValue<T>() Gets the value of the row. Declaration public T GetValue<T>() Returns T The value of the row. Type Parameters T The expected type of the value."
   },
   "5.0.0/api/Hazelcast.Sql.SqlRow.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.html",
     "title": "SqlRow Class | Hazelcast .NET Documentation",
-    "keywords": "SqlRow Class Namespace: Hazelcast.Sql Assembly: Hazelcast.Net.dll public class SqlRow Inheritance Object SqlRow Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors SqlRow(IList<Object>, SqlRowMetadata) Properties Metadata Methods GetColumn<T>(Int32) GetColumn<T>(String) GetKey<T>() GetValue<T>()"
+    "keywords": "SqlRow Class Namespace: Hazelcast.Sql Assembly: Hazelcast.Net.dll Represents a row in an ISqlQueryResult . public class SqlRow Inheritance Object SqlRow Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors SqlRow(IList<Object>, SqlRowMetadata) Initializes a new instance of the SqlRow class. Properties Metadata Gets the row metadata. Methods GetColumn<T>(Int32) Gets th GetColumn<T>(String) Gets the value of a column identified by its name. GetKey<T>() Gets the key of the row. GetValue<T>() Gets the value of the row."
   },
   "5.0.0/api/Hazelcast.Sql.SqlRow.Metadata.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRow.Metadata.html",
     "title": "Metadata Property | Hazelcast .NET Documentation",
-    "keywords": "Metadata Property Metadata Declaration public SqlRowMetadata Metadata { get; } Property Value SqlRowMetadata"
+    "keywords": "Metadata Property Metadata Gets the row metadata. Declaration public SqlRowMetadata Metadata { get; } Property Value SqlRowMetadata"
   },
   "5.0.0/api/Hazelcast.Sql.SqlRowMetadata.Columns.html": {
     "href": "5.0.0/api/Hazelcast.Sql.SqlRowMetadata.Columns.html",

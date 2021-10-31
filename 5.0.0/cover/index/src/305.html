@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapGetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapForceUnlockCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the collection of values associated with the key. The collection is NOT backed by the map, so changes to
-    /// the map are NOT reflected in the collection, and vice-versa.
+    /// Releases the lock for the specified key regardless of the lock owner. It always successfully unlocks the key,
+    /// never blocks and returns immediately.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapGetServerCodec
+    internal static class MultiMapForceUnlockServerCodec
 #else
-    internal static class MultiMapGetCodec
+    internal static class MultiMapForceUnlockCodec
 #endif
     {
-        public const int RequestMessageType = 131584; // 0x020200
-        public const int ResponseMessageType = 131585; // 0x020201
-        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 136192; // 0x021400
+        public const int ResponseMessageType = 136193; // 0x021401
+        private const int RequestReferenceIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -74,28 +74,28 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The key whose associated values are to be returned
+            /// The key to Lock
             ///&lt;/summary&gt;
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            /// The client-wide unique id for this request. It is used to make the request idempotent by sending the same reference id during retries.
             ///&lt;/summary&gt;
-            public long ThreadId { get; set; }
+            public long ReferenceId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
+        public static ClientMessage EncodeRequest(string name, IData key, long referenceId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;MultiMap.Get&quot;
+                OperationName = &quot;MultiMap.ForceUnlock&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestReferenceIdFieldOffset, referenceId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -108,7 +108,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.ReferenceId = initialFrame.Bytes.ReadLongL(RequestReferenceIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             return request;
@@ -117,21 +117,15 @@ namespace Hazelcast.Protocol.Codecs
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// The collection of the values associated with the key.
-            ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -141,7 +135,6 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -150,7 +143,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,81,1],[89,13,89,48,1],[90,13,90,53,1],[91,13,91,50,1],[92,13,92,34,1],[114,44,114,48,1],[114,49,114,53,1],[131,13,131,64,1],[132,13,132,53,1],[133,13,133,29,1],[134,13,134,88,1],[135,13,135,29,1],[136,9,136,10,1]]);
+      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,87,1],[89,13,89,48,1],[90,13,90,53,1],[91,13,91,50,1],[92,13,92,34,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,29,1],[128,13,128,29,1],[129,9,129,10,1]]);
     </script>
   </body>
 </html>

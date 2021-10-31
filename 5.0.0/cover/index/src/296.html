@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapAddEntryListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapValuesWithPredicateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,62 +49,51 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/update/evict events.
+    /// Queries the map based on the specified predicate and returns the values of matching entries.Specified predicate
+    /// runs on all members in parallel. The collection is NOT backed by the map, so changes to the map are NOT reflected
+    /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw a
+    /// QueryResultSizeExceededException if query result size limit is configured.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapAddEntryListenerServerCodec
+    internal static class MapValuesWithPredicateServerCodec
 #else
-    internal static class MultiMapAddEntryListenerCodec
+    internal static class MapValuesWithPredicateCodec
 #endif
     {
-        public const int RequestMessageType = 134656; // 0x020E00
-        public const int ResponseMessageType = 134657; // 0x020E01
-        private const int RequestIncludeValueFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestLocalOnlyFieldOffset = RequestIncludeValueFieldOffset + BytesExtensions.SizeOfBool;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventEntryEventTypeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventEntryMessageType = 134658; // 0x020E02
+        public const int RequestMessageType = 75520; // 0x012700
+        public const int ResponseMessageType = 75521; // 0x012701
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the MultiMap
+            /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// True if EntryEvent should contain the value,false otherwise
+            /// specified query criteria.
             ///&lt;/summary&gt;
-            public bool IncludeValue { get; set; }
-
-            /// &lt;summary&gt;
-            /// if true fires events that originated from this node only, otherwise fires all events
-            ///&lt;/summary&gt;
-            public bool LocalOnly { get; set; }
+            public IData Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, IData predicate)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;MultiMap.AddEntryListener&quot;
+                IsRetryable = true,
+                OperationName = &quot;Map.ValuesWithPredicate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteBoolL(RequestIncludeValueFieldOffset, includeValue);
-            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -113,10 +102,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
-            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -125,19 +113,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Returns registration id for the entry listener
+            /// result value collection of the query.
             ///&lt;/summary&gt;
-            public Guid Response { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(Guid response)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -146,55 +134,17 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
-#if SERVER_CODEC
-        public static ClientMessage EncodeEntryEvent(IData key, IData @value, IData oldValue, IData mergingValue, int eventType, Guid uuid, int numberOfAffectedEntries)
-        {
-            var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventEntryInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventEntryMessageType);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EventEntryEventTypeFieldOffset, eventType);
-            initialFrame.Bytes.WriteGuidL(EventEntryUuidFieldOffset, uuid);
-            initialFrame.Bytes.WriteIntL(EventEntryNumberOfAffectedEntriesFieldOffset, numberOfAffectedEntries);
-            clientMessage.Append(initialFrame);
-            clientMessage.Flags |= ClientMessageFlags.Event;
-            CodecUtil.EncodeNullable(clientMessage, key, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, @value, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, oldValue, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, mergingValue, DataCodec.Encode);
-            return clientMessage;
-        }
-#endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;IData, IData, IData, IData, int, Guid, int, object, ValueTask&gt; handleEntryEventAsync, object state, ILoggerFactory loggerFactory)
-        {
-            using var iterator = clientMessage.GetEnumerator();
-            var messageType = clientMessage.MessageType;
-            if (messageType == EventEntryMessageType)
-            {
-                var initialFrame = iterator.Take();
-                var eventType =  initialFrame.Bytes.ReadIntL(EventEntryEventTypeFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuidL(EventEntryUuidFieldOffset);
-                var numberOfAffectedEntries =  initialFrame.Bytes.ReadIntL(EventEntryNumberOfAffectedEntriesFieldOffset);
-                var key = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                var @value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                var oldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                var mergingValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-                return handleEntryEventAsync(key, @value, oldValue, mergingValue, eventType, uuid, numberOfAffectedEntries, state);
-            }
-            loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
-            return default;
-        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,89,1],[95,13,95,83,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,34,1],[120,36,120,40,1],[120,41,120,45,1],[137,13,137,64,1],[138,13,138,53,1],[139,13,139,48,1],[140,13,140,91,1],[141,13,141,29,1],[142,9,142,10,1],[165,13,165,64,1],[166,13,166,57,1],[167,13,167,54,1],[169,17,169,52,1],[170,17,170,94,1],[171,17,171,85,1],[172,17,172,122,1],[173,17,173,80,1],[174,17,174,83,1],[175,17,175,85,1],[176,17,176,89,1],[177,17,177,132,1],[179,13,179,137,0],[180,13,180,28,0],[181,9,181,10,1]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,48,1],[85,13,85,53,1],[86,13,86,56,1],[87,13,87,34,1],[108,44,108,48,1],[108,49,108,53,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,29,1],[128,13,128,88,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

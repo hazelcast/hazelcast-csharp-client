@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\TokenCredentialsFactory.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\TokenCredentials.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,54 +23,43 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Text;
-using Hazelcast.Configuration;
-using Hazelcast.Core;
 
 namespace Hazelcast.Security
 {
     /// &lt;summary&gt;
-    /// Provides an implementation of &lt;see cref=&quot;ICredentialsFactory&quot;/&gt; that returns a static token &lt;see cref=&quot;ICredentials&quot;/&gt;.
+    /// Implements &lt;see cref=&quot;ITokenCredentials&quot;/&gt; for simple token-based protocols.
     /// &lt;/summary&gt;
-    internal class TokenCredentialsFactory : StaticCredentialsFactory
+    [Serializable]
+    public class TokenCredentials : ITokenCredentials
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TokenCredentialsFactory&quot;/&gt;.
+        /// Initializes a new instance of the &lt;see cref=&quot;TokenCredentials&quot;/&gt; class with a token.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;token&quot;&gt;A token.&lt;/param&gt;
-        public TokenCredentialsFactory(byte[] token)
-            : base(new TokenCredentials(token))
-        { }
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TokenCredentialsFactory&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;token&quot;&gt;A token.&lt;/param&gt;
-        public TokenCredentialsFactory(string token)
-            : this(Encoding.UTF8.GetBytes(token))
-        { }
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TokenCredentialsFactory&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;args&quot;&gt;Arguments.&lt;/param&gt;
-        public TokenCredentialsFactory(IReadOnlyDictionary&lt;string, string&gt; args)
-            : this(GetTokenBytes(args.GetStringValue(&quot;encoding&quot;, &quot;none&quot;), args.GetStringValue(&quot;data&quot;)))
-        { }
-
-        private static byte[] GetTokenBytes(string encoding, string data)
+        /// &lt;param name=&quot;token&quot;&gt;The credentials token.&lt;/param&gt;
+        public TokenCredentials(byte[] token)
         {
-            if (encoding.Equals(&quot;base64&quot;, StringComparison.OrdinalIgnoreCase)) return Convert.FromBase64String(data);
-            if (encoding.Equals(&quot;none&quot;, StringComparison.OrdinalIgnoreCase)) return Encoding.UTF8.GetBytes(data);
-            throw new ConfigurationException($&quot;Invalid token bytes encoding \&quot;{encoding}\&quot;.&quot;);
+            this.token = token ?? throw new ArgumentNullException(nameof(token));
         }
+
+        /// &lt;inheritdoc /&gt;
+        public string Name =&gt; GetToken() == null ? &quot;&lt;empty&gt;&quot; : &quot;&lt;token&gt;&quot;;
+
+        private readonly byte[] token;
+
+        /// &lt;summary&gt;
+        /// Gets the token representing the credentials.
+        /// &lt;/summary&gt;
+        public byte[] GetToken() =&gt; token;
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+            =&gt; $&quot;{nameof(TokenCredentials)} ({GetToken().Length} bytes)&quot;;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,15,33,48,1],[34,11,34,12,1],[41,15,41,50,1],[42,11,42,12,1],[49,15,49,104,1],[50,11,50,12,1],[54,13,54,79,1],[54,80,54,118,1],[55,13,55,77,1],[55,78,55,114,1],[56,13,56,95,1]]);
+      highlightRanges([[29,9,29,46,1],[31,13,31,82,1],[32,9,32,10,1],[35,31,35,73,1],[42,37,42,42,1],[46,16,46,73,1]]);
     </script>
   </body>
 </html>

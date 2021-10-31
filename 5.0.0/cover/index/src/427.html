@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ByteArrayCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\BigDecimalCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,33 +22,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Numerics;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ByteArrayCodec
+    internal static class BigDecimalCodec
     {
-        public static void Encode(ClientMessage clientMessage, byte[] bytes)
+        public static HBigDecimal Decode(IEnumerator&lt;Frame&gt; iterator)
         {
-            clientMessage.Append(new Frame(bytes));
+            var bytes = iterator.Take().Bytes;
+            var contentSize = bytes.ReadIntL(0);
+            var body = new ReadOnlySpan&lt;byte&gt;(bytes, BytesExtensions.SizeOfInt, contentSize);
+
+#if NETSTANDARD2_0
+            var bodyLE = body.ToArray();
+            Array.Reverse(bodyLE);
+            var unscaled = new BigInteger(bodyLE);
+#else
+            var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
+#endif
+
+            var scale = bytes.ReadIntL(BytesExtensions.SizeOfInt + contentSize);
+
+            return new HBigDecimal(unscaled, scale);
         }
 
-        public static byte[] Decode(Frame frame)
+        public static HBigDecimal DecodeNullable(IEnumerator&lt;Frame&gt; iterator)
         {
-            return frame.Bytes;
-        }
-
-        public static byte[] Decode(IEnumerator&lt;Frame&gt; iterator)
-        {
-            return Decode(iterator.Take());
+            return iterator.SkipNull() ? default : Decode(iterator);
         }
     }
 }
-
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,13,24,52,0],[25,9,25,10,0],[29,13,29,32,0],[34,13,34,44,0]]);
+      highlightRanges([[28,13,28,47,1],[29,13,29,49,1],[30,13,30,94,1],[37,13,37,87,1],[40,13,40,81,1],[42,13,42,53,1],[47,13,47,69,1]]);
     </script>
   </body>
 </html>

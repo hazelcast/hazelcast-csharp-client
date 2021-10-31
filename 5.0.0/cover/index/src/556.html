@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapClearedEventHandler.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapClearedEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,26 +22,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading.Tasks;
 using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapClearedEventHandler&lt;TKey, TValue, TSender&gt; : MapEventHandlerBase&lt;TKey, TValue, TSender, MapClearedEventArgs&gt;
+    public sealed class MapClearedEventArgs : MapEventArgsBase
     {
-        public MapClearedEventHandler(Func&lt;TSender, MapClearedEventArgs, ValueTask&gt; handler)
-            : base(MapEventTypes.AllCleared, handler)
+        public MapClearedEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
+            : base(member, numberOfAffectedEntries, state)
         { }
-
-        protected override MapClearedEventArgs CreateEventArgs(MemberInfo member, int numberOfAffectedEntries, object state)
-            =&gt; new MapClearedEventArgs(member, numberOfAffectedEntries, state);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,15,24,54,1],[25,11,25,12,1],[28,16,28,79,1]]);
+      highlightRanges([[22,15,22,59,1],[23,11,23,12,1]]);
     </script>
   </body>
 </html>

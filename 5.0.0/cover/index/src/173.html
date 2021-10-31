@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\StackTraceElementCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\SqlQueryIdCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -46,40 +46,41 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class StackTraceElementCodec
+    internal static class SqlQueryIdCodec
     {
-        private const int LineNumberFieldOffset = 0;
-        private const int InitialFrameSize = LineNumberFieldOffset + BytesExtensions.SizeOfInt;
+        private const int MemberIdHighFieldOffset = 0;
+        private const int MemberIdLowFieldOffset = MemberIdHighFieldOffset + BytesExtensions.SizeOfLong;
+        private const int LocalIdHighFieldOffset = MemberIdLowFieldOffset + BytesExtensions.SizeOfLong;
+        private const int LocalIdLowFieldOffset = LocalIdHighFieldOffset + BytesExtensions.SizeOfLong;
+        private const int InitialFrameSize = LocalIdLowFieldOffset + BytesExtensions.SizeOfLong;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Exceptions.StackTraceElement stackTraceElement)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Sql.SqlQueryId sqlQueryId)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(LineNumberFieldOffset, stackTraceElement.LineNumber);
+            initialFrame.Bytes.WriteLongL(MemberIdHighFieldOffset, sqlQueryId.MemberIdHigh);
+            initialFrame.Bytes.WriteLongL(MemberIdLowFieldOffset, sqlQueryId.MemberIdLow);
+            initialFrame.Bytes.WriteLongL(LocalIdHighFieldOffset, sqlQueryId.LocalIdHigh);
+            initialFrame.Bytes.WriteLongL(LocalIdLowFieldOffset, sqlQueryId.LocalIdLow);
             clientMessage.Append(initialFrame);
-
-            StringCodec.Encode(clientMessage, stackTraceElement.ClassName);
-            StringCodec.Encode(clientMessage, stackTraceElement.MethodName);
-            CodecUtil.EncodeNullable(clientMessage, stackTraceElement.FileName, StringCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Exceptions.StackTraceElement Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static Hazelcast.Sql.SqlQueryId Decode(IEnumerator&lt;Frame&gt; iterator)
         {
             // begin frame
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var lineNumber = initialFrame.Bytes.ReadIntL(LineNumberFieldOffset);
+            var memberIdHigh = initialFrame.Bytes.ReadLongL(MemberIdHighFieldOffset);
 
-            var className = StringCodec.Decode(iterator);
-            var methodName = StringCodec.Decode(iterator);
-            var fileName = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-
+            var memberIdLow = initialFrame.Bytes.ReadLongL(MemberIdLowFieldOffset);
+            var localIdHigh = initialFrame.Bytes.ReadLongL(LocalIdHighFieldOffset);
+            var localIdLow = initialFrame.Bytes.ReadLongL(LocalIdLowFieldOffset);
             iterator.SkipToStructEnd();
-            return new Hazelcast.Exceptions.StackTraceElement(className, methodName, fileName, lineNumber);
+            return new Hazelcast.Sql.SqlQueryId(memberIdHigh, memberIdLow, localIdHigh, localIdLow);
         }
     }
 }
@@ -88,7 +89,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[46,13,46,61,0],[48,13,48,70,0],[49,13,49,95,0],[50,13,50,48,0],[52,13,52,76,0],[53,13,53,77,0],[54,13,54,101,0],[56,13,56,59,0],[57,9,57,10,0],[62,13,62,29,1],[64,13,64,48,1],[65,13,65,81,1],[67,13,67,58,1],[68,13,68,59,1],[69,13,69,83,1],[71,13,71,40,1],[72,13,72,108,1]]);
+      highlightRanges([[49,13,49,61,1],[51,13,51,70,1],[52,13,52,93,1],[53,13,53,91,1],[54,13,54,91,1],[55,13,55,89,1],[56,13,56,48,1],[58,13,58,59,1],[59,9,59,10,1],[64,13,64,29,0],[66,13,66,48,0],[67,13,67,86,0],[69,13,69,84,0],[70,13,70,84,0],[71,13,71,82,0],[72,13,72,40,0],[73,13,73,101,0]]);
     </script>
   </body>
 </html>

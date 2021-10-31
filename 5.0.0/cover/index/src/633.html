@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BackgroundTask.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Attempt`TResult.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,104 +22,183 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// have to comment this out, C# 8 will not allow us to write TResult?
+// without specifying whether TResult is a class or a struct
+// TODO: uncomment + make exception Exception? eventually (requires C# 9)
+//#nullable enable
+
 using System;
-using System.Threading;
-using System.Threading.Tasks;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Represents a background task.
+    /// Represents the result of attempting an operation to produce a result.
     /// &lt;/summary&gt;
-    // we do not dispose tasks, generally, and we *do* dispose the cancellation
-#pragma warning disable CA1001 // Types that own disposable fields should be disposable
-    internal class BackgroundTask
-#pragma warning restore CA1001
+    /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result.&lt;/typeparam&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;An &lt;see cref=&quot;Attempt{TResult}&quot;/&gt; is either successful or failed, it
+    /// carries a &lt;typeparamref name=&quot;TResult&quot;/&gt; result, and an exception.&lt;/para&gt;
+    /// &lt;para&gt;An attempt can be used explicitly:  &lt;code&gt;
+    /// var attempt = await TryAsync(...);
+    /// if (attempt.Success)
+    /// {
+    ///     // use attempt.Value
+    /// }
+    /// &lt;/code&gt; or implicitly via deconstruction: &lt;code&gt;
+    /// var (success, value) = await TryAsync(...);
+    /// if (success)
+    /// {
+    ///     // use value
+    /// }
+    /// &lt;/code&gt;
+    /// &lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal readonly struct Attempt&lt;TResult&gt; : IEquatable&lt;Attempt&lt;TResult&gt;&gt;, IEquatable&lt;TResult&gt;
     {
-        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
-        private readonly object _mutex = new object();
-        private bool _completed;
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Attempt{TResult}&quot;/&gt; struct.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;success&quot;&gt;Whether the attempt succeeded.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The optional value of the result.&lt;/param&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;An optional captured exception.&lt;/param&gt;
+        internal Attempt(bool success, TResult value = default, Exception exception = default)
+        {
+            Success = success;
+            Value = value;
+            Exception = exception;
+        }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;BackgroundTask&quot;/&gt; class.
+        /// Represents a failed attempt with no result and no exception.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;function&quot;&gt;The work to execute.&lt;/param&gt;
+        public static Attempt&lt;TResult&gt; Failed =&gt; new Attempt&lt;TResult&gt;(false); // no such thing as &#39;struct&#39; singletons!
+
+        /// &lt;summary&gt;
+        /// Gets a value indicating whether the attempt succeeded.
+        /// &lt;/summary&gt;
+        public bool Success { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the value of the result.
+        /// &lt;/summary&gt;
+        public TResult Value { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the value of the result, if successful, else another value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;other&quot;&gt;The other value.&lt;/param&gt;
+        /// &lt;returns&gt;The value of the result, if successful, else the specified value.&lt;/returns&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
-        /// throws, then the background task ends and does not restart.&lt;/para&gt;
+        /// &lt;para&gt;If not successful, the attempt may still carry a value, but this method
+        /// does not return it. To check the value, regardless of success, use the &lt;see cref=&quot;Value&quot;/&gt;
+        /// property.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        private BackgroundTask(Func&lt;CancellationToken, Task&gt; function)
-        {
-            Task = Task.Run(async () =&gt;
-            {
-                try
-                {
-                    await function(_cancellation.Token).CfAwait();
-                }
-                finally
-                {
-                    lock (_mutex)
-                    {
-                        _completed = true;
-                        _cancellation.Dispose();
-                    }
-                }
-            });
-        }
+        [return: MaybeNull]
+        public TResult ValueOr([AllowNull] TResult other)
+            =&gt; Success ? Value : other;
 
         /// &lt;summary&gt;
-        /// (internal for tests only) Gets the executing task.
+        /// Gets the value of the result, if successful, else the default value for &lt;typeparamref name=&quot;TResult&quot;/&gt;.
         /// &lt;/summary&gt;
-        internal Task Task { get; }
-
-        /// &lt;summary&gt;
-        /// Completes the background task.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
-        public async Task CompleteAsync(bool observeException)
-        {
-            if (observeException)
-                await Task.CfAwaitNoThrow();
-            else
-                await Task.CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Cancels the background task if not completed, and waits for completion.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
-        public async Task CompletedOrCancelAsync(bool observeException = false)
-        {
-            lock (_mutex)
-            {
-                if (!_completed) _cancellation.Cancel();
-            }
-
-            if (observeException)
-                await Task.CfAwaitNoThrow();
-            else
-                await Task.CfAwaitCanceled();
-        }
-
-        /// &lt;summary&gt;
-        /// Runs the specified work as a background task.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;function&quot;&gt;The work to execute in a background task.&lt;/param&gt;
-        /// &lt;returns&gt;A background task executing the work.&lt;/returns&gt;
+        /// &lt;returns&gt;The value of the result, if successful, else the default value for &lt;typeparamref name=&quot;TResult&quot;/&gt;.&lt;/returns&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
-        /// throws, then the background task ends and does not restart.&lt;/para&gt;
+        /// &lt;para&gt;If not successful, the attempt may still carry a value, but this method
+        /// does not return it. To check the value, regardless of success, use the &lt;see cref=&quot;Value&quot;/&gt;
+        /// property.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        public static BackgroundTask Run(Func&lt;CancellationToken, Task&gt; function)
-            =&gt; new BackgroundTask(function);
+        [return: MaybeNull]
+        public TResult ValueOrDefault()
+            =&gt; Success ? Value : default;
+
+        /// &lt;summary&gt;
+        /// Gets a captured exception.
+        /// &lt;/summary&gt;
+        public Exception Exception { get; }
+
+        /// &lt;summary&gt;
+        /// Gets a value indicating whether the attempt contains an exception.
+        /// &lt;/summary&gt;
+        public bool HasException =&gt; Exception != null;
+
+        /// &lt;summary&gt;
+        /// Implicitly converts an attempt into a boolean.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attempt&quot;&gt;The attempt.&lt;/param&gt;
+        public static implicit operator bool(Attempt&lt;TResult&gt; attempt)
+            =&gt; attempt.Success;
+
+        /// &lt;summary&gt;
+        /// Implicitly converts an attempt into its result.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attempt&quot;&gt;The attempt.&lt;/param&gt;
+        public static implicit operator TResult(Attempt&lt;TResult&gt; attempt)
+            =&gt; attempt.Value;
+
+        /// &lt;summary&gt;
+        /// Implicitly converts a non-generic attempt into a generic one.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attempt&quot;&gt;The attempt.&lt;/param&gt;
+        public static implicit operator Attempt&lt;TResult&gt;(Attempt attempt)
+            =&gt; new Attempt&lt;TResult&gt;(attempt.Success);
+
+        /// &lt;summary&gt;
+        /// Implicitly converts a result value into a successful attempts.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;result&quot;&gt;The result value.&lt;/param&gt;
+        public static implicit operator Attempt&lt;TResult&gt;(TResult result)
+            =&gt; new Attempt&lt;TResult&gt;(true, result);
+
+        /// &lt;summary&gt;
+        /// Deconstruct an attempt.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;success&quot;&gt;Whether the attempt succeeded.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value of the result.&lt;/param&gt;
+        public void Deconstruct(out bool success, out TResult value)
+        {
+            success = Success;
+            value = Value;
+        }
+
+        // NOTE
+        //
+        // there is no way to return Attempt.Fail(exception) and have it implicitly
+        // converted to a new Attempt&lt;TResult&gt; as that would allocate first the non-
+        // generic and second the generic attempt, and we want to avoid this - and
+        // all the tricks to convert a struct into another... still imply some
+        // allocations
+
+
+        /// &lt;inheritdoc /&gt;
+        public bool Equals(Attempt&lt;TResult&gt; other)
+            =&gt; (Success &amp;&amp; other.Success &amp;&amp; (Value is null ? other.Value is null : Value.Equals(other.Value))) ||
+               (!Success &amp;&amp; !other.Success);
+
+        /// &lt;inheritdoc /&gt;
+        public bool Equals(TResult other)
+            =&gt; Success &amp;&amp; (Value is null ? other is null : Value.Equals(other));
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+            =&gt; obj is Attempt&lt;TResult&gt; attempt &amp;&amp; Equals(attempt);
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Success, Value);
+        }
+
+        public static bool operator ==(Attempt&lt;TResult&gt; left, Attempt&lt;TResult&gt; right)
+            =&gt; left.Equals(right);
+
+        public static bool operator !=(Attempt&lt;TResult&gt; left, Attempt&lt;TResult&gt; right)
+            =&gt; !left.Equals(right);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,96,1],[30,9,30,55,1],[41,9,41,71,1],[43,13,47,21,1],[47,21,47,67,1],[47,67,48,17,1],[48,17,48,18,1],[48,18,51,21,1],[51,21,51,34,1],[51,34,53,25,1],[53,25,53,43,1],[53,43,54,25,1],[54,25,54,49,1],[54,49,55,21,1],[55,21,55,22,1],[55,22,57,13,1],[57,13,57,14,1],[57,14,57,16,1],[58,9,58,10,1],[63,30,63,34,1],[72,13,72,34,0],[73,17,73,45,0],[75,17,75,38,0],[76,9,76,10,0],[85,13,85,26,1],[87,17,87,33,1],[87,34,87,57,1],[88,13,88,14,1],[90,13,90,34,1],[91,17,91,45,1],[93,17,93,46,1],[94,9,94,10,1],[106,16,106,44,1]]);
+      highlightRanges([[57,13,57,31,1],[58,13,58,27,1],[59,13,59,35,1],[60,9,60,10,1],[65,50,65,77,1],[70,31,70,35,1],[75,32,75,36,1],[89,16,89,39,1],[102,16,102,41,0],[107,38,107,42,1],[112,37,112,54,1],[119,16,119,31,1],[126,16,126,29,1],[133,16,133,53,1],[140,16,140,50,1],[149,13,149,31,1],[150,13,150,27,1],[151,9,151,10,1],[164,16,165,44,0],[169,16,169,80,0],[173,16,173,66,0],[178,13,178,53,0],[182,16,182,34,0],[185,16,185,35,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapReplaceIfSameCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapReplaceCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Replaces the the entry for a key only if existing values equal to the testValue
+    /// Replaces the entry for a key only if currently mapped to a given value.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapReplaceIfSameServerCodec
+    internal static class MapReplaceServerCodec
 #else
-    internal static class MapReplaceIfSameCodec
+    internal static class MapReplaceCodec
 #endif
     {
-        public const int RequestMessageType = 66816; // 0x010500
-        public const int ResponseMessageType = 66817; // 0x010501
+        public const int RequestMessageType = 66560; // 0x010400
+        public const int ResponseMessageType = 66561; // 0x010401
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -79,12 +78,7 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// Test the existing value against this value to find if equal to this value.
-            ///&lt;/summary&gt;
-            public IData TestValue { get; set; }
-
-            /// &lt;summary&gt;
-            /// New value for the map entry. Only replace with this value if existing value is equal to the testValue.
+            /// New value for the map entry.
             ///&lt;/summary&gt;
             public IData Value { get; set; }
 
@@ -95,12 +89,12 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData testValue, IData @value, long threadId)
+        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.ReplaceIfSame&quot;
+                OperationName = &quot;Map.Replace&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -109,7 +103,6 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, testValue);
             DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
@@ -123,7 +116,6 @@ namespace Hazelcast.Protocol.Codecs
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
-            request.TestValue = DataCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
             return request;
         }
@@ -133,19 +125,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if value is replaced with new one, false otherwise
+            /// Clone of the previous value, not the original (identically equal) value previously put into the map.
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -154,8 +146,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -164,7 +156,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[90,13,94,15,1],[95,13,95,123,1],[96,13,96,104,1],[97,13,97,88,1],[98,13,98,81,1],[99,13,99,48,1],[100,13,100,53,1],[101,13,101,50,1],[102,13,102,56,1],[103,13,103,53,1],[104,13,104,34,1],[128,36,128,40,1],[128,41,128,45,1],[145,13,145,64,1],[146,13,146,53,1],[147,13,147,48,1],[148,13,148,91,1],[149,13,149,29,1],[150,9,150,10,1]]);
+      highlightRanges([[84,13,88,15,1],[89,13,89,123,1],[90,13,90,104,1],[91,13,91,88,1],[92,13,92,81,1],[93,13,93,48,1],[94,13,94,53,1],[95,13,95,50,1],[96,13,96,53,1],[97,13,97,34,1],[120,37,120,41,1],[120,42,120,46,1],[137,13,137,64,1],[138,13,138,53,1],[139,13,139,29,1],[140,13,140,86,1],[141,13,141,29,1],[142,9,142,10,1]]);
     </script>
   </body>
 </html>

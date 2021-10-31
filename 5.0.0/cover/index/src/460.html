@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\ProjectionDataSerializerHook.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\MultiAttributeProjection.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -28,33 +28,70 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Projection
 {
     /// &lt;summary&gt;
-    /// Provides an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for projections.
+    /// Represents a multiple attributes projection.
     /// &lt;/summary&gt;
-    internal class ProjectionDataSerializerHook : IDataSerializerHook
+    internal class MultiAttributeProjection : IProjection, IIdentifiedDataSerializable
     {
-        public const int FactoryIdConst = FactoryIds.ProjectionDsFactoryId;
-        public const int SingleAttribute = 0;
-        public const int MultiAttribute = 1;
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MultiAttributeProjection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public MultiAttributeProjection()
+        { }
 
-        private const int Len = MultiAttribute + 1;
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MultiAttributeProjection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePaths&quot;&gt;The attribute paths.&lt;/param&gt;
+        public MultiAttributeProjection(string[] attributePaths)
+        {
+            if (attributePaths == null) throw new ArgumentNullException(nameof(attributePaths));
+
+            foreach (var attributePath in attributePaths)
+            {
+                if (string.IsNullOrWhiteSpace(attributePath))
+                    throw new ArgumentException(&quot;No attribute path can be null nor empty.&quot;, nameof(attributePaths));
+#if NETFRAMEWORK
+                if (attributePath.Contains(&quot;[any]&quot;))
+#else
+                if (attributePath.Contains(&quot;[any]&quot;, StringComparison.OrdinalIgnoreCase))
+#endif
+                    throw new ArgumentException(&quot;No attribute path can contain the &#39;[any]&#39; operator.&quot;, nameof(attributePaths));
+            }
+
+            AttributePaths = attributePaths;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Get the attribute path.
+        /// &lt;/summary&gt;
+        internal string[] AttributePaths { get; private set; }
 
         /// &lt;inheritdoc /&gt;
-        public IDataSerializableFactory CreateFactory()
+        public void ReadData(IObjectDataInput input)
         {
-            var constructors = new Func&lt;IIdentifiedDataSerializable&gt;[Len];
-            constructors[SingleAttribute] = () =&gt; new SingleAttributeProjection();
-
-            return new ArrayDataSerializableFactory(constructors);
+            if (input == null) throw new ArgumentNullException(nameof(input));
+            AttributePaths = input.ReadStringArray();
         }
 
         /// &lt;inheritdoc /&gt;
-        public int FactoryId =&gt; FactoryIdConst;
+        public void WriteData(IObjectDataOutput output)
+        {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+            output.WriteStringArray(AttributePaths);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public int FactoryId =&gt; FactoryIds.ProjectionDsFactoryId;
+
+        /// &lt;inheritdoc /&gt;
+        public int ClassId =&gt; ProjectionDataSerializerHook.MultiAttribute;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[34,13,34,75,1],[35,13,35,51,1],[35,51,35,82,1],[35,82,35,83,1],[37,13,37,67,1],[41,33,41,47,1]]);
+      highlightRanges([[28,9,28,42,0],[29,11,29,12,0],[35,9,35,65,0],[37,13,37,40,0],[37,41,37,97,0],[39,22,39,39,0],[39,40,39,42,0],[39,43,39,57,0],[41,17,41,62,0],[42,21,42,117,0],[46,17,46,89,0],[48,21,48,128,0],[51,13,51,45,0],[52,9,52,10,0],[58,44,58,48,0],[58,49,58,61,0],[63,13,63,31,0],[63,32,63,79,0],[64,13,64,54,0],[65,9,65,10,0],[70,13,70,32,0],[70,33,70,81,0],[71,13,71,53,0],[72,9,72,10,0],[75,33,75,65,0],[78,31,78,74,0]]);
     </script>
   </body>
 </html>

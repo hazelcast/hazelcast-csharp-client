@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapPutCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapLockCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,25 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Stores a key-value pair in the multimap.
+    /// Acquires the lock for the specified key for the specified lease time. After the lease time, the lock will be
+    /// released. If the lock is not available, then the current thread becomes disabled for thread scheduling
+    /// purposes and lies dormant until the lock has been acquired. Scope of the lock is for this map only. The acquired
+    /// lock is only for the key in this map.Locks are re-entrant, so if the key is locked N times, then it should be
+    /// unlocked N times before another thread can acquire it.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapPutServerCodec
+    internal static class MultiMapLockServerCodec
 #else
-    internal static class MultiMapPutCodec
+    internal static class MultiMapLockCodec
 #endif
     {
-        public const int RequestMessageType = 131328; // 0x020100
-        public const int ResponseMessageType = 131329; // 0x020101
+        public const int RequestMessageType = 135168; // 0x021000
+        public const int ResponseMessageType = 135169; // 0x021001
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestReferenceIdFieldOffset = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestInitialFrameSize = RequestReferenceIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -74,37 +79,43 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The key to be stored
+            /// The key the Lock
             ///&lt;/summary&gt;
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The value to be stored
-            ///&lt;/summary&gt;
-            public IData Value { get; set; }
-
-            /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation
             ///&lt;/summary&gt;
             public long ThreadId { get; set; }
+
+            /// &lt;summary&gt;
+            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
+            ///&lt;/summary&gt;
+            public long Ttl { get; set; }
+
+            /// &lt;summary&gt;
+            /// The client-wide unique id for this request. It is used to make the request idempotent by sending the same reference id during retries.
+            ///&lt;/summary&gt;
+            public long ReferenceId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId, long ttl, long referenceId)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;MultiMap.Put&quot;
+                IsRetryable = true,
+                OperationName = &quot;MultiMap.Lock&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
+            initialFrame.Bytes.WriteLongL(RequestReferenceIdFieldOffset, referenceId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -115,29 +126,24 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.ReferenceId = initialFrame.Bytes.ReadLongL(RequestReferenceIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// True if size of the multimap is increased, false if the multimap already contains the key-value pair.
-            ///&lt;/summary&gt;
-            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -147,8 +153,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
             return response;
         }
 
@@ -157,7 +162,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,81,1],[94,13,94,48,1],[95,13,95,53,1],[96,13,96,50,1],[97,13,97,53,1],[98,13,98,34,1],[121,36,121,40,1],[121,41,121,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,91,1],[142,13,142,29,1],[143,9,143,10,1]]);
+      highlightRanges([[95,13,99,15,1],[100,13,100,123,1],[101,13,101,104,1],[102,13,102,88,1],[103,13,103,81,1],[104,13,104,71,1],[105,13,105,87,1],[106,13,106,48,1],[107,13,107,53,1],[108,13,108,50,1],[109,13,109,34,1],[144,13,144,64,1],[145,13,145,53,1],[146,13,146,29,1],[147,13,147,29,1],[148,9,148,10,1]]);
     </script>
   </body>
 </html>

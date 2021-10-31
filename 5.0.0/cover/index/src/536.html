@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\TargetDisconnectedException.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\StackTraceElement.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,70 +22,108 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if !NETFRAMEWORK &amp;&amp; !NETSTANDARD2_0
 using System;
-using System.Runtime.Serialization;
-using Hazelcast.Configuration;
+#endif
 
 namespace Hazelcast.Exceptions
 {
     /// &lt;summary&gt;
-    /// Represents the exception that is thrown when the target of an invocation disconnects.
+    /// Represents a stack trace element that can be exchanged between the client and the server.
     /// &lt;/summary&gt;
-    [Serializable]
-    public sealed class TargetDisconnectedException : TargetUnreachableException
+    internal class StackTraceElement
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ConfigurationException&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;StackTraceElement&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public TargetDisconnectedException()
-            : base(ExceptionMessages.TargetDisconnectedException)
-        { }
+        /// &lt;param name=&quot;className&quot;&gt;The name of the class.&lt;/param&gt;
+        /// &lt;param name=&quot;methodName&quot;&gt;The name of the method.&lt;/param&gt;
+        /// &lt;param name=&quot;fileName&quot;&gt;The name of the source file.&lt;/param&gt;
+        /// &lt;param name=&quot;lineNumber&quot;&gt;The line number.&lt;/param&gt;
+        public StackTraceElement(string className, string methodName, string fileName, int lineNumber)
+        {
+            ClassName = className;
+            MethodName = methodName;
+            FileName = fileName;
+            LineNumber = lineNumber;
+        }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a specified error message.
+        /// Gets the name of the class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
-        public TargetDisconnectedException(string message)
-            : base(message)
-        { }
+        public string ClassName { get; }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a reference to
-        /// the inner exception that is the cause of this exception.
+        /// Gets the name of the method.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
-        /// reference if no inner exception is specified.&lt;/param&gt;
-        public TargetDisconnectedException(Exception innerException)
-            : base(ExceptionMessages.TargetDisconnectedException, innerException)
-        { }
+        public string MethodName { get; }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a specified error message
-        /// and a reference to the inner exception that is the cause of this exception.
+        /// Gets the name of the source file.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
-        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
-        /// reference if no inner exception is specified.&lt;/param&gt;
-        public TargetDisconnectedException(string message, Exception innerException)
-            : base(message, innerException)
-        { }
+        public string FileName { get; }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with serialized data.
+        /// Gets the line number.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
-        /// about the exception being thrown.&lt;/param&gt;
-        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
-        /// about the source or destination.&lt;/param&gt;
-        private TargetDisconnectedException(SerializationInfo info, StreamingContext context)
-            : base(info, context)
-        { }
+        public int LineNumber { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is StackTraceElement other &amp;&amp; EqualsN(this, other);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether two objects are equal.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;left&quot;&gt;The first object.&lt;/param&gt;
+        /// &lt;param name=&quot;right&quot;&gt;The second object.&lt;/param&gt;
+        /// &lt;returns&gt;A value indicating whether the two objects are equal.&lt;/returns&gt;
+        private static bool Equals(StackTraceElement left, StackTraceElement right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            return EqualsN(left, right);
+        }
+
+        private static bool EqualsN(StackTraceElement left, StackTraceElement right)
+            =&gt; left.ClassName == right.ClassName &amp;&amp;
+               left.MethodName == right.MethodName &amp;&amp;
+               left.FileName == right.FileName &amp;&amp;
+               left.LineNumber == right.LineNumber;
+
+        public static bool operator ==(StackTraceElement left, StackTraceElement right) =&gt; Equals(left, right);
+
+        public static bool operator !=(StackTraceElement left, StackTraceElement right) =&gt; !Equals(left, right);
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode()
+        {
+#if NETFRAMEWORK || NETSTANDARD2_0
+            unchecked
+            {
+                var hashCode = (ClassName != null ? ClassName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (MethodName != null ? MethodName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (FileName != null ? FileName.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ LineNumber;
+                return hashCode;
+            }
+#else
+            return HashCode.Combine(ClassName, MethodName, FileName, LineNumber);
+#endif
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString() =&gt; $&quot;at {ClassName}.{MethodName}(...) in {FileName}:{LineNumber}&quot;;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[31,15,31,66,1],[32,11,32,12,1],[39,15,39,28,1],[40,11,40,12,1],[49,15,49,82,1],[50,11,50,12,1],[60,15,60,44,1],[61,11,61,12,1],[71,15,71,34,1],[72,11,72,12,1]]);
+      highlightRanges([[33,9,33,103,1],[35,13,35,35,1],[36,13,36,37,1],[37,13,37,33,1],[38,13,38,37,1],[39,9,39,10,1],[44,35,44,39,1],[49,36,49,40,1],[54,34,54,38,1],[59,33,59,37,1],[64,13,64,29,1],[64,30,64,43,1],[65,13,65,44,1],[65,45,65,57,1],[66,13,66,75,1],[77,13,77,46,1],[77,47,77,59,1],[78,13,78,47,1],[78,48,78,61,1],[79,13,79,41,1],[83,16,86,51,1],[88,92,88,111,1],[90,92,90,112,1],[105,13,105,82,1],[110,46,110,108,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\CPGroupDestroyCPObjectCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\CPGroupCreateCPGroupCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Destroys the distributed object with the given name on the requested
-    /// CP group
+    /// Creates a new CP group with the given name
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class CPGroupDestroyCPObjectServerCodec
+    internal static class CPGroupCreateCPGroupServerCodec
 #else
-    internal static class CPGroupDestroyCPObjectCodec
+    internal static class CPGroupCreateCPGroupCodec
 #endif
     {
-        public const int RequestMessageType = 1966592; // 0x1E0200
-        public const int ResponseMessageType = 1966593; // 0x1E0201
+        public const int RequestMessageType = 1966336; // 0x1E0100
+        public const int ResponseMessageType = 1966337; // 0x1E0101
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -68,36 +67,24 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// CP group id of this distributed object
+            /// The proxy name of this data structure instance
             ///&lt;/summary&gt;
-            public Hazelcast.CP.CPGroupId GroupId { get; set; }
-
-            /// &lt;summary&gt;
-            /// The service of this distributed object
-            ///&lt;/summary&gt;
-            public string ServiceName { get; set; }
-
-            /// &lt;summary&gt;
-            /// The name of this distributed object
-            ///&lt;/summary&gt;
-            public string ObjectName { get; set; }
+            public string ProxyName { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string serviceName, string objectName)
+        public static ClientMessage EncodeRequest(string proxyName)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;CPGroup.DestroyCPObject&quot;
+                OperationName = &quot;CPGroup.CreateCPGroup&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
-            RaftGroupIdCodec.Encode(clientMessage, groupId);
-            StringCodec.Encode(clientMessage, serviceName);
-            StringCodec.Encode(clientMessage, objectName);
+            StringCodec.Encode(clientMessage, proxyName);
             return clientMessage;
         }
 
@@ -107,24 +94,28 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
-            request.GroupId = RaftGroupIdCodec.Decode(iterator);
-            request.ServiceName = StringCodec.Decode(iterator);
-            request.ObjectName = StringCodec.Decode(iterator);
+            request.ProxyName = StringCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// ID of the CP group that contains the CP object
+            ///&lt;/summary&gt;
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(Hazelcast.CP.CPGroupId groupId)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            RaftGroupIdCodec.Encode(clientMessage, groupId);
             return clientMessage;
         }
 #endif
@@ -134,6 +125,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.GroupId = RaftGroupIdCodec.Decode(iterator);
             return response;
         }
 
@@ -142,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[79,13,83,15,1],[84,13,84,123,1],[85,13,85,104,1],[86,13,86,88,1],[87,13,87,48,1],[88,13,88,61,1],[89,13,89,60,1],[90,13,90,59,1],[91,13,91,34,1],[124,13,124,64,1],[125,13,125,53,1],[126,13,126,29,1],[127,13,127,29,1],[128,9,128,10,1]]);
+      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,58,1],[78,13,78,34,1],[98,53,98,57,1],[98,58,98,62,1],[115,13,115,64,1],[116,13,116,53,1],[117,13,117,29,1],[118,13,118,66,1],[119,13,119,29,1],[120,9,120,10,1]]);
     </script>
   </body>
 </html>

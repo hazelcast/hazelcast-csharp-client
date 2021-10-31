@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListIndexOfCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListGetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the index of the first occurrence of the specified element in this list, or -1 if this list does not
-    /// contain the element.
+    /// Returns the element at the specified position in this list
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ListIndexOfServerCodec
+    internal static class ListGetServerCodec
 #else
-    internal static class ListIndexOfCodec
+    internal static class ListGetCodec
 #endif
     {
-        public const int RequestMessageType = 332800; // 0x051400
-        public const int ResponseMessageType = 332801; // 0x051401
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 331520; // 0x050F00
+        public const int ResponseMessageType = 331521; // 0x050F01
+        private const int RequestIndexFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -74,25 +73,25 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Element to search for
+            /// Index of the element to return
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public int Index { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData @value)
+        public static ClientMessage EncodeRequest(string name, int index)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;List.IndexOf&quot;
+                OperationName = &quot;List.Get&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -101,9 +100,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -112,20 +111,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The index of the first occurrence of the specified element in
-            /// this list, or -1 if this list does not contain the element
+            /// The element at the specified position in this list
             ///&lt;/summary&gt;
-            public int Response { get; set; }
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(int response)
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -134,8 +132,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -144,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[75,13,79,15,1],[80,13,80,123,1],[81,13,81,104,1],[82,13,82,88,1],[83,13,83,48,1],[84,13,84,53,1],[85,13,85,53,1],[86,13,86,34,1],[108,35,108,39,1],[108,40,108,44,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,90,1],[129,13,129,29,1],[130,9,130,10,1]]);
+      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,74,1],[83,13,83,48,1],[84,13,84,53,1],[85,13,85,34,1],[106,37,106,41,1],[106,42,106,46,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,29,1],[126,13,126,86,1],[127,13,127,29,1],[128,9,128,10,1]]);
     </script>
   </body>
 </html>

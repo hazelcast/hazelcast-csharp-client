@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapEntrySetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapDeleteCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the set of key-value pairs in the multimap.The collection is NOT backed by the map, so changes to the map
-    /// are NOT reflected in the collection, and vice-versa
+    /// Removes all the entries with the given key.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapEntrySetServerCodec
+    internal static class MultiMapDeleteServerCodec
 #else
-    internal static class MultiMapEntrySetCodec
+    internal static class MultiMapDeleteCodec
 #endif
     {
-        public const int RequestMessageType = 132608; // 0x020600
-        public const int ResponseMessageType = 132609; // 0x020601
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 136704; // 0x021600
+        public const int ResponseMessageType = 136705; // 0x021601
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -71,21 +71,33 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the MultiMap
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// The key of the entry to remove
+            ///&lt;/summary&gt;
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;MultiMap.EntrySet&quot;
+                IsRetryable = false,
+                OperationName = &quot;MultiMap.Delete&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -94,29 +106,25 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// The set of key-value pairs in the multimap. The returned set might be modifiable but it has no effect on the multimap.
-            ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;KeyValuePair&lt;IData, IData&gt;&gt; response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -126,7 +134,6 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
             return response;
         }
 
@@ -135,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,65,99,69,1],[99,70,99,74,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,29,1],[119,13,119,101,1],[120,13,120,29,1],[121,9,121,10,1]]);
+      highlightRanges([[79,13,83,15,1],[84,13,84,123,1],[85,13,85,104,1],[86,13,86,88,1],[87,13,87,81,1],[88,13,88,48,1],[89,13,89,53,1],[90,13,90,50,1],[91,13,91,34,1],[124,13,124,64,0],[125,13,125,53,0],[126,13,126,29,0],[127,13,127,29,0],[128,9,128,10,0]]);
     </script>
   </body>
 </html>

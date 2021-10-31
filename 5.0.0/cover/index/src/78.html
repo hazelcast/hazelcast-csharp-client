@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ArrayStreamSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\StreamSerializerAdapter.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,37 +22,53 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.DefaultSerializers
-{
-    internal class ArrayStreamSerializer : SingletonSerializerBase&lt;object[]&gt;
-    {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeArray;
+using System.Text;
 
-        public override object[] Read(IObjectDataInput input)
+namespace Hazelcast.Serialization
+{
+    internal sealed class StreamSerializerAdapter&lt;T&gt; : ISerializerAdapter
+    {
+        private readonly IStreamSerializer&lt;T&gt; _serializer;
+
+        public StreamSerializerAdapter(IStreamSerializer&lt;T&gt; serializer)
         {
-            var length = input.ReadInt();
-            var objects = new object[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                objects[i] = input.ReadObject&lt;object&gt;();
-            }
-            return objects;
+            _serializer = serializer;
         }
 
-        public override void Write(IObjectDataOutput output, object[] obj)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public void Write(IObjectDataOutput output, object obj)
         {
-            output.WriteInt(obj.Length);
-            foreach (var t in obj)
-            {
-                output.WriteObject(t);
-            }
+            _serializer.Write(output, (T) obj);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public object Read(IObjectDataInput input)
+        {
+            return _serializer.Read(input);
+        }
+
+        public int TypeId =&gt; _serializer.TypeId;
+
+        public void Dispose()
+        {
+            _serializer.Dispose();
+        }
+
+        public ISerializer Serializer =&gt; _serializer;
+
+        public override string ToString()
+        {
+            var sb = new StringBuilder(&quot;SerializerAdapter{&quot;);
+            sb.Append(&quot;serializer=&quot;).Append(_serializer);
+            sb.Append(&#39;}&#39;);
+            return sb.ToString();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,39,19,82,1],[23,13,23,42,0],[24,13,24,46,0],[25,18,25,27,0],[25,29,25,39,0],[25,41,25,44,0],[27,17,27,57,0],[29,13,29,28,0],[34,13,34,41,0],[35,22,35,27,0],[35,28,35,30,0],[35,31,35,34,0],[37,17,37,39,0],[39,9,39,10,0]]);
+      highlightRanges([[23,9,23,72,1],[25,13,25,38,1],[26,9,26,10,1],[31,13,31,48,1],[32,9,32,10,1],[37,13,37,44,1],[40,30,40,48,1],[44,13,44,35,1],[45,9,45,10,1],[47,42,47,53,1],[51,13,51,62,0],[52,13,52,58,0],[53,13,53,28,0],[54,13,54,34,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalQueuePollCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalQueuePeekCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Retrieves and removes the head of this queue, waiting up to the specified wait time if necessary for an element
-    /// to become available.
+    /// Retrieves, but does not remove, the head of this queue, or returns null if this queue is empty.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalQueuePollServerCodec
+    internal static class TransactionalQueuePeekServerCodec
 #else
-    internal static class TransactionalQueuePollCodec
+    internal static class TransactionalQueuePeekCodec
 #endif
     {
-        public const int RequestMessageType = 1180416; // 0x120300
-        public const int ResponseMessageType = 1180417; // 0x120301
+        public const int RequestMessageType = 1180672; // 0x120400
+        public const int ResponseMessageType = 1180673; // 0x120401
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestTimeoutFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
@@ -97,7 +96,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalQueue.Poll&quot;
+                OperationName = &quot;TransactionalQueue.Peek&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -128,7 +127,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The head of this queue, or &lt;tt&gt;null&lt;/tt&gt; if the specified waiting time elapses before an element is available
+            /// The value at the head of the queue.
             ///&lt;/summary&gt;
             public IData Response { get; set; }
         }
@@ -159,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[87,13,91,15,1],[92,13,92,123,1],[93,13,93,104,1],[94,13,94,88,1],[95,13,95,75,1],[96,13,96,81,1],[97,13,97,79,1],[98,13,98,48,1],[99,13,99,53,1],[100,13,100,34,1],[123,37,123,41,1],[123,42,123,46,1],[140,13,140,64,1],[141,13,141,53,1],[142,13,142,29,1],[143,13,143,86,1],[144,13,144,29,1],[145,9,145,10,1]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,75,1],[95,13,95,81,1],[96,13,96,79,1],[97,13,97,48,1],[98,13,98,53,1],[99,13,99,34,1],[122,37,122,41,1],[122,42,122,46,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,29,1],[142,13,142,86,1],[143,13,143,29,1],[144,9,144,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\AuthenticationOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\AddressLocker.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,175 +22,83 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Configuration.Binding;
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Security;
+using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
-    /// &lt;summary&gt;
-    /// Represents authentication options.
-    /// &lt;/summary&gt;
-    public class AuthenticationOptions
+    internal class AddressLocker
     {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;AuthenticationOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        public AuthenticationOptions()
+        private readonly Dictionary&lt;NetworkAddress, LockInfo&gt; _locks
+            = new Dictionary&lt;NetworkAddress, LockInfo&gt;();
+
+        private readonly object _lock = new object();
+
+        private class LockInfo : IDisposable
         {
-            CredentialsFactory = new SingletonServiceFactory&lt;ICredentialsFactory&gt;();
+            private readonly AddressLocker _addressLocker;
+
+            public LockInfo(AddressLocker addressLocker, NetworkAddress address)
+            {
+                _addressLocker = addressLocker;
+
+                Address = address;
+                Semaphore = new SemaphoreSlim(1);
+            }
+
+            public NetworkAddress Address { get; }
+
+            public int ReferenceCount { get; set; }
+
+            public SemaphoreSlim Semaphore { get; }
+
+            public void Dispose()
+            {
+                Semaphore.Release();
+                _addressLocker.Return(this);
+            }
         }
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;AuthenticationOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        private AuthenticationOptions(AuthenticationOptions other)
+        private LockInfo GetLockInfo(NetworkAddress address)
         {
-            CredentialsFactory = other.CredentialsFactory.Clone();
+            LockInfo lockInfo;
+
+            lock (_lock)
+            {
+                if (!_locks.TryGetValue(address, out lockInfo))
+                    lockInfo = _locks[address] = new LockInfo(this, address);
+                lockInfo.ReferenceCount++;
+            }
+
+            return lockInfo;
         }
 
-        /// &lt;summary&gt;
-        /// Gets the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; for the &lt;see cref=&quot;ICredentialsFactory&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;When set in the configuration file, it is defined as an injected type, for instance:
-        /// &lt;code&gt;
-        /// &quot;credentialsFactory&quot;:
-        /// {
-        ///   &quot;typeName&quot;: &quot;My.CredentialsFactory&quot;,
-        ///   &quot;args&quot;:
-        ///   {
-        ///     &quot;foo&quot;: 42
-        ///   }
-        /// }
-        /// &lt;/code&gt;
-        /// where &lt;c&gt;typeName&lt;/c&gt; is the name of the type, and &lt;c&gt;args&lt;/c&gt; is an optional dictionary
-        /// of arguments for the type constructor.&lt;/para&gt;
-        /// &lt;para&gt;In addition, shortcuts exists for common credentials factory. The whole &lt;c&gt;credentialsFactory&lt;/c&gt;
-        /// block can be omitted and replace by one of the following:&lt;/para&gt;
-        /// &lt;para&gt;Username and password:&lt;code&gt;
-        /// &quot;username-password&quot;:
-        /// {
-        ///   &quot;username&quot;: &quot;someone&quot;,
-        ///   &quot;password&quot;: &quot;secret&quot;
-        /// }
-        /// &lt;/code&gt;&lt;/para&gt;
-        /// &lt;para&gt;Kerberos:&lt;code&gt;
-        /// &quot;kerberos&quot;:
-        /// {
-        ///   &quot;spn&quot;: &quot;service-provider-name&quot;
-        /// }
-        /// &lt;/code&gt;&lt;/para&gt;
-        /// &lt;para&gt;Token:&lt;code&gt;
-        /// &quot;token&quot;:
-        /// {
-        ///   &quot;data&quot;: &quot;some-secret-token&quot;,
-        ///   &quot;encoding&quot;: &quot;none&quot;
-        /// }
-        /// &lt;/code&gt;Supported encodings are: &lt;c&gt;none&lt;/c&gt; and &lt;c&gt;base64&lt;/c&gt;.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        [BinderIgnore]
-        public SingletonServiceFactory&lt;ICredentialsFactory&gt; CredentialsFactory { get; }
-
-        [BinderName(&quot;credentialsFactory&quot;)]
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions CredentialsFactoryBinder
-#pragma warning restore IDE0051 // Remove unused private members
+        private void Return(LockInfo lockInfo)
         {
-            get =&gt; default;
-            set =&gt; CredentialsFactory.Creator = () =&gt; ServiceFactory.CreateInstance&lt;ICredentialsFactory&gt;(value.TypeName, value.Args);
+            lock (_lock)
+            {
+                lockInfo.ReferenceCount--;
+                if (lockInfo.ReferenceCount == 0)
+                    _locks.Remove(lockInfo.Address);
+            }
         }
 
-        [BinderName(&quot;username-password&quot;)] // + &quot;username&quot;, &quot;password&quot;
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions UsernamePasswordCredentialsFactoryBinder
-#pragma warning restore IDE0051 // Remove unused private members
+        public async Task&lt;IDisposable&gt; LockAsync(NetworkAddress address)
         {
-            get =&gt; default;
-            set =&gt; CredentialsFactory.Creator = () =&gt; new UsernamePasswordCredentialsFactory(value.Args);
+            var lockInfo = GetLockInfo(address);
+            await lockInfo.Semaphore.WaitAsync().CfAwait();
+            return lockInfo;
         }
-
-        [BinderName(&quot;token&quot;)] // + &quot;encoding&quot;, &quot;data&quot;
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions TokenCredentialsFactoryBinder
-#pragma warning restore IDE0051 // Remove unused private members
-        {
-            get =&gt; default;
-            set =&gt; CredentialsFactory.Creator = () =&gt; new TokenCredentialsFactory(value.Args);
-        }
-
-        [BinderName(&quot;kerberos&quot;)] // + &quot;spn&quot;
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions KerberosCredentialsFactoryBinder
-#pragma warning restore IDE0051 // Remove unused private members
-        {
-            get =&gt; default;
-            set =&gt; CredentialsFactory.Creator = () =&gt; new KerberosCredentialsFactory(value.Args);
-        }
-
-        /// &lt;summary&gt;
-        /// Configures a user name and password as the authentication mechanism.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;username&quot;&gt;Username.&lt;/param&gt;
-        /// &lt;param name=&quot;password&quot;&gt;Password.&lt;/param&gt;
-        /// &lt;returns&gt;The security options.&lt;/returns&gt;
-        public AuthenticationOptions ConfigureUsernamePasswordCredentials(string username, string password)
-        {
-            CredentialsFactory.Creator = () =&gt; new UsernamePasswordCredentialsFactory(username, password);
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Configures static credentials as the authentication mechanism.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;credentials&quot;&gt;Credentials.&lt;/param&gt;
-        /// &lt;returns&gt;The security options.&lt;/returns&gt;
-        public AuthenticationOptions ConfigureCredentials(ICredentials credentials)
-        {
-            CredentialsFactory.Creator = () =&gt; new StaticCredentialsFactory(credentials);
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Configures a static token as the authentication mechanism.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;token&quot;&gt;A token.&lt;/param&gt;
-        /// &lt;returns&gt;The security configuration.&lt;/returns&gt;
-        public AuthenticationOptions ConfigureTokenCredentials(byte[] token)
-        {
-            return ConfigureCredentials(new TokenCredentials(token));
-        }
-
-        /// &lt;summary&gt;
-        /// Configures Kerberos as the authentication mechanism.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;options&quot;&gt;The authentication options.&lt;/param&gt;
-        /// &lt;param name=&quot;spn&quot;&gt;The service principal name of the Hazelcast cluster.&lt;/param&gt;
-        /// &lt;returns&gt;The authentication options.&lt;/returns&gt;
-        public AuthenticationOptions ConfigureKerberosCredentials(string spn)
-        {
-            CredentialsFactory.Creator = () =&gt; new KerberosCredentialsFactory(spn);
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Clone the options.
-        /// &lt;/summary&gt;
-        internal AuthenticationOptions Clone() =&gt; new AuthenticationOptions(this);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,39,1],[31,13,31,85,1],[32,9,32,10,1],[37,9,37,67,1],[39,13,39,67,1],[40,9,40,10,1],[83,82,83,86,1],[92,20,92,27,1],[93,20,93,55,1],[93,55,93,133,1],[103,20,103,27,1],[104,20,104,55,0],[104,55,104,105,0],[114,20,114,27,1],[115,20,115,55,0],[115,55,115,94,0],[125,20,125,27,1],[126,20,126,55,0],[126,55,126,97,0],[137,13,137,48,0],[137,48,137,106,0],[137,106,137,107,0],[138,13,138,25,0],[148,13,148,48,0],[148,48,148,89,0],[148,89,148,90,0],[149,13,149,25,0],[159,13,159,70,0],[170,13,170,48,0],[170,48,170,83,0],[170,83,170,84,0],[171,13,171,25,0],[177,51,177,82,1]]);
+      highlightRanges([[26,9,27,58,0],[29,9,29,54,0],[35,13,35,81,0],[37,17,37,48,0],[39,17,39,35,0],[40,17,40,50,0],[41,13,41,14,0],[43,45,43,49,0],[45,41,45,45,0],[45,46,45,50,0],[47,46,47,50,0],[51,17,51,37,0],[52,17,52,45,0],[53,13,53,14,0],[60,13,60,25,0],[62,17,62,64,0],[63,21,63,78,0],[64,17,64,43,0],[65,13,65,14,0],[67,13,67,29,0],[72,13,72,25,0],[74,17,74,43,0],[75,17,75,50,0],[76,21,76,53,0],[77,13,77,14,0],[78,9,78,10,0],[82,13,82,49,0],[83,13,83,60,0],[84,13,84,29,0],[85,9,85,10,0]]);
     </script>
   </body>
 </html>

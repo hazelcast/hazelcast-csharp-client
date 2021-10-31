@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\CustomTypeFactory.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\CodecUtil.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,86 +24,38 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Exceptions;
-using Hazelcast.Models;
-using Hazelcast.Networking;
-using Hazelcast.Serialization;
-using Hazelcast.Sql;
+using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class CustomTypeFactory
+    internal delegate T DecodeDelegate&lt;out T&gt;(IEnumerator&lt;Frame&gt; iterator);
+
+    internal delegate T DecodeBytesDelegate&lt;out T&gt;(byte[] bytes, int position);
+
+    internal static class CodecUtil
     {
-        public static NetworkAddress CreateAddress(string host, int port)
+        public static void EncodeNullable&lt;T&gt;(ClientMessage clientMessage, T value, Action&lt;ClientMessage, T&gt; encode)
         {
-            try
+            if (value == null)
             {
-                // The creation of the address uses https://docs.microsoft.com/en-us/dotnet/api/system.net.dns.gethostaddresses
-                // This method may throw ArgumentException, SocketException, ArgumentOutOfRangeException, ArgumentNullException
-                // Java implementation may throw https://docs.oracle.com/javase/7/docs/api/java/net/UnknownHostException.html
-                return new NetworkAddress(host, port);
+                clientMessage.Append(Frame.CreateNull());
             }
-            catch (Exception e)
+            else
             {
-                throw new HazelcastException(e);
+                encode(clientMessage, value);
             }
         }
 
-        public static MapEntryStats&lt;IData, IData&gt; CreateSimpleEntryView(IData key, IData value, long cost, long creationTime,
-            long expirationTime, long hits, long lastAccessTime, long lastStoredTime, long lastUpdateTime, long version, long ttl,
-            long maxIdle)
+        public static T DecodeNullable&lt;T&gt;(IEnumerator&lt;Frame&gt; iterator, DecodeDelegate&lt;T&gt; decode) where T : class
         {
-            return new MapEntryStats&lt;IData, IData&gt;
-            {
-                Key = key,
-                Value = value,
-                Cost = cost,
-                CreationTime = creationTime,
-                ExpirationTime = expirationTime,
-                Hits = hits,
-                LastAccessTime = lastAccessTime,
-                LastStoredTime = lastStoredTime,
-                LastUpdateTime = lastUpdateTime,
-                Version = version,
-                Ttl = ttl,
-                MaxIdle = maxIdle
-            };
-        }
-
-        public static IndexOptions CreateIndexConfig(string name, int indexType, List&lt;string&gt; attributes, BitmapIndexOptions bitmapIndexOptions)
-        {
-            return new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
-        }
-
-        public static BitmapIndexOptions CreateBitmapIndexOptions(string uniqueKey, int uniqueKeyTransformation)
-        {
-            return new BitmapIndexOptions { UniqueKey = uniqueKey, UniqueKeyTransformation = (UniqueKeyTransformation) uniqueKeyTransformation };
-        }
-
-        public static EndpointQualifier CreateEndpointQualifier(int type, string identifier)
-        {
-            return new EndpointQualifier((ProtocolType) type, identifier);
-        }
-
-        public static SqlColumnMetadata CreateSqlColumnMetadata(string name, int type, bool isNullableExists, bool nullable)
-        {
-            if (!Enum.IsDefined(typeof(SqlColumnType), type))
-                throw new NotSupportedException($&quot;Column type #{type} is not supported.&quot;);
-
-            var sqlColumnType = (SqlColumnType)type;
-
-            return new SqlColumnMetadata(name, sqlColumnType,
-                // By default, columns are nullable
-                // The column becomes non-nullable only if NOT NULL modifier applied during table creation or if an expression is selected
-                nullable || !isNullableExists
-            );
+            return iterator.SkipNull() ? null : decode(iterator);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[34,17,34,55,1],[38,17,38,49,0],[40,9,40,10,1],[46,13,60,15,1],[65,13,65,136,0],[70,13,70,146,0],[75,13,75,75,1],[80,13,80,62,1],[81,17,81,91,0],[83,13,83,53,1],[85,13,89,15,1]]);
+      highlightRanges([[29,13,29,31,1],[31,17,31,58,1],[35,17,35,46,1],[37,9,37,10,1],[41,13,41,66,1]]);
     </script>
   </body>
 </html>

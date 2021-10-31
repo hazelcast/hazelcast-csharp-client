@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapAddEntryListenerToKeyCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapAddEntryListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds the specified entry listener for the specified key.The listener will be notified for all
-    /// add/remove/update/evict events for the specified key only.
+    /// Adds an entry listener for this multimap. The listener will be notified for all multimap add/remove/update/evict events.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapAddEntryListenerToKeyServerCodec
+    internal static class MultiMapAddEntryListenerServerCodec
 #else
-    internal static class MultiMapAddEntryListenerToKeyCodec
+    internal static class MultiMapAddEntryListenerCodec
 #endif
     {
-        public const int RequestMessageType = 134400; // 0x020D00
-        public const int ResponseMessageType = 134401; // 0x020D01
+        public const int RequestMessageType = 134656; // 0x020E00
+        public const int ResponseMessageType = 134657; // 0x020E01
         private const int RequestIncludeValueFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestLocalOnlyFieldOffset = RequestIncludeValueFieldOffset + BytesExtensions.SizeOfBool;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
@@ -69,7 +68,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventEntryMessageType = 134402; // 0x020D02
+        private const int EventEntryMessageType = 134658; // 0x020E02
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -79,11 +78,6 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the MultiMap
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// The key to listen to
-            ///&lt;/summary&gt;
-            public IData Key { get; set; }
 
             /// &lt;summary&gt;
             /// True if EntryEvent should contain the value,false otherwise
@@ -97,12 +91,12 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, bool includeValue, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;MultiMap.AddEntryListenerToKey&quot;
+                OperationName = &quot;MultiMap.AddEntryListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -111,7 +105,6 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -124,7 +117,6 @@ namespace Hazelcast.Protocol.Codecs
             request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -202,7 +194,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[92,13,96,15,1],[97,13,97,123,1],[98,13,98,104,1],[99,13,99,88,1],[100,13,100,89,1],[101,13,101,83,1],[102,13,102,48,1],[103,13,103,53,1],[104,13,104,50,1],[105,13,105,34,1],[128,36,128,40,1],[128,41,128,45,1],[145,13,145,64,1],[146,13,146,53,1],[147,13,147,48,1],[148,13,148,91,1],[149,13,149,29,1],[150,9,150,10,1],[173,13,173,64,1],[174,13,174,57,1],[175,13,175,54,1],[177,17,177,52,1],[178,17,178,94,1],[179,17,179,85,1],[180,17,180,122,1],[181,17,181,80,1],[182,17,182,83,1],[183,17,183,85,1],[184,17,184,89,1],[185,17,185,132,1],[187,13,187,137,0],[188,13,188,28,0],[189,9,189,10,1]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,89,1],[95,13,95,83,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,34,1],[120,36,120,40,1],[120,41,120,45,1],[137,13,137,64,1],[138,13,138,53,1],[139,13,139,48,1],[140,13,140,91,1],[141,13,141,29,1],[142,9,142,10,1],[165,13,165,64,1],[166,13,166,57,1],[167,13,167,54,1],[169,17,169,52,1],[170,17,170,94,1],[171,17,171,85,1],[172,17,172,122,1],[173,17,173,80,1],[174,17,174,83,1],[175,17,175,85,1],[176,17,176,89,1],[177,17,177,132,1],[179,13,179,137,0],[180,13,180,28,0],[181,9,181,10,1]]);
     </script>
   </body>
 </html>

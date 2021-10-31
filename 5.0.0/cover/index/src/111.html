@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\LongArraySerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\KeyValuePairSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,29 +22,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
+
 namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal sealed class LongArraySerializer : SingletonSerializerBase&lt;long[]&gt;
+    internal class KeyValuePairSerializer : SingletonSerializerBase&lt;KeyValuePair&lt;object, object&gt;&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.ConstantTypeLongArray;
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeSimpleEntry;
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override long[] Read(IObjectDataInput input)
+        public override KeyValuePair&lt;object, object&gt; Read(IObjectDataInput input)
         {
-            return input.ReadLongArray();
+            return new KeyValuePair&lt;object, object&gt;(input.ReadObject&lt;object&gt;(),input.ReadObject&lt;object&gt;());
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override void Write(IObjectDataOutput output, long[] obj)
+        public override void Write(IObjectDataOutput output, KeyValuePair&lt;object, object&gt; obj)
         {
-            output.WriteLongArray(obj);
+            output.WriteObject(obj.Key);
+            output.WriteObject(obj.Value);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,39,19,83,1],[24,13,24,42,1],[30,13,30,40,1],[31,9,31,10,1]]);
+      highlightRanges([[21,39,21,85,1],[25,13,25,108,0],[30,13,30,41,0],[31,13,31,43,0],[32,9,32,10,0]]);
     </script>
   </body>
 </html>

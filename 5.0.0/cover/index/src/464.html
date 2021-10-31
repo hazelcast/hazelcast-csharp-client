@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\PartitionTable.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\Partitioner.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,68 +24,135 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Core;
 
 namespace Hazelcast.Partitioning
 {
-    /// &lt;summary&gt;
-    /// Represents a cluster partition table.
-    /// &lt;/summary&gt;
-    internal class PartitionTable
+    internal class Partitioner
     {
-        private readonly Dictionary&lt;int, Guid&gt; _partitionsMap;
+        private readonly object _partitionsLock = new object();
+        private PartitionTable _partitions;
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;PartitionTable&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;originClientId&quot;&gt;The unique identifier of the client that originated the table.&lt;/param&gt;
-        /// &lt;param name=&quot;version&quot;&gt;The version of the partition table.&lt;/param&gt;
-        /// &lt;param name=&quot;partitionsMap&quot;&gt;A map of partition identifiers to cluster member identifiers.&lt;/param&gt;
-        public PartitionTable(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
+        static Partitioner()
         {
-            OriginClientId = originClientId;
-            Version = version;
-            _partitionsMap = partitionsMap;
+            HConsole.Configure(x =&gt; x.Configure&lt;Partitioner&gt;().SetPrefix(&quot;PART&quot;));
         }
 
         /// &lt;summary&gt;
-        /// Gets the identifier of the client that originated the table.
+        /// Gets the number of partitions.
         /// &lt;/summary&gt;
-        public Guid OriginClientId { get; }
+        public int Count { get; private set; }
 
         /// &lt;summary&gt;
-        /// Gets the version of the partition table.
-        /// &lt;/summary&gt;
-        public int Version { get; }
-
-        /// &lt;summary&gt;
-        /// Gets the number of partitions in the table.
-        /// &lt;/summary&gt;
-        public int Count =&gt; _partitionsMap.Count;
-
-        /// &lt;summary&gt;
-        /// Maps a partition to the corresponding cluster member.
+        /// Gets the unique identifier of the member owning a partition.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
-        /// &lt;returns&gt;The identifier of the cluster member corresponding to the partition, or an
-        /// empty Guid if no cluster member corresponds to the partition.&lt;/returns&gt;
-        public Guid MapPartitionId(int partitionId)
-            =&gt; _partitionsMap.TryGetValue(partitionId, out var memberId) ? memberId : default;
+        /// &lt;returns&gt;The unique identifier of the member owning the partition with the specified &lt;paramref name=&quot;partitionId&quot;/&gt;,
+        /// or an empty &lt;see cref=&quot;Guid&quot;/&gt; if that partition has no owner.&lt;/returns&gt;
+        public Guid GetPartitionOwner(int partitionId)
+        {
+            if (partitionId &lt; 0) return default;
+
+            // once _partitions has a value, it won&#39;t be null again
+            // and we can use whatever value it has, and references are atomic
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (_partitions == null) return default;
+            // ReSharper disable once InconsistentlySynchronizedField
+            return _partitions.MapPartitionId(partitionId);
+        }
 
         /// &lt;summary&gt;
-        /// Determines whether this partition table is superseded by a new table.
+        /// Gets the unique identifier of the member owning the partition corresponding to a partition hash.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;originClientId&quot;&gt;The identifier of the client that originated the new partition table.&lt;/param&gt;
-        /// &lt;param name=&quot;version&quot;&gt;The version of the new partition table.&lt;/param&gt;
-        /// &lt;param name=&quot;partitionsMap&quot;&gt;A new map of partition identifiers to cluster member identifiers.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;/returns&gt;
-        public bool IsSupersededBy(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
-            =&gt; partitionsMap.Count &gt; 0 &amp;&amp; (originClientId != OriginClientId || version &gt; Version);
+        /// &lt;param name=&quot;partitionHash&quot;&gt;The partition hash.&lt;/param&gt;
+        /// &lt;returns&gt;The unique identifier of the owner owning the partition corresponding to the specified
+        /// &lt;paramref name=&quot;partitionHash&quot;/&gt;, or an empty &lt;see cref=&quot;Guid&quot;/&gt; if that partition has no owner.&lt;/returns&gt;
+        public Guid GetPartitionHashOwner(int partitionHash)
+        {
+            return GetPartitionOwner(GetPartitionId(partitionHash));
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the identifier of the partition corresponding to a partition hash.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitionHash&quot;&gt;The partition hash.&lt;/param&gt;
+        /// &lt;returns&gt;The identifier of the partition corresponding to the specified &lt;paramref name=&quot;partitionHash&quot;/&gt;.&lt;/returns&gt;
+        public int GetPartitionId(int partitionHash)
+        {
+            if (Count == 0) return 0;
+
+            // we can use whatever value count is, and it is atomic
+            return partitionHash == int.MinValue // cannot Abs(int.MinValue)
+                ? 0
+                : Math.Abs(partitionHash) % Count;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a random partition identifier.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A random partition identifier.&lt;/returns&gt;
+        public int GetRandomPartitionId()
+        {
+            return RandomProvider.Next(Count);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies the partitioner of a new partition view.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;originClientId&quot;&gt;The unique identifier of the client originating the view.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the view.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionsMap&quot;&gt;The partitions map.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the new view superseded and replaced the existing one; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool NotifyPartitionView(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
+        {
+            if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
+
+            HConsole.WriteLine(this, $&quot;Received partition table v{version}&quot;);
+            HConsole.WriteLine(this, 10, $&quot;Partitions v{version}:\n&quot; +
+                                        string.Join(&quot;\n&quot;, partitionsMap.Select(kvp =&gt; $&quot;\t{kvp.Key,-16}{kvp.Value}&quot;)));
+
+            lock (_partitionsLock) // one at a time please
+            {
+                if (_partitions != null &amp;&amp; !_partitions.IsSupersededBy(originClientId, version, partitionsMap))
+                    return false;
+
+                _partitions = new PartitionTable(originClientId, version, partitionsMap);
+                Count = _partitions.Count;
+                return true;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Sets or verifies the partition count.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;count&quot;&gt;The partition count.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The specified &lt;paramref name=&quot;count&quot;/&gt; must be either the first one,
+        /// i.e. the partitioner does not know of partitions yet, or it must be equal
+        /// to the known partitions count. Otherwise, a &lt;see cref=&quot;InvalidOperationException&quot;/&gt;
+        /// is thrown.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public void SetOrVerifyPartitionCount(int count)
+        {
+            lock (_partitionsLock)
+            {
+                if (_partitions == null)
+                {
+                    Count = count;
+                }
+                else if (Count != count)
+                {
+                    throw new InvalidOperationException($&quot;Received count value {count} but expected {Count}.&quot;);
+                }
+            }
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,9,33,101,1],[35,13,35,45,1],[36,13,36,31,1],[37,13,37,44,1],[38,9,38,10,1],[43,38,43,42,1],[48,30,48,34,1],[53,29,53,49,1],[62,16,62,94,1],[72,16,72,98,1]]);
+      highlightRanges([[24,9,24,64,1],[30,9,30,10,1],[35,28,35,32,1],[35,33,35,45,1],[45,13,45,33,1],[45,34,45,49,1],[50,13,50,37,1],[50,38,50,53,1],[52,13,52,60,1],[63,13,63,69,1],[73,13,73,28,1],[73,29,73,38,1],[76,13,78,51,1],[87,13,87,47,1],[99,13,99,39,1],[99,40,99,95,1],[105,13,105,35,1],[107,17,107,112,1],[108,21,108,34,1],[110,17,110,90,1],[111,17,111,43,1],[112,17,112,29,1],[114,9,114,10,1],[128,13,128,35,1],[130,17,130,41,1],[132,21,132,35,1],[134,22,134,41,1],[136,21,136,112,1],[138,13,138,14,1],[139,9,139,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Int32Sequence.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\InjectionOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,28 +22,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
+using System.Collections.Generic;
+using System.Text;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Implements an &lt;see cref=&quot;ISequence{Int32}&quot; /&gt;.
+    /// Represents an option for an injected instance.
     /// &lt;/summary&gt;
-    internal class Int32Sequence : ISequence&lt;int&gt;
+    internal class InjectionOptions
     {
-        private int _value;
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the type.
+        /// &lt;/summary&gt;
+        public string TypeName { get; set;}
+
+        /// &lt;summary&gt;
+        /// Gets or sets the arguments.
+        /// &lt;/summary&gt;
+        public Dictionary&lt;string, string&gt; Args { get; } = new Dictionary&lt;string, string&gt;();
 
         /// &lt;inheritdoc /&gt;
-        public int GetNext()
+        public override string ToString()
         {
-            return Interlocked.Increment(ref _value);
+            var text = new StringBuilder();
+            text.Append(GetType().Name);
+            text.Append(&quot; typeName: &#39;&quot;);
+            text.Append(TypeName ?? &quot;&lt;null&gt;&quot;);
+            text.Append(&#39;\&#39;&#39;);
+
+            ToString(text);
+
+            if (Args != null)
+            {
+                foreach (var (argKey, argValue) in Args)
+                {
+                    text.Append(&quot;, &quot;);
+                    text.Append(argKey);
+                    text.Append(&quot;: &#39;&quot;);
+                    text.Append(argValue ?? &quot;&lt;null&gt;&quot;);
+                    text.Append(&#39;\&#39;&#39;);
+                }
+            }
+
+            return text.ToString();
         }
+
+        protected virtual void ToString(StringBuilder text)
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,13,29,54,1]]);
+      highlightRanges([[28,34,28,38,1],[28,39,28,43,1],[33,50,33,54,1],[33,59,33,91,1],[38,13,38,44,1],[39,13,39,41,1],[40,13,40,41,1],[41,13,41,47,1],[42,13,42,31,1],[44,13,44,28,1],[46,13,46,30,1],[48,26,48,48,1],[48,49,48,51,1],[48,52,48,56,1],[50,21,50,39,1],[51,21,51,41,1],[52,21,52,40,1],[53,21,53,55,1],[54,21,54,39,1],[58,13,58,36,1],[62,11,62,12,1]]);
     </script>
   </body>
 </html>

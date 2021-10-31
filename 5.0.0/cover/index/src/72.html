@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializationService.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\SerializationOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,733 +23,316 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Reflection;
-using System.Threading;
+using System.Text;
+using Hazelcast.Configuration;
+using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Partitioning.Strategies;
-using Microsoft.Extensions.Logging;
+
+// suppress warning about IPortableFactory not being disposed
+// TODO: should HazelcastOptions be IDisposable so in the end we dispose these factories?
+#pragma warning disable CA2000 // Dispose objects before losing scope
 
 namespace Hazelcast.Serialization
 {
-    internal class SerializationService : IDisposable
+    /// &lt;summary&gt;
+    /// Contains the serialization options
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;see cref=&quot;IIdentifiedDataSerializable&quot;/&gt;, &lt;see cref=&quot;IPortable&quot;/&gt;, custom serializers, and global serializer can be configured using this config.
+    /// &lt;/remarks&gt;
+    public sealed class SerializationOptions
     {
-        public const byte SerializerVersion = 1;
-        private const int ConstantSerializersSize = SerializationConstants.ConstantSerializersArraySize;
-
-        private static readonly IPartitioningStrategy NullPartitioningStrategy = new NullPartitioningStrategy();
-        private readonly ILogger _logger;
-
-        private readonly ISerializerAdapter[] _constantTypeIds = new ISerializerAdapter[ConstantSerializersSize];
-
-        private readonly Dictionary&lt;Type, ISerializerAdapter&gt; _constantTypesMap =
-            new Dictionary&lt;Type, ISerializerAdapter&gt;(ConstantSerializersSize);
-
-        private readonly ISerializerAdapter _dataSerializerAdapter;
-        private volatile ISerializerAdapter _global;
-
-        private readonly ConcurrentDictionary&lt;int, ISerializerAdapter&gt; _idMap =
-            new ConcurrentDictionary&lt;int, ISerializerAdapter&gt;();
-
-        // private readonly IInputOutputFactory _inputOutputFactory;
-        private readonly ISerializerAdapter _nullSerializerAdapter;
-        private readonly int _initialOutputBufferSize;
-        private readonly PortableContext _portableContext;
-        private readonly PortableSerializer _portableSerializer;
-        private readonly ISerializerAdapter _portableSerializerAdapter;
-        private readonly ISerializerAdapter _serializableSerializerAdapter;
-
-        private readonly ConcurrentDictionary&lt;Type, ISerializerAdapter&gt; _typeMap =
-            new ConcurrentDictionary&lt;Type, ISerializerAdapter&gt;();
-
-        protected internal readonly IPartitioningStrategy GlobalPartitioningStrategy;
-
-        private bool _overrideClrSerialization;
-
-        internal SerializationService(Endianness endianness, int version,
-            IDictionary&lt;int, IDataSerializableFactory&gt; dataSerializableFactories,
-            IDictionary&lt;int, IPortableFactory&gt; portableFactories, ICollection&lt;IClassDefinition&gt; classDefinitions,
-            SerializerHooks hooks,
-            IEnumerable&lt;ISerializerDefinitions&gt; definitions,
-            bool checkClassDefErrors, IPartitioningStrategy partitioningStrategy, int initialOutputBufferSize,
-            ILoggerFactory loggerFactory)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SerializationOptions()
         {
-            _logger = loggerFactory.CreateLogger&lt;SerializationService&gt;();
-            Endianness = endianness;
-            GlobalPartitioningStrategy = partitioningStrategy;
-            _initialOutputBufferSize = initialOutputBufferSize;
-            _portableContext = new PortableContext(this, version);
-
-            // create data serializer (will be added as constant)
-            var dataSerializer = new DataSerializer(hooks, dataSerializableFactories, loggerFactory);
-            _dataSerializerAdapter = CreateSerializerAdapter&lt;IIdentifiedDataSerializable&gt;(dataSerializer);
-
-            // create portable serializer (will be added as constant)
-            _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
-            _portableSerializerAdapter = CreateSerializerAdapter&lt;IPortable&gt;(_portableSerializer);
-
-            // create the serializer of null objects (will be added as constant)
-            _nullSerializerAdapter = CreateSerializerAdapter&lt;object&gt;(new NullSerializer());
-
-            // create the serializable adapter (will be added as constant)
-            _serializableSerializerAdapter = CreateSerializerAdapter&lt;object&gt;(new SerializableSerializer());
-
-            // add defined serializers
-            foreach (var definition in definitions)
-                definition.AddSerializers(this);
-
-            // add constant serializers
-            AddMoreSerializers();
-
-            // add class definitions
-            RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
-        }
-
-#pragma warning disable CA1822 // Mark members as static - might not remain constant forever
-        public byte GetVersion() =&gt; SerializerVersion;
-#pragma warning restore CA1822
-
-        public virtual IPortableContext GetPortableContext() =&gt; _portableContext;
-
-        public Endianness Endianness { get; }
-
-        #region DataOutput / DataInput
-
-        private ObjectDataOutput GetDataOutput()
-        {
-            //TODO pooling
-            return CreateObjectDataOutput();
-        }
-
-        private static void ReturnDataOutput(ObjectDataOutput output)
-        {
-            //TODO pooling
-            output.Dispose();
-        }
-
-        private ObjectDataInput GetDataInput(IData data)
-        {
-            //TODO pooling
-            return new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
-        }
-
-        private static void ReturnDataInput(ObjectDataInput input)
-        {
-            //TODO pooling
-            input.Dispose();
-        }
-
-        #endregion
-
-        #region ToData, WriteObject, ToObject, ReadObject
-
-        public IData ToData(object o)
-            =&gt; ToData(o, GlobalPartitioningStrategy);
-
-        public IData ToData(object o, IPartitioningStrategy strategy)
-        {
-            if (o is null) return null;
-            if (o is IData data) return data;
-
-            var output = GetDataOutput();
-
-            try
+            PortableFactories = new List&lt;FactoryOptions&lt;IPortableFactory&gt;&gt;();
+            PortableFactoriesBinder = new CollectionBinder&lt;IdentifiedInjectionOptions&gt;(item =&gt;
             {
-                var serializer = SerializerFor(o);
-                var partitionHash = CalculatePartitionHash(o, strategy);
-                output.WriteIntBigEndian(partitionHash);
-                output.WriteIntBigEndian(serializer.TypeId);
-                serializer.Write(output, o);
-                return new HeapData(output.ToByteArray());
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException) &amp;&amp; !(e is SerializationException))
-            {
-                throw new SerializationException(e);
-            }
-            finally
-            {
-                ReturnDataOutput(output);
-            }
-        }
-
-        public T ToObject&lt;T&gt;(object o)
-        {
-            var oo = ToObject(o);
-            return oo switch
-            {
-                null =&gt; default,
-                T ot =&gt; ot,
-                _ =&gt; throw new InvalidCastException($&quot;Deserialized object is of type {oo.GetType()}, not {typeof(T)}.&quot;)
-            };
-        }
-
-        public object ToObject(object o)
-        {
-            if (!(o is IData data))
-                return o;
-
-            // TODO: but, if returned, why is it disposable in the first place?
-            var input = GetDataInput(data);
-            try
-            {
-                var typeId = data.TypeId;
-                var serializer = SerializerFor(typeId);
-                if (serializer == null) ThrowMissingSerializer(typeId);
-                return serializer.Read(input);
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException) &amp;&amp; !(e is SerializationException))
-            {
-                throw new SerializationException(e);
-            }
-            finally
-            {
-                ReturnDataInput(input);
-            }
-        }
-
-        public void WriteObject(IObjectDataOutput output, object o)
-        {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-            if (o is IData) throw new SerializationException(&quot;Cannot write IData. Use WriteData instead.&quot;);
-
-            try
-            {
-                var serializer = SerializerFor(o);
-                output.WriteInt(serializer.TypeId);
-                serializer.Write(output, o);
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException) &amp;&amp; !(e is SerializationException))
-            {
-                throw new SerializationException(e);
-            }
-        }
-
-        private static bool CanBeNull&lt;T&gt;()
-        {
-            var typeOfT = typeof(T);
-
-            var isValueType = typeOfT.IsValueType;
-            if (!isValueType) return true;
-
-#pragma warning disable CA1508 // Avoid dead conditional code
-            // false positive, https://github.com/dotnet/roslyn-analyzers/issues/4763
-            var isNullableType = typeOfT.IsNullableType();
-#pragma warning restore CA1508
-            if (isNullableType) return true;
-
-            return false;
-        }
-
-        public T ReadObject&lt;T&gt;(IObjectDataInput input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-
-            try
-            {
-                var typeId = input.ReadInt();
-                var serializer = SerializerFor(typeId);
-                if (serializer == null)
-                    ThrowMissingSerializer(typeId);
-
-                var o = serializer.Read(input);
-                if (o is T ot) return ot;
-
-                if (o is null)
+                PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt;
                 {
-                    if (CanBeNull&lt;T&gt;()) return default;
-                    throw new SerializationException($&quot;Deserialized null value cannot be of value type {typeof(T)}.&quot;);
-                }
+                    Id = item.Id,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(item.TypeName, item.Args)
+                });
+            });
 
-                throw new InvalidCastException($&quot;Deserialized object is of type {o.GetType()}, not {typeof(T)}.&quot;);
-            }
-            catch (Exception e) when (!(e is OutOfMemoryException) &amp;&amp; !(e is SerializationException))
+            DataSerializableFactories = new List&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt;();
+            DataSerializableFactoriesBinder = new CollectionBinder&lt;IdentifiedInjectionOptions&gt;(item =&gt;
             {
-                throw new SerializationException(e);
-            }
-        }
-
-        [DoesNotReturn]
-        private static void ThrowMissingSerializer(int typeId)
-        {
-            throw new SerializationException($&quot;Could not find a serializer for type {typeId}.&quot;);
-        }
-
-        [DoesNotReturn]
-        private static void ThrowMissingSerializer(Type type)
-        {
-            throw new SerializationException($&quot;Could not find a serializer for type {type}.&quot;);
-        }
-
-        #endregion
-
-        #region Create object data input/output
-
-        public ObjectDataInput CreateObjectDataInput(byte[] data)
-            =&gt; new ObjectDataInput(data, this, Endianness);
-
-        public ObjectDataInput CreateObjectDataInput(IData data)
-            =&gt; new ObjectDataInput(data.ToByteArray(), this, Endianness, HeapData.DataOffset);
-
-        public ObjectDataOutput CreateObjectDataOutput(int size)
-            =&gt; new ObjectDataOutput(size, this, Endianness);
-
-        public ObjectDataOutput CreateObjectDataOutput()
-            =&gt; new ObjectDataOutput(_initialOutputBufferSize, this, Endianness);
-
-        #endregion
-
-        #region Register constant serializers (cannot be overriden)
-
-        private void AddMoreSerializers()
-        {
-            AddConstantSerializer(null, _nullSerializerAdapter); // TODO: why add it?
-            AddConstantSerializer&lt;IIdentifiedDataSerializable&gt;(_dataSerializerAdapter); // TODO: why add it?
-            AddConstantSerializer&lt;IPortable&gt;(_portableSerializerAdapter); // TODO: why add it?
-            _idMap.TryAdd(_serializableSerializerAdapter.TypeId, _serializableSerializerAdapter); // TODO: why add it?
-        }
-
-        private void AddConstantSerializer(Type type, ISerializerAdapter adapter)
-        {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-
-            if (type != null)
-                _constantTypesMap.Add(type, adapter);
-
-            _constantTypeIds[IndexForDefaultType(adapter.TypeId)] = adapter;
-        }
-
-        private void AddConstantSerializer(Type type, ISerializer serializer)
-            =&gt; AddConstantSerializer(type, CreateSerializerAdapter(type, serializer));
-
-        public void AddConstantSerializer&lt;TSerialized&gt;(ISerializerAdapter adapter)
-            =&gt; AddConstantSerializer(typeof(TSerialized), adapter);
-
-        public void AddConstantSerializer&lt;TSerialized&gt;(ISerializer serializer)
-            =&gt; AddConstantSerializer&lt;TSerialized&gt;(CreateSerializerAdapter&lt;TSerialized&gt;(serializer));
-
-        private static MethodInfo _createSerializerAdapter;
-
-        private ISerializerAdapter CreateSerializerAdapter(Type type, ISerializer serializer)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-
-            if (_createSerializerAdapter == null)
-            {
-                var method = typeof(SerializationService).GetMethods(BindingFlags.Static | BindingFlags.NonPublic)
-                    .FirstOrDefault(x =&gt; x.Name == nameof(CreateSerializerAdapter) &amp;&amp; x.IsGenericMethod);
-                if (method == null)
-                    throw new ServiceFactoryException(&quot;Internal error (failed to get CreateSerializerAdapter method).&quot;);
-                _createSerializerAdapter = method.GetGenericMethodDefinition();
-            }
-
-            var createSerializerAdapter = _createSerializerAdapter.MakeGenericMethod(type);
-            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] {serializer});
-        }
-
-        private static ISerializerAdapter CreateSerializerAdapter&lt;T&gt;(ISerializer serializer)
-        {
-            return serializer switch
-            {
-                IStreamSerializer&lt;T&gt; streamSerializer =&gt; new StreamSerializerAdapter&lt;T&gt;(streamSerializer),
-                IByteArraySerializer&lt;T&gt; arraySerializer =&gt; new ByteArraySerializerAdapter&lt;T&gt;(arraySerializer),
-                _ =&gt; throw new ArgumentException(&quot;Serializer must be instance of either StreamSerializer or ByteArraySerializer.&quot;)
-            };
-        }
-
-        #endregion
-
-        #region Register configured serializers (cannot override constants)
-
-        public void AddConfiguredSerializer(Type type, ISerializer serializer)
-        {
-            if (type == null) throw new ArgumentNullException(nameof(type));
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-            if (serializer.TypeId &lt;= 0)
-                throw new ArgumentException($&quot;Serializer {serializer} has invalid id {serializer.TypeId}&quot;, nameof(serializer));
-
-            AddSerializer(type, CreateSerializerAdapter(type, serializer));
-        }
-
-        private bool AddSerializer(Type type, ISerializerAdapter adapter)
-        {
-            if (_constantTypesMap.ContainsKey(type))
-                throw new ArgumentException($&quot;Type {type} is a constant type and its serializer cannot be overridden.&quot;,
-                    nameof(type));
-
-            var added = true;
-
-            if (!_typeMap.TryAdd(type, adapter))
-            {
-                added = false;
-                var existing = _typeMap[type];
-                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
-                    throw new InvalidOperationException(
-                        $&quot;Serializer {existing.Serializer} has already been registered for type {type}.&quot;);
-            }
-
-            if (!_idMap.TryAdd(adapter.TypeId, adapter))
-            {
-                added = false;
-                var existing = _idMap[adapter.TypeId];
-                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
-                    throw new InvalidOperationException(
-                        $&quot;Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.&quot;);
-            }
-
-            return added;
-        }
-
-        private void AddSerializer(Type type, ISerializer serializer)
-        {
-            AddSerializer(type, CreateSerializerAdapter(type, serializer));
-        }
-
-        public void SetGlobalSerializer(ISerializer serializer, bool overrideClrSerialization)
-        {
-            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-
-            var adapter = CreateSerializerAdapter&lt;object&gt;(serializer);
-            if (Interlocked.CompareExchange(ref _global, adapter, null) != null)
-                throw new InvalidOperationException(&quot;Global serializer is already registered!&quot;);
-
-            _overrideClrSerialization = overrideClrSerialization;
-            if (!_idMap.TryAdd(serializer.TypeId, adapter))
-            {
-                var existing = _idMap[serializer.TypeId];
-                if (existing.Serializer.GetType() != adapter.Serializer.GetType())
+                DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt;
                 {
-                    Interlocked.CompareExchange(ref _global, null, adapter);
-                    _overrideClrSerialization = false;
-                    throw new InvalidOperationException(
-                        $&quot;Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.&quot;);
-                }
-            }
+                    Id = item.Id,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(item.TypeName, item.Args)
+                });
+            });
+
+            Serializers = new List&lt;SerializerOptions&gt;();
+            SerializersBinder = new CollectionBinder&lt;SerializerInjectionOptions&gt;(item =&gt;
+            {
+                Serializers.Add(new SerializerOptions
+                {
+                    SerializedType = Type.GetType(item.SerializedTypeName) ?? throw new ConfigurationException($&quot;Unknown serialized type \&quot;{item.SerializedTypeName}\&quot;.&quot;),
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;ISerializer&gt;(item.TypeName, item.Args)
+                });
+            });
         }
-
-        #endregion
-
-        #region Get serializers
 
         /// &lt;summary&gt;
-        /// (internal for tests only)
-        /// Gets the portable serializer.
+        /// Initializes a new instance of the &lt;see cref=&quot;SerializationOptions&quot;/&gt; class.
         /// &lt;/summary&gt;
-        internal PortableSerializer PortableSerializer =&gt; _portableSerializer;
-
-        private ISerializerAdapter SerializerFor(object obj)
+        private SerializationOptions(SerializationOptions other)
         {
-            // try
-            // - null serializer if object is null
-            // - default
-            // - custom
-            // - clr
-            // - global
+            Endianness = other.Endianness;
+            ValidateClassDefinitions = other.ValidateClassDefinitions;
+            PortableVersion = other.PortableVersion;
 
-            if (obj == null) return _nullSerializerAdapter;
+            ClassDefinitions = new HashSet&lt;IClassDefinition&gt;(other.ClassDefinitions);
+            PortableFactories = new List&lt;FactoryOptions&lt;IPortableFactory&gt;&gt;(other.PortableFactories);
+            DataSerializableFactories = new List&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt;(other.DataSerializableFactories);
 
-            var type = obj.GetType();
-
-            var serializer = LookupDefaultSerializer(type) ??
-                             LookupCustomSerializer(type) ??
-                             (_overrideClrSerialization ? null : LookupSerializableSerializer(type)) ??
-                             LookupGlobalSerializer(type);
-
-            if (serializer == null) ThrowMissingSerializer(type);
-            return serializer;
+            GlobalSerializer = other.GlobalSerializer?.Clone();
+            Serializers = new List&lt;SerializerOptions&gt;(other.Serializers);
         }
 
-        protected internal ISerializerAdapter SerializerFor(int typeId)
-        {
-            if (typeId &lt;= 0)
-            {
-                var index = IndexForDefaultType(typeId);
-                if (index &lt; ConstantSerializersSize &amp;&amp;
-                    index != IndexForDefaultType(SerializationConstants.CsharpClrSerializationType))
-                {
-                    return _constantTypeIds[index];
-                }
-            }
 
-            return _idMap.TryGetValue(typeId, out var result) ? result : default;
+        /// &lt;summary&gt;
+        /// Gets or sets the &lt;see cref=&quot;Endianness&quot;/&gt;. This value should match the server configuration.
+        /// &lt;/summary&gt;
+        public Endianness Endianness { get; set; } = Endianness.BigEndian;
+
+        /// &lt;summary&gt;
+        /// Whether to check for class definition errors at start,
+        /// and throw an Serialization Exception with error definition.
+        /// &lt;/summary&gt;
+        public bool ValidateClassDefinitions { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the portable version.
+        /// &lt;/summary&gt;
+        public int PortableVersion { get; set; }
+
+        #region Class Definitions
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;IClassDefinition&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This can only be done programmatically.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ICollection&lt;IClassDefinition&gt; ClassDefinitions { get; } = new HashSet&lt;IClassDefinition&gt;();
+
+        #endregion
+
+        #region Portable Factories
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;FactoryOptions{T}&quot;/&gt; of &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        [BinderIgnore]
+        public ICollection&lt;FactoryOptions&lt;IPortableFactory&gt;&gt; PortableFactories { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;portableFactories&quot;)]
+        private CollectionBinder&lt;IdentifiedInjectionOptions&gt; PortableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, IPortableFactory factory)
+        {
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; factory });
+            return this;
         }
 
-        // lookup default serializer
-        // - data serializable
-        // - portable
-        // - constant types
-        private ISerializerAdapter LookupDefaultSerializer(Type type)
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryType&quot;&gt;The type of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, Type factoryType)
         {
-            // fast path for data serializable
-            if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
-                return _dataSerializerAdapter;
-
-            // fast path for portable serialization
-            if (typeof(IPortable).IsAssignableFrom(type))
-                return _portableSerializerAdapter;
-
-            // else, look for constant serializer
-            if (!_constantTypesMap.TryGetValue(type, out var serializer))
-                return null;
-
-            if (serializer == null) throw new SerializationException($&quot;Failed to find default serializer for type {type}.&quot;);
-            return serializer;
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(factoryType, null) });
+            return this;
         }
 
-        private ISerializerAdapter LookupCustomSerializer(Type type)
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IPortableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryTypeName&quot;&gt;The type name of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddPortableFactory(int factoryId, string factoryTypeName)
         {
-            _typeMap.TryGetValue(type, out var serializer);
-            if (serializer == null)
-            {
-                // look for super classes
-                var typeSuperclass = type.BaseType;
-                ICollection&lt;Type&gt; interfaces = new HashSet&lt;Type&gt;(); //new Type[5]);
-                GetInterfaces(type, interfaces);
-                while (typeSuperclass != null)
-                {
-                    serializer = RegisterFromSuperType(type, typeSuperclass);
-                    if (serializer != null)
-                    {
-                        break;
-                    }
-
-                    GetInterfaces(typeSuperclass, interfaces);
-                    typeSuperclass = typeSuperclass.BaseType;
-                }
-
-                if (serializer == null)
-                {
-                    // look for interfaces
-                    foreach (var typeInterface in interfaces)
-                    {
-                        serializer = RegisterFromSuperType(type, typeInterface);
-                        if (serializer != null)
-                        {
-                            break;
-                        }
-                    }
-                }
-            }
-
-            return serializer;
-        }
-
-        // lookup for CLR serialization (IsSerializable type)
-        private ISerializerAdapter LookupSerializableSerializer(Type type)
-        {
-            if (!type.IsSerializable) return null;
-
-            // register so we find it faster next time
-            if (AddSerializer(type, _serializableSerializerAdapter))
-            {
-                _logger.LogWarning(&quot;Performance hint: Serialization service will use the CLR serialization &quot; +
-                                   $&quot;for type {type}. Please consider using a faster serialization option such as &quot; +
-                                   &quot;IIdentifiedDataSerializable.&quot;);
-            }
-
-            return _serializableSerializerAdapter;
-        }
-
-        // fallback to global serializer
-        private ISerializerAdapter LookupGlobalSerializer(Type type)
-        {
-            var serializer = _global;
-
-            // register so we find it faster next time
-            if (serializer != null)
-                AddSerializer(type, serializer);
-
-            return serializer;
+            PortableFactories.Add(new FactoryOptions&lt;IPortableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IPortableFactory&gt;(factoryTypeName, null) });
+            return this;
         }
 
         #endregion
 
-        public virtual void DisposeData(IData data)
+        #region Data Serializable Factories
+
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;FactoryOptions{T}&quot;/&gt; of &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        [BinderIgnore]
+        public ICollection&lt;FactoryOptions&lt;IDataSerializableFactory&gt;&gt; DataSerializableFactories { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;dataSerializableFactories&quot;)]
+        private CollectionBinder&lt;IdentifiedInjectionOptions&gt; DataSerializableFactoriesBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactory(int factoryId, IDataSerializableFactory factory)
         {
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; factory });
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public IPortableReader CreatePortableReader(IData data)
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryTypeName&quot;&gt;The type name of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactoryClass(int factoryId, string factoryTypeName)
         {
-            if (!data.IsPortable)
-            {
-                throw new ArgumentException(&quot;Given data is not Portable! -&gt; &quot; + data.TypeId);
-            }
-
-            ObjectDataInput input = null;
-            IPortableReader reader;
-            try
-            {
-                input = CreateObjectDataInput(data);
-                reader = _portableSerializer.CreateReader(input);
-                input = null;
-            }
-            finally
-            {
-#pragma warning disable CA1508 // Avoid dead conditional code - false positive
-                input?.Dispose();
-#pragma warning restore CA1508
-            }
-
-            return reader;
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(factoryTypeName, null) });
+            return this;
         }
 
-        public virtual void Dispose()
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;factoryId&quot;&gt;The identifier of the factory.&lt;/param&gt;
+        /// &lt;param name=&quot;factoryType&quot;&gt;The type of the factory&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;SerializationOptions&quot;/&gt;.&lt;/returns&gt;
+        public SerializationOptions AddDataSerializableFactoryClass(int factoryId, Type factoryType)
         {
-            foreach (var serializer in _typeMap.Values)
+            DataSerializableFactories.Add(new FactoryOptions&lt;IDataSerializableFactory&gt; { Id = factoryId, Creator = () =&gt; ServiceFactory.CreateInstance&lt;IDataSerializableFactory&gt;(factoryType, null) });
+            return this;
+        }
+
+        #endregion
+
+        #region Serializers
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;GlobalSerializerOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When defined in a configuration file, it is defined as an injected type, for instance:
+        /// &lt;code&gt;
+        /// &quot;globalSerializer&quot;:
+        /// {
+        ///   &quot;typeName&quot;: &quot;My.Serializer&quot;,
+        ///   &quot;args&quot;:
+        ///   {
+        ///     &quot;foo&quot;: 42
+        ///   },
+        ///   &quot;overrideClrSerialization&quot;: true
+        /// }
+        /// &lt;/code&gt;
+        /// with the additional &lt;c&gt;overrideClrSerialization&lt;/c&gt; property.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public GlobalSerializerOptions GlobalSerializer { get; set; } = new GlobalSerializerOptions();
+
+#pragma warning disable IDE0051 // Remove unused private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;globalSerializer&quot;)]
+        private GlobalSerializerInjectionOptions GlobalSerializerBinder
+        {
+            get =&gt; default;
+            set
             {
-                serializer.Dispose();
-            }
-
-            _typeMap.Clear();
-            _idMap.Clear();
-            Interlocked.Exchange(ref _global, null);
-            _constantTypesMap.Clear();
-
-            _portableSerializer.Dispose();
-
-            _nullSerializerAdapter.Dispose();
-            _portableSerializerAdapter.Dispose();
-            _dataSerializerAdapter.Dispose();
-            _serializableSerializerAdapter.Dispose();
-        }
-
-        protected internal int CalculatePartitionHash(object obj, IPartitioningStrategy strategy)
-        {
-            // ToData(o) -&gt; ToData(o, GlobalPartitionStrategy)
-            // ToData(o, strategy) -&gt; CalculatePartitionHash(o, strategy)
-            //  (and this overload is not used anywhere else)
-
-            // strategy: o -&gt; partitionKey
-            var partitioningStrategy = strategy ?? GlobalPartitioningStrategy;
-            var partitionKey = partitioningStrategy?.GetPartitionKey(obj);
-
-            // returning 0 here means that we&#39;re going to create a HeapData that:
-            // - has HasPartitionHash == false
-            // - returns PartitionHash = GetHashCode() which is overriden with a Murmur3 hasher
-
-            if (partitionKey is null) return 0; // no partition key
-            if (partitionKey == obj) return 0; // obj is *not* IData (else we wouldn&#39;t be here), so this is a dead end
-
-            // fast: partitionKey *is* a hash
-            // TODO: consider implementing this?
-            //if (partitionKey is int hash) return hash;
-
-            // fast: partitionKey provides a hash
-            if (partitionKey is IData data) return data.PartitionHash;
-
-            // slow: partitionKey wants to be hashed
-            //   create a HeapData with NullPartitioningStrategy =&gt; CalculatePartitionHash returns zero,
-            //   HasPartitionHash is false, and therefore PartitionHash is obtained by Murmur3-hashing
-            //   the serialized partitionKey bytes - i.e. &quot;hashing partitionKey&quot;
-            var meh = ToData(partitionKey, NullPartitioningStrategy);
-            if (meh != null) return meh.PartitionHash;
-
-            // duh - should never happen, really
-            return 0;
-
-            // NOTE: this is an exact copy of the Java client algorithm and in case partitionKey is e.g. a string,
-            // it probably is not especially efficient (allocates a new HeapData etc) - it would probably be better
-            // for the partition strategy to return a dummy IData with the pre-computed hash...
-        }
-
-        internal static bool IsNullData(IData data)
-        {
-            return data.DataSize == 0 &amp;&amp; data.TypeId == SerializationConstants.ConstantTypeNull;
-        }
-
-        private static void GetInterfaces(Type type, ICollection&lt;Type&gt; interfaces)
-        {
-            var types = type.GetInterfaces();
-            if (types.Length &gt; 0)
-            {
-                foreach (var t in types)
+                GlobalSerializer = new GlobalSerializerOptions
                 {
-                    interfaces.Add(t);
-                }
-
-                foreach (var cl in types)
-                {
-                    GetInterfaces(cl, interfaces);
-                }
+                    OverrideClrSerialization = value.OverrideClrSerialization,
+                    Creator = () =&gt; ServiceFactory.CreateInstance&lt;ISerializer&gt;(value.TypeName, value.Args)
+                };
             }
         }
+#pragma warning restore IDE0051 // Remove unused private members
 
-        private static int IndexForDefaultType(int typeId)
+        /// &lt;summary&gt;
+        /// Gets the collection of &lt;see cref=&quot;SerializerOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public ICollection&lt;SerializerOptions&gt; Serializers { get; }
+
+#pragma warning disable IDE0052 // Remove unread private members - used by binding
+        [BinderIgnore(false)]
+        [BinderName(&quot;serializers&quot;)]
+        private CollectionBinder&lt;SerializerInjectionOptions&gt; SerializersBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        #endregion
+
+        internal class IdentifiedInjectionOptions : InjectionOptions
         {
-            return -typeId;
+            public int Id { get; set; }
+
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(&quot;, id: &quot;);
+                text.Append(Id);
+            }
         }
 
-
-        private void RegisterClassDefinition(IClassDefinition cd, IDictionary&lt;int, IClassDefinition&gt; classDefMap,
-            bool checkClassDefErrors)
+        internal class SerializerInjectionOptions : InjectionOptions
         {
-            for (var i = 0; i &lt; cd.GetFieldCount(); i++)
-            {
-                var fd = cd.GetField(i);
-                if (fd.FieldType == FieldType.Portable || fd.FieldType == FieldType.PortableArray)
-                {
-                    var classId = fd.ClassId;
-                    classDefMap.TryGetValue(classId, out var nestedCd);
-                    if (nestedCd != null)
-                    {
-                        RegisterClassDefinition(nestedCd, classDefMap, checkClassDefErrors);
-                        _portableContext.RegisterClassDefinition(nestedCd);
-                    }
-                    else
-                    {
-                        if (checkClassDefErrors)
-                        {
-                            throw new SerializationException(
-                                &quot;Could not find registered ClassDefinition for class-id: &quot; + classId);
-                        }
-                    }
-                }
-            }
+            public string SerializedTypeName { get; set; }
 
-            _portableContext.RegisterClassDefinition(cd);
+            protected override void ToString(StringBuilder text)
+            {
+                base.ToString(text);
+                text.Append(&quot;, serializedTypeName: &#39;&quot;);
+                text.Append(SerializedTypeName ?? &quot;&lt;null&gt;&quot;);
+                text.Append(&#39;\&#39;&#39;);
+            }
         }
 
-        private void RegisterClassDefinitions(ICollection&lt;IClassDefinition&gt; classDefinitions, bool checkClassDefErrors)
+        internal class GlobalSerializerInjectionOptions : InjectionOptions
         {
-            IDictionary&lt;int, IClassDefinition&gt; classDefMap =
-                new Dictionary&lt;int, IClassDefinition&gt;(classDefinitions.Count);
-            foreach (var cd in classDefinitions)
-            {
-                if (classDefMap.ContainsKey(cd.ClassId))
-                {
-                    throw new SerializationException(&quot;Duplicate registration found for class-id[&quot; +
-                                                     cd.ClassId + &quot;]!&quot;);
-                }
+            public bool OverrideClrSerialization { get; set; }
 
-                classDefMap.Add(cd.ClassId, cd);
-            }
-
-            foreach (var classDefinition in classDefinitions)
+            protected override void ToString(StringBuilder text)
             {
-                RegisterClassDefinition(classDefinition, classDefMap, checkClassDefErrors);
+                base.ToString(text);
+                text.Append(&quot;, overrideClr: &quot;);
+                text.Append(OverrideClrSerialization);
             }
         }
 
-        private ISerializerAdapter RegisterFromSuperType(Type type, Type superType)
-        {
-            _typeMap.TryGetValue(superType, out var serializer);
-            if (serializer != null)
-            {
-                AddSerializer(type, serializer);
-            }
-
-            return serializer;
-        }
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal SerializationOptions Clone() =&gt; new SerializationOptions(this);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,9,33,113,1],[36,9,36,114,1],[38,9,39,79,1],[44,9,45,65,1],[55,9,56,66,1],[62,9,68,42,1],[70,13,70,74,1],[71,13,71,37,1],[72,13,72,63,1],[73,13,73,64,1],[74,13,74,67,1],[77,13,77,102,1],[78,13,78,107,1],[81,13,81,95,1],[82,13,82,98,1],[85,13,85,92,1],[88,13,88,108,1],[91,22,91,36,1],[91,37,91,39,1],[91,40,91,51,1],[92,17,92,49,1],[95,13,95,34,1],[98,13,98,77,1],[99,9,99,10,1],[102,37,102,54,1],[105,65,105,81,1],[107,40,107,44,1],[114,13,114,45,1],[120,13,120,30,1],[121,9,121,10,1],[126,13,126,99,1],[132,13,132,29,1],[133,9,133,10,1],[140,16,140,53,1],[144,13,144,27,1],[144,28,144,40,1],[145,13,145,33,1],[145,34,145,46,0],[147,13,147,42,1],[151,17,151,51,1],[152,17,152,73,1],[153,17,153,57,1],[154,17,154,61,1],[155,17,155,45,1],[156,17,156,59,1],[158,33,158,102,1],[160,17,160,53,0],[164,17,164,42,1],[165,13,165,14,1],[166,9,166,10,1],[170,13,170,34,1],[171,13,173,25,1],[173,25,173,32,1],[173,32,174,25,1],[174,25,174,27,1],[174,27,175,22,1],[175,22,175,120,0],[175,120,176,15,1],[181,13,181,36,1],[182,17,182,26,1],[185,13,185,44,1],[188,17,188,42,1],[189,17,189,56,1],[190,17,190,40,1],[190,41,190,72,0],[191,17,191,47,1],[193,33,193,102,1],[195,17,195,53,0],[199,17,199,40,1],[200,13,200,14,1],[201,9,201,10,1],[205,13,205,32,1],[205,33,205,81,0],[206,13,206,28,1],[206,29,206,108,0],[210,17,210,51,1],[211,17,211,52,1],[212,17,212,45,1],[213,13,213,14,1],[214,33,214,102,0],[216,17,216,53,0],[218,9,218,10,1],[222,13,222,37,1],[224,13,224,51,1],[225,13,225,30,1],[225,31,225,43,1],[229,13,229,59,1],[231,13,231,32,1],[231,33,231,45,1],[233,13,233,26,1],[238,13,238,31,1],[238,32,238,79,0],[242,17,242,46,1],[243,17,243,56,1],[244,17,244,40,1],[245,21,245,52,0],[247,17,247,48,1],[248,17,248,31,1],[248,32,248,42,1],[250,17,250,31,1],[252,21,252,40,1],[252,41,252,56,1],[253,21,253,119,1],[256,17,256,115,0],[258,33,258,102,1],[260,17,260,53,0],[262,9,262,10,1],[267,13,267,97,0],[273,13,273,95,0],[281,16,281,59,1],[284,16,284,94,1],[287,16,287,60,1],[290,16,290,80,1],[298,13,298,65,1],[299,13,299,88,1],[300,13,300,74,1],[301,13,301,98,1],[302,9,302,10,1],[306,13,306,33,1],[306,34,306,83,0],[308,13,308,30,1],[309,17,309,54,1],[311,13,311,77,1],[312,9,312,10,1],[315,16,315,86,0],[318,16,318,67,1],[321,16,321,100,1],[327,13,327,30,1],[327,31,327,77,0],[328,13,328,36,1],[328,37,328,89,0],[330,13,330,50,1],[332,17,333,42,1],[333,42,333,104,1],[333,104,333,106,1],[334,17,334,36,1],[335,21,335,121,0],[336,17,336,80,1],[339,13,339,92,1],[340,13,340,105,1],[345,13,347,58,1],[347,58,347,106,1],[347,106,348,60,1],[348,60,348,110,1],[348,110,349,22,1],[349,22,349,131,0],[349,131,350,15,1],[359,13,359,30,1],[359,31,359,77,0],[360,13,360,36,1],[360,37,360,89,0],[361,13,361,40,1],[362,17,362,128,0],[364,13,364,76,1],[365,9,365,10,1],[369,13,369,53,1],[370,17,371,35,0],[373,13,373,30,1],[375,13,375,49,1],[377,17,377,31,1],[378,17,378,47,1],[379,17,379,83,1],[380,21,381,107,0],[384,13,384,57,1],[386,17,386,31,1],[387,17,387,55,1],[388,17,388,83,1],[389,21,390,120,0],[393,13,393,26,1],[398,13,398,76,0],[399,9,399,10,0],[403,13,403,36,1],[403,37,403,89,0],[405,13,405,71,1],[406,13,406,81,1],[407,17,407,97,0],[409,13,409,66,1],[410,13,410,60,1],[412,17,412,58,0],[413,17,413,83,0],[415,21,415,77,0],[416,21,416,55,0],[417,21,418,120,0],[421,9,421,10,1],[431,59,431,78,1],[442,13,442,29,1],[442,30,442,60,1],[444,13,444,38,1],[446,13,449,59,1],[451,13,451,36,1],[451,37,451,66,0],[452,13,452,31,1],[457,13,457,29,1],[459,17,459,57,1],[460,17,461,101,1],[463,21,463,52,1],[467,13,467,82,1],[477,13,477,76,1],[478,17,478,47,1],[481,13,481,58,1],[482,17,482,51,1],[485,13,485,74,1],[486,17,486,29,1],[488,13,488,36,1],[488,37,488,125,0],[489,13,489,31,1],[494,13,494,60,1],[495,13,495,36,1],[498,17,498,52,1],[499,17,499,68,1],[500,17,500,49,1],[501,17,501,47,1],[503,21,503,78,1],[504,21,504,44,1],[509,21,509,63,1],[510,21,510,62,1],[513,17,513,40,1],[516,30,516,47,1],[516,48,516,50,1],[516,51,516,61,1],[518,25,518,81,1],[519,25,519,48,1],[521,29,521,35,0],[527,13,527,31,1],[533,13,533,38,1],[533,39,533,51,0],[536,13,536,69,1],[538,17,540,68,0],[543,13,543,51,1],[549,13,549,38,1],[552,13,552,36,1],[553,17,553,49,1],[555,13,555,31,1],[562,9,562,10,0],[567,13,567,34,1],[569,17,569,94,0],[572,13,572,42,1],[576,17,576,53,1],[577,17,577,66,1],[578,17,578,30,1],[579,13,579,14,1],[583,17,583,34,1],[585,13,585,14,1],[587,13,587,27,1],[592,22,592,36,1],[592,37,592,39,1],[592,40,592,55,1],[594,17,594,38,1],[597,13,597,30,1],[598,13,598,28,1],[599,13,599,53,1],[600,13,600,39,1],[602,13,602,43,1],[604,13,604,46,1],[605,13,605,50,1],[606,13,606,46,1],[607,13,607,54,1],[608,9,608,10,1],[617,13,617,79,1],[618,13,618,75,1],[624,13,624,38,1],[624,39,624,48,1],[625,13,625,37,0],[625,38,625,47,0],[632,13,632,44,0],[632,45,632,71,0],[638,13,638,70,0],[639,13,639,29,0],[639,30,639,55,0],[642,13,642,22,0],[651,13,651,97,0],[656,13,656,46,1],[657,13,657,34,1],[659,26,659,31,1],[659,32,659,34,1],[659,35,659,40,1],[661,21,661,39,1],[664,26,664,32,1],[664,33,664,35,1],[664,36,664,41,1],[666,21,666,51,1],[669,9,669,10,1],[673,13,673,28,1],[680,18,680,27,1],[680,29,680,51,1],[680,53,680,56,1],[682,17,682,41,1],[683,17,683,99,1],[685,21,685,46,1],[686,21,686,72,1],[687,21,687,42,1],[689,25,689,93,1],[690,25,690,76,1],[694,25,694,49,1],[696,29,697,103,1],[703,13,703,58,1],[704,9,704,10,1],[708,13,709,79,1],[710,22,710,28,1],[710,29,710,31,1],[710,32,710,48,1],[712,17,712,57,1],[714,21,715,73,0],[718,17,718,49,1],[721,22,721,41,1],[721,42,721,44,1],[721,45,721,61,1],[723,17,723,92,1],[725,9,725,10,1],[729,13,729,65,1],[730,13,730,36,1],[732,17,732,49,0],[735,13,735,31,1]]);
+      highlightRanges([[39,9,39,38,1],[41,13,41,78,1],[42,13,44,17,1],[44,17,47,37,1],[47,37,47,110,1],[47,110,48,20,1],[48,20,49,13,1],[49,13,49,14,1],[49,14,49,16,1],[51,13,51,94,1],[52,13,54,17,1],[54,17,57,37,1],[57,37,57,118,1],[57,118,58,20,1],[58,20,59,13,1],[59,13,59,14,1],[59,14,59,16,1],[61,13,61,57,1],[62,13,64,17,1],[64,17,67,37,1],[67,37,67,105,1],[67,105,68,20,1],[68,20,69,13,1],[69,13,69,14,1],[69,14,69,16,1],[70,9,70,10,1],[75,9,75,65,1],[77,13,77,43,1],[78,13,78,71,1],[79,13,79,53,1],[81,13,81,86,1],[82,13,82,101,1],[83,13,83,125,1],[85,13,85,64,1],[86,13,86,74,1],[87,9,87,10,1],[93,40,93,44,1],[93,45,93,49,1],[99,48,99,52,1],[99,53,99,57,1],[99,62,99,66,1],[99,62,99,66,1],[104,38,104,42,1],[104,43,104,47,1],[114,65,114,69,1],[114,74,114,105,1],[114,74,114,105,1],[124,82,124,86,1],[129,88,129,92,1],[140,13,140,106,1],[140,106,140,113,1],[140,113,140,117,1],[141,13,141,25,1],[152,13,152,106,1],[152,106,152,172,1],[152,172,152,176,1],[153,13,153,25,1],[164,13,164,106,0],[164,106,164,176,0],[164,176,164,180,0],[165,13,165,25,0],[176,98,176,102,1],[181,96,181,100,1],[192,13,192,122,1],[192,122,192,129,1],[192,129,192,133,1],[193,13,193,25,1],[204,13,204,122,0],[204,122,204,200,0],[204,200,204,204,0],[205,13,205,25,0],[216,13,216,122,1],[216,122,216,196,1],[216,196,216,200,1],[217,13,217,25,1],[243,59,243,63,1],[243,64,243,68,1],[243,73,243,102,1],[243,73,243,102,1],[250,20,250,27,1],[253,17,256,37,1],[256,37,256,107,1],[256,107,257,19,1],[258,13,258,14,1],[269,61,269,65,1],[274,82,274,86,1],[281,29,281,33,1],[281,34,281,38,1],[285,17,285,37,0],[286,17,286,39,0],[287,17,287,33,0],[288,13,288,14,0],[293,48,293,52,1],[293,53,293,57,1],[297,17,297,37,0],[298,17,298,56,0],[299,17,299,61,0],[300,17,300,35,0],[301,13,301,14,0],[306,52,306,56,1],[306,57,306,61,1],[310,17,310,37,0],[311,17,311,48,0],[312,17,312,55,0],[313,13,313,14,0],[319,50,319,80,1]]);
     </script>
   </body>
 </html>

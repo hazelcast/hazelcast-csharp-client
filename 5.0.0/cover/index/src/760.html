@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HSet.Getting.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HQueue.Removing.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,55 +26,60 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HSet&lt;T&gt; // Getting
+    internal partial class HQueue&lt;T&gt; // Removing
     {
-        public override async Task&lt;IReadOnlyList&lt;T&gt;&gt; GetAllAsync()
-        {
-            var requestMessage = SetGetAllCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = SetGetAllCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;T&gt;(response, SerializationService);
-        }
-
-        public override async Task&lt;bool&gt; ContainsAsync(T item)
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; RemoveAsync(T item)
         {
             var itemData = ToSafeData(item);
-            var requestMessage = SetContainsCodec.EncodeRequest(Name, itemData);
+            var requestMessage = QueueRemoveCodec.EncodeRequest(Name, itemData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return SetContainsCodec.DecodeResponse(responseMessage).Response;
+            return QueueRemoveCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task&lt;int&gt; GetSizeAsync()
-        {
-            var requestMessage = SetSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return SetSizeCodec.DecodeResponse(responseMessage).Response;
-        }
-
-        public override async Task&lt;bool&gt; ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; RemoveAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
         {
             var itemsData = ToSafeData(items);
-            var requestMessage = SetContainsAllCodec.EncodeRequest(Name, itemsData);
+            var requestMessage = QueueCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return SetContainsAllCodec.DecodeResponse(responseMessage).Response;
+            return QueueCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public override async Task&lt;bool&gt; IsEmptyAsync()
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; RetainAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
         {
-            var requestMessage = SetIsEmptyCodec.EncodeRequest(Name);
+            var itemsData = ToSafeData(items);
+            var requestMessage = QueueCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return SetIsEmptyCodec.DecodeResponse(responseMessage).Response;
+            return QueueCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task ClearAsync()
+        {
+            var requestMessage = QueueClearCodec.EncodeRequest(Name);
+            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,13,27,69,1],[28,13,28,124,1],[29,13,29,84,1],[30,13,30,76,1],[31,9,31,10,1],[35,13,35,45,1],[36,13,36,81,1],[37,13,37,124,1],[38,13,38,78,1],[39,9,39,10,1],[43,13,43,67,1],[44,13,44,124,1],[45,13,45,74,1],[46,9,46,10,1],[50,13,50,47,1],[51,13,51,85,1],[52,13,52,124,1],[53,13,53,81,1],[54,9,54,10,1],[58,13,58,70,1],[59,13,59,124,1],[60,13,60,77,1],[61,9,61,10,1]]);
+      highlightRanges([[27,13,27,45,1],[28,13,28,81,1],[29,13,29,124,1],[30,13,30,78,1],[31,9,31,10,1],[36,13,36,47,1],[37,13,37,95,1],[38,13,38,124,1],[39,13,39,91,1],[40,9,40,10,1],[45,13,45,47,1],[46,13,46,95,1],[47,13,47,124,1],[48,13,48,91,1],[49,9,49,10,1],[58,13,58,70,1],[59,13,59,97,1],[64,13,64,34,1],[66,9,66,10,1]]);
     </script>
   </body>
 </html>

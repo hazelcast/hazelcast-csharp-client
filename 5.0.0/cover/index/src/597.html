@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Events.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,160 +22,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
-using Hazelcast.Models;
-using Hazelcast.Protocol.Codecs;
-using Hazelcast.Query;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HMap&lt;TKey, TValue&gt; // Events
+    /// &lt;summary&gt;
+    /// Implements &lt;see cref=&quot;IHMap{TKey,TValue}&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+    internal partial class HMap&lt;TKey, TValue&gt; : DistributedObjectBase, IHMap&lt;TKey, TValue&gt;
     {
-        private async Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, Maybe&lt;TKey&gt; key, IPredicate predicate, bool includeValues, object state, CancellationToken cancellationToken)
+        private readonly ISequence&lt;long&gt; _lockReferenceIdSequence;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HMap{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory owning this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;lockReferenceIdSequence&quot;&gt;A lock reference identifiers sequence.&lt;/param&gt;
+        /// &lt;param name=&quot;logggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence&lt;long&gt; lockReferenceIdSequence, ILoggerFactory logggerFactory)
+            : base(ServiceNames.Map, name, factory, cluster, serializationService, logggerFactory)
         {
-            if (events == null) throw new ArgumentNullException(nameof(events));
-
-            var handlers = new MapEventHandlers&lt;TKey, TValue&gt;();
-            events(handlers);
-
-            var flags = default (MapEventTypes);
-            foreach (var handler in handlers)
-                flags |= handler.EventType;
-
-            // 0: no entryKey, no predicate
-            // 1: entryKey, no predicate
-            // 2: no entryKey, predicate
-            // 3: entryKey, predicate
-            var mode = key.Match(1, 0) + (predicate != null ? 2 : 0);
-            var keyv = key.ValueOrDefault();
-
-            var subscribeRequest = mode switch
-            {
-                0 =&gt; MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, Cluster.IsSmartRouting),
-                1 =&gt; MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), includeValues, (int) flags, Cluster.IsSmartRouting),
-                2 =&gt; MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
-                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(keyv), ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
-                _ =&gt; throw new NotSupportedException()
-            };
-
-            var subscription = new ClusterSubscription(
-                subscribeRequest,
-                ReadSubscribeResponse,
-                CreateUnsubscribeRequest,
-                ReadUnsubscribeResponse,
-                HandleEventAsync,
-                new MapSubscriptionState(mode, Name, handlers, state));
-
-            await Cluster.Events.AddSubscriptionAsync(subscription, cancellationToken).CfAwait();
-
-            return subscription.Id;
+            _lockReferenceIdSequence = lockReferenceIdSequence;
         }
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, bool includeValues = true, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.None, null, includeValues, state, CancellationToken.None);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, bool includeValues = true, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.Some(key), null, includeValues, state, CancellationToken.None);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, IPredicate predicate, bool includeValues = true, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.None, predicate, includeValues, state, CancellationToken.None);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, IPredicate predicate, bool includeValues = true, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.Some(key), predicate, includeValues, state, CancellationToken.None);
-
-        private class MapSubscriptionState : SubscriptionState&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;
-        {
-            public MapSubscriptionState(int mode, string name, MapEventHandlers&lt;TKey, TValue&gt; handlers, object state)
-                : base(name, handlers, state)
-            {
-                Mode = mode;
-            }
-
-            public int Mode { get; }
-        }
-
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
-        {
-            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
-
-            return sstate.Mode switch
-            {
-                0 =&gt; MapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
-                1 =&gt; MapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
-                2 =&gt; MapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
-                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
-                _ =&gt; throw new NotSupportedException()
-            };
-        }
-
-        private async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
-        {
-            if (eventTypeData == 0) return;
-            var eventType = (MapEventTypes) eventTypeData;
-
-            var member = Cluster.Members.GetMember(memberId);
-            var key = LazyArg&lt;TKey&gt;(keyData);
-            var value = LazyArg&lt;TValue&gt;(valueData);
-            var oldValue = LazyArg&lt;TValue&gt;(oldValueData);
-            var mergingValue = LazyArg&lt;TValue&gt;(mergingValueData);
-
-            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
-
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in sstate.Handlers)
-            {
-                if (handler.EventType.HasAll(eventType))
-                {
-                    var task = handler switch
-                    {
-                        IMapEntryEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt; entryHandler =&gt; entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
-                        IMapEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt; mapHandler =&gt; mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
-                        _ =&gt; throw new NotSupportedException()
-                    };
-                    await task.CfAwait();
-                }
-            }
-        }
-
-        private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
-        {
-            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
-            return MapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
-        }
-
-        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
-        {
-            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
-
-            return sstate.Mode switch
-            {
-                0 =&gt; MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
-                1 =&gt; MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response,
-                2 =&gt; MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response,
-                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response,
-                _ =&gt; throw new NotSupportedException()
-            };
-        }
-
-        private static bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
-        {
-            return MapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
-        }
-
-        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
-            =&gt; UnsubscribeBaseAsync(subscriptionId);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[32,13,32,32,1],[32,33,32,81,0],[34,13,34,65,1],[35,13,35,30,1],[37,13,37,49,1],[38,22,38,33,1],[38,34,38,36,1],[38,37,38,45,1],[39,17,39,44,1],[45,13,45,70,1],[46,13,46,45,1],[48,13,50,22,1],[50,22,50,118,1],[50,118,51,22,1],[51,22,51,137,1],[51,137,52,22,1],[52,22,52,150,1],[52,150,53,22,1],[53,22,53,169,1],[53,169,54,22,1],[54,22,54,55,0],[54,55,55,15,1],[57,13,63,72,1],[65,13,65,98,1],[67,13,67,36,1],[68,9,68,10,1],[71,16,71,102,1],[74,16,74,107,1],[77,16,77,107,1],[80,16,80,112,1],[85,19,85,46,1],[87,17,87,29,1],[88,13,88,14,1],[90,31,90,35,1],[95,13,95,67,1],[97,13,99,22,1],[99,22,99,117,1],[99,117,100,22,1],[100,22,100,122,1],[100,122,101,22,1],[101,22,101,130,1],[101,130,102,22,1],[102,22,102,135,1],[102,135,103,22,1],[103,22,103,55,0],[103,55,104,15,1],[109,13,109,36,1],[109,37,109,44,0],[110,13,110,59,1],[112,13,112,62,1],[113,13,113,46,1],[114,13,114,52,1],[115,13,115,58,1],[116,13,116,66,1],[118,13,118,67,1],[121,22,121,33,1],[121,34,121,36,1],[121,37,121,52,1],[123,17,123,57,1],[125,21,127,98,1],[127,98,127,215,1],[127,215,128,91,1],[128,91,128,159,1],[128,159,129,30,1],[129,30,129,63,0],[129,63,130,23,1],[131,21,131,42,1],[134,9,134,10,1],[138,13,138,67,1],[139,13,139,91,1],[144,13,144,67,1],[146,13,148,22,1],[148,22,148,87,1],[148,87,149,22,1],[149,22,149,92,1],[149,92,150,22,1],[150,22,150,100,1],[150,100,151,22,1],[151,22,151,105,1],[151,105,152,22,1],[152,22,152,55,0],[152,55,153,15,1],[158,13,158,100,1],[162,16,162,52,1]]);
+      highlightRanges([[41,15,41,99,1],[43,13,43,64,1],[44,9,44,10,1]]);
     </script>
   </body>
 </html>

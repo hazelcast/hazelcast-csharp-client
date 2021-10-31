@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAddInterceptorCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAddIndexCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds an interceptor for this map. Added interceptor will intercept operations
-    /// and execute user defined methods and will cancel operations if user defined method throw exception.
+    /// Adds an index to this map with specified configuration.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapAddInterceptorServerCodec
+    internal static class MapAddIndexServerCodec
 #else
-    internal static class MapAddInterceptorCodec
+    internal static class MapAddIndexCodec
 #endif
     {
-        public const int RequestMessageType = 70656; // 0x011400
-        public const int ResponseMessageType = 70657; // 0x011401
+        public const int RequestMessageType = 76032; // 0x012900
+        public const int ResponseMessageType = 76033; // 0x012901
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -68,30 +67,30 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// name of map
+            /// Name of map.
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// interceptor to add
+            /// Index configuration.
             ///&lt;/summary&gt;
-            public IData Interceptor { get; set; }
+            public Hazelcast.Models.IndexOptions IndexConfig { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData interceptor)
+        public static ClientMessage EncodeRequest(string name, Hazelcast.Models.IndexOptions indexConfig)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.AddInterceptor&quot;
+                OperationName = &quot;Map.AddIndex&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, interceptor);
+            IndexConfigCodec.Encode(clientMessage, indexConfig);
             return clientMessage;
         }
 
@@ -102,28 +101,22 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Interceptor = DataCodec.Decode(iterator);
+            request.IndexConfig = IndexConfigCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// id of registered interceptor.
-            ///&lt;/summary&gt;
-            public string Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(string response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, response);
             return clientMessage;
         }
 #endif
@@ -133,7 +126,6 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = StringCodec.Decode(iterator);
             return response;
         }
 
@@ -142,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[74,13,78,15,0],[79,13,79,123,0],[80,13,80,104,0],[81,13,81,88,0],[82,13,82,48,0],[83,13,83,53,0],[84,13,84,58,0],[85,13,85,34,0],[106,38,106,42,0],[106,43,106,47,0],[123,13,123,64,0],[124,13,124,53,0],[125,13,125,29,0],[126,13,126,62,0],[127,13,127,29,0],[128,9,128,10,0]]);
+      highlightRanges([[73,13,77,15,1],[78,13,78,123,1],[79,13,79,104,1],[80,13,80,88,1],[81,13,81,48,1],[82,13,82,53,1],[83,13,83,65,1],[84,13,84,34,1],[116,13,116,64,0],[117,13,117,53,0],[118,13,118,29,0],[119,13,119,29,0],[120,9,120,10,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\StateChangeQueue.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\RetryStrategy.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,162 +23,129 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
     /// &lt;summary&gt;
-    /// Raises client state change events sequentially, in order.
+    /// Implements a &lt;see cref=&quot;IRetryStrategy&quot;/&gt; with back-off and timeout.
     /// &lt;/summary&gt;
-    internal class StateChangeQueue : IAsyncDisposable
+    internal class RetryStrategy : IRetryStrategy
     {
-        private readonly AsyncQueue&lt;ClientState&gt; _states = new AsyncQueue&lt;ClientState&gt;();
-        private readonly ConcurrentDictionary&lt;int, TaskCompletionSource&lt;object&gt;&gt; _markers = new ConcurrentDictionary&lt;int, TaskCompletionSource&lt;object&gt;&gt;();
-        private readonly Task _raising;
+        private readonly int _initialBackOffMilliseconds;
+        private readonly int _maxBackOffMilliseconds;
+        private readonly double _multiplier;
+        private readonly long _timeoutMilliseconds;
+        private readonly double _jitter;
+        private readonly string _action;
         private readonly ILogger _logger;
 
-        private Func&lt;ClientState, ValueTask&gt; _stateChanged;
-        private volatile int _disposed;
+        private int _currentBackOffMilliseconds;
+        private int _attempts;
+        private DateTime _begin;
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;StateChangeQueue&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
         /// &lt;/summary&gt;
+        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Configuration.&lt;/param&gt;
         /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public StateChangeQueue(ILoggerFactory loggerFactory)
-        {
-            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
-            _logger = loggerFactory.CreateLogger&lt;StateChangeQueue&gt;();
-
-            _raising = RaiseEvents();
-        }
-
-        // throws if this instance has been disposed
-        private void ThrowIfDisposed()
-        {
-            if (_disposed &gt; 0) throw new ObjectDisposedException(nameof(StateChangeQueue));
-        }
+        public RetryStrategy(string action, ConnectionRetryOptions options, ILoggerFactory loggerFactory)
+            : this(action,
+                (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
+                options.MaxBackoffMilliseconds,
+                options.Multiplier,
+                options.ClusterConnectionTimeoutMilliseconds,
+                options.Jitter,
+                loggerFactory)
+        { }
 
         /// &lt;summary&gt;
-        /// Occurs when the state has changed.
+        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public Func&lt;ClientState, ValueTask&gt; StateChanged
+        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
+        /// &lt;param name=&quot;initialBackOffMilliseconds&quot;&gt;The initial back-off value in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;maxBackOffMilliseconds&quot;&gt;The maximum back-off value in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;multiplier&quot;&gt;The multiplier.&lt;/param&gt;
+        /// &lt;param name=&quot;timeoutMilliseconds&quot;&gt;The timeout in milliseconds.&lt;/param&gt;
+        /// &lt;param name=&quot;jitter&quot;&gt;A jitter factor.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public RetryStrategy(string action, int initialBackOffMilliseconds, int maxBackOffMilliseconds, double multiplier, long timeoutMilliseconds, double jitter, ILoggerFactory loggerFactory)
         {
-            get =&gt; _stateChanged;
-            set
-            {
-                ThrowIfDisposed();
-                _stateChanged = value ?? throw new ArgumentNullException(nameof(value));
-            }
-        }
+            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(action));
+#pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
+            _action = action.ToLowerInvariant();
+#pragma warning restore CA1308
+            _initialBackOffMilliseconds = initialBackOffMilliseconds;
+            _maxBackOffMilliseconds = maxBackOffMilliseconds;
+            _currentBackOffMilliseconds = initialBackOffMilliseconds;
+            _multiplier = multiplier;
+            _timeoutMilliseconds = timeoutMilliseconds;
+            _jitter = jitter;
+            _logger = loggerFactory?.CreateLogger&lt;RetryStrategy&gt;() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-        /// &lt;summary&gt;
-        /// Adds a state change to the queue.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;state&quot;&gt;The new state.&lt;/param&gt;
-        public void Add(ClientState state)
-        {
-            ThrowIfDisposed();
-            if (_states.TryWrite(state)) return;
-
-            FailAdd(state);
-        }
-
-        /// &lt;summary&gt;
-        /// Adds a state change to the queue and wait for the corresponding event.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;state&quot;&gt;The new state.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the event corresponding to the state
-        /// has been fully handled.&lt;/returns&gt;
-        public async Task AddAndWait(ClientState state)
-        {
-            ThrowIfDisposed();
-
-            int marker;
-
-            // get a marker
-            var completion = new TaskCompletionSource&lt;object&gt;();
-            do
-            {
-                marker = -RandomProvider.Next();
-            } while (marker &lt; 0 &amp;&amp; !_markers.TryAdd(marker, completion));
-
-            // queue the state
-            if (!_states.TryWrite(state))
-            {
-                // embarrassing - should never happen, our code should *not*
-                // dispose the state change queue while adding states!
-                FailAdd(state);
-                return;
-            }
-
-            // queue the marker
-            if (!_states.TryWrite((ClientState) marker))
-            {
-                // embarrassing - should never happen, our code should *not*
-                // dispose the state change queue while adding states!
-                FailAdd(state);
-                return;
-            }
-
-            // wait until the marker is hit
-            await completion.Task.CfAwait();
-        }
-
-        // fails to add a state
-        private void FailAdd(ClientState state)
-        {
-            _logger.LogWarning($&quot;Failed to add a state {state}.&quot;);
-            ThrowIfDisposed();
-        }
-
-        // (background task loop) raises events
-        private async Task RaiseEvents()
-        {
-            await foreach (var state in _states)
-            {
-                var marker = (int) state;
-                if (marker &lt; 0)
-                {
-                    if (_markers.TryRemove(marker, out var completion))
-                        completion.TrySetResult(null);
-                    continue;
-                }
-
-                try
-                {
-                    await _stateChanged.AwaitEach(state).CfAwait();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, $&quot;Caught error while raising StateChanged ({state}).&quot;);
-                }
-            }
+            Restart();
         }
 
         /// &lt;inheritdoc /&gt;
-        public async ValueTask DisposeAsync()
+        public async ValueTask&lt;bool&gt; WaitAsync(CancellationToken cancellationToken)
         {
-            // note: DisposeAsync should not throw (CA1065)
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException();
 
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return;
+            _attempts++;
 
-            // stop accepting new states
-            _states.Complete();
+            var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
 
-            // wait until the events queue is drained
-            await _raising.CfAwait();
+            _logger.IfDebug()?.LogDebug($&quot;Elapsed {elapsed}ms, timeout={_timeoutMilliseconds}ms, back-off={_currentBackOffMilliseconds}ms ({_initialBackOffMilliseconds}-{_maxBackOffMilliseconds}, m={_multiplier}, j={_jitter})&quot;);
+
+            if (_timeoutMilliseconds &gt; 0 &amp;&amp; elapsed &gt; _timeoutMilliseconds)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, timeout ({_timeoutMilliseconds}ms).&quot;);
+                return false;
+            }
+
+            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
+            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
+
+            _logger.LogDebug($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms&quot;);
+
+            try
+            {
+                await Task.Delay(delay, cancellationToken).CfAwait();
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, cancelled.&quot;);
+                return false;
+            }
+            catch (Exception)
+            {
+                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, error.&quot;);
+                return false;
+            }
+
+            _currentBackOffMilliseconds = (int) Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            return true;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public void Restart()
+        {
+            _attempts = 0;
+            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
+            _begin = DateTime.UtcNow;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,90,1],[30,9,30,155,1],[41,9,41,62,1],[43,13,43,39,1],[43,40,43,95,0],[44,13,44,70,1],[46,13,46,38,1],[47,9,47,10,1],[52,13,52,31,1],[52,32,52,92,0],[53,9,53,10,1],[60,20,60,33,1],[63,17,63,35,1],[64,17,64,89,1],[65,13,65,14,1],[74,13,74,31,1],[75,13,75,41,1],[75,42,75,49,1],[77,13,77,28,0],[78,9,78,10,0],[88,13,88,31,1],[93,13,93,65,1],[96,17,96,49,1],[97,15,97,74,1],[100,13,100,42,1],[104,17,104,32,0],[105,17,105,24,0],[109,13,109,57,1],[113,17,113,32,0],[114,17,114,24,0],[118,13,118,45,1],[119,9,119,10,1],[124,13,124,67,0],[125,13,125,31,0],[126,9,126,10,0],[131,28,131,37,1],[131,38,131,40,1],[131,41,131,48,1],[133,17,133,42,1],[134,17,134,32,1],[136,21,136,72,1],[137,25,137,55,1],[138,21,138,30,1],[143,21,143,68,1],[144,17,144,18,1],[145,17,145,36,0],[147,21,147,96,0],[148,17,148,18,0],[150,9,150,10,1],[157,13,157,71,1],[158,17,158,24,0],[161,13,161,32,1],[164,13,164,38,1],[165,9,165,10,1]]);
+      highlightRanges([[48,15,54,31,1],[55,11,55,12,1],[67,9,67,194,1],[69,13,69,51,1],[69,52,69,127,0],[71,13,71,49,1],[73,13,73,70,1],[74,13,74,62,1],[75,13,75,70,1],[76,13,76,38,1],[77,13,77,56,1],[78,13,78,30,1],[79,13,79,126,1],[81,13,81,23,1],[82,9,82,10,1],[87,13,87,59,1],[88,17,88,56,1],[90,13,90,25,1],[92,13,92,78,1],[94,13,94,229,1],[96,13,96,76,1],[98,17,98,140,1],[99,17,99,30,1],[102,13,102,113,1],[103,13,103,90,1],[105,13,105,122,1],[109,17,109,70,1],[110,13,110,14,1],[111,13,111,47,0],[113,17,113,115,0],[114,17,114,30,0],[116,13,116,30,0],[118,17,118,111,0],[119,17,119,30,0],[122,13,122,126,1],[123,13,123,25,1],[124,9,124,10,1],[129,13,129,27,1],[130,13,130,106,1],[131,13,131,38,1],[132,9,132,10,1]]);
     </script>
   </body>
 </html>

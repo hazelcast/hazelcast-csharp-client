@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapProjectWithPredicateCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapProjectCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Applies the projection logic on map entries filtered with the Predicate and returns the result
+    /// Applies the projection logic on all map entries and returns the result
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapProjectWithPredicateServerCodec
+    internal static class MapProjectServerCodec
 #else
-    internal static class MapProjectWithPredicateCodec
+    internal static class MapProjectCodec
 #endif
     {
-        public const int RequestMessageType = 80896; // 0x013C00
-        public const int ResponseMessageType = 80897; // 0x013C01
+        public const int RequestMessageType = 80640; // 0x013B00
+        public const int ResponseMessageType = 80641; // 0x013B01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -75,20 +75,15 @@ namespace Hazelcast.Protocol.Codecs
             /// projection to transform the entries with. May return null.
             ///&lt;/summary&gt;
             public IData Projection { get; set; }
-
-            /// &lt;summary&gt;
-            /// predicate to filter the entries with
-            ///&lt;/summary&gt;
-            public IData Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData projection, IData predicate)
+        public static ClientMessage EncodeRequest(string name, IData projection)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Map.ProjectWithPredicate&quot;
+                OperationName = &quot;Map.Project&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -96,7 +91,6 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, projection);
-            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -108,7 +102,6 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.Projection = DataCodec.Decode(iterator);
-            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -148,7 +141,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[78,13,82,15,1],[83,13,83,123,1],[84,13,84,104,1],[85,13,85,88,1],[86,13,86,48,1],[87,13,87,53,1],[88,13,88,57,1],[89,13,89,56,1],[90,13,90,34,1],[112,44,112,48,1],[112,49,112,53,1],[129,13,129,64,1],[130,13,130,53,1],[131,13,131,29,1],[132,13,132,104,1],[133,13,133,29,1],[134,9,134,10,1]]);
+      highlightRanges([[73,13,77,15,1],[78,13,78,123,1],[79,13,79,104,1],[80,13,80,88,1],[81,13,81,48,1],[82,13,82,53,1],[83,13,83,57,1],[84,13,84,34,1],[105,44,105,48,1],[105,49,105,53,1],[122,13,122,64,1],[123,13,123,53,1],[124,13,124,29,1],[125,13,125,104,1],[126,13,126,29,1],[127,9,127,10,1]]);
     </script>
   </body>
 </html>

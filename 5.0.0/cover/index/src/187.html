@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientAuthenticationCustomCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientAuthenticationCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Makes an authentication request to the cluster using custom credentials.
+    /// Makes an authentication request to the cluster.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientAuthenticationCustomServerCodec
+    internal static class ClientAuthenticationServerCodec
 #else
-    internal static class ClientAuthenticationCustomCodec
+    internal static class ClientAuthenticationCodec
 #endif
     {
-        public const int RequestMessageType = 512; // 0x000200
-        public const int ResponseMessageType = 513; // 0x000201
+        public const int RequestMessageType = 256; // 0x000100
+        public const int ResponseMessageType = 257; // 0x000101
         private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + BytesExtensions.SizeOfByte;
@@ -80,9 +80,16 @@ namespace Hazelcast.Protocol.Codecs
             public string ClusterName { get; set; }
 
             /// &lt;summary&gt;
-            /// Secret byte array for authentication.
+            /// Name of the user for authentication.
+            /// Used in case Client Identity Config, otherwise it should be passed null.
             ///&lt;/summary&gt;
-            public byte[] Credentials { get; set; }
+            public string Username { get; set; }
+
+            /// &lt;summary&gt;
+            /// Password for the user.
+            /// Used in case Client Identity Config, otherwise it should be passed null.
+            ///&lt;/summary&gt;
+            public string Password { get; set; }
 
             /// &lt;summary&gt;
             /// Unique string identifying the connected client uniquely.
@@ -116,12 +123,12 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string clusterName, byte[] credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection&lt;string&gt; labels)
+        public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection&lt;string&gt; labels)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Client.AuthenticationCustom&quot;
+                OperationName = &quot;Client.Authentication&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -130,7 +137,8 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteByteL(RequestSerializationVersionFieldOffset, serializationVersion);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, clusterName);
-            ByteArrayCodec.Encode(clientMessage, credentials);
+            CodecUtil.EncodeNullable(clientMessage, username, StringCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, password, StringCodec.Encode);
             StringCodec.Encode(clientMessage, clientType);
             StringCodec.Encode(clientMessage, clientHazelcastVersion);
             StringCodec.Encode(clientMessage, clientName);
@@ -147,7 +155,8 @@ namespace Hazelcast.Protocol.Codecs
             request.Uuid = initialFrame.Bytes.ReadGuidL(RequestUuidFieldOffset);
             request.SerializationVersion = initialFrame.Bytes.ReadByteL(RequestSerializationVersionFieldOffset);
             request.ClusterName = StringCodec.Decode(iterator);
-            request.Credentials = ByteArrayCodec.Decode(iterator);
+            request.Username = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            request.Password = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             request.ClientType = StringCodec.Decode(iterator);
             request.ClientHazelcastVersion = StringCodec.Decode(iterator);
             request.ClientName = StringCodec.Decode(iterator);
@@ -191,7 +200,7 @@ namespace Hazelcast.Protocol.Codecs
             public int PartitionCount { get; set; }
 
             /// &lt;summary&gt;
-            /// The cluster id of the cluster.
+            /// UUID of the cluster that the client authenticated.
             ///&lt;/summary&gt;
             public Guid ClusterId { get; set; }
 
@@ -241,7 +250,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[111,13,115,15,0],[116,13,116,123,0],[117,13,117,104,0],[118,13,118,88,0],[119,13,119,73,0],[120,13,120,105,0],[121,13,121,48,0],[122,13,122,60,0],[123,13,123,63,0],[124,13,124,59,0],[125,13,125,71,0],[126,13,126,59,0],[127,13,127,83,0],[128,13,128,34,0],[156,34,156,38,0],[156,39,156,43,0],[161,66,161,70,0],[161,71,161,75,0],[166,38,166,42,0],[166,43,166,47,0],[171,48,171,52,0],[171,53,171,57,0],[176,52,176,56,0],[176,57,176,61,0],[181,41,181,45,0],[181,46,181,50,0],[186,37,186,41,0],[186,42,186,46,0],[191,45,191,49,0],[191,50,191,54,0],[215,13,215,64,0],[216,13,216,53,0],[217,13,217,48,0],[218,13,218,87,0],[219,13,219,95,0],[220,13,220,115,0],[221,13,221,102,0],[222,13,222,93,0],[223,13,223,109,0],[224,13,224,88,0],[225,13,225,76,0],[226,13,226,29,0],[227,9,227,10,0]]);
+      highlightRanges([[118,13,122,15,1],[123,13,123,123,1],[124,13,124,104,1],[125,13,125,88,1],[126,13,126,73,1],[127,13,127,105,1],[128,13,128,48,1],[129,13,129,60,1],[130,13,130,83,1],[131,13,131,83,1],[132,13,132,59,1],[133,13,133,71,1],[134,13,134,59,1],[135,13,135,83,1],[136,13,136,34,1],[165,34,165,38,1],[165,39,165,43,1],[170,66,170,70,1],[170,71,170,75,1],[175,38,175,42,1],[175,43,175,47,1],[180,48,180,52,1],[180,53,180,57,1],[185,52,185,56,1],[185,57,185,61,1],[190,41,190,45,1],[190,46,190,50,1],[195,37,195,41,1],[195,42,195,46,1],[200,45,200,49,1],[200,50,200,54,1],[224,13,224,64,1],[225,13,225,53,1],[226,13,226,48,1],[227,13,227,87,1],[228,13,228,95,1],[229,13,229,115,1],[230,13,230,102,1],[231,13,231,93,1],[232,13,232,109,1],[233,13,233,88,1],[234,13,234,76,1],[235,13,235,29,1],[236,9,236,10,1]]);
     </script>
   </body>
 </html>

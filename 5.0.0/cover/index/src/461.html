@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\Projections.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\ProjectionDataSerializerHook.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,34 +22,39 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using Hazelcast.Serialization;
+
 namespace Hazelcast.Projection
 {
     /// &lt;summary&gt;
-    /// Creates &lt;see cref=&quot;IProjection&quot;/&gt; instances.
+    /// Provides an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for projections.
     /// &lt;/summary&gt;
-    public static class Projections
+    internal class ProjectionDataSerializerHook : IDataSerializerHook
     {
-        /// &lt;summary&gt;
-        /// Projects a single attribute.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute.&lt;/param&gt;
-        /// &lt;returns&gt;A projection.&lt;/returns&gt;
-        public static IProjection SingleAttribute(string attributePath)
-            =&gt; new SingleAttributeProjection(attributePath);
+        public const int FactoryIdConst = FactoryIds.ProjectionDsFactoryId;
+        public const int SingleAttribute = 0;
+        public const int MultiAttribute = 1;
 
-        /// &lt;summary&gt;
-        /// Projects multiple attributes.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;attributePaths&quot;&gt;The attribute paths.&lt;/param&gt;
-        /// &lt;returns&gt;A projection.&lt;/returns&gt;
-        public static IProjection MultipleAttribute(params string[] attributePaths)
-            =&gt; new MultiAttributeProjection(attributePaths);
+        private const int Len = MultiAttribute + 1;
+
+        /// &lt;inheritdoc /&gt;
+        public IDataSerializableFactory CreateFactory()
+        {
+            var constructors = new Func&lt;IIdentifiedDataSerializable&gt;[Len];
+            constructors[SingleAttribute] = () =&gt; new SingleAttributeProjection();
+
+            return new ArrayDataSerializableFactory(constructors);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public int FactoryId =&gt; FactoryIdConst;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,16,28,60,1],[36,16,36,60,0]]);
+      highlightRanges([[34,13,34,75,1],[35,13,35,51,1],[35,51,35,82,1],[35,82,35,83,1],[37,13,37,67,1],[41,33,41,47,1]]);
     </script>
   </body>
 </html>

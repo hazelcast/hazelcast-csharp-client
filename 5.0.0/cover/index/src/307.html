@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapKeySetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapIsLockedCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the set of keys in the multimap.The collection is NOT backed by the map, so changes to the map are NOT
-    /// reflected in the collection, and vice-versa.
+    /// Checks the lock for the specified key. If the lock is acquired, this method returns true, else it returns false.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapKeySetServerCodec
+    internal static class MultiMapIsLockedServerCodec
 #else
-    internal static class MultiMapKeySetCodec
+    internal static class MultiMapIsLockedCodec
 #endif
     {
-        public const int RequestMessageType = 132096; // 0x020400
-        public const int ResponseMessageType = 132097; // 0x020401
+        public const int RequestMessageType = 135680; // 0x021200
+        public const int ResponseMessageType = 135681; // 0x021201
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -71,21 +71,27 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the MultiMap
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// Key to lock to be checked.
+            ///&lt;/summary&gt;
+            public IData Key { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData key)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;MultiMap.KeySet&quot;
+                OperationName = &quot;MultiMap.IsLocked&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -96,6 +102,7 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -104,19 +111,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The set of keys in the multimap. The returned set might be modifiable but it has no effect on the multimap.
+            /// True if the lock acquired,false otherwise
             ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -125,8 +132,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -135,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,44,99,48,1],[99,49,99,53,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,29,1],[119,13,119,88,1],[120,13,120,29,1],[121,9,121,10,1]]);
+      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,53,1],[84,13,84,50,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryInvalidatedEventHandler.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryInvalidatedEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,25 +23,21 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapEntryInvalidatedEventHandler&lt;TKey, TValue, TSender&gt; : MapEntryEventHandlerBase&lt;TKey, TValue, TSender, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;&gt;
+    public sealed class MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt; : MapEntryEventArgsBase&lt;TKey&gt;
     {
-        public MapEntryInvalidatedEventHandler(Func&lt;TSender, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
-            : base(MapEventTypes.Invalidated, handler)
+        public MapEntryInvalidatedEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, object state)
+            : base(member, key, state)
         { }
-
-        protected override MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt; CreateEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, Lazy&lt;TValue&gt; mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, object state)
-            =&gt; new MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;(member, key, state);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,15,24,55,0],[25,11,25,12,0],[28,16,28,82,0]]);
+      highlightRanges([[23,15,23,39,0],[24,11,24,12,0]]);
     </script>
   </body>
 </html>

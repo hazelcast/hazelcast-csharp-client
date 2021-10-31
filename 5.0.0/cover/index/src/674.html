@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ReadOnlyDictionaryConfigurationExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\RandomProvider.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,118 +23,108 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
+using System.Threading;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides extension methods for the &lt;see cref=&quot;IReadOnlyDictionary{TKey,TValue}&quot;/&gt; interface.
+    /// Provides safe random numbers.
     /// &lt;/summary&gt;
-    internal static class ReadOnlyDictionaryConfigurationExtensions
+    internal static class RandomProvider
     {
-        /// &lt;summary&gt;
-        /// Gets a string value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;defaultValue&quot;&gt;An optional value to return if the key was not found.&lt;/param&gt;
-        /// &lt;returns&gt;The value.&lt;/returns&gt;
-        public static string GetStringValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key, string defaultValue = null)
-        {
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            if (!keyValues.TryGetValue(key, out var arg))
-            {
-                arg = defaultValue ??
-                      throw new InvalidOperationException($&quot;Failed to get a string value for key &#39;{key}&#39;.&quot;);
-            }
+        // Notes
+        //
+        // Random is *not* thread-safe
+        // read
+        //   https://stackoverflow.com/questions/3049467
+        //   https://docs.microsoft.com/en-us/dotnet/api/system.random
+        //   https://codeblog.jonskeet.uk/2009/11/04/revisiting-randomness/
+        // for best-practices.
 
-            return arg;
+        private static readonly Random GlobalRandom = new Random();
+        private static readonly object GlobalLock = new object();
+        private static readonly ThreadLocal&lt;Random&gt; ThreadRandom = new ThreadLocal&lt;Random&gt;(NewRandom);
+
+
+        /// &lt;summary&gt;
+        /// Creates a new random for a thread.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A new random for a thread.&lt;/returns&gt;
+        private static Random NewRandom()
+        {
+            // use GlobalRandom to get a random seed, using GlobalLock
+            // because the Random class is not thread safe
+#pragma warning disable CA5394 // Do not use insecure randomness
+            lock (GlobalLock) return new Random(GlobalRandom.Next());
+#pragma warning restore CA5394
         }
 
         /// &lt;summary&gt;
-        /// Tries to get a string value.
+        /// Gets a thread-safe &lt;see cref=&quot;Random&quot;/&gt; instance (do *not* cache this instance).
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        /// &lt;returns&gt;true if a value was found; otherwise false.&lt;/returns&gt;
-        public static bool TryGetStringValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key, out string value)
-        {
-            value = default;
-
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            if (!keyValues.TryGetValue(key, out var arg))
-                return false;
-
-            value = arg;
-            return true;
-        }
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The instance is thread-safe because it is local to the thread. Do *not*
+        /// store the instance in a variable as that may break thread safety. Instead,
+        /// retrieve it each time it is required.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static Random Random =&gt; ThreadRandom.Value;
 
         /// &lt;summary&gt;
-        /// Gets a Guid value.
+        /// Returns a non-negative random integer number (thread-safe, not appropriate for security purposes).
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;returns&gt;The value.&lt;/returns&gt;
-        public static Guid GetGuidValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key)
-        {
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            if (!keyValues.TryGetValue(key, out var arg) || !Guid.TryParse(arg, out var value))
-                throw new InvalidOperationException($&quot;Failed to get a Guid value for key &#39;{key}&#39;.&quot;);
-
-            return value;
-        }
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to 0 and less than &lt;see cref=&quot;int.MaxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next() =&gt; Random.Next();
+#pragma warning restore CA5394
 
         /// &lt;summary&gt;
-        /// Tries to get a Guid value.
+        /// Returns a non-negative random integer number that is less than the specified maximum (thread-safe, not appropriate for security purposes).
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        /// &lt;returns&gt;true if a value was found; otherwise false.&lt;/returns&gt;
-        public static bool TryGetGuidValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key, out Guid value)
-        {
-            value = default;
-
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            return keyValues.TryGetValue(key, out var arg) &amp;&amp; Guid.TryParse(arg, out value);
-        }
+        /// &lt;param name=&quot;maxValue&quot;&gt;The exclusive upper bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to 0 and less than &lt;paramref name=&quot;maxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int maxValue) =&gt; Random.Next(maxValue);
+#pragma warning restore CA5394
 
         /// &lt;summary&gt;
-        /// Gets an integer value.
+        /// Returns a non-negative random integer number that is within the specified range (thread-safe, not appropriate for security purposes).
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;returns&gt;The value.&lt;/returns&gt;
-        public static int GetIntValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key)
-        {
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            if (!keyValues.TryGetValue(key, out var arg) || !int.TryParse(arg, out var value))
-                throw new InvalidOperationException($&quot;Failed to get an integer value for key &#39;{key}&#39;.&quot;);
-
-            return value;
-        }
+        /// &lt;param name=&quot;minValue&quot;&gt;The non-negative, inclusive lower bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;param name=&quot;maxValue&quot;&gt;The exclusive upper bound of the random number to be generated.&lt;/param&gt;
+        /// &lt;returns&gt;A 32-bit signed integer that is greater than or equal to &lt;paramref name=&quot;minValue&quot;/&gt; and less than &lt;paramref name=&quot;maxValue&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static int Next(int minValue, int maxValue) =&gt; Random.Next(minValue, maxValue);
+#pragma warning restore CA5394
 
         /// &lt;summary&gt;
-        /// Tries to get an integer value.
+        /// Returns a random floating-point number that is greater than or equal to 0.0, and less than 1.0 (thread-safe, not appropriate for security purposes).
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyValues&quot;&gt;Key-values.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        /// &lt;returns&gt;true if a value was found; otherwise false.&lt;/returns&gt;
-        public static bool TryGetIntValue(this IReadOnlyDictionary&lt;string, string&gt; keyValues, string key, out int value)
-        {
-            value = default;
-
-            if (keyValues == null) throw new ArgumentNullException(nameof(keyValues));
-            return keyValues.TryGetValue(key, out var arg) &amp;&amp; int.TryParse(arg, out value);
-        }
+        /// &lt;returns&gt;A double-precision floating-point number that is greater than or equal to 0.0, and less than 1.0.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Using this method will not trigger a CA5394 &quot;Do not use insecure randomness&quot; warning,
+        /// yet this method should NOT be used for anything related to security.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+#pragma warning disable CA5394 // Do not use insecure randomness
+        public static double NextDouble() =&gt; Random.NextDouble();
+#pragma warning restore CA5394
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[34,13,34,35,1],[34,36,34,87,1],[35,13,35,58,1],[37,17,38,109,1],[41,13,41,24,1],[53,13,53,29,1],[55,13,55,35,1],[55,36,55,87,1],[56,13,56,58,1],[57,17,57,30,1],[59,13,59,25,1],[60,13,60,25,1],[71,13,71,35,1],[71,36,71,87,1],[72,13,72,96,1],[73,17,73,101,1],[75,13,75,26,1],[87,13,87,29,1],[89,13,89,35,1],[89,36,89,87,1],[90,13,90,93,1],[101,13,101,35,1],[101,36,101,87,1],[102,13,102,95,1],[103,17,103,105,1],[105,13,105,26,1],[117,13,117,29,1],[119,13,119,35,1],[119,36,119,87,1],[120,13,120,92,1]]);
+      highlightRanges([[34,9,34,68,1],[35,9,35,66,1],[36,9,36,103,1],[48,13,48,30,1],[48,31,48,70,1],[50,9,50,10,1],[60,40,60,58,1],[71,37,71,50,1],[84,49,84,70,1],[98,63,98,94,0],[110,46,110,65,1]]);
     </script>
   </body>
 </html>

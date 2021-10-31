@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientAddClusterViewListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicRefSetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,42 +49,61 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds a cluster view listener to a connection.
+    /// Atomically sets the given value
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientAddClusterViewListenerServerCodec
+    internal static class AtomicRefSetServerCodec
 #else
-    internal static class ClientAddClusterViewListenerCodec
+    internal static class AtomicRefSetCodec
 #endif
     {
-        public const int RequestMessageType = 768; // 0x000300
-        public const int ResponseMessageType = 769; // 0x000301
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 656640; // 0x0A0500
+        public const int ResponseMessageType = 656641; // 0x0A0501
+        private const int RequestReturnOldValueFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestReturnOldValueFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int EventMembersViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventMembersViewInitialFrameSize = EventMembersViewVersionFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventMembersViewMessageType = 770; // 0x000302
-        private const int EventPartitionsViewVersionFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventPartitionsViewInitialFrameSize = EventPartitionsViewVersionFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventPartitionsViewMessageType = 771; // 0x000303
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
+
+            /// &lt;summary&gt;
+            /// CP group id of this IAtomicReference instance.
+            ///&lt;/summary&gt;
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
+
+            /// &lt;summary&gt;
+            /// Name of this IAtomicReference instance.
+            ///&lt;/summary&gt;
+            public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// The value to set
+            ///&lt;/summary&gt;
+            public IData NewValue { get; set; }
+
+            /// &lt;summary&gt;
+            /// Denotes whether the old value is returned or not
+            ///&lt;/summary&gt;
+            public bool ReturnOldValue { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest()
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, IData newValue, bool returnOldValue)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Client.AddClusterViewListener&quot;
+                OperationName = &quot;AtomicRef.Set&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestReturnOldValueFieldOffset, returnOldValue);
             clientMessage.Append(initialFrame);
+            RaftGroupIdCodec.Encode(clientMessage, groupId);
+            StringCodec.Encode(clientMessage, name);
+            CodecUtil.EncodeNullable(clientMessage, newValue, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -93,22 +112,33 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ReturnOldValue = initialFrame.Bytes.ReadBoolL(RequestReturnOldValueFieldOffset);
+            request.GroupId = RaftGroupIdCodec.Decode(iterator);
+            request.Name = StringCodec.Decode(iterator);
+            request.NewValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// the old value or null, depending on
+            /// the {
+            ///&lt;/summary&gt;
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -118,62 +148,16 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
-#if SERVER_CODEC
-        public static ClientMessage EncodeMembersViewEvent(int version, ICollection&lt;Hazelcast.Models.MemberInfo&gt; memberInfos)
-        {
-            var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventMembersViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventMembersViewMessageType);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EventMembersViewVersionFieldOffset, version);
-            clientMessage.Append(initialFrame);
-            clientMessage.Flags |= ClientMessageFlags.Event;
-            ListMultiFrameCodec.Encode(clientMessage, memberInfos, MemberInfoCodec.Encode);
-            return clientMessage;
-        }
-        public static ClientMessage EncodePartitionsViewEvent(int version, ICollection&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt; partitions)
-        {
-            var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventPartitionsViewInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventPartitionsViewMessageType);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EventPartitionsViewVersionFieldOffset, version);
-            clientMessage.Append(initialFrame);
-            clientMessage.Flags |= ClientMessageFlags.Event;
-            EntryListUUIDListIntegerCodec.Encode(clientMessage, partitions);
-            return clientMessage;
-        }
-#endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;int, IList&lt;Hazelcast.Models.MemberInfo&gt;, object, ValueTask&gt; handleMembersViewEventAsync, Func&lt;int, IList&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt;, object, ValueTask&gt; handlePartitionsViewEventAsync, object state, ILoggerFactory loggerFactory)
-        {
-            using var iterator = clientMessage.GetEnumerator();
-            var messageType = clientMessage.MessageType;
-            if (messageType == EventMembersViewMessageType)
-            {
-                var initialFrame = iterator.Take();
-                var version =  initialFrame.Bytes.ReadIntL(EventMembersViewVersionFieldOffset);
-                var memberInfos = ListMultiFrameCodec.Decode(iterator, MemberInfoCodec.Decode);
-                return handleMembersViewEventAsync(version, memberInfos, state);
-            }
-            if (messageType == EventPartitionsViewMessageType)
-            {
-                var initialFrame = iterator.Take();
-                var version =  initialFrame.Bytes.ReadIntL(EventPartitionsViewVersionFieldOffset);
-                var partitions = EntryListUUIDListIntegerCodec.Decode(iterator);
-                return handlePartitionsViewEventAsync(version, partitions, state);
-            }
-            loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
-            return default;
-        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,34,1],[108,13,108,64,0],[109,13,109,53,0],[110,13,110,29,0],[111,13,111,29,0],[112,9,112,10,0],[142,13,142,64,1],[143,13,143,57,1],[144,13,144,60,1],[146,17,146,52,1],[147,17,147,96,1],[148,17,148,96,1],[149,17,149,81,1],[151,13,151,63,1],[153,17,153,52,1],[154,17,154,99,1],[155,17,155,81,1],[156,17,156,83,1],[158,13,158,137,0],[159,13,159,28,0],[160,9,160,10,1]]);
+      highlightRanges([[84,13,88,15,1],[89,13,89,123,1],[90,13,90,104,1],[91,13,91,88,1],[92,13,92,93,1],[93,13,93,48,1],[94,13,94,61,1],[95,13,95,53,1],[96,13,96,81,1],[97,13,97,34,1],[121,37,121,41,1],[121,42,121,46,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,29,1],[141,13,141,86,1],[142,13,142,29,1],[143,9,143,10,1]]);
     </script>
   </body>
 </html>

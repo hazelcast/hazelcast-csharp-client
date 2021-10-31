@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BackgroundTask.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,209 +23,103 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using Hazelcast.Exceptions;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides extension methods to byte buffers.
+    /// Represents a background task.
     /// &lt;/summary&gt;
-    internal static partial class BytesExtensions
+    // we do not dispose tasks, generally, and we *do* dispose the cancellation
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable
+    internal class BackgroundTask
+#pragma warning restore CA1001
     {
-        /// &lt;summary&gt;
-        /// Represents a null array size
-        /// &lt;/summary&gt;
-        public const int SizeOfNullArray = -1;
+        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private readonly object _mutex = new object();
+        private bool _completed;
 
         /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;byte&quot;/&gt; value in arrays or sequences of bytes.
+        /// Initializes a new instance of the &lt;see cref=&quot;BackgroundTask&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public const int SizeOfByte = 1;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;sbyte&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfUnsignedByte = 1;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;short&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfShort = 2;
-
-        /// &lt;summary&gt;
-        /// Gets the size of an &lt;see cref=&quot;ushort&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfUnsignedShort = 2;
-
-        /// &lt;summary&gt;
-        /// Gets the size of an &lt;see cref=&quot;int&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfInt = 4;
-
-        /// &lt;summary&gt;
-        /// Gets the size of an &lt;see cref=&quot;uint&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfUnsignedInt = 4;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;float&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfFloat = 4;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;long&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfLong = 8;
-
-        /// &lt;summary&gt;
-        /// Gets the size of an &lt;see cref=&quot;ulong&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfUnsignedLong = 8;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;double&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfDouble = 8;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;decimal&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfDecimal = 16;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;bool&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfBool = 1;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;char&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfChar = 2;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a &lt;see cref=&quot;Guid&quot;/&gt; value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfGuid = (1 + 16) * SizeOfByte;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a Java LocalDate value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfLocalDate = SizeOfInt + SizeOfByte * 2;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a Java LocalTime value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfLocalTime = SizeOfInt + SizeOfByte * 3;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a Java LocalDateTime value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfLocalDateTime = SizeOfLocalDate + SizeOfLocalTime;
-
-        /// &lt;summary&gt;
-        /// Gets the size of a Java OffsetDateTime value in arrays or sequences of bytes.
-        /// &lt;/summary&gt;
-        public const int SizeOfOffsetDateTime = SizeOfLocalDateTime + SizeOfInt;
-
-        /// &lt;summary&gt;
-        /// Copies a sequence of &lt;typeparamref name=&quot;T&quot;/&gt; to a span of &lt;typeparamref name=&quot;T&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items in the sequence and span.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The sequence of &lt;typeparamref name=&quot;T&quot;/&gt; to copy from.&lt;/param&gt;
-        /// &lt;param name=&quot;destination&quot;&gt;The span of &lt;typeparamref name=&quot;T&quot;/&gt; to copy to.&lt;/param&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The work to execute.&lt;/param&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;There must be enough items in the sequence to fill the span. There can be more
-        /// items in the sequence than in the span, and extra items will be ignored.&lt;/para&gt;
-        /// &lt;para&gt;Slices the sequence of the used items.&lt;/para&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
+        /// throws, then the background task ends and does not restart.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Fill&lt;T&gt;(ref this ReadOnlySequence&lt;T&gt; source, Span&lt;T&gt; destination)
+        private BackgroundTask(Func&lt;CancellationToken, Task&gt; function)
         {
-            if (source.Length &lt; destination.Length)
-                throw new ArgumentOutOfRangeException(nameof(source), ExceptionMessages.NotEnoughBytes);
-
-            if (source.IsSingleSegment)
+            Task = Task.Run(async () =&gt;
             {
-                var span = source.First.Span;
-                if (span.Length &gt; destination.Length)
-                    span = span.Slice(0, destination.Length);
-                span.CopyTo(destination);
-            }
-            else
-            {
-                FillMultiSegment(source, destination);
-            }
-
-            source = source.Slice(destination.Length);
-        }
-
-        /// &lt;summary&gt;
-        /// Fills a span of &lt;typeparamref name=&quot;T&quot;/&gt; from a sequence.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items in the sequence and span.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;destination&quot;&gt;The span of &lt;typeparamref name=&quot;T&quot;/&gt; to copy to.&lt;/param&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The sequence of &lt;typeparamref name=&quot;T&quot;/&gt; to copy from.&lt;/param&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;There must be enough items in the sequence to fill the span. There can be more
-        /// items in the sequence than in the span, and extra items will be ignored.&lt;/para&gt;
-        /// &lt;para&gt;Slices the sequence of the used items.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Fill&lt;T&gt;(this Span&lt;T&gt; destination, ref ReadOnlySequence&lt;T&gt; source)
-        {
-            if (source.Length &lt; destination.Length)
-                throw new ArgumentOutOfRangeException(nameof(source), ExceptionMessages.NotEnoughBytes);
-
-            if (source.IsSingleSegment)
-            {
-                var span = source.First.Span;
-                if (span.Length &gt; destination.Length)
-                    span = span.Slice(0, destination.Length);
-                span.CopyTo(destination);
-            }
-            else
-            {
-                FillMultiSegment(source, destination);
-            }
-
-            source = source.Slice(destination.Length);
-        }
-
-        /// &lt;summary&gt;
-        /// Copies a multi-segment sequence of &lt;typeparamref name=&quot;T&quot;/&gt; to a span of &lt;typeparamref name=&quot;T&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items in the sequence and span.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The sequence of &lt;typeparamref name=&quot;T&quot;/&gt; to copy from.&lt;/param&gt;
-        /// &lt;param name=&quot;destination&quot;&gt;The span of &lt;typeparamref name=&quot;T&quot;/&gt; to copy to.&lt;/param&gt;
-        private static void FillMultiSegment&lt;T&gt;(in ReadOnlySequence&lt;T&gt; source, Span&lt;T&gt; destination)
-        {
-            //if (sequence.Length &lt; destination.Length)
-            //    throw new ArgumentOutOfRangeException(ExceptionMessage.NotEnoughBytes, nameof(sequence));
-
-            var position = source.Start;
-            var byteCount = destination.Length;
-            while (source.TryGet(ref position, out var memory))
-            {
-                var span = memory.Span;
-                if (span.Length &gt; byteCount)
+                try
                 {
-                    span.Slice(0, byteCount).CopyTo(destination);
-                    break;
+                    await function(_cancellation.Token).CfAwait();
                 }
-
-                span.CopyTo(destination);
-                destination = destination.Slice(span.Length);
-                byteCount -= span.Length;
-            }
+                finally
+                {
+                    lock (_mutex)
+                    {
+                        _completed = true;
+                        _cancellation.Dispose();
+                    }
+                }
+            });
         }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Gets the executing task.
+        /// &lt;/summary&gt;
+        internal Task Task { get; }
+
+        /// &lt;summary&gt;
+        /// Completes the background task.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
+        public async Task CompleteAsync(bool observeException)
+        {
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Cancels the background task if not completed, and waits for completion.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
+        public async Task CompletedOrCancelAsync(bool observeException = false)
+        {
+            lock (_mutex)
+            {
+                if (!_completed) _cancellation.Cancel();
+            }
+
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwaitCanceled();
+        }
+
+        /// &lt;summary&gt;
+        /// Runs the specified work as a background task.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The work to execute in a background task.&lt;/param&gt;
+        /// &lt;returns&gt;A background task executing the work.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
+        /// throws, then the background task ends and does not restart.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static BackgroundTask Run(Func&lt;CancellationToken, Task&gt; function)
+            =&gt; new BackgroundTask(function);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[136,13,136,52,1],[137,17,137,105,1],[139,13,139,40,1],[141,17,141,46,1],[142,17,142,54,1],[143,21,143,62,1],[144,17,144,42,1],[148,17,148,55,1],[151,13,151,55,1],[152,9,152,10,1],[168,13,168,52,1],[169,17,169,105,1],[171,13,171,40,1],[173,17,173,46,1],[174,17,174,54,1],[175,21,175,62,1],[176,17,176,42,1],[180,17,180,55,1],[183,13,183,55,1],[184,9,184,10,1],[197,13,197,41,1],[198,13,198,48,1],[199,13,199,64,1],[201,17,201,40,1],[202,17,202,45,1],[204,21,204,66,1],[205,21,205,27,1],[208,17,208,42,1],[209,17,209,62,1],[210,17,210,42,1],[211,13,211,14,1],[212,9,212,10,1]]);
+      highlightRanges([[29,9,29,96,1],[30,9,30,55,1],[41,9,41,71,1],[43,13,47,21,1],[47,21,47,67,1],[47,67,48,17,1],[48,17,48,18,1],[48,18,51,21,1],[51,21,51,34,1],[51,34,53,25,1],[53,25,53,43,1],[53,43,54,25,1],[54,25,54,49,1],[54,49,55,21,1],[55,21,55,22,1],[55,22,57,13,1],[57,13,57,14,1],[57,14,57,16,1],[58,9,58,10,1],[63,30,63,34,1],[72,13,72,34,0],[73,17,73,45,0],[75,17,75,38,0],[76,9,76,10,0],[85,13,85,26,1],[87,17,87,33,1],[87,34,87,57,1],[88,13,88,14,1],[90,13,90,34,1],[91,17,91,45,1],[93,17,93,46,1],[94,9,94,10,1],[106,16,106,44,1]]);
     </script>
   </body>
 </html>

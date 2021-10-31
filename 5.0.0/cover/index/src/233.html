@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAggregateCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAddPartitionLostListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,48 +49,59 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Applies the aggregation logic on all map entries and returns the result
+    /// Adds a MapPartitionLostListener. The addPartitionLostListener returns a register-id. This id is needed to remove
+    /// the MapPartitionLostListener using the removePartitionLostListener(String) method.
+    /// There is no check for duplicate registrations, so if you register the listener twice, it will get events twice.
+    /// IMPORTANT: Please see com.hazelcast.partition.PartitionLostListener for weaknesses.
+    /// IMPORTANT: Listeners registered from HazelcastClient may miss some of the map partition lost events due
+    /// to design limitations.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapAggregateServerCodec
+    internal static class MapAddPartitionLostListenerServerCodec
 #else
-    internal static class MapAggregateCodec
+    internal static class MapAddPartitionLostListenerCodec
 #endif
     {
-        public const int RequestMessageType = 80128; // 0x013900
-        public const int ResponseMessageType = 80129; // 0x013901
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        public const int RequestMessageType = 72448; // 0x011B00
+        public const int ResponseMessageType = 72449; // 0x011B01
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventMapPartitionLostPartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventMapPartitionLostUuidFieldOffset = EventMapPartitionLostPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventMapPartitionLostInitialFrameSize = EventMapPartitionLostUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventMapPartitionLostMessageType = 72450; // 0x011B02
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the map.
+            /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// aggregator to aggregate the entries with
+            /// if true fires events that originated from this node only, otherwise fires all events
             ///&lt;/summary&gt;
-            public IData Aggregator { get; set; }
+            public bool LocalOnly { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData aggregator)
+        public static ClientMessage EncodeRequest(string name, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;Map.Aggregate&quot;
+                IsRetryable = false,
+                OperationName = &quot;Map.AddPartitionLostListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, aggregator);
             return clientMessage;
         }
 
@@ -99,9 +110,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Aggregator = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -110,19 +121,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// the aggregation result
+            /// returns the registration id for the MapPartitionLostListener.
             ///&lt;/summary&gt;
-            public IData Response { get; set; }
+            public Guid Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -131,17 +142,45 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeMapPartitionLostEvent(int partitionId, Guid uuid)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventMapPartitionLostInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventMapPartitionLostMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(EventMapPartitionLostPartitionIdFieldOffset, partitionId);
+            initialFrame.Bytes.WriteGuidL(EventMapPartitionLostUuidFieldOffset, uuid);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            return clientMessage;
+        }
+#endif
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;int, Guid, object, ValueTask&gt; handleMapPartitionLostEventAsync, object state, ILoggerFactory loggerFactory)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var messageType = clientMessage.MessageType;
+            if (messageType == EventMapPartitionLostMessageType)
+            {
+                var initialFrame = iterator.Take();
+                var partitionId =  initialFrame.Bytes.ReadIntL(EventMapPartitionLostPartitionIdFieldOffset);
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventMapPartitionLostUuidFieldOffset);
+                return handleMapPartitionLostEventAsync(partitionId, uuid, state);
+            }
+            loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
+            return default;
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[73,13,77,15,1],[78,13,78,123,1],[79,13,79,104,1],[80,13,80,88,1],[81,13,81,48,1],[82,13,82,53,1],[83,13,83,57,1],[84,13,84,34,1],[105,37,105,41,1],[105,42,105,46,1],[122,13,122,64,1],[123,13,123,53,1],[124,13,124,29,1],[125,13,125,86,1],[126,13,126,29,1],[127,9,127,10,1]]);
+      highlightRanges([[84,13,88,15,0],[89,13,89,123,0],[90,13,90,104,0],[91,13,91,88,0],[92,13,92,83,0],[93,13,93,48,0],[94,13,94,53,0],[95,13,95,34,0],[116,36,116,40,0],[116,41,116,45,0],[133,13,133,64,0],[134,13,134,53,0],[135,13,135,48,0],[136,13,136,91,0],[137,13,137,29,0],[138,9,138,10,0],[156,13,156,64,0],[157,13,157,57,0],[158,13,158,65,0],[160,17,160,52,0],[161,17,161,109,0],[162,17,162,96,0],[163,17,163,83,0],[165,13,165,137,0],[166,13,166,28,0],[167,9,167,10,0]]);
     </script>
   </body>
 </html>

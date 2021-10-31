@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\DateSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ConcurrentHashMapStreamSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,40 +23,28 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class DateSerializer : SingletonSerializerBase&lt;DateTime&gt;
+    internal class ConcurrentHashMapStreamSerializer : DictStreamSerializerBase&lt;ConcurrentDictionary&lt;object, object&gt;&gt;
     {
-        private static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+        private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
 
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeDate;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeConcurrentHashMap;
 
-        public override DateTime Read(IObjectDataInput input)
+        public override ConcurrentDictionary&lt;object, object&gt; Read(IObjectDataInput input)
         {
-            return FromEpochTime(input.ReadLong());
-        }
-
-        public override void Write(IObjectDataOutput output, DateTime obj)
-        {
-            output.WriteLong(ToEpochDateTime(obj));
-        }
-
-        private static DateTime FromEpochTime(long sinceEpoxMillis)
-        {
-            return Epoch.AddMilliseconds(sinceEpoxMillis);
-        }
-
-        private static long ToEpochDateTime(DateTime dateTime)
-        {
-            return (long) dateTime.Subtract(Epoch).TotalMilliseconds;
+            var size = input.ReadInt();
+            var dict = new ConcurrentDictionary&lt;object, object&gt;(DefaultConcurrencyLevel, size);
+            return DeserializeEntries(input, size, dict);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,9,21,102,1],[23,39,23,81,1],[27,13,27,52,1],[32,13,32,52,1],[33,9,33,10,1],[37,13,37,59,1],[42,13,42,70,1]]);
+      highlightRanges([[22,9,22,90,0],[24,39,24,94,1],[28,13,28,40,0],[29,13,29,96,0],[30,13,30,58,0]]);
     </script>
   </body>
 </html>

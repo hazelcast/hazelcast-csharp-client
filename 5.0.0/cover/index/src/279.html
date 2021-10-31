@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemoveIfSameCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemoveEntryListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the mapping for a key from this map if existing value equal to the this value
+    /// Removes the specified entry listener. If there is no such listener added before, this call does no change in the
+    /// cluster and returns false.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapRemoveIfSameServerCodec
+    internal static class MapRemoveEntryListenerServerCodec
 #else
-    internal static class MapRemoveIfSameCodec
+    internal static class MapRemoveEntryListenerCodec
 #endif
     {
-        public const int RequestMessageType = 67584; // 0x010800
-        public const int ResponseMessageType = 67585; // 0x010801
-        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 72192; // 0x011A00
+        public const int ResponseMessageType = 72193; // 0x011A01
+        private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
@@ -69,42 +70,30 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Name of the map.
+            /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Key for the map entry.
+            /// id of registered listener.
             ///&lt;/summary&gt;
-            public IData Key { get; set; }
-
-            /// &lt;summary&gt;
-            /// Test the existing value against this value to find if equal to this value. Only remove the entry from the map if the value is equal to this value.
-            ///&lt;/summary&gt;
-            public IData Value { get; set; }
-
-            /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
-            ///&lt;/summary&gt;
-            public long ThreadId { get; set; }
+            public Guid RegistrationId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId)
+        public static ClientMessage EncodeRequest(string name, Guid registrationId)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;Map.RemoveIfSame&quot;
+                IsRetryable = true,
+                OperationName = &quot;Map.RemoveEntryListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteGuidL(RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -114,10 +103,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.RegistrationId = initialFrame.Bytes.ReadGuidL(RequestRegistrationIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -126,7 +113,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Returns true if the key exists and removed, otherwise returns false.
+            /// true if registration is removed, false otherwise.
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -157,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,81,1],[94,13,94,48,1],[95,13,95,53,1],[96,13,96,50,1],[97,13,97,53,1],[98,13,98,34,1],[121,36,121,40,1],[121,41,121,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,91,1],[142,13,142,29,1],[143,9,143,10,1]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,93,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

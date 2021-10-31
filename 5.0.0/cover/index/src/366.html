@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferSizeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferRemainingCapacityCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns number of items in the ringbuffer. If no ttl is set, the size will always be equal to capacity after the
-    /// head completed the first looparound the ring. This is because no items are getting retired.
+    /// Returns the remaining capacity of the ringbuffer. The returned value could be stale as soon as it is returned.
+    /// If ttl is not set, the remaining capacity will always be the capacity.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class RingbufferSizeServerCodec
+    internal static class RingbufferRemainingCapacityServerCodec
 #else
-    internal static class RingbufferSizeCodec
+    internal static class RingbufferRemainingCapacityCodec
 #endif
     {
-        public const int RequestMessageType = 1507584; // 0x170100
-        public const int ResponseMessageType = 1507585; // 0x170101
+        public const int RequestMessageType = 1508608; // 0x170500
+        public const int ResponseMessageType = 1508609; // 0x170501
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
@@ -80,7 +80,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Ringbuffer.Size&quot;
+                OperationName = &quot;Ringbuffer.RemainingCapacity&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -105,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// the size
+            /// the remaining capacity
             ///&lt;/summary&gt;
             public long Response { get; set; }
         }

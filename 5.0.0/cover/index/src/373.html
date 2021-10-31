@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetCompareAndRetainAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetCompareAndRemoveAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Retains only the elements in this set that are contained in the specified collection (optional operation).
-    /// In other words, removes from this set all of its elements that are not contained in the specified collection.
+    /// Removes from this set all of its elements that are contained in the specified collection (optional operation).
     /// If the specified collection is also a set, this operation effectively modifies this set so that its value is the
-    /// intersection of the two sets.
+    /// asymmetric set difference of the two sets.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetCompareAndRetainAllServerCodec
+    internal static class SetCompareAndRemoveAllServerCodec
 #else
-    internal static class SetCompareAndRetainAllCodec
+    internal static class SetCompareAndRemoveAllCodec
 #endif
     {
-        public const int RequestMessageType = 395264; // 0x060800
-        public const int ResponseMessageType = 395265; // 0x060801
+        public const int RequestMessageType = 395008; // 0x060700
+        public const int ResponseMessageType = 395009; // 0x060701
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
@@ -76,7 +75,7 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The list of values to test for matching the item to retain.
+            /// The list of values to test for matching the item to remove.
             ///&lt;/summary&gt;
             public IList&lt;IData&gt; Values { get; set; }
         }
@@ -87,7 +86,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Set.CompareAndRetainAll&quot;
+                OperationName = &quot;Set.CompareAndRemoveAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -114,8 +113,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if at least one item in values existed and it is retained, false otherwise. All items not in valueSet but
-            /// in the Set are removed.
+            /// true if at least one item in values existed and removed, false otherwise.
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -146,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,81,1],[88,13,88,34,1],[110,36,110,40,1],[110,41,110,45,1],[127,13,127,64,1],[128,13,128,53,1],[129,13,129,48,1],[130,13,130,91,1],[131,13,131,29,1],[132,9,132,10,1]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,48,1],[85,13,85,53,1],[86,13,86,81,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

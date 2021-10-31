@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ClassDefinitionWriter.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ClassDefinitionBuilder.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,206 +23,241 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed class ClassDefinitionWriter : IPortableWriter
+    /// &lt;summary&gt;
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    ///     ClassDefinitionBuilder is used to build and register ClassDefinitions manually.
+    /// &lt;/remarks&gt;
+    /// &lt;seealso cref=&quot;IClassDefinition&quot;&gt;IClassDefinition&lt;/seealso&gt;
+    /// &lt;seealso cref=&quot;IPortable&quot;&gt;IPortable&lt;/seealso&gt;
+    /// &lt;seealso cref=&quot;SerializationOptions.AddClassDefinition(IClassDefinition)&quot;&gt;
+    ///     Hazelcast.Config.SerializationConfig.AddClassDefinition(IClassDefinition)
+    /// &lt;/seealso&gt;
+    public sealed class ClassDefinitionBuilder
     {
-        private readonly ClassDefinitionBuilder _builder;
-        private readonly IPortableContext _context;
+        private readonly int _classId;
+        private readonly int _factoryId;
 
-        internal ClassDefinitionWriter(IPortableContext context, int factoryId, int classId, int version)
+        private readonly IList&lt;FieldDefinition&gt; _fieldDefinitions = new List&lt;FieldDefinition&gt;();
+        private readonly int _version;
+
+        private bool _done;
+        private int _index;
+
+        public ClassDefinitionBuilder(int factoryId, int classId)
         {
-            _context = context;
-            _builder = new ClassDefinitionBuilder(factoryId, classId, version);
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = 0;
         }
 
-        internal ClassDefinitionWriter(IPortableContext context, ClassDefinitionBuilder builder)
+        public ClassDefinitionBuilder(int factoryId, int classId, int version)
         {
-            _context = context;
-            _builder = builder;
+            _factoryId = factoryId;
+            _classId = classId;
+            _version = version;
         }
 
-        public void WriteInt(string fieldName, int value)
+        public ClassDefinitionBuilder AddBooleanArrayField(string fieldName)
         {
-            _builder.AddIntField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.BooleanArray, _version));
+            return this;
         }
 
-        public void WriteLong(string fieldName, long value)
+        public ClassDefinitionBuilder AddBooleanField(string fieldName)
         {
-            _builder.AddLongField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Boolean, _version));
+            return this;
         }
 
-        public void WriteString(string fieldName, string str)
+        public ClassDefinitionBuilder AddByteArrayField(string fieldName)
         {
-            _builder.AddStringField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ByteArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteBoolean(string fieldName, bool value)
+        public ClassDefinitionBuilder AddByteField(string fieldName)
         {
-            _builder.AddBooleanField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Byte, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteByte(string fieldName, byte value)
+        public ClassDefinitionBuilder AddCharArrayField(string
+            fieldName)
         {
-            _builder.AddByteField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.CharArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteChar(string fieldName, char value)
+        public ClassDefinitionBuilder AddCharField(string fieldName)
         {
-            _builder.AddCharField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Char, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteDouble(string fieldName, double value)
+        public ClassDefinitionBuilder AddDoubleArrayField(string fieldName)
         {
-            _builder.AddDoubleField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.DoubleArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteFloat(string fieldName, float value)
+        public ClassDefinitionBuilder AddDoubleField(string fieldName)
         {
-            _builder.AddFloatField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Double, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteShort(string fieldName, short value)
+        public ClassDefinitionBuilder AddFloatArrayField(string fieldName)
         {
-            _builder.AddShortField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.FloatArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteBooleanArray(string fieldName, bool[] bools)
+        public ClassDefinitionBuilder AddFloatField(string fieldName)
         {
-            _builder.AddBooleanArrayField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Float, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteByteArray(string fieldName, byte[] bytes)
+        public ClassDefinitionBuilder AddIntArrayField(string fieldName)
         {
-            _builder.AddByteArrayField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.IntArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteCharArray(string fieldName, char[] chars)
+        public ClassDefinitionBuilder AddIntField(string fieldName)
         {
-            _builder.AddCharArrayField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Int, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteIntArray(string fieldName, int[] ints)
+        public ClassDefinitionBuilder AddLongArrayField(string fieldName)
         {
-            _builder.AddIntArrayField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.LongArray, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteLongArray(string fieldName, long[] longs)
+        public ClassDefinitionBuilder AddLongField(string fieldName)
         {
-            _builder.AddLongArrayField(fieldName);
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Long, _version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteDoubleArray(string fieldName, double[] values)
+        public ClassDefinitionBuilder AddPortableArrayField(string fieldName, IClassDefinition def)
         {
-            _builder.AddDoubleArrayField(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteFloatArray(string fieldName, float[] values)
-        {
-            _builder.AddFloatArrayField(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteShortArray(string fieldName, short[] values)
-        {
-            _builder.AddShortArrayField(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteStringArray(string fieldName, string[] strings)
-        {
-            _builder.AddStringArrayField(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WritePortable(string fieldName, IPortable portable)
-        {
-            if (portable == null)
+            if (def == null) throw new ArgumentNullException(nameof(def));
+            Check();
+            if (def.ClassId == 0)
             {
-                throw new SerializationException(&quot;Cannot write null portable without explicitly &quot;
-                                                          + &quot;registering class definition!&quot;);
+                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
             }
-            var version = PortableVersionHelper.GetVersion(portable, _context.GetVersion());
-            var nestedClassDef = CreateNestedClassDef(portable, new ClassDefinitionBuilder
-                (portable.FactoryId, portable.ClassId, version));
-            _builder.AddPortableField(fieldName, nestedClassDef);
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.PortableArray, def.FactoryId,
+                def.ClassId, def.Version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WriteNullPortable(string fieldName, int factoryId, int classId)
+        public ClassDefinitionBuilder AddPortableField(string fieldName, IClassDefinition def)
         {
-            var nestedClassDef = _context.LookupClassDefinition(factoryId, classId
-                , _context.GetVersion());
-            if (nestedClassDef == null)
+            if (def == null) throw new ArgumentNullException(nameof(def));
+            Check();
+            if (def.ClassId == 0)
             {
-                throw new SerializationException(&quot;Cannot write null portable without explicitly &quot;
-                                                          + &quot;registering class definition!&quot;);
+                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
             }
-            _builder.AddPortableField(fieldName, nestedClassDef);
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Portable, def.FactoryId,
+                def.ClassId, def.Version));
+            return this;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void WritePortableArray&lt;TPortable&gt;(string fieldName, TPortable[] portables) where TPortable : IPortable
+        public ClassDefinitionBuilder AddShortArrayField(string fieldName)
         {
-            if (portables == null || portables.Length == 0)
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.ShortArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddShortField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Short, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddStringArrayField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.UtfArray, _version));
+            return this;
+        }
+
+        public ClassDefinitionBuilder AddStringField(string fieldName)
+        {
+            Check();
+            _fieldDefinitions.Add(new FieldDefinition(_index++, fieldName, FieldType.Utf, _version));
+            return this;
+        }
+
+        public IClassDefinition Build()
+        {
+            _done = true;
+            var cd = new ClassDefinition(_factoryId, _classId, _version);
+            foreach (var fd in _fieldDefinitions)
             {
-                throw new SerializationException(&quot;Cannot write null portable array without explicitly &quot;
-                                                          + &quot;registering class definition!&quot;);
+                cd.AddFieldDef(fd);
             }
-            var p = portables[0];
-            var classId = p.ClassId;
-            for (var i = 1; i &lt; portables.Length; i++)
+            return cd;
+        }
+
+        public int ClassId =&gt; _classId;
+
+        public int FactoryId =&gt; _factoryId;
+
+        public int Version =&gt; _version;
+
+        internal ClassDefinitionBuilder AddField(FieldDefinition fieldDefinition)
+        {
+            Check();
+            if (_index != fieldDefinition.Index)
             {
-                if (portables[i].ClassId != classId)
-                {
-                    throw new ArgumentException(&quot;Detected different class-ids in portable array!&quot;);
-                }
+                throw new ArgumentException(&quot;Invalid field index&quot;);
             }
-            var version = PortableVersionHelper.GetVersion(p, _context.GetVersion());
-            var nestedClassDef = CreateNestedClassDef(p, new ClassDefinitionBuilder
-                (p.FactoryId, classId, version));
-            _builder.AddPortableArrayField(fieldName, nestedClassDef);
+            _index++;
+            _fieldDefinitions.Add(fieldDefinition);
+            return this;
         }
 
-        public IObjectDataOutput GetRawDataOutput()
+        private void Check()
         {
-            return new EmptyObjectDataOutput();
-        }
-
-        internal IClassDefinition RegisterAndGet()
-        {
-            var cd = _builder.Build();
-            return _context.RegisterClassDefinition(cd);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        private IClassDefinition CreateNestedClassDef(IPortable portable, ClassDefinitionBuilder
-            nestedBuilder)
-        {
-            var writer = new ClassDefinitionWriter(_context, nestedBuilder);
-            portable.WritePortable(writer);
-            return _context.RegisterClassDefinition(nestedBuilder.Build());
+            if (_done)
+            {
+                throw new SerializationException(&quot;ClassDefinition is already built for &quot; + _classId);
+            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,9,24,106,1],[26,13,26,32,1],[27,13,27,80,1],[28,9,28,10,1],[30,9,30,97,1],[32,13,32,32,1],[33,13,33,32,1],[34,9,34,10,1],[38,13,38,45,1],[39,9,39,10,1],[43,13,43,46,1],[44,9,44,10,1],[48,13,48,48,1],[49,9,49,10,1],[54,13,54,49,1],[55,9,55,10,1],[60,13,60,46,1],[61,9,61,10,1],[66,13,66,46,1],[67,9,67,10,1],[72,13,72,48,1],[73,9,73,10,1],[78,13,78,47,1],[79,9,79,10,1],[84,13,84,47,1],[85,9,85,10,1],[90,13,90,54,1],[91,9,91,10,1],[96,13,96,51,1],[97,9,97,10,1],[102,13,102,51,1],[103,9,103,10,1],[108,13,108,50,1],[109,9,109,10,1],[114,13,114,51,1],[115,9,115,10,1],[120,13,120,53,1],[121,9,121,10,1],[126,13,126,52,1],[127,9,127,10,1],[132,13,132,52,1],[133,9,133,10,1],[138,13,138,53,1],[139,9,139,10,1],[144,13,144,34,1],[146,17,147,94,0],[149,13,149,93,1],[150,13,151,66,1],[152,13,152,66,1],[153,9,153,10,1],[158,13,159,42,1],[160,13,160,40,1],[162,17,163,94,0],[165,13,165,66,1],[166,9,166,10,1],[171,13,171,60,1],[173,17,174,94,0],[176,13,176,34,1],[177,13,177,37,1],[178,18,178,27,1],[178,29,178,49,1],[178,51,178,54,1],[180,17,180,53,1],[182,21,182,100,0],[185,13,185,86,1],[186,13,187,50,1],[188,13,188,71,1],[189,9,189,10,1],[193,13,193,48,1],[198,13,198,39,1],[199,13,199,57,1],[206,13,206,77,1],[207,13,207,44,1],[208,13,208,76,1]]);
+      highlightRanges([[36,9,36,97,0],[36,9,36,97,1],[42,9,42,66,0],[44,13,44,36,0],[45,13,45,32,0],[46,13,46,26,0],[47,9,47,10,0],[49,9,49,79,1],[51,13,51,36,1],[52,13,52,32,1],[53,13,53,32,1],[54,9,54,10,1],[58,13,58,21,1],[59,13,59,111,1],[60,13,60,25,1],[65,13,65,21,1],[66,13,66,106,1],[67,13,67,25,1],[72,13,72,21,1],[73,13,73,108,1],[74,13,74,25,1],[79,13,79,21,1],[80,13,80,103,1],[81,13,81,25,1],[87,13,87,21,1],[88,13,88,108,1],[89,13,89,25,1],[94,13,94,21,1],[95,13,95,103,1],[96,13,96,25,1],[101,13,101,21,1],[102,13,102,110,1],[103,13,103,25,1],[108,13,108,21,1],[109,13,109,105,1],[110,13,110,25,1],[115,13,115,21,1],[116,13,116,109,1],[117,13,117,25,1],[122,13,122,21,1],[123,13,123,104,1],[124,13,124,25,1],[129,13,129,21,1],[130,13,130,107,1],[131,13,131,25,1],[136,13,136,21,1],[137,13,137,102,1],[138,13,138,25,1],[143,13,143,21,1],[144,13,144,108,1],[145,13,145,25,1],[150,13,150,21,1],[151,13,151,103,1],[152,13,152,25,1],[157,13,157,29,1],[157,30,157,75,0],[158,13,158,21,1],[159,13,159,34,1],[161,17,161,82,0],[163,13,164,44,1],[165,13,165,25,1],[170,13,170,29,1],[170,30,170,75,0],[171,13,171,21,1],[172,13,172,34,1],[174,17,174,82,0],[176,13,177,44,1],[178,13,178,25,1],[183,13,183,21,1],[184,13,184,109,1],[185,13,185,25,1],[190,13,190,21,1],[191,13,191,104,1],[192,13,192,25,1],[197,13,197,21,1],[198,13,198,107,1],[199,13,199,25,1],[204,13,204,21,1],[205,13,205,102,1],[206,13,206,25,1],[211,13,211,26,1],[212,13,212,74,1],[213,22,213,28,1],[213,29,213,31,1],[213,32,213,49,1],[215,17,215,36,1],[217,13,217,23,1],[220,31,220,39,0],[222,33,222,43,0],[224,31,224,39,0],[228,13,228,21,1],[229,13,229,49,1],[231,17,231,68,0],[233,13,233,22,1],[234,13,234,52,1],[235,13,235,25,1],[240,13,240,23,1],[242,17,242,102,0],[244,9,244,10,1]]);
     </script>
   </body>
 </html>

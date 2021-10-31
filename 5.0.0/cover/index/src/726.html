@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\RetryStrategy.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\RemoteExceptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,129 +23,88 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.Exceptions;
-using Microsoft.Extensions.Logging;
+using System.Collections.Generic;
+using System.Text;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.Clustering
 {
     /// &lt;summary&gt;
-    /// Implements a &lt;see cref=&quot;IRetryStrategy&quot;/&gt; with back-off and timeout.
+    /// Maps remote exceptions to C# exceptions.
     /// &lt;/summary&gt;
-    internal class RetryStrategy : IRetryStrategy
+    internal static class RemoteExceptions
     {
-        private readonly int _initialBackOffMilliseconds;
-        private readonly int _maxBackOffMilliseconds;
-        private readonly double _multiplier;
-        private readonly long _timeoutMilliseconds;
-        private readonly double _jitter;
-        private readonly string _action;
-        private readonly ILogger _logger;
+        private static readonly HashSet&lt;RemoteError&gt; RetryableExceptions = new HashSet&lt;RemoteError&gt;
+        {
+            RemoteError.CallerNotMember,
+            RemoteError.MemberLeft,
+            RemoteError.PartitionMigrating,
+            RemoteError.RetryableHazelcast,
+            RemoteError.RetryableIO,
+            RemoteError.TargetNotMember,
+            RemoteError.WrongTarget,
+            RemoteError.TargetNotReplicaException,
+            RemoteError.CannotReplicateException,
+            RemoteError.HazelcastInstanceNotActive,
 
-        private int _currentBackOffMilliseconds;
-        private int _attempts;
-        private DateTime _begin;
+            // this one must *not* automatically retryable, because it requires more
+            // checks on the client and message in order to decide whether to retry
+            //RemoteError.TargetDisconnected,
+        };
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
+        /// Creates a C# exception that represents an exception that was thrown remotely on a server.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
-        /// &lt;param name=&quot;options&quot;&gt;Configuration.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public RetryStrategy(string action, ConnectionRetryOptions options, ILoggerFactory loggerFactory)
-            : this(action,
-                (options ?? throw new ArgumentNullException(nameof(options))).InitialBackoffMilliseconds,
-                options.MaxBackoffMilliseconds,
-                options.Multiplier,
-                options.ClusterConnectionTimeoutMilliseconds,
-                options.Jitter,
-                loggerFactory)
-        { }
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member that threw the exception.&lt;/param&gt;
+        /// &lt;param name=&quot;errorHolders&quot;&gt;Server errors.&lt;/param&gt;
+        /// &lt;returns&gt;An exception representing the specified server errors.&lt;/returns&gt;
+        internal static RemoteException CreateException(Guid memberId, IEnumerable&lt;ErrorHolder&gt; errorHolders)
+        {
+            if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
+
+            return CreateException(memberId, errorHolders.GetEnumerator());
+        }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;RetryStrategy&quot;/&gt; class.
+        /// Create a C# exception that represents an exception that was thrown remotely on a server.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;action&quot;&gt;The description of the action.&lt;/param&gt;
-        /// &lt;param name=&quot;initialBackOffMilliseconds&quot;&gt;The initial back-off value in milliseconds.&lt;/param&gt;
-        /// &lt;param name=&quot;maxBackOffMilliseconds&quot;&gt;The maximum back-off value in milliseconds.&lt;/param&gt;
-        /// &lt;param name=&quot;multiplier&quot;&gt;The multiplier.&lt;/param&gt;
-        /// &lt;param name=&quot;timeoutMilliseconds&quot;&gt;The timeout in milliseconds.&lt;/param&gt;
-        /// &lt;param name=&quot;jitter&quot;&gt;A jitter factor.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public RetryStrategy(string action, int initialBackOffMilliseconds, int maxBackOffMilliseconds, double multiplier, long timeoutMilliseconds, double jitter, ILoggerFactory loggerFactory)
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member that threw the exception.&lt;/param&gt;
+        /// &lt;param name=&quot;errorHolders&quot;&gt;Server errors.&lt;/param&gt;
+        /// &lt;returns&gt;An exception representing the specified server errors.&lt;/returns&gt;
+        private static RemoteException CreateException(Guid memberId, IEnumerator&lt;ErrorHolder&gt; errorHolders)
         {
-            if (string.IsNullOrWhiteSpace(action)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(action));
-#pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
-            _action = action.ToLowerInvariant();
-#pragma warning restore CA1308
-            _initialBackOffMilliseconds = initialBackOffMilliseconds;
-            _maxBackOffMilliseconds = maxBackOffMilliseconds;
-            _currentBackOffMilliseconds = initialBackOffMilliseconds;
-            _multiplier = multiplier;
-            _timeoutMilliseconds = timeoutMilliseconds;
-            _jitter = jitter;
-            _logger = loggerFactory?.CreateLogger&lt;RetryStrategy&gt;() ?? throw new ArgumentNullException(nameof(loggerFactory));
+            if (errorHolders == null) throw new ArgumentNullException(nameof(errorHolders));
 
-            Restart();
-        }
+            if (!errorHolders.MoveNext())
+                return null;
 
-        /// &lt;inheritdoc /&gt;
-        public async ValueTask&lt;bool&gt; WaitAsync(CancellationToken cancellationToken)
-        {
-            if (cancellationToken.IsCancellationRequested)
-                throw new OperationCanceledException();
+            var errorHolder = errorHolders.Current;
+            if (errorHolder == null) return new RemoteException(memberId, RemoteError.Undefined);
 
-            _attempts++;
+            var innerException = CreateException(memberId, errorHolders);
 
-            var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
+            var error = RemoteError.Undefined;
+            if (Enum.IsDefined(typeof(RemoteError), errorHolder.ErrorCode))
+                error = (RemoteError) errorHolder.ErrorCode;
+            var retryable = RetryableExceptions.Contains(error);
 
-            _logger.IfDebug()?.LogDebug($&quot;Elapsed {elapsed}ms, timeout={_timeoutMilliseconds}ms, back-off={_currentBackOffMilliseconds}ms ({_initialBackOffMilliseconds}-{_maxBackOffMilliseconds}, m={_multiplier}, j={_jitter})&quot;);
-
-            if (_timeoutMilliseconds &gt; 0 &amp;&amp; elapsed &gt; _timeoutMilliseconds)
+            var serverStackTrace = new StringBuilder();
+            var first = true;
+            foreach (var stackTraceElement in errorHolder.StackTraceElements)
             {
-                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, timeout ({_timeoutMilliseconds}ms).&quot;);
-                return false;
+                if (first) first = false; else serverStackTrace.AppendLine();
+                serverStackTrace.Append(&quot;   &quot;).Append(stackTraceElement);
             }
 
-            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
-            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
-
-            _logger.LogDebug($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms&quot;);
-
-            try
-            {
-                await Task.Delay(delay, cancellationToken).CfAwait();
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, cancelled.&quot;);
-                return false;
-            }
-            catch (Exception)
-            {
-                _logger.LogWarning($&quot;Unable to {_action} after {_attempts} attempts and {elapsed}ms, error.&quot;);
-                return false;
-            }
-
-            _currentBackOffMilliseconds = (int) Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
-            return true;
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public void Restart()
-        {
-            _attempts = 0;
-            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
-            _begin = DateTime.UtcNow;
+            return new RemoteException(memberId, error, errorHolder.Message, innerException, serverStackTrace.ToString(), retryable);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[48,15,54,31,1],[55,11,55,12,1],[67,9,67,194,1],[69,13,69,51,1],[69,52,69,127,0],[71,13,71,49,1],[73,13,73,70,1],[74,13,74,62,1],[75,13,75,70,1],[76,13,76,38,1],[77,13,77,56,1],[78,13,78,30,1],[79,13,79,126,1],[81,13,81,23,1],[82,9,82,10,1],[87,13,87,59,1],[88,17,88,56,1],[90,13,90,25,1],[92,13,92,78,1],[94,13,94,229,1],[96,13,96,76,1],[98,17,98,140,1],[99,17,99,30,1],[102,13,102,113,1],[103,13,103,90,1],[105,13,105,122,1],[109,17,109,70,1],[110,13,110,14,1],[111,13,111,47,0],[113,17,113,115,0],[114,17,114,30,0],[116,13,116,30,0],[118,17,118,111,0],[119,17,119,30,0],[122,13,122,126,1],[123,13,123,25,1],[124,9,124,10,1],[129,13,129,27,1],[130,13,130,106,1],[131,13,131,38,1],[132,9,132,10,1]]);
+      highlightRanges([[28,9,44,11,1],[54,13,54,38,1],[54,39,54,93,0],[56,13,56,76,1],[67,13,67,38,1],[67,39,67,93,0],[69,13,69,42,1],[70,17,70,29,1],[72,13,72,52,1],[73,13,73,37,1],[73,38,73,98,0],[75,13,75,74,1],[77,13,77,47,1],[78,13,78,76,1],[79,17,79,61,1],[80,13,80,65,1],[82,13,82,56,1],[83,13,83,30,1],[84,22,84,43,1],[84,44,84,46,1],[84,47,84,77,1],[86,17,86,27,1],[86,28,86,42,1],[86,48,86,78,1],[87,17,87,74,1],[90,13,90,134,1]]);
     </script>
   </body>
 </html>

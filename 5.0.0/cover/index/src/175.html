@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicLongCompareAndSetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicLongAddAndGetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Atomically sets the value to the given updated value only if the current
-    /// value the expected value.
+    /// Atomically adds the given value to the current value.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class AtomicLongCompareAndSetServerCodec
+    internal static class AtomicLongAddAndGetServerCodec
 #else
-    internal static class AtomicLongCompareAndSetCodec
+    internal static class AtomicLongAddAndGetCodec
 #endif
     {
-        public const int RequestMessageType = 590848; // 0x090400
-        public const int ResponseMessageType = 590849; // 0x090401
-        private const int RequestExpectedFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestUpdatedFieldOffset = RequestExpectedFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestInitialFrameSize = RequestUpdatedFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 590592; // 0x090300
+        public const int ResponseMessageType = 590593; // 0x090301
+        private const int RequestDeltaFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestDeltaFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -81,29 +79,23 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The expected value
+            /// The value to add to the current value
             ///&lt;/summary&gt;
-            public long Expected { get; set; }
-
-            /// &lt;summary&gt;
-            /// The new value
-            ///&lt;/summary&gt;
-            public long Updated { get; set; }
+            public long Delta { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, long expected, long updated)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, long delta)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;AtomicLong.CompareAndSet&quot;
+                OperationName = &quot;AtomicLong.AddAndGet&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestExpectedFieldOffset, expected);
-            initialFrame.Bytes.WriteLongL(RequestUpdatedFieldOffset, updated);
+            initialFrame.Bytes.WriteLongL(RequestDeltaFieldOffset, delta);
             clientMessage.Append(initialFrame);
             RaftGroupIdCodec.Encode(clientMessage, groupId);
             StringCodec.Encode(clientMessage, name);
@@ -116,8 +108,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Expected = initialFrame.Bytes.ReadLongL(RequestExpectedFieldOffset);
-            request.Updated = initialFrame.Bytes.ReadLongL(RequestUpdatedFieldOffset);
+            request.Delta = initialFrame.Bytes.ReadLongL(RequestDeltaFieldOffset);
             request.GroupId = RaftGroupIdCodec.Decode(iterator);
             request.Name = StringCodec.Decode(iterator);
             return request;
@@ -128,19 +119,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if successful; or false if the actual value
-            /// was not equal to the expected value.
+            /// the updated value, the given value added to the current value
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public long Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(long response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -151,7 +141,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadLongL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -160,7 +150,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[87,13,91,15,1],[92,13,92,123,1],[93,13,93,104,1],[94,13,94,88,1],[95,13,95,81,1],[96,13,96,79,1],[97,13,97,48,1],[98,13,98,61,1],[99,13,99,53,1],[100,13,100,34,1],[124,36,124,40,1],[124,41,124,45,1],[141,13,141,64,1],[142,13,142,53,1],[143,13,143,48,1],[144,13,144,91,1],[145,13,145,29,1],[146,9,146,10,1]]);
+      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,75,1],[89,13,89,48,1],[90,13,90,61,1],[91,13,91,53,1],[92,13,92,34,1],[114,36,114,40,1],[114,41,114,45,1],[131,13,131,64,1],[132,13,132,53,1],[133,13,133,48,1],[134,13,134,91,1],[135,13,135,29,1],[136,9,136,10,1]]);
     </script>
   </body>
 </html>

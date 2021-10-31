@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferReadOneCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferReadManyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,29 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Reads one item from the Ringbuffer. If the sequence is one beyond the current tail, this call blocks until an
-    /// item is added. This method is not destructive unlike e.g. a queue.take. So the same item can be read by multiple
-    /// readers or it can be read multiple times by the same reader. Currently it isn&#39;t possible to control how long this
-    /// call is going to block. In the future we could add e.g. tryReadOne(long sequence, long timeout, TimeUnit unit).
+    /// Reads a batch of items from the Ringbuffer. If the number of available items after the first read item is smaller
+    /// than the maxCount, these items are returned. So it could be the number of items read is smaller than the maxCount.
+    /// If there are less items available than minCount, then this call blacks. Reading a batch of items is likely to
+    /// perform better because less overhead is involved. A filter can be provided to only select items that need to be read.
+    /// If the filter is null, all items are read. If the filter is not null, only items where the filter function returns
+    /// true are returned. Using filters is a good way to prevent getting items that are of no value to the receiver.
+    /// This reduces the amount of IO and the number of operations being executed, and can result in a significant performance improvement.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class RingbufferReadOneServerCodec
+    internal static class RingbufferReadManyServerCodec
 #else
-    internal static class RingbufferReadOneCodec
+    internal static class RingbufferReadManyCodec
 #endif
     {
-        public const int RequestMessageType = 1509120; // 0x170700
-        public const int ResponseMessageType = 1509121; // 0x170701
-        private const int RequestSequenceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestSequenceFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        public const int RequestMessageType = 1509632; // 0x170900
+        public const int ResponseMessageType = 1509633; // 0x170901
+        private const int RequestStartSequenceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestMinCountFieldOffset = RequestStartSequenceFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestMaxCountFieldOffset = RequestMinCountFieldOffset + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestMaxCountFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseReadCountFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseNextSeqFieldOffset = ResponseReadCountFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = ResponseNextSeqFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -76,25 +83,43 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// the sequence of the item to read.
+            /// the startSequence of the first item to read
             ///&lt;/summary&gt;
-            public long Sequence { get; set; }
+            public long StartSequence { get; set; }
+
+            /// &lt;summary&gt;
+            /// the minimum number of items to read.
+            ///&lt;/summary&gt;
+            public int MinCount { get; set; }
+
+            /// &lt;summary&gt;
+            /// the maximum number of items to read.
+            ///&lt;/summary&gt;
+            public int MaxCount { get; set; }
+
+            /// &lt;summary&gt;
+            /// Filter is allowed to be null, indicating there is no filter.
+            ///&lt;/summary&gt;
+            public IData Filter { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, long sequence)
+        public static ClientMessage EncodeRequest(string name, long startSequence, int minCount, int maxCount, IData filter)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Ringbuffer.ReadOne&quot;
+                OperationName = &quot;Ringbuffer.ReadMany&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestSequenceFieldOffset, sequence);
+            initialFrame.Bytes.WriteLongL(RequestStartSequenceFieldOffset, startSequence);
+            initialFrame.Bytes.WriteIntL(RequestMinCountFieldOffset, minCount);
+            initialFrame.Bytes.WriteIntL(RequestMaxCountFieldOffset, maxCount);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            CodecUtil.EncodeNullable(clientMessage, filter, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -104,8 +129,11 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Sequence = initialFrame.Bytes.ReadLongL(RequestSequenceFieldOffset);
+            request.StartSequence = initialFrame.Bytes.ReadLongL(RequestStartSequenceFieldOffset);
+            request.MinCount = initialFrame.Bytes.ReadIntL(RequestMinCountFieldOffset);
+            request.MaxCount = initialFrame.Bytes.ReadIntL(RequestMaxCountFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Filter = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -114,19 +142,37 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// the read item
+            /// Number of items that have been read before filtering.
             ///&lt;/summary&gt;
-            public IData Response { get; set; }
+            public int ReadCount { get; set; }
+
+            /// &lt;summary&gt;
+            /// List of items that have beee read.
+            ///&lt;/summary&gt;
+            public IList&lt;IData&gt; Items { get; set; }
+
+            /// &lt;summary&gt;
+            /// List of sequence numbers for the items that have been read.
+            ///&lt;/summary&gt;
+            public long[] ItemSeqs { get; set; }
+
+            /// &lt;summary&gt;
+            /// Sequence number of the item following the last read item.
+            ///&lt;/summary&gt;
+            public long NextSeq { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse(int readCount, ICollection&lt;IData&gt; items, long[] itemSeqs, long nextSeq)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseReadCountFieldOffset, readCount);
+            initialFrame.Bytes.WriteLongL(ResponseNextSeqFieldOffset, nextSeq);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
+            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, itemSeqs, LongArrayCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -135,8 +181,11 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.ReadCount = initialFrame.Bytes.ReadIntL(ResponseReadCountFieldOffset);
+            response.NextSeq = initialFrame.Bytes.ReadLongL(ResponseNextSeqFieldOffset);
+            response.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            response.ItemSeqs = CodecUtil.DecodeNullable(iterator, LongArrayCodec.Decode);
             return response;
         }
 
@@ -145,7 +194,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,81,1],[86,13,86,48,1],[87,13,87,53,1],[88,13,88,34,1],[109,37,109,41,1],[109,42,109,46,1],[126,13,126,64,1],[127,13,127,53,1],[128,13,128,29,1],[129,13,129,86,1],[130,13,130,29,1],[131,9,131,10,1]]);
+      highlightRanges([[99,13,103,15,1],[104,13,104,123,1],[105,13,105,104,1],[106,13,106,88,1],[107,13,107,91,1],[108,13,108,80,1],[109,13,109,80,1],[110,13,110,48,1],[111,13,111,53,1],[112,13,112,79,1],[113,13,113,34,1],[137,36,137,40,0],[137,41,137,45,1],[142,41,142,45,1],[142,46,142,50,1],[147,38,147,42,0],[147,43,147,47,1],[152,35,152,39,0],[152,40,152,44,1],[172,13,172,64,1],[173,13,173,53,1],[174,13,174,48,1],[175,13,175,92,1],[176,13,176,89,1],[177,13,177,85,1],[178,13,178,91,1],[179,13,179,29,1],[180,9,180,10,1]]);
     </script>
   </body>
 </html>

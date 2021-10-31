@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\PredicateDataSerializerHook.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\PredicateBuilder.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,67 +23,151 @@
 // limitations under the License.
 
 using System;
-using Hazelcast.Serialization;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Query
 {
     /// &lt;summary&gt;
-    /// Provides an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for predicates.
+    /// Builds a predicate.
     /// &lt;/summary&gt;
-    internal class PredicateDataSerializerHook : IDataSerializerHook
+    public class PredicateBuilder
     {
-        private const int FactoryIdConst = FactoryIds.PredicateFactoryId;
-        public const int SqlPredicate = 0;
-        public const int AndPredicate = 1;
-        public const int BetweenPredicate = 2;
-        public const int EqualPredicate = 3;
-        public const int GreaterLessPredicate = 4;
-        public const int LikePredicate = 5;
-        public const int ILikePredicate = 6;
-        public const int InPredicate = 7;
-        public const int InstanceofPredicate = 8;
-        public const int NotEqualPredicate = 9;
-        public const int NotPredicate = 10;
-        public const int OrPredicate = 11;
-        public const int RegexPredicate = 12;
-        public const int FalsePredicate = 13;
-        public const int TruePredicate = 14;
-        public const int PagingPredicate = 15;
-        public const int PartitionPredicate = 16;
-        public const int FactorySize = 17;
+        private readonly string _name;
 
-        /// &lt;inheritdoc /&gt;
-        public IDataSerializableFactory CreateFactory()
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;PredicateBuilder&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name of the target.&lt;/param&gt;
+        internal PredicateBuilder(string name)
         {
-            var constructors = new Func&lt;IIdentifiedDataSerializable&gt;[FactorySize];
-            constructors[SqlPredicate] = () =&gt; new SqlPredicate();
-            constructors[AndPredicate] = () =&gt; new AndPredicate();
-            constructors[BetweenPredicate] = () =&gt; new BetweenPredicate();
-            constructors[EqualPredicate] = () =&gt; new EqualPredicate();
-            constructors[GreaterLessPredicate] = () =&gt; new GreaterLessPredicate();
-            constructors[LikePredicate] = () =&gt; new LikePredicate();
-            constructors[ILikePredicate] = () =&gt; new CaseInsensitiveLikePredicate();
-            constructors[InPredicate] = () =&gt; new InPredicate();
-            constructors[InstanceofPredicate] = () =&gt; new InstanceofPredicate();
-            constructors[NotEqualPredicate] = () =&gt; new NotEqualPredicate();
-            constructors[NotPredicate] = () =&gt; new NotPredicate();
-            constructors[OrPredicate] = () =&gt; new OrPredicate();
-            constructors[RegexPredicate] = () =&gt; new RegexPredicate();
-            constructors[FalsePredicate] = () =&gt; new FalsePredicate();
-            constructors[TruePredicate] = () =&gt; new TruePredicate();
-            constructors[PagingPredicate] = () =&gt; new PagingPredicate();
-            constructors[PartitionPredicate] = () =&gt; new PartitionPredicate();
-            return new ArrayDataSerializableFactory(constructors);
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
+            _name = name;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public int FactoryId =&gt; FactoryIdConst;
+
+
+        /// &lt;summary&gt;
+        /// Negates a predicate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;predicate&quot;&gt;The predicate.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        internal static IPredicate Not(IPredicate predicate)
+            =&gt; new NotPredicate(predicate);
+
+
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is between the specified inclusive bounds.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;lowerBound&quot;&gt;The lower inclusive bound.&lt;/param&gt;
+        /// &lt;param name=&quot;upperBound&quot;&gt;The upper inclusive bound.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsBetween(object lowerBound, object upperBound)
+            =&gt; new BetweenPredicate(_name, lowerBound, upperBound);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is equal to one of the specified values.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;values&quot;&gt;The values.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsIn(params object[] values)
+            =&gt; new InPredicate(_name, values);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is equal to the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsEqualTo(object value)
+            =&gt; new EqualPredicate(_name, value);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is not equal to the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsNotEqualTo(object value)
+            =&gt; new NotEqualPredicate(_name, value);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is less than the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsLessThan(object value)
+            =&gt; new GreaterLessPredicate(_name, value, false, true);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is less than, or equal to, the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsLessThanOrEqualTo(object value)
+            =&gt; new GreaterLessPredicate(_name, value, true, true);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is greater than the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsGreaterThan(object value)
+            =&gt; new GreaterLessPredicate(_name, value, false, false);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value is greater than, or equal to, the specified value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        public virtual IPredicate IsGreaterThanOrEqualTo(object value)
+            =&gt; new GreaterLessPredicate(_name, value, true, false);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified case-insensitive pattern.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;pattern&quot;&gt;The pattern.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is case-insensitive.&lt;/para&gt;
+        /// &lt;para&gt;In the pattern, the % character (percentage sign) is a placeholder for
+        /// multiple characters, and the _ character (underscore) is a placeholder for
+        /// a single character.&lt;/para&gt;
+        /// &lt;para&gt;These two special characters can be escaped with a backslash.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate IsILike(string pattern)
+            =&gt; new CaseInsensitiveLikePredicate(_name, pattern);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified case-sensitive pattern.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;pattern&quot;&gt;The pattern.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is case-sensitive.&lt;/para&gt;
+        /// &lt;para&gt;In the pattern, the % character (percentage sign) is a placeholder for
+        /// multiple characters, and the _ character (underscore) is a placeholder for
+        /// a single character.&lt;/para&gt;
+        /// &lt;para&gt;These two special characters can be escaped with a backslash.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate IsLike(string pattern)
+            =&gt; new LikePredicate(_name, pattern);
+
+        /// &lt;summary&gt;
+        /// Succeeds if the target value matches the specified regular expression.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;regex&quot;&gt;The regular expression.&lt;/param&gt;
+        /// &lt;returns&gt;A new predicate.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The pattern is interpreted exactly in the same way as described in the
+        /// documentation for the Java &lt;c&gt;java.util.regex.Pattern&lt;/c&gt; class.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public virtual IPredicate Matches(string regex)
+            =&gt; new RegexPredicate(_name, regex);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[48,13,48,83,1],[49,13,49,48,1],[49,48,49,66,1],[49,66,49,67,1],[50,13,50,48,1],[50,48,50,66,1],[50,66,50,67,1],[51,13,51,52,1],[51,52,51,74,1],[51,74,51,75,1],[52,13,52,50,1],[52,50,52,70,1],[52,70,52,71,1],[53,13,53,56,1],[53,56,53,82,1],[53,82,53,83,1],[54,13,54,49,1],[54,49,54,68,1],[54,68,54,69,1],[55,13,55,50,1],[55,50,55,84,1],[55,84,55,85,1],[56,13,56,47,1],[56,47,56,64,1],[56,64,56,65,1],[57,13,57,55,1],[57,55,57,80,1],[57,80,57,81,1],[58,13,58,53,1],[58,53,58,76,1],[58,76,58,77,1],[59,13,59,48,1],[59,48,59,66,1],[59,66,59,67,1],[60,13,60,47,1],[60,47,60,64,1],[60,64,60,65,1],[61,13,61,50,1],[61,50,61,70,1],[61,70,61,71,1],[62,13,62,50,1],[62,50,62,70,1],[62,70,62,71,1],[63,13,63,49,1],[63,49,63,68,1],[63,68,63,69,1],[64,13,64,51,1],[64,51,64,72,1],[64,72,64,73,1],[65,13,65,54,1],[65,54,65,78,1],[65,78,65,79,1],[66,13,66,67,1],[70,33,70,47,1]]);
+      highlightRanges([[31,9,31,47,1],[33,13,33,49,1],[33,50,33,123,0],[34,13,34,26,1],[35,9,35,10,1],[45,16,45,43,0],[56,16,56,67,1],[64,16,64,46,1],[72,16,72,48,1],[80,16,80,51,1],[88,16,88,67,1],[96,16,96,66,1],[104,16,104,68,1],[112,16,112,67,1],[127,16,127,64,1],[142,16,142,49,1],[154,16,154,48,1]]);
     </script>
   </body>
 </html>

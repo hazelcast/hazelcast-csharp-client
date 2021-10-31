@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\CollectionExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\CollectionBinder.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,46 +23,67 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using Hazelcast.Serialization.Collections;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
-    internal static class CollectionExtensions
+    internal class CollectionBinder&lt;T&gt; : ICollection&lt;T&gt;
     {
-        /// &lt;summary&gt;
-        /// Removes the first occurrence of a specific key-value pair from a collection of key-value pairs.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the key.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the value.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The collection.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if an occurrence was removed; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public static bool TryRemove&lt;TKey, TValue&gt;(this ICollection&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, TKey key, TValue value)
+        private readonly Action&lt;T&gt; _onItem;
+
+        public CollectionBinder(Action&lt;T&gt; onItem)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            return source.Remove(new KeyValuePair&lt;TKey, TValue&gt;(key, value));
+            _onItem = onItem;
         }
 
-        /// &lt;summary&gt;
-        /// Returns read-only wrapper for &lt;paramref name=&quot;list&quot;/&gt;
-        /// or &lt;paramref name=&quot;list&quot;/&gt; itself if it already implements &lt;see cref=&quot;IReadOnlyList{T}&quot;/&gt;.
-        /// &lt;/summary&gt;
-        public static IReadOnlyList&lt;T&gt; AsReadOnly&lt;T&gt;(this IList&lt;T&gt; list) =&gt; list as IReadOnlyList&lt;T&gt; ?? new ReadOnlyCollection&lt;T&gt;(list);
+        public IEnumerator&lt;T&gt; GetEnumerator()
+        {
+            throw new NotSupportedException();
+        }
 
-        /// &lt;summary&gt;
-        /// Returns read-only wrapper for &lt;paramref name=&quot;list&quot;/&gt; where each element is returned as &lt;see cref=&quot;object&quot;/&gt; with boxing performed as needed
-        /// or &lt;paramref name=&quot;list&quot;/&gt; itself if it already implements &lt;see cref=&quot;IReadOnlyList{T}&quot;/&gt; with &lt;c&gt;T&lt;/c&gt; being &lt;see cref=&quot;object&quot;/&gt;.
-        /// &lt;/summary&gt;
-        public static IReadOnlyList&lt;object&gt; AsReadOnlyObjectList&lt;T&gt;(this IList&lt;T&gt; list) =&gt; list as IReadOnlyList&lt;object&gt; ?? new ReadOnlyObjectList&lt;T&gt;(list);
+        // dotCover does not understand that GetEnumerator() throws and does not return
+        [ExcludeFromCodeCoverage]
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(T item)
+        {
+            _onItem(item);
+        }
+
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CopyTo(T[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(T item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public int Count =&gt; throw new NotSupportedException();
+
+        public bool IsReadOnly =&gt; throw new NotSupportedException();
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[35,13,35,32,1],[35,33,35,81,1],[36,13,36,78,1],[43,77,43,136,0],[49,92,49,156,1]]);
+      highlightRanges([[26,9,26,50,1],[28,13,28,30,1],[29,9,29,10,1],[33,13,33,47,1],[45,13,45,27,1],[46,9,46,10,1],[50,13,50,47,1],[55,13,55,47,1],[60,13,60,47,1],[65,13,65,47,1],[68,29,68,62,1],[70,35,70,68,1]]);
     </script>
   </body>
 </html>

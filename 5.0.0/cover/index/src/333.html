@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueuePeekCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueOfferCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Retrieves, but does not remove, the head of this queue, or returns null if this queue is empty.
+    /// Inserts the specified element into this queue, waiting up to the specified wait time if necessary for space to
+    /// become available.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class QueuePeekServerCodec
+    internal static class QueueOfferServerCodec
 #else
-    internal static class QueuePeekCodec
+    internal static class QueueOfferCodec
 #endif
     {
-        public const int RequestMessageType = 198400; // 0x030700
-        public const int ResponseMessageType = 198401; // 0x030701
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        public const int RequestMessageType = 196864; // 0x030100
+        public const int ResponseMessageType = 196865; // 0x030101
+        private const int RequestTimeoutMillisFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestTimeoutMillisFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -70,21 +73,33 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the Queue
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// The element to add
+            ///&lt;/summary&gt;
+            public IData Value { get; set; }
+
+            /// &lt;summary&gt;
+            /// Maximum time in milliseconds to wait for acquiring the lock for the key.
+            ///&lt;/summary&gt;
+            public long TimeoutMillis { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData @value, long timeoutMillis)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Queue.Peek&quot;
+                OperationName = &quot;Queue.Offer&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestTimeoutMillisFieldOffset, timeoutMillis);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -93,8 +108,10 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.TimeoutMillis = initialFrame.Bytes.ReadLongL(RequestTimeoutMillisFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -103,19 +120,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The head of this queue, or &lt;tt&gt;null&lt;/tt&gt; if this queue is empty
+            /// &lt;tt&gt;True&lt;/tt&gt; if the element was added to this queue, else &lt;tt&gt;false&lt;/tt&gt;
             ///&lt;/summary&gt;
-            public IData Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -124,8 +141,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -134,7 +151,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,53,1],[78,13,78,34,1],[98,37,98,41,1],[98,42,98,46,1],[115,13,115,64,1],[116,13,116,53,1],[117,13,117,29,1],[118,13,118,86,1],[119,13,119,29,1],[120,9,120,10,1]]);
+      highlightRanges([[81,13,85,15,1],[86,13,86,123,1],[87,13,87,104,1],[88,13,88,88,1],[89,13,89,91,1],[90,13,90,48,1],[91,13,91,53,1],[92,13,92,53,1],[93,13,93,34,1],[115,36,115,40,1],[115,41,115,45,1],[132,13,132,64,1],[133,13,133,53,1],[134,13,134,48,1],[135,13,135,91,1],[136,13,136,29,1],[137,9,137,10,1]]);
     </script>
   </body>
 </html>

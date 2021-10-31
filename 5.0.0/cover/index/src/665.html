@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Int64Sequence.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Int32Sequence.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -27,14 +27,14 @@ using System.Threading;
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Implements an &lt;see cref=&quot;ISequence{Int64}&quot; /&gt;.
+    /// Implements an &lt;see cref=&quot;ISequence{Int32}&quot; /&gt;.
     /// &lt;/summary&gt;
-    internal class Int64Sequence : ISequence&lt;long&gt;
+    internal class Int32Sequence : ISequence&lt;int&gt;
     {
-        private long _value;
+        private int _value;
 
         /// &lt;inheritdoc /&gt;
-        public long GetNext()
+        public int GetNext()
         {
             return Interlocked.Increment(ref _value);
         }

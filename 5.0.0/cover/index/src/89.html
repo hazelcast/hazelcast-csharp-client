@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HLocalDateSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HBigDecimalSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,35 +22,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Numerics;
 using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class HLocalDateSerializer : SingletonSerializerBase&lt;HLocalDate&gt;
+    internal class HBigDecimalSerializer : SingletonSerializerBase&lt;HBigDecimal&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeLocalDate;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeBigDecimal;
 
-        public override HLocalDate Read(IObjectDataInput input)
+        public override HBigDecimal Read(IObjectDataInput input)
         {
-            var year = input.ReadInt();
-            var month = input.ReadByte();
-            var date = input.ReadByte();
+            var body = input.ReadByteArray();
+            var scale = input.ReadInt();
 
-            return new HLocalDate(year, month, date);
+#if NETSTANDARD2_0
+            Array.Reverse(body);
+            var unscaled = new BigInteger(body);
+#else
+            var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
+#endif
+
+            return new HBigDecimal(unscaled, scale);
         }
 
-        public override void Write(IObjectDataOutput output, HLocalDate obj)
+        public override void Write(IObjectDataOutput output, HBigDecimal obj)
         {
-            output.WriteInt(obj.Year);
-            output.WriteByte(obj.Month);
-            output.WriteByte(obj.Day);
+            var body = obj.UnscaledValue.ToByteArray();
+            Array.Reverse(body);
+
+            output.WriteByteArray(body);
+            output.WriteInt(obj.Scale);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,39,21,86,1],[25,13,25,40,0],[26,13,26,42,0],[27,13,27,41,0],[29,13,29,54,0],[34,13,34,39,1],[35,13,35,41,1],[36,13,36,39,1],[37,9,37,10,1]]);
+      highlightRanges([[23,39,23,87,1],[27,13,27,46,0],[28,13,28,41,0],[34,13,34,87,0],[37,13,37,53,0],[42,13,42,56,1],[43,13,43,33,1],[45,13,45,41,1],[46,13,46,40,1],[47,9,47,10,1]]);
     </script>
   </body>
 </html>

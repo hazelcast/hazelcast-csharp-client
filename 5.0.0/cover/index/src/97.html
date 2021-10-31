@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\BooleanSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\BooleanArraySerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,27 +24,27 @@
 
 namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal sealed class BooleanSerializer : SingletonSerializerBase&lt;bool&gt;
+    internal sealed class BooleanArraySerializer : SingletonSerializerBase&lt;bool[]&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.ConstantTypeBoolean;
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeBooleanArray;
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override bool Read(IObjectDataInput input)
+        public override bool[] Read(IObjectDataInput input)
         {
-            return input.ReadByte() != 0;
+            return input.ReadBooleanArray();
         }
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override void Write(IObjectDataOutput output, bool obj)
+        public override void Write(IObjectDataOutput output, bool[] obj)
         {
-            output.WriteBoolean(obj);
+            output.WriteBooleanArray(obj);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,39,19,81,1],[24,13,24,42,1],[30,13,30,38,1],[31,9,31,10,1]]);
+      highlightRanges([[19,39,19,86,1],[24,13,24,45,1],[30,13,30,43,1],[31,9,31,10,1]]);
     </script>
   </body>
 </html>

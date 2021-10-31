@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterMessaging.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterMembers.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,312 +23,735 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
+using Hazelcast.Events;
 using Hazelcast.Exceptions;
-using Hazelcast.Messaging;
-using Hazelcast.Serialization;
+using Hazelcast.Models;
+using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
     /// &lt;summary&gt;
-    /// Provides the messaging services of a cluster.
+    /// Provides the members management services of a cluster.
     /// &lt;/summary&gt;
-    internal class ClusterMessaging
+    internal class ClusterMembers : IAsyncDisposable
     {
+        private const int SqlConnectionRandomAttempts = 10;
+
+        private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
-        private readonly ClusterMembers _clusterMembers;
+        private readonly ILogger _logger;
+        private readonly ILoadBalancer _loadBalancer;
+
+        private readonly TerminateConnections _terminateConnections;
+        private readonly MemberConnectionQueue _memberConnectionQueue;
+
+        private MemberTable _members;
+        private bool _connected;
+        private bool _usePublicAddresses;
+
+        // flag + semaphore to wait for the first &quot;partitions view&quot; event
+        //private volatile int _firstPartitionsViewed;
+        //private SemaphoreSlim _firstPartitionsView = new SemaphoreSlim(0, 1);
+
+        // member id -&gt; connection
+        // not concurrent, always managed through the mutex
+        private readonly Dictionary&lt;Guid, MemberConnection&gt; _connections = new Dictionary&lt;Guid, MemberConnection&gt;();
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ClusterMessaging&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterMembers&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;clusterState&quot;&gt;The cluster state.&lt;/param&gt;
-        /// &lt;param name=&quot;clusterMembers&quot;&gt;The cluster members.&lt;/param&gt;
-        public ClusterMessaging(ClusterState clusterState, ClusterMembers clusterMembers)
+        /// &lt;param name=&quot;terminateConnections&quot;&gt;The terminate connections task.&lt;/param&gt;
+        public ClusterMembers(ClusterState clusterState, TerminateConnections terminateConnections)
         {
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterMembers&gt;().SetPrefix(&quot;CLUST.MBRS&quot;));
+
             _clusterState = clusterState;
-            _clusterMembers = clusterMembers;
+            _terminateConnections = terminateConnections;
+            _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
 
-            HConsole.Configure(x =&gt; x.Configure&lt;ClusterMessaging&gt;().SetPrefix(&quot;MSGING&quot;));
-        }
+            _logger = _clusterState.LoggerFactory.CreateLogger&lt;ClusterMembers&gt;();
 
-        /// &lt;summary&gt;
-        /// Sends a message to a random member.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        public async Task&lt;ClientMessage&gt; SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
+            _members = new MemberTable();
 
-            return await SendAsyncInternal(message, null, -1, default, cancellationToken).CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message to a member.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;If &lt;paramref name=&quot;memberId&quot;/&gt; is the default value, sends the message to a random member. If it
-        /// is an unknown member, sends the message to a random number too.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-
-            return await SendAsyncInternal(message, null, -1, memberId, cancellationToken).CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message to a member.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
-
-            return await SendAsyncInternal(message, memberConnection, -1, default, cancellationToken).CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message to a member.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
-        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, long correlationId, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
-
-            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellationToken).CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message to the member owning a key.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task&lt;ClientMessage&gt; SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (key == null) throw new ArgumentNullException(nameof(key));
-
-            var partitionId = _clusterState.Partitioner.GetPartitionId(key.PartitionHash);
-            if (partitionId &lt; 0) throw new ArgumentException(&quot;Could not get a partition for this key.&quot;, nameof(key));
-
-            message.PartitionId = partitionId;
-            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message to the member owning a partition.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task&lt;ClientMessage&gt; SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-            if (partitionId &lt; 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
-
-            message.PartitionId = partitionId;
-            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;connection&quot;&gt;An optional target client.&lt;/param&gt;
-        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
-        private
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken = default)
-        {
-            var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Sends a message.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
-        /// &lt;param name=&quot;connection&quot;&gt;An optional target member connection.&lt;/param&gt;
-        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The response message.&lt;/returns&gt;
-        private async Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken = default)
-        {
-            if (message == null) throw new ArgumentNullException(nameof(message));
-
-            // fail fast, if the cluster is not active
-            _clusterState.ThrowIfNotActive();
-
-            // assign a unique identifier to the message
-            // and send in one fragment, with proper flags
-            message.CorrelationId = correlationId;
-            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-
-            // create the invocation
-            var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
-                             targetPartitionId &gt;= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
-                             targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
-                             new Invocation(message, _clusterState.Options.Messaging);
-
-            return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
-        }
-
-        /// &lt;summary&gt;
-        /// Sends an invocation request message.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The response message.&lt;/returns&gt;
-        private async Task&lt;ClientMessage&gt; SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
-        {
-            // yield now, so the caller gets a task that can bubble up to user&#39;s code
-            // immediately without waiting for more synchronous operations to take place
-            await Task.Yield();
-
-            // NOTE: *every* invocation sent to the cluster goes through the code below
-
-            // if the client is active but not connected, we are going to retry the invocation for a while (assuming it
-            // is retryable) and then timeout and bubble the invocation to the user - and we do *not* have a way to sort
-            // of suspend the whole client waiting for it to reconnect, because... what sense does it make? That would
-            // be the &quot;sync&quot; reconnect mode - TODO: figure this out
-
-            while (true)
+            // members to connect
+            if (clusterState.IsSmartRouting)
             {
-                try
+                // initialize the queue of members to connect
+                // and the handler to re-queue members that have failed, *if* they are still members
+                _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
+                _memberConnectionQueue.ConnectionFailed += (_, member) =&gt;
                 {
-                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
-                    return await connection.SendAsync(invocation, cancellationToken).CfAwait();
-                }
-                catch (TaskCanceledException)
-                {
-                    throw;
-                }
-                catch (Exception exception)
-                {
-                    // if the client is not active, die - an active client is starting, started, connected or
-                    // disconnected - but attempting to reconnect - whereas a non-active client is down and
-                    // will not go back up
-                    _clusterState.ThrowIfNotActive(exception);
-
-                    // if the invocation is not retryable, throw
-                    bool retryUnsafeOperations, retryOnClientReconnecting;
-                    if (_clusterState.Options.Messaging.Preview.EnableNewRetryOptions)
+                    lock (_mutex)
                     {
-                        // use the new set of options
-                        retryUnsafeOperations = _clusterState.Options.Messaging.RetryUnsafeOperations;
-                        retryOnClientReconnecting = _clusterState.Options.Messaging.RetryOnClientReconnecting;
+                        if (_members.ContainsMember(member.Id))
+                            _memberConnectionQueue.Add(member);
+                    }
+                };
+            }
+        }
+
+        // NOTES
+        // we cannot have two connections to the same member ID at the same time, but a member IP may change,
+        // so having a connection to a member ID does not mean that the member is connected, and we may have
+        // to switch a member&#39;s connection over to a new IP
+
+        // determines whether a member is connected.
+        private bool IsMemberConnected(MemberInfo member)
+        {
+            // a member is connected when it is registered, and has a connection
+            return _members.ContainsMember(member.Id) &amp;&amp;
+                   HasConnectionForMember(member);
+        }
+
+        // determines whether at least one member is connected.
+        private bool IsAnyMemberConnected()
+        {
+            lock (_mutex) return _members.Members.Any(HasConnectionForMemberLocked);
+        }
+
+        private bool HasConnectionForMemberLocked(MemberInfo member)
+            =&gt; _connections.TryGetValue(member.Id, out var connection) &amp;&amp;
+               connection.Address == member.ConnectAddress;
+
+        // determines whether we have a connection for a member
+        private bool HasConnectionForMember(MemberInfo member)
+        {
+            lock (_mutex) return HasConnectionForMemberLocked(member);
+        }
+
+        // registers a connection for termination
+        public void TerminateConnection(MemberConnection connection)
+            =&gt; _terminateConnections.Add(connection);
+
+        #region Event Handlers
+
+        /// &lt;summary&gt;
+        /// Adds a connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;param name=&quot;isNewCluster&quot;&gt;Whether the connection is the first connection to a new cluster.&lt;/param&gt;
+        public void AddConnection(MemberConnection connection, bool isNewCluster)
+        {
+            // accept every connection, regardless of whether there is a known corresponding member,
+            // since the first connection is going to come before we get the first members view.
+
+            lock (_mutex)
+            {
+                // don&#39;t add the connection if it is not active - if it *is* active, it still
+                // could turn not-active anytime, but thanks to _mutex that will only happen
+                // after the connection has been added
+                if (!connection.Active) return;
+
+                var contains = _connections.TryGetValue(connection.MemberId, out var existingConnection);
+
+                if (contains)
+                {
+                    if (existingConnection.Address != connection.Address)
+                    {
+                        _terminateConnections.Add(existingConnection);
                     }
                     else
                     {
-                        // use the v4 set of options
-                        retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
-                        retryOnClientReconnecting = true;
+                        // we cannot accept this connection, it&#39;s a duplicate (internal error?)
+                        _logger.LogWarning($&quot;Cannot add connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}, a connection to that member at that address already exists.&quot;);
+                        _terminateConnections.Add(connection); // kill.kill.kill
+                        return;
                     }
-                    if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
-                        throw;
+                }
 
-                    // else, wait for retrying
-                    // this will throw if it cannot retry
-                    await invocation.WaitRetryAsync(() =&gt; _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
+                // add the connection
+                _connections[connection.MemberId] = connection;
 
-                    HConsole.WriteLine(this, &quot;Retrying...&quot;);
+                if (isNewCluster)
+                {
+                    // reset members
+                    // this is safe because... isNewCluster means that this is the very first connection and there are
+                    // no other connections yet and therefore we should not receive events and therefore no one
+                    // should invoke SetMembers.
+                    _members = new MemberTable();
+                }
+
+                // if this is a true member connection
+                if (_members.TryGetMember(connection.MemberId, out var member) &amp;&amp; member.ConnectAddress == connection.Address)
+                {
+                    // if this is the first connection to an actual member, change state &amp; trigger event
+                    if (!_connected)
+                    {
+                        // change Started | Disconnected -&gt; Connected, ignore otherwise, it could be ShuttingDown or Shutdown
+                        _logger.LogDebug($&quot;Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}, now connected.&quot;);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else if (_logger.IsEnabled(LogLevel.Debug))
+                    {
+                        var msg = $&quot;Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}&quot;;
+                        msg += existingConnection == null
+                            ? &quot;.&quot;
+                            : $&quot;, replacing connection {existingConnection.Id.ToShortString()} at {existingConnection.Address}.&quot;;
+                        _logger.LogDebug(msg);
+                    }
+                }
+                else
+                {
+                    _logger.IfDebug()?.LogDebug($&quot;Added orphan connection {connection.Id.ToShortString()} at {connection.Address} (member {connection.MemberId.ToShortString()}).&quot;);
                 }
             }
         }
 
         /// &lt;summary&gt;
-        /// Gets a connection for an invocation.
+        /// Removes a connection.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
-        /// &lt;returns&gt;A connection for the invocation.&lt;/returns&gt;
-        /// &lt;exception cref=&quot;ClientOfflineException&quot;&gt;Occurs when no connection could be found.&lt;/exception&gt;
-        private MemberConnection GetInvocationConnection(Invocation invocation)
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        public async Task RemoveConnectionAsync(MemberConnection connection)
         {
-            // try the target connection
-            var connection = invocation.TargetClientConnection;
-            if (connection != null) return connection;
-
-            // try the partition
-            if (invocation.TargetPartitionId &gt;= 0)
+            lock (_mutex)
             {
-                var memberId = _clusterState.Partitioner.GetPartitionOwner(invocation.TargetPartitionId);
-                if (_clusterMembers.TryGetConnection(memberId, out connection))
-                    return connection;
+                // ignore unknown connections that were not added in the first place,
+                // or that have been replaced with another connection to the same member
+                if (!_connections.TryGetValue(connection.MemberId, out var c) || connection.Id != c.Id)
+                {
+                    _logger.IfDebug()?.LogDebug($&quot;Removed orphan connection {connection.Id.ToShortString()}.&quot;);
+                    return;
+                }
+
+                // remove the connection and check whether we are potentially disconnecting
+                // ie whether we were connected, and either we don&#39;t have connections any more, or no member
+                // is connected (has a matching connection)
+                _connections.Remove(connection.MemberId);
+                var disconnecting = _connected &amp;&amp; (_connections.Count == 0 || !IsAnyMemberConnected());
+
+                // if we are not disconnecting, we can return - we are done
+                if (!disconnecting)
+                {
+                    _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.&quot;);
+
+                    // if we are connected,
+                    // and the disconnected member is still a member, queue it for reconnection
+                    if (_connected &amp;&amp; _members.TryGetMember(connection.MemberId, out var member))
+                        _memberConnectionQueue?.Add(member);
+                    return;
+                }
             }
 
-            // try the member
-            if (invocation.TargetMemberId != default)
+            // otherwise, we might be disconnecting
+
+            // but, the connection queue was running and might have added a new connection
+            // we *need* a stable state in order to figure out whether we are disconnecting or not,
+            // and if we are, we *need* to drain the queue (stop connecting more members) - and
+            // the only way to achieve this is to suspend the queue
+            if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
+
+            // note: multiple connections can close an once = multiple calls can reach this point
+
+            var drain = false;
+            try
             {
-                if (_clusterMembers.TryGetConnection(invocation.TargetMemberId, out connection))
-                    return connection;
+                lock (_mutex) // but we deal with calls one by one
+                {
+                    if (_connected) // and only disconnect once
+                    {
+                        // if we have connections, and at least one member is connected (has a matching connection),
+                        // then the queue has added a new connection indeed and we are finally not disconnecting - we
+                        // can return - we are done
+                        if (_connections.Count &gt; 0 &amp;&amp; _members.Members.Any(x =&gt; _connections.ContainsKey(x.Id)))
+                        {
+                            // if the disconnected member is still a member, queue it for reconnection
+                            if (_members.TryGetMember(connection.MemberId, out var member))
+                                _memberConnectionQueue?.Add(member);
+                            _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.&quot;);
+                            return;
+                        }
+
+                        // otherwise, we&#39;re really disconnecting: flip _connected, and change the state
+                        _connected = false;
+                        _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, disconnecting.&quot;);
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+
+                        // and drain the queue: stop connecting members, we need to fully reconnect
+                        drain = true;
+                    }
+                    else
+                    {
+                        _logger.LogDebug($&quot;Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, already disconnected (?).&quot;);
+                    }
+                }
+            }
+            finally
+            {
+                // don&#39;t forget to resume the queue
+                _memberConnectionQueue?.Resume(drain);
+            }
+        }
+
+        private void LogDiffs(MemberTable table, Dictionary&lt;MemberInfo, int&gt; diff)
+        {
+            var msg = new StringBuilder();
+            msg.Append(&quot;Members [&quot;);
+            msg.Append(table.Count);
+            msg.AppendLine(&quot;] {&quot;);
+            foreach (var member in table.Members)
+            {
+                msg.Append(&quot;    &quot;);
+                msg.Append(member.ToShortString(true));
+                if (diff.TryGetValue(member, out var d) &amp;&amp; d == 2)
+                    msg.Append(&quot; - new&quot;);
+                msg.AppendLine();
+            }
+            msg.Append(&#39;}&#39;);
+
+            _logger.LogInformation(msg.ToString());
+        }
+
+        /// &lt;summary&gt;
+        /// Set the members.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding event arguments, if members were updated; otherwise &lt;c&gt;null&lt;/c&gt;.&lt;/returns&gt;
+        public async Task&lt;MembersUpdatedEventArgs&gt; SetMembersAsync(int version, ICollection&lt;MemberInfo&gt; members)
+        {
+            // skip old sets
+            if (version &lt; _members.Version)
+                return null;
+
+            // note: members are compared by member.Id and member.ConnectAddress
+            // as that is what makes a difference, really - the actual Address and
+            // PublicAddress don&#39;t matter much for what we do
+
+            // replace the table
+            var previous = _members;
+            var table = new MemberTable(version, members);
+            lock (_mutex) _members = table;
+
+            // notify the load balancer of the new list of members
+            // (the load balancer can always return a member that is not a member
+            // anymore, see note in GetMember)
+            _loadBalancer.SetMembers(members.Select(x =&gt; x.Id));
+
+            // if this is the initial list of members, determine how to connect to members
+            if (previous.Count == 0)
+            {
+                var resolver = new ConnectAddressResolver(_clusterState.Options.Networking, _clusterState.LoggerFactory);
+                if (!(members is IReadOnlyCollection&lt;MemberInfo&gt; mro)) throw new HazelcastException(&quot;panic&quot;); // TODO: not exactly pretty
+                _usePublicAddresses = await resolver.DetermineUsePublicAddresses(mro).CfAwaitNoThrow(false);
             }
 
-            // fall over to random client
-            connection = _clusterMembers.GetRandomConnection();
-            if (connection != null)
-                return connection;
+            // update members
+            foreach (var member in members) member.UsePublicAddress = _usePublicAddresses;
 
-            // fail
-            throw _clusterState.ThrowClientOfflineException();
+            // compute changes
+            // count 1 for old members, 2 for new members, and then the result is
+            // 1=removed, 2=added, 3=unchanged
+            // MemberInfo overrides GetHashCode and can be used as a key here
+            var diff = new Dictionary&lt;MemberInfo, int&gt;();
+            if (previous == null)
+            {
+                foreach (var m in members)
+                    diff[m] = 2;
+            }
+            else
+            {
+                foreach (var m in previous.Members)
+                    diff[m] = 1;
+
+                foreach (var m in members)
+                    if (diff.ContainsKey(m)) diff[m] += 2;
+                    else diff[m] = 2;
+            }
+
+            // log, if the members have changed (one of them at least is not 3=unchanged)
+            if (_logger.IsEnabled(LogLevel.Information) &amp;&amp; diff.Any(d =&gt; d.Value != 3))
+                LogDiffs(table, diff);
+
+            // process changes, gather events
+            var added = new List&lt;MemberInfo&gt;();
+            var removed = new List&lt;MemberInfo&gt;();
+            foreach (var (member, status) in diff) // all members, old and new
+            {
+                switch (status)
+                {
+                    case 1: // old but not new = removed
+                        HConsole.WriteLine(this, $&quot;Removed {member}&quot;);
+                        removed.Add(member);
+
+                        // dequeue the member
+                        _memberConnectionQueue?.Remove(member.Id);
+
+                        break;
+
+                    case 2: // new but not old = added
+                        HConsole.WriteLine(this, $&quot;Added {member}&quot;);
+                        added.Add(member);
+
+                        // queue the member for connection
+                        _memberConnectionQueue?.Add(member);
+
+                        break;
+
+                    case 3: // old and new = no change
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+
+            var maybeDisconnected = false;
+            lock (_mutex)
+            {
+                // removed members need to have their connection removed and terminated
+                foreach (var member in removed)
+                {
+                    if (_connections.TryGetValue(member.Id, out var c))
+                    {
+                        _logger.LogDebug($&quot;Set members: remove obsolete connection {c.Id.ToShortString()} to {c.MemberId.ToShortString()} at {c.Address}.&quot;);
+                        _connections.Remove(member.Id);
+                        _terminateConnections.Add(c);
+                    }
+                }
+
+                // remove connections that don&#39;t match a member
+                var d = members.ToDictionary(x =&gt; x.Id, x =&gt; x);
+                List&lt;MemberConnection&gt; toRemove = null;
+                foreach (var c in _connections.Values)
+                {
+                    if (!d.TryGetValue(c.MemberId, out var m) || m.ConnectAddress != c.Address)
+                        (toRemove ??= new List&lt;MemberConnection&gt;()).Add(c);
+                }
+
+                if (toRemove != null)
+                {
+                    foreach (var c in toRemove)
+                    {
+                        _connections.Remove(c.Id);
+                        _logger.LogDebug($&quot;Set members: remove orphaned connection {c.Id.ToShortString()} to {c.MemberId.ToShortString()} at {c.Address}.&quot;);
+                        _terminateConnections.Add(c);
+                    }
+                }
+
+                var isAnyMemberConnected = IsAnyMemberConnected();
+
+                if (!_connected)
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // if we were not connected and now one member happens to be connected then we are now connected
+                        // we hold the mutex so nothing bad can happen
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.&quot;);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _connected = true;
+                    }
+                    else
+                    {
+                        // remain disconnected
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none is connected, remain disconnected.&quot;);
+                    }
+                }
+                else
+                {
+                    if (isAnyMemberConnected)
+                    {
+                        // remain connected
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.&quot;);
+                    }
+                    else
+                    {
+                        // we probably are disconnected now
+                        // but the connection queue is running and might have re-added a member
+                        maybeDisconnected = true;
+                    }
+                }
+            }
+
+            // if we cannot be disconnected, we can return immediately
+            if (!maybeDisconnected) return new MembersUpdatedEventArgs(added, removed, members.ToList());
+
+            // else, suspend the queue - we need stable connections before we can make a decision
+            if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
+
+            var disconnected = false;
+            try
+            {
+                lock (_mutex)
+                {
+                    var isAnyMemberConnected = IsAnyMemberConnected();
+                    if (!isAnyMemberConnected)
+                    {
+                        // no more connected member, we are now disconnected
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none connected, disconnecting.&quot;);
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                        _connected = false;
+                        disconnected = true;
+                    }
+                    else
+                    {
+                        _logger.LogDebug($&quot;Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.&quot;);
+                    }
+                }
+            }
+            finally
+            {
+                // if we are now disconnected, make sure to drain the queue
+                _memberConnectionQueue?.Resume(drain: disconnected);
+            }
+
+            return new MembersUpdatedEventArgs(added, removed, members.ToList());
+        }
+
+        #endregion
+
+
+        /// &lt;summary&gt;
+        /// Enumerates the members to connect.
+        /// &lt;/summary&gt;
+        public IAsyncEnumerable&lt;MemberConnectionRequest&gt; MemberConnectionRequests
+            =&gt; _memberConnectionQueue;
+
+        /// &lt;summary&gt;
+        /// Gets a connection to a random member.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A random client connection if available; otherwise &lt;c&gt;null&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;para&gt;The connection should be active, but there is no guarantee it will not become immediately inactive.&lt;/para&gt;
+        public MemberConnection GetRandomConnection()
+        {
+            MemberConnection connection;
+
+            // In &quot;smart routing&quot; mode the clients connect to each member of the cluster. Since each
+            // data partition uses the well known and consistent hashing algorithm, each client
+            // can send an operation to the relevant cluster member, which increases the
+            // overall throughput and efficiency. Smart mode is the default mode.
+            //
+            // In &quot;uni-socket&quot; mode the clients is required to connect to a single member, which
+            // then behaves as a gateway for the other members. Firewalls, security, or some
+            // custom networking issues can be the reason for these cases.
+
+            if (_clusterState.IsSmartRouting)
+            {
+                // &quot;smart&quot; mode
+
+                // limit the number of tries to the amount of known members, but
+                // it is ok to try more than once, order to return a connection
+                // that has a reasonable chance of being usable
+                var count = _loadBalancer.Count;
+
+                for (var i = 0; i &lt; count; i++)
+                {
+                    var memberId = _loadBalancer.GetMember();
+
+                    // if the load balancer does not have members, break
+                    if (memberId == Guid.Empty)
+                        break;
+
+                    // we cannot guarantee that the connection we&#39;ll return will not correspond to
+                    // a member... that is not a member by the time it is used... but at least we
+                    // can make sure it *still* is a member now
+                    if (!_members.ContainsMember(memberId))
+                        continue;
+
+                    lock (_mutex)
+                    {
+                        if (_connections.TryGetValue(memberId, out connection))
+                            return connection;
+                    }
+                }
+            }
+
+            // either &quot;smart&quot; mode but the load balancer did not return a member,
+            // or &quot;uni-socket&quot; mode where there should only be once connection
+            lock (_mutex) connection = _connections.Values.FirstOrDefault();
+
+            // may be null
+            return connection;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets connection to execute SQL queries/statements.
+        /// &lt;/summary&gt;
+        public MemberConnection GetConnectionForSql()
+        {
+            if (_clusterState.IsSmartRouting)
+            {
+                // There might be a race - the chosen member might be just connected or disconnected - try a
+                // couple of times, the memberOfLargerSameVersionGroup returns a random connection,
+                // we might be lucky...
+                for (var i = 0; i &lt; SqlConnectionRandomAttempts; i++)
+                {
+                    var member = GetMemberForSql();
+                    if (member == null) break;
+
+                    if (TryGetConnection(member.Id, out var memberConnection))
+                        return memberConnection;
+                }
+            }
+
+            // Otherwise iterate over connections and return the first one that&#39;s not to a lite member
+            MemberConnection firstConnection = null;
+
+            lock (_mutex)
+            {
+                foreach (var (memberId, connection) in _connections)
+                {
+                    firstConnection ??= connection;
+
+                    if (_members.TryGetMember(memberId, out var member) &amp;&amp; !member.IsLiteMember)
+                        return connection;
+                }
+            }
+
+            // Failed to get a connection to a data member, return first lite member instead
+            // Lite members support DDL but note DML statements
+            // https://docs.hazelcast.com/hazelcast/5.0-SNAPSHOT/sql/sql-statements.html
+            return firstConnection;
+        }
+
+        /// &lt;summary&gt;
+        /// Finds a larger same-version group of data members from a collection of members.
+        /// Otherwise returns a random member from the group. If the same-version
+        /// groups have the same size, returns a member from the newer group.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;see cref=&quot;MemberInfo&quot;/&gt; if one is found or &lt;c&gt;null&lt;/c&gt; otherwise.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;InvalidOperationException&quot;&gt;If there are more than 2 distinct member versions found.&lt;/exception&gt;
+        public MemberInfo GetMemberForSql()
+        {
+            (MemberVersion version0, MemberVersion version1) = (null, null);
+            var (count0, count1) = (0, 0);
+
+            foreach (var member in _members.Members)
+            {
+                if (member.IsLiteMember)
+                    continue;
+
+                var memberVersion = member.Version;
+
+                if (version0 == null || version0.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version0 = memberVersion;
+                    count0++;
+                }
+                else if (version1 == null || version1.Equals(memberVersion, ignorePatchVersion: true))
+                {
+                    version1 = memberVersion;
+                    count1++;
+                }
+                else
+                {
+                    var strVersion0 = version0.ToString(ignorePatchVersion: true);
+                    var strVersion1 = version1.ToString(ignorePatchVersion: true);
+                    var strVersion = memberVersion.ToString(ignorePatchVersion: true);
+
+                    throw new InvalidOperationException(
+                        $&quot;More than 2 distinct member versions found: {strVersion0}, {strVersion1}, {strVersion}&quot;
+                    );
+                }
+            }
+
+            // no data members
+            if (count0 == 0)
+                return null;
+
+            int count;
+            MemberVersion version;
+
+            if (count0 &gt; count1 || (count0 == count1 &amp;&amp; version0 &gt; version1))
+                (count, version) = (count0, version0);
+            else
+                (count, version) = (count1, version1);
+
+            // otherwise return a random member from the larger group
+            var randomIndex = RandomProvider.Next(count);
+            foreach (var member in _members.Members)
+            {
+                if (!member.IsLiteMember &amp;&amp; member.Version.Equals(version, ignorePatchVersion: true))
+                {
+                    randomIndex--;
+                    if (randomIndex &lt; 0)
+                        return member;
+                }
+            }
+
+            // should never get here
+            throw new HazelcastException($&quot;Reached unexpected state in {nameof(GetMemberForSql)}.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the oldest active connection.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The oldest active connection, or &lt;c&gt;null&lt;/c&gt; if no connection is active.&lt;/returns&gt;
+        public MemberConnection GetOldestConnection()
+        {
+            lock (_mutex) return _connections.Values
+                .Where(x =&gt; x.Active)
+                .OrderBy(x =&gt; x.ConnectTime)
+                .FirstOrDefault();
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to get a connection for a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if a connection to the specified member was found; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;para&gt;The connection should be active, but there is no guarantee it will not become immediately inactive.&lt;/para&gt;
+        public bool TryGetConnection(Guid memberId, out MemberConnection connection)
+        {
+            lock (_mutex) return _connections.TryGetValue(memberId, out connection);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets information about each member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;liteOnly&quot;&gt;Whether to only return lite members.&lt;/param&gt;
+        /// &lt;returns&gt;The current members.&lt;/returns&gt;
+        public IEnumerable&lt;MemberInfoState&gt; GetMembersAndState(bool liteOnly = false)
+        {
+            IEnumerable&lt;MemberInfo&gt; members = _members.Members;
+            if (liteOnly) members = members.Where(x =&gt; x.IsLiteMember);
+
+            lock (_mutex) return members.Select(x =&gt; new MemberInfoState(x, HasConnectionForMemberLocked(x))).ToList();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets information about each member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;liteOnly&quot;&gt;Whether to only return lite members.&lt;/param&gt;
+        /// &lt;returns&gt;The current members.&lt;/returns&gt;
+        public IEnumerable&lt;MemberInfo&gt; GetMembers(bool liteOnly = false)
+        {
+            IEnumerable&lt;MemberInfo&gt; members = _members.Members;
+            return liteOnly ? members.Where(x =&gt; x.IsLiteMember).ToList() : members;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets information about a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;returns&gt;Information about the specified member, or &lt;c&gt;null&lt;/c&gt; if no member with the specified identifier was found.&lt;/returns&gt;
+        public MemberInfo GetMember(Guid memberId)
+        {
+            return _members.TryGetMember(memberId, out var memberInfo)
+                ? memberInfo
+                : null;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            await _memberConnectionQueue.DisposeAsync().CfAwait();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[38,9,38,90,1],[40,13,40,42,1],[41,13,41,46,1],[44,9,44,10,1],[54,13,54,33,1],[54,34,54,83,0],[56,13,56,101,1],[57,9,57,10,1],[72,13,72,33,1],[72,34,72,83,0],[74,13,74,102,1],[75,9,75,10,1],[86,13,86,33,1],[86,34,86,83,0],[87,13,87,42,1],[87,43,87,101,0],[89,13,89,113,1],[90,9,90,10,1],[102,13,102,33,1],[102,34,102,83,0],[103,13,103,42,1],[103,43,103,101,1],[105,13,105,128,1],[106,9,106,10,1],[121,13,121,33,1],[121,34,121,83,0],[122,13,122,29,1],[122,30,122,75,0],[124,13,124,91,1],[125,13,125,33,1],[125,34,125,118,0],[127,13,127,47,1],[128,13,128,98,1],[133,13,133,41,1],[135,9,135,10,1],[150,13,150,33,1],[150,34,150,83,0],[151,13,151,33,1],[151,34,151,93,0],[153,13,153,47,1],[154,13,154,98,1],[159,13,159,41,1],[161,9,161,10,1],[178,13,178,155,1],[183,13,183,41,1],[185,9,185,10,1],[199,13,199,33,1],[199,34,199,83,0],[202,13,202,46,1],[206,13,206,51,1],[207,13,207,96,1],[210,13,213,87,1],[215,13,215,85,1],[216,9,216,10,1],[228,13,228,32,1],[241,21,241,74,1],[242,21,242,96,1],[244,17,244,46,1],[246,21,246,27,1],[253,21,253,63,1],[257,21,257,87,1],[260,25,260,103,1],[261,25,261,111,1],[266,25,266,97,1],[267,25,267,58,1],[269,21,269,110,1],[270,25,270,31,1],[274,21,274,59,1],[274,59,274,95,1],[274,95,274,126,1],[277,17,277,18,1],[279,9,279,10,1],[290,13,290,64,1],[291,13,291,36,1],[291,37,291,55,1],[294,13,294,51,1],[296,17,296,106,1],[297,17,297,80,1],[298,21,298,39,1],[302,13,302,54,1],[304,17,304,97,0],[305,21,305,39,0],[309,13,309,64,1],[310,13,310,36,1],[311,17,311,35,1],[314,13,314,63,1]]);
+      highlightRanges([[37,9,37,55,1],[55,9,55,117,1],[62,9,62,100,1],[66,13,66,42,1],[67,13,67,58,1],[68,13,68,99,1],[70,13,70,82,1],[72,13,72,42,1],[75,13,75,45,1],[79,17,79,96,1],[80,17,82,21,1],[82,21,82,34,1],[82,34,84,25,1],[84,25,84,64,1],[84,64,85,29,1],[85,29,85,64,1],[85,64,86,21,1],[86,21,86,22,1],[86,22,87,17,1],[87,17,87,18,1],[87,18,87,19,1],[89,9,89,10,1],[100,13,101,51,0],[107,13,107,26,1],[107,27,107,85,1],[108,9,108,10,1],[111,16,112,59,1],[117,13,117,26,0],[117,27,117,71,0],[118,9,118,10,0],[122,16,122,53,0],[136,13,136,26,1],[141,17,141,40,1],[141,41,141,48,0],[143,17,143,106,1],[145,17,145,30,1],[147,21,147,74,0],[149,25,149,71,0],[154,25,154,235,0],[155,25,155,63,0],[156,25,156,32,0],[161,17,161,64,1],[163,17,163,34,1],[169,21,169,50,1],[173,17,173,127,1],[176,21,176,37,1],[179,25,179,183,0],[180,25,180,121,0],[181,25,181,43,0],[183,26,183,64,1],[185,25,185,159,0],[186,25,188,130,0],[189,25,189,47,0],[194,21,194,181,1],[196,13,196,14,1],[197,9,197,10,1],[205,13,205,26,1],[209,17,209,104,1],[211,21,211,112,0],[212,21,212,28,0],[218,17,218,58,1],[219,17,219,104,1],[222,17,222,36,1],[224,21,224,160,1],[228,21,228,98,1],[229,25,229,61,1],[230,21,230,28,1],[232,13,232,14,1],[240,13,240,48,1],[240,49,240,103,1],[244,13,244,31,1],[247,17,247,30,1],[249,21,249,36,1],[254,25,254,113,1],[254,81,254,111,0],[257,29,257,92,0],[258,33,258,69,0],[259,29,259,168,0],[260,29,260,36,0],[264,25,264,44,1],[265,25,265,161,1],[266,25,266,100,1],[269,25,269,38,1],[273,25,273,172,0],[275,17,275,18,1],[276,13,276,14,1],[280,17,280,55,1],[282,9,282,10,1],[286,13,286,43,1],[287,13,287,37,1],[288,13,288,37,1],[289,13,289,35,1],[290,22,290,32,1],[290,33,290,35,1],[290,36,290,49,1],[292,17,292,36,1],[293,17,293,56,1],[294,17,294,67,1],[295,21,295,42,1],[296,17,296,34,1],[298,13,298,29,1],[300,13,300,52,1],[301,9,301,10,1],[312,13,312,44,1],[313,17,313,29,0],[320,13,320,37,1],[321,13,321,59,1],[322,13,322,26,1],[322,27,322,44,1],[327,13,327,58,1],[327,58,327,62,1],[327,62,327,65,1],[330,13,330,37,1],[332,17,332,122,1],[333,17,333,71,1],[333,72,333,110,0],[334,17,334,109,1],[338,22,338,32,1],[338,33,338,35,1],[338,36,338,43,1],[338,45,338,91,1],[344,13,344,58,1],[345,13,345,34,1],[347,26,347,31,0],[347,32,347,34,0],[347,35,347,42,0],[348,21,348,33,0],[352,26,352,31,1],[352,32,352,34,1],[352,35,352,51,1],[353,21,353,33,1],[355,26,355,31,1],[355,32,355,34,1],[355,35,355,42,1],[356,21,356,45,1],[356,46,356,59,1],[357,26,357,38,1],[361,13,361,74,1],[361,74,361,86,1],[361,86,361,88,1],[362,17,362,39,1],[365,13,365,48,1],[366,13,366,50,1],[367,22,367,42,1],[367,43,367,45,1],[367,46,367,50,1],[373,25,373,45,1],[376,25,376,67,1],[378,25,378,31,1],[382,25,382,43,1],[385,25,385,61,1],[387,25,387,31,1],[393,25,393,59,0],[397,13,397,43,1],[398,13,398,26,1],[401,26,401,36,1],[401,37,401,39,1],[401,40,401,47,1],[403,21,403,72,1],[405,25,405,157,1],[406,25,406,56,1],[407,25,407,54,1],[412,17,412,51,1],[412,51,412,55,1],[412,55,412,62,1],[412,62,412,63,1],[412,63,412,65,1],[413,17,413,56,1],[414,26,414,31,1],[414,32,414,34,1],[414,35,414,54,1],[416,21,416,96,1],[417,25,417,76,0],[420,17,420,38,1],[422,30,422,35,0],[422,36,422,38,0],[422,39,422,47,0],[424,25,424,51,0],[425,25,425,157,0],[426,25,426,54,0],[430,17,430,67,1],[432,17,432,33,1],[434,21,434,46,1],[438,25,438,173,1],[439,25,439,121,1],[440,25,440,43,1],[445,25,445,171,1],[450,21,450,46,1],[453,25,453,176,1],[459,25,459,50,0],[462,13,462,14,1],[465,13,465,36,1],[465,37,465,106,1],[468,13,468,48,0],[468,49,468,103,0],[470,13,470,38,0],[473,17,473,30,0],[475,21,475,71,0],[476,21,476,47,0],[479,25,479,162,0],[480,25,480,100,0],[481,25,481,44,0],[482,25,482,45,0],[486,25,486,176,0],[488,17,488,18,0],[489,13,489,14,0],[493,17,493,69,0],[496,13,496,82,0],[497,9,497,10,1],[506,16,506,38,1],[526,13,526,46,1],[533,17,533,49,1],[535,22,535,31,1],[535,33,535,42,1],[535,44,535,47,1],[537,21,537,62,1],[540,21,540,48,1],[546,21,546,60,1],[549,21,549,34,1],[551,25,551,80,1],[552,29,552,47,1],[553,21,553,22,1],[559,13,559,26,1],[559,27,559,77,1],[562,13,562,31,1],[563,9,563,10,1],[570,13,570,46,1],[575,22,575,31,1],[575,33,575,64,1],[575,66,575,69,0],[577,21,577,52,1],[578,21,578,40,1],[580,21,580,79,1],[581,25,581,49,1],[586,13,586,53,1],[588,13,588,26,1],[590,26,590,52,1],[590,53,590,55,1],[590,56,590,68,1],[592,21,592,52,1],[594,21,594,97,1],[595,25,595,43,1],[602,13,602,36,1],[603,9,603,10,1],[614,13,614,77,1],[615,13,615,43,1],[617,22,617,32,1],[617,33,617,35,1],[617,36,617,52,1],[619,17,619,41,1],[622,17,622,52,1],[624,17,624,98,1],[626,21,626,46,1],[627,21,627,30,1],[629,22,629,103,0],[631,21,631,46,0],[632,21,632,30,0],[636,21,636,83,0],[637,21,637,83,0],[638,21,638,87,0],[640,21,642,23,0],[647,13,647,29,1],[648,17,648,29,1],[653,13,653,78,1],[654,17,654,55,1],[656,17,656,55,0],[659,13,659,58,1],[660,22,660,32,1],[660,33,660,35,1],[660,36,660,52,1],[662,17,662,102,1],[664,21,664,35,1],[665,21,665,41,1],[666,25,666,39,1],[671,13,671,101,0],[672,9,672,10,1],[680,13,680,26,0],[680,27,681,29,0],[681,29,681,37,0],[681,37,682,31,0],[682,31,682,44,0],[682,44,683,35,0],[684,9,684,10,0],[695,13,695,26,1],[695,27,695,85,1],[696,9,696,10,1],[705,13,705,64,0],[706,13,706,26,0],[706,27,706,56,0],[706,56,706,70,0],[706,70,706,72,0],[708,13,708,26,0],[708,27,708,54,0],[708,54,708,109,0],[708,109,708,120,0],[709,9,709,10,0],[718,13,718,64,1],[719,13,719,50,1],[719,50,719,64,1],[719,64,719,85,1],[729,13,731,24,1],[737,13,737,67,1],[738,9,738,10,1]]);
     </script>
   </body>
 </html>

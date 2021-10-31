@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\NumberAverageAggregator.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\MinAggregator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -27,49 +27,48 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Aggregation
 {
     /// &lt;summary&gt;
-    /// Represents an aggregator that averages the input values.
+    /// Represents an aggregator that returns the minimum input value.
     /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TResult&quot;&gt;The aggregated result type.&lt;/typeparam&gt;
     /// &lt;remarks&gt;
-    /// &lt;para&gt;Null input values are not accepted.&lt;/para&gt;
+    /// &lt;para&gt;Null input values are accepted.&lt;/para&gt;
     /// &lt;/remarks&gt;
-    internal sealed class NumberAverageAggregator : AggregatorBase&lt;double&gt;
+    internal sealed class MinAggregator&lt;TResult&gt; : AggregatorBase&lt;TResult&gt;
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NumberAverageAggregator&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;MinAggregator{TResult}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public NumberAverageAggregator()
+        public MinAggregator()
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NumberAverageAggregator&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;MinAggregator{TResult}&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
-        public NumberAverageAggregator(string attributePath)
+        public MinAggregator(string attributePath)
             : base(attributePath)
         { }
 
         /// &lt;inheritdoc /&gt;
         protected override void ReadAggregatorData(IObjectDataInput input)
         {
-            input.ReadDouble(); // member side field not used on client
-            input.ReadLong(); // member side field not used on client
+            input.ReadObject&lt;object&gt;(); // member side field not used on client
         }
 
         /// &lt;inheritdoc /&gt;
         protected override void WriteAggregatorData(IObjectDataOutput output)
         {
-            output.WriteDouble(0D); // member side field not used on client
-            output.WriteLong(0L); // member side field not used on client
+            output.WriteObject(null); // member side field not used on client
         }
 
         /// &lt;inheritdoc /&gt;
-        public override int ClassId =&gt; AggregatorDataSerializerHook.NumberAvg;
+        public override int ClassId =&gt; AggregatorDataSerializerHook.Min;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,41,1],[31,11,31,12,1],[38,15,38,34,1],[39,11,39,12,1],[44,13,44,32,1],[45,13,45,30,1],[46,9,46,10,1],[51,13,51,36,1],[52,13,52,34,1],[53,9,53,10,1],[56,40,56,78,1]]);
+      highlightRanges([[31,9,31,31,1],[32,11,32,12,1],[39,15,39,34,1],[40,11,40,12,1],[45,13,45,40,1],[46,9,46,10,1],[51,13,51,38,1],[52,9,52,10,1],[55,40,55,72,1]]);
     </script>
   </body>
 </html>

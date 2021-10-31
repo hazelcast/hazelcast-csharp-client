@@ -2,152 +2,183 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\HLocalDate.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\HBigDecimal.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
   <body>
     <pre id="content" class="source-code">
-// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-//
-// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 using System;
-using System.Text.RegularExpressions;
+using System.Globalization;
+using System.Numerics;
 
 namespace Hazelcast.Models
 {
     /// &lt;summary&gt;
-    /// Represents Hazelcast SQL &lt;c&gt;DATE&lt;/c&gt; type corresponding to &lt;c&gt;java.time.LocalDate&lt;/c&gt; in Java.
+    /// Represents Hazelcast SQL &lt;c&gt;DECIMAL&lt;/c&gt; type corresponding to &lt;c&gt;java.math.BigDecimal&lt;/c&gt; in Java.
     /// &lt;/summary&gt;
-    public readonly struct HLocalDate : IEquatable&lt;HLocalDate&gt;
+    public readonly struct HBigDecimal: IEquatable&lt;HBigDecimal&gt;
     {
-        private static readonly Regex ParseRegex = new Regex(
-            @&quot;^(?&#39;year&#39;-?\d+)-(?&#39;month&#39;\d+)-(?&#39;day&#39;\d+)$&quot;,
-            RegexOptions.Compiled | RegexOptions.ExplicitCapture
-        );
-
-        public const int MaxYear = 999_999_999;
-        public const int MinYear = -999_999_999;
-
-        public static readonly HLocalDate Max = new HLocalDate(MinYear, 12, 31);
-        public static readonly HLocalDate Min = new HLocalDate(MaxYear, 1, 1);
-
-        /// &lt;summary&gt;
-        /// Year value. Ranges between &lt;see cref=&quot;MinYear&quot;/&gt; and &lt;see cref=&quot;MaxYear&quot;/&gt; inclusive.
-        /// &lt;/summary&gt;
-        public int Year { get; }
-
-        /// &lt;summary&gt;
-        /// Month value. Ranges between 1 and 12 inclusive.
-        /// &lt;/summary&gt;
-        public byte Month { get; }
-
-        /// &lt;summary&gt;
-        /// Day value. Ranges between 1 and max number of days in given &lt;see cref=&quot;Year&quot;/&gt; and &lt;see cref=&quot;Month&quot;/&gt; inclusive.
-        /// &lt;/summary&gt;
-        public byte Day { get; }
-
-        public HLocalDate(int year, byte month, byte day)
+        private static readonly NumberFormatInfo NoSignFormat = new NumberFormatInfo
         {
-            if (year &lt; MinYear || year &gt; MaxYear)
-                throw new ArgumentOutOfRangeException(nameof(year), $@&quot;Year must be between {MinYear} and {MaxYear}.&quot;);
-            if (month &lt; 1 || month &gt; 12)
-                throw new ArgumentOutOfRangeException(nameof(month), @&quot;Month must be between 1 and 12.&quot;);
-            if (day &lt; 1 || day &gt; 31 || day &gt; DateTime.DaysInMonth(year % 4 + 4, month))
-                throw new ArgumentOutOfRangeException(nameof(day), @&quot;Day must be between 1 and number of days in provided month.&quot;);
+            NegativeSign = &quot;&quot;,
+            PositiveSign = &quot;&quot;
+        };
 
-            Year = year;
-            Month = month;
-            Day = day;
+        private static readonly BigInteger MaxDecimal = new BigInteger(decimal.MaxValue);
+
+        public static readonly HBigDecimal Zero = new HBigDecimal(BigInteger.Zero);
+        public static readonly HBigDecimal One = new HBigDecimal(BigInteger.One);
+        public static readonly HBigDecimal MinusOne = new HBigDecimal(BigInteger.MinusOne);
+        public static readonly HBigDecimal Ten = new HBigDecimal(10);
+
+        /// &lt;summary&gt;
+        /// Unscaled part of number.
+        /// Final value is calculated as &lt;see cref=&quot;UnscaledValue&quot;/&gt;*(10^-&lt;see cref=&quot;Scale&quot;/&gt;)
+        /// &lt;/summary&gt;
+        public BigInteger UnscaledValue { get; }
+
+        /// &lt;summary&gt;
+        /// Scale to apply to &lt;see cref=&quot;UnscaledValue&quot;/&gt; to get represented number.
+        /// Final value is calculated as &lt;see cref=&quot;UnscaledValue&quot;/&gt;*(10^-&lt;see cref=&quot;Scale&quot;/&gt;)
+        /// &lt;/summary&gt;
+        public int Scale { get; }
+
+        public HBigDecimal(BigInteger unscaledValue, int scale = 0)
+        {
+            UnscaledValue = unscaledValue;
+            Scale = scale;
         }
 
-        public HLocalDate(DateTime dateTime)
+        public HBigDecimal(int value)
         {
-            Year = dateTime.Year;
-            Month = (byte)dateTime.Month;
-            Day = (byte)dateTime.Day;
+            UnscaledValue = new BigInteger(value);
+            Scale = 0;
         }
 
-        public DateTime ToDateTime() =&gt; new DateTime(Year, Month, Day, 0, 0, 0, DateTimeKind.Local);
-
-        public bool TryToDateTime(out DateTime dateTime)
+        public HBigDecimal(decimal value): this()
         {
-            dateTime = default;
+            if (value == 0M) return;
 
-            if (Year &lt; 1 || Year &gt; 9999)
+            const int signMask = unchecked((int)0x80000000);
+            const int scaleMask = 0x00FF0000;
+
+            var valueBytes = decimal.GetBits(value);
+
+            var unscaledValue = (new BigInteger(((ulong)(uint)valueBytes[2] &lt;&lt; 32) | (uint)valueBytes[1]) &lt;&lt; 32) | (uint)valueBytes[0];
+            if ((valueBytes[3] &amp; signMask) != 0) unscaledValue = -unscaledValue;
+
+            var scale = (valueBytes[3] &amp; scaleMask) &gt;&gt; 16;
+
+            UnscaledValue = unscaledValue;
+            Scale = scale;
+        }
+
+        public static explicit operator decimal(HBigDecimal value) =&gt; value.ToDecimal();
+        public static explicit operator HBigDecimal(decimal value) =&gt; new HBigDecimal(value);
+
+        public bool TryToDecimal(out decimal value)
+        {
+            value = default;
+
+            var normalized = Normalize();
+            var (unscaled, scale) = (normalized.UnscaledValue, normalized.Scale);
+
+            var divisor = Pow10(scale);
+            var remainder = BigInteger.Remainder(unscaled, divisor);
+            var scaled = BigInteger.Divide(unscaled, divisor);
+
+            if (scaled &gt; MaxDecimal)
                 return false;
 
-            dateTime = ToDateTime();
+            value = (decimal)scaled + (decimal)remainder / (decimal)divisor;
             return true;
         }
 
-        public static explicit operator DateTime(HLocalDate localDate) =&gt; localDate.ToDateTime();
-        public static explicit operator HLocalDate(DateTime dateTime) =&gt; new HLocalDate(dateTime);
+        public decimal ToDecimal() =&gt; TryToDecimal(out var value)
+            ? value
+            : throw new OverflowException($&quot;Value was either too large or too small for {nameof(Decimal)}.&quot;);
 
-        public override string ToString() =&gt; $&quot;{Year:D4}-{Month:D2}-{Day:D2}&quot;;
-
-        public static bool TryParse(string s, out HLocalDate localDate)
+        public string ToString(CultureInfo cultureInfo)
         {
-            localDate = default;
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
 
-            var match = ParseRegex.Match(s);
-            if (!match.Success ||
-                !int.TryParse(match.Groups[&quot;year&quot;].Value, out var year) ||
-                !byte.TryParse(match.Groups[&quot;month&quot;].Value, out var month) ||
-                !byte.TryParse(match.Groups[&quot;day&quot;].Value, out var day)
-            )
+            var separator = cultureInfo.NumberFormat.NumberDecimalSeparator;
+            var unscaledString = UnscaledValue.ToString(&quot;G&quot;, NoSignFormat) ?? &quot;0&quot;;
+            var unsignedString = Scale switch
             {
-                return false;
-            }
+                var scale when scale &lt; 0 =&gt; $&quot;{unscaledString}{new string(&#39;0&#39;, -scale)}&quot;,
+                var scale when scale &gt; 0 &amp;&amp; scale &lt; unscaledString.Length =&gt; $&quot;{unscaledString[..^scale]}.{unscaledString[^scale..]}&quot;,
+                var scale when scale &gt;= unscaledString.Length =&gt; $&quot;0{separator}{new string(&#39;0&#39;, scale - unscaledString.Length)}{unscaledString}&quot;,
+                _ =&gt; unscaledString
+            };
 
-            localDate = new HLocalDate(year, month, day);
+            return (UnscaledValue.Sign &lt; 0 ? &#39;-&#39; : (char?)null) + unsignedString;
+        }
+
+        public override string ToString() =&gt; ToString(CultureInfo.CurrentCulture);
+
+        public static bool TryParse(string s, CultureInfo cultureInfo, out HBigDecimal bigDecimal)
+        {
+            // s can be null and we&#39;ll return false
+            if (cultureInfo == null) throw new ArgumentNullException(nameof(cultureInfo));
+
+            bigDecimal = default;
+            if (s == null)
+                return false;
+
+            var separator = cultureInfo.NumberFormat.NumberDecimalSeparator;
+            if (!BigInteger.TryParse(s.Replace(separator, &quot;&quot;, StringComparison.Ordinal), NumberStyles.Integer, cultureInfo, out var unscaled))
+                return false;
+
+            var scale = 0;
+            if (s.IndexOf(separator, StringComparison.Ordinal) is var separatorIndex &amp;&amp; separatorIndex &gt;= 0)
+                scale = s.Length - separatorIndex - 1;
+
+            if (separatorIndex != s.LastIndexOf(separator, StringComparison.Ordinal))
+                return false;
+
+            bigDecimal = new HBigDecimal(unscaled, scale);
             return true;
         }
 
-        public static HLocalDate Parse(string s)
-        {
-            return TryParse(s, out var localDate)
-                ? localDate
-                : throw new FormatException($&quot;Failed to parse \&quot;{s}\&quot; as {nameof(HLocalDate)}.&quot;);
-        }
+        public static bool TryParse(string s, out HBigDecimal bigDecimal) =&gt; TryParse(s, CultureInfo.CurrentCulture, out bigDecimal);
+
+        public static HBigDecimal Parse(string s, CultureInfo cultureInfo) =&gt; TryParse(s, cultureInfo, out var bigDecimal)
+            ? bigDecimal
+            : throw new FormatException($&quot;Failed to parse \&quot;{s}\&quot; as {nameof(HBigDecimal)}.&quot;);
+
+        public static HBigDecimal Parse(string s) =&gt; Parse(s, CultureInfo.CurrentCulture);
+
+        private static BigInteger Pow10(int power) =&gt; BigInteger.Pow(new BigInteger(10), power);
+
+        /// &lt;summary&gt;
+        /// Returns equivalent &lt;see cref=&quot;HBigDecimal&quot;/&gt; value but with &lt;see cref=&quot;Scale&quot;/&gt; guaranteed to be non-negative.
+        /// &lt;/summary&gt;
+        private HBigDecimal Normalize() =&gt; Scale &gt;= 0 ? this : new HBigDecimal(UnscaledValue * Pow10(-Scale));
 
         #region Equality members
 
-        public bool Equals(HLocalDate other)
+        public bool Equals(HBigDecimal other)
         {
-            return Year == other.Year &amp;&amp; Month == other.Month &amp;&amp; Day == other.Day;
+            var (thisNormalized, otherNormalized) = (Normalize(), other.Normalize());
+            return thisNormalized.UnscaledValue.Equals(otherNormalized.UnscaledValue) &amp;&amp; thisNormalized.Scale == otherNormalized.Scale;
         }
 
         public override bool Equals(object obj)
         {
-            return obj is HLocalDate other &amp;&amp; Equals(other);
+            return obj is HBigDecimal other &amp;&amp; Equals(other);
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Year, Month, Day);
+            var normalized = Normalize();
+            return HashCode.Combine(normalized.UnscaledValue, normalized.Scale);
         }
 
-        public static bool operator ==(HLocalDate left, HLocalDate right)
-        {
-            return left.Equals(right);
-        }
+        public static bool operator ==(HBigDecimal left, HBigDecimal right) =&gt; left.Equals(right);
 
-        public static bool operator !=(HLocalDate left, HLocalDate right)
-        {
-            return !left.Equals(right);
-        }
+        public static bool operator !=(HBigDecimal left, HBigDecimal right) =&gt; !left.Equals(right);
 
         #endregion
 
@@ -156,7 +187,7 @@ namespace Hazelcast.Models
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,9,28,11,1],[33,9,33,81,1],[34,9,34,79,1],[39,27,39,31,1],[44,29,44,33,1],[49,27,49,31,1],[53,13,53,50,1],[54,17,54,120,0],[55,13,55,41,1],[56,17,56,106,0],[57,13,57,88,1],[58,17,58,132,0],[60,13,60,25,1],[61,13,61,27,1],[62,13,62,23,1],[63,9,63,10,1],[67,13,67,34,1],[68,13,68,42,1],[69,13,69,38,1],[70,9,70,10,1],[72,41,72,100,1],[76,13,76,32,0],[78,13,78,41,0],[79,17,79,30,0],[81,13,81,37,0],[82,13,82,25,0],[85,75,85,97,1],[86,74,86,98,1],[88,46,88,78,1],[92,13,92,33,1],[94,13,94,45,1],[95,13,99,14,1],[101,17,101,30,0],[104,13,104,58,1],[105,13,105,25,1],[110,13,112,98,1],[119,13,119,83,1],[124,13,124,61,0],[129,13,129,55,0],[134,13,134,39,0],[139,13,139,40,0]]);
+      highlightRanges([[12,9,16,11,1],[18,9,18,90,1],[20,9,20,84,1],[21,9,21,82,1],[22,9,22,92,1],[23,9,23,70,1],[29,43,29,47,1],[35,28,35,32,1],[39,13,39,43,1],[40,13,40,27,1],[41,9,41,10,1],[45,13,45,51,1],[46,13,46,23,1],[47,9,47,10,1],[49,44,49,50,1],[51,13,51,29,1],[51,30,51,37,1],[56,13,56,53,1],[58,13,58,136,1],[59,13,59,49,1],[59,50,59,81,1],[61,13,61,59,1],[63,13,63,43,1],[64,13,64,27,1],[65,9,65,10,1],[67,71,67,88,1],[68,71,68,93,1],[72,13,72,29,1],[74,13,74,42,1],[75,13,75,82,1],[77,13,77,40,1],[78,13,78,69,1],[79,13,79,63,1],[81,13,81,37,1],[82,17,82,30,1],[84,13,84,77,1],[85,13,85,25,1],[88,39,90,109,1],[94,13,94,37,1],[94,38,94,91,0],[96,13,96,77,1],[97,13,97,83,1],[98,13,100,27,1],[100,27,100,41,1],[100,41,100,45,1],[100,45,100,89,0],[100,89,101,27,1],[101,27,101,74,1],[101,74,101,78,1],[101,78,101,134,0],[101,134,102,27,1],[102,27,102,62,1],[102,62,102,66,1],[102,66,102,145,1],[102,145,103,22,1],[103,22,103,36,1],[103,36,104,15,1],[106,13,106,82,1],[109,46,109,82,0],[114,13,114,37,1],[114,38,114,91,0],[116,13,116,34,1],[117,13,117,27,1],[118,17,118,30,0],[120,13,120,77,1],[121,13,121,143,1],[122,17,122,30,0],[124,13,124,27,1],[125,13,125,109,1],[126,17,126,55,1],[128,13,128,86,1],[129,17,129,30,0],[131,13,131,59,1],[132,13,132,25,1],[135,78,135,133,0],[137,79,139,94,1],[141,54,141,90,1],[143,55,143,96,1],[148,44,148,110,1],[154,13,154,86,1],[155,13,155,136,1],[160,13,160,62,0],[165,13,165,42,0],[166,13,166,81,0],[169,80,169,98,0],[171,80,171,99,0]]);
     </script>
   </body>
 </html>

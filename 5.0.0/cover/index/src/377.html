@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetIsEmptyCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetGetAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this set contains no elements.
+    /// Return the all elements of this collection
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetIsEmptyServerCodec
+    internal static class SetGetAllServerCodec
 #else
-    internal static class SetIsEmptyCodec
+    internal static class SetGetAllCodec
 #endif
     {
-        public const int RequestMessageType = 396544; // 0x060D00
-        public const int ResponseMessageType = 396545; // 0x060D01
+        public const int RequestMessageType = 395776; // 0x060A00
+        public const int ResponseMessageType = 395777; // 0x060A01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -79,7 +78,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Set.IsEmpty&quot;
+                OperationName = &quot;Set.GetAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -104,19 +103,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this set contains no elements
+            /// Array of all values in the Set
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -125,8 +124,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -135,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,36,99,40,1],[99,41,99,45,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,48,1],[119,13,119,91,1],[120,13,120,29,1],[121,9,121,10,1]]);
+      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,53,1],[78,13,78,34,1],[98,44,98,48,1],[98,49,98,53,1],[115,13,115,64,1],[116,13,116,53,1],[117,13,117,29,1],[118,13,118,88,1],[119,13,119,29,1],[120,9,120,10,1]]);
     </script>
   </body>
 </html>

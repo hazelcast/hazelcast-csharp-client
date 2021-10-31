@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryLoadedEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryInvalidatedEventHandler.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,37 +23,25 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
-    public sealed class MapEntryLoadedEventArgs&lt;TKey, TValue&gt; : MapEntryEventArgsBase&lt;TKey&gt;
+    internal sealed class MapEntryInvalidatedEventHandler&lt;TKey, TValue, TSender&gt; : MapEntryEventHandlerBase&lt;TKey, TValue, TSender, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;&gt;
     {
-        private readonly Lazy&lt;TValue&gt; _value;
-        private readonly Lazy&lt;TValue&gt; _oldValue;
+        public MapEntryInvalidatedEventHandler(Func&lt;TSender, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+            : base(MapEventTypes.Invalidated, handler)
+        { }
 
-        public MapEntryLoadedEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, object state)
-            : base(member, key, state)
-        {
-            _value = value;
-            _oldValue = oldValue;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the value that was loaded.
-        /// &lt;/summary&gt;
-        public TValue Value =&gt; _value == null ? default : _value.Value;
-
-        /// &lt;summary&gt;
-        /// Gets the value before load, if the entry existed.
-        /// &lt;/summary&gt;
-        public TValue OldValue =&gt; _oldValue == null ? default : _oldValue.Value;
+        protected override MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt; CreateEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, Lazy&lt;TValue&gt; mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, object state)
+            =&gt; new MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;(member, key, state);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[26,15,26,39,0],[28,13,28,28,0],[29,13,29,34,0],[30,9,30,10,0],[35,32,35,71,0],[40,35,40,80,0]]);
+      highlightRanges([[24,15,24,55,0],[25,11,25,12,0],[28,16,28,82,0]]);
     </script>
   </body>
 </html>

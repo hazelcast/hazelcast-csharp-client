@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\NetworkingOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\NetworkAddress.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,170 +22,379 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System;
+using System.Linq;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 
 namespace Hazelcast.Networking
 {
     /// &lt;summary&gt;
-    /// Represents the networking options.
+    /// Represents a network address.
     /// &lt;/summary&gt;
-    public class NetworkingOptions
+    public class NetworkAddress : IEquatable&lt;NetworkAddress&gt;
     {
+        // NOTES
+        //
+        // an IP v4 address is &#39;x.x.x.x&#39; where each octet &#39;x&#39; is a byte (8 bits unsigned)
+        //
+        // an IP v4 endpoint is &#39;&lt;address&gt;:p&#39; where &#39;p&#39; is the port number
+        //
+        // an IP v6 address can be normal (pure v6) or dual (v6 + v4)
+        //  normal is &#39;y:y:y:y:y:y:y:y&#39; where each segment &#39;y&#39; is a word (16 bits unsigned)
+        //  dual is &#39;y:y:y:y:y:y:x.x.x.x&#39;
+        //  missing segments are assumed to be zeros
+        //
+        // it can also be &#39;y:y:y:y:y:y:y:y%i&#39; where &#39;i&#39; is the scope id (a number, &#39;eth0&#39;..)
+        //
+        // an IP v6 endpoint is &#39;[&lt;address&gt;]:p&#39; where &#39;p&#39; is the port number
+        //
+        // read
+        // https://superuser.com/questions/99746/why-is-there-a-percent-sign-in-the-ipv6-address
+        // https://docs.microsoft.com/en-us/previous-versions/aa917150(v=msdn.10)
+        // which explain the &#39;node-local&#39; vs &#39;link-local&#39; vs &#39;global&#39; scopes
+
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NetworkingOptions&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; class with a hostname and a port.
         /// &lt;/summary&gt;
-        public NetworkingOptions(PreviewOptions preview = null)
+        /// &lt;param name=&quot;hostName&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        public NetworkAddress(string hostName, int port = 0)
+            : this(hostName, GetIPAddressByName(hostName), port)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; class with an IP address and a port.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;ipAddress&quot;&gt;The IP address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        public NetworkAddress(IPAddress ipAddress, int port = 0)
+            : this(null, ipAddress, port)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt; with an IP endpoint.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;endpoint&quot;&gt;The IP endpoint.&lt;/param&gt;
+        internal NetworkAddress(IPEndPoint endpoint)
         {
-            Preview = preview ?? new PreviewOptions();
+            IPEndPoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+
+            var ipAddress = IPEndPoint.Address;
+            if (ipAddress == null) throw new ArgumentException(&quot;Address cannot be null.&quot;, nameof(endpoint));
+
+            HostName = ipAddress.ToString();
         }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;NetworkingOptions&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
         /// &lt;/summary&gt;
-        private NetworkingOptions(NetworkingOptions other, PreviewOptions preview)
+        /// &lt;param name=&quot;hostName&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;param name=&quot;ipAddress&quot;&gt;The IP address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;hostName&quot;/&gt; and &lt;paramref name=&quot;ipAddress&quot;/&gt; are assumed to be consistent.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal NetworkAddress(string hostName, IPAddress ipAddress, int port)
         {
-            Preview = preview;
+            if (ipAddress == null) throw new ArgumentNullException(nameof(ipAddress));
+            if (port &lt; 0) throw new ArgumentOutOfRangeException(nameof(port));
 
-            Addresses = new List&lt;string&gt;(other.Addresses);
-            ShuffleAddresses = other.ShuffleAddresses;
-            SmartRouting = other.SmartRouting;
-            RedoOperations = other.RedoOperations;
-            Reconnect = other.Reconnect;
-            ReconnectMode = other.ReconnectMode;
-            ConnectionTimeoutMilliseconds = other.ConnectionTimeoutMilliseconds;
-            UsePublicAddresses = other.UsePublicAddresses;
-
-            Ssl = other.Ssl.Clone();
-            Cloud = other.Cloud.Clone();
-            Socket = other.Socket.Clone();
-            ConnectionRetry = other.ConnectionRetry.Clone();
+            IPEndPoint = new IPEndPoint(ipAddress, port);
+            HostName = string.IsNullOrWhiteSpace(hostName) ? ipAddress.ToString() : hostName;
         }
 
         /// &lt;summary&gt;
-        /// (unsupported) Gets the &lt;see cref=&quot;PreviewOptions&quot;/&gt;.
+        /// (internal for tests only)
+        /// Initializes a new instance of the &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
         /// &lt;/summary&gt;
-        internal PreviewOptions Preview { get; }
+        /// &lt;param name=&quot;source&quot;&gt;The origin address.&lt;/param&gt;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        internal NetworkAddress(NetworkAddress source, int port)
+        {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (port &lt; 0) throw new ArgumentOutOfRangeException(nameof(port));
+
+            IPEndPoint = new IPEndPoint(source.IPAddress, port);
+            HostName = source.HostName;
+        }
 
         /// &lt;summary&gt;
-        /// Gets the default Hazelcast server port.
+        /// Gets the host name.
         /// &lt;/summary&gt;
-        internal int DefaultPort { get; } = 5701;
+        public string HostName { get; }
 
         /// &lt;summary&gt;
-        /// Gets the port range to scan.
+        /// Gets the host name (prefer &lt;see cref=&quot;HostName&quot;/&gt;).
         /// &lt;/summary&gt;
-        internal int PortRange { get; } = 3;
+        /// &lt;returns&gt;
+        /// &lt;para&gt;This property returns &lt;see cref=&quot;HostName&quot;/&gt; and is required by codecs
+        /// that use names derived from the protocol definitions, because the protocol
+        /// codecs generator does not know yet how to map / rename properties.&lt;/para&gt;
+        /// &lt;/returns&gt;
+        internal string Host =&gt; HostName;
 
         /// &lt;summary&gt;
-        /// Gets or sets the list of initial addresses.
+        /// Gets the port.
         /// &lt;/summary&gt;
+        public int Port =&gt; IPEndPoint.Port;
+
+        /// &lt;summary&gt;
+        /// Gets the IP address corresponding to this address.
+        /// &lt;/summary&gt;
+        // ReSharper disable once InconsistentNaming
+        public IPAddress IPAddress =&gt; IPEndPoint.Address;
+
+        /// &lt;summary&gt;
+        /// Gets the IP endpoint corresponding to this address.
+        /// &lt;/summary&gt;
+        // ReSharper disable once InconsistentNaming
+        public IPEndPoint IPEndPoint { get; }
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v4 address.
+        /// &lt;/summary&gt;
+        public bool IsIpV4 =&gt; IPAddress.AddressFamily == AddressFamily.InterNetwork;
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v6 address.
+        /// &lt;/summary&gt;
+        public bool IsIpV6 =&gt; IPAddress.AddressFamily == AddressFamily.InterNetworkV6;
+
+        /// &lt;summary&gt;
+        /// Whether the address is an IP v6 address which is global (non-local), or scoped.
+        /// &lt;/summary&gt;
+        public bool IsIpV6GlobalOrScoped =&gt; (!IPAddress.IsIPv6SiteLocal &amp;&amp; !IPAddress.IsIPv6LinkLocal) || IPAddress.ScopeId &gt; 0;
+
+        /// &lt;summary&gt;
+        /// Gets an IP address by name, via DNS.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostname&quot;&gt;The hostname.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding IP address.&lt;/returns&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;The client uses this list to find a running member and connect
-        /// to it. This initial member will then send the list of other members
-        /// to the client.&lt;/para&gt;
-        /// &lt;para&gt;Each address must be a valid IPv4 or IPv6 address.&lt;/para&gt;
+        /// &lt;para&gt;Returns the first IP v4 address available, if any,
+        /// else the first IP v6 address available. Throws if it cannot
+        /// get an IP for the hostname via DNS.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        public IList&lt;string&gt; Addresses { get; } = new List&lt;string&gt;();
+        // ReSharper disable once InconsistentNaming
+        internal static IPAddress GetIPAddressByName(string hostname)
+        {
+            if (hostname == &quot;0.0.0.0&quot;) return IPAddress.Any;
+
+            var addresses = HDns.GetHostAddresses(hostname);
+
+            // prefer an IP v4, if possible
+            return addresses.FirstOrDefault(x =&gt; x.AddressFamily == AddressFamily.InterNetwork) ??
+                   addresses.FirstOrDefault();
+        }
 
         /// &lt;summary&gt;
-        /// Whether to shuffle addresses when attempting to connect to the cluster.
+        /// Parses a string into a &lt;see cref=&quot;NetworkAddress&quot;/&gt;.
         /// &lt;/summary&gt;
-        public bool ShuffleAddresses { get; set; } = true;
+        /// &lt;param name=&quot;s&quot;&gt;The string.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultPort&quot;&gt;The default port to use if none is specified.&lt;/param&gt;
+        /// &lt;returns&gt;The network address.&lt;/returns&gt;
+        internal static NetworkAddress Parse(string s, int defaultPort = 0)
+        {
+            if (TryParse(s, out NetworkAddress address, defaultPort)) return address;
+            throw new FormatException($&quot;The string \&quot;{s}\&quot; does not represent a valid network address.&quot;);
+        }
 
         /// &lt;summary&gt;
-        /// Whether smart routing is enabled.
+        /// Tries to parse a string into a &lt;see cref=&quot;NetworkAddress&quot;/&gt; instance.
         /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;If true (default), client will route the key based operations to owner of
-        /// the key at the best effort.&lt;/para&gt;
-        /// &lt;para&gt;Note that it however does not guarantee that the operation will always be
-        /// executed on the owner, as the member table is only updated every 10 seconds.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool SmartRouting { get; set; } = true;
+        /// &lt;param name=&quot;s&quot;&gt;The string.&lt;/param&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The network address.&lt;/param&gt;
+        /// &lt;param name=&quot;defaultPort&quot;&gt;The default port to use if none is specified.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the string could be parsed into an address.&lt;/returns&gt;
+        internal static bool TryParse(string s, out NetworkAddress address, int defaultPort = 0)
+        {
+            address = null;
+
+            var span = s.AsSpan();
+            var colon1 = span.IndexOf(&#39;:&#39;);
+            var colon2 = span.LastIndexOf(&#39;:&#39;);
+            var brket1 = span.IndexOf(&#39;[&#39;);
+            var brket2 = span.IndexOf(&#39;]&#39;);
+            var port = defaultPort;
+
+            // opening bracket must be first
+            if (brket1 &gt; 0) return false;
+
+            // must have both brackets, or none
+            if (brket1 == 0 != brket2 &gt;= 0) return false;
+
+            // brackets =&gt; colon if any *must* be right after closing bracket
+            if (brket1 == 0 &amp;&amp; colon2 &gt; brket2 + 1) return false;
+
+            // no bracket and single colon, or one colon after brackets
+            // =&gt; parse port
+            if ((brket2 &lt; 0 &amp;&amp; colon2 &gt; 0 &amp;&amp; colon1 == colon2) ||
+                (brket2 &gt; 0 &amp;&amp; colon2 &gt; brket2))
+            {
+#if NETSTANDARD2_0
+                if (!int.TryParse(span[(colon2 + 1)..].ToString(), out port))
+                    return false;
+#else
+                if (!int.TryParse(span.Slice(colon2 + 1), out port))
+                    return false;
+#endif
+            }
+
+            ReadOnlySpan&lt;char&gt; hostName;
+
+#pragma warning disable IDE0057 // Slice can be simplified
+
+            if (brket1 == 0)
+            {
+                // if we have brackets, they must contain colons
+                if (colon2 &lt; 0 || colon1 &gt; brket2) return false;
+
+                // hostname is in-between brackets
+                // (and has to be parseable as an ip address)
+                hostName = span.Slice(1, brket2 - 1);
+            }
+            else
+            {
+                // one single colon = hostname is whatever is before
+                // otherwise, hostname is the whole string
+                hostName = (colon2 &gt; 0 &amp;&amp; colon1 == colon2) ? span[..colon2] : span;
+            }
+
+#pragma warning restore IDE0057 // Slice can be simplified
+
+            // must have a hostname - look at the code above, hostname cannot be empty here
+            //if (hostName.Length == 0)
+            //    return false;
+
+            // note that in IPv6 case, hostname can contain a % followed by a scope id
+            // which is fine, IPAddress.TryParse handles it
+
+            string hostNameString;
+
+#if NETSTANDARD2_0
+            if (IPAddress.TryParse(hostName.ToString(), out var ipAddress))
+#else
+            if (IPAddress.TryParse(hostName, out var ipAddress))
+#endif
+            {
+                // if the hostname parses to an ip address, fine
+                hostNameString = ipAddress.ToString();
+            }
+            else
+            {
+                // if we have brackets, hostname must be parseable
+                if (brket1 == 0) return false;
+
+                hostNameString = hostName.ToString();
+
+                // else, try to get the ip via DNS
+                try
+                {
+                    ipAddress = GetIPAddressByName(hostNameString);
+                }
+                catch
+                {
+                    return false;
+                }
+            }
+
+            address = new NetworkAddress(hostNameString, ipAddress, port);
+            return true;
+        }
 
         /// &lt;summary&gt;
-        /// Whether to retry operations.
+        /// Creates a new instance of the network address with the same host but a different port.
         /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;While sending the requests to related members, operations can fail due to various
-        /// reasons. Read-only operations are retried by default. If you want to enable retry for
-        /// the other operations, set this property to &lt;c&gt;true&lt;/c&gt;.&lt;/para&gt;
-        /// &lt;para&gt;Note that it is not clear whether the operation is performed or not. For idempotent
-        /// operations this is harmless, but for non idempotent ones retrying can cause
-        /// undesirable effects. Also note that the redo can perform on any member.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool RedoOperations { get; set; } = true;
+        /// &lt;param name=&quot;port&quot;&gt;The port.&lt;/param&gt;
+        /// &lt;returns&gt;A new instance of the network address with the same host but a different port.&lt;/returns&gt;
+        internal NetworkAddress WithPort(int port) =&gt; new NetworkAddress(Host, port);
 
         /// &lt;summary&gt;
-        /// Gets or sets the &lt;see cref=&quot;ReconnectMode&quot;/&gt; in case the client is disconnected.
+        /// Determines whether this address is reachable, by trying to connect to it.
         /// &lt;/summary&gt;
-        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+        /// &lt;param name=&quot;timeout&quot;&gt;A timeout.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the connection was successful; otherwise false.&lt;/returns&gt;
+        /// &lt;remarks&gt;Use a timeout value of -1ms for infinite.&lt;/remarks&gt;
+        internal async Task&lt;bool&gt; TryReachAsync(TimeSpan timeout)
+        {
+            var socket = new Socket(IPAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
+            try
+            {
+                await socket.ConnectAsync(IPEndPoint, (int) timeout.TotalMilliseconds, CancellationToken.None).CfAwait();
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+            finally
+            {
+                socket.Close();
+                socket.Dispose();
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var name = IPAddress.ToString(); // or HostName?
+            return IPAddress.AddressFamily == AddressFamily.InterNetworkV6
+                ? $&quot;[{name}]:{Port}&quot;
+                : $&quot;{name}:{Port}&quot;;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode() =&gt; IPEndPoint.GetHashCode();
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+        {
+            return obj is NetworkAddress other &amp;&amp; Equals(this, other);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public bool Equals(NetworkAddress other)
+        {
+            return Equals(this, other);
+        }
 
         /// &lt;summary&gt;
-        /// Whether to attempt to automatically reconnect a client that has been disconnected.
+        /// Compares two instances for equality.
         /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;This is &lt;c&gt;true&lt;/c&gt; by default, i.e. a client that has been disconnected but is
-        /// still active will try to reconnect to the cluster. Set this to &lt;c&gt;false&lt;/c&gt; if you
-        /// want it to shut down and never reconnect.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool Reconnect { get; set; } = true;
+        private static bool Equals(NetworkAddress a1, NetworkAddress a2)
+        {
+            // return true if both are null or both are the same instance
+            if (ReferenceEquals(a1, a2)) return true;
+
+            // return false if either is null since the other cannot be null
+            if (a1 is null || a2 is null) return false;
+
+            // actual comparison
+            return a1.IPEndPoint.Equals(a2.IPEndPoint);
+        }
 
         /// &lt;summary&gt;
-        /// Whether to use the public addresses of members.
+        /// Overrides the == operator.
         /// &lt;/summary&gt;
-        /// &lt;remarks&gt;When connecting to clusters where members have different public and
-        /// internal addresses, this option can be used to indicate whether to use, or not
-        /// use, the public addresses. When &lt;c&gt;null&lt;/c&gt; (by default), the client will try
-        /// to determine which address to use automatically.&lt;/remarks&gt;
-        public bool? UsePublicAddresses { get; set; }
+        public static bool operator ==(NetworkAddress a1, NetworkAddress a2)
+            =&gt; Equals(a1, a2);
 
         /// &lt;summary&gt;
-        /// Gets the &lt;see cref=&quot;SslOptions&quot;/&gt;.
+        /// Overrides the != operator.
         /// &lt;/summary&gt;
-        public SslOptions Ssl { get; } = new SslOptions();
-
-        /// &lt;summary&gt;
-        /// Gets the &lt;see cref=&quot;CloudOptions&quot;/&gt;.
-        /// &lt;/summary&gt;
-        public CloudOptions Cloud { get; } = new CloudOptions();
-
-        /// &lt;summary&gt;
-        /// Gets the &lt;see cref=&quot;SocketOptions&quot;/&gt;.
-        /// &lt;/summary&gt;
-        public SocketOptions Socket { get; } = new SocketOptions();
-
-        /// &lt;summary&gt;
-        /// Gets the connection &lt;see cref=&quot;ConnectionRetryOptions&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Specifies the Hazelcast client connection parameters, including the timeout, i.e. the maximum
-        /// amount of time that the Hazelcast client can spend trying to establish a connection to the cluster
-        /// before failing. See &lt;see cref=&quot;SocketOptions&quot;/&gt; for specifying the individual socket parameters,
-        /// including the individual socket connection timeout.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
-
-        /// &lt;summary&gt;
-        /// Gets or sets the connection timeout.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;This timeout is used in various places. It is the connection timeout for each individual
-        /// socket. It is also the timeout for cloud discovery.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public int ConnectionTimeoutMilliseconds { get; set; } = 5_000;
-
-        /// &lt;summary&gt;
-        /// Clones the options.
-        /// &lt;/summary&gt;
-        internal NetworkingOptions Clone(PreviewOptions preview = null) =&gt; new NetworkingOptions(this, preview ?? Preview.Clone());
+        public static bool operator !=(NetworkAddress a1, NetworkAddress a2)
+            =&gt; !(a1 == a2);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,9,28,64,1],[30,13,30,55,1],[31,9,31,10,1],[36,9,36,83,1],[38,13,38,31,1],[40,13,40,59,1],[41,13,41,55,1],[42,13,42,47,1],[43,13,43,51,1],[44,13,44,41,1],[45,13,45,49,1],[46,13,46,81,1],[47,13,47,59,1],[49,13,49,37,1],[50,13,50,41,1],[51,13,51,43,1],[52,13,52,61,1],[53,9,53,10,1],[58,43,58,47,1],[63,36,63,40,1],[63,45,63,49,1],[63,45,63,49,1],[68,34,68,38,1],[68,43,68,44,1],[68,43,68,44,1],[79,42,79,46,1],[79,51,79,69,1],[79,51,79,69,1],[84,40,84,44,1],[84,45,84,49,1],[84,54,84,58,1],[84,54,84,58,1],[95,36,95,40,1],[95,41,95,45,1],[95,50,95,54,1],[95,50,95,54,1],[108,38,108,42,1],[108,43,108,47,1],[108,52,108,56,1],[108,52,108,56,1],[113,46,113,50,1],[113,51,113,55,1],[123,33,123,37,1],[123,38,123,42,1],[123,47,123,51,1],[123,47,123,51,1],[132,43,132,47,1],[132,48,132,52,1],[137,33,137,37,1],[137,42,137,58,1],[137,42,137,58,1],[142,37,142,41,1],[142,46,142,64,1],[142,46,142,64,1],[147,39,147,43,1],[147,48,147,67,1],[147,48,147,67,1],[158,57,158,61,1],[158,66,158,94,1],[158,66,158,94,1],[167,52,167,56,1],[167,57,167,61,1],[167,66,167,71,1],[167,66,167,71,1],[172,76,172,131,1]]);
+      highlightRanges([[56,15,56,65,1],[57,11,57,12,1],[65,15,65,42,1],[66,11,66,12,1],[72,9,72,53,1],[74,13,74,88,1],[76,13,76,48,1],[77,13,77,35,1],[77,36,77,109,1],[79,13,79,45,1],[80,9,80,10,1],[91,9,91,80,1],[93,13,93,35,1],[93,36,93,87,1],[94,13,94,26,1],[94,27,94,79,1],[96,13,96,58,1],[97,13,97,94,1],[98,9,98,10,1],[106,9,106,65,1],[108,13,108,32,1],[108,33,108,81,1],[109,13,109,26,1],[109,27,109,79,1],[111,13,111,65,1],[112,13,112,40,1],[113,9,113,10,1],[118,34,118,38,1],[128,33,128,41,1],[133,28,133,43,1],[139,39,139,57,1],[145,40,145,44,1],[150,31,150,84,1],[155,31,155,86,1],[160,45,160,128,1],[175,13,175,39,1],[175,40,175,61,1],[177,13,177,61,1],[180,13,180,50,1],[180,50,180,95,1],[180,95,181,47,1],[192,13,192,70,1],[192,71,192,86,1],[193,13,193,106,1],[205,13,205,28,1],[207,13,207,35,1],[208,13,208,44,1],[209,13,209,48,1],[210,13,210,44,1],[211,13,211,44,1],[212,13,212,36,1],[215,13,215,28,1],[215,29,215,42,1],[218,13,218,44,1],[218,45,218,58,1],[221,13,221,52,1],[221,53,221,66,1],[225,13,226,49,1],[232,17,232,69,1],[233,21,233,34,1],[241,13,241,29,1],[244,17,244,51,1],[244,52,244,65,1],[248,17,248,54,1],[254,17,254,85,1],[271,13,271,65,1],[275,17,275,55,1],[280,17,280,33,1],[280,34,280,47,1],[282,17,282,54,1],[287,21,287,68,1],[288,17,288,18,1],[289,17,289,22,1],[291,21,291,34,1],[295,13,295,75,1],[296,13,296,25,1],[297,9,297,10,1],[304,55,304,85,1],[314,13,314,99,0],[318,17,318,122,0],[319,17,319,29,0],[321,13,321,18,0],[323,17,323,30,0],[327,17,327,32,0],[328,17,328,34,0],[330,9,330,10,0],[335,13,335,45,1],[336,13,338,36,1],[342,46,342,70,1],[347,13,347,71,0],[353,13,353,40,1],[362,13,362,41,1],[362,42,362,54,1],[365,13,365,42,1],[365,43,365,56,1],[368,13,368,56,1],[375,16,375,30,1],[381,16,381,27,1]]);
     </script>
   </body>
 </html>

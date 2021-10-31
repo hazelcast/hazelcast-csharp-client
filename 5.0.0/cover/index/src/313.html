@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapSizeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapRemoveEntryListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the number of key-value pairs in the multimap.
+    /// Removes the specified entry listener. If there is no such listener added before, this call does no change in the
+    /// cluster and returns false.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapSizeServerCodec
+    internal static class MultiMapRemoveEntryListenerServerCodec
 #else
-    internal static class MultiMapSizeCodec
+    internal static class MultiMapRemoveEntryListenerCodec
 #endif
     {
-        public const int RequestMessageType = 133632; // 0x020A00
-        public const int ResponseMessageType = 133633; // 0x020A01
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 134912; // 0x020F00
+        public const int ResponseMessageType = 134913; // 0x020F01
+        private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -71,19 +73,25 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the MultiMap
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// Registration id of listener
+            ///&lt;/summary&gt;
+            public Guid RegistrationId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, Guid registrationId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;MultiMap.Size&quot;
+                OperationName = &quot;MultiMap.RemoveEntryListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -94,7 +102,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.RegistrationId = initialFrame.Bytes.ReadGuidL(RequestRegistrationIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
@@ -104,18 +113,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The number of key-value pairs in the multimap.
+            /// True if registration is removed, false otherwise
             ///&lt;/summary&gt;
-            public int Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(int response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -126,7 +135,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -135,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,35,99,39,1],[99,40,99,44,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,48,1],[119,13,119,90,1],[120,13,120,29,1],[121,9,121,10,1]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,93,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

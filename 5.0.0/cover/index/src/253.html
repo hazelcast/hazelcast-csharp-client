@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapFetchWithQueryCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapFetchNearCacheInvalidationMetadataCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Fetches the specified number of entries from the specified partition starting from specified table index
-    /// that match the predicate and applies the projection logic on them.
+    /// Fetches invalidation metadata from partitions of map.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapFetchWithQueryServerCodec
+    internal static class MapFetchNearCacheInvalidationMetadataServerCodec
 #else
-    internal static class MapFetchWithQueryCodec
+    internal static class MapFetchNearCacheInvalidationMetadataCodec
 #endif
     {
-        public const int RequestMessageType = 81920; // 0x014000
-        public const int ResponseMessageType = 81921; // 0x014001
-        private const int RequestBatchFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestBatchFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 81152; // 0x013D00
+        public const int ResponseMessageType = 81153; // 0x013D01
+        private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -69,48 +68,30 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Name of the map
+            /// names of the maps
             ///&lt;/summary&gt;
-            public string Name { get; set; }
+            public IList&lt;string&gt; Names { get; set; }
 
             /// &lt;summary&gt;
-            /// The index-size pairs that define the state of iteration
+            /// The uuid of the member to fetch the near cahce invalidation meta data
             ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;int, int&gt;&gt; IterationPointers { get; set; }
-
-            /// &lt;summary&gt;
-            /// The number of items to be batched
-            ///&lt;/summary&gt;
-            public int Batch { get; set; }
-
-            /// &lt;summary&gt;
-            /// projection to transform the entries with
-            ///&lt;/summary&gt;
-            public IData Projection { get; set; }
-
-            /// &lt;summary&gt;
-            /// predicate to filter the entries with
-            ///&lt;/summary&gt;
-            public IData Predicate { get; set; }
+            public Guid Uuid { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;KeyValuePair&lt;int, int&gt;&gt; iterationPointers, int batch, IData projection, IData predicate)
+        public static ClientMessage EncodeRequest(ICollection&lt;string&gt; names, Guid uuid)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;Map.FetchWithQuery&quot;
+                IsRetryable = false,
+                OperationName = &quot;Map.FetchNearCacheInvalidationMetadata&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(RequestBatchFieldOffset, batch);
+            initialFrame.Bytes.WriteGuidL(RequestUuidFieldOffset, uuid);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, name);
-            EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
-            DataCodec.Encode(clientMessage, projection);
-            DataCodec.Encode(clientMessage, predicate);
+            ListMultiFrameCodec.Encode(clientMessage, names, StringCodec.Encode);
             return clientMessage;
         }
 
@@ -120,11 +101,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Batch = initialFrame.Bytes.ReadIntL(RequestBatchFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
-            request.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
-            request.Projection = DataCodec.Decode(iterator);
-            request.Predicate = DataCodec.Decode(iterator);
+            request.Uuid = initialFrame.Bytes.ReadGuidL(RequestUuidFieldOffset);
+            request.Names = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             return request;
         }
 #endif
@@ -133,25 +111,25 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// List of fetched entries.
+            /// Map of partition ids and sequence number of invalidations mapped by the map name.
             ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Results { get; set; }
+            public IList&lt;KeyValuePair&lt;string, IList&lt;KeyValuePair&lt;int, long&gt;&gt;&gt;&gt; NamePartitionSequenceList { get; set; }
 
             /// &lt;summary&gt;
-            /// The index-size pairs that define the state of iteration
+            /// Map of member UUIDs mapped by the partition ids of invalidations.
             ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;int, int&gt;&gt; IterationPointers { get; set; }
+            public IList&lt;KeyValuePair&lt;int, Guid&gt;&gt; PartitionUuidList { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; results, ICollection&lt;KeyValuePair&lt;int, int&gt;&gt; iterationPointers)
+        public static ClientMessage EncodeResponse(ICollection&lt;KeyValuePair&lt;string, ICollection&lt;KeyValuePair&lt;int, long&gt;&gt;&gt;&gt; namePartitionSequenceList, ICollection&lt;KeyValuePair&lt;int, Guid&gt;&gt; partitionUuidList)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            ListMultiFrameCodec.EncodeContainsNullable(clientMessage, results, DataCodec.Encode);
-            EntryListIntegerIntegerCodec.Encode(clientMessage, iterationPointers);
+            EntryListCodec.Encode(clientMessage, namePartitionSequenceList, StringCodec.Encode, EntryListIntegerLongCodec.Encode);
+            EntryListIntegerUUIDCodec.Encode(clientMessage, partitionUuidList);
             return clientMessage;
         }
 #endif
@@ -161,8 +139,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Results = ListMultiFrameCodec.DecodeContainsNullable(iterator, DataCodec.Decode);
-            response.IterationPointers = EntryListIntegerIntegerCodec.Decode(iterator);
+            response.NamePartitionSequenceList = EntryListCodec.Decode(iterator, StringCodec.Decode, EntryListIntegerLongCodec.Decode);
+            response.PartitionUuidList = EntryListIntegerUUIDCodec.Decode(iterator);
             return response;
         }
 
@@ -171,7 +149,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[90,13,94,15,0],[95,13,95,123,0],[96,13,96,104,0],[97,13,97,88,0],[98,13,98,74,0],[99,13,99,48,0],[100,13,100,53,0],[101,13,101,83,0],[102,13,102,57,0],[103,13,103,56,0],[104,13,104,34,0],[128,43,128,47,0],[128,48,128,52,0],[133,70,133,74,0],[133,75,133,79,0],[151,13,151,64,0],[152,13,152,53,0],[153,13,153,29,0],[154,13,154,103,0],[155,13,155,88,0],[156,13,156,29,0],[157,9,157,10,0]]);
+      highlightRanges([[74,13,78,15,0],[79,13,79,123,0],[80,13,80,104,0],[81,13,81,88,0],[82,13,82,73,0],[83,13,83,48,0],[84,13,84,82,0],[85,13,85,34,0],[106,108,106,112,0],[106,113,106,117,0],[111,71,111,75,0],[111,76,111,80,0],[129,13,129,64,0],[130,13,130,53,0],[131,13,131,29,0],[132,13,132,136,0],[133,13,133,85,0],[134,13,134,29,0],[135,9,135,10,0]]);
     </script>
   </body>
 </html>

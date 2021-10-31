@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\PartitionPredicate.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\PagingPredicate.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,56 +22,177 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Globalization;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
 {
     /// &lt;summary&gt;
-    /// A builtin predicate that restricts the execution of a target Predicate to a single Partition.
+    /// This class is a special Predicate which helps to get a page-by-page result of a query.
+    /// It can be constructed with a page-size, an inner predicate for filtering, and a comparator for sorting.
     /// &lt;/summary&gt;
     /// &lt;remarks&gt;
-    /// This can help to speed up query execution since only a single instead of all partitions needs to be queried.
-    ///
-    /// This predicate can only be used as an outer predicate
+    /// This class is not thread-safe and stateless. To be able to reuse for another query, one should call
+    /// &lt;see cref=&quot;PagingPredicate.Reset()&quot;/&gt;
     /// &lt;/remarks&gt;
-    internal class PartitionPredicate : IPartitionPredicate, IIdentifiedDataSerializable
+    /// &lt;example&gt;
+    /// &lt;code&gt;
+    /// Predicate lessEqualThanFour = Predicates.IsLessThanOrEqual(&quot;this&quot;, 4);
+    /// // We are constructing our paging predicate with a predicate and page size. In this case query results fetched two by two.
+    /// PagingPredicate predicate = new PagingPredicate(2, lessEqualThanFour);
+    /// // we are initializing our map with integers from 0 to 10 as keys and values.
+    /// var map = hazelcastInstance.GetMap(&quot;myMap&quot;);
+    /// for (int i = 0; i &amp;lt; 10; i++)
+    /// {
+    ///     map.Put(i, i);
+    /// }
+    ///
+    /// //invoking the query
+    /// var values = map.Values(predicate);
+    /// Console.WriteLine(&quot;values = &quot; + values); // will print &#39;values = [0, 1]&#39;
+    /// predicate.NextPage(); // we are setting up paging predicate to fetch next page in the next call.
+    /// values = map.Values(predicate);
+    /// Console.WriteLine(&quot;values = &quot; + values);// will print &#39;values = [2, 3]&#39;
+    /// var anchor = predicate.GetAnchor();
+    /// Console.WriteLine(&quot;anchor -&gt; &quot; + anchor); // will print &#39;anchor -&gt; 1=1&#39;,  since the anchor is the last entry of the previous page.
+    /// predicate.previousPage(); // we are setting up paging predicate to fetch previous page in the next call
+    /// values = map.Values(predicate);
+    /// Console.WriteLine(&quot;values = &quot; + values) // will print &#39;values = [0, 1]&#39;
+    /// &lt;/code&gt;
+    /// &lt;/example&gt;
+    internal class PagingPredicate : IPagingPredicate, IIdentifiedDataSerializable
     {
-        public PartitionPredicate()
+        //private static readonly KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt; NullAnchor = new KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;(-1, new KeyValuePair&lt;object, object&gt;(null, null));
+
+        internal PagingPredicate()
         { }
 
-        public PartitionPredicate(object partitionKey, IPredicate predicate)
+        /// &lt;summary&gt;
+        /// Creates a Paging predicate with provided page size and optional predicate and comparer.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;pageSize&quot;&gt;page size of each result set&lt;/param&gt;
+        /// &lt;param name=&quot;predicate&quot;&gt;Optional predicate to filter of the results. if null, no filtering applied&lt;/param&gt;
+        /// &lt;param name=&quot;comparer&quot;&gt;Optional &lt;see cref=&quot;IComparer&quot;/&gt; implementation used to sort the results. see warning at &lt;see cref=&quot;Comparer&quot;/&gt;&lt;/param&gt;
+        /// &lt;exception cref=&quot;ArgumentOutOfRangeException&quot;&gt;if page size is negative&lt;/exception&gt;
+        /// &lt;exception cref=&quot;ArgumentException&quot;&gt;Nested PagingPredicate is not supported&lt;/exception&gt;
+        public PagingPredicate(int pageSize, IPredicate predicate = null, IComparer&lt;KeyValuePair&lt;object, object&gt;&gt; comparer = null)
         {
-            Target = predicate;
-            PartitionKey = partitionKey;
+            if (pageSize &lt;= 0)
+            {
+                throw new ArgumentOutOfRangeException(nameof(pageSize), @&quot;pageSize should be greater than 0 !!!&quot;);
+            }
+            PageSize = pageSize;
+            if (predicate is PagingPredicate)
+            {
+                throw new ArgumentException(@&quot;Nested PagingPredicate is not supported!!!&quot;, nameof(predicate));
+            }
+            Predicate = predicate;
+            Comparer = comparer;
+            _anchorList = new List&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt;();
         }
 
         /// &lt;inheritdoc /&gt;
-        public IPredicate Target { get; private set; }
+        public int PageSize { get; }
+
+        /// &lt;summary&gt;
+        ///
+        /// &lt;/summary&gt;
+        public IPredicate Predicate { get; }
+
+        /// &lt;summary&gt;
+        /// &lt;c&gt;IComparer&amp;lt;KeyValuePair&amp;lt;object, object&amp;gt;&amp;gt;&lt;/c&gt;&gt; implementation used to sort the result on client side.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;b&gt;WARNING:&lt;/b&gt; This comparer implementation should be hazelcast serializable and must have the same
+        /// implementation on server side.
+        /// &lt;/remarks&gt;
+        public IComparer&lt;KeyValuePair&lt;object, object&gt;&gt; Comparer { get; }
+
+        public KeyValuePair&lt;object, object&gt; Anchor
+        {
+            get
+            {
+                if (_anchorList == null) return default;
+                var anchorEntry = _anchorList[Page];
+                return anchorEntry.Value;
+            }
+        }
+
+        private List&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt; _anchorList;
+
+        internal IList&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt; AnchorList =&gt; _anchorList;
+
+        // don&#39;t make the AnchorList property publicly settable + reuse the list
+        internal void UpdateAnchors(IEnumerable&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt; anchors)
+        {
+            _anchorList ??= new List&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt;();
+            _anchorList.Clear();
+            _anchorList.AddRange(anchors);
+        }
 
         /// &lt;inheritdoc /&gt;
-        public object PartitionKey { get; private set; }
+        public int Page { get; set; }
+
+        /// &lt;summary&gt;
+        /// Iteration type this paging predicate: One of Key, Value or Entry
+        /// &lt;/summary&gt;
+        public IterationType? IterationType { get; set; }
+
+        /// &lt;inheritdoc /&gt;
+        public void Reset()
+        {
+            IterationType = null;
+            AnchorList.Clear();
+            Page = 0;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public void NextPage()
+        {
+            Page++;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public void PreviousPage()
+        {
+            if (Page != 0) {
+                Page--;
+            }
+        }
 
         public void ReadData(IObjectDataInput input)
         {
-            PartitionKey = input.ReadObject&lt;object&gt;();
-            Target = input.ReadObject&lt;IPredicate&gt;();
+            throw new NotSupportedException(&quot;Client should not need to use ReadData method.&quot;);
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteObject(PartitionKey);
-            output.WriteObject(Target);
+            output.WriteObject(Predicate);
+            output.WriteObject(Comparer);
+            output.WriteInt(Page);
+            output.WriteInt(PageSize);
+            output.WriteString(IterationType?.ToString().ToUpper(CultureInfo.InvariantCulture));
+            output.WriteInt(AnchorList.Count);
+            foreach (var (key, anchorEntry) in AnchorList)
+            {
+                output.WriteInt(key);
+                output.WriteObject(anchorEntry.Key);
+                output.WriteObject(anchorEntry.Value);
+            }
         }
 
         public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
 
-        public int ClassId =&gt; PredicateDataSerializerHook.PartitionPredicate;
+        public int ClassId =&gt; PredicateDataSerializerHook.PagingPredicate;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,36,1],[30,11,30,12,1],[32,9,32,77,1],[34,13,34,32,1],[35,13,35,41,1],[36,9,36,10,1],[39,36,39,40,1],[39,41,39,53,1],[42,38,42,42,1],[42,43,42,55,1],[46,13,46,55,1],[47,13,47,53,1],[48,9,48,10,1],[52,13,52,46,1],[53,13,53,40,1],[54,9,54,10,1],[56,33,56,62,1],[58,31,58,77,1]]);
+      highlightRanges([[60,9,60,35,1],[61,11,61,12,1],[71,9,71,131,1],[73,13,73,31,1],[75,17,75,115,1],[77,13,77,33,1],[78,13,78,46,1],[80,17,80,111,1],[82,13,82,35,1],[83,13,83,33,1],[84,13,84,87,1],[85,9,85,10,1],[88,31,88,35,1],[93,39,93,43,1],[102,67,102,71,1],[108,17,108,41,0],[108,42,108,57,0],[109,17,109,53,0],[110,17,110,42,0],[116,87,116,98,1],[121,13,121,89,1],[122,13,122,33,1],[123,13,123,43,1],[124,9,124,10,1],[127,27,127,31,1],[127,32,127,36,1],[132,47,132,51,1],[132,52,132,56,1],[137,13,137,34,1],[138,13,138,32,1],[139,13,139,22,1],[140,9,140,10,1],[145,13,145,20,1],[146,9,146,10,1],[151,13,151,27,1],[152,17,152,24,1],[154,9,154,10,1],[158,13,158,95,1],[163,13,163,43,1],[164,13,164,42,1],[165,13,165,35,1],[166,13,166,39,1],[167,13,167,97,1],[168,13,168,47,1],[169,22,169,44,1],[169,45,169,47,1],[169,48,169,58,1],[171,17,171,38,1],[172,17,172,53,1],[173,17,173,55,1],[175,9,175,10,1],[177,33,177,62,1],[179,31,179,74,1]]);
     </script>
   </body>
 </html>

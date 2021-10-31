@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DisposeAction.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DictionaryBinder.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,36 +23,97 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Hazelcast.Core
 {
-    /// &lt;summary&gt;
-    /// Represents an &lt;see cref=&quot;IDisposable&quot;/&gt; that executes an &lt;see cref=&quot;Action&quot;/&gt; when disposed.
-    /// &lt;/summary&gt;
-    internal class DisposeAction : IDisposable
+    internal class DictionaryBinder : IDictionary&lt;string, string&gt;
     {
-        private readonly Action _action;
+        private readonly Action&lt;string, string&gt; _onItem;
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;DisposeAction&quot;/&gt; class with an action.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;action&quot;&gt;&lt;/param&gt;
-        public DisposeAction(Action action)
+        public DictionaryBinder(Action&lt;string, string&gt; onItem)
         {
-            _action = action;
+            _onItem = onItem;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public void Dispose()
+        public IEnumerator&lt;KeyValuePair&lt;string, string&gt;&gt; GetEnumerator()
         {
-            _action();
+            throw new NotSupportedException();
         }
+
+        // dotCover does not understand that GetEnumerator() throws and does not return
+        [ExcludeFromCodeCoverage]
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
+        }
+
+        public void Add(KeyValuePair&lt;string, string&gt; item)
+        {
+            _onItem(item.Key, item.Value);
+        }
+
+        public void Clear()
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Contains(KeyValuePair&lt;string, string&gt; item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public void CopyTo(KeyValuePair&lt;string, string&gt;[] array, int arrayIndex)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(KeyValuePair&lt;string, string&gt; item)
+        {
+            throw new NotSupportedException();
+        }
+
+        public int Count =&gt; throw new NotSupportedException();
+
+        public bool IsReadOnly =&gt; throw new NotSupportedException();
+
+        public void Add(string key, string value)
+        {
+            _onItem(key, value);
+        }
+
+        public bool ContainsKey(string key)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool Remove(string key)
+        {
+            throw new NotSupportedException();
+        }
+
+        public bool TryGetValue(string key, out string value)
+        {
+            throw new NotSupportedException();
+        }
+
+        public string this[string key]
+        {
+            get =&gt; throw new NotSupportedException();
+            set =&gt; _onItem(key, value);
+        }
+
+        public ICollection&lt;string&gt; Keys =&gt; throw new NotSupportedException();
+
+        public ICollection&lt;string&gt; Values =&gt; throw new NotSupportedException();
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,44,1],[32,13,32,30,1],[33,9,33,10,1],[38,13,38,23,1],[39,9,39,10,1]]);
+      highlightRanges([[26,9,26,63,1],[28,13,28,30,1],[29,9,29,10,1],[33,13,33,47,1],[45,13,45,43,1],[46,9,46,10,1],[50,13,50,47,1],[55,13,55,47,1],[60,13,60,47,1],[65,13,65,47,1],[68,29,68,62,1],[70,35,70,68,1],[74,13,74,33,1],[75,9,75,10,1],[79,13,79,47,1],[84,13,84,47,1],[89,13,89,47,1],[94,20,94,53,1],[95,20,95,39,1],[98,44,98,77,1],[100,46,100,79,1]]);
     </script>
   </body>
 </html>

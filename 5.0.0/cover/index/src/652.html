@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DumpCoreExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DisposeAction.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,67 +23,36 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
-using System.Globalization;
-using System.Text;
-using Hazelcast.Exceptions;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides extension methods for dumping objects.
+    /// Represents an &lt;see cref=&quot;IDisposable&quot;/&gt; that executes an &lt;see cref=&quot;Action&quot;/&gt; when disposed.
     /// &lt;/summary&gt;
-    internal static class DumpCoreExtensions
+    internal class DisposeAction : IDisposable
     {
+        private readonly Action _action;
+
         /// &lt;summary&gt;
-        /// Dumps an array of bytes into a readable format.
+        /// Initializes a new instance of the &lt;see cref=&quot;DisposeAction&quot;/&gt; class with an action.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes.&lt;/param&gt;
-        /// &lt;param name=&quot;length&quot;&gt;The number of bytes to dump, or zero to dump all bytes in the array.&lt;/param&gt;
-        /// &lt;returns&gt;A readable string representation of the array of bytes.&lt;/returns&gt;
-        public static string Dump(this byte[] bytes, int length = 0)
+        /// &lt;param name=&quot;action&quot;&gt;&lt;/param&gt;
+        public DisposeAction(Action action)
         {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            if (length &gt; bytes.Length)
-                throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
-
-            if (length == 0) length = bytes.Length;
-
-            var text = new StringBuilder();
-            var i = 0;
-            while (i &lt; length)
-            {
-                for (var j = 0; j &lt; 8 &amp;&amp; i &lt; length; j++, i++)
-                {
-                    if (j &gt; 0) text.Append(&#39; &#39;);
-                    text.AppendFormat(CultureInfo.InvariantCulture, &quot;{0:x2}&quot;, bytes[i]);
-                }
-
-                if (i &lt; length)
-                    text.AppendLine();
-            }
-
-            return text.ToString();
+            _action = action;
         }
 
-        /// &lt;summary&gt;
-        /// Dumps an sequence of bytes into a readable format.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes.&lt;/param&gt;
-        /// &lt;param name=&quot;length&quot;&gt;The number of bytes to dump, or zero to dump all bytes in the sequence.&lt;/param&gt;
-        /// &lt;returns&gt;A readable string representation of the sequence of bytes.&lt;/returns&gt;
-        public static string Dump(this ReadOnlySequence&lt;byte&gt; bytes, int length = 0)
+        /// &lt;inheritdoc /&gt;
+        public void Dispose()
         {
-            var a = new byte[bytes.Length];
-            bytes.CopyTo(a);
-            return a.Dump(length);
+            _action();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[36,13,36,31,1],[36,32,36,79,1],[37,13,37,39,1],[38,17,38,87,1],[40,13,40,29,1],[40,30,40,52,1],[42,13,42,44,1],[43,13,43,23,1],[44,13,44,31,1],[46,22,46,31,1],[46,33,46,52,1],[46,54,46,57,1],[46,59,46,62,1],[48,21,48,31,1],[48,32,48,49,1],[49,21,49,89,1],[52,17,52,32,1],[53,21,53,39,1],[56,13,56,36,1],[67,13,67,44,1],[68,13,68,29,1],[69,13,69,35,1]]);
+      highlightRanges([[30,9,30,44,1],[32,13,32,30,1],[33,9,33,10,1],[38,13,38,23,1],[39,9,39,10,1]]);
     </script>
   </body>
 </html>

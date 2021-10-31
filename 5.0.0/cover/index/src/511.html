@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\EnumerableOfMetricsExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\DataOutputStream.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,54 +22,93 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using System.Text;
+using System;
+using System.IO;
 
 namespace Hazelcast.Metrics
 {
-    internal static class EnumerableOfMetricsExtensions
+    // a minimal port of Java&#39;s DataOutputStream to be used in MetricsCompressor,
+    // because MetricsCompressor needs to send things in a Java-expected way
+    internal class DataOutputStream
     {
-        public const char StatSeparator = &#39;,&#39;;
-        public const char KeyValueSeparator = &#39;=&#39;;
-        public const char NameSeparator = &#39;.&#39;;
-        public const char EscapeChar = &#39;\\&#39;;
+        private readonly Stream _stream;
 
-        public static string Serialize(this IEnumerable&lt;Metric&gt; metrics)
+        public DataOutputStream(Stream stream)
         {
-            var text = new StringBuilder();
-
-            foreach (var metric in metrics)
-            {
-                if (text.Length &gt; 0) text.Append(StatSeparator);
-                if (metric.Descriptor.Prefix != null)
-                    text.Append(metric.Descriptor.Prefix).Append(NameSeparator).AppendEscaped(metric.Descriptor.Name);
-                else
-                    text.Append(metric.Descriptor.Name);
-                text.Append(KeyValueSeparator).Append(metric.StringValue);
-            }
-
-            return text.ToString();
+            _stream = stream;
         }
 
-        private static StringBuilder AppendEscaped(this StringBuilder text, string value)
+        public void WriteByte(byte value)
         {
-            if (value == null) return text;
+            _stream.WriteByte(value);
+        }
 
-            foreach (var c in value)
-            {
-                if (c == StatSeparator || c == KeyValueSeparator || c == NameSeparator || c == EscapeChar)
-                    text.Append(EscapeChar);
-                text.Append(c);
-            }
+        public void WriteInt(int value)
+        {
+            // this has to be in line with Java
 
-            return text;
+            var uvalue = (uint) value;
+
+            WriteByte((byte) (uvalue &gt;&gt; 0x18));
+            WriteByte((byte) (uvalue &gt;&gt; 0x10));
+            WriteByte((byte) (uvalue &gt;&gt; 8));
+            WriteByte((byte) uvalue);
+        }
+
+        public void WriteLong(long value)
+        {
+            // this has to be in line with Java
+
+            var uvalue = (ulong) value;
+
+            WriteByte((byte) (uvalue &gt;&gt; 0x38));
+            WriteByte((byte) (uvalue &gt;&gt; 0x30));
+            WriteByte((byte) (uvalue &gt;&gt; 0x28));
+            WriteByte((byte) (uvalue &gt;&gt; 0x20));
+
+            WriteByte((byte) (uvalue &gt;&gt; 0x18));
+            WriteByte((byte) (uvalue &gt;&gt; 0x10));
+            WriteByte((byte) (uvalue &gt;&gt; 8));
+            WriteByte((byte) uvalue);
+        }
+
+        public void WriteChar(char value)
+        {
+            // this has to be in line with Java
+
+            var uvalue = (ushort) value;
+
+            WriteByte((byte) (uvalue &gt;&gt; 8));
+            WriteByte((byte) uvalue);
+        }
+
+        public void WriteDouble(double value)
+        {
+            // this has to be in line with Java
+
+            WriteLong(BitConverter.DoubleToInt64Bits(value));
+        }
+
+        public void Write(byte[] bytes, int offset, int count)
+        {
+            _stream.Write(bytes, offset, count);
+        }
+
+        public void Write(byte[] bytes)
+            =&gt; Write(bytes, 0, bytes.Length);
+
+        public void WriteString(string s, int offset, int count)
+        {
+            var bound = offset + count;
+            for (var i = offset; i &lt; bound; i++)
+                WriteChar(s[i]);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,13,29,44,0],[31,22,31,32,0],[31,33,31,35,0],[31,36,31,43,0],[33,17,33,37,0],[33,38,33,65,0],[34,17,34,54,0],[35,21,35,119,0],[37,21,37,57,0],[38,17,38,75,0],[41,13,41,36,0],[46,13,46,31,0],[46,32,46,44,0],[48,22,48,27,0],[48,28,48,30,0],[48,31,48,36,0],[50,17,50,107,0],[51,21,51,45,0],[52,17,52,32,0],[55,13,55,25,0]]);
+      highlightRanges([[26,9,26,47,0],[28,13,28,30,0],[29,9,29,10,0],[33,13,33,38,0],[34,9,34,10,0],[40,13,40,39,0],[42,13,42,48,0],[43,13,43,48,0],[44,13,44,45,0],[45,13,45,38,0],[46,9,46,10,0],[52,13,52,40,0],[54,13,54,48,0],[55,13,55,48,0],[56,13,56,48,0],[57,13,57,48,0],[59,13,59,48,0],[60,13,60,48,0],[61,13,61,45,0],[62,13,62,38,0],[63,9,63,10,0],[69,13,69,41,0],[71,13,71,45,0],[72,13,72,38,0],[73,9,73,10,0],[79,13,79,62,0],[80,9,80,10,0],[84,13,84,49,0],[85,9,85,10,0],[88,16,88,45,0],[92,13,92,40,0],[93,18,93,32,0],[93,34,93,43,0],[93,45,93,48,0],[94,17,94,33,0],[95,9,95,10,0]]);
     </script>
   </body>
 </html>

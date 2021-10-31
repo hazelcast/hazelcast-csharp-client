@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapKeySetWithPagingPredicateCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapKeySetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Queries the map based on the specified predicate and returns the keys of matching entries. Specified predicate
-    /// runs on all members in parallel. The collection is NOT backed by the map, so changes to the map are NOT reflected
-    /// in the collection, and vice-versa. This method is always executed by a distributed query, so it may throw a
-    /// QueryResultSizeExceededException if query result size limit is configured.
+    /// Returns a set clone of the keys contained in this map. The set is NOT backed by the map, so changes to the map
+    /// are NOT reflected in the set, and vice-versa. This method is always executed by a distributed query, so it may
+    /// throw a QueryResultSizeExceededException if query result size limit is configured.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapKeySetWithPagingPredicateServerCodec
+    internal static class MapKeySetServerCodec
 #else
-    internal static class MapKeySetWithPagingPredicateCodec
+    internal static class MapKeySetCodec
 #endif
     {
-        public const int RequestMessageType = 78848; // 0x013400
-        public const int ResponseMessageType = 78849; // 0x013401
+        public const int RequestMessageType = 74240; // 0x012200
+        public const int ResponseMessageType = 74241; // 0x012201
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -70,30 +69,24 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// name of map
+            /// name of the map
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// specified query criteria.
-            ///&lt;/summary&gt;
-            public Hazelcast.Protocol.Models.PagingPredicateHolder Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Hazelcast.Protocol.Models.PagingPredicateHolder predicate)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Map.KeySetWithPagingPredicate&quot;
+                OperationName = &quot;Map.KeySet&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            PagingPredicateHolderCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -104,7 +97,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Predicate = PagingPredicateHolderCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -113,25 +105,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// result keys for the query.
+            /// a set clone of the keys contained in this map.
             ///&lt;/summary&gt;
             public IList&lt;IData&gt; Response { get; set; }
-
-            /// &lt;summary&gt;
-            /// The updated anchor list.
-            ///&lt;/summary&gt;
-            public Hazelcast.Protocol.Models.AnchorDataListHolder AnchorDataList { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response, Hazelcast.Protocol.Models.AnchorDataListHolder anchorDataList)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
             ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
-            AnchorDataListHolderCodec.Encode(clientMessage, anchorDataList);
             return clientMessage;
         }
 #endif
@@ -142,7 +128,6 @@ namespace Hazelcast.Protocol.Codecs
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
             response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
-            response.AnchorDataList = AnchorDataListHolderCodec.Decode(iterator);
             return response;
         }
 
@@ -151,7 +136,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[76,13,80,15,0],[81,13,81,123,0],[82,13,82,104,0],[83,13,83,88,0],[84,13,84,48,0],[85,13,85,53,0],[86,13,86,73,0],[87,13,87,34,0],[108,44,108,48,0],[108,49,108,53,0],[113,84,113,88,0],[113,89,113,93,0],[131,13,131,64,0],[132,13,132,53,0],[133,13,133,29,0],[134,13,134,88,0],[135,13,135,82,0],[136,13,136,29,0],[137,9,137,10,0]]);
+      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[100,44,100,48,1],[100,49,100,53,1],[117,13,117,64,1],[118,13,118,53,1],[119,13,119,29,1],[120,13,120,88,1],[121,13,121,29,1],[122,9,122,10,1]]);
     </script>
   </body>
 </html>

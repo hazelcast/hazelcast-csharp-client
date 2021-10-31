@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HLocalDateTimeSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HLocalDateSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,41 +26,31 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class HLocalDateTimeSerializer : SingletonSerializerBase&lt;HLocalDateTime&gt;
+    internal class HLocalDateSerializer : SingletonSerializerBase&lt;HLocalDate&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeLocalDateTime;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeLocalDate;
 
-        public override HLocalDateTime Read(IObjectDataInput input)
+        public override HLocalDate Read(IObjectDataInput input)
         {
             var year = input.ReadInt();
             var month = input.ReadByte();
-            var day = input.ReadByte();
+            var date = input.ReadByte();
 
-            var hour = input.ReadByte();
-            var minute = input.ReadByte();
-            var second = input.ReadByte();
-            var nano = input.ReadInt();
-
-            return new HLocalDateTime(year, month, day, hour, minute, second, nano);
+            return new HLocalDate(year, month, date);
         }
 
-        public override void Write(IObjectDataOutput output, HLocalDateTime obj)
+        public override void Write(IObjectDataOutput output, HLocalDate obj)
         {
             output.WriteInt(obj.Year);
             output.WriteByte(obj.Month);
             output.WriteByte(obj.Day);
-
-            output.WriteByte(obj.Hour);
-            output.WriteByte(obj.Minute);
-            output.WriteByte(obj.Second);
-            output.WriteInt(obj.Nanosecond);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,39,21,90,1],[25,13,25,40,0],[26,13,26,42,0],[27,13,27,40,0],[29,13,29,41,0],[30,13,30,43,0],[31,13,31,43,0],[32,13,32,40,0],[34,13,34,85,0],[39,13,39,39,1],[40,13,40,41,1],[41,13,41,39,1],[43,13,43,40,1],[44,13,44,42,1],[45,13,45,42,1],[46,13,46,45,1],[47,9,47,10,1]]);
+      highlightRanges([[21,39,21,86,1],[25,13,25,40,0],[26,13,26,42,0],[27,13,27,41,0],[29,13,29,54,0],[34,13,34,39,1],[35,13,35,41,1],[36,13,36,39,1],[37,9,37,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\Frame.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\DumpMessagingExtensions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,164 +23,87 @@
 // limitations under the License.
 
 using System;
-using System.Buffers;
-using Hazelcast.Core;
+
+#if DEBUG
+using System.Text;
+#else
+#pragma warning disable CA1801 // Review unused parameters
+#endif
 
 namespace Hazelcast.Messaging
 {
     /// &lt;summary&gt;
-    /// Represents a message frame.
+    /// Provides extension methods for dumping objects.
     /// &lt;/summary&gt;
-    /// &lt;remarks&gt;
-    /// &lt;para&gt;A frame is composed of its length (int), its flags (ushort), and its payload (byte[]). What
-    /// the payload contains depend on the type of the frame and of the &lt;see cref=&quot;ClientMessage&quot;/&gt; containing
-    /// the frame.&lt;/para&gt;
-    /// &lt;para&gt;Frames form a linked list through their &lt;see cref=&quot;Next&quot;/&gt; property, with the
-    /// &lt;see cref=&quot;ClientMessage&quot;/&gt; keeping track of the first and last frame of the list.&lt;/para&gt;
-    /// &lt;/remarks&gt;
-    internal class Frame
+    internal static class DumpMessagingExtensions
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;Frame&quot;/&gt; class representing an empty frame.
+        /// Dumps a client message into a readable string.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;flags&quot;&gt;The frame flags.&lt;/param&gt;
-        public Frame(FrameFlags flags = FrameFlags.Default)
+        /// &lt;param name=&quot;message&quot;&gt;The client message.&lt;/param&gt;
+        /// &lt;param name=&quot;level&quot;&gt;Verbosity level.&lt;/param&gt;
+        /// &lt;returns&gt;A readable string representation of the message.&lt;/returns&gt;
+        public static string Dump(this ClientMessage message, int level)
         {
-            Flags = flags;
-            Bytes = Array.Empty&lt;byte&gt;();
+            if (message == null) throw new ArgumentNullException(nameof(message));
+#if DEBUG
+            string prefix;
+            var text = new StringBuilder();
+
+            // trying to do colors but that does not seem to work w/Nunit
+            //text.Append(&quot;\u001b[31m&quot;);
+
+            if (message.MessageType == 0)
+            {
+                prefix = &quot;EXCEPTION&quot;;
+                text.Append(prefix);
+            }
+            else
+            {
+                prefix = message.IsEvent
+                    ? &quot;EVENT&quot;
+                    : (message.MessageType &amp; 1) &gt; 0 ? &quot;RESPONSE&quot; : &quot;REQUEST&quot;;
+
+                var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
+
+                text.AppendLine($&quot;{prefix} [{message.CorrelationId}]&quot;);
+                text.Append($&quot;TYPE 0x{message.MessageType:x} {name}&quot;);
+            }
+
+            if (prefix == &quot;REQUEST&quot;)
+            {
+                if (message.FirstFrame.Length &gt;= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
+                {
+                    text.AppendLine();
+                    text.Append($&quot;PARTID {message.PartitionId}&quot;);
+                }
+            }
+
+            if (level &gt;= 2)
+            {
+                var frame = message.FirstFrame;
+                while (frame != null)
+                {
+                    text.AppendLine();
+                    text.Append(&quot;FRAME &quot;);
+                    text.Append(frame);
+                    frame = frame.Next;
+                }
+            }
+
+            //text.Append(&quot;\u001b[0m&quot;);
+
+            return text.ToString();
+#else
+            return string.Empty;
+#endif
         }
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;Frame&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;The frame bytes.&lt;/param&gt;
-        /// &lt;param name=&quot;flags&quot;&gt;The frame flags.&lt;/param&gt;
-        public Frame(byte[] bytes, FrameFlags flags = FrameFlags.Default)
-        {
-            Flags = flags;
-            Bytes = bytes ?? Array.Empty&lt;byte&gt;();
-        }
-
-        /// &lt;summary&gt;
-        /// Creates a new null frame.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;&lt;/returns&gt;
-        public static Frame CreateNull() =&gt; new Frame(FrameFlags.Null);
-
-        /// &lt;summary&gt;
-        /// Creates a new structure begin frame.
-        /// &lt;/summary&gt;
-        public static Frame CreateBeginStruct() =&gt; new Frame(FrameFlags.BeginStruct);
-
-        /// &lt;summary&gt;
-        /// Creates a new structure end frame.
-        /// &lt;/summary&gt;
-        public static Frame CreateEndStruct() =&gt; new Frame(FrameFlags.EndStruct);
-
-        /// &lt;summary&gt;
-        /// Reads the length of the frame from a sequence of bytes, and slice the sequence accordingly.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes.&lt;/param&gt;
-        /// &lt;returns&gt;The length of the frame.&lt;/returns&gt;
-        public static int ReadLength(ref ReadOnlySequence&lt;byte&gt; bytes)
-            =&gt; BytesExtensions.ReadInt(ref bytes, Endianness.LittleEndian);
-
-        /// &lt;summary&gt;
-        /// Reads the flags of the frame from a sequence of bytes, and slice the sequence accordingly.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes.&lt;/param&gt;
-        /// &lt;returns&gt;The flags of the frame.&lt;/returns&gt;
-        public static FrameFlags ReadFlags(ref ReadOnlySequence&lt;byte&gt; bytes)
-            =&gt; (FrameFlags) BytesExtensions.ReadUShort(ref bytes, Endianness.LittleEndian);
-
-        /// &lt;summary&gt;
-        /// Writes the length and flags of the frame to an array of bytes.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;bytes&quot;&gt;An array of bytes.&lt;/param&gt;
-        /// &lt;param name=&quot;position&quot;&gt;The position.&lt;/param&gt;
-        public void WriteLengthAndFlags(byte[] bytes, int position = 0)
-        {
-            bytes.WriteInt(position, Length, Endianness.LittleEndian);
-            bytes.WriteUShort(position + FrameFields.SizeOf.Length, (ushort) Flags, Endianness.LittleEndian);
-        }
-
-        /// &lt;summary&gt;
-        /// Gets or sets the frame flags.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Message flags and Frame flags are carried by the same field.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public FrameFlags Flags { get; set;  }
-
-        /// &lt;summary&gt;
-        /// Gets the frame bytes.
-        /// &lt;/summary&gt;
-#pragma warning disable CA1819 // Properties should not return arrays - but here we do intend to modify the array
-        public byte[] Bytes { get; }
-#pragma warning restore CA1819
-
-        /// &lt;summary&gt;
-        /// Gets the next frame.
-        /// &lt;/summary&gt;
-        public Frame Next { get; set; }
-
-        /// &lt;summary&gt;
-        /// Gets the frame length (including length and flags fields).
-        /// &lt;/summary&gt;
-        public int Length =&gt; FrameFields.SizeOf.Length + FrameFields.SizeOf.Flags + (Bytes?.Length ?? 0);
-
-        /// &lt;summary&gt;
-        /// Determines whether the frame is a structure end frame.
-        /// &lt;/summary&gt;
-        public bool IsEndStruct =&gt; Flags.HasAll(FrameFlags.EndStruct);
-
-        /// &lt;summary&gt;
-        /// Determines whether the frame is a structure begin frame.
-        /// &lt;/summary&gt;
-        public bool IsBeginStruct =&gt; Flags.HasAll(FrameFlags.BeginStruct);
-
-        /// &lt;summary&gt;
-        /// Determines whether the frame is a null frame.
-        /// &lt;/summary&gt;
-        public bool IsNull =&gt; Flags.HasAll(FrameFlags.Null);
-
-        /// &lt;summary&gt;
-        /// Determines whether the frame is a final frame.
-        /// &lt;/summary&gt;
-        public bool IsFinal =&gt; Flags.HasAll(FrameFlags.Final);
-
-        /// &lt;summary&gt;
-        /// Shallow clone the frame.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;A shallow clone of the frame.&lt;/returns&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;The shallow clone of a frame shares the byte array.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public Frame ShallowClone() =&gt; new Frame(Bytes, Flags);
-
-        /// &lt;summary&gt;
-        /// Deep clone the frame.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;A deep clone of the frame.&lt;/returns&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;THe deep clone of a frame contains a copy of the original byte array.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public Frame DeepClone()
-        {
-            var bytes = new byte[Bytes.Length];
-            Buffer.BlockCopy(Bytes, 0, bytes, 0, bytes.Length);
-            return new Frame(bytes, Flags);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public override string ToString()
-            =&gt; $&quot;{{Frame: {Length} bytes, {Flags.ToBetterString()} (0x{Flags:x})}}&quot;;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[37,9,37,60,1],[39,13,39,27,1],[40,13,40,41,1],[41,9,41,10,1],[48,9,48,74,1],[50,13,50,27,1],[51,13,51,50,1],[52,9,52,10,1],[58,45,58,71,1],[63,52,63,85,1],[68,50,68,81,1],[76,16,76,75,1],[84,16,84,91,1],[93,13,93,71,1],[94,13,94,110,1],[95,9,95,10,1],[103,35,103,39,1],[103,40,103,44,1],[109,31,109,35,1],[115,29,115,33,1],[115,34,115,38,1],[120,30,120,105,1],[125,36,125,70,1],[130,38,130,74,1],[135,31,135,60,1],[140,32,140,62,1],[149,40,149,63,1],[160,13,160,48,1],[161,13,161,64,1],[162,13,162,44,1],[167,16,167,84,1]]);
+      highlightRanges([[38,13,38,33,1],[38,34,38,83,1],[88,13,88,33,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTopic.Events.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTopic.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,78 +22,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HTopic&lt;T&gt; // Events
+    /// &lt;summary&gt;
+    /// Implements &lt;see cref=&quot;IHTopic{T}&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;T&quot;&gt;The type of the message objects.&lt;/typeparam&gt;
+    internal sealed partial class HTopic&lt;T&gt; : DistributedObjectBase, IHTopic&lt;T&gt;
     {
+        private IData _keyData;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Topic{T}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public HTopic(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.Topic, name, factory, cluster, serializationService, loggerFactory)
+        { }
+
         /// &lt;inheritdoc /&gt;
-        public async Task&lt;Guid&gt; SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt; events, object state = null)
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task PublishAsync(T message)
         {
-            if (events == null) throw new ArgumentNullException(nameof(events));
+            _keyData ??= ToData(Name);
 
-            var handlers = new TopicEventHandlers&lt;T&gt;();
-            events(handlers);
+            var messageData = ToSafeData(message);
+            var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
+            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
 
-            var subscription = new ClusterSubscription(
-                TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
-                ReadSubscribeResponse,
-                CreateUnsubscribeRequest,
-                ReadUnsubscribeResponse,
-                HandleEventAsync,
-                new SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;(Name, handlers, state));
-
-            await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
-
-            return subscription.Id;
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
         }
-
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
-        {
-            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleTopicEventAsync, state, LoggerFactory);
-        }
-
-        private async ValueTask HandleTopicEventAsync(IData itemData, long publishTime, Guid memberId, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;&gt;(state);
-
-            var member = Cluster.Members.GetMember(memberId);
-
-            // that one is not lazy...
-            var item = ToObject&lt;T&gt;(itemData);
-
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in sstate.Handlers)
-            {
-                // there is only one event type...
-                await handler.HandleAsync(this, member, publishTime, item, state).CfAwait();
-            }
-        }
-
-        private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
-            =&gt; TopicRemoveMessageListenerCodec.EncodeRequest(Name, subscriptionId);
-
-        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
-            =&gt; TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
-
-        private static bool ReadUnsubscribeResponse(ClientMessage message, object state)
-            =&gt; TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
-
-        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
-            =&gt; UnsubscribeBaseAsync(subscriptionId);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,13,30,32,1],[30,33,30,81,0],[32,13,32,56,1],[33,13,33,30,1],[35,13,41,86,1],[43,13,43,79,1],[45,13,45,36,1],[46,9,46,10,1],[50,13,50,125,1],[55,13,55,87,1],[57,13,57,62,1],[60,13,60,46,1],[63,22,63,33,1],[63,34,63,36,1],[63,37,63,52,1],[66,17,66,93,1],[68,9,68,10,1],[71,16,71,83,1],[74,16,74,85,1],[77,16,77,80,1],[80,16,80,52,1]]);
+      highlightRanges([[41,15,41,100,1],[42,11,42,12,1],[51,13,51,39,1],[53,13,53,51,1],[54,13,54,85,1],[55,13,55,97,1],[60,13,60,34,1],[62,9,62,10,1]]);
     </script>
   </body>
 </html>

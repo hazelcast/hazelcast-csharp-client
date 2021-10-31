@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SqlCloseCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetSizeCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,42 +49,44 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Closes server-side query cursor.
+    /// Returns the number of elements in this set (its cardinality). If this set contains more than Integer.MAX_VALUE
+    /// elements, returns Integer.MAX_VALUE.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SqlCloseServerCodec
+    internal static class SetSizeServerCodec
 #else
-    internal static class SqlCloseCodec
+    internal static class SetSizeCodec
 #endif
     {
-        public const int RequestMessageType = 2163456; // 0x210300
-        public const int ResponseMessageType = 2163457; // 0x210301
+        public const int RequestMessageType = 393472; // 0x060100
+        public const int ResponseMessageType = 393473; // 0x060101
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Query ID.
+            /// Name of the Set
             ///&lt;/summary&gt;
-            public Hazelcast.Sql.SqlQueryId QueryId { get; set; }
+            public string Name { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.Sql.SqlQueryId queryId)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Sql.Close&quot;
+                OperationName = &quot;Set.Size&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
-            SqlQueryIdCodec.Encode(clientMessage, queryId);
+            StringCodec.Encode(clientMessage, name);
             return clientMessage;
         }
 
@@ -94,21 +96,27 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
-            request.QueryId = SqlQueryIdCodec.Decode(iterator);
+            request.Name = StringCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// The number of elements in this set (its cardinality)
+            ///&lt;/summary&gt;
+            public int Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(int response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -118,7 +126,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -127,7 +136,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,60,1],[78,13,78,34,1],[109,13,109,64,1],[110,13,110,53,1],[111,13,111,29,1],[112,13,112,29,1],[113,9,113,10,1]]);
+      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[100,35,100,39,1],[100,40,100,44,1],[117,13,117,64,1],[118,13,118,53,1],[119,13,119,48,1],[120,13,120,90,1],[121,13,121,29,1],[122,9,122,10,1]]);
     </script>
   </body>
 </html>

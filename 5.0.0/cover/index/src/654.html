@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\EnumerableExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\EndiannessExtensions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,254 +23,38 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides extension methods to the &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; interface.
+    /// Provides extension methods to the &lt;see cref=&quot;Endianness&quot;/&gt; enumeration.
     /// &lt;/summary&gt;
-    internal static class EnumerableExtensions
+    public static class EndiannessExtensions
     {
         /// &lt;summary&gt;
-        /// Shuffles an enumerable.
+        /// Gets the native endianness of the computer architecture where the code is executing.
         /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The enumerated type.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The original enumerable.&lt;/param&gt;
-        /// &lt;returns&gt;The original items, in random order.&lt;/returns&gt;
-        public static IEnumerable&lt;T&gt; Shuffle&lt;T&gt;(this IEnumerable&lt;T&gt; source)
-            =&gt; source.OrderBy(x =&gt; RandomProvider.Next());
+        public static Endianness NativeEndianness =&gt; BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian;
 
         /// &lt;summary&gt;
-        /// Shuffles a collection.
+        /// Determines whether this endianness is &#39;big-endian&#39;.
         /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The enumerated type.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The original collection.&lt;/param&gt;
-        /// &lt;returns&gt;The original items, in random order.&lt;/returns&gt;
-        public static IReadOnlyCollection&lt;T&gt; Shuffle&lt;T&gt;(this IReadOnlyCollection&lt;T&gt; source)
-        {
-            // if source is a collection, we can optimize the list creation
-            var l = new List&lt;T&gt;(source.Count);
-            l.AddRange(source.OrderBy(x =&gt; RandomProvider.Next()));
-            return l;
-        }
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;true if this endianness is &#39;big-endian&#39;; otherwise false.&lt;/returns&gt;
+        public static bool IsBigEndian(this Endianness endianness) =&gt; endianness == Endianness.BigEndian;
 
         /// &lt;summary&gt;
-        /// Combine multiple &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; instances.
+        /// Determines whether this endianness is &#39;little-endian&#39;.
         /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T1&quot;&gt;The first enumerated type.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;T2&quot;&gt;The second enumerated type.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The instances to combine.&lt;/param&gt;
-        /// &lt;returns&gt;One single &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; combining the multiple instances.&lt;/returns&gt;
-        public static IEnumerable&lt;(T1, T2)&gt; Combine&lt;T1, T2&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2) source)
-        {
-            var (source1, source2) = source;
-
-            if (source1 == null) throw new ArgumentException(&quot;Element #1 of source is null.&quot;, nameof(source));
-            if (source2 == null) throw new ArgumentException(&quot;Element #2 of source is null.&quot;, nameof(source));
-
-            var i1 = source1.GetEnumerator();
-            var i2 = source2.GetEnumerator();
-
-            try
-            {
-                while (i1.MoveNext() &amp;&amp; i2.MoveNext())
-                    yield return (i1.Current, i2.Current);
-            }
-            finally
-            {
-                i1.Dispose();
-                i2.Dispose();
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Combine &lt;see cref=&quot;IEnumerable{T}&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T1&quot;&gt;The first enumerated type.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;T2&quot;&gt;The second enumerated type.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;T3&quot;&gt;The third enumerated type.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;T4&quot;&gt;The fourth enumerated type.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The instances to combine.&lt;/param&gt;
-        /// &lt;returns&gt;One single &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; combining the multiple instances.&lt;/returns&gt;
-        public static IEnumerable&lt;(T1, T2, T3, T4)&gt; Combine&lt;T1, T2, T3, T4&gt;(this (IEnumerable&lt;T1&gt; Source1, IEnumerable&lt;T2&gt; Source2, IEnumerable&lt;T3&gt; Source3, IEnumerable&lt;T4&gt; Source4) source)
-        {
-            var (source1, source2, source3, source4) = source;
-
-            if (source1 == null) throw new ArgumentException(&quot;Element #1 of source is null.&quot;, nameof(source));
-            if (source2 == null) throw new ArgumentException(&quot;Element #2 of source is null.&quot;, nameof(source));
-            if (source3 == null) throw new ArgumentException(&quot;Element #3 of source is null.&quot;, nameof(source));
-            if (source4 == null) throw new ArgumentException(&quot;Element #4 of source is null.&quot;, nameof(source));
-
-            var i1 = source1.GetEnumerator();
-            var i2 = source2.GetEnumerator();
-            var i3 = source3.GetEnumerator();
-            var i4 = source4.GetEnumerator();
-
-            try
-            {
-                while (i1.MoveNext() &amp;&amp; i2.MoveNext() &amp;&amp; i3.MoveNext() &amp;&amp; i4.MoveNext())
-                    yield return (i1.Current, i2.Current, i3.Current, i4.Current);
-            }
-            finally
-            {
-                i1.Dispose();
-                i2.Dispose();
-                i3.Dispose();
-                i4.Dispose();
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Creates a &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; from an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey, TValue}&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to create a &lt;see cref=&quot;IDictionary{TKey,TValue}&quot;/&gt; from.&lt;/param&gt;
-        /// &lt;returns&gt;A &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; that contains values provided by &lt;paramref name=&quot;source&quot;/&gt;.&lt;/returns&gt;
-        public static IDictionary&lt;TKey, TValue&gt; ToDictionary&lt;TKey, TValue&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source)
-            =&gt; source.ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
-
-        /// &lt;summary&gt;
-        /// Creates a &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; from an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of (key, value) pairs.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to create a &lt;see cref=&quot;IDictionary{TKey,TValue}&quot;/&gt; from.&lt;/param&gt;
-        /// &lt;returns&gt;A &lt;see cref=&quot;Dictionary{TKey,TValue}&quot;/&gt; that contains values provided by &lt;paramref name=&quot;source&quot;/&gt;.&lt;/returns&gt;
-        public static IDictionary&lt;TKey, TValue&gt; ToDictionary&lt;TKey, TValue&gt;(this IEnumerable&lt;(TKey Key, TValue Value)&gt; source)
-            =&gt; source.ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
-
-        /// &lt;summary&gt;
-        /// Enumerates &lt;paramref name=&quot;source&quot;/&gt; to a new &lt;see cref=&quot;List{T}&quot;/&gt; starting from &lt;paramref name=&quot;initialCapacity&quot;/&gt; size.
-        /// This allows to avoid or minimize list resizing if number of elements is known fully or approximately.
-        /// &lt;/summary&gt;
-        public static List&lt;T&gt; ToList&lt;T&gt;(this IEnumerable&lt;T&gt; source, int initialCapacity)
-        {
-            var list = new List&lt;T&gt;(initialCapacity);
-            list.AddRange(source);
-            return list;
-        }
-
-        /// Deconstructs an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; into its items.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to deconstruct.&lt;/param&gt;
-        /// &lt;param name=&quot;item1&quot;&gt;The first item.&lt;/param&gt;
-        public static void Deconstruct&lt;T&gt;(this IEnumerable&lt;T&gt; source, out T item1)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            using var e = source.GetEnumerator();
-            if (!e.MoveNext()) throw new ArgumentException(&quot;Source does not contain enough items.&quot;, nameof(source));
-            item1 = e.Current;
-        }
-
-        /// &lt;summary&gt;
-        /// Deconstructs an &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; into its items.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; to deconstruct.&lt;/param&gt;
-        /// &lt;param name=&quot;item1&quot;&gt;The first item.&lt;/param&gt;
-        /// &lt;param name=&quot;item2&quot;&gt;The second item.&lt;/param&gt;
-        public static void Deconstruct&lt;T&gt;(this IEnumerable&lt;T&gt; source, out T item1, out T item2)
-        {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            using var e = source.GetEnumerator();
-            if (!e.MoveNext()) throw new ArgumentException(&quot;Source does not contain enough items.&quot;, nameof(source));
-            item1 = e.Current;
-            if (!e.MoveNext()) throw new ArgumentException(&quot;Source does not contain enough items.&quot;, nameof(source));
-            item2 = e.Current;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the index of the first &lt;see cref=&quot;IList{T}&quot;/&gt; item that satisfies the specified &lt;paramref name=&quot;predicate&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;list&quot;&gt;A list of items.&lt;/param&gt;
-        /// &lt;param name=&quot;predicate&quot;&gt;A predicate.&lt;/param&gt;
-        /// &lt;returns&gt;The index of the first item that satisfies the specified &lt;paramref name=&quot;predicate&quot;/&gt;, or -1.&lt;/returns&gt;
-        public static int IndexOf&lt;T&gt;(this IList&lt;T&gt; list, Func&lt;T, bool&gt; predicate)
-        {
-            var i = 0;
-            foreach (var item in list)
-                if (predicate(item))
-                    return i;
-                else
-                    i += 1;
-            return -1;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the index of the last &lt;see cref=&quot;IList{T}&quot;/&gt; item that satisfies the specified &lt;paramref name=&quot;predicate&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;list&quot;&gt;A list of items.&lt;/param&gt;
-        /// &lt;param name=&quot;predicate&quot;&gt;A predicate.&lt;/param&gt;
-        /// &lt;returns&gt;The index of the last item that satisfies the specified &lt;paramref name=&quot;predicate&quot;/&gt;, or -1.&lt;/returns&gt;
-        public static int LastIndexOf&lt;T&gt;(this IList&lt;T&gt; list, Func&lt;T, bool&gt; predicate)
-        {
-            var i = 0;
-            var f = -1;
-            foreach (var item in list)
-            {
-                if (predicate(item)) f = i;
-                i += 1;
-            }
-            return f;
-        }
-
-        /// &lt;summary&gt;
-        /// Filters a sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; based on a predicate.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;A sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;param name=&quot;predicate&quot;&gt;A function to test each &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; for a condition.&lt;/param&gt;
-        /// &lt;returns&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; from the input sequence that satisfy the condition.&lt;/returns&gt;
-        public static IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; WherePair&lt;TKey, TValue&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, Func&lt;TKey, TValue, bool&gt; predicate)
-            =&gt; source.Where(pair =&gt; predicate(pair.Key, pair.Value));
-
-        /// &lt;summary&gt;
-        /// Filters a sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; based on a predicate.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;A sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;param name=&quot;predicate&quot;&gt;A function to test each &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; for a condition.&lt;/param&gt;
-        /// &lt;returns&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; from the input sequence that satisfy the condition.&lt;/returns&gt;
-        public static IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; WherePair&lt;TKey, TValue&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, Func&lt;TKey, TValue, int, bool&gt; predicate)
-            =&gt; source.Where((pair, index) =&gt; predicate(pair.Key, pair.Value, index));
-
-        /// &lt;summary&gt;
-        /// Project each element of a sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; into a new form.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the projected elements.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;A sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;param name=&quot;selector&quot;&gt;A transform function to apply to each &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;returns&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; whose elements are the result of the transform function on each element of the source.&lt;/returns&gt;
-        public static IEnumerable&lt;TResult&gt; SelectPair&lt;TKey, TValue, TResult&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, Func&lt;TKey, TValue, TResult&gt; selector)
-            =&gt; source.Select(pair =&gt; selector(pair.Key, pair.Value));
-
-        /// &lt;summary&gt;
-        /// Project each element of a sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; into a new form.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the projected elements.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;source&quot;&gt;A sequence of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;param name=&quot;selector&quot;&gt;A transform function to apply to each &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.&lt;/param&gt;
-        /// &lt;returns&gt;An &lt;see cref=&quot;IEnumerable{T}&quot;/&gt; of &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; whose elements are the result of the transform function on each element of the source.&lt;/returns&gt;
-        public static IEnumerable&lt;TResult&gt; SelectPair&lt;TKey, TValue, TResult&gt;(this IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; source, Func&lt;TKey, TValue, int, TResult&gt; selector)
-            =&gt; source.Select((pair, index) =&gt; selector(pair.Key, pair.Value, index));
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        /// &lt;returns&gt;true if this endianness is &#39;little-endian&#39;; otherwise false.&lt;/returns&gt;
+        public static bool IsLittleEndian(this Endianness endianness) =&gt; endianness == Endianness.LittleEndian;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,16,33,36,1],[33,36,33,57,1],[33,57,33,58,1],[44,13,44,47,1],[45,13,45,44,1],[45,44,45,65,1],[45,65,45,68,1],[46,13,46,22,1],[58,13,58,45,1],[60,13,60,33,1],[60,34,60,111,1],[61,13,61,33,1],[61,34,61,111,1],[63,13,63,46,1],[64,13,64,46,1],[68,17,68,55,1],[69,21,69,59,1],[70,13,70,14,1],[73,17,73,30,1],[74,17,74,30,1],[75,13,75,14,1],[76,9,76,10,1],[89,13,89,63,1],[91,13,91,33,1],[91,34,91,111,1],[92,13,92,33,1],[92,34,92,111,1],[93,13,93,33,1],[93,34,93,111,1],[94,13,94,33,1],[94,34,94,111,1],[96,13,96,46,1],[97,13,97,46,1],[98,13,98,46,1],[99,13,99,46,1],[103,17,103,89,1],[104,21,104,83,1],[105,13,105,14,1],[108,17,108,30,1],[109,17,109,30,1],[110,17,110,30,1],[111,17,111,30,1],[112,13,112,14,1],[113,9,113,10,1],[123,16,123,41,1],[123,41,123,46,1],[123,46,123,53,1],[123,53,123,60,1],[123,60,123,61,1],[133,16,133,41,1],[133,41,133,46,1],[133,46,133,53,1],[133,53,133,60,1],[133,60,133,61,1],[141,13,141,53,1],[142,13,142,35,1],[143,13,143,25,1],[153,13,153,32,0],[153,33,153,81,0],[154,13,154,50,0],[155,13,155,31,0],[155,32,155,117,0],[156,13,156,31,0],[157,9,157,10,0],[168,13,168,32,0],[168,33,168,81,0],[169,13,169,50,0],[170,13,170,31,0],[170,32,170,117,0],[171,13,171,31,0],[172,13,172,31,0],[172,32,172,117,0],[173,13,173,31,0],[174,9,174,10,0],[185,13,185,23,0],[186,22,186,30,0],[186,31,186,33,0],[186,34,186,38,0],[187,17,187,37,0],[188,21,188,30,0],[190,21,190,28,0],[191,13,191,23,0],[192,9,192,10,0],[203,13,203,23,0],[204,13,204,24,0],[205,22,205,30,0],[205,31,205,33,0],[205,34,205,38,0],[207,17,207,37,0],[207,38,207,44,0],[208,17,208,24,0],[210,13,210,22,0],[222,16,222,37,1],[222,37,222,68,1],[222,68,222,69,1],[233,16,233,46,0],[233,46,233,84,0],[233,84,233,85,0],[245,16,245,38,1],[245,38,245,68,0],[245,68,245,69,1],[257,16,257,47,0],[257,47,257,84,0],[257,84,257,85,0]]);
+      highlightRanges([[27,54,27,130,1],[34,71,34,105,1],[41,74,41,111,1]]);
     </script>
   </body>
 </html>

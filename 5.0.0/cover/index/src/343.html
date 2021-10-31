@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapAddEntryListenerToKeyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds an continuous entry listener for this map. The listener will be notified for map add/remove/update/evict
-    /// events filtered by the given predicate.
+    /// Adds the specified entry listener for the specified key. The listener will be notified for all
+    /// add/remove/update/evict events of the specified key only.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ReplicatedMapAddEntryListenerToKeyWithPredicateServerCodec
+    internal static class ReplicatedMapAddEntryListenerToKeyServerCodec
 #else
-    internal static class ReplicatedMapAddEntryListenerToKeyWithPredicateCodec
+    internal static class ReplicatedMapAddEntryListenerToKeyCodec
 #endif
     {
-        public const int RequestMessageType = 854528; // 0x0D0A00
-        public const int ResponseMessageType = 854529; // 0x0D0A01
+        public const int RequestMessageType = 855040; // 0x0D0C00
+        public const int ResponseMessageType = 855041; // 0x0D0C01
         private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
@@ -68,7 +68,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventEntryMessageType = 854530; // 0x0D0A02
+        private const int EventEntryMessageType = 855042; // 0x0D0C02
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -85,23 +85,18 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The predicate for filtering entries
-            ///&lt;/summary&gt;
-            public IData Predicate { get; set; }
-
-            /// &lt;summary&gt;
             /// if true fires events that originated from this node only, otherwise fires all events
             ///&lt;/summary&gt;
             public bool LocalOnly { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData predicate, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, IData key, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;ReplicatedMap.AddEntryListenerToKeyWithPredicate&quot;
+                OperationName = &quot;ReplicatedMap.AddEntryListenerToKey&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -110,7 +105,6 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -123,7 +117,6 @@ namespace Hazelcast.Protocol.Codecs
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
-            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -201,7 +194,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[91,13,95,15,1],[96,13,96,123,1],[97,13,97,104,1],[98,13,98,88,1],[99,13,99,83,1],[100,13,100,48,1],[101,13,101,53,1],[102,13,102,50,1],[103,13,103,56,1],[104,13,104,34,1],[127,36,127,40,1],[127,41,127,45,1],[144,13,144,64,1],[145,13,145,53,1],[146,13,146,48,1],[147,13,147,91,1],[148,13,148,29,1],[149,9,149,10,1],[172,13,172,64,1],[173,13,173,57,1],[174,13,174,54,1],[176,17,176,52,1],[177,17,177,94,1],[178,17,178,85,1],[179,17,179,122,1],[180,17,180,80,1],[181,17,181,83,1],[182,17,182,85,1],[183,17,183,89,1],[184,17,184,132,1],[186,13,186,137,0],[187,13,187,28,0],[188,9,188,10,1]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,83,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,50,1],[98,13,98,34,1],[120,36,120,40,1],[120,41,120,45,1],[137,13,137,64,1],[138,13,138,53,1],[139,13,139,48,1],[140,13,140,91,1],[141,13,141,29,1],[142,9,142,10,1],[165,13,165,64,1],[166,13,166,57,1],[167,13,167,54,1],[169,17,169,52,1],[170,17,170,94,1],[171,17,171,85,1],[172,17,172,122,1],[173,17,173,80,1],[174,17,174,83,1],[175,17,175,85,1],[176,17,176,89,1],[177,17,177,132,1],[179,13,179,137,0],[180,13,180,28,0],[181,9,181,10,1]]);
     </script>
   </body>
 </html>

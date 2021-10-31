@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutWithMaxIdleCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutTransientWithMaxIdleCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Puts an entry into this map with a given ttl (time to live) value.Entry will expire and get evicted after the ttl
-    /// If ttl is 0, then the entry lives forever.This method returns a clone of the previous value, not the original
-    /// (identically equal) value previously put into the map.Time resolution for TTL is seconds. The given TTL value is
-    /// rounded to the next closest second value.
+    /// Same as put except that MapStore, if defined, will not be called to store/persist the entry.
+    /// If ttl and maxIdle are 0, then the entry lives forever.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapPutWithMaxIdleServerCodec
+    internal static class MapPutTransientWithMaxIdleServerCodec
 #else
-    internal static class MapPutWithMaxIdleCodec
+    internal static class MapPutTransientWithMaxIdleCodec
 #endif
     {
-        public const int RequestMessageType = 82944; // 0x014400
-        public const int ResponseMessageType = 82945; // 0x014401
+        public const int RequestMessageType = 83200; // 0x014500
+        public const int ResponseMessageType = 83201; // 0x014501
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestMaxIdleFieldOffset = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
@@ -110,7 +108,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.PutWithMaxIdle&quot;
+                OperationName = &quot;Map.PutTransientWithMaxIdle&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -176,7 +174,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[100,13,104,15,0],[105,13,105,123,0],[106,13,106,104,0],[107,13,107,88,0],[108,13,108,81,0],[109,13,109,71,0],[110,13,110,79,0],[111,13,111,48,0],[112,13,112,53,0],[113,13,113,50,0],[114,13,114,53,0],[115,13,115,34,0],[140,37,140,41,0],[140,42,140,46,0],[157,13,157,64,0],[158,13,158,53,0],[159,13,159,29,0],[160,13,160,86,0],[161,13,161,29,0],[162,9,162,10,0]]);
+      highlightRanges([[98,13,102,15,0],[103,13,103,123,0],[104,13,104,104,0],[105,13,105,88,0],[106,13,106,81,0],[107,13,107,71,0],[108,13,108,79,0],[109,13,109,48,0],[110,13,110,53,0],[111,13,111,50,0],[112,13,112,53,0],[113,13,113,34,0],[138,37,138,41,0],[138,42,138,46,0],[155,13,155,64,0],[156,13,156,53,0],[157,13,157,29,0],[158,13,158,86,0],[159,13,159,29,0],[160,9,160,10,0]]);
     </script>
   </body>
 </html>

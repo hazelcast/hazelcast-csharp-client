@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\FlakeIdGeneratorNewIdBatchCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\CPGroupDestroyCPObjectCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,52 +49,55 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Fetches a new batch of ids for the given flake id generator.
+    /// Destroys the distributed object with the given name on the requested
+    /// CP group
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class FlakeIdGeneratorNewIdBatchServerCodec
+    internal static class CPGroupDestroyCPObjectServerCodec
 #else
-    internal static class FlakeIdGeneratorNewIdBatchCodec
+    internal static class CPGroupDestroyCPObjectCodec
 #endif
     {
-        public const int RequestMessageType = 1835264; // 0x1C0100
-        public const int ResponseMessageType = 1835265; // 0x1C0101
-        private const int RequestBatchSizeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestBatchSizeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int ResponseBaseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseIncrementFieldOffset = ResponseBaseFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseBatchSizeFieldOffset = ResponseIncrementFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = ResponseBatchSizeFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 1966592; // 0x1E0200
+        public const int ResponseMessageType = 1966593; // 0x1E0201
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the flake id generator.
+            /// CP group id of this distributed object
             ///&lt;/summary&gt;
-            public string Name { get; set; }
+            public Hazelcast.CP.CPGroupId GroupId { get; set; }
 
             /// &lt;summary&gt;
-            /// Number of ids that will be fetched on one call.
+            /// The service of this distributed object
             ///&lt;/summary&gt;
-            public int BatchSize { get; set; }
+            public string ServiceName { get; set; }
+
+            /// &lt;summary&gt;
+            /// The name of this distributed object
+            ///&lt;/summary&gt;
+            public string ObjectName { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, int batchSize)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string serviceName, string objectName)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;FlakeIdGenerator.NewIdBatch&quot;
+                OperationName = &quot;CPGroup.DestroyCPObject&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(RequestBatchSizeFieldOffset, batchSize);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, name);
+            RaftGroupIdCodec.Encode(clientMessage, groupId);
+            StringCodec.Encode(clientMessage, serviceName);
+            StringCodec.Encode(clientMessage, objectName);
             return clientMessage;
         }
 
@@ -103,41 +106,24 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.BatchSize = initialFrame.Bytes.ReadIntL(RequestBatchSizeFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
+            iterator.Take(); // empty initial frame
+            request.GroupId = RaftGroupIdCodec.Decode(iterator);
+            request.ServiceName = StringCodec.Decode(iterator);
+            request.ObjectName = StringCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// First id in the batch.
-            ///&lt;/summary&gt;
-            public long Base { get; set; }
-
-            /// &lt;summary&gt;
-            /// Increment for the next id in the batch.
-            ///&lt;/summary&gt;
-            public long Increment { get; set; }
-
-            /// &lt;summary&gt;
-            /// Number of ids in the batch.
-            ///&lt;/summary&gt;
-            public int BatchSize { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(long @base, long increment, int batchSize)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteLongL(ResponseBaseFieldOffset, @base);
-            initialFrame.Bytes.WriteLongL(ResponseIncrementFieldOffset, increment);
-            initialFrame.Bytes.WriteIntL(ResponseBatchSizeFieldOffset, batchSize);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -147,10 +133,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Base = initialFrame.Bytes.ReadLongL(ResponseBaseFieldOffset);
-            response.Increment = initialFrame.Bytes.ReadLongL(ResponseIncrementFieldOffset);
-            response.BatchSize = initialFrame.Bytes.ReadIntL(ResponseBatchSizeFieldOffset);
+            iterator.Take(); // empty initial frame
             return response;
         }
 
@@ -159,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,82,1],[86,13,86,48,1],[87,13,87,53,1],[88,13,88,34,1],[109,32,109,36,1],[109,37,109,41,1],[114,37,114,41,1],[114,42,114,46,1],[119,36,119,40,1],[119,41,119,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,83,1],[142,13,142,93,1],[143,13,143,92,1],[144,13,144,29,1],[145,9,145,10,1]]);
+      highlightRanges([[79,13,83,15,1],[84,13,84,123,1],[85,13,85,104,1],[86,13,86,88,1],[87,13,87,48,1],[88,13,88,61,1],[89,13,89,60,1],[90,13,90,59,1],[91,13,91,34,1],[124,13,124,64,1],[125,13,125,53,1],[126,13,126,29,1],[127,13,127,29,1],[128,9,128,10,1]]);
     </script>
   </body>
 </html>

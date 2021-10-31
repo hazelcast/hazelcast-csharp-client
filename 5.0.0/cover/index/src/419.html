@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalQueueTakeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalQueueSizeCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Retrieves and removes the head of this queue, waiting if necessary until an element becomes available.
+    /// Returns the number of elements in this collection.If this collection contains more than Integer.MAX_VALUE
+    /// elements, returns Integer.MAX_VALUE.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalQueueTakeServerCodec
+    internal static class TransactionalQueueSizeServerCodec
 #else
-    internal static class TransactionalQueueTakeCodec
+    internal static class TransactionalQueueSizeCodec
 #endif
     {
-        public const int RequestMessageType = 1180160; // 0x120200
-        public const int ResponseMessageType = 1180161; // 0x120201
+        public const int RequestMessageType = 1180928; // 0x120500
+        public const int ResponseMessageType = 1180929; // 0x120501
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -90,7 +92,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalQueue.Take&quot;
+                OperationName = &quot;TransactionalQueue.Size&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -119,19 +121,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The head of this queue
+            /// The number of elements in this collection
             ///&lt;/summary&gt;
-            public IData Response { get; set; }
+            public int Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse(int response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -140,8 +142,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -150,7 +152,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,75,1],[89,13,89,81,1],[90,13,90,48,1],[91,13,91,53,1],[92,13,92,34,1],[114,37,114,41,1],[114,42,114,46,1],[131,13,131,64,1],[132,13,132,53,1],[133,13,133,29,1],[134,13,134,86,1],[135,13,135,29,1],[136,9,136,10,1]]);
+      highlightRanges([[82,13,86,15,1],[87,13,87,123,1],[88,13,88,104,1],[89,13,89,88,1],[90,13,90,75,1],[91,13,91,81,1],[92,13,92,48,1],[93,13,93,53,1],[94,13,94,34,1],[116,35,116,39,1],[116,40,116,44,1],[133,13,133,64,1],[134,13,134,53,1],[135,13,135,48,1],[136,13,136,90,1],[137,13,137,29,1],[138,9,138,10,1]]);
     </script>
   </body>
 </html>

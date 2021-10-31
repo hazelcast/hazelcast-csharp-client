@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\AutoBatcher.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\TransactionalDistributedObjectBase.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,42 +22,49 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
+using System;
 using Hazelcast.Clustering;
-using Hazelcast.Core;
-using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.DistributedObjects.Impl
+namespace Hazelcast.DistributedObjects
 {
-    internal sealed class AutoBatcher : AutoBatcherBase
+    /// &lt;summary&gt;
+    /// Provides a base class to transactional distributed objects.
+    /// &lt;/summary&gt;
+    internal abstract class TransactionalDistributedObjectBase : DistributedObjectBase, ITransactionalDistributedObject
     {
-        private readonly string _name;
-        private readonly FlakeIdGeneratorOptions _options;
-        private readonly ClusterMessaging _messaging;
-
-        public AutoBatcher(string name, FlakeIdGeneratorOptions options, ClusterMessaging messaging)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TransactionalDistributedObjectBase&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serviceName&quot;&gt;the name of the service managing this object.&lt;/param&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;transactionClientConnection&quot;&gt;The client connection supporting the transaction.&lt;/param&gt;
+        /// &lt;param name=&quot;transactionId&quot;&gt;The unique identifier of the transaction.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        protected TransactionalDistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
         {
-            _name = name;
-            _options = options;
-            _messaging = messaging;
+            TransactionId = transactionId;
+            TransactionClientConnection = transactionClientConnection;
         }
 
-        protected override async Task&lt;Batch&gt; FetchBatch()
-        {
-            var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(_name, _options.PrefetchCount);
-            var responseMessage = await _messaging.SendAsync(requestMessage).CfAwait();
-            var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
+        /// &lt;inheritdoc /&gt;
+        public Guid TransactionId { get; }
 
-            var batch = new Batch(response.Base, response.Increment, response.BatchSize, _options.PrefetchValidityPeriod);
-            SetBatch(batch); // important!
-            return batch;
-        }
+        /// &lt;summary&gt;
+        /// Gets the client connection supporting the transaction.
+        /// &lt;/summary&gt;
+        public MemberConnection TransactionClientConnection { get; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,9,28,101,1],[30,13,30,26,1],[31,13,31,32,1],[32,13,32,36,1],[33,9,33,10,1],[37,13,37,111,1],[38,13,38,88,1],[39,13,39,92,1],[41,13,41,123,1],[42,13,42,29,1],[43,13,43,26,1],[44,9,44,10,1]]);
+      highlightRanges([[39,15,39,93,1],[41,13,41,43,1],[42,13,42,71,1],[43,9,43,10,1],[46,37,46,41,1],[51,63,51,67,1]]);
     </script>
   </body>
 </html>

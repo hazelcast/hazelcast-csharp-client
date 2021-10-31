@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTopic.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HSet.Events.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,60 +22,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
-using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    /// &lt;summary&gt;
-    /// Implements &lt;see cref=&quot;IHTopic{T}&quot;/&gt;.
-    /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;T&quot;&gt;The type of the message objects.&lt;/typeparam&gt;
-    internal sealed partial class HTopic&lt;T&gt; : DistributedObjectBase, IHTopic&lt;T&gt;
+    internal partial class HSet&lt;T&gt; // Events
     {
-        private IData _keyData;
+        protected override ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting)
+            =&gt; SetAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;Topic{T}&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
-        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
-        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public HTopic(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(ServiceNames.Topic, name, factory, cluster, serializationService, loggerFactory)
-        { }
+        protected override ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
 
-        /// &lt;inheritdoc /&gt;
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task PublishAsync(T message)
-        {
-            _keyData ??= ToData(Name);
+        protected override Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetAddListenerCodec.DecodeResponse(responseMessage).Response;
 
-            var messageData = ToSafeData(message);
-            var requestMessage = TopicPublishCodec.EncodeRequest(Name, messageData);
-            var task = Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, _keyData);
+        protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; SetRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            await task.CfAwait();
-#endif
-        }
+        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func&lt;IData, Guid, int, object, ValueTask&gt; handler, object state, ILoggerFactory loggerFactory)
+            =&gt; SetAddListenerCodec.HandleEventAsync(eventMessage, handler, state, loggerFactory);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[41,15,41,100,1],[42,11,42,12,1],[51,13,51,39,1],[53,13,53,51,1],[54,13,54,85,1],[55,13,55,97,1],[60,13,60,34,1],[62,9,62,10,1]]);
+      highlightRanges([[27,16,27,85,1],[30,16,30,74,1],[33,16,33,76,1],[36,16,36,90,1],[39,16,39,97,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HList.Removing.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HList.Getting.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,60 +26,96 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HList&lt;T&gt; // Remove
+    internal partial class HList&lt;T&gt; // Getting
     {
         /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; RemoveAsync(T item)
+        public override async Task&lt;IReadOnlyList&lt;T&gt;&gt; GetAllAsync()
         {
-            var itemData = ToSafeData(item);
-            var requestMessage = ListRemoveCodec.EncodeRequest(Name, itemData);
+            var requestMessage = ListGetAllCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListRemoveCodec.DecodeResponse(responseMessage).Response;
+            var response = ListGetAllCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;T&gt;(response, SerializationService);
         }
 
         /// &lt;inheritdoc /&gt;
-        public async Task&lt;T&gt; RemoveAsync(int index)
+        public async Task&lt;T&gt; GetAsync(int index)
         {
-            var requestMessage = ListRemoveWithIndexCodec.EncodeRequest(Name, index);
+            var requestMessage = ListGetCodec.EncodeRequest(Name, index);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = ListRemoveWithIndexCodec.DecodeResponse(responseMessage).Response;
+            var response = ListGetCodec.DecodeResponse(responseMessage).Response;
             return ToObject&lt;T&gt;(response);
         }
 
         /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; RemoveAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
+        public async Task&lt;IReadOnlyList&lt;T&gt;&gt; GetSublistAsync(int fromIndex, int toIndex)
         {
-            var itemsData = ToSafeData(items);
-            var requestMessage = ListCompareAndRemoveAllCodec.EncodeRequest(Name, itemsData);
+            var requestMessage = ListSubCodec.EncodeRequest(Name, fromIndex, toIndex);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListCompareAndRemoveAllCodec.DecodeResponse(responseMessage).Response;
+            var response = ListSubCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;T&gt;(response, SerializationService);
         }
 
         /// &lt;inheritdoc /&gt;
-        public override async Task&lt;bool&gt; RetainAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
+        public async Task&lt;int&gt; IndexOfAsync(T item)
         {
-            var itemsData = ToSafeData(items);
-            var requestMessage = ListCompareAndRetainAllCodec.EncodeRequest(Name, itemsData);
+            var itemData = ToSafeData(item);
+            var requestMessage = ListIndexOfCodec.EncodeRequest(Name, itemData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            return ListCompareAndRetainAllCodec.DecodeResponse(responseMessage).Response;
+            return ListIndexOfCodec.DecodeResponse(responseMessage).Response;
         }
 
         /// &lt;inheritdoc /&gt;
-        public override async Task ClearAsync()
+        public async Task&lt;int&gt; LastIndexOfAsync(T item)
         {
-            var requestMessage = ListClearCodec.EncodeRequest(Name);
+            var itemData = ToSafeData(item);
+            var requestMessage = ListLastIndexOfCodec.EncodeRequest(Name, itemData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            _ = ListClearCodec.DecodeResponse(responseMessage);
+            return ListLastIndexOfCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; ContainsAsync(T item)
+        {
+            var itemData = ToSafeData(item);
+            var requestMessage = ListContainsCodec.EncodeRequest(Name, itemData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListContainsCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; ContainsAllAsync&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
+        {
+            var itemsData = ToSafeData(items);
+            var requestMessage = ListContainsAllCodec.EncodeRequest(Name, itemsData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListContainsAllCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; IsEmptyAsync()
+        {
+            var requestMessage = ListIsEmptyCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListIsEmptyCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;int&gt; GetSizeAsync()
+        {
+            var requestMessage = ListSizeCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListSizeCodec.DecodeResponse(responseMessage).Response;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,13,27,45,1],[28,13,28,80,1],[29,13,29,124,1],[30,13,30,77,1],[31,9,31,10,1],[36,13,36,86,0],[37,13,37,124,0],[38,13,38,94,0],[39,13,39,42,0],[40,9,40,10,0],[45,13,45,47,1],[46,13,46,94,1],[47,13,47,124,1],[48,13,48,90,1],[49,9,49,10,1],[54,13,54,47,1],[55,13,55,94,1],[56,13,56,124,1],[57,13,57,90,1],[58,9,58,10,1],[63,13,63,69,1],[64,13,64,124,1],[65,13,65,64,1],[66,9,66,10,1]]);
+      highlightRanges([[28,13,28,70,1],[29,13,29,124,1],[30,13,30,85,1],[31,13,31,76,1],[32,9,32,10,1],[37,13,37,74,1],[38,13,38,124,1],[39,13,39,82,1],[40,13,40,42,1],[41,9,41,10,1],[46,13,46,87,1],[47,13,47,124,1],[48,13,48,82,1],[49,13,49,76,1],[50,9,50,10,1],[55,13,55,45,1],[56,13,56,81,1],[57,13,57,124,1],[58,13,58,78,1],[59,9,59,10,1],[64,13,64,45,1],[65,13,65,85,1],[66,13,66,124,1],[67,13,67,82,1],[68,9,68,10,1],[73,13,73,45,1],[74,13,74,82,1],[75,13,75,124,1],[76,13,76,79,1],[77,9,77,10,1],[82,13,82,47,1],[83,13,83,86,1],[84,13,84,124,1],[85,13,85,82,1],[86,9,86,10,1],[91,13,91,71,1],[92,13,92,124,1],[93,13,93,78,1],[94,9,94,10,1],[99,13,99,68,1],[100,13,100,124,1],[101,13,101,75,1],[102,9,102,10,1]]);
     </script>
   </body>
 </html>

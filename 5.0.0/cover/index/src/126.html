@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\KerberosCredentials.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\DefaultCredentialsFactory.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -25,27 +25,30 @@
 namespace Hazelcast.Security
 {
     /// &lt;summary&gt;
-    /// Implements &lt;see cref=&quot;ICredentials&quot;/&gt; for the Kerberos protocol.
+    /// Represents a default &lt;see cref=&quot;ICredentialsFactory&quot;/&gt;.
     /// &lt;/summary&gt;
-    public class KerberosCredentials : TokenCredentials
+    /// &lt;remarks&gt;This factory provides username + password credentials, with username being &#39;default&#39;
+    /// and password being &#39;&#39;, and is used whenever no other factory has been configured.&lt;/remarks&gt;
+    internal sealed class DefaultCredentialsFactory : ICredentialsFactory
     {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;KerberosCredentials&quot;/&gt; class with a Kerberos token.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;token&quot;&gt;The Kerberos token.&lt;/param&gt;
-        public KerberosCredentials(byte[] token)
-            : base(token)
-        { }
+        // by default, go with username+password
+        private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();
 
         /// &lt;inheritdoc /&gt;
-        public override string ToString()
-            =&gt; $&quot;KerberosCredentials (Token, {GetToken().Length} bytes)&quot;;
+        public ICredentials NewCredentials()
+        {
+            return DefaultCredentials;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public void Dispose()
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,15,27,26,0],[28,11,28,12,0],[32,16,32,73,0]]);
+      highlightRanges([[25,9,25,101,1],[30,13,30,39,1],[35,11,35,12,1]]);
     </script>
   </body>
 </html>

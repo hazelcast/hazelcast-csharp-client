@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemovePartitionLostListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemoveInterceptorCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,19 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the specified map partition lost listener. If there is no such listener added before, this call does no
-    /// change in the cluster and returns false.
+    /// Removes the given interceptor for this map so it will not intercept operations anymore.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapRemovePartitionLostListenerServerCodec
+    internal static class MapRemoveInterceptorServerCodec
 #else
-    internal static class MapRemovePartitionLostListenerCodec
+    internal static class MapRemoveInterceptorCodec
 #endif
     {
-        public const int RequestMessageType = 72704; // 0x011C00
-        public const int ResponseMessageType = 72705; // 0x011C01
-        private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
+        public const int RequestMessageType = 70912; // 0x011500
+        public const int ResponseMessageType = 70913; // 0x011501
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
@@ -75,25 +73,25 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// id of register
+            /// of interceptor
             ///&lt;/summary&gt;
-            public Guid RegistrationId { get; set; }
+            public string Id { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid registrationId)
+        public static ClientMessage EncodeRequest(string name, string id)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;Map.RemovePartitionLostListener&quot;
+                IsRetryable = false,
+                OperationName = &quot;Map.RemoveInterceptor&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteGuidL(RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            StringCodec.Encode(clientMessage, id);
             return clientMessage;
         }
 
@@ -102,9 +100,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.RegistrationId = initialFrame.Bytes.ReadGuidL(RequestRegistrationIdFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
+            request.Id = StringCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -113,7 +111,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if registration is removed, false otherwise.
+            /// Returns true if successful, otherwise returns false
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -144,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[76,13,80,15,0],[81,13,81,123,0],[82,13,82,104,0],[83,13,83,88,0],[84,13,84,93,0],[85,13,85,48,0],[86,13,86,53,0],[87,13,87,34,0],[108,36,108,40,0],[108,41,108,45,0],[125,13,125,64,0],[126,13,126,53,0],[127,13,127,48,0],[128,13,128,91,0],[129,13,129,29,0],[130,9,130,10,0]]);
+      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,53,1],[84,13,84,51,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
     </script>
   </body>
 </html>

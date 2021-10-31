@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HashSetStreamSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HashMapStreamSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,22 +26,22 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class HashSetStreamSerializer : CollectionStreamSerializerBase&lt;HashSet&lt;object&gt;&gt;
+    internal class HashMapStreamSerializer : DictStreamSerializerBase&lt;Dictionary&lt;object, object&gt;&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeHashSet;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeHashMap;
 
-        public override HashSet&lt;object&gt; Read(IObjectDataInput input)
+        public override Dictionary&lt;object, object&gt; Read(IObjectDataInput input)
         {
             var size = input.ReadInt();
-            var set = new HashSet&lt;object&gt;();
-            return DeserializeEntries(input, size, set);
+            var dict = new Dictionary&lt;object, object&gt;(size);
+            return DeserializeEntries(input, size, dict);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,39,21,84,1],[25,13,25,40,0],[26,13,26,45,0],[27,13,27,57,0]]);
+      highlightRanges([[21,39,21,84,1],[25,13,25,40,0],[26,13,26,61,0],[27,13,27,58,0]]);
     </script>
   </body>
 </html>

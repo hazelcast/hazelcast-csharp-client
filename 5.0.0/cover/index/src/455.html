@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\LongArrayCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListUUIDCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,39 +22,43 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class LongArrayCodec
+    internal static class ListUUIDCodec
     {
-        public static void Encode(ClientMessage clientMessage, long[] collection)
+        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;Guid&gt; collection)
         {
-            var itemCount = collection.Length;
-            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfLong]);
+            var itemCount = collection.Count();
+            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfGuid]);
 
-            for (var i = 0; i &lt; collection.Length; i++)
+            var i = 0;
+            foreach (var guid in collection)
             {
-                frame.Bytes.WriteLongL(i * BytesExtensions.SizeOfLong, collection[i]);
+                frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfGuid, guid);
+                i++;
             }
 
             clientMessage.Append(frame);
         }
 
-        public static long[] Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static IList&lt;Guid&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
         {
             return Decode(iterator.Take());
         }
 
-        public static long[] Decode(Frame frame)
+        public static List&lt;Guid&gt; Decode(Frame frame)
         {
-            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfLong;
-            var result = new long[itemCount];
+            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfGuid;
+            var result = new List&lt;Guid&gt;(itemCount);
             for (var i = 0; i &lt; itemCount; i++)
             {
-                result[i] = frame.Bytes.ReadLongL(i * BytesExtensions.SizeOfLong);
+                result.Add(frame.Bytes.ReadGuidL(i * BytesExtensions.SizeOfGuid));
             }
             return result;
         }
@@ -63,7 +67,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,13,25,47,0],[26,13,26,85,0],[28,18,28,27,0],[28,29,28,50,0],[28,52,28,55,0],[30,17,30,87,0],[33,13,33,41,0],[34,9,34,10,0],[38,13,38,44,1],[43,13,43,77,1],[44,13,44,46,1],[45,18,45,27,1],[45,29,45,42,1],[45,44,45,47,1],[47,17,47,83,1],[49,13,49,27,1]]);
+      highlightRanges([[27,13,27,48,1],[28,13,28,85,1],[30,13,30,23,1],[31,22,31,30,1],[31,31,31,33,1],[31,34,31,44,1],[33,17,33,78,1],[34,17,34,21,1],[37,13,37,41,1],[38,9,38,10,1],[42,13,42,44,1],[47,13,47,77,1],[48,13,48,52,1],[49,18,49,27,1],[49,29,49,42,1],[49,44,49,47,1],[51,17,51,83,1],[53,13,53,27,1]]);
     </script>
   </body>
 </html>

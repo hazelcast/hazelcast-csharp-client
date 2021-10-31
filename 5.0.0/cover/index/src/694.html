@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastMemoryConfigurationProvider.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastEnvironmentVariablesConfigurationSource.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,45 +22,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Configuration.Memory;
 
 namespace Hazelcast.Configuration
 {
     /// &lt;summary&gt;
-    /// An in-memory based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
+    /// Represents Hazelcast environment variables arguments as an &lt;see cref=&quot;IConfigurationSource&quot;/&gt;.
     /// &lt;/summary&gt;
-    internal class HazelcastMemoryConfigurationProvider : MemoryConfigurationProvider
+    internal class HazelcastEnvironmentVariablesConfigurationSource : IConfigurationSource
     {
-        public HazelcastMemoryConfigurationProvider(HazelcastMemoryConfigurationSource source)
-            : base(FilterSource(source))
-        { }
-
-        /// &lt;summary&gt;
-        /// (internal for tests only)
-        /// Filters a configuration source.
-        /// &lt;/summary&gt;
-        internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
+        /// &lt;inheritdoc /&gt;
+        public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            static KeyValuePair&lt;string, string&gt; Filter(KeyValuePair&lt;string, string&gt; kvp)
-                =&gt; kvp.Key.StartsWith(&quot;hazelcast.&quot;, StringComparison.Ordinal)
-                    ? new KeyValuePair&lt;string, string&gt;(kvp.Key.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal), kvp.Value)
-                    : kvp;
-
-            return new MemoryConfigurationSource
-            {
-                InitialData = source.InitialData.Select(Filter)
-            };
+            return new HazelcastEnvironmentVariablesConfigurationProvider();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,15,29,41,1],[30,11,30,12,1],[39,20,41,26,1],[43,13,46,15,1]]);
+      highlightRanges([[27,13,27,77,1]]);
     </script>
   </body>
 </html>

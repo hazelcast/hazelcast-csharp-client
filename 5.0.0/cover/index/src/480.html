@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SystemNetDns.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SslOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,25 +22,132 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Net;
+using System.Security.Authentication;
+using System.Text;
+using Hazelcast.Configuration;
 
 namespace Hazelcast.Networking
 {
-    internal sealed class SystemNetDns : IDns
+    /// &lt;summary&gt;
+    /// Represents the SSL options.
+    /// &lt;/summary&gt;
+    public class SslOptions
     {
-        public string GetHostName() =&gt; Dns.GetHostName();
+        // default is none, to let the system select the best option
+        private SslProtocols _sslProtocol = SslProtocols.None;
 
-        public IPHostEntry GetHostEntry(string hostNameOrAddress) =&gt; Dns.GetHostEntry(hostNameOrAddress);
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SslOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SslOptions()
+        { }
 
-        public IPHostEntry GetHostEntry(IPAddress address) =&gt; Dns.GetHostEntry(address);
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SslOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private SslOptions(SslOptions other)
+        {
+            Enabled = other.Enabled;
+            ValidateCertificateChain = other.ValidateCertificateChain;
+            ValidateCertificateName = other.ValidateCertificateName;
+            CheckCertificateRevocation = other.CheckCertificateRevocation;
+            CertificateName = other.CertificateName;
+            CertificatePath = other.CertificatePath;
+            CertificatePassword = other.CertificatePassword;
+            _sslProtocol = other._sslProtocol;
+        }
 
-        public IPAddress[] GetHostAddresses(string hostNameOrAddress) =&gt; Dns.GetHostAddresses(hostNameOrAddress);
+        /// &lt;summary&gt;
+        /// Whether to enable SSL.
+        /// &lt;/summary&gt;
+        public bool Enabled { get; set; }
+
+        /// &lt;summary&gt;
+        /// Whether to validate the certificate chain.
+        /// &lt;/summary&gt;
+        public bool ValidateCertificateChain { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Whether to validate the certificate name.
+        /// &lt;/summary&gt;
+        public bool ValidateCertificateName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Whether to check for certificate revocation.
+        /// &lt;/summary&gt;
+        public bool CheckCertificateRevocation { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the certificate.
+        /// &lt;/summary&gt;
+        public string CertificateName { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the full path to the certificate file.
+        /// &lt;/summary&gt;
+        public string CertificatePath { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the password for the certificate file.
+        /// &lt;/summary&gt;
+        public string CertificatePassword { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the SSL protocol.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The protocol must be a member of the &lt;see cref=&quot;SslProtocols&quot;/&gt; enum,
+        /// and currently only &lt;c&gt;Tls&lt;/c&gt;, &lt;c&gt;Tls11&lt;/c&gt; and &lt;c&gt;Tls12&lt;/c&gt; are supported,
+        /// though only the latest is recommended.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public SslProtocols Protocol
+        {
+            get =&gt; _sslProtocol;
+            set
+            {
+#pragma warning disable IDE0072
+                // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
+                _sslProtocol = value switch
+                {
+                    SslProtocols.None =&gt; value,
+#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - but, we still support them
+                    SslProtocols.Tls =&gt; value,
+                    SslProtocols.Tls11 =&gt; value,
+#pragma warning restore CA5397
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
+                    SslProtocols.Tls12 =&gt; value,
+#pragma warning restore CA5398
+                    _ =&gt; throw new ConfigurationException(&quot;Invalid value. Value must be None, Tls, Tls11 or Tls12.&quot;)
+                };
+#pragma warning restore IDE0072
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var text = new StringBuilder();
+            text.Append(&quot;SslConfig {&quot;);
+            text.Append(Enabled ? &quot;enabled&quot; : &quot;disabled&quot;);
+            text.Append(&quot;, ValidateCertificateName=&quot;).Append(ValidateCertificateName ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, ValidateCertificateChain=&quot;).Append(ValidateCertificateChain ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, CheckCertificateRevocation=&quot;).Append(CheckCertificateRevocation ? &quot;true&quot; : &quot;false&quot;);
+            text.Append(&quot;, CertificateName=&#39;&quot;).Append(CertificateName);
+            text.Append(&quot;&#39;, CertificatePath=&#39;&quot;).Append(CertificatePath);
+            text.Append(&quot;&#39;}&quot;);
+            return text.ToString();
+        }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal SslOptions Clone() =&gt; new SslOptions(this);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,40,21,57,1],[23,70,23,105,1],[25,63,25,88,1],[27,74,27,113,1]]);
+      highlightRanges([[32,9,32,28,1],[33,11,33,12,1],[38,9,38,45,1],[40,13,40,37,1],[41,13,41,71,1],[42,13,42,69,1],[43,13,43,75,1],[44,13,44,53,1],[45,13,45,53,1],[46,13,46,61,1],[47,13,47,47,1],[48,9,48,10,1],[53,31,53,35,1],[53,36,53,40,1],[58,48,58,52,1],[58,53,58,57,1],[58,62,58,66,1],[58,62,58,66,1],[63,47,63,51,1],[63,52,63,56,1],[68,50,68,54,1],[68,55,68,59,1],[73,41,73,45,1],[73,46,73,50,1],[78,41,78,45,1],[78,46,78,50,1],[83,45,83,49,1],[83,50,83,54,1],[95,20,95,32,1],[100,17,102,42,1],[102,42,102,47,0],[102,47,104,41,1],[104,41,104,46,0],[104,46,105,43,1],[105,43,105,48,1],[105,48,108,43,1],[108,43,108,48,0],[108,48,110,26,1],[110,26,110,117,1],[110,117,111,19,1],[113,13,113,14,1],[119,13,119,44,1],[120,13,120,40,1],[121,13,121,59,1],[122,13,122,106,1],[123,13,123,108,1],[124,13,124,112,1],[125,13,125,72,1],[126,13,126,73,1],[127,13,127,31,1],[128,13,128,36,1],[134,40,134,60,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferHeadSequenceCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferCapacityCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the sequence of the head. The head is the side of the ringbuffer where the oldest items in the ringbuffer
-    /// are found. If the RingBuffer is empty, the head will be one more than the tail.
-    /// The initial value of the head is 0 (1 more than tail).
+    /// Returns the capacity of this Ringbuffer.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class RingbufferHeadSequenceServerCodec
+    internal static class RingbufferCapacityServerCodec
 #else
-    internal static class RingbufferHeadSequenceCodec
+    internal static class RingbufferCapacityCodec
 #endif
     {
-        public const int RequestMessageType = 1508096; // 0x170300
-        public const int ResponseMessageType = 1508097; // 0x170301
+        public const int RequestMessageType = 1508352; // 0x170400
+        public const int ResponseMessageType = 1508353; // 0x170401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
@@ -81,7 +79,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Ringbuffer.HeadSequence&quot;
+                OperationName = &quot;Ringbuffer.Capacity&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -106,7 +104,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// the sequence of the head
+            /// the capacity
             ///&lt;/summary&gt;
             public long Response { get; set; }
         }
@@ -137,7 +135,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[71,13,75,15,1],[76,13,76,123,1],[77,13,77,104,1],[78,13,78,88,1],[79,13,79,48,1],[80,13,80,53,1],[81,13,81,34,1],[101,36,101,40,1],[101,41,101,45,1],[118,13,118,64,1],[119,13,119,53,1],[120,13,120,48,1],[121,13,121,91,1],[122,13,122,29,1],[123,9,123,10,1]]);
+      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,36,99,40,1],[99,41,99,45,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,48,1],[119,13,119,91,1],[120,13,120,29,1],[121,9,121,10,1]]);
     </script>
   </body>
 </html>

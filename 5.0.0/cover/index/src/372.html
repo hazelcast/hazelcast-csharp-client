@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetCompareAndRemoveAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetClearCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes from this set all of its elements that are contained in the specified collection (optional operation).
-    /// If the specified collection is also a set, this operation effectively modifies this set so that its value is the
-    /// asymmetric set difference of the two sets.
+    /// Removes all of the elements from this set (optional operation). The set will be empty after this call returns.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetCompareAndRemoveAllServerCodec
+    internal static class SetClearServerCodec
 #else
-    internal static class SetCompareAndRemoveAllCodec
+    internal static class SetClearCodec
 #endif
     {
-        public const int RequestMessageType = 395008; // 0x060700
-        public const int ResponseMessageType = 395009; // 0x060701
+        public const int RequestMessageType = 395520; // 0x060900
+        public const int ResponseMessageType = 395521; // 0x060901
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -73,27 +70,21 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the Set
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// The list of values to test for matching the item to remove.
-            ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Values { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; values)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Set.CompareAndRemoveAll&quot;
+                OperationName = &quot;Set.Clear&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            ListMultiFrameCodec.Encode(clientMessage, values, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -104,27 +95,20 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Values = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// true if at least one item in values existed and removed, false otherwise.
-            ///&lt;/summary&gt;
-            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -134,8 +118,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
             return response;
         }
 
@@ -144,7 +127,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,48,1],[85,13,85,53,1],[86,13,86,81,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
+      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,53,1],[78,13,78,34,1],[109,13,109,64,1],[110,13,110,53,1],[111,13,111,29,1],[112,13,112,29,1],[113,9,113,10,1]]);
     </script>
   </body>
 </html>

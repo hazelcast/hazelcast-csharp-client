@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TopicAddMessageListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SqlFetchCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,55 +49,49 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Subscribes to this topic. When someone publishes a message on this topic. onMessage() function of the given
-    /// MessageListener is called. More than one message listener can be added on one instance.
+    /// Fetches the next row page.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TopicAddMessageListenerServerCodec
+    internal static class SqlFetchServerCodec
 #else
-    internal static class TopicAddMessageListenerCodec
+    internal static class SqlFetchCodec
 #endif
     {
-        public const int RequestMessageType = 262656; // 0x040200
-        public const int ResponseMessageType = 262657; // 0x040201
-        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventTopicPublishTimeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
-        private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventTopicMessageType = 262658; // 0x040202
+        public const int RequestMessageType = 2163968; // 0x210500
+        public const int ResponseMessageType = 2163969; // 0x210501
+        private const int RequestCursorBufferSizeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestCursorBufferSizeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the Topic
+            /// Query ID.
             ///&lt;/summary&gt;
-            public string Name { get; set; }
+            public Hazelcast.Sql.SqlQueryId QueryId { get; set; }
 
             /// &lt;summary&gt;
-            /// if true listens only local events on registered member
+            /// Cursor buffer size.
             ///&lt;/summary&gt;
-            public bool LocalOnly { get; set; }
+            public int CursorBufferSize { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, bool localOnly)
+        public static ClientMessage EncodeRequest(Hazelcast.Sql.SqlQueryId queryId, int cursorBufferSize)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Topic.AddMessageListener&quot;
+                OperationName = &quot;Sql.Fetch&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
+            initialFrame.Bytes.WriteIntL(RequestCursorBufferSizeFieldOffset, cursorBufferSize);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, name);
+            SqlQueryIdCodec.Encode(clientMessage, queryId);
             return clientMessage;
         }
 
@@ -107,8 +101,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
-            request.Name = StringCodec.Decode(iterator);
+            request.CursorBufferSize = initialFrame.Bytes.ReadIntL(RequestCursorBufferSizeFieldOffset);
+            request.QueryId = SqlQueryIdCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -117,19 +111,25 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// returns the registration id
+            /// Row page.
             ///&lt;/summary&gt;
-            public Guid Response { get; set; }
+            public Hazelcast.Sql.SqlPage RowPage { get; set; }
+
+            /// &lt;summary&gt;
+            /// Error object.
+            ///&lt;/summary&gt;
+            public Hazelcast.Sql.SqlError Error { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(Guid response)
+        public static ClientMessage EncodeResponse(Hazelcast.Sql.SqlPage rowPage, Hazelcast.Sql.SqlError error)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, rowPage, SqlPageCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, error, SqlErrorCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -138,47 +138,18 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.RowPage = CodecUtil.DecodeNullable(iterator, SqlPageCodec.Decode);
+            response.Error = CodecUtil.DecodeNullable(iterator, SqlErrorCodec.Decode);
             return response;
         }
 
-#if SERVER_CODEC
-        public static ClientMessage EncodeTopicEvent(IData item, long publishTime, Guid uuid)
-        {
-            var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventTopicInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventTopicMessageType);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(EventTopicPublishTimeFieldOffset, publishTime);
-            initialFrame.Bytes.WriteGuidL(EventTopicUuidFieldOffset, uuid);
-            clientMessage.Append(initialFrame);
-            clientMessage.Flags |= ClientMessageFlags.Event;
-            DataCodec.Encode(clientMessage, item);
-            return clientMessage;
-        }
-#endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;IData, long, Guid, object, ValueTask&gt; handleTopicEventAsync, object state, ILoggerFactory loggerFactory)
-        {
-            using var iterator = clientMessage.GetEnumerator();
-            var messageType = clientMessage.MessageType;
-            if (messageType == EventTopicMessageType)
-            {
-                var initialFrame = iterator.Take();
-                var publishTime =  initialFrame.Bytes.ReadLongL(EventTopicPublishTimeFieldOffset);
-                var uuid =  initialFrame.Bytes.ReadGuidL(EventTopicUuidFieldOffset);
-                var item = DataCodec.Decode(iterator);
-                return handleTopicEventAsync(item, publishTime, uuid, state);
-            }
-            loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
-            return default;
-        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,83,1],[89,13,89,48,1],[90,13,90,53,1],[91,13,91,34,1],[112,36,112,40,1],[112,41,112,45,1],[129,13,129,64,1],[130,13,130,53,1],[131,13,131,48,1],[132,13,132,91,1],[133,13,133,29,1],[134,9,134,10,1],[153,13,153,64,1],[154,13,154,57,1],[155,13,155,54,1],[157,17,157,52,1],[158,17,158,99,1],[159,17,159,85,1],[160,17,160,55,1],[161,17,161,78,1],[163,13,163,137,0],[164,13,164,28,0],[165,9,165,10,1]]);
+      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,96,1],[83,13,83,48,1],[84,13,84,60,1],[85,13,85,34,1],[106,52,106,56,1],[106,57,106,61,1],[111,51,111,55,1],[111,56,111,60,1],[129,13,129,64,1],[130,13,130,53,1],[131,13,131,29,1],[132,13,132,88,1],[133,13,133,87,1],[134,13,134,29,1],[135,9,135,10,1]]);
     </script>
   </body>
 </html>

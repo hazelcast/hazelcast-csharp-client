@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryMergedEventHandler.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryMergedEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,25 +23,44 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
 using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
-    internal sealed class MapEntryMergedEventHandler&lt;TKey, TValue, TSender&gt; : MapEntryEventHandlerBase&lt;TKey, TValue, TSender, MapEntryMergedEventArgs&lt;TKey, TValue&gt;&gt;
+    public sealed class MapEntryMergedEventArgs&lt;TKey, TValue&gt; : MapEntryEventArgsBase&lt;TKey&gt;
     {
-        public MapEntryMergedEventHandler(Func&lt;TSender, MapEntryMergedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
-            : base(MapEventTypes.Merged, handler)
-        { }
+        private readonly Lazy&lt;TValue&gt; _value;
+        private readonly Lazy&lt;TValue&gt; _oldValue;
+        private readonly Lazy&lt;TValue&gt; _mergeValue;
 
-        protected override MapEntryMergedEventArgs&lt;TKey, TValue&gt; CreateEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, Lazy&lt;TValue&gt; mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, object state)
-            =&gt; new MapEntryMergedEventArgs&lt;TKey, TValue&gt;(member, key, value, oldValue, mergeValue, state);
+        public MapEntryMergedEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, Lazy&lt;TValue&gt; mergeValue, object state)
+            : base(member, key, state)
+        {
+            _value = value;
+            _oldValue = oldValue;
+            _mergeValue = mergeValue;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the value after merge.
+        /// &lt;/summary&gt;
+        public TValue Value =&gt; _value == null ? default : _value.Value;
+
+        /// &lt;summary&gt;
+        /// Gets the value before merge.
+        /// &lt;/summary&gt;
+        public TValue OldValue =&gt; _oldValue == null ? default : _oldValue.Value;
+
+        /// &lt;summary&gt;
+        /// Gets the value proposed during merge.
+        /// &lt;/summary&gt;
+        public TValue MergeValue =&gt; _mergeValue == null ? default : _mergeValue.Value;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,15,24,50,0],[25,11,25,12,0],[28,16,28,106,0]]);
+      highlightRanges([[27,15,27,39,0],[29,13,29,28,0],[30,13,30,34,0],[31,13,31,38,0],[32,9,32,10,0],[37,32,37,71,0],[42,35,42,80,0],[47,37,47,86,0]]);
     </script>
   </body>
 </html>

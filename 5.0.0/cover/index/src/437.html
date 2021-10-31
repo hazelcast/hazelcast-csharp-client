@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListUUIDLongCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListUUIDListIntegerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -30,43 +30,51 @@ using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class EntryListUUIDLongCodec
+    // ReSharper disable once InconsistentNaming
+    internal static class EntryListUUIDListIntegerCodec
     {
-        private const int EntrySizeInBytes = BytesExtensions.SizeOfGuid + BytesExtensions.SizeOfLong;
-
-        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;KeyValuePair&lt;Guid, long&gt;&gt; collection)
+        public static void Encode(ClientMessage clientMessage, ICollection&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt; collection)
         {
-            var itemCount = collection.Count();
-            var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
-            var i = 0;
-            foreach (var kvp in collection)
+            var keyList = new List&lt;Guid&gt;(collection.Count);
+            clientMessage.Append(Frame.CreateBeginStruct());
+            foreach (var (ownerId, partitionIds) in collection)
             {
-                frame.Bytes.WriteGuidL(i * EntrySizeInBytes, kvp.Key);
-                frame.Bytes.WriteLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfGuid, kvp.Value);
-                i++;
+                keyList.Add(ownerId);
+                ListIntegerCodec.Encode(clientMessage, partitionIds);
             }
-            clientMessage.Append(frame);
+            clientMessage.Append(Frame.CreateEndStruct());
+            ListUUIDCodec.Encode(clientMessage, keyList);
         }
 
-        public static IList&lt;KeyValuePair&lt;Guid, long&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static void Encode(ClientMessage clientMessage, ICollection&lt;KeyValuePair&lt;Guid, ICollection&lt;int&gt;&gt;&gt; collection)
         {
-            var frame = iterator.Take();
-            var itemCount = frame.Bytes.Length / EntrySizeInBytes;
-            var result = new List&lt;KeyValuePair&lt;Guid, long&gt;&gt;(itemCount);
-            for (var i = 0; i &lt; itemCount; i++)
+            var keyList = new List&lt;Guid&gt;(collection.Count);
+            clientMessage.Append(Frame.CreateBeginStruct());
+            foreach (var (ownerId, partitionIds) in collection)
             {
-                var key = frame.Bytes.ReadGuidL(i * EntrySizeInBytes);
-                var value = frame.Bytes.ReadLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfGuid);
-                result.Add(new KeyValuePair&lt;Guid, long&gt;(key, value));
+                keyList.Add(ownerId);
+                ListIntegerCodec.Encode(clientMessage, partitionIds);
             }
-            return result;
+            clientMessage.Append(Frame.CreateEndStruct());
+            ListUUIDCodec.Encode(clientMessage, keyList);
+        }
+
+        // TODO: refactor codecs to work with IDictionary
+        public static IList&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        {
+            var ownerPartitionIds = ListMultiFrameCodec.Decode(iterator, ListIntegerCodec.Decode);
+            var ownerIds = ListUUIDCodec.Decode(iterator);
+
+            return (ownerIds, ownerPartitionIds).Combine()
+                .Select(x =&gt; new KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;(x.Item1, x.Item2))
+                .ToList();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,13,29,48,0],[30,13,30,75,0],[31,13,31,23,0],[32,22,32,29,0],[32,30,32,32,0],[32,33,32,43,0],[34,17,34,71,0],[35,17,35,102,0],[36,17,36,21,0],[38,13,38,41,0],[39,9,39,10,0],[43,13,43,41,0],[44,13,44,67,0],[45,13,45,72,0],[46,18,46,27,0],[46,29,46,42,0],[46,44,46,47,0],[48,17,48,71,0],[49,17,49,102,0],[50,17,50,70,0],[52,13,52,27,0]]);
+      highlightRanges([[28,13,28,60,1],[29,13,29,61,1],[30,22,30,49,1],[30,50,30,52,1],[30,53,30,63,1],[32,17,32,38,1],[33,17,33,70,1],[35,13,35,59,1],[36,13,36,58,1],[37,9,37,10,1],[41,13,41,60,0],[42,13,42,61,0],[43,22,43,49,0],[43,50,43,52,0],[43,53,43,63,0],[45,17,45,38,0],[46,17,46,70,0],[48,13,48,59,0],[49,13,49,58,0],[50,9,50,10,0],[55,13,55,99,1],[56,13,56,59,1],[58,13,59,30,1],[59,30,59,82,1],[59,82,60,27,1]]);
     </script>
   </body>
 </html>

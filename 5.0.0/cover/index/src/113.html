@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\ShortArraySerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\LongSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,27 +24,27 @@
 
 namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal sealed class ShortArraySerializer : SingletonSerializerBase&lt;short[]&gt;
+    internal sealed class LongSerializer : SingletonSerializerBase&lt;long&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.ConstantTypeShortArray;
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeLong;
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override short[] Read(IObjectDataInput input)
+        public override long Read(IObjectDataInput input)
         {
-            return input.ReadShortArray();
+            return input.ReadLong();
         }
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override void Write(IObjectDataOutput output, short[] obj)
+        public override void Write(IObjectDataOutput output, long obj)
         {
-            output.WriteShortArray(obj);
+            output.WriteLong(obj);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,39,19,84,1],[24,13,24,43,1],[30,13,30,41,1],[31,9,31,10,1]]);
+      highlightRanges([[19,39,19,78,1],[24,13,24,37,1],[30,13,30,35,1],[31,9,31,10,1]]);
     </script>
   </body>
 </html>

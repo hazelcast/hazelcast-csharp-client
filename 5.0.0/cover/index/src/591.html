@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HCollectionBase.Events.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HCollectionBase.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,98 +22,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Threading;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
-using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HCollectionBase&lt;T&gt; // Events
+    internal abstract partial class HCollectionBase&lt;T&gt; : DistributedObjectBase, IHCollection&lt;T&gt;
     {
+        protected HCollectionBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
+        { }
+
         /// &lt;inheritdoc /&gt;
-        public async Task&lt;Guid&gt; SubscribeAsync(Action&lt;CollectionItemEventHandlers&lt;T&gt;&gt; events, bool includeValue = true, object state = null)
+        public virtual async IAsyncEnumerator&lt;T&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
         {
-            if (events == null) throw new ArgumentNullException(nameof(events));
-
-            var handlers = new CollectionItemEventHandlers&lt;T&gt;();
-            events(handlers);
-
-            var subscription = new ClusterSubscription(
-                CreateSubscribeRequest(includeValue, Cluster.IsSmartRouting),
-                ReadSubscribeResponse, CreateUnsubscribeRequest, ReadUnsubscribeResponse, HandleEventAsync,
-                new SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt;(Name, handlers, state));
-
-            await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
-
-            return subscription.Id;
+            // all collections are async enumerable,
+            // but by default we load the whole items set at once,
+            // then iterate in memory
+            var items = await GetAllAsync().CfAwait();
+            foreach (var item in items)
+                yield return item;
         }
-
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
-        {
-            return CodecHandleEventAsync(eventMessage, HandleCodecEventAsync, state, LoggerFactory);
-        }
-
-        private async ValueTask HandleCodecEventAsync(IData itemData, Guid memberId, int eventTypeData, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt;&gt;(state);
-
-            if (eventTypeData == 0) return;
-            var eventType = (CollectionItemEventTypes) eventTypeData;
-
-            var member = Cluster.Members.GetMember(memberId);
-            var item = LazyArg&lt;T&gt;(itemData);
-
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in sstate.Handlers)
-            {
-                if (handler.EventType.HasAll(eventType))
-                {
-                    await handler.HandleAsync(this, member, item, sstate.HandlerState).CfAwait();
-                }
-            }
-        }
-
-        protected abstract ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func&lt;IData, Guid, int, object, ValueTask&gt; handler, object state, ILoggerFactory loggerFactory);
-
-        protected abstract ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting);
-
-        private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt;&gt;(state);
-            return CreateUnsubscribeRequest(subscriptionId, sstate);
-        }
-
-        protected abstract ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state);
-
-        private Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt;&gt;(state);
-            return ReadSubscribeResponse(responseMessage, sstate);
-        }
-
-        protected abstract Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state);
-
-        private bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt;&gt;(state);
-            return ReadUnsubscribeResponse(unsubscribeResponseMessage, sstate);
-        }
-
-        protected abstract bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state);
-
-        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
-            =&gt; UnsubscribeBaseAsync(subscriptionId);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[31,13,31,32,1],[31,33,31,81,0],[33,13,33,65,1],[34,13,34,30,1],[36,13,39,95,1],[41,13,41,79,1],[43,13,43,36,1],[44,9,44,10,1],[48,13,48,101,1],[53,13,53,96,1],[55,13,55,36,1],[55,37,55,44,0],[56,13,56,70,1],[58,13,58,62,1],[59,13,59,45,1],[62,22,62,33,1],[62,34,62,36,1],[62,37,62,52,1],[64,17,64,57,1],[66,21,66,98,1],[69,9,69,10,1],[77,13,77,96,1],[78,13,78,69,1],[85,13,85,96,1],[86,13,86,67,1],[93,13,93,96,1],[94,13,94,80,1],[100,16,100,52,1]]);
+      highlightRanges([[27,15,27,93,1],[28,11,28,12,1],[36,13,36,55,1],[37,22,37,30,1],[37,31,37,33,1],[37,34,37,39,1],[38,17,38,35,1],[39,9,39,10,1]]);
     </script>
   </body>
 </html>

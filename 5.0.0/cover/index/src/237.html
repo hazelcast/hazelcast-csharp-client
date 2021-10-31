@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapContainsValueCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapContainsKeyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this map maps one or more keys to the specified value.This operation will probably require time
-    /// linear in the map size for most implementations of the Map interface.
+    /// Returns true if this map contains a mapping for the specified key.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapContainsValueServerCodec
+    internal static class MapContainsKeyServerCodec
 #else
-    internal static class MapContainsValueCodec
+    internal static class MapContainsKeyCodec
 #endif
     {
-        public const int RequestMessageType = 67328; // 0x010700
-        public const int ResponseMessageType = 67329; // 0x010701
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 67072; // 0x010600
+        public const int ResponseMessageType = 67073; // 0x010601
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
@@ -74,25 +74,31 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Value to check if exists in the map.
+            /// Key for the map entry.
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData @value)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Map.ContainsValue&quot;
+                OperationName = &quot;Map.ContainsKey&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -101,9 +107,10 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -112,7 +119,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Returns true if the value exists, otherwise returns false.
+            /// Returns true if the key exists, otherwise returns false.
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -143,7 +150,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[75,13,79,15,1],[80,13,80,123,1],[81,13,81,104,1],[82,13,82,88,1],[83,13,83,48,1],[84,13,84,53,1],[85,13,85,53,1],[86,13,86,34,1],[107,36,107,40,1],[107,41,107,45,1],[124,13,124,64,1],[125,13,125,53,1],[126,13,126,48,1],[127,13,127,91,1],[128,13,128,29,1],[129,9,129,10,1]]);
+      highlightRanges([[80,13,84,15,1],[85,13,85,123,1],[86,13,86,104,1],[87,13,87,88,1],[88,13,88,81,1],[89,13,89,48,1],[90,13,90,53,1],[91,13,91,50,1],[92,13,92,34,1],[114,36,114,40,1],[114,41,114,45,1],[131,13,131,64,1],[132,13,132,53,1],[133,13,133,48,1],[134,13,134,91,1],[135,13,135,29,1],[136,9,136,10,1]]);
     </script>
   </body>
 </html>

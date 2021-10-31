@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemoveInterceptorCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapRemoveIfSameCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the given interceptor for this map so it will not intercept operations anymore.
+    /// Removes the mapping for a key from this map if existing value equal to the this value
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapRemoveInterceptorServerCodec
+    internal static class MapRemoveIfSameServerCodec
 #else
-    internal static class MapRemoveInterceptorCodec
+    internal static class MapRemoveIfSameCodec
 #endif
     {
-        public const int RequestMessageType = 70912; // 0x011500
-        public const int ResponseMessageType = 70913; // 0x011501
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 67584; // 0x010800
+        public const int ResponseMessageType = 67585; // 0x010801
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
@@ -68,30 +69,42 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// name of map
+            /// Name of the map.
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// of interceptor
+            /// Key for the map entry.
             ///&lt;/summary&gt;
-            public string Id { get; set; }
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// Test the existing value against this value to find if equal to this value. Only remove the entry from the map if the value is equal to this value.
+            ///&lt;/summary&gt;
+            public IData Value { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, string id)
+        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.RemoveInterceptor&quot;
+                OperationName = &quot;Map.RemoveIfSame&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            StringCodec.Encode(clientMessage, id);
+            DataCodec.Encode(clientMessage, key);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -100,9 +113,11 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Id = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -111,7 +126,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Returns true if successful, otherwise returns false
+            /// Returns true if the key exists and removed, otherwise returns false.
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -142,7 +157,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,53,1],[84,13,84,51,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
+      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,81,1],[94,13,94,48,1],[95,13,95,53,1],[96,13,96,50,1],[97,13,97,53,1],[98,13,98,34,1],[121,36,121,40,1],[121,41,121,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,91,1],[142,13,142,29,1],[143,9,143,10,1]]);
     </script>
   </body>
 </html>

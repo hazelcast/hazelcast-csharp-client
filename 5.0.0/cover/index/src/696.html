@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\Binding\BinderIgnoreAttribute.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastMemoryConfigurationSource.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,25 +22,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
 
-namespace Hazelcast.Configuration.Binding
+namespace Hazelcast.Configuration
 {
-    [AttributeUsage(AttributeTargets.Property)]
-    internal sealed class BinderIgnoreAttribute : Attribute
+    /// &lt;summary&gt;
+    /// Represents Hazelcast in-memory arguments as an &lt;see cref=&quot;IConfigurationSource&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class HazelcastMemoryConfigurationSource : IConfigurationSource
     {
-        public BinderIgnoreAttribute(bool ignore = true)
-        {
-            Ignore = ignore;
-        }
+        /// &lt;summary&gt;
+        /// Gets or sets the initial key value configuration pairs.
+        /// &lt;/summary&gt;
+        public IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt; InitialData { get; set; }
 
-        public bool Ignore { get; }
+        /// &lt;inheritdoc /&gt;
+        public IConfigurationProvider Build(IConfigurationBuilder builder)
+        {
+            return new HazelcastMemoryConfigurationProvider(this);
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,9,22,57,1],[24,13,24,29,1],[25,9,25,10,1],[27,30,27,34,1]]);
+      highlightRanges([[28,72,28,76,1],[28,77,28,81,1],[33,13,33,67,1]]);
     </script>
   </body>
 </html>

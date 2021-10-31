@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HConsole.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HazelcastJsonValue.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,322 +22,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if !HZ_CONSOLE
-#pragma warning disable // too many &#39;unused args&#39; etc
-#endif
-
 using System;
-using System.Diagnostics;
-using System.Text;
-using Microsoft.Extensions.Logging;
-#if HZ_CONSOLE
-using System.Globalization;
-#endif
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides a console for troubleshooting.
+    /// Represents a JSON formatted string.
     /// &lt;/summary&gt;
     /// &lt;remarks&gt;
-    /// &lt;para&gt;To enable the console, define HZ_CONSOLE. Otherwise, none of the console
-    /// method invocations will be compiled (thanks to &lt;see cref=&quot;ConditionalAttribute&quot;/&gt;)
-    /// and therefore the impact on actual (production) code will be null.&lt;/para&gt;
-    /// &lt;para&gt;The original &lt;see cref=&quot;Console&quot;/&gt; can become somewhat erratic when used
-    /// in heavy multi-threaded code, therefore this console writes to a &lt;see cref=&quot;StringBuilder&quot;/&gt;
-    /// which can be rendered with the &lt;see cref=&quot;WriteAndClear&quot;/&gt; method.&lt;/para&gt;
+    /// &lt;para&gt;It is preferred to store HazelcastJsonValue instead of String for JSON formatted strings.
+    /// Users can then run predicates and aggregations and use indexes on the attributes of the underlying
+    /// JSON content.&lt;/para&gt;
+    /// &lt;para&gt;Note that the string is not validated and may be invalid JSON.&lt;/para&gt;
     /// &lt;/remarks&gt;
-#if HZ_CONSOLE_PUBLIC
-    public
-#else
-    internal
-#endif
-    static class HConsole
+    public sealed class HazelcastJsonValue
     {
-#if HZ_CONSOLE
-        internal static readonly HConsoleOptions Options = new HConsoleOptions();
-        private static readonly StringBuilder TextBuilder = new StringBuilder();
-        private static readonly object TextBuilderLock = new object();
-#endif
-
-        // NOTES
-        //
-        // The HConsoleConfiguration class *must* exist regardless of the HZ_CONSOLE define, as
-        // it is exposed by the methods below, so that the code can compile,
-        // and even though these methods may not be compiled (see below).
-        // However, to reduce its weight, we can simplify the class body when
-        // HZ_CONSOLE is not defined.
-        //
-        // Methods below *must* exist regardless of the HZ_CONSOLE define, so that
-        // the code can compile, but due to the [Conditional] attributes, their
-        // invocations will *not* be compiled = zero cost.
-        // Nevertheless, to reduce their weight, we can simplify their bodies
-        // when HZ_CONSOLE is not defined.
-        // The &#39;Lines&#39; method cannot be marked [Conditional] because it returns
-        // a non-void value. However, it should always be invoked from within
-        // a call to WriteLine, which will *not* be compiled anyways.
+        private readonly string _json;
 
         /// &lt;summary&gt;
-        /// Gets the text.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastJsonValue&quot;/&gt; with a string containing JSON.
         /// &lt;/summary&gt;
-        public static string Text
+        /// &lt;param name=&quot;json&quot;&gt;The string containing JSON.&lt;/param&gt;
+        public HazelcastJsonValue(string json)
         {
-#if HZ_CONSOLE
-            get { lock (TextBuilderLock) return TextBuilder.ToString(); }
-#else
-            get =&gt; string.Empty;
-#endif
+            _json = json ?? throw new ArgumentNullException(nameof(json));
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString() =&gt; _json;
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode() =&gt; _json.GetHashCode(StringComparison.Ordinal);
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is HazelcastJsonValue other &amp;&amp; Equals(this, other);
         }
 
         /// &lt;summary&gt;
-        /// Clears the text buffer.
+        /// Compares two instances of the &lt;see cref=&quot;HazelcastJsonValue&quot;/&gt; for equality.
         /// &lt;/summary&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void Clear()
-        {
-#if HZ_CONSOLE
-            lock (TextBuilderLock) TextBuilder.Clear();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes the text to the actual System.Console and clears the buffer.
-        /// &lt;/summary&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteAndClear()
-        {
-#if HZ_CONSOLE
-            lock (TextBuilderLock)
-            {
-                if (TextBuilder.Length &gt; 0)
-                {
-                    Console.Write(TextBuilder.ToString());
-                    TextBuilder.Clear();
-                }
-            }
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Gets a disposable that, when disposed, will write and clear the console.
-        /// &lt;/summary&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void Reset()
-        {
-#if HZ_CONSOLE
-            Options.ClearAll();
-            lock (TextBuilderLock) TextBuilder.Clear();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Configures.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;configure&quot;&gt;An action to configure the options.&lt;/param&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;We HAVE to have this method wrapping an Action so that we can mark it Conditional. If
-        /// we were to implement direct fluent configuration eg HConsole.Configure().SetLevel(...) that
-        /// top-level Configure method could not be marked Conditional because it returns a value.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void Configure(Action&lt;HConsoleOptions&gt; configure)
-        {
-#if HZ_CONSOLE
-            if (configure == null) throw new ArgumentNullException(nameof(configure));
-            configure(Options);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Gets a disposable that, when disposed, will write and clear the console.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;configure&quot;&gt;An optional action to configure the options.&lt;/param&gt;
-        /// &lt;returns&gt;A disposable that, when disposed, will write and clear the console.&lt;/returns&gt;
-        // cannot be [Conditional] when return type is not void
-        public static IDisposable Capture(Action&lt;HConsoleOptions&gt; configure = null)
-        {
-#if HZ_CONSOLE
-            configure?.Invoke(Options);
-            return new Disposable();
-#else
-            return null;
-#endif
-        }
-
-#if HZ_CONSOLE
-        private class Disposable : IDisposable
-        {
-            public void Dispose()
-            {
-                WriteAndClear();
-            }
-        }
-#endif
-
-        /// &lt;summary&gt;
-        /// Writes a line.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;text&quot;&gt;The text to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, string text)
-        {
-#if HZ_CONSOLE
-            WriteLine(source, 0, text);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line and a stack trace.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;text&quot;&gt;The text to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void TraceLine(object source, string text)
-        {
-#if HZ_CONSOLE
-            WriteLine(source, 0, text + &quot;\n&quot; + Environment.StackTrace);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line at a level, if the level is not ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;param name=&quot;text&quot;&gt;The text to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, int level, string text)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.GetOptions(source);
-            if (config.Ignore(level)) return;
-            lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line and a stack trace at a level, if the level is not ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;param name=&quot;text&quot;&gt;The text to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void TraceLine(object source, int level, string text)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.GetOptions(source);
-            if (config.Ignore(level)) return;
-            lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + text + &quot;\n&quot; + Environment.StackTrace);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;format&quot;&gt;The line format.&lt;/param&gt;
-        /// &lt;param name=&quot;args&quot;&gt;The line arguments.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, string format, params object[] args)
-        {
-#if HZ_CONSOLE
-            WriteLine(source, 0, format, args);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line at a level, if the level is not ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;param name=&quot;format&quot;&gt;The line format.&lt;/param&gt;
-        /// &lt;param name=&quot;args&quot;&gt;The line arguments.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, int level, string format, params object[] args)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.GetOptions(source);
-            if (config.Ignore(level)) return;
-            lock (TextBuilderLock) TextBuilder.AppendFormat(CultureInfo.InvariantCulture, config.FormattedPrefix + format + Environment.NewLine, args);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;o&quot;&gt;The object to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, object o)
-        {
-#if HZ_CONSOLE
-            WriteLine(source, 0, o);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Writes a line at a level, if the level is not ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;param name=&quot;o&quot;&gt;The object to write.&lt;/param&gt;
-        [Conditional(&quot;HZ_CONSOLE&quot;)]
-        public static void WriteLine(object source, int level, object o)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var config = Options.GetOptions(source);
-            if (config.Ignore(level)) return;
-            lock (TextBuilderLock) TextBuilder.AppendLine(config.FormattedPrefix + o);
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Builds a block of lines at a level, if the level is not ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;param name=&quot;text&quot;&gt;The lines.&lt;/param&gt;
-        /// &lt;returns&gt;The indented lines, if the level is not ignored; otherwise an empty string.&lt;/returns&gt;
-        public static string Lines(object source, int level, string text)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var info = Options.GetOptions(source);
-            if (info.Ignore(level)) return &quot;&quot;;
-            var prefix = new string(&#39; &#39;, info.FormattedPrefix.Length);
-            text = &quot;\n&quot; + text;
-            return text.Replace(&quot;\n&quot;, &quot;\n&quot; + prefix, StringComparison.Ordinal);
-#else
-            return &quot;&quot;;
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the level of a source object.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
-        /// &lt;returns&gt;The level for the source object.&lt;/returns&gt;
-        public static int Level(object source)
-        {
-#if HZ_CONSOLE
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            var info = Options.GetOptions(source);
-            return info.Level;
-#else
-            return 0;
-#endif
-        }
+        /// &lt;param name=&quot;x1&quot;&gt;The first instance.&lt;/param&gt;
+        /// &lt;param name=&quot;x2&quot;&gt;The second instance.&lt;/param&gt;
+        /// &lt;returns&gt;true if the two instances are equal; otherwise false.&lt;/returns&gt;
+        private static bool Equals(HazelcastJsonValue x1, HazelcastJsonValue x2)
+            =&gt; x1._json == x2._json;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[78,20,78,32,0],[91,9,91,10,0],[109,9,109,10,0],[121,9,121,10,0],[139,9,139,10,0],[153,13,153,25,1],[178,9,178,10,0],[191,9,191,10,0],[208,9,208,10,0],[225,9,225,10,0],[239,9,239,10,0],[257,9,257,10,0],[270,9,270,10,0],[287,9,287,10,0],[306,13,306,23,0],[322,13,322,22,0]]);
+      highlightRanges([[36,9,36,47,1],[38,13,38,75,1],[39,9,39,10,1],[42,46,42,51,1],[45,46,45,89,1],[50,13,50,44,1],[50,45,50,57,1],[51,13,51,29,1],[51,30,51,43,1],[52,13,52,75,1],[62,16,62,36,1]]);
     </script>
   </body>
 </html>

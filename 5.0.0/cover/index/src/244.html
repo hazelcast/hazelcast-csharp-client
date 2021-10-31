@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEvictAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEventJournalSubscribeCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,27 +49,29 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Evicts all keys from this map except the locked ones. If a MapStore is defined for this map, deleteAll is not
-    /// called by this method. If you do want to deleteAll to be called use the clear method. The EVICT_ALL event is
-    /// fired for any registered listeners.
+    /// Performs the initial subscription to the map event journal.
+    /// This includes retrieving the event journal sequences of the
+    /// oldest and newest event in the journal.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapEvictAllServerCodec
+    internal static class MapEventJournalSubscribeServerCodec
 #else
-    internal static class MapEvictAllCodec
+    internal static class MapEventJournalSubscribeCodec
 #endif
     {
-        public const int RequestMessageType = 73472; // 0x011F00
-        public const int ResponseMessageType = 73473; // 0x011F01
+        public const int RequestMessageType = 82176; // 0x014100
+        public const int ResponseMessageType = 82177; // 0x014101
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseOldestSequenceFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseNewestSequenceFieldOffset = ResponseOldestSequenceFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = ResponseNewestSequenceFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// name of map
+            /// name of the map
             ///&lt;/summary&gt;
             public string Name { get; set; }
         }
@@ -79,8 +81,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;Map.EvictAll&quot;
+                IsRetryable = true,
+                OperationName = &quot;Map.EventJournalSubscribe&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -103,14 +105,26 @@ namespace Hazelcast.Protocol.Codecs
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// Sequence id of the oldest event in the event journal.
+            ///&lt;/summary&gt;
+            public long OldestSequence { get; set; }
+
+            /// &lt;summary&gt;
+            /// Sequence id of the newest event in the event journal.
+            ///&lt;/summary&gt;
+            public long NewestSequence { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(long oldestSequence, long newestSequence)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteLongL(ResponseOldestSequenceFieldOffset, oldestSequence);
+            initialFrame.Bytes.WriteLongL(ResponseNewestSequenceFieldOffset, newestSequence);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -120,7 +134,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.OldestSequence = initialFrame.Bytes.ReadLongL(ResponseOldestSequenceFieldOffset);
+            response.NewestSequence = initialFrame.Bytes.ReadLongL(ResponseNewestSequenceFieldOffset);
             return response;
         }
 
@@ -129,7 +145,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[111,13,111,64,0],[112,13,112,53,0],[113,13,113,29,0],[114,13,114,29,0],[115,9,115,10,0]]);
+      highlightRanges([[72,13,76,15,0],[77,13,77,123,0],[78,13,78,104,0],[79,13,79,88,0],[80,13,80,48,0],[81,13,81,53,0],[82,13,82,34,0],[102,42,102,46,0],[102,47,102,51,0],[107,42,107,46,0],[107,47,107,51,0],[125,13,125,64,0],[126,13,126,53,0],[127,13,127,48,0],[128,13,128,103,0],[129,13,129,103,0],[130,13,130,29,0],[131,9,131,10,0]]);
     </script>
   </body>
 </html>

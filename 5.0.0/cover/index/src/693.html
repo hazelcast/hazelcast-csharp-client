@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastEnvironmentVariablesConfigurationSource.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastEnvironmentVariablesConfigurationProvider.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,26 +22,50 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
 
 namespace Hazelcast.Configuration
 {
     /// &lt;summary&gt;
-    /// Represents Hazelcast environment variables arguments as an &lt;see cref=&quot;IConfigurationSource&quot;/&gt;.
+    /// An environment variables based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
     /// &lt;/summary&gt;
-    internal class HazelcastEnvironmentVariablesConfigurationSource : IConfigurationSource
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Adds support for the hazelcast.x.y variables that do not respect the standard hazelcast__x__y pattern.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class HazelcastEnvironmentVariablesConfigurationProvider : ConfigurationProvider
     {
         /// &lt;inheritdoc /&gt;
-        public IConfigurationProvider Build(IConfigurationBuilder builder)
+        public override void Load()
+            =&gt; Load(Environment.GetEnvironmentVariables());
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Loads environment variables.
+        /// &lt;/summary&gt;
+        internal void Load(IDictionary envVariables)
         {
-            return new HazelcastEnvironmentVariablesConfigurationProvider();
+            Data = new Dictionary&lt;string, string&gt;(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var envVariable in envVariables.Cast&lt;DictionaryEntry&gt;())
+            {
+                var key = (string) envVariable.Key;
+
+                if (!key.StartsWith(&quot;hazelcast.&quot;, StringComparison.OrdinalIgnoreCase)) continue;
+
+                key = key.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+                Data[key] = (string)envVariable.Value;
+            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,13,27,77,1]]);
+      highlightRanges([[33,16,33,59,1],[41,13,41,85,1],[43,22,43,37,1],[43,38,43,40,1],[43,41,43,77,1],[45,17,45,52,1],[47,17,47,87,1],[49,17,49,98,1],[50,17,50,55,1],[52,9,52,10,1]]);
     </script>
   </body>
 </html>

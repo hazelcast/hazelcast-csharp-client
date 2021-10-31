@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\EndpointQualifierCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\DistributedObjectInfoCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -46,36 +46,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class EndpointQualifierCodec
+    internal static class DistributedObjectInfoCodec
     {
-        private const int TypeFieldOffset = 0;
-        private const int InitialFrameSize = TypeFieldOffset + BytesExtensions.SizeOfInt;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.EndpointQualifier endpointQualifier)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.DistributedObjectInfo distributedObjectInfo)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
-            var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(TypeFieldOffset, endpointQualifier.Type);
-            clientMessage.Append(initialFrame);
-
-            CodecUtil.EncodeNullable(clientMessage, endpointQualifier.Identifier, StringCodec.Encode);
+            StringCodec.Encode(clientMessage, distributedObjectInfo.ServiceName);
+            StringCodec.Encode(clientMessage, distributedObjectInfo.Name);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Models.EndpointQualifier Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static Hazelcast.Models.DistributedObjectInfo Decode(IEnumerator&lt;Frame&gt; iterator)
         {
             // begin frame
             iterator.Take();
-
-            var initialFrame = iterator.Take();
-            var type = initialFrame.Bytes.ReadIntL(TypeFieldOffset);
-
-            var identifier = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            var serviceName = StringCodec.Decode(iterator);
+            var name = StringCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return CustomTypeFactory.CreateEndpointQualifier(type, identifier);
+            return new Hazelcast.Models.DistributedObjectInfo(serviceName, name);
         }
     }
 }
@@ -84,7 +76,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[46,13,46,61,0],[48,13,48,70,0],[49,13,49,83,0],[50,13,50,48,0],[52,13,52,103,0],[54,13,54,59,0],[55,9,55,10,0],[60,13,60,29,1],[62,13,62,48,1],[63,13,63,69,1],[65,13,65,85,1],[67,13,67,40,1],[68,13,68,80,1]]);
+      highlightRanges([[44,13,44,61,0],[46,13,46,82,0],[47,13,47,75,0],[49,13,49,59,0],[50,9,50,10,0],[55,13,55,29,0],[56,13,56,60,0],[57,13,57,53,0],[59,13,59,40,0],[60,13,60,82,0]]);
     </script>
   </body>
 </html>

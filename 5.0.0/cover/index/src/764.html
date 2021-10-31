@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\FuncExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;Func{TResult}&quot;/&gt; delegate.
+    /// &lt;/summary&gt;
+    internal static class FuncExtensions
+    {
+        // Part 15.4 of the C# 4.0 language specification
+        //
+        // Invocation of a delegate instance whose invocation list contains multiple
+        // entries proceeds by invoking each of the methods in the invocation list,
+        // synchronously, in order. ... If the delegate invocation includes output
+        // parameters or a return value, their final value will come from the invocation
+        // of the last delegate in the list.
+        //
+        // ie only the last result of functions is returned
+        // but each function or action runs
+
+        // however, for tasks, what we really want is to run and await each entry in
+        // sequence, and that cannot be done by simply invoking the delegate, we have
+        // to get the invocation list and handle the calls
+
+        /// &lt;summary&gt;
+        /// Awaits each entries of an async function delegate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The function delegate.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when each entries in &lt;paramref name=&quot;function&quot;/&gt;
+        /// has been executed and awaited.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If one entry of the delegate throws, execution stops and the remaining entries are ignored.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static async ValueTask AwaitEach(this Func&lt;ValueTask&gt; function)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func&lt;ValueTask&gt;) d)().CfAwait();
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Awaits each entries of an async function delegate.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the argument.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The function delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;arg&quot;&gt;An argument for the function.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when each entries in &lt;paramref name=&quot;function&quot;/&gt;
+        /// has been executed and awaited.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If one entry of the delegate throws, execution stops and the remaining entries are ignored.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static async ValueTask AwaitEach&lt;T&gt;(this Func&lt;T, ValueTask&gt; function, T arg)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func&lt;T, ValueTask&gt;) d)(arg).CfAwait();
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Awaits each entries of an async function delegate.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T1&quot;&gt;The type of the first argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T2&quot;&gt;The type of the second argument.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The function delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;arg1&quot;&gt;The first argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg2&quot;&gt;The second argument for the function.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when each entries in &lt;paramref name=&quot;function&quot;/&gt;
+        /// has been executed and awaited.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If one entry of the delegate throws, execution stops and the remaining entries are ignored.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static async ValueTask AwaitEach&lt;T1, T2&gt;(this Func&lt;T1, T2,ValueTask&gt; function, T1 arg1, T2 arg2)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func&lt;T1, T2, ValueTask&gt;) d)(arg1, arg2).CfAwait();
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Awaits each entries of an async function delegate.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T1&quot;&gt;The type of the first argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T2&quot;&gt;The type of the second argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T3&quot;&gt;The type of the third argument.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The function delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;arg1&quot;&gt;The first argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg2&quot;&gt;The second argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg3&quot;&gt;The third argument for the function.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when each entries in &lt;paramref name=&quot;function&quot;/&gt;
+        /// has been executed and awaited.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If one entry of the delegate throws, execution stops and the remaining entries are ignored.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static async ValueTask AwaitEach&lt;T1, T2, T3&gt;(this Func&lt;T1, T2, T3, ValueTask&gt; function, T1 arg1, T2 arg2, T3 arg3)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func&lt;T1, T2, T3, ValueTask&gt;) d)(arg1, arg2, arg3).CfAwait();
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Awaits each entries of an async function delegate.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T1&quot;&gt;The type of the first argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T2&quot;&gt;The type of the second argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T3&quot;&gt;The type of the third argument.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;T4&quot;&gt;The type of the fourth argument.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The function delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;arg1&quot;&gt;The first argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg2&quot;&gt;The second argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg3&quot;&gt;The third argument for the function.&lt;/param&gt;
+        /// &lt;param name=&quot;arg4&quot;&gt;The fourth argument for the function.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when each entries in &lt;paramref name=&quot;function&quot;/&gt;
+        /// has been executed and awaited.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If one entry of the delegate throws, execution stops and the remaining entries are ignored.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static async ValueTask AwaitEach&lt;T1, T2, T3, T4&gt;(this Func&lt;T1, T2, T3, T4, ValueTask&gt; function, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            if (function != null)
+            {
+                foreach (var d in function.GetInvocationList())
+                {
+                    await ((Func&lt;T1, T2, T3, T4, ValueTask&gt;)d)(arg1, arg2, arg3, arg4).CfAwait();
+                }
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[51,13,51,34,1],[53,26,53,31,1],[53,32,53,34,1],[53,35,53,63,1],[55,21,55,61,1],[58,9,58,10,1],[73,13,73,34,1],[75,26,75,31,1],[75,32,75,34,1],[75,35,75,63,1],[77,21,77,67,1],[80,9,80,10,1],[97,13,97,34,0],[99,26,99,31,0],[99,32,99,34,0],[99,35,99,63,0],[101,21,101,79,0],[104,9,104,10,0],[123,13,123,34,0],[125,26,125,31,0],[125,32,125,34,0],[125,35,125,63,0],[127,21,127,89,0],[130,9,130,10,0],[151,13,151,34,1],[153,26,153,31,1],[153,32,153,34,1],[153,35,153,63,1],[155,21,155,98,1],[158,9,158,10,1]]);
+    </script>
+  </body>
+</html>

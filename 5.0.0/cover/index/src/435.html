@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListLongByteArrayCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListIntegerLongCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,38 +23,43 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class EntryListLongByteArrayCodec
+    internal static class EntryListIntegerLongCodec
     {
-        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;KeyValuePair&lt;long, byte[]&gt;&gt; collection)
-        {
-            var valueList = new List&lt;long&gt;();
-            clientMessage.Append(Frame.CreateBeginStruct());
+        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfLong;
 
+        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;KeyValuePair&lt;int,long&gt;&gt; collection)
+        {
+            var itemCount = collection.Count();
+
+            var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
+            var i = 0;
             foreach (var kvp in collection)
             {
-                valueList.Add(kvp.Key);
-                ByteArrayCodec.Encode(clientMessage, kvp.Value);
+                frame.Bytes.WriteIntL(i * EntrySizeInBytes, kvp.Key);
+                frame.Bytes.WriteLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
+                i++;
             }
 
-            clientMessage.Append(Frame.CreateEndStruct());
-            ListLongCodec.Encode(clientMessage, valueList);
+            clientMessage.Append(frame);
         }
 
-        public static IList&lt;KeyValuePair&lt;long, byte[]&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static IList&lt;KeyValuePair&lt;int, long&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
         {
-            var listV = ListMultiFrameCodec.Decode(iterator, ByteArrayCodec.Decode);
-            var listK = ListLongCodec.Decode(iterator);
-
-            var result = new List&lt;KeyValuePair&lt;long, byte[]&gt;&gt;(listV.Count);
-            for (var i = 0; i &lt; listK.Count; i++)
+            var frame = iterator.Take();
+            var itemCount = frame.Bytes.Length / EntrySizeInBytes;
+            var result = new List&lt;KeyValuePair&lt;int, long&gt;&gt;();
+            for (var i = 0; i &lt; itemCount; i++)
             {
-                result.Add(new KeyValuePair&lt;long, byte[]&gt;(listK[i], listV[i]));
+                var key = frame.Bytes.ReadIntL(i * EntrySizeInBytes);
+                var value = frame.Bytes.ReadLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
+                result.Add(new KeyValuePair&lt;int, long&gt;(key, value));
             }
-
             return result;
         }
     }
@@ -62,7 +67,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,13,24,46,0],[25,13,25,61,0],[27,22,27,29,0],[27,30,27,32,0],[27,33,27,43,0],[29,17,29,40,0],[30,17,30,65,0],[33,13,33,59,0],[34,13,34,60,0],[35,9,35,10,0],[39,13,39,85,0],[40,13,40,56,0],[42,13,42,76,0],[43,18,43,27,0],[43,29,43,44,0],[43,46,43,49,0],[45,17,45,80,0],[48,13,48,27,0]]);
+      highlightRanges([[28,13,28,48,0],[30,13,30,75,0],[31,13,31,23,0],[32,22,32,29,0],[32,30,32,32,0],[32,33,32,43,0],[34,17,34,70,0],[35,17,35,101,0],[36,17,36,21,0],[39,13,39,41,0],[40,9,40,10,0],[44,13,44,41,0],[45,13,45,67,0],[46,13,46,62,0],[47,18,47,27,0],[47,29,47,42,0],[47,44,47,47,0],[49,17,49,70,0],[50,17,50,101,0],[51,17,51,69,0],[53,13,53,27,0]]);
     </script>
   </body>
 </html>

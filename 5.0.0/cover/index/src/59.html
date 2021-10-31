@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\MorphingPortableReader.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\JavaClass.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,415 +22,60 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+
 namespace Hazelcast.Serialization
 {
-    internal class MorphingPortableReader : DefaultPortableReader
+    /// &lt;summary&gt;
+    ///  Class for serializing/deserializing Java Class types
+    /// &lt;/summary&gt;
+    public class JavaClass
     {
-        public MorphingPortableReader(PortableSerializer serializer, ObjectDataInput input, IClassDefinition cd)
-            : base(serializer, input, cd)
+        public JavaClass(string name)
         {
+            Name = name;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override bool ReadBoolean(string fieldName)
+        public string Name { get; }
+
+        public override bool Equals(object obj)
         {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return false;
-            }
-            if (fd.FieldType != FieldType.Boolean)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadBoolean(fieldName);
+            if (ReferenceEquals(this, obj)) return true;
+            return obj is JavaClass thing &amp;&amp; EqualsN(this, thing);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override byte ReadByte(string fieldName)
+        protected bool Equals(JavaClass other)
         {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0;
-            }
-            if (fd.FieldType != FieldType.Byte)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadByte(fieldName);
+            if (other is null) return false;
+            return ReferenceEquals(this, other) || EqualsN(this, other);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override byte[] ReadByteArray(string fieldName)
+        public static bool Equals(JavaClass left, JavaClass right)
         {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.ByteArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadByteArray(fieldName);
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+            return EqualsN(left, right);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override char ReadChar(string fieldName)
+        private static bool EqualsN(JavaClass left, JavaClass right)
+            =&gt; string.Equals(left.Name, right.Name, StringComparison.Ordinal);
+
+        public override int GetHashCode()
         {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return &#39;\0&#39;;
-            }
-            if (fd.FieldType != FieldType.Char)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadChar(fieldName);
+            return Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override char[] ReadCharArray(string fieldName)
+        public override string ToString()
         {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.CharArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadCharArray(fieldName);
+            return $&quot;Name: {Name}&quot;;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override double ReadDouble(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0d;
-            }
-            switch (fd.FieldType)
-            {
-                case FieldType.Double:
-                {
-                    return base.ReadDouble(fieldName);
-                }
-
-                case FieldType.Long:
-                {
-                    return base.ReadLong(fieldName);
-                }
-
-                case FieldType.Float:
-                {
-                    return base.ReadFloat(fieldName);
-                }
-
-                case FieldType.Int:
-                {
-                    return base.ReadInt(fieldName);
-                }
-
-                case FieldType.Byte:
-                {
-                    return base.ReadByte(fieldName);
-                }
-
-                case FieldType.Char:
-                {
-                    return base.ReadChar(fieldName);
-                }
-
-                case FieldType.Short:
-                {
-                    return base.ReadShort(fieldName);
-                }
-
-                default:
-                {
-                    throw new InvalidPortableFieldException();
-                }
-            }
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override double[] ReadDoubleArray(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.DoubleArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadDoubleArray(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override float ReadFloat(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0f;
-            }
-            switch (fd.FieldType)
-            {
-                case FieldType.Float:
-                {
-                    return base.ReadFloat(fieldName);
-                }
-
-                case FieldType.Int:
-                {
-                    return base.ReadInt(fieldName);
-                }
-
-                case FieldType.Byte:
-                {
-                    return base.ReadByte(fieldName);
-                }
-
-                case FieldType.Char:
-                {
-                    return base.ReadChar(fieldName);
-                }
-
-                case FieldType.Short:
-                {
-                    return base.ReadShort(fieldName);
-                }
-
-                default:
-                {
-                    throw new InvalidPortableFieldException();
-                }
-            }
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override float[] ReadFloatArray(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.FloatArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadFloatArray(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override int ReadInt(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0;
-            }
-            switch (fd.FieldType)
-            {
-                case FieldType.Int:
-                {
-                    return base.ReadInt(fieldName);
-                }
-
-                case FieldType.Byte:
-                {
-                    return base.ReadByte(fieldName);
-                }
-
-                case FieldType.Char:
-                {
-                    return base.ReadChar(fieldName);
-                }
-
-                case FieldType.Short:
-                {
-                    return base.ReadShort(fieldName);
-                }
-
-                default:
-                {
-                    throw new InvalidPortableFieldException();
-                }
-            }
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override int[] ReadIntArray(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.IntArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadIntArray(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override long ReadLong(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0L;
-            }
-            switch (fd.FieldType)
-            {
-                case FieldType.Long:
-                {
-                    return base.ReadLong(fieldName);
-                }
-
-                case FieldType.Int:
-                {
-                    return base.ReadInt(fieldName);
-                }
-
-                case FieldType.Byte:
-                {
-                    return base.ReadByte(fieldName);
-                }
-
-                case FieldType.Char:
-                {
-                    return base.ReadChar(fieldName);
-                }
-
-                case FieldType.Short:
-                {
-                    return base.ReadShort(fieldName);
-                }
-
-                default:
-                {
-                    throw new InvalidPortableFieldException();
-                }
-            }
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override long[] ReadLongArray(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.LongArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadLongArray(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override TPortable ReadPortable&lt;TPortable&gt;(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return default;
-            }
-            if (fd.FieldType != FieldType.Portable)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadPortable&lt;TPortable&gt;(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override TPortable[] ReadPortableArray&lt;TPortable&gt;(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.PortableArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadPortableArray&lt;TPortable&gt;(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override short ReadShort(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return 0;
-            }
-            switch (fd.FieldType)
-            {
-                case FieldType.Short:
-                {
-                    return base.ReadShort(fieldName);
-                }
-
-                case FieldType.Byte:
-                {
-                    return base.ReadByte(fieldName);
-                }
-
-                default:
-                {
-                    throw new InvalidPortableFieldException();
-                }
-            }
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override short[] ReadShortArray(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.ShortArray)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadShortArray(fieldName);
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override string ReadString(string fieldName)
-        {
-            var fd = Cd.GetField(fieldName);
-            if (fd == null)
-            {
-                return null;
-            }
-            if (fd.FieldType != FieldType.Utf)
-            {
-                throw new InvalidPortableFieldException();
-            }
-            return base.ReadString(fieldName);
-        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[20,15,20,42,1],[22,9,22,10,1],[27,13,27,45,1],[28,13,28,28,1],[30,17,30,30,1],[32,13,32,51,1],[34,17,34,59,1],[36,13,36,48,1],[42,13,42,45,1],[43,13,43,28,1],[45,17,45,26,1],[47,13,47,48,1],[49,17,49,59,1],[51,13,51,45,1],[57,13,57,45,1],[58,13,58,28,1],[60,17,60,29,1],[62,13,62,53,1],[64,17,64,59,1],[66,13,66,50,1],[72,13,72,45,1],[73,13,73,28,1],[75,17,75,29,1],[77,13,77,48,1],[79,17,79,59,1],[81,13,81,45,1],[87,13,87,45,1],[88,13,88,28,1],[90,17,90,29,1],[92,13,92,53,1],[94,17,94,59,1],[96,13,96,50,1],[102,13,102,45,1],[103,13,103,28,1],[105,17,105,27,1],[107,13,107,34,1],[111,21,111,55,1],[116,21,116,53,1],[121,21,121,54,1],[126,21,126,52,1],[131,21,131,53,1],[136,21,136,53,1],[141,21,141,54,1],[146,21,146,63,1],[154,13,154,45,1],[155,13,155,28,1],[157,17,157,29,1],[159,13,159,55,1],[161,17,161,59,0],[163,13,163,52,1],[169,13,169,45,1],[170,13,170,28,1],[172,17,172,27,1],[174,13,174,34,1],[178,21,178,54,1],[183,21,183,52,1],[188,21,188,53,1],[193,21,193,53,1],[198,21,198,54,1],[203,21,203,63,1],[211,13,211,45,1],[212,13,212,28,1],[214,17,214,29,1],[216,13,216,54,1],[218,17,218,59,0],[220,13,220,51,1],[226,13,226,45,1],[227,13,227,28,1],[229,17,229,26,1],[231,13,231,34,1],[235,21,235,52,1],[240,21,240,53,1],[245,21,245,53,1],[250,21,250,54,1],[255,21,255,63,1],[263,13,263,45,1],[264,13,264,28,1],[266,17,266,29,1],[268,13,268,52,1],[270,17,270,59,1],[272,13,272,49,1],[278,13,278,45,1],[279,13,279,28,1],[281,17,281,27,1],[283,13,283,34,1],[287,21,287,53,1],[292,21,292,52,1],[297,21,297,53,1],[302,21,302,53,1],[307,21,307,54,1],[312,21,312,63,1],[320,13,320,45,1],[321,13,321,28,1],[323,17,323,29,1],[325,13,325,53,1],[327,17,327,59,0],[329,13,329,50,1],[335,13,335,45,1],[336,13,336,28,1],[338,17,338,32,1],[340,13,340,52,1],[342,17,342,59,0],[344,13,344,60,1],[350,13,350,45,1],[351,13,351,28,1],[353,17,353,29,1],[355,13,355,57,1],[357,17,357,59,0],[359,13,359,65,1],[365,13,365,45,1],[366,13,366,28,1],[368,17,368,26,1],[370,13,370,34,1],[374,21,374,54,1],[379,21,379,53,1],[384,21,384,63,1],[392,13,392,45,1],[393,13,393,28,1],[395,17,395,29,1],[397,13,397,54,1],[399,17,399,59,0],[401,13,401,51,1],[407,13,407,45,1],[408,13,408,28,1],[410,17,410,29,1],[412,13,412,47,1],[414,17,414,59,1],[416,13,416,47,1]]);
+      highlightRanges([[24,9,24,38,1],[26,13,26,25,1],[27,9,27,10,1],[29,30,29,34,1],[33,13,33,44,1],[33,45,33,57,0],[34,13,34,67,1],[39,13,39,31,0],[39,32,39,45,0],[40,13,40,73,0],[45,13,45,46,0],[45,47,45,59,0],[46,13,46,47,0],[46,48,46,61,0],[47,13,47,41,0],[51,16,51,78,1],[55,13,55,82,0],[60,13,60,36,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Maybe`T.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Maybe.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,323 +26,76 @@ using System;
 
 namespace Hazelcast.Core
 {
-    // TODO: consider implementing IStructuralEquatable
-
-    // &lt;pedant&gt;
-    // &quot;A monad is just a monoid in the category of endofunctors.&quot;
-    // &lt;/pedant&gt;
-    //
-    // In many cases we would like to return a T? value where T can just be
-    // anything, but C# 8 does not supporting nullable &quot;anything&quot;, and we
-    // have to fall back to using our own structure.
-    //
-    // references:
-    // https://mikhail.io/2018/07/monads-explained-in-csharp-again/
-    // https://gist.github.com/johnazariah/d95c03e2c56579c11272a647bab4bc38
-    // https://github.com/bert2/Nullable.Extensions
-    // https://github.com/AndreyTsvetkov/Functional.Maybe
-    // https://habr.com/en/post/458692/
-
     /// &lt;summary&gt;
     /// Represents a value that may be missing.
     /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;T&quot;&gt;The type of the value.&lt;/typeparam&gt;
-    internal readonly struct Maybe&lt;T&gt; : IEquatable&lt;Maybe&lt;T&gt;&gt;, IEquatable&lt;T&gt;
+    internal readonly struct Maybe : IEquatable&lt;Maybe&gt;
     {
-        private readonly bool _hasValue;
-        private readonly T _value;
-
         // note: the parameter-less constructor is always implied with structs
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;Maybe{T}&quot;/&gt; class with a value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        private Maybe(T value)
-        {
-            _value = value;
-            _hasValue = true;
-        }
 
         #region Create
 
-#pragma warning disable CA1000 // Do not declare static members on generic types
-
         /// &lt;summary&gt;
-        /// Gets a &lt;see cref=&quot;Maybe{T}&quot;/&gt; with no value.
+        /// Gets a &lt;see cref=&quot;Maybe&quot;/&gt; with no value.
         /// &lt;/summary&gt;
-        /// &lt;returns&gt;A &lt;see cref=&quot;Maybe{T}&quot;/&gt; with no value.&lt;/returns&gt;
-        public static Maybe&lt;T&gt; None =&gt; default;
+        public static Maybe None =&gt; default;
 
         /// &lt;summary&gt;
         /// Gets a &lt;see cref=&quot;Maybe{T}&quot;/&gt; with a value.
         /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the value.&lt;/typeparam&gt;
         /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
         /// &lt;returns&gt;A &lt;see cref=&quot;Maybe{T}&quot;/&gt; with a value.&lt;/returns&gt;
-        public static Maybe&lt;T&gt; Some(T value) =&gt; new Maybe&lt;T&gt;(value);
-
-#pragma warning restore CA1000
-
-        #endregion
-
-        #region Conversions
-
-        /// &lt;summary&gt;
-        /// Implicitly converts a &lt;typeparamref cref=&quot;T&quot;/&gt; value into a corresponding &lt;see cref=&quot;Maybe{T}&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        public static implicit operator Maybe&lt;T&gt;(T value)
-            =&gt; value == null ? default : new Maybe&lt;T&gt;(value);
-
-        /// &lt;summary&gt;
-        /// Implicitly converts a non-generic &lt;see cref=&quot;Maybe&quot;/&gt; none value into a
-        /// corresponding &lt;see cref=&quot;Maybe{T}&quot;/&gt; with no value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;_&quot;&gt;&lt;/param&gt;
-        public static implicit operator Maybe&lt;T&gt;(Maybe _)
-            =&gt; default;
-
-        /// &lt;summary&gt;
-        /// Explicitly converts a &lt;see cref=&quot;Maybe{T}&quot;/&gt; into its value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;maybe&quot;&gt;The attempt.&lt;/param&gt;
-        public static explicit operator T(Maybe&lt;T&gt; maybe)
-            =&gt; maybe._value;
-
-        #endregion
-
-        #region Value
-
-        /// &lt;summary&gt;
-        /// Tries to get the value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value if any; otherwise the default value for &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/param&gt;
-        /// &lt;returns&gt;Whether this instance has a value.&lt;/returns&gt;
-        public bool TryGetValue(out T value)
+        public static Maybe&lt;T&gt; Some&lt;T&gt;(T value)
         {
-            value = _hasValue ? _value : default;
-            return _hasValue;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets this value, if it exists; otherwise the default value for &lt;typeparamref name=&quot;T&quot;/&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This value, if it exists; otherwise the default value for &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/returns&gt;
-        public T ValueOrDefault()
-            =&gt; _hasValue ? _value : default;
-
-        /// &lt;summary&gt;
-        /// Gets this value, if it exists; otherwise the specified value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        /// &lt;returns&gt;This value, if it exists; otherwise the specified value.&lt;/returns&gt;
-        public T ValueOr(T value)
-            =&gt; _hasValue ? _value : value;
-
-        /// &lt;summary&gt;
-        /// Deconstruct this instance.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;hasValue&quot;&gt;Whether this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value if any; otherwise the default value for &lt;typeparamref name=&quot;T&quot;/&gt;.&lt;/param&gt;
-        public void Deconstruct(out bool hasValue, out T value)
-        {
-            hasValue = _hasValue;
-            value = _value;
-        }
-
-        /// &lt;summary&gt;
-        /// Whether this instance does not have a value.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if this instance does not have a value; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool IsNone =&gt; !_hasValue;
-
-        /// &lt;summary&gt;
-        /// Whether this instance has a value.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if this instance has a value; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool IsValue =&gt; _hasValue;
-
-        #endregion
-
-        #region Operations
-
-        /// &lt;summary&gt;
-        /// Maps this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the map operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;map&quot;&gt;The map function.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;see cref=&quot;Maybe{TResult}&quot;/&gt; resulting from the map.&lt;/returns&gt;
-        public Maybe&lt;TResult&gt; Map&lt;TResult&gt;(Func&lt;T, TResult&gt; map)
-        {
-            if (map == null) throw new ArgumentNullException(nameof(map));
-            return _hasValue ? map(_value) : default;
-        }
-
-        /// &lt;summary&gt;
-        /// Combines this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the combination operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;bind&quot;&gt;The combinator function.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;see cref=&quot;Maybe{TResult}&quot;/&gt; resulting from the combinations.&lt;/returns&gt;
-        public Maybe&lt;TResult&gt; Bind&lt;TResult&gt;(Func&lt;T, Maybe&lt;TResult&gt;&gt; bind)
-        {
-            if (bind == null) throw new ArgumentNullException(nameof(bind));
-            return _hasValue ? bind(_value) : default;
-        }
-
-        /// &lt;summary&gt;
-        /// Matches this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the match operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;ifSome&quot;&gt;The value to match if this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;ifNone&quot;&gt;The value to match if this instance does not have a value.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;typeparamref name=&quot;TResult&quot;/&gt; value resulting from the match.&lt;/returns&gt;
-        public TResult Match&lt;TResult&gt;(TResult ifSome, TResult ifNone)
-        {
-            return _hasValue ? ifSome : ifNone;
-        }
-
-        /// &lt;summary&gt;
-        /// Matches this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the match operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;ifSome&quot;&gt;The function to match if this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;ifNone&quot;&gt;The function to match if this instance does not have a value.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;typeparamref name=&quot;TResult&quot;/&gt; value resulting from the match.&lt;/returns&gt;
-        public TResult Match&lt;TResult&gt;(Func&lt;T, TResult&gt; ifSome, Func&lt;TResult&gt; ifNone)
-        {
-            if (ifSome == null) throw new ArgumentNullException(nameof(ifSome));
-            if (ifNone == null) throw new ArgumentNullException(nameof(ifNone));
-
-            return _hasValue ? ifSome(_value) : ifNone();
-        }
-
-        /// &lt;summary&gt;
-        /// Matches this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the match operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;ifSome&quot;&gt;The function to match if this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;ifNone&quot;&gt;The value to match if this instance does not have a value.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;typeparamref name=&quot;TResult&quot;/&gt; value resulting from the match.&lt;/returns&gt;
-        public TResult Match&lt;TResult&gt;(Func&lt;T, TResult&gt; ifSome, TResult ifNone)
-        {
-            if (ifSome == null) throw new ArgumentNullException(nameof(ifSome));
-
-            return _hasValue ? ifSome(_value) : ifNone;
-        }
-
-        /// &lt;summary&gt;
-        /// Matches this instance.
-        /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;TResult&quot;&gt;The type of the result of the match operation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;ifSome&quot;&gt;The function to match if this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The value to match if this instance does not have a value.&lt;/param&gt;
-        /// &lt;returns&gt;The &lt;typeparamref name=&quot;TResult&quot;/&gt; value resulting from the match.&lt;/returns&gt;
-        public TResult Match&lt;TResult&gt;(Func&lt;TResult, T, TResult&gt; ifSome, TResult value)
-        {
-            if (ifSome == null) throw new ArgumentNullException(nameof(ifSome));
-
-            // note: this is also known as &quot;fold&quot;
-
-            return _hasValue ? ifSome(value, _value) : value;
-        }
-
-        /// &lt;summary&gt;
-        /// Matches this instance.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;ifSome&quot;&gt;The action to match if this instance has a value.&lt;/param&gt;
-        /// &lt;param name=&quot;ifNone&quot;&gt;The action to match if this instance does not have a value.&lt;/param&gt;
-        public void Match(Action&lt;T&gt; ifSome, Action ifNone)
-        {
-            if (ifSome == null) throw new ArgumentNullException(nameof(ifSome));
-            if (ifNone == null) throw new ArgumentNullException(nameof(ifNone));
-
-            // note: purists may object to the &#39;Match&#39; name
-
-            if (_hasValue) ifSome(_value); else ifNone();
+            if (value == null) throw new ArgumentNullException(nameof(value));
+            return value;
         }
 
         #endregion
 
         #region Equality
 
-        // &#39;==&#39; compares references (object.ReferenceEquals) for reference types,
-        // unless it is implemented for the type, whereas &#39;Equals&#39; compares values.
-        //
-        // we do not need == for Maybe&lt;T&gt; and T, because of the above implicit and
-        // explicit operators for converting types.
-        //
-        // == is ok if
-        // both sides are reference types (compares references)
-        // or
-        // &#39;==&#39; has been defined for the type (which one?)
-        //
-        // &#39;==&#39; performs value-equality comparison for value types,
-        // and reference-equality comparison for reference types, by default
-
-
         /// &lt;inheritdoc /&gt;
         public override bool Equals(object obj)
-        {
-            return (obj is Maybe &amp;&amp; !_hasValue) ||
-                   (obj is Maybe&lt;T&gt; other &amp;&amp; Equals(other));
-        }
+            =&gt; (obj is Maybe) ||
+               (!(obj is null) &amp;&amp; obj.Equals(this)); // deals with obj being Maybe&lt;T&gt;
 
         /// &lt;summary&gt;
         /// Determines whether this instance is equal to another instance.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;other&quot;&gt;The other instance.&lt;/param&gt;
         /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if this instance is equal to the other instance; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool Equals(Maybe&lt;T&gt; other) // IEquatable&lt;Maybe&lt;T&gt;&gt;
-        {
-            return _hasValue == other._hasValue &amp;&amp;
-                   (!_hasValue || _value.Equals(other._value));
-        }
+        public bool Equals(Maybe other) =&gt; true;
 
         /// &lt;summary&gt;
-        /// Determines whether this instance has a value which is is equal to another value.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;value&quot;&gt;The other value.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if this instance has a value which is equal to the other value; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool Equals(T value) // IEquatable&lt;T&gt;
-        {
-            return _hasValue &amp;&amp; _value.Equals(value);
-        }
-
-        /// &lt;summary&gt;
-        /// Determines whether two &lt;see cref=&quot;Maybe{T}&quot;/&gt; instance are equal.
+        /// Determines whether two &lt;see cref=&quot;Maybe&quot;/&gt; instance are equal.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;left&quot;&gt;The first instance.&lt;/param&gt;
         /// &lt;param name=&quot;right&quot;&gt;The second instance.&lt;/param&gt;
         /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the two instances are equal; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public static bool operator ==(Maybe&lt;T&gt; left, Maybe&lt;T&gt; right)
+        public static bool operator ==(Maybe left, Maybe right)
             =&gt; left.Equals(right);
 
         /// &lt;summary&gt;
-        /// Determines whether two &lt;see cref=&quot;Maybe{T}&quot;/&gt; instance are different.
+        /// Determines whether two &lt;see cref=&quot;Maybe&quot;/&gt; instance are different.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;left&quot;&gt;The first instance.&lt;/param&gt;
         /// &lt;param name=&quot;right&quot;&gt;The second instance.&lt;/param&gt;
         /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the two instances are different; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public static bool operator !=(Maybe&lt;T&gt; left, Maybe&lt;T&gt; right)
+        public static bool operator !=(Maybe left, Maybe right)
             =&gt; !left.Equals(right);
 
         /// &lt;inheritdoc /&gt;
-        public override int GetHashCode() =&gt; _hasValue ? _value.GetHashCode() : 0;
+        public override int GetHashCode() =&gt; 0;
 
         #endregion
-
-        /// &lt;inheritdoc /&gt;
-        public override string ToString()
-        {
-            return $&quot;HasValue = {(_hasValue ? &quot;true&quot; : &quot;false&quot;)}{(_hasValue ? &quot;, Value = &quot; + _value : &quot;&quot;)}&quot;;
-        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[53,13,53,28,1],[54,13,54,30,1],[55,9,55,10,1],[65,40,65,47,1],[72,49,72,68,0],[85,16,85,61,1],[93,16,93,23,1],[100,16,100,28,0],[113,13,113,50,1],[114,13,114,30,1],[122,16,122,44,1],[130,16,130,42,1],[139,13,139,34,0],[140,13,140,28,0],[141,9,141,10,0],[147,31,147,41,0],[153,32,153,41,0],[167,13,167,29,1],[167,30,167,75,1],[168,13,168,54,1],[179,13,179,30,1],[179,31,179,77,1],[180,13,180,55,1],[192,13,192,48,1],[204,13,204,32,0],[204,33,204,81,0],[205,13,205,32,0],[205,33,205,81,0],[207,13,207,58,0],[219,13,219,32,0],[219,33,219,81,0],[221,13,221,56,0],[233,13,233,32,0],[233,33,233,81,0],[237,13,237,62,0],[247,13,247,32,0],[247,33,247,81,0],[248,13,248,32,0],[248,33,248,81,0],[252,13,252,27,0],[252,28,252,43,0],[252,49,252,58,0],[253,9,253,10,0],[277,13,278,61,1],[288,13,289,64,1],[299,13,299,54,1],[309,16,309,34,1],[318,16,318,35,1],[321,46,321,82,1],[328,13,328,109,1]]);
+      highlightRanges([[31,37,31,44,1],[41,13,41,31,1],[41,32,41,79,1],[42,13,42,26,1],[51,16,52,52,1],[59,44,59,48,1],[68,16,68,34,1],[77,16,77,35,0],[80,46,80,47,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\PNCounterGetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\PNCounterAddCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,7 +49,8 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Query operation to retrieve the current value of the PNCounter.
+    /// Adds a delta to the PNCounter value. The delta may be negative for a
+    /// subtraction.
     /// &lt;p&gt;
     /// The invocation will return the replica timestamps (vector clock) which
     /// can then be sent with the next invocation to keep session consistency
@@ -59,14 +60,16 @@ namespace Hazelcast.Protocol.Codecs
     /// message may act as a proxy.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class PNCounterGetServerCodec
+    internal static class PNCounterAddServerCodec
 #else
-    internal static class PNCounterGetCodec
+    internal static class PNCounterAddCodec
 #endif
     {
-        public const int RequestMessageType = 1900800; // 0x1D0100
-        public const int ResponseMessageType = 1900801; // 0x1D0101
-        private const int RequestTargetReplicaUUIDFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 1901056; // 0x1D0200
+        public const int ResponseMessageType = 1901057; // 0x1D0201
+        private const int RequestDeltaFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestGetBeforeUpdateFieldOffset = RequestDeltaFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestTargetReplicaUUIDFieldOffset = RequestGetBeforeUpdateFieldOffset + BytesExtensions.SizeOfBool;
         private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + BytesExtensions.SizeOfGuid;
         private const int ResponseValueFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + BytesExtensions.SizeOfLong;
@@ -82,6 +85,18 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
+            /// the delta to add to the counter value, can be negative
+            ///&lt;/summary&gt;
+            public long Delta { get; set; }
+
+            /// &lt;summary&gt;
+            /// {@code true} if the operation should return the
+            /// counter value before the addition, {@code false}
+            /// if it should return the value after the addition
+            ///&lt;/summary&gt;
+            public bool GetBeforeUpdate { get; set; }
+
+            /// &lt;summary&gt;
             /// last observed replica timestamps (vector clock)
             ///&lt;/summary&gt;
             public IList&lt;KeyValuePair&lt;Guid, long&gt;&gt; ReplicaTimestamps { get; set; }
@@ -93,16 +108,18 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;KeyValuePair&lt;Guid, long&gt;&gt; replicaTimestamps, Guid targetReplicaUUID)
+        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, ICollection&lt;KeyValuePair&lt;Guid, long&gt;&gt; replicaTimestamps, Guid targetReplicaUUID)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;PNCounter.Get&quot;
+                IsRetryable = false,
+                OperationName = &quot;PNCounter.Add&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestDeltaFieldOffset, delta);
+            initialFrame.Bytes.WriteBoolL(RequestGetBeforeUpdateFieldOffset, getBeforeUpdate);
             initialFrame.Bytes.WriteGuidL(RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
@@ -116,6 +133,8 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
+            request.Delta = initialFrame.Bytes.ReadLongL(RequestDeltaFieldOffset);
+            request.GetBeforeUpdate = initialFrame.Bytes.ReadBoolL(RequestGetBeforeUpdateFieldOffset);
             request.TargetReplicaUUID = initialFrame.Bytes.ReadGuidL(RequestTargetReplicaUUIDFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
@@ -172,7 +191,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[88,13,92,15,0],[93,13,93,123,0],[94,13,94,104,0],[95,13,95,88,0],[96,13,96,99,0],[97,13,97,48,0],[98,13,98,53,0],[99,13,99,77,0],[100,13,100,34,0],[122,33,122,37,0],[122,38,122,42,0],[127,72,127,76,0],[127,77,127,81,0],[132,39,132,43,0],[132,44,132,48,0],[151,13,151,64,0],[152,13,152,53,0],[153,13,153,48,0],[154,13,154,85,0],[155,13,155,98,0],[156,13,156,82,0],[157,13,157,29,0],[158,9,158,10,0]]);
+      highlightRanges([[103,13,107,15,0],[108,13,108,123,0],[109,13,109,104,0],[110,13,110,88,0],[111,13,111,75,0],[112,13,112,95,0],[113,13,113,99,0],[114,13,114,48,0],[115,13,115,53,0],[116,13,116,77,0],[117,13,117,34,0],[141,33,141,37,0],[141,38,141,42,0],[146,72,146,76,0],[146,77,146,81,0],[151,39,151,43,0],[151,44,151,48,0],[170,13,170,64,0],[171,13,171,53,0],[172,13,172,48,0],[173,13,173,85,0],[174,13,174,98,0],[175,13,175,82,0],[176,13,176,29,0],[177,9,177,10,0]]);
     </script>
   </body>
 </html>

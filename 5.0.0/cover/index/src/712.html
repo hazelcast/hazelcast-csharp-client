@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\DistributedEventExceptionEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterSubscription.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,46 +23,211 @@
 // limitations under the License.
 
 using System;
+using System.Collections;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Clustering
 {
     /// &lt;summary&gt;
-    /// Represents the event data corresponding to an exception thrown while handling a distributed event.
+    /// Represents a cluster subscription to a server event.
     /// &lt;/summary&gt;
-    internal class DistributedEventExceptionEventArgs : EventArgs
+    internal class ClusterSubscription : IEnumerable&lt;MemberSubscription&gt;
     {
+        private readonly object _mutex = new object();
+        private readonly ConcurrentDictionary&lt;MemberConnection, MemberSubscription&gt; _memberSubscriptions = new ConcurrentDictionary&lt;MemberConnection, MemberSubscription&gt;();
+        private readonly Func&lt;ClientMessage, object, Guid&gt; _subscribeResponseReader;
+        private readonly Func&lt;Guid, object, ClientMessage&gt; _unsubscribeRequestFactory;
+        private readonly Func&lt;ClientMessage, object, bool&gt; _unsubscribeResponseReader;
+        private readonly Func&lt;ClientMessage, object, ValueTask&gt; _eventHandler;
+
+        private volatile bool _active = true; // always start as active
+
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;DistributedEventExceptionEventArgs&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterSubscription&quot;/&gt; class with an auto-assigned identifier.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;exception&quot;&gt;The exception that was thrown by the event handler.&lt;/param&gt;
-        /// &lt;param name=&quot;message&quot;&gt;The client event message that was being processed when the exception was thrown.&lt;/param&gt;
-        internal DistributedEventExceptionEventArgs(Exception exception, ClientMessage message)
+        /// &lt;param name=&quot;subscribeRequest&quot;&gt;The subscribe request message.&lt;/param&gt;
+        /// &lt;param name=&quot;subscribeResponseReader&quot;&gt;The subscribe response message reader.&lt;/param&gt;
+        /// &lt;param name=&quot;unsubscribeRequestFactory&quot;&gt;The unsubscribe request message factory.&lt;/param&gt;
+        /// &lt;param name=&quot;unsubscribeResponseReader&quot;&gt;An unsubscribe response reader.&lt;/param&gt;
+        /// &lt;param name=&quot;eventHandler&quot;&gt;The event handler.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        public ClusterSubscription(ClientMessage subscribeRequest,
+            Func&lt;ClientMessage, object, Guid&gt; subscribeResponseReader,
+            Func&lt;Guid, object, ClientMessage&gt; unsubscribeRequestFactory,
+            Func&lt;ClientMessage, object, bool&gt; unsubscribeResponseReader,
+            Func&lt;ClientMessage, object, ValueTask&gt; eventHandler,
+            object state = null)
+            : this(Guid.NewGuid(), subscribeRequest, subscribeResponseReader, unsubscribeRequestFactory, unsubscribeResponseReader, eventHandler, state)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new complete instance of the &lt;see cref=&quot;ClusterSubscription&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The unique identifier of the subscription.&lt;/param&gt;
+        /// &lt;param name=&quot;subscribeRequest&quot;&gt;The subscribe request message.&lt;/param&gt;
+        /// &lt;param name=&quot;subscribeResponseReader&quot;&gt;The subscribe response message reader.&lt;/param&gt;
+        /// &lt;param name=&quot;unsubscribeRequestFactory&quot;&gt;The unsubscribe request message factory.&lt;/param&gt;
+        /// &lt;param name=&quot;unsubscribeResponseReader&quot;&gt;An unsubscribe response reader.&lt;/param&gt;
+        /// &lt;param name=&quot;eventHandler&quot;&gt;The event handler.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        public ClusterSubscription(Guid id, ClientMessage subscribeRequest,
+            Func&lt;ClientMessage, object, Guid&gt; subscribeResponseReader,
+            Func&lt;Guid, object, ClientMessage&gt; unsubscribeRequestFactory,
+            Func&lt;ClientMessage, object, bool&gt; unsubscribeResponseReader,
+            Func&lt;ClientMessage, object, ValueTask&gt; eventHandler,
+            object state = null)
         {
-            Exception = exception;
-            Message = message;
+            Id = id;
+            SubscribeRequest = subscribeRequest;
+            _subscribeResponseReader = subscribeResponseReader;
+            _unsubscribeRequestFactory = unsubscribeRequestFactory;
+            _unsubscribeResponseReader = unsubscribeResponseReader;
+            _eventHandler = eventHandler;
+            State = state;
         }
 
         /// &lt;summary&gt;
-        /// Gets the exception that was thrown by the event handler.
+        /// Initializes a new simplified instance of the &lt;see cref=&quot;ClusterSubscription&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public Exception Exception { get; }
+        /// &lt;param name=&quot;eventHandler&quot;&gt;The event handler.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;A simplified instance only has a handler, and nothing else. It cannot be unsubscribed,
+        /// because it is bound to a client and just dies when the client dies. It will not have any
+        /// associated client subscriptions.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal ClusterSubscription(Func&lt;ClientMessage, object, ValueTask&gt; eventHandler)
+        {
+            _eventHandler = eventHandler;
+        }
 
         /// &lt;summary&gt;
-        /// Whether the exception has been handled by user code.
+        /// Gets or sets the unique identifier of this subscription.
         /// &lt;/summary&gt;
-        public bool Handled { get; set; }
+        public Guid Id { get; }
 
         /// &lt;summary&gt;
-        /// Gets the client event message that was being processed when the exception was thrown.
+        /// Gets a value indicating whether the subscription is active.
         /// &lt;/summary&gt;
-        internal ClientMessage Message { get; }
+        public bool Active =&gt; _active;
+
+        /// &lt;summary&gt;
+        /// Gets the state object.
+        /// &lt;/summary&gt;
+        public object State { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the registration request message.
+        /// &lt;/summary&gt;
+        public ClientMessage SubscribeRequest { get; }
+
+        /// &lt;summary&gt;
+        /// Deactivates the subscription.
+        /// &lt;/summary&gt;
+        public void Deactivate()
+        {
+            lock (_mutex)
+            {
+                _active = false;
+                DeactivateTime = DateTime.Now;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the time the subscription was de-activated.
+        /// &lt;/summary&gt;
+        public DateTime DeactivateTime { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Reads a subscription response.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The response message.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;returns&gt;The corresponding member subscription.&lt;/returns&gt;
+        public MemberSubscription ReadSubscriptionResponse(ClientMessage message, MemberConnection connection)
+        {
+            var serverSubscriptionId = _subscribeResponseReader(message, State);
+            return new MemberSubscription(this, serverSubscriptionId, message.CorrelationId, connection);
+        }
+
+        /// &lt;summary&gt;
+        /// Tries to add a member subscription.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;subscription&quot;&gt;The member subscription.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the member subscription was added.&lt;/returns&gt;
+        public bool TryAddMemberSubscription(MemberSubscription subscription)
+        {
+            lock (_mutex)
+            {
+                if (_active)
+                    _memberSubscriptions[subscription.Connection] = subscription;
+                return _active;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Removes a member subscription.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;param name=&quot;memberSubscription&quot;&gt;The client subscription.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the member subscription was removed.&lt;/returns&gt;
+        public bool TryRemove(MemberConnection connection, out MemberSubscription memberSubscription)
+            =&gt; _memberSubscriptions.TryRemove(connection, out memberSubscription);
+
+        /// &lt;summary&gt;
+        /// Removes a member subscription.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberSubscription&quot;&gt;The client subscription.&lt;/param&gt;
+        public void Remove(MemberSubscription memberSubscription)
+            =&gt; _memberSubscriptions.TryRemove(memberSubscription.Connection, out _);
+
+        /// &lt;summary&gt;
+        /// Creates an unsubscribe request message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serverSubscriptionId&quot;&gt;The unique identifier assigned to the subscription by the server.&lt;/param&gt;
+        /// &lt;returns&gt;A new unsubscribe request message.&lt;/returns&gt;
+        public ClientMessage CreateUnsubscribeRequest(Guid serverSubscriptionId) =&gt; _unsubscribeRequestFactory(serverSubscriptionId, State);
+
+        /// &lt;summary&gt;
+        /// Handles an event message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;eventMessage&quot;&gt;The event message.&lt;/param&gt;
+        public async ValueTask HandleAsync(ClientMessage eventMessage)
+        {
+            if (!_active) return;
+            await _eventHandler(eventMessage, State).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Reads the unsubscribe response.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The unsubscribe response.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the operation was successful.&lt;/returns&gt;
+        public bool ReadUnsubscribeResponse(ClientMessage message)
+            =&gt; _unsubscribeResponseReader(message, State);
+
+        /// &lt;summary&gt;
+        /// Gets the number of member subscriptions.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _memberSubscriptions.Count;
+
+        /// &lt;inheritdoc /&gt;
+        public IEnumerator&lt;MemberSubscription&gt; GetEnumerator()
+            // .Values captures values and can then be safely enumerated
+            =&gt; _memberSubscriptions.Values.GetEnumerator();
+
+        /// &lt;inheritdoc /&gt;
+        IEnumerator IEnumerable.GetEnumerator()
+            =&gt; GetEnumerator();
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,96,1],[32,13,32,35,1],[33,13,33,31,1],[34,9,34,10,1],[39,38,39,42,1],[44,31,44,35,1],[44,36,44,40,1],[49,42,49,46,1]]);
+      highlightRanges([[30,9,30,55,1],[30,9,30,55,1],[31,9,31,173,1],[31,9,31,173,1],[37,9,37,46,1],[37,9,37,46,1],[54,15,54,153,1],[55,11,55,12,1],[67,9,72,33,1],[74,13,74,21,1],[75,13,75,49,1],[76,13,76,64,1],[77,13,77,68,1],[78,13,78,68,1],[79,13,79,42,1],[80,13,80,27,1],[81,9,81,10,1],[92,9,92,90,1],[94,13,94,42,1],[95,9,95,10,1],[100,26,100,30,1],[105,31,105,38,1],[110,31,110,35,1],[115,49,115,53,1],[122,13,122,26,1],[124,17,124,33,1],[125,17,125,47,1],[126,13,126,14,1],[127,9,127,10,1],[132,42,132,46,0],[132,47,132,59,1],[142,13,142,81,1],[143,13,143,106,1],[153,13,153,26,1],[155,17,155,29,1],[156,21,156,82,1],[157,17,157,32,1],[159,9,159,10,1],[168,16,168,82,1],[175,16,175,84,1],[182,85,182,140,1],[190,13,190,26,1],[190,27,190,34,0],[191,13,191,64,1],[192,9,192,10,1],[200,16,200,58,1],[205,29,205,55,1],[210,16,210,59,1],[214,16,214,31,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyKeyValuePairs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyEntry`TKeyTValue.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,120 +22,93 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections;
-using System.Collections.Generic;
-
 namespace Hazelcast.Serialization.Collections
 {
     /// &lt;summary&gt;
-    /// Represent a lazy dictionary of keys and values.
+    /// Represents an entry in a lazy collection.
     /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-    /// &lt;remarks&gt;
-    /// &lt;para&gt;The key objects are always &lt;see cref=&quot;IData&quot;/&gt; instances.&lt;/para&gt;
-    /// &lt;para&gt;This class is not thread-safe for writing: it should be entirely populated
-    /// in a thread-safe way, before being returned to readers.&lt;/para&gt;
-    /// &lt;para&gt;This class is thread-safe for reading, however for performance purposes, some values may
-    /// be deserialized multiple times in multi-threaded situations.&lt;/para&gt;
-    /// &lt;/remarks&gt;
-    internal sealed class ReadOnlyLazyKeyValuePairs&lt;TKey, TValue&gt; : IReadOnlyCollection&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the key.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the value.&lt;/typeparam&gt;
+    internal class ReadOnlyLazyEntry&lt;TKey, TValue&gt; : ReadOnlyLazyEntry&lt;TValue&gt;
     {
-        private readonly SerializationService _serializationService;
-
-        private readonly List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt; _entries = new List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt;();
+        private TKey _key;
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyDictionary{TKey,TValue}&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        public ReadOnlyLazyKeyValuePairs(SerializationService serializationService)
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        public ReadOnlyLazyEntry(TKey key, IData valueData)
+            : base(valueData)
         {
-            _serializationService = serializationService;
+            Key = key;
         }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyDictionary{TKey,TValue}&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;entries&quot;&gt;&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        public ReadOnlyLazyKeyValuePairs(IEnumerable&lt;KeyValuePair&lt;IData, IData&gt;&gt; entries, SerializationService serializationService)
-        {
-            _serializationService = serializationService;
-            Add(entries);
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the entries.
-        /// &lt;/summary&gt;
-        public List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt; Entries =&gt; _entries;
-
-        /// &lt;summary&gt;
-        /// Adds entries.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;entries&quot;&gt;Entries.&lt;/param&gt;
-        public void Add(IEnumerable&lt;KeyValuePair&lt;IData, IData&gt;&gt; entries)
-        {
-            foreach (var (keyData, valueObject) in entries)
-                _entries.Add(new ReadOnlyLazyEntry&lt;TKey, TValue&gt;(keyData, valueObject));
-        }
-
-        /// &lt;summary&gt;
-        /// Adds a key-value pair.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
         /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
-        public void Add(IData keyData, TValue value)
+        public ReadOnlyLazyEntry(IData keyData, TValue value)
+            : base(value)
         {
-            _entries.Add(new ReadOnlyLazyEntry&lt;TKey, TValue&gt;(keyData, value));
+            KeyData = keyData;
         }
 
         /// &lt;summary&gt;
-        /// Ensures that an entry has a key.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;entry&quot;&gt;The entry.&lt;/param&gt;
-        private void EnsureKey(ReadOnlyLazyEntry&lt;TKey, TValue&gt; entry)
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        public ReadOnlyLazyEntry(TKey key, TValue value)
+            : base(value)
         {
-            if (entry.HasKey) return;
-
-            entry.Key = _serializationService.ToObject&lt;TKey&gt;(entry.KeyData);
+            Key = key;
         }
 
         /// &lt;summary&gt;
-        /// Ensures that an entry has a value.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;entry&quot;&gt;The entry.&lt;/param&gt;
-        private void EnsureValue(ReadOnlyLazyEntry&lt;TValue&gt; entry)
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        public ReadOnlyLazyEntry(IData keyData, IData valueData)
+            : base(valueData)
         {
-            if (entry.HasValue) return;
-
-            entry.Value = _serializationService.ToObject&lt;TValue&gt;(entry.ValueData);
+            KeyData = keyData;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public IEnumerator&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; GetEnumerator()
+        /// &lt;summary&gt;
+        /// Gets or sets the key source data.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Once &lt;see cref=&quot;Key&quot;/&gt; has been assigned, this property is reset to null.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IData KeyData { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the key.
+        /// &lt;/summary&gt;
+        public TKey Key
         {
-            foreach (var entry in _entries)
+            get =&gt; _key;
+            set
             {
-                // deserialize
-                EnsureKey(entry);
-                EnsureValue(entry);
-
-                yield return new KeyValuePair&lt;TKey, TValue&gt;(entry.Key, entry.Value);
+                _key = value;
+                HasKey = true;
+                KeyData = default;
             }
         }
 
-        /// &lt;inheritdoc /&gt;
-        IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator();
-
-        /// &lt;inheritdoc /&gt;
-        public int Count =&gt; _entries.Count;
+        /// &lt;summary&gt;
+        /// Determines whether the entry has its key already.
+        /// &lt;/summary&gt;
+        public bool HasKey { get; private set; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[36,9,36,119,0],[36,9,36,119,1],[42,9,42,84,0],[44,13,44,58,0],[45,9,45,10,0],[52,9,52,133,1],[54,13,54,58,1],[55,13,55,26,1],[56,9,56,10,1],[61,65,61,73,0],[69,22,69,48,1],[69,49,69,51,1],[69,52,69,59,1],[70,17,70,89,1],[71,9,71,10,1],[80,13,80,79,0],[81,9,81,10,0],[89,13,89,30,0],[89,31,89,38,0],[91,13,91,77,0],[92,9,92,10,0],[100,13,100,32,0],[100,33,100,40,0],[102,13,102,83,0],[103,9,103,10,0],[108,22,108,31,0],[108,32,108,34,0],[108,35,108,43,0],[111,17,111,34,0],[112,17,112,36,0],[114,17,114,85,0],[116,9,116,10,0],[119,52,119,67,0],[122,29,122,43,1]]);
+      highlightRanges([[32,15,32,30,0],[34,13,34,23,0],[35,9,35,10,0],[43,15,43,26,1],[45,13,45,31,1],[46,9,46,10,1],[54,15,54,26,0],[56,13,56,23,0],[57,9,57,10,0],[65,15,65,30,1],[67,13,67,31,1],[68,9,68,10,1],[76,32,76,36,1],[76,37,76,49,1],[83,20,83,24,1],[86,17,86,30,1],[87,17,87,31,1],[88,17,88,35,1],[89,13,89,14,1],[95,30,95,34,1],[95,35,95,47,1]]);
     </script>
   </body>
 </html>

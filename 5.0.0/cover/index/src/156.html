@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Models\ErrorHolder.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Models\AnchorDataListHolder.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,38 +23,44 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using Hazelcast.Exceptions;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.Models
 {
-    internal class ErrorHolder
+    internal class AnchorDataListHolder
     {
-        public int ErrorCode { get; }
-        public string ClassName { get; }
-        public string Message { get; }
-        public IEnumerable&lt;StackTraceElement&gt; StackTraceElements { get; }
-
-        public ErrorHolder(RemoteError errorCode, string className, string message, IEnumerable&lt;StackTraceElement&gt; stackTraceElements)
+        public AnchorDataListHolder(IList&lt;int&gt; anchorPageList, IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; anchorDataList)
         {
-            ErrorCode = (int) errorCode;
-            ClassName = className;
-            Message = message;
-            StackTraceElements = stackTraceElements;
+            AnchorPageList = anchorPageList;
+            AnchorDataList = anchorDataList;
         }
 
-        public ErrorHolder(int errorCode, string className, string message, IEnumerable&lt;StackTraceElement&gt; stackTraceElements)
+        internal IList&lt;int&gt; AnchorPageList { get; }
+
+        internal IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; AnchorDataList { get; }
+
+        internal IEnumerable&lt;KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;&gt; AsAnchorIterator(SerializationService serializationService)
         {
-            ErrorCode = errorCode;
-            ClassName = className;
-            Message = message;
-            StackTraceElements = stackTraceElements;
+            using var dataEntryIterator = AnchorDataList.GetEnumerator();
+            foreach (var pageNumber in AnchorPageList)
+            {
+                dataEntryIterator.MoveNext();
+
+                var (keyData, valueData) = dataEntryIterator.Current;
+
+                var key = serializationService.ToObject(keyData);
+                var value = serializationService.ToObject(valueData);
+
+                var entry = new KeyValuePair&lt;object, object&gt;(key, value);
+                yield return new KeyValuePair&lt;int, KeyValuePair&lt;object, object&gt;&gt;(pageNumber, entry);
+            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,32,22,36,1],[23,35,23,39,1],[24,33,24,37,1],[25,68,25,72,1],[27,9,27,135,1],[29,13,29,41,1],[30,13,30,35,1],[31,13,31,31,1],[32,13,32,53,1],[33,9,33,10,1],[35,9,35,127,1],[37,13,37,35,1],[38,13,38,35,1],[39,13,39,31,1],[40,13,40,53,1],[41,9,41,10,1]]);
+      highlightRanges([[22,9,22,113,1],[24,13,24,45,1],[25,13,25,45,1],[26,9,26,10,1],[28,46,28,50,1],[30,69,30,73,1],[34,13,34,74,1],[35,22,35,36,1],[35,37,35,39,1],[35,40,35,54,1],[37,17,37,46,1],[39,17,39,70,1],[41,17,41,66,1],[42,17,42,70,1],[44,17,44,74,1],[45,17,45,101,1],[47,9,47,10,1]]);
     </script>
   </body>
 </html>

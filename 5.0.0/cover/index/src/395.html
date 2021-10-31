@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapGetForUpdateCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapGetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Locks the key and then gets and returns the value to which the specified key is mapped. Lock will be released at
-    /// the end of the transaction (either commit or rollback).
+    /// Returns the value for the specified key, or null if this map does not contain this key.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapGetForUpdateServerCodec
+    internal static class TransactionalMapGetServerCodec
 #else
-    internal static class TransactionalMapGetForUpdateCodec
+    internal static class TransactionalMapGetCodec
 #endif
     {
-        public const int RequestMessageType = 918272; // 0x0E0300
-        public const int ResponseMessageType = 918273; // 0x0E0301
+        public const int RequestMessageType = 918016; // 0x0E0200
+        public const int ResponseMessageType = 918017; // 0x0E0201
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
@@ -85,7 +84,7 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// The value to which the specified key is mapped
+            /// The specified key
             ///&lt;/summary&gt;
             public IData Key { get; set; }
         }
@@ -96,7 +95,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.GetForUpdate&quot;
+                OperationName = &quot;TransactionalMap.Get&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -158,7 +157,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,75,1],[95,13,95,81,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,50,1],[99,13,99,34,1],[122,37,122,41,1],[122,42,122,46,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,29,1],[142,13,142,86,1],[143,13,143,29,1],[144,9,144,10,1]]);
+      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,75,1],[94,13,94,81,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,50,1],[98,13,98,34,1],[121,37,121,41,1],[121,42,121,46,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,29,1],[141,13,141,86,1],[142,13,142,29,1],[143,9,143,10,1]]);
     </script>
   </body>
 </html>

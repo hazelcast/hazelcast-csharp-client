@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\FloatArraySerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\DoubleSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,27 +24,27 @@
 
 namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal sealed class FloatArraySerializer : SingletonSerializerBase&lt;float[]&gt;
+    internal sealed class DoubleSerializer : SingletonSerializerBase&lt;double&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.ConstantTypeFloatArray;
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeDouble;
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override float[] Read(IObjectDataInput input)
+        public override double Read(IObjectDataInput input)
         {
-            return input.ReadFloatArray();
+            return input.ReadDouble();
         }
 
         /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override void Write(IObjectDataOutput output, float[] obj)
+        public override void Write(IObjectDataOutput output, double obj)
         {
-            output.WriteFloatArray(obj);
+            output.WriteDouble(obj);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,39,19,84,1],[24,13,24,43,1],[30,13,30,41,1],[31,9,31,10,1]]);
+      highlightRanges([[19,39,19,80,1],[24,13,24,39,1],[30,13,30,37,1],[31,9,31,10,1]]);
     </script>
   </body>
 </html>

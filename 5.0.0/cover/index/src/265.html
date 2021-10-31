@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapLoadGivenKeysCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapLoadAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Loads the given keys. This is a batch load operation so that an implementation can optimize the multiple loads.
+    /// Loads all keys into the store. This is a batch load operation so that an implementation can optimize the multiple loads.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapLoadGivenKeysServerCodec
+    internal static class MapLoadAllServerCodec
 #else
-    internal static class MapLoadGivenKeysCodec
+    internal static class MapLoadAllCodec
 #endif
     {
-        public const int RequestMessageType = 73984; // 0x012100
-        public const int ResponseMessageType = 73985; // 0x012101
+        public const int RequestMessageType = 73728; // 0x012000
+        public const int ResponseMessageType = 73729; // 0x012001
         private const int RequestReplaceExistingValuesFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestReplaceExistingValuesFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
@@ -73,23 +73,19 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// keys to load
-            ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Keys { get; set; }
-
-            /// &lt;summary&gt;
-            /// when &lt;code&gt;true&lt;/code&gt;, existing values in the Map will be replaced by those loaded from the MapLoader
+            /// when &lt;code&gt;true&lt;/code&gt;, existing values in the Map will
+            /// be replaced by those loaded from the MapLoader
             ///&lt;/summary&gt;
             public bool ReplaceExistingValues { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; keys, bool replaceExistingValues)
+        public static ClientMessage EncodeRequest(string name, bool replaceExistingValues)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.LoadGivenKeys&quot;
+                OperationName = &quot;Map.LoadAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -97,7 +93,6 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteBoolL(RequestReplaceExistingValuesFieldOffset, replaceExistingValues);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            ListMultiFrameCodec.Encode(clientMessage, keys, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -109,7 +104,6 @@ namespace Hazelcast.Protocol.Codecs
             var initialFrame = iterator.Take();
             request.ReplaceExistingValues = initialFrame.Bytes.ReadBoolL(RequestReplaceExistingValuesFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -142,7 +136,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[79,13,83,15,0],[84,13,84,123,0],[85,13,85,104,0],[86,13,86,88,0],[87,13,87,107,0],[88,13,88,48,0],[89,13,89,53,0],[90,13,90,79,0],[91,13,91,34,0],[124,13,124,64,0],[125,13,125,53,0],[126,13,126,29,0],[127,13,127,29,0],[128,9,128,10,0]]);
+      highlightRanges([[75,13,79,15,0],[80,13,80,123,0],[81,13,81,104,0],[82,13,82,88,0],[83,13,83,107,0],[84,13,84,48,0],[85,13,85,53,0],[86,13,86,34,0],[118,13,118,64,0],[119,13,119,53,0],[120,13,120,29,0],[121,13,121,29,0],[122,9,122,10,0]]);
     </script>
   </body>
 </html>

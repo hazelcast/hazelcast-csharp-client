@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapIsEmptyCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapGetForUpdateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this map contains no entries.
+    /// Locks the key and then gets and returns the value to which the specified key is mapped. Lock will be released at
+    /// the end of the transaction (either commit or rollback).
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapIsEmptyServerCodec
+    internal static class TransactionalMapGetForUpdateServerCodec
 #else
-    internal static class TransactionalMapIsEmptyCodec
+    internal static class TransactionalMapGetForUpdateCodec
 #endif
     {
-        public const int RequestMessageType = 918784; // 0x0E0500
-        public const int ResponseMessageType = 918785; // 0x0E0501
+        public const int RequestMessageType = 918272; // 0x0E0300
+        public const int ResponseMessageType = 918273; // 0x0E0301
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -83,15 +83,20 @@ namespace Hazelcast.Protocol.Codecs
             /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
             ///&lt;/summary&gt;
             public long ThreadId { get; set; }
+
+            /// &lt;summary&gt;
+            /// The value to which the specified key is mapped
+            ///&lt;/summary&gt;
+            public IData Key { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.IsEmpty&quot;
+                OperationName = &quot;TransactionalMap.GetForUpdate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -100,6 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -112,6 +118,7 @@ namespace Hazelcast.Protocol.Codecs
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -120,19 +127,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// &lt;tt&gt;true&lt;/tt&gt; if this map contains no entries.
+            /// The value for the specified key
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -141,8 +148,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -151,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[81,13,85,15,1],[86,13,86,123,1],[87,13,87,104,1],[88,13,88,88,1],[89,13,89,75,1],[90,13,90,81,1],[91,13,91,48,1],[92,13,92,53,1],[93,13,93,34,1],[115,36,115,40,1],[115,41,115,45,1],[132,13,132,64,1],[133,13,133,53,1],[134,13,134,48,1],[135,13,135,91,1],[136,13,136,29,1],[137,9,137,10,1]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,75,1],[95,13,95,81,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,50,1],[99,13,99,34,1],[122,37,122,41,1],[122,42,122,46,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,29,1],[142,13,142,86,1],[143,13,143,29,1],[144,9,144,10,1]]);
     </script>
   </body>
 </html>

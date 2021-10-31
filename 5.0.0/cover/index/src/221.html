@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListRemoveWithIndexCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListRemoveListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the element at the specified position in this list (optional operation). Shifts any subsequent elements
-    /// to the left (subtracts one from their indices). Returns the element that was removed from the list.
+    /// Removes the specified item listener. If there is no such listener added before, this call does no change in the
+    /// cluster and returns false.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ListRemoveWithIndexServerCodec
+    internal static class ListRemoveListenerServerCodec
 #else
-    internal static class ListRemoveWithIndexCodec
+    internal static class ListRemoveListenerCodec
 #endif
     {
-        public const int RequestMessageType = 332288; // 0x051200
-        public const int ResponseMessageType = 332289; // 0x051201
-        private const int RequestIndexFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        public const int RequestMessageType = 330752; // 0x050C00
+        public const int ResponseMessageType = 330753; // 0x050C01
+        private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -74,23 +75,23 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The index of the element to be removed
+            /// The id of the listener which was provided during registration.
             ///&lt;/summary&gt;
-            public int Index { get; set; }
+            public Guid RegistrationId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, int index)
+        public static ClientMessage EncodeRequest(string name, Guid registrationId)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;List.RemoveWithIndex&quot;
+                IsRetryable = true,
+                OperationName = &quot;List.RemoveListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
+            initialFrame.Bytes.WriteGuidL(RequestRegistrationIdFieldOffset, registrationId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -102,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
+            request.RegistrationId = initialFrame.Bytes.ReadGuidL(RequestRegistrationIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
@@ -112,19 +113,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The element previously at the specified position
+            /// True if unregistered, false otherwise.
             ///&lt;/summary&gt;
-            public IData Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -133,8 +134,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -143,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[75,13,79,15,0],[80,13,80,123,0],[81,13,81,104,0],[82,13,82,88,0],[83,13,83,74,0],[84,13,84,48,0],[85,13,85,53,0],[86,13,86,34,0],[107,37,107,41,0],[107,42,107,46,0],[124,13,124,64,0],[125,13,125,53,0],[126,13,126,29,0],[127,13,127,86,0],[128,13,128,29,0],[129,9,129,10,0]]);
+      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,93,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

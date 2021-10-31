@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetClearCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetAddListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,25 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes all of the elements from this set (optional operation). The set will be empty after this call returns.
+    /// Adds an item listener for this collection. Listener will be notified for all collection add/remove events.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetClearServerCodec
+    internal static class SetAddListenerServerCodec
 #else
-    internal static class SetClearCodec
+    internal static class SetAddListenerCodec
 #endif
     {
-        public const int RequestMessageType = 395520; // 0x060900
-        public const int ResponseMessageType = 395521; // 0x060901
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        public const int RequestMessageType = 396032; // 0x060B00
+        public const int ResponseMessageType = 396033; // 0x060B01
+        private const int RequestIncludeValueFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestLocalOnlyFieldOffset = RequestIncludeValueFieldOffset + BytesExtensions.SizeOfBool;
+        private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventItemUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventItemEventTypeFieldOffset = EventItemUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventItemInitialFrameSize = EventItemEventTypeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int EventItemMessageType = 396034; // 0x060B02
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -70,19 +77,31 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the Set
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// if set to true, the event shall also include the value.
+            ///&lt;/summary&gt;
+            public bool IncludeValue { get; set; }
+
+            /// &lt;summary&gt;
+            /// if true fires events that originated from this node only, otherwise fires all events
+            ///&lt;/summary&gt;
+            public bool LocalOnly { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Set.Clear&quot;
+                OperationName = &quot;Set.AddListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteBoolL(RequestIncludeValueFieldOffset, includeValue);
+            initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             return clientMessage;
@@ -93,7 +112,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
+            request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             return request;
         }
@@ -101,14 +122,20 @@ namespace Hazelcast.Protocol.Codecs
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// The registration id.
+            ///&lt;/summary&gt;
+            public Guid Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(Guid response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteGuidL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -118,16 +145,47 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadGuidL(ResponseResponseFieldOffset);
             return response;
         }
 
+#if SERVER_CODEC
+        public static ClientMessage EncodeItemEvent(IData item, Guid uuid, int eventType)
+        {
+            var clientMessage = new ClientMessage();
+            var initialFrame = new Frame(new byte[EventItemInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventItemMessageType);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteGuidL(EventItemUuidFieldOffset, uuid);
+            initialFrame.Bytes.WriteIntL(EventItemEventTypeFieldOffset, eventType);
+            clientMessage.Append(initialFrame);
+            clientMessage.Flags |= ClientMessageFlags.Event;
+            CodecUtil.EncodeNullable(clientMessage, item, DataCodec.Encode);
+            return clientMessage;
+        }
+#endif
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;IData, Guid, int, object, ValueTask&gt; handleItemEventAsync, object state, ILoggerFactory loggerFactory)
+        {
+            using var iterator = clientMessage.GetEnumerator();
+            var messageType = clientMessage.MessageType;
+            if (messageType == EventItemMessageType)
+            {
+                var initialFrame = iterator.Take();
+                var uuid =  initialFrame.Bytes.ReadGuidL(EventItemUuidFieldOffset);
+                var eventType =  initialFrame.Bytes.ReadIntL(EventItemEventTypeFieldOffset);
+                var item = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+                return handleItemEventAsync(item, uuid, eventType, state);
+            }
+            loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
+            return default;
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[68,13,72,15,1],[73,13,73,123,1],[74,13,74,104,1],[75,13,75,88,1],[76,13,76,48,1],[77,13,77,53,1],[78,13,78,34,1],[109,13,109,64,1],[110,13,110,53,1],[111,13,111,29,1],[112,13,112,29,1],[113,9,113,10,1]]);
+      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,89,1],[94,13,94,83,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,34,1],[119,36,119,40,1],[119,41,119,45,1],[136,13,136,64,1],[137,13,137,53,1],[138,13,138,48,1],[139,13,139,91,1],[140,13,140,29,1],[141,9,141,10,1],[160,13,160,64,1],[161,13,161,57,1],[162,13,162,53,1],[164,17,164,52,1],[165,17,165,84,1],[166,17,166,93,1],[167,17,167,81,1],[168,17,168,75,1],[170,13,170,137,0],[171,13,171,28,0],[172,9,172,10,1]]);
     </script>
   </body>
 </html>

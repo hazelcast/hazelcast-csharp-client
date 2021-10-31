@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxList.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTopic.Events.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,63 +26,74 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    /// &lt;summary&gt;
-    /// Implements &lt;see cref=&quot;IHTxList{TItem}&quot;/&gt;.
-    /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;TItem&quot;&gt;The type of the items.&lt;/typeparam&gt;
-    internal class HTxList&lt;TItem&gt; : TransactionalDistributedObjectBase, IHTxList&lt;TItem&gt;
+    internal partial class HTopic&lt;T&gt; // Events
     {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;HTxList{TItem}&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The unique name of the list.&lt;/param&gt;
-        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
-        /// &lt;param name=&quot;cluster&quot;&gt;The cluster.&lt;/param&gt;
-        /// &lt;param name=&quot;transactionClientConnection&quot;&gt;The client supporting the transaction.&lt;/param&gt;
-        /// &lt;param name=&quot;transactionId&quot;&gt;The unique identifier of the transaction.&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;The logger factory.&lt;/param&gt;
-        public HTxList(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(ServiceNames.List, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
-        { }
-
-        /// &lt;inheritoc /&gt;
-        public async Task&lt;bool&gt; AddAsync(TItem item)
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;Guid&gt; SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt; events, object state = null)
         {
-            var itemData = ToData(item);
-            var requestMessage = TransactionalListAddCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            return TransactionalListAddCodec.DecodeResponse(responseMessage).Response;
+            if (events == null) throw new ArgumentNullException(nameof(events));
+
+            var handlers = new TopicEventHandlers&lt;T&gt;();
+            events(handlers);
+
+            var subscription = new ClusterSubscription(
+                TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
+                ReadSubscribeResponse,
+                CreateUnsubscribeRequest,
+                ReadUnsubscribeResponse,
+                HandleEventAsync,
+                new SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;(Name, handlers, state));
+
+            await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
+
+            return subscription.Id;
         }
 
-        /// &lt;inheritoc /&gt;
-        public async Task&lt;bool&gt; RemoveAsync(TItem item)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
-            var itemData = ToData(item);
-            var requestMessage = TransactionalListRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, itemData);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            return TransactionalListRemoveCodec.DecodeResponse(responseMessage).Response;
+            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleTopicEventAsync, state, LoggerFactory);
         }
 
-        /// &lt;inheritoc /&gt;
-        public async Task&lt;int&gt; GetSizeAsync()
+        private async ValueTask HandleTopicEventAsync(IData itemData, long publishTime, Guid memberId, object state)
         {
-            var requestMessage = TransactionalListSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            return TransactionalListSizeCodec.DecodeResponse(responseMessage).Response;
+            var sstate = ToSafeState&lt;SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;&gt;(state);
+
+            var member = Cluster.Members.GetMember(memberId);
+
+            // that one is not lazy...
+            var item = ToObject&lt;T&gt;(itemData);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
+            {
+                // there is only one event type...
+                await handler.HandleAsync(this, member, publishTime, item, state).CfAwait();
+            }
         }
+
+        private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
+            =&gt; TopicRemoveMessageListenerCodec.EncodeRequest(Name, subscriptionId);
+
+        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
+            =&gt; TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
+
+        private static bool ReadUnsubscribeResponse(ClientMessage message, object state)
+            =&gt; TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
+
+        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
+            =&gt; UnsubscribeBaseAsync(subscriptionId);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[42,15,42,143,1],[43,11,43,12,1],[48,13,48,41,1],[49,13,49,116,1],[50,13,50,132,1],[51,13,51,87,1],[52,9,52,10,1],[57,13,57,41,1],[58,13,58,119,1],[59,13,59,132,1],[60,13,60,90,1],[61,9,61,10,1],[66,13,66,107,1],[67,13,67,132,1],[68,13,68,88,1],[69,9,69,10,1]]);
+      highlightRanges([[30,13,30,32,1],[30,33,30,81,0],[32,13,32,56,1],[33,13,33,30,1],[35,13,41,86,1],[43,13,43,79,1],[45,13,45,36,1],[46,9,46,10,1],[50,13,50,125,1],[55,13,55,87,1],[57,13,57,62,1],[60,13,60,46,1],[63,22,63,33,1],[63,34,63,36,1],[63,37,63,52,1],[66,17,66,93,1],[68,9,68,10,1],[71,16,71,83,1],[74,16,74,85,1],[77,16,77,80,1],[80,16,80,52,1]]);
     </script>
   </body>
 </html>

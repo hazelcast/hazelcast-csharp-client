@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\RepairingHandler.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\RandomComparer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,286 +24,28 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
-using Hazelcast.Partitioning;
-using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.NearCaching
 {
     /// &lt;summary&gt;
-    /// Represents a Near Cache repairing handler.
+    /// Compares &lt;see cref=&quot;NearCacheEntry&quot;/&gt; randomly.
     /// &lt;/summary&gt;
-    internal class RepairingHandler
+    internal class RandomComparer : IComparer&lt;NearCacheEntry&gt;
     {
-        private readonly ILogger _logger;
-        private readonly Guid _clusterClientId;
-        private readonly int _maxToleratedMissCount;
-        private readonly MetaData[] _metadataTable;
-        private readonly NearCache _nearCache;
-        private readonly int _partitionCount;
-        private readonly SerializationService _serializationService;
-        private readonly Partitioner _partitioner;
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;RepairingHandler&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;clusterClientId&quot;&gt;The unique identifier of the cluster, as assigned by the client.&lt;/param&gt;
-        /// &lt;param name=&quot;nearCache&quot;&gt;The near cache instance.&lt;/param&gt;
-        /// &lt;param name=&quot;maxToleratedMissCount&quot;&gt;The max tolerated miss count.&lt;/param&gt;
-        /// &lt;param name=&quot;partitioner&quot;&gt;The partitioner.&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public RepairingHandler(Guid clusterClientId, NearCache nearCache, int maxToleratedMissCount, Partitioner partitioner, SerializationService serializationService, ILoggerFactory loggerFactory)
+        /// &lt;inheritdoc /&gt;
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
         {
-            _clusterClientId = clusterClientId;
-            _nearCache = nearCache;
-            _partitioner = partitioner;
-            _partitionCount = partitioner.Count;
-            _metadataTable = CreateMetadataTable(_partitionCount);
-            _maxToleratedMissCount = maxToleratedMissCount;
-            _serializationService = serializationService;
-            _logger = loggerFactory.CreateLogger&lt;RepairingHandler&gt;();
-        }
+            if (x == null) throw new ArgumentNullException(nameof(x));
+            if (y == null) throw new ArgumentNullException(nameof(y));
 
-        // multiple threads can concurrently call this method: one is anti-entropy, other one is event service thread
-        // TODO: understand and document what those GUIDs are?!
-        /// &lt;summary&gt;
-        /// Updates the ???
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionId&quot;&gt;The partition identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;newUuid&quot;&gt;???&lt;/param&gt;
-        public void UpdateUuid(int partitionId, Guid newUuid)
-        {
-            if (newUuid == default) throw new ArgumentOutOfRangeException(nameof(newUuid));
-
-            var metadata = GetMetadata(partitionId);
-
-            while (true)
-            {
-                var currentUuid = metadata.Guid;
-
-                // ignore if not changed
-                if (currentUuid.Equals(newUuid))
-                    break;
-
-                // try to update the ???, loop if current ??? is locked?
-                // assuming that eventually, the new ??? will be accepted
-                if (!metadata.TrySetGuid(newUuid))
-                    continue;
-
-                // reset and report
-                metadata.ResetSequences();
-                _logger.LogDebug($&quot;Invalid UUID, lost remote partition data unexpectedly &quot; +
-                                 $&quot;(map={_nearCache.Name}, partition={partitionId}, current={currentUuid}, new={newUuid})&quot;);
-
-                // we&#39;re done
-                break;
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Updates the sequence of a partition.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionId&quot;&gt;The partition identifier.&lt;/param&gt;
-        /// &lt;param name=&quot;newSequence&quot;&gt;The new sequence value.&lt;/param&gt;
-        /// &lt;param name=&quot;viaAntiEntropy&quot;&gt;Whether the method is invoked by the anti-entropy task.&lt;/param&gt;
-        public void UpdateSequence(int partitionId, long newSequence, bool viaAntiEntropy)
-        {
-            if (newSequence &lt; 0) throw new ArgumentOutOfRangeException(nameof(newSequence));
-
-            var metadata = GetMetadata(partitionId);
-
-            while (true)
-            {
-                var currentSequence = metadata.Sequence;
-
-                // ignore an obsolete new sequence
-                if (currentSequence &gt;= newSequence)
-                    break;
-
-                // try to update the sequence, loop if current sequence has changed in the meantime
-                // assuming that, eventually, the new sequence will either be accepted, or obsolete
-                if (!metadata.UpdateSequence(currentSequence, newSequence))
-                    continue;
-
-                // sequence has been updated - handle the change
-                var sequenceDelta = newSequence - currentSequence;
-                if (viaAntiEntropy || sequenceDelta &gt; 1L)
-                {
-                    // we have found at least one missing sequence between current and new sequences. if miss is detected by
-                    // anti-entropy, number of missed sequences will be &#39;miss = new - current&#39;, otherwise it means miss is
-                    // detected by observing received invalidation event sequence numbers and number of missed sequences will be
-                    // &#39;miss =  new - current - 1&#39;.
-                    var missCount = viaAntiEntropy ? sequenceDelta : sequenceDelta - 1;
-                    var totalMissCount = metadata.AddMissedSequences(missCount);
-
-                    // report
-                    _logger.LogDebug($&quot;Invalid sequence (map={_nearCache.Name}, partition={partitionId}, &quot; +
-                                     $&quot;current={currentSequence}, new={newSequence}, totalMiss={totalMissCount})&quot;);
-                }
-
-                // we&#39;re done
-                break;
-            }
-        }
-
-        #region Meta data
-
-        /// &lt;summary&gt;
-        /// Populates a meta data table.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionCount&quot;&gt;The number of partitions.&lt;/param&gt;
-        /// &lt;returns&gt;A meta data table.&lt;/returns&gt;
-        private static MetaData[] CreateMetadataTable(int partitionCount)
-        {
-            var metaData = new MetaData[partitionCount];
-            for (var partitionId = 0; partitionId &lt; partitionCount; partitionId++)
-                metaData[partitionId] = new MetaData();
-            return metaData;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets meta data for a partition.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionId&quot;&gt;The partition identifier.&lt;/param&gt;
-        /// &lt;returns&gt;Meta data for the specified partition.&lt;/returns&gt;
-        public MetaData GetMetadata(int partitionId)
-            =&gt; _metadataTable[partitionId];
-
-        #endregion
-
-        /// &lt;summary&gt;
-        /// Handles an invalidation.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;key&quot;&gt;The invalidated key.&lt;/param&gt;
-        /// &lt;param name=&quot;sourceClusterClientId&quot;&gt;The identifier of the cluster client originating the event.&lt;/param&gt;
-        /// &lt;param name=&quot;partitionGuid&quot;&gt;???&lt;/param&gt;
-        /// &lt;param name=&quot;sequence&quot;&gt;The sequence.&lt;/param&gt;
-        public void Handle(IData key, Guid sourceClusterClientId, Guid partitionGuid, long sequence)
-        {
-            // apply invalidation if it&#39;s not originated by the cluster client (Hazelcast client)
-            // running this code, because local Near Caches are invalidated immediately.
-            if (!_clusterClientId.Equals(sourceClusterClientId))
-            {
-                // sourceClusterClientId is allowed to be null, meaning: all
-                if (key == null)
-                    _nearCache.Clear();
-                else
-                    _nearCache.Remove(key);
-            }
-
-            var partitionId = GetPartitionIdOrDefault(key);
-            UpdateUuid(partitionId, partitionGuid);
-            UpdateSequence(partitionId, sequence, false);
-        }
-
-        /// &lt;summary&gt;
-        /// Handles an invalidation.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keys&quot;&gt;The invalidated keys.&lt;/param&gt;
-        /// &lt;param name=&quot;sourceClusterClientIds&quot;&gt;The identifiers of the cluster client originating the event.&lt;/param&gt;
-        /// &lt;param name=&quot;partitionUuids&quot;&gt;&lt;/param&gt;
-        /// &lt;param name=&quot;sequences&quot;&gt;The sequences.&lt;/param&gt;
-        public void Handle(IEnumerable&lt;IData&gt; keys, IEnumerable&lt;Guid&gt; sourceClusterClientIds, IEnumerable&lt;Guid&gt; partitionUuids,
-            IEnumerable&lt;long&gt; sequences)
-        {
-            foreach (var (key, sourceClusterClientId, partitionUuid, sequence) in (keys, sourceClusterClientIds, partitionUuids, sequences).Combine())
-                Handle(key, sourceClusterClientId, partitionUuid, sequence);
-        }
-
-        /// &lt;summary&gt;
-        /// Initializes the ????
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionUuidList&quot;&gt;&lt;/param&gt;
-        public void InitializeGuids(IList&lt;KeyValuePair&lt;int, Guid&gt;&gt; partitionUuidList)
-        {
-            // received from server:
-            // (partition id -&gt; partition ???), (...), ...
-
-            foreach (var (partitionId, partitionUuid) in partitionUuidList)
-            {
-                var metadata = GetMetadata(partitionId);
-                metadata.Guid = partitionUuid;
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Initializes the partition sequences.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;partitionSequencesTable&quot;&gt;The partition sequences table.&lt;/param&gt;
-        public void InitializeSequences(IList&lt;KeyValuePair&lt;string, IList&lt;KeyValuePair&lt;int, long&gt;&gt;&gt;&gt; partitionSequencesTable)
-        {
-            // received from server:
-            // cache name -&gt; ( partition id -&gt; partition sequence ), (...), ...
-
-            foreach (var (_, partitionSequences) in partitionSequencesTable)
-            foreach (var (partitionId, partitionSequence) in partitionSequences)
-            {
-                var metadata = GetMetadata(partitionId);
-                metadata.Sequence = partitionSequence;
-            }
-        }
-
-        public override string ToString()
-        {
-            return $&quot;RepairingHandler{{name=&#39;{_nearCache.Name}&#39;, localUuid=&#39;{_clusterClientId}&#39;}}&quot;;
-        }
-
-        internal void FixSequenceGap()
-        {
-            if (IsAboveMaxToleratedMissCount())
-            {
-                UpdateLastKnownStaleSequences();
-            }
-        }
-
-        private int GetPartitionIdOrDefault(IData key)
-        {
-            // `name` is used to determine partition ID of map-wide events like clear()
-            // since key is `null`, we are using `name` to find the partition ID
-            if (key == null) key = _serializationService.ToData(_nearCache.Name);
-            return _partitioner.GetPartitionId(key.PartitionHash);
-        }
-
-        // Calculates number of missed invalidations and checks if repair is needed for the supplied handler.
-        // Every handler represents a single Near Cache.
-        private bool IsAboveMaxToleratedMissCount()
-        {
-            int partition = 0;
-            long missCount = 0;
-            do
-            {
-                var metaData = GetMetadata(partition);
-                missCount += metaData.MissedSequenceCount;
-
-                if (missCount &gt; _maxToleratedMissCount)
-                {
-                    _logger.LogDebug($&quot;Exceeded tolerated miss count (map={_nearCache.Name}, miss={missCount}, max={_maxToleratedMissCount}).&quot;);
-                    return true;
-                }
-            } while (++partition &lt; _partitionCount);
-            return false;
-        }
-
-        private void UpdateLastKnownStaleSequences()
-        {
-            foreach (var metaDataContainer in _metadataTable)
-            {
-                var missCount = metaDataContainer.MissedSequenceCount;
-                if (metaDataContainer.MissedSequenceCount != 0)
-                {
-                    metaDataContainer.AddMissedSequences(-missCount);
-                    metaDataContainer.UpdateStaleSequence();
-                }
-            }
+            return 0; // meaning they are equal = no reason to pick one or the other
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[47,9,47,200,1],[49,13,49,48,1],[50,13,50,36,1],[51,13,51,40,1],[52,13,52,49,1],[53,13,53,67,1],[54,13,54,60,1],[55,13,55,58,1],[56,13,56,70,1],[57,9,57,10,1],[68,13,68,36,1],[68,37,68,92,0],[70,13,70,53,1],[74,17,74,49,1],[77,17,77,49,1],[82,17,82,51,1],[86,17,86,43,1],[87,17,88,125,1],[93,9,93,10,1],[103,13,103,33,1],[103,34,103,93,0],[105,13,105,53,1],[109,17,109,57,1],[112,17,112,52,1],[117,17,117,76,1],[121,17,121,67,1],[122,17,122,58,1],[128,21,128,88,1],[129,21,129,81,1],[132,21,133,116,1],[139,9,139,10,1],[150,13,150,57,1],[151,18,151,37,1],[151,39,151,67,1],[151,69,151,82,1],[152,17,152,56,1],[153,13,153,29,1],[162,16,162,43,1],[177,13,177,65,1],[180,17,180,33,1],[181,21,181,40,1],[183,21,183,44,1],[186,13,186,60,1],[187,13,187,52,1],[188,13,188,58,1],[189,9,189,10,1],[201,22,201,79,0],[201,80,201,82,0],[201,83,201,150,0],[202,17,202,77,0],[203,9,203,10,0],[214,22,214,54,0],[214,55,214,57,0],[214,58,214,75,0],[216,17,216,57,0],[217,17,217,47,0],[219,9,219,10,0],[230,22,230,49,0],[230,50,230,52,0],[230,53,230,76,0],[231,22,231,58,0],[231,59,231,61,0],[231,62,231,80,0],[233,17,233,57,0],[234,17,234,55,0],[236,9,236,10,0],[240,13,240,100,0],[245,13,245,48,1],[247,17,247,49,1],[249,9,249,10,1],[255,13,255,29,1],[255,30,255,82,1],[256,13,256,67,1],[263,13,263,31,1],[264,13,264,32,1],[267,17,267,55,1],[268,17,268,59,1],[270,17,270,56,1],[272,21,272,145,1],[273,21,273,33,1],[275,15,275,53,1],[276,13,276,26,1],[281,22,281,43,1],[281,44,281,46,1],[281,47,281,61,1],[283,17,283,71,1],[284,17,284,64,1],[286,21,286,70,1],[287,21,287,61,1],[290,9,290,10,1]]);
+      highlightRanges([[28,13,28,27,0],[28,28,28,71,0],[29,13,29,27,0],[29,28,29,71,0],[31,13,31,22,0]]);
     </script>
   </body>
 </html>

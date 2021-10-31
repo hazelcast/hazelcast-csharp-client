@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\DistributedObjectFactory.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\DistributedObjectBase.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -29,228 +29,336 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Models;
-using Hazelcast.Protocol.Codecs;
+using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects
 {
     /// &lt;summary&gt;
-    /// Represents a factory that creates &lt;see cref=&quot;IDistributedObject&quot;/&gt; instances.
+    /// Provides a base class to distributed objects.
     /// &lt;/summary&gt;
-    internal class DistributedObjectFactory : IAsyncDisposable
+    internal abstract class DistributedObjectBase : IDistributedObject
     {
-        private readonly ConcurrentAsyncDictionary&lt;DistributedObjectInfo, DistributedObjectBase&gt; _objects
-            = new ConcurrentAsyncDictionary&lt;DistributedObjectInfo, DistributedObjectBase&gt;();
-
-        private readonly Cluster _cluster;
-        private readonly SerializationService _serializationService;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly ILogger _logger;
+        private readonly DistributedObjectFactory _factory;
+        private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
+        private Action&lt;DistributedObjectBase&gt; _objectDisposed;
+        private string _partitionKey;
+        private IData _partitionKeyData;
+        private int? _partitionId;
 
         private volatile int _disposed;
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;DistributedObjectFactory&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;DistributedObjectBase&quot;/&gt; class.
         /// &lt;/summary&gt;
+        /// &lt;param name=&quot;serviceName&quot;&gt;The name of the service managing this object.&lt;/param&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The distributed object factory.&lt;/param&gt;
         /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
         /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
         /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public DistributedObjectFactory(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        protected DistributedObjectBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
-            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            if (string.IsNullOrWhiteSpace(serviceName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(serviceName));
+            ServiceName = serviceName;
 
-            _logger = loggerFactory.CreateLogger&lt;DistributedObjectFactory&gt;();
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(name));
+            Name = name;
+
+            _factory = factory ?? throw new ArgumentNullException(nameof(factory));
+            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            LoggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
         /// &lt;summary&gt;
-        /// Gets or creates a distributed object.
+        /// Gets or sets an action that will be executed when the object disposes.
         /// &lt;/summary&gt;
-        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the distributed object.&lt;/typeparam&gt;
-        /// &lt;typeparam name=&quot;TImpl&quot;&gt;The type of the implementation.&lt;/typeparam&gt;
-        /// &lt;param name=&quot;serviceName&quot;&gt;The unique name of the service.&lt;/param&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
-        /// &lt;param name=&quot;remote&quot;&gt;Whether to create the object remotely too.&lt;/param&gt;
-        /// &lt;param name=&quot;factory&quot;&gt;The object factory.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The distributed object.&lt;/returns&gt;
-        public async Task&lt;T&gt; GetOrCreateAsync&lt;T, TImpl&gt;(
-            string serviceName, string name, bool remote,
-            Func&lt;string, DistributedObjectFactory, Cluster, SerializationService, ILoggerFactory, TImpl&gt; factory,
-            CancellationToken cancellationToken = default)
-            where TImpl : DistributedObjectBase, T
+        public Action&lt;DistributedObjectBase&gt; ObjectDisposed
         {
-            if (_disposed == 1) throw new ObjectDisposedException(&quot;DistributedObjectFactory&quot;);
-
-            var info = new DistributedObjectInfo(serviceName, name);
-
-            async ValueTask&lt;DistributedObjectBase&gt; CreateAsync(DistributedObjectInfo info2, CancellationToken token)
+            get =&gt; _objectDisposed;
+            set
             {
-                var x = factory(name, this, _cluster, _serializationService, _loggerFactory);
-                x.ObjectDisposed = OnObjectDisposed; // this is why is has to be DistributedObjectBase
-
-                // initialize the object
-                if (remote)
-                {
-                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
-                    _ = await _cluster.Messaging.SendAsync(requestMessage, token).CfAwait();
-                }
-
-                x.OnInitialized();
-                _logger.LogDebug(&quot;Initialized ({Object}) distributed object.&quot;, info2);
-                return x;
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _objectDisposed = value;
             }
-
-            // try to get the object - thanks to the concurrent dictionary there will be only 1 task
-            // and if several concurrent requests are made, they will all await that same task
-
-            var o = await _objects.GetOrAddAsync(info, CreateAsync, cancellationToken).CfAwait();
-
-            // race condition: maybe the factory has been disposed and is already disposing
-            // objects and will ignore this new object even though it has been added to the
-            // dictionary, so take care of it ourselves
-            if (_disposed == 1)
-            {
-                await o.DisposeAsync().CfAwait();
-                throw new ObjectDisposedException(&quot;DistributedObjectFactory&quot;);
-            }
-
-            // if the object is a T then we can return it
-            if (o is T t) return t;
-
-            // otherwise, the client was already used to retrieve an object with the specified service
-            // name and object name, but a different type, for instance IHList&lt;int&gt; vs IHList&lt;string&gt;,
-            // and we just cannot support this = throw
-
-            throw new HazelcastException($&quot;A distributed object with the specified service name ({serviceName}) &quot; +
-                                         $&quot;and object name ({name}) exists but of type {o.GetType().ToCsString()}, &quot; +
-                                         $&quot;instead of {typeof(T).ToCsString()}.&quot;);
-        }
-
-        /// &lt;summary&gt;
-        /// Creates all known &lt;see cref=&quot;IDistributedObject&quot;/&gt; on a cluster.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;A task that will complete when the state has been sent.&lt;/returns&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;This is used when connecting to a new cluster.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public async ValueTask CreateAllAsync(MemberConnection connection)
-        {
-            await foreach (var (key, _) in _objects)
-            {
-                // if the connection goes down, stop
-                if (!connection.Active) return;
-
-                try
-                {
-                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, $&quot;Failed to create ({key}) distributed object on new cluster.&quot;);
-                }
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Deals with an object being disposed.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;o&quot;&gt;The object.&lt;/param&gt;
-        private void OnObjectDisposed(DistributedObjectBase o)
-        {
-            // simply disposing the distributed object removes it from the list
-            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
-            _objects.TryRemove(info);
-        }
-
-        /// &lt;summary&gt;
-        /// Destroys a distributed object.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;o&quot;&gt;The distributed object.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken = default)
-        {
-            // try to get the object - and then, dispose it
-
-            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
-            var attempt = await _objects.TryGetAndRemoveAsync(info).CfAwait();
-            if (attempt)
-                await TryDispose(attempt.Value).CfAwait();
-
-            var ob = (DistributedObjectBase) o; // we *know* all our objects inherit from the base object
-            await ob.DestroyingAsync().CfAwait();
-            await DestroyAsync(o.ServiceName, o.Name, cancellationToken).CfAwait();
-        }
-
-        // internal for tests only
-        internal async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
-        {
-            // regardless of whether the object was known locally, destroy on server
-            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
-            var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
-            _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
-        }
-
-        /// &lt;summary&gt;
-        /// Handles a connection to a new cluster.
-        /// &lt;/summary&gt;
-#pragma warning disable IDE0060 // Remove unused parameters
-#pragma warning disable CA1801 // Review unused parameters
-        // unused parameters are required, this is an event handler
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
-#pragma warning restore CA1801
-#pragma warning restore IDE0060
-        {
-            if (!isNewCluster) return default;
-
-            // when connecting to a new cluster, re-create the distributed objects there
-            // this *may* take, but we cannot really use a new cluster before everything
-            // has been set up correctly (so we cannot really run this in a background task).
-            //
-            // if this is a new cluster, then this is a &quot;first&quot; connection and there are
-            // no other connections yet. we should be able to run CreateAllAsync on the
-            // connection, else something is wrong - CreateAllAsync stops if the connection
-            // becomes non-active (and does not throw)
-
-            return CreateAllAsync(connection);
         }
 
         /// &lt;inheritdoc /&gt;
-        public async ValueTask DisposeAsync()
+        public string ServiceName { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public string Name { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public string PartitionKey =&gt; _partitionKey ??= StringPartitioningStrategy.GetPartitionKey(Name);
+
+        /// &lt;summary&gt;
+        /// Get the partition key data of this object.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The partition key data is the &lt;see cref=&quot;IData&quot;/&gt; conversion of &lt;see cref=&quot;PartitionKey&quot;/&gt;.&lt;/para&gt;
+        /// &lt;para&gt;This value makes sense only for distributed objects that access a single partition.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IData PartitionKeyData =&gt; _partitionKeyData ??= ToData(PartitionKey);
+
+        /// &lt;summary&gt;
+        /// Gets the partition identifier of this object.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The partition identifier derives from the &lt;see cref=&quot;PartitionKeyData&quot;/&gt;.&lt;/para&gt;
+        /// &lt;para&gt;This value makes sense only for distributed objects that access a single partition.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int PartitionId =&gt; _partitionId ??
+                                  (_partitionId = Cluster.Partitioner.GetPartitionId(PartitionKeyData.PartitionHash)).Value;
+
+        /// &lt;summary&gt;
+        /// Gets the current context identifier.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// Hazelcast APIs call this the thread identified and maintain locks &quot;per threads&quot;,
+        /// so we are keeping the name here internally, but in reality this is not a thread
+        /// identifier anymore - it is attached to the async context so it can flow with
+        /// async operations.
+        /// &lt;/remarks&gt;
+        protected static long ContextId =&gt; AsyncContext.Current.Id;
+
+        /// &lt;summary&gt;
+        /// Gets the serialization service.
+        /// &lt;/summary&gt;
+        protected SerializationService SerializationService { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the cluster.
+        /// &lt;/summary&gt;
+        protected Cluster Cluster { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the logger factory.
+        /// &lt;/summary&gt;
+        protected ILoggerFactory LoggerFactory { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DestroyAsync()
+            =&gt; await _factory.DestroyAsync(this).CfAwait();
+
+        /// &lt;summary&gt;
+        /// Performs required operations when destroying an object (but before it is destroyed).
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A task that will complete when done.&lt;/returns&gt;
+        protected internal virtual ValueTask DestroyingAsync() =&gt; default;
+
+        /// &lt;summary&gt;
+        /// Serializes an object to &lt;see cref=&quot;IData&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o&quot;&gt;The object.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IData&quot;/&gt; serialized object.&lt;/returns&gt;
+        protected virtual IData ToData(object o)
+            =&gt; SerializationService.ToData(o);
+
+        /// &lt;summary&gt;
+        /// Serializes a non-null object to &lt;see cref=&quot;IData&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o1&quot;&gt;The object.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IData&quot;/&gt; serialized object.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ArgumentNullException&quot;&gt;Occurs when the object is null.&lt;/exception&gt;
+        protected IData ToSafeData(object o1)
         {
-            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
-                return;
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
 
-            // there is a potential race-cond here, if an item is added to _objects after
-            // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
+            var data1 = ToData(o1);
 
-            await foreach (var (_, value) in _objects)
-            {
-                await TryDispose(value).CfAwait();
-            }
+            return data1;
         }
 
-        private async ValueTask TryDispose(IDistributedObject o)
+        /// &lt;summary&gt;
+        /// Serializes non-null objects to &lt;see cref=&quot;IData&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the objects.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;collection&quot;&gt;The collection of objects.&lt;/param&gt;
+        /// &lt;returns&gt;The collection of &lt;see cref=&quot;IData&quot;/&gt; serialized objects.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ArgumentNullException&quot;&gt;Occurs when the collection, or an object in the collection, is null.&lt;/exception&gt;
+        protected ICollection&lt;IData&gt; ToSafeData&lt;T&gt;(ICollection&lt;T&gt; collection)
         {
-            try
+            if (collection == null) throw new ArgumentNullException(nameof(collection));
+
+            var data = new List&lt;IData&gt;(collection.Count);
+            foreach (var item in collection) data.Add(ToData(item));
+            return data;
+        }
+
+        /// &lt;summary&gt;
+        /// Serializes non-null objects to &lt;see cref=&quot;IData&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o1&quot;&gt;The first object.&lt;/param&gt;
+        /// &lt;param name=&quot;o2&quot;&gt;The second objects.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IData&quot;/&gt; serialized objects.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ArgumentNullException&quot;&gt;Occurs when any of the objects is null.&lt;/exception&gt;
+        protected (IData, IData) ToSafeData(object o1, object o2)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+            if (o2 == null) throw new ArgumentNullException(nameof(o2));
+
+            var data1 = ToData(o1);
+            var data2 = ToData(o2);
+
+            return (data1, data2);
+        }
+
+        /// &lt;summary&gt;
+        /// Serializes non-null objects to &lt;see cref=&quot;IData&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o1&quot;&gt;The first object.&lt;/param&gt;
+        /// &lt;param name=&quot;o2&quot;&gt;The second objects.&lt;/param&gt;
+        /// &lt;param name=&quot;o3&quot;&gt;The third objects.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;IData&quot;/&gt; serialized objects.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ArgumentNullException&quot;&gt;Occurs when any of the objects is null.&lt;/exception&gt;
+        protected (IData, IData, IData) ToSafeData(object o1, object o2, object o3)
+        {
+            if (o1 == null) throw new ArgumentNullException(nameof(o1));
+            if (o2 == null) throw new ArgumentNullException(nameof(o2));
+            if (o3 == null) throw new ArgumentNullException(nameof(o3));
+
+            var data1 = ToData(o1);
+            var data2 = ToData(o2);
+            var data3 = ToData(o3);
+
+            return (data1, data2, data3);
+        }
+
+        /// &lt;summary&gt;
+        /// Deserializes an &lt;see cref=&quot;IData&quot;/&gt; serialized instance into an object.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TObject&quot;&gt;The type of the object.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;data&quot;&gt;The &lt;see cref=&quot;IData&quot;/&gt; serialized instance.&lt;/param&gt;
+        /// &lt;returns&gt;The deserialized object.&lt;/returns&gt;
+        protected virtual TObject ToObject&lt;TObject&gt;(IData data)
+            =&gt; SerializationService.ToObject&lt;TObject&gt;(data);
+
+        /// &lt;summary&gt;
+        /// Creates a lazy argument.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TArg&quot;&gt;The type of the argument.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;source&quot;&gt;The source value.&lt;/param&gt;
+        /// &lt;returns&gt;The lazy argument.&lt;/returns&gt;
+        protected Lazy&lt;TArg&gt; LazyArg&lt;TArg&gt;(IData source)
+            =&gt; source == null
+                ? null
+                : new Lazy&lt;TArg&gt;(() =&gt; ToObject&lt;TArg&gt;(source));
+
+        /// &lt;summary&gt;
+        /// Represents subscription state data.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TEventHandlers&quot;&gt;The type of the event handlers.&lt;/typeparam&gt;
+        protected class SubscriptionState&lt;TEventHandlers&gt;
+        {
+            /// &lt;summary&gt;
+            /// Initializes a new instance of the &lt;see cref=&quot;SubscriptionState{TEventHandlers}&quot;/&gt; class.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;name&quot;&gt;The unique name of the distributed object.&lt;/param&gt;
+            /// &lt;param name=&quot;handlers&quot;&gt;The event handlers.&lt;/param&gt;
+            /// &lt;param name=&quot;handlerState&quot;&gt;A state object which is passed to handlers.&lt;/param&gt;
+            public SubscriptionState(string name, TEventHandlers handlers, object handlerState)
             {
-                await o.DisposeAsync().CfAwait();
+                Name = name;
+                Handlers = handlers;
+                HandlerState = handlerState;
             }
-            catch (Exception e)
+
+            /// &lt;summary&gt;
+            /// Gets the unique name of the distributed object.
+            /// &lt;/summary&gt;
+            public string Name { get; }
+
+            /// &lt;summary&gt;
+            /// Gets the event handlers.
+            /// &lt;/summary&gt;
+            public TEventHandlers Handlers { get; }
+
+            /// &lt;summary&gt;
+            /// Gets the handler state.
+            /// &lt;/summary&gt;
+            public object HandlerState { get; }
+        }
+
+        /// &lt;summary&gt;
+        /// Casts a subscription state, or throw.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The expected type.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The state object.&lt;/param&gt;
+        /// &lt;returns&gt;The state object.&lt;/returns&gt;
+        protected static T ToSafeState&lt;T&gt;(object state)
+        {
+            return state switch
             {
-                _logger.LogWarning(e, $&quot;Failed to dispose ({o}) distributed object.&quot;, o);
-            }
+                null =&gt; default,
+                T sstate =&gt; sstate,
+                _ =&gt; throw new InvalidCastException(&quot;Invalid subscription state type.&quot;)
+            };
+        }
+
+        /// &lt;summary&gt;
+        /// Unsubscribe from events.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;subscriptionId&quot;&gt;The unique identifier of the subscription.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the operation completed successfully.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Once this method has been invoked, and whatever its result, the subscription is
+        /// de-activated, which means that no events will trigger anymore, even if the client
+        /// receives event messages from the servers.&lt;/para&gt;
+        /// &lt;para&gt;If this method returns &lt;c&gt;false&lt;/c&gt;, then one or more client connection has not
+        /// been able to get its server to remove the subscription. Even though no events will
+        /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
+        /// recommended to retry unsubscribing until it is successful.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        protected
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        ValueTask&lt;bool&gt; UnsubscribeBaseAsync(Guid subscriptionId)
+        {
+            var task = Cluster.Events.RemoveSubscriptionAsync(subscriptionId, CancellationToken.None);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        public virtual void OnInitialized()
+        {
+            _readonlyProperties = true;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return default;
+
+            _objectDisposed(this);
+
+            return DisposeAsyncCore();
+        }
+
+        /// &lt;summary&gt;
+        /// Disposes resources.
+        /// &lt;/summary&gt;
+        protected virtual ValueTask DisposeAsyncCore() =&gt; default;
+
+        public override string ToString()
+        {
+            return $&quot;ServiceName = &#39;{ServiceName}&#39;, Name = &#39;{Name}&#39;, Type = &#39;{GetType().ToCsString()}&#39;&quot;;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[34,9,35,93,1],[50,9,50,130,1],[52,13,52,84,1],[53,13,53,123,1],[54,13,54,102,1],[56,13,56,78,1],[57,9,57,10,1],[76,13,76,32,1],[76,33,76,95,0],[78,13,78,69,1],[82,17,82,94,1],[83,17,83,53,1],[86,17,86,28,1],[88,21,88,102,1],[89,21,89,93,1],[92,17,92,35,1],[93,17,93,87,1],[94,17,94,26,1],[95,13,95,14,1],[100,13,100,98,1],[105,13,105,32,1],[107,17,107,50,0],[108,17,108,79,0],[112,13,112,26,1],[112,27,112,36,1],[118,13,120,83,0],[121,9,121,10,1],[132,28,132,40,1],[132,41,132,43,1],[132,44,132,52,1],[135,17,135,40,1],[139,21,139,106,1],[140,21,140,102,1],[141,17,141,18,1],[142,17,142,36,0],[144,21,144,105,0],[145,17,145,18,0],[146,13,146,14,1],[147,9,147,10,1],[156,13,156,73,1],[157,13,157,38,1],[158,9,158,10,1],[169,13,169,73,1],[170,13,170,79,1],[171,13,171,25,1],[172,17,172,59,1],[174,13,174,48,1],[175,13,175,50,1],[176,13,176,84,1],[177,9,177,10,1],[183,13,183,90,1],[184,13,184,114,1],[185,13,185,73,1],[186,9,186,10,1],[198,13,198,31,1],[198,32,198,47,1],[209,13,209,47,1],[215,13,215,71,1],[216,17,216,24,0],[221,28,221,42,1],[221,43,221,45,1],[221,46,221,54,1],[223,17,223,51,1],[225,9,225,10,1],[231,17,231,50,1],[232,13,232,14,1],[233,13,233,32,0],[235,17,235,90,0],[236,13,236,14,0],[237,9,237,10,1]]);
+      highlightRanges([[51,9,51,197,1],[53,13,53,56,1],[53,57,53,137,0],[54,13,54,39,1],[56,13,56,49,1],[56,50,56,123,0],[57,13,57,25,1],[59,13,59,84,1],[60,13,60,83,1],[61,13,61,122,1],[62,13,62,101,1],[63,9,63,10,1],[70,20,70,35,0],[73,17,73,41,1],[74,21,74,98,0],[75,17,75,41,1],[76,13,76,14,1],[80,37,80,41,1],[83,30,83,34,1],[86,39,86,105,1],[95,42,95,84,1],[104,35,105,124,1],[116,44,116,67,1],[121,63,121,67,1],[126,37,126,41,1],[131,50,131,54,1],[135,16,135,59,1],[141,67,141,74,1],[149,16,149,46,1],[159,13,159,28,1],[159,29,159,73,1],[161,13,161,36,1],[163,13,163,26,1],[175,13,175,36,1],[175,37,175,89,0],[177,13,177,58,1],[178,22,178,30,1],[178,31,178,33,1],[178,34,178,44,1],[178,46,178,69,1],[179,13,179,25,1],[191,13,191,28,1],[191,29,191,73,1],[192,13,192,28,1],[192,29,192,73,1],[194,13,194,36,1],[195,13,195,36,1],[197,13,197,35,1],[210,13,210,28,1],[210,29,210,73,0],[211,13,211,28,1],[211,29,211,73,0],[212,13,212,28,1],[212,29,212,73,0],[214,13,214,36,1],[215,13,215,36,1],[216,13,216,36,1],[218,13,218,42,1],[228,16,228,60,1],[237,16,239,40,1],[239,40,239,62,1],[239,62,239,63,1],[253,13,253,96,1],[255,17,255,29,1],[256,17,256,37,1],[257,17,257,45,1],[258,13,258,14,1],[263,34,263,38,1],[268,46,268,50,1],[273,42,273,46,1],[284,13,286,25,1],[286,25,286,32,0],[286,32,287,29,1],[287,29,287,35,1],[287,35,288,22,1],[288,22,288,88,0],[288,88,289,15,1],[312,13,312,103,1],[317,13,317,41,1],[319,9,319,10,1],[323,13,323,40,1],[324,9,324,10,1],[329,13,329,71,1],[330,17,330,32,1],[332,13,332,35,1],[334,13,334,39,1],[340,59,340,66,1],[344,13,344,105,0]]);
     </script>
   </body>
 </html>

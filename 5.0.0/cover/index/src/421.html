@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalSetRemoveCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalSetAddCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Remove item from transactional set.
+    /// Add new item to transactional set.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalSetRemoveServerCodec
+    internal static class TransactionalSetAddServerCodec
 #else
-    internal static class TransactionalSetRemoveCodec
+    internal static class TransactionalSetAddCodec
 #endif
     {
-        public const int RequestMessageType = 1049088; // 0x100200
-        public const int ResponseMessageType = 1049089; // 0x100201
+        public const int RequestMessageType = 1048832; // 0x100100
+        public const int ResponseMessageType = 1048833; // 0x100101
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
@@ -85,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// Item removed from Transactional Set
+            /// Item added to transactional set
             ///&lt;/summary&gt;
             public IData Item { get; set; }
         }
@@ -96,7 +96,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalSet.Remove&quot;
+                OperationName = &quot;TransactionalSet.Add&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -127,7 +127,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if item is remove successfully
+            /// True if item is added successfully
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }

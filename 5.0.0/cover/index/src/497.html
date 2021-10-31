@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\DistributedObjectInfo.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\BitmapIndexOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,56 +22,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Models
 {
-    internal class DistributedObjectInfo : IEquatable&lt;DistributedObjectInfo&gt;
+    /// &lt;summary&gt;
+    /// Configures indexing options for &lt;see cref=&quot;IndexType.Bitmap&quot;/&gt; indexes.
+    /// &lt;/summary&gt;
+    public class BitmapIndexOptions
     {
-        public DistributedObjectInfo(string serviceName, string name)
-        {
-            Name = name;
-            ServiceName = serviceName;
-        }
+        /// &lt;summary&gt;
+        /// Gets or sets the unique key.
+        /// &lt;/summary&gt;
+        public string UniqueKey { get; set; } = Query.Predicates.KeyName;
 
-        public string Name { get; }
-
-        public string ServiceName { get; }
-
-        public override bool Equals(object obj)
-            =&gt; Equals(obj as DistributedObjectInfo);
-
-        public bool Equals(DistributedObjectInfo other)
-        {
-            if (other is null) return false;
-            if (ReferenceEquals(this, other)) return true;
-
-            return
-                Name == other.Name &amp;&amp;
-                ServiceName == other.ServiceName;
-        }
-
-        public static bool operator ==(DistributedObjectInfo left, DistributedObjectInfo right)
-            =&gt; left is null ? right is null : left.Equals(right);
-
-        public static bool operator !=(DistributedObjectInfo left, DistributedObjectInfo right)
-            =&gt; !(left == right);
-
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(ServiceName, Name);
-        }
-
-        public override string ToString()
-        {
-            return $&quot;ServiceName = &#39;{ServiceName}&#39;, Name = &#39;{Name}&#39;&quot;;
-        }
+        /// &lt;summary&gt;
+        /// Gets or sets the &lt;see cref=&quot;UniqueKeyTransformation&quot;/&gt; which will be
+        /// applied to the &lt;see cref=&quot;UniqueKey&quot;/&gt; value.
+        /// &lt;/summary&gt;
+        public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,9,21,70,1],[23,13,23,25,1],[24,13,24,39,1],[25,9,25,10,1],[27,30,27,34,1],[29,37,29,41,1],[32,16,32,52,1],[36,13,36,31,1],[36,32,36,45,1],[37,13,37,46,1],[37,47,37,59,1],[39,13,41,50,1],[45,16,45,65,1],[48,16,48,32,1],[52,13,52,56,1],[57,13,57,70,1]]);
+      highlightRanges([[25,35,25,39,1],[25,40,25,44,1],[25,49,25,73,1],[31,66,31,70,1],[31,71,31,75,1]]);
     </script>
   </body>
 </html>

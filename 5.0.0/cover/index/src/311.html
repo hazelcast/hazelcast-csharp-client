@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapRemoveEntryCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapRemoveCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes all the entries with the given key. The collection is NOT backed by the map, so changes to the map are
-    /// NOT reflected in the collection, and vice-versa.
+    /// Removes the given key value pair from the multimap.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MultiMapRemoveEntryServerCodec
+    internal static class MultiMapRemoveServerCodec
 #else
-    internal static class MultiMapRemoveEntryCodec
+    internal static class MultiMapRemoveCodec
 #endif
     {
-        public const int RequestMessageType = 136448; // 0x021500
-        public const int ResponseMessageType = 136449; // 0x021501
+        public const int RequestMessageType = 131840; // 0x020300
+        public const int ResponseMessageType = 131841; // 0x020301
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -80,23 +78,18 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The value of the entry to remove
-            ///&lt;/summary&gt;
-            public IData Value { get; set; }
-
-            /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
             ///&lt;/summary&gt;
             public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId)
+        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;MultiMap.RemoveEntry&quot;
+                OperationName = &quot;MultiMap.Remove&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -105,7 +98,6 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -118,7 +110,6 @@ namespace Hazelcast.Protocol.Codecs
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -129,17 +120,17 @@ namespace Hazelcast.Protocol.Codecs
             /// &lt;summary&gt;
             /// True if the size of the multimap changed after the remove operation, false otherwise.
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -148,8 +139,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -158,7 +149,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,81,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,50,1],[98,13,98,53,1],[99,13,99,34,1],[122,36,122,40,1],[122,41,122,45,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,48,1],[142,13,142,91,1],[143,13,143,29,1],[144,9,144,10,1]]);
+      highlightRanges([[79,13,83,15,1],[84,13,84,123,1],[85,13,85,104,1],[86,13,86,88,1],[87,13,87,81,1],[88,13,88,48,1],[89,13,89,53,1],[90,13,90,50,1],[91,13,91,34,1],[113,44,113,48,1],[113,49,113,53,1],[130,13,130,64,1],[131,13,131,53,1],[132,13,132,29,1],[133,13,133,88,1],[134,13,134,29,1],[135,9,135,10,1]]);
     </script>
   </body>
 </html>

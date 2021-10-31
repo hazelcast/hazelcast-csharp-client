@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxQueue.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxMultiMap.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,78 +23,77 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal class HTxQueue&lt;TItem&gt; : TransactionalDistributedObjectBase, IHTxQueue&lt;TItem&gt;
+    internal class HTxMultiMap&lt;TKey, TValue&gt; : TransactionalDistributedObjectBase, IHTxMultiMap&lt;TKey, TValue&gt;
     {
-        public HTxQueue(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(ServiceNames.Queue, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        public HTxMultiMap(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.MultiMap, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
         { }
 
-        public Task&lt;bool&gt; OfferAsync(TItem item)
-            =&gt; OfferAsync(item, TimeSpan.Zero);
-
-        public async Task&lt;bool&gt; OfferAsync(TItem item, TimeSpan timeToWait)
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetAsync(TKey key)
         {
-            var itemData = ToSafeData(item);
-
-            // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds();
-
-            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMs);
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMultiMapGetCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
+            var response = TransactionalMultiMapGetCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
         }
 
-        public async Task&lt;TItem&gt; PeekAsync(TimeSpan timeToWait = default)
+        public async Task&lt;bool&gt; PutAsync(TKey key, TValue value)
         {
-            // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds();
-
-            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
+            var (keyData, valueData) = ToSafeData(key, value);
+            var requestMessage = TransactionalMultiMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TItem&gt;(response);
+            return TransactionalMultiMapPutCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task&lt;TItem&gt; PollAsync(TimeSpan timeToWait = default)
+        public async Task&lt;bool&gt; RemoveAsync(TKey key, TValue value)
         {
-            // codec wants -1 for infinite, 0 for zero
-            var timeToWaitMs = timeToWait.RoundedMilliseconds();
-
-            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
+            var (keyData, valueData) = ToSafeData(key, value);
+            var requestMessage = TransactionalMultiMapRemoveEntryCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TItem&gt;(response);
+            return TransactionalMultiMapRemoveEntryCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; RemoveAsync(TKey key)
+        {
+            var keyData = ToData(key);
+            var requestMessage = TransactionalMultiMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalMultiMapRemoveCodec.DecodeResponse(responseMessage).Response;
+            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
         }
 
         public async Task&lt;int&gt; GetSizeAsync()
         {
-            var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var requestMessage = TransactionalMultiMapSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
+            return TransactionalMultiMapSizeCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task&lt;TItem&gt; TakeAsync()
+        public async Task&lt;int&gt; GetValueCountAsync(TKey key)
         {
-            var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var keyData = ToSafeData(key);
+            var requestMessage = TransactionalMultiMapValueCountCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
-            var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TItem&gt;(response);
+            return TransactionalMultiMapValueCountCodec.DecodeResponse(responseMessage).Response;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,15,28,144,1],[29,11,29,12,1],[32,16,32,47,1],[36,13,36,45,1],[39,13,39,65,1],[41,13,41,133,1],[42,13,42,132,1],[43,13,43,90,1],[44,9,44,10,1],[49,13,49,65,1],[51,13,51,122,1],[52,13,52,132,1],[53,13,53,97,1],[54,13,54,46,1],[55,9,55,10,1],[60,13,60,65,1],[62,13,62,122,1],[63,13,63,132,1],[64,13,64,97,1],[65,13,65,46,1],[66,9,66,10,1],[70,13,70,108,1],[71,13,71,132,1],[72,13,72,89,1],[73,9,73,10,1],[77,13,77,108,1],[78,13,78,132,1],[79,13,79,97,1],[80,13,80,46,1],[81,9,81,10,1]]);
+      highlightRanges([[30,15,30,147,1],[31,11,31,12,1],[35,13,35,43,1],[36,13,36,119,1],[37,13,37,132,1],[38,13,38,99,1],[39,13,39,81,1],[40,9,40,10,1],[44,13,44,63,1],[45,13,45,130,1],[46,13,46,132,1],[47,13,47,91,1],[48,9,48,10,1],[52,13,52,63,1],[53,13,53,138,1],[54,13,54,132,1],[55,13,55,99,1],[56,9,56,10,1],[60,13,60,39,1],[61,13,61,122,1],[62,13,62,132,1],[63,13,63,102,1],[64,13,64,81,1],[65,9,65,10,1],[69,13,69,111,1],[70,13,70,132,1],[71,13,71,92,1],[72,9,72,10,1],[76,13,76,43,1],[77,13,77,126,1],[78,13,78,132,1],[79,13,79,98,1],[80,9,80,10,1]]);
     </script>
   </body>
 </html>

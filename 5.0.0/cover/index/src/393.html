@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapDeleteCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapContainsValueCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the mapping for a key from this map if it is present. The map will not contain a mapping for the specified
-    /// key once the call returns. This method is preferred to #remove(Object) if the old value is not needed. The object
-    /// to be deleted will be removed from only the current transaction context until the transaction is committed.
+    /// Returns true if this map contains an entry for the specified value.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapDeleteServerCodec
+    internal static class TransactionalMapContainsValueServerCodec
 #else
-    internal static class TransactionalMapDeleteCodec
+    internal static class TransactionalMapContainsValueCodec
 #endif
     {
-        public const int RequestMessageType = 920576; // 0x0E0C00
-        public const int ResponseMessageType = 920577; // 0x0E0C01
+        public const int RequestMessageType = 922112; // 0x0E1200
+        public const int ResponseMessageType = 922113; // 0x0E1201
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -86,18 +85,18 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// Remove the mapping for this key.
+            /// The specified value.
             ///&lt;/summary&gt;
-            public IData Key { get; set; }
+            public IData Value { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData @value)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.Delete&quot;
+                OperationName = &quot;TransactionalMap.ContainsValue&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -106,7 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -119,21 +118,27 @@ namespace Hazelcast.Protocol.Codecs
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// True if this map contains an entry for the specified key.
+            ///&lt;/summary&gt;
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -143,7 +148,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -152,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[87,13,91,15,1],[92,13,92,123,1],[93,13,93,104,1],[94,13,94,88,1],[95,13,95,75,1],[96,13,96,81,1],[97,13,97,48,1],[98,13,98,53,1],[99,13,99,50,1],[100,13,100,34,1],[134,13,134,64,1],[135,13,135,53,1],[136,13,136,29,1],[137,13,137,29,1],[138,9,138,10,1]]);
+      highlightRanges([[86,13,90,15,0],[91,13,91,123,0],[92,13,92,104,0],[93,13,93,88,0],[94,13,94,75,0],[95,13,95,81,0],[96,13,96,48,0],[97,13,97,53,0],[98,13,98,53,0],[99,13,99,34,0],[122,36,122,40,0],[122,41,122,45,0],[139,13,139,64,0],[140,13,140,53,0],[141,13,141,48,0],[142,13,142,91,0],[143,13,143,29,0],[144,9,144,10,0]]);
     </script>
   </body>
 </html>

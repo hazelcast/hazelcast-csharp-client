@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\StackTraceElement.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\HazelcastException.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,108 +22,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#if !NETFRAMEWORK &amp;&amp; !NETSTANDARD2_0
 using System;
-#endif
+using System.Runtime.Serialization;
 
 namespace Hazelcast.Exceptions
 {
     /// &lt;summary&gt;
-    /// Represents a stack trace element that can be exchanged between the client and the server.
+    /// Represents the generic exception that is throw when Hazelcast goes south.
     /// &lt;/summary&gt;
-    internal class StackTraceElement
+    [Serializable]
+    public class HazelcastException : Exception
     {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;StackTraceElement&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;className&quot;&gt;The name of the class.&lt;/param&gt;
-        /// &lt;param name=&quot;methodName&quot;&gt;The name of the method.&lt;/param&gt;
-        /// &lt;param name=&quot;fileName&quot;&gt;The name of the source file.&lt;/param&gt;
-        /// &lt;param name=&quot;lineNumber&quot;&gt;The line number.&lt;/param&gt;
-        public StackTraceElement(string className, string methodName, string fileName, int lineNumber)
-        {
-            ClassName = className;
-            MethodName = methodName;
-            FileName = fileName;
-            LineNumber = lineNumber;
-        }
+        // ReSharper disable once InconsistentNaming
+        private const string DefaultMessage = &quot;Hazelcast gone south.&quot;;
 
         /// &lt;summary&gt;
-        /// Gets the name of the class.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public string ClassName { get; }
+        public HazelcastException()
+            : base(DefaultMessage)
+        { }
 
         /// &lt;summary&gt;
-        /// Gets the name of the method.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a specified error message.
         /// &lt;/summary&gt;
-        public string MethodName { get; }
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public HazelcastException(string message)
+            : base(message)
+        { }
 
         /// &lt;summary&gt;
-        /// Gets the name of the source file.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
         /// &lt;/summary&gt;
-        public string FileName { get; }
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public HazelcastException(Exception innerException)
+            : base(DefaultMessage, innerException)
+        { }
 
         /// &lt;summary&gt;
-        /// Gets the line number.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
         /// &lt;/summary&gt;
-        public int LineNumber { get; }
-
-        /// &lt;inheritdoc /&gt;
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is StackTraceElement other &amp;&amp; EqualsN(this, other);
-        }
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public HazelcastException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
 
         /// &lt;summary&gt;
-        /// Determines whether two objects are equal.
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastException&quot;/&gt; class with serialized data.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;left&quot;&gt;The first object.&lt;/param&gt;
-        /// &lt;param name=&quot;right&quot;&gt;The second object.&lt;/param&gt;
-        /// &lt;returns&gt;A value indicating whether the two objects are equal.&lt;/returns&gt;
-        private static bool Equals(StackTraceElement left, StackTraceElement right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (left is null || right is null) return false;
-            return EqualsN(left, right);
-        }
-
-        private static bool EqualsN(StackTraceElement left, StackTraceElement right)
-            =&gt; left.ClassName == right.ClassName &amp;&amp;
-               left.MethodName == right.MethodName &amp;&amp;
-               left.FileName == right.FileName &amp;&amp;
-               left.LineNumber == right.LineNumber;
-
-        public static bool operator ==(StackTraceElement left, StackTraceElement right) =&gt; Equals(left, right);
-
-        public static bool operator !=(StackTraceElement left, StackTraceElement right) =&gt; !Equals(left, right);
-
-        /// &lt;inheritdoc /&gt;
-        public override int GetHashCode()
-        {
-#if NETFRAMEWORK || NETSTANDARD2_0
-            unchecked
-            {
-                var hashCode = (ClassName != null ? ClassName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (MethodName != null ? MethodName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (FileName != null ? FileName.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ LineNumber;
-                return hashCode;
-            }
-#else
-            return HashCode.Combine(ClassName, MethodName, FileName, LineNumber);
-#endif
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public override string ToString() =&gt; $&quot;at {ClassName}.{MethodName}(...) in {FileName}:{LineNumber}&quot;;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        protected HazelcastException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,9,33,103,1],[35,13,35,35,1],[36,13,36,37,1],[37,13,37,33,1],[38,13,38,37,1],[39,9,39,10,1],[44,35,44,39,1],[49,36,49,40,1],[54,34,54,38,1],[59,33,59,37,1],[64,13,64,29,1],[64,30,64,43,1],[65,13,65,44,1],[65,45,65,57,1],[66,13,66,75,1],[77,13,77,46,1],[77,47,77,59,1],[78,13,78,47,1],[78,48,78,61,1],[79,13,79,41,1],[83,16,86,51,1],[88,92,88,111,1],[90,92,90,112,1],[105,13,105,82,1],[110,46,110,108,1]]);
+      highlightRanges([[33,15,33,35,1],[34,11,34,12,1],[41,15,41,28,1],[42,11,42,12,1],[51,15,51,51,1],[52,11,52,12,1],[62,15,62,44,1],[63,11,63,12,1],[73,15,73,34,1],[74,11,74,12,1]]);
     </script>
   </body>
 </html>

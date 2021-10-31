@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\FloatingPointSumAggregator.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\FixedSumAggregator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -32,42 +32,42 @@ namespace Hazelcast.Aggregation
     /// &lt;remarks&gt;
     /// &lt;para&gt;Null input values not accepted.&lt;/para&gt;
     /// &lt;/remarks&gt;
-    internal sealed class FloatingPointSumAggregator : AggregatorBase&lt;double&gt;
+    internal sealed class FixedSumAggregator : AggregatorBase&lt;long&gt;
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;FloatingPointSumAggregator&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;FixedSumAggregator&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public FloatingPointSumAggregator()
+        public FixedSumAggregator()
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;FloatingPointSumAggregator&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;FixedSumAggregator&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
-        public FloatingPointSumAggregator(string attributePath)
+        public FixedSumAggregator(string attributePath)
             : base(attributePath)
         { }
 
         /// &lt;inheritdoc /&gt;
         protected override void ReadAggregatorData(IObjectDataInput input)
         {
-            input.ReadDouble(); // member side field not used on client
+            input.ReadLong(); // member side field not used on client
         }
 
         /// &lt;inheritdoc /&gt;
         protected override void WriteAggregatorData(IObjectDataOutput output)
         {
-            output.WriteDouble(0.0d); // member side field not used on client
+            output.WriteLong(0L); // member side field not used on client
         }
 
         /// &lt;inheritdoc /&gt;
-        public override int ClassId =&gt; AggregatorDataSerializerHook.FloatingPointSum;
+        public override int ClassId =&gt; AggregatorDataSerializerHook.FixedSum;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,44,1],[31,11,31,12,1],[38,15,38,34,1],[39,11,39,12,1],[44,13,44,32,1],[45,9,45,10,1],[50,13,50,38,1],[51,9,51,10,1],[54,40,54,85,1]]);
+      highlightRanges([[30,9,30,36,1],[31,11,31,12,1],[38,15,38,34,1],[39,11,39,12,1],[44,13,44,30,1],[45,9,45,10,1],[50,13,50,34,1],[51,9,51,10,1],[54,40,54,77,1]]);
     </script>
   </body>
 </html>

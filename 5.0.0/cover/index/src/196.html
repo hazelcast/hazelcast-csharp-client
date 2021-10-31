@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientRemovePartitionLostListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientRemoveDistributedObjectListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the specified partition lost listener. If there is no such listener added before, this call does no change
-    /// in the cluster and returns false.
+    /// Removes the specified distributed object listener. If there is no such listener added before, this call does no
+    /// change in the cluster and returns false.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientRemovePartitionLostListenerServerCodec
+    internal static class ClientRemoveDistributedObjectListenerServerCodec
 #else
-    internal static class ClientRemovePartitionLostListenerCodec
+    internal static class ClientRemoveDistributedObjectListenerCodec
 #endif
     {
-        public const int RequestMessageType = 1792; // 0x000700
-        public const int ResponseMessageType = 1793; // 0x000701
+        public const int RequestMessageType = 2560; // 0x000A00
+        public const int ResponseMessageType = 2561; // 0x000A01
         private const int RequestRegistrationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestRegistrationIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
@@ -70,7 +70,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The id assigned during the listener registration.
+            /// The id assigned during the registration.
             ///&lt;/summary&gt;
             public Guid RegistrationId { get; set; }
         }
@@ -81,7 +81,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = &quot;Client.RemovePartitionLostListener&quot;
+                OperationName = &quot;Client.RemoveDistributedObjectListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -137,7 +137,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[71,13,75,15,0],[76,13,76,123,0],[77,13,77,104,0],[78,13,78,88,0],[79,13,79,93,0],[80,13,80,48,0],[81,13,81,34,0],[101,36,101,40,0],[101,41,101,45,0],[118,13,118,64,0],[119,13,119,53,0],[120,13,120,48,0],[121,13,121,91,0],[122,13,122,29,0],[123,9,123,10,0]]);
+      highlightRanges([[71,13,75,15,1],[76,13,76,123,1],[77,13,77,104,1],[78,13,78,88,1],[79,13,79,93,1],[80,13,80,48,1],[81,13,81,34,1],[101,36,101,40,0],[101,41,101,45,0],[118,13,118,64,0],[119,13,119,53,0],[120,13,120,48,0],[121,13,121,91,0],[122,13,122,29,0],[123,9,123,10,0]]);
     </script>
   </body>
 </html>

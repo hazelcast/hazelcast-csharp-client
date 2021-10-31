@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ObjectLifecycleEventSubscription.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberTable.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,58 +23,95 @@
 // limitations under the License.
 
 using System;
-using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
 using Hazelcast.Core;
-using Hazelcast.Events;
-using Hazelcast.Protocol.Codecs;
+using Hazelcast.Models;
 
 namespace Hazelcast.Clustering
 {
-    internal class ObjectLifecycleEventSubscription : EventSubscriptionBase
+    /// &lt;summary&gt;
+    /// Represents a cluster member table.
+    /// &lt;/summary&gt;
+    internal class MemberTable
     {
-        private readonly bool _isSmart;
+        private readonly Dictionary&lt;Guid, MemberInfo&gt; _members;
 
-        public ObjectLifecycleEventSubscription(ClusterState clusterState, ClusterEvents clusterEvents)
-            : base(clusterState, clusterEvents)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public MemberTable()
+            : this(-1, new Dictionary&lt;Guid, MemberInfo&gt;())
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the member table.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        public MemberTable(int version, Dictionary&lt;Guid, MemberInfo&gt; members)
         {
-            _isSmart = clusterState.Options.Networking.SmartRouting;
+            Version = version;
+            _members = members;
         }
 
-        protected override ClusterSubscription CreateSubscription()
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberTable&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the member table.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        public MemberTable(int version, IEnumerable&lt;MemberInfo&gt; members)
+            : this(version, members.ToDictionary(x =&gt; x.Id, x =&gt; x))
+        {}
+
+        /// &lt;summary&gt;
+        /// Gets the version of the member table.
+        /// &lt;/summary&gt;
+        public int Version { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the number of members in the table.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _members.Count;
+
+        /// &lt;summary&gt;
+        /// Gets the members.
+        /// &lt;/summary&gt;
+        public IReadOnlyCollection&lt;MemberInfo&gt; Members =&gt; _members.Values;
+
+        /// &lt;summary&gt;
+        /// Determines whether the table contains a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the table contains the member; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool ContainsMember(Guid memberId) =&gt; _members.ContainsKey(memberId);
+
+        /// &lt;summary&gt;
+        /// Tries to get the member associated with the specified identifier.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the table contains the member; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool TryGetMember(Guid memberId, out MemberInfo member) =&gt; _members.TryGetValue(memberId, out member);
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
         {
-            return new ClusterSubscription(
-                ClientAddDistributedObjectListenerCodec.EncodeRequest(_isSmart),
-                (message, state) =&gt; ClientAddDistributedObjectListenerCodec.DecodeResponse(message).Response,
-                (id, state) =&gt; ClientRemoveDistributedObjectListenerCodec.EncodeRequest(id),
-                (message, state) =&gt; ClientRemoveDistributedObjectListenerCodec.DecodeResponse(message).Response,
-                (message, state) =&gt; ClientAddDistributedObjectListenerCodec.HandleEventAsync(message, HandleCodecEvent, null, LoggerFactory));
-        }
-
-        internal Func&lt;DistributedObjectCreatedEventArgs, ValueTask&gt; ObjectCreated { get; set; }
-
-        internal Func&lt;DistributedObjectDestroyedEventArgs, ValueTask&gt; ObjectDestroyed { get; set; }
-
-        private ValueTask HandleCodecEvent(string name, string serviceName, string eventTypeName, Guid memberId, object state)
-        {
-            return eventTypeName switch
-            {
-                &quot;CREATED&quot; =&gt; ObjectCreated == null
-                    ? default
-                    : ObjectCreated.AwaitEach(new DistributedObjectCreatedEventArgs(serviceName, name, memberId)),
-
-                &quot;DESTROYED&quot; =&gt; ObjectDestroyed == null
-                    ? default
-                    : ObjectDestroyed.AwaitEach(new DistributedObjectDestroyedEventArgs(serviceName, name, memberId)),
-
-                _ =&gt; throw new NotSupportedException($&quot;Event type \&quot;{eventTypeName}\&quot; is not supported.&quot;)
-            };
+            var text = new StringBuilder();
+            text.Append(&quot;MemberTable (&quot;);
+            text.Append(Count);
+            text.Append(&quot; members: &quot;);
+            text.Append(string.Join(&quot;, &quot;, Members));
+            text.Append(&#39;)&#39;);
+            return text.ToString();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,15,28,48,1],[30,13,30,69,1],[31,9,31,10,1],[35,13,37,37,1],[37,37,37,109,1],[37,109,38,32,1],[38,32,38,92,1],[38,92,39,37,1],[39,37,39,112,0],[39,112,40,37,1],[40,37,40,141,1],[40,141,40,143,1],[43,85,43,89,1],[43,90,43,94,1],[45,89,45,93,1],[45,94,45,98,1],[49,13,51,30,1],[51,30,53,114,1],[53,114,55,32,1],[55,32,57,118,1],[57,118,59,22,1],[59,22,59,106,0],[59,106,60,15,1]]);
+      highlightRanges([[35,15,35,59,1],[36,11,36,12,1],[43,9,43,78,1],[45,13,45,31,1],[46,13,46,32,1],[47,9,47,10,1],[55,15,55,55,1],[55,55,55,59,1],[55,59,55,66,1],[55,66,55,67,1],[55,67,55,69,1],[56,10,56,11,1],[61,30,61,34,1],[66,29,66,43,1],[71,59,71,74,1],[78,54,78,84,1],[86,75,86,117,1],[91,13,91,44,0],[92,13,92,42,0],[93,13,93,32,0],[94,13,94,39,0],[95,13,95,53,0],[96,13,96,30,0],[97,13,97,36,0]]);
     </script>
   </body>
 </html>

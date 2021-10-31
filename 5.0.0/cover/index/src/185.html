@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientAddPartitionLostListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientAddDistributedObjectListenerCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,33 +49,32 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds a partition lost listener to the cluster.
+    /// Adds a distributed object listener to the cluster. This listener will be notified
+    /// when a distributed object is created or destroyed.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientAddPartitionLostListenerServerCodec
+    internal static class ClientAddDistributedObjectListenerServerCodec
 #else
-    internal static class ClientAddPartitionLostListenerCodec
+    internal static class ClientAddDistributedObjectListenerCodec
 #endif
     {
-        public const int RequestMessageType = 1536; // 0x000600
-        public const int ResponseMessageType = 1537; // 0x000601
+        public const int RequestMessageType = 2304; // 0x000900
+        public const int ResponseMessageType = 2305; // 0x000901
         private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventPartitionLostPartitionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventPartitionLostLostBackupCountFieldOffset = EventPartitionLostPartitionIdFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventPartitionLostSourceFieldOffset = EventPartitionLostLostBackupCountFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventPartitionLostInitialFrameSize = EventPartitionLostSourceFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int EventPartitionLostMessageType = 1538; // 0x000602
+        private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventDistributedObjectMessageType = 2306; // 0x000902
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// if true only node that has the partition sends the request, if false
-            /// sends all partition lost events.
+            /// If set to true, the server adds the listener only to itself, otherwise the listener is is added for all
+            /// members in the cluster.
             ///&lt;/summary&gt;
             public bool LocalOnly { get; set; }
         }
@@ -86,7 +85,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Client.AddPartitionLostListener&quot;
+                OperationName = &quot;Client.AddDistributedObjectListener&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -111,7 +110,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The listener registration id.
+            /// The registration id for the distributed object listener.
             ///&lt;/summary&gt;
             public Guid Response { get; set; }
         }
@@ -138,31 +137,33 @@ namespace Hazelcast.Protocol.Codecs
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodePartitionLostEvent(int partitionId, int lostBackupCount, Guid source)
+        public static ClientMessage EncodeDistributedObjectEvent(string name, string serviceName, string eventType, Guid source)
         {
             var clientMessage = new ClientMessage();
-            var initialFrame = new Frame(new byte[EventPartitionLostInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
-            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventPartitionLostMessageType);
+            var initialFrame = new Frame(new byte[EventDistributedObjectInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
+            initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, EventDistributedObjectMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(EventPartitionLostPartitionIdFieldOffset, partitionId);
-            initialFrame.Bytes.WriteIntL(EventPartitionLostLostBackupCountFieldOffset, lostBackupCount);
-            initialFrame.Bytes.WriteGuidL(EventPartitionLostSourceFieldOffset, source);
+            initialFrame.Bytes.WriteGuidL(EventDistributedObjectSourceFieldOffset, source);
             clientMessage.Append(initialFrame);
             clientMessage.Flags |= ClientMessageFlags.Event;
+            StringCodec.Encode(clientMessage, name);
+            StringCodec.Encode(clientMessage, serviceName);
+            StringCodec.Encode(clientMessage, eventType);
             return clientMessage;
         }
 #endif
-        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;int, int, Guid, object, ValueTask&gt; handlePartitionLostEventAsync, object state, ILoggerFactory loggerFactory)
+        public static ValueTask HandleEventAsync(ClientMessage clientMessage, Func&lt;string, string, string, Guid, object, ValueTask&gt; handleDistributedObjectEventAsync, object state, ILoggerFactory loggerFactory)
         {
             using var iterator = clientMessage.GetEnumerator();
             var messageType = clientMessage.MessageType;
-            if (messageType == EventPartitionLostMessageType)
+            if (messageType == EventDistributedObjectMessageType)
             {
                 var initialFrame = iterator.Take();
-                var partitionId =  initialFrame.Bytes.ReadIntL(EventPartitionLostPartitionIdFieldOffset);
-                var lostBackupCount =  initialFrame.Bytes.ReadIntL(EventPartitionLostLostBackupCountFieldOffset);
-                var source =  initialFrame.Bytes.ReadGuidL(EventPartitionLostSourceFieldOffset);
-                return handlePartitionLostEventAsync(partitionId, lostBackupCount, source, state);
+                var source =  initialFrame.Bytes.ReadGuidL(EventDistributedObjectSourceFieldOffset);
+                var name = StringCodec.Decode(iterator);
+                var serviceName = StringCodec.Decode(iterator);
+                var eventType = StringCodec.Decode(iterator);
+                return handleDistributedObjectEventAsync(name, serviceName, eventType, source, state);
             }
             loggerFactory.CreateLogger(typeof(EventHandler)).LogDebug(&quot;Unknown message type received on event handler :&quot; + messageType);
             return default;
@@ -172,7 +173,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[76,13,80,15,0],[81,13,81,123,0],[82,13,82,104,0],[83,13,83,88,0],[84,13,84,83,0],[85,13,85,48,0],[86,13,86,34,0],[106,36,106,40,0],[106,41,106,45,0],[123,13,123,64,0],[124,13,124,53,0],[125,13,125,48,0],[126,13,126,91,0],[127,13,127,29,0],[128,9,128,10,0],[147,13,147,64,0],[148,13,148,57,0],[149,13,149,62,0],[151,17,151,52,0],[152,17,152,106,0],[153,17,153,114,0],[154,17,154,97,0],[155,17,155,99,0],[157,13,157,137,0],[158,13,158,28,0],[159,9,159,10,0]]);
+      highlightRanges([[75,13,79,15,1],[80,13,80,123,1],[81,13,81,104,1],[82,13,82,88,1],[83,13,83,83,1],[84,13,84,48,1],[85,13,85,34,1],[105,36,105,40,1],[105,41,105,45,1],[122,13,122,64,1],[123,13,123,53,1],[124,13,124,48,1],[125,13,125,91,1],[126,13,126,29,1],[127,9,127,10,1],[147,13,147,64,1],[148,13,148,57,1],[149,13,149,66,1],[151,17,151,52,1],[152,17,152,101,1],[153,17,153,57,1],[154,17,154,64,1],[155,17,155,62,1],[156,17,156,103,1],[158,13,158,137,0],[159,13,159,28,0],[160,9,160,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapExecuteOnKeysCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapExecuteOnKeyCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Applies the user defined EntryProcessor to the entries mapped by the collection of keys.The results mapped by
-    /// each key in the collection.
+    /// Applies the user defined EntryProcessor to the entry mapped by the key. Returns the the object which is result of
+    /// the process() method of EntryProcessor.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapExecuteOnKeysServerCodec
+    internal static class MapExecuteOnKeyServerCodec
 #else
-    internal static class MapExecuteOnKeysCodec
+    internal static class MapExecuteOnKeyCodec
 #endif
     {
-        public const int RequestMessageType = 78336; // 0x013200
-        public const int ResponseMessageType = 78337; // 0x013201
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 77312; // 0x012E00
+        public const int ResponseMessageType = 77313; // 0x012E01
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -73,31 +74,37 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// entry processor to be executed.
+            /// processor to execute on the map entry
             ///&lt;/summary&gt;
             public IData EntryProcessor { get; set; }
 
             /// &lt;summary&gt;
-            /// The keys for the entries for which the entry processor shall be executed on.
+            /// the key of the map entry.
             ///&lt;/summary&gt;
-            public IList&lt;IData&gt; Keys { get; set; }
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// Id of the thread that the task is submitted from.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData entryProcessor, ICollection&lt;IData&gt; keys)
+        public static ClientMessage EncodeRequest(string name, IData entryProcessor, IData key, long threadId)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.ExecuteOnKeys&quot;
+                OperationName = &quot;Map.ExecuteOnKey&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, entryProcessor);
-            ListMultiFrameCodec.Encode(clientMessage, keys, DataCodec.Encode);
+            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -106,10 +113,11 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.EntryProcessor = DataCodec.Decode(iterator);
-            request.Keys = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
+            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -118,19 +126,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// results of entry process on the entries with the provided keys
+            /// result of entry process.
             ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; Response { get; set; }
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(ICollection&lt;KeyValuePair&lt;IData, IData&gt;&gt; response)
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            EntryListCodec.Encode(clientMessage, response, DataCodec.Encode, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -140,7 +148,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -149,7 +157,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[79,13,83,15,1],[84,13,84,123,1],[85,13,85,104,1],[86,13,86,88,1],[87,13,87,48,1],[88,13,88,53,1],[89,13,89,61,1],[90,13,90,79,1],[91,13,91,34,1],[113,65,113,69,1],[113,70,113,74,1],[130,13,130,64,1],[131,13,131,53,1],[132,13,132,29,1],[133,13,133,101,1],[134,13,134,29,1],[135,9,135,10,1]]);
+      highlightRanges([[85,13,89,15,1],[90,13,90,123,1],[91,13,91,104,1],[92,13,92,88,1],[93,13,93,81,1],[94,13,94,48,1],[95,13,95,53,1],[96,13,96,61,1],[97,13,97,50,1],[98,13,98,34,1],[121,37,121,41,1],[121,42,121,46,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,29,1],[141,13,141,86,1],[142,13,142,29,1],[143,9,143,10,1]]);
     </script>
   </body>
 </html>

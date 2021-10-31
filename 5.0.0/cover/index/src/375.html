@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetContainsCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetContainsAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,17 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns true if this set contains the specified element.
+    /// Returns true if this set contains all of the elements of the specified collection. If the specified collection is
+    /// also a set, this method returns true if it is a subset of this set.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetContainsServerCodec
+    internal static class SetContainsAllServerCodec
 #else
-    internal static class SetContainsCodec
+    internal static class SetContainsAllCodec
 #endif
     {
-        public const int RequestMessageType = 393728; // 0x060200
-        public const int ResponseMessageType = 393729; // 0x060201
+        public const int RequestMessageType = 393984; // 0x060300
+        public const int ResponseMessageType = 393985; // 0x060301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
@@ -73,25 +74,25 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Element whose presence in this set is to be tested
+            /// Collection to be checked for containment in this list
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public IList&lt;IData&gt; Items { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData @value)
+        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; items)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Set.Contains&quot;
+                OperationName = &quot;Set.ContainsAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
+            ListMultiFrameCodec.Encode(clientMessage, items, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -102,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
+            request.Items = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -111,7 +112,8 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this set contains the specified element, false otherwise
+            /// true if this set contains all of the elements of the
+            /// specified collection
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -142,7 +144,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,53,1],[84,13,84,53,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
+      highlightRanges([[75,13,79,15,1],[80,13,80,123,1],[81,13,81,104,1],[82,13,82,88,1],[83,13,83,48,1],[84,13,84,53,1],[85,13,85,80,1],[86,13,86,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
     </script>
   </body>
 </html>

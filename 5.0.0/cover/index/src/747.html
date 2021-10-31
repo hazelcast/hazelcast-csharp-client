@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\MinAggregator.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\MaxAggregator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -27,25 +27,25 @@ using Hazelcast.Serialization;
 namespace Hazelcast.Aggregation
 {
     /// &lt;summary&gt;
-    /// Represents an aggregator that returns the minimum input value.
+    /// Represents an aggregator that returns the maximum input value.
     /// &lt;/summary&gt;
     /// &lt;typeparam name=&quot;TResult&quot;&gt;The aggregated result type.&lt;/typeparam&gt;
     /// &lt;remarks&gt;
     /// &lt;para&gt;Null input values are accepted.&lt;/para&gt;
     /// &lt;/remarks&gt;
-    internal sealed class MinAggregator&lt;TResult&gt; : AggregatorBase&lt;TResult&gt;
+    internal sealed class MaxAggregator&lt;TResult&gt; : AggregatorBase&lt;TResult&gt;
     {
         /// &lt;summary&gt;
         /// Initializes a new instance of the &lt;see cref=&quot;MinAggregator{TResult}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public MinAggregator()
+        public MaxAggregator()
         { }
 
         /// &lt;summary&gt;
         /// Initializes a new instance of the &lt;see cref=&quot;MinAggregator{TResult}&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
-        public MinAggregator(string attributePath)
+        public MaxAggregator(string attributePath)
             : base(attributePath)
         { }
 
@@ -58,11 +58,11 @@ namespace Hazelcast.Aggregation
         /// &lt;inheritdoc /&gt;
         protected override void WriteAggregatorData(IObjectDataOutput output)
         {
-            output.WriteObject(null); // member side field not used on client
+            output.WriteObject(null);  // member side field not used on client
         }
 
         /// &lt;inheritdoc /&gt;
-        public override int ClassId =&gt; AggregatorDataSerializerHook.Min;
+        public override int ClassId =&gt; AggregatorDataSerializerHook.Max;
     }
 }
 

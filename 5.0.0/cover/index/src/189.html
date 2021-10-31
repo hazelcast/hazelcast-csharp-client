@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientCreateProxyCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ClientCreateProxiesCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Creates a cluster-wide proxy with the given name and service.
+    /// Proxies will be created on all cluster members.
+    /// If the member is  a lite member, a replicated map will not be created.
+    /// Any proxy creation failure is logged on the server side.
+    /// Exceptions related to a proxy creation failure is not send to the client.
+    /// A proxy creation failure does not cancel this operation, all proxies will be attempted to be created.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ClientCreateProxyServerCodec
+    internal static class ClientCreateProxiesServerCodec
 #else
-    internal static class ClientCreateProxyCodec
+    internal static class ClientCreateProxiesCodec
 #endif
     {
-        public const int RequestMessageType = 1024; // 0x000400
-        public const int ResponseMessageType = 1025; // 0x000401
+        public const int RequestMessageType = 3584; // 0x000E00
+        public const int ResponseMessageType = 3585; // 0x000E01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -67,45 +71,27 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The distributed object name for which the proxy is being created for.
+            /// proxies that will be created
+            /// Each entry&#39;s key is distributed object name.
+            /// Each entry&#39;s value is service name.
+            /// For possible service names see createProxy message.
             ///&lt;/summary&gt;
-            public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// The name of the service. Possible service names are:
-            /// &quot;hz:impl:listService&quot;
-            /// &quot;hz:impl:queueService&quot;
-            /// &quot;hz:impl:setService&quot;
-            /// &quot;hz:impl:idGeneratorService&quot;
-            /// &quot;hz:impl:executorService&quot;
-            /// &quot;hz:impl:mapService&quot;
-            /// &quot;hz:impl:multiMapService&quot;
-            /// &quot;hz:impl:splitBrainProtectionService&quot;
-            /// &quot;hz:impl:replicatedMapService&quot;
-            /// &quot;hz:impl:ringbufferService&quot;
-            /// &quot;hz:core:proxyService&quot;
-            /// &quot;hz:impl:reliableTopicService&quot;
-            /// &quot;hz:impl:topicService&quot;
-            /// &quot;hz:core:txManagerService&quot;
-            /// &quot;hz:impl:xaService&quot;
-            ///&lt;/summary&gt;
-            public string ServiceName { get; set; }
+            public IList&lt;KeyValuePair&lt;string, string&gt;&gt; Proxies { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, string serviceName)
+        public static ClientMessage EncodeRequest(ICollection&lt;KeyValuePair&lt;string, string&gt;&gt; proxies)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Client.CreateProxy&quot;
+                OperationName = &quot;Client.CreateProxies&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
-            StringCodec.Encode(clientMessage, name);
-            StringCodec.Encode(clientMessage, serviceName);
+            EntryListCodec.Encode(clientMessage, proxies, StringCodec.Encode, StringCodec.Encode);
             return clientMessage;
         }
 
@@ -115,8 +101,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
-            request.Name = StringCodec.Decode(iterator);
-            request.ServiceName = StringCodec.Decode(iterator);
+            request.Proxies = EntryListCodec.Decode(iterator, StringCodec.Decode, StringCodec.Decode);
             return request;
         }
 #endif
@@ -149,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[88,13,92,15,1],[93,13,93,123,1],[94,13,94,104,1],[95,13,95,88,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,60,1],[99,13,99,34,1],[131,13,131,64,0],[132,13,132,53,0],[133,13,133,29,0],[134,13,134,29,0],[135,9,135,10,0]]);
+      highlightRanges([[75,13,79,15,0],[80,13,80,123,0],[81,13,81,104,0],[82,13,82,88,0],[83,13,83,48,0],[84,13,84,99,0],[85,13,85,34,0],[116,13,116,64,0],[117,13,117,53,0],[118,13,118,29,0],[119,13,119,29,0],[120,9,120,10,0]]);
     </script>
   </body>
 </html>

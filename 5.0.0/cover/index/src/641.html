@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ClientStateExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\CancellationTokenSourceExtensions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,28 +22,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Threading;
+
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides extension methods for the &lt;see cref=&quot;ClientState&quot;/&gt; enum.
+    /// Provides extension methods for the &lt;see cref=&quot;CancellationTokenSource&quot;/&gt; class.
     /// &lt;/summary&gt;
-    public static class ClientStateExtensions
+    internal static class CancellationTokenSourceExtensions
     {
         /// &lt;summary&gt;
-        /// Whether this state is an active state.
+        /// Creates a cancellation source by combining a source and a cancellation token.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;state&quot;&gt;This state.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; is this state is an active state; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public static bool IsActiveState(this ClientState state) =&gt; state == ClientState.Starting ||
-                                                                    state == ClientState.Started ||
-                                                                    state == ClientState.Connected ||
-                                                                    state == ClientState.Disconnected;
+        /// &lt;param name=&quot;source&quot;&gt;The source.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;The cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The combined cancellation.&lt;/returns&gt;
+        public static CancellationTokenSource LinkedWith(this CancellationTokenSource source, CancellationToken cancellationToken)
+            =&gt; CancellationTokenSource.CreateLinkedTokenSource(source.Token, cancellationToken);
+
+
+        /// &lt;summary&gt;
+        /// Throws an &lt;see cref=&quot;OperationCanceledException&quot;/&gt; if this source has had cancellation requested.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;source&quot;&gt;A cancellation token source.&lt;/param&gt;
+        public static void ThrowIfCancellationRequested(this CancellationTokenSource source)
+            =&gt; source.Token.ThrowIfCancellationRequested();
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,69,30,102,1]]);
+      highlightRanges([[32,16,32,96,1],[40,16,40,59,1]]);
     </script>
   </body>
 </html>

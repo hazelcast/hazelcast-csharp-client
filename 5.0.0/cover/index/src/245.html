@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEvictCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapEvictAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Evicts the specified key from this map. If a MapStore is defined for this map, then the entry is not deleted
-    /// from the underlying MapStore, evict only removes the entry from the memory.
+    /// Evicts all keys from this map except the locked ones. If a MapStore is defined for this map, deleteAll is not
+    /// called by this method. If you do want to deleteAll to be called use the clear method. The EVICT_ALL event is
+    /// fired for any registered listeners.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapEvictServerCodec
+    internal static class MapEvictAllServerCodec
 #else
-    internal static class MapEvictCodec
+    internal static class MapEvictAllCodec
 #endif
     {
-        public const int RequestMessageType = 73216; // 0x011E00
-        public const int ResponseMessageType = 73217; // 0x011E01
-        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 73472; // 0x011F00
+        public const int ResponseMessageType = 73473; // 0x011F01
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -73,33 +72,21 @@ namespace Hazelcast.Protocol.Codecs
             /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// the specified key to evict from this map.
-            ///&lt;/summary&gt;
-            public IData Key { get; set; }
-
-            /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
-            ///&lt;/summary&gt;
-            public long ThreadId { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, long threadId)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.Evict&quot;
+                OperationName = &quot;Map.EvictAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
             return clientMessage;
         }
 
@@ -108,30 +95,22 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// true if the key is evicted, false otherwise.
-            ///&lt;/summary&gt;
-            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -141,8 +120,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
             return response;
         }
 
@@ -151,7 +129,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[81,13,85,15,1],[86,13,86,123,1],[87,13,87,104,1],[88,13,88,88,1],[89,13,89,81,1],[90,13,90,48,1],[91,13,91,53,1],[92,13,92,50,1],[93,13,93,34,1],[115,36,115,40,1],[115,41,115,45,1],[132,13,132,64,1],[133,13,133,53,1],[134,13,134,48,1],[135,13,135,91,1],[136,13,136,29,1],[137,9,137,10,1]]);
+      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[111,13,111,64,0],[112,13,112,53,0],[113,13,113,29,0],[114,13,114,29,0],[115,9,115,10,0]]);
     </script>
   </body>
 </html>

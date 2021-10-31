@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\ErrorsCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\TruePredicate.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,29 +22,54 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using Hazelcast.Messaging;
-using Hazelcast.Protocol.BuiltInCodecs;
-using Hazelcast.Protocol.CustomCodecs;
-using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
 
-namespace Hazelcast.Protocol
+namespace Hazelcast.Query
 {
-    internal static class ErrorsCodec
+    internal class TruePredicate : IPredicate, IIdentifiedDataSerializable
     {
-        public static List&lt;ErrorHolder&gt; Decode(ClientMessage clientMessage)
+        public void ReadData(IObjectDataInput input)
         {
-            using var iterator = clientMessage.GetEnumerator();
-            //initial frame
-            iterator.Take();
-            return ListMultiFrameCodec.Decode(iterator, ErrorHolderCodec.Decode);
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+        }
+
+        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
+
+        public int ClassId =&gt; PredicateDataSerializerHook.TruePredicate;
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is TruePredicate other &amp;&amp; Equals(this, other);
+        }
+
+        private static bool Equals(TruePredicate left, TruePredicate right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
+        }
+
+        public override string ToString()
+        {
+            return &quot;TRUE&quot;;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,13,27,64,1],[29,13,29,29,1],[30,13,30,82,1],[31,9,31,10,1]]);
+      highlightRanges([[23,9,23,10,1],[27,9,27,10,1],[29,33,29,62,1],[31,31,31,72,1],[35,13,35,44,1],[35,45,35,57,1],[36,13,36,29,1],[36,30,36,43,1],[37,13,37,70,1],[42,13,42,46,1],[42,47,42,59,1],[43,13,43,47,1],[43,48,43,61,1],[45,13,45,25,1],[50,13,50,22,1],[55,13,55,27,1]]);
     </script>
   </body>
 </html>

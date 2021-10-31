@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Caching.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,42 +22,72 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Clustering;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    /// &lt;summary&gt;
-    /// Implements &lt;see cref=&quot;IHMap{TKey,TValue}&quot;/&gt;.
-    /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
-    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-    internal partial class HMap&lt;TKey, TValue&gt; : DistributedObjectBase, IHMap&lt;TKey, TValue&gt;
+    // ReSharper disable once UnusedTypeParameter
+    internal partial class HMap&lt;TKey, TValue&gt; // Caching
     {
-        private readonly ISequence&lt;long&gt; _lockReferenceIdSequence;
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;bool&gt; EvictAsync(TKey key)
+            =&gt; EvictAsync(key, CancellationToken.None);
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;HMap{TKey,TValue}&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
-        /// &lt;param name=&quot;factory&quot;&gt;The factory owning this object.&lt;/param&gt;
-        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
-        /// &lt;param name=&quot;lockReferenceIdSequence&quot;&gt;A lock reference identifiers sequence.&lt;/param&gt;
-        /// &lt;param name=&quot;logggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence&lt;long&gt; lockReferenceIdSequence, ILoggerFactory logggerFactory)
-            : base(ServiceNames.Map, name, factory, cluster, serializationService, logggerFactory)
+        private async Task&lt;bool&gt; EvictAsync(TKey key, CancellationToken cancellationToken)
         {
-            _lockReferenceIdSequence = lockReferenceIdSequence;
+            var keyData = ToSafeData(key);
+
+            var requestMessage = MapEvictCodec.EncodeRequest(Name, keyData, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
+            var response = MapEvictCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task EvictAllAsync()
+            =&gt; EvictAllAsync(CancellationToken.None);
+
+        private async Task EvictAllAsync(CancellationToken cancellationToken)
+        {
+            var requestMessage = MapEvictAllCodec.EncodeRequest(Name);
+            await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task FlushAsync()
+            =&gt; FlushAsync(CancellationToken.None);
+
+        private async Task FlushAsync(CancellationToken cancellationToken)
+        {
+            var requestMessage = MapFlushCodec.EncodeRequest(Name);
+            await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task LoadAllAsync(bool replaceExistingValues)
+        {
+            var requestMessage = MapLoadAllCodec.EncodeRequest(Name, replaceExistingValues);
+            await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task LoadAllAsync(ICollection&lt;TKey&gt; keys, bool replaceExistingValues)
+        {
+            var keysData = keys.Select(key =&gt; ToSafeData(key)).ToList();
+            var requestMessage = MapLoadGivenKeysCodec.EncodeRequest(Name, keysData, replaceExistingValues);
+            await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[41,15,41,99,1],[43,13,43,64,1],[44,9,44,10,1]]);
+      highlightRanges([[29,16,29,55,1],[33,13,33,43,1],[35,13,35,88,1],[36,13,36,142,1],[37,13,37,83,1],[38,13,38,29,1],[39,9,39,10,1],[43,16,43,53,1],[47,13,47,71,1],[48,13,48,92,1],[49,9,49,10,1],[53,16,53,50,1],[57,13,57,68,1],[58,13,58,92,1],[59,9,59,10,1],[64,13,64,93,0],[65,13,65,73,0],[66,9,66,10,0],[71,13,71,47,0],[71,47,71,62,0],[71,62,71,73,0],[72,13,72,109,0],[73,13,73,73,0],[74,9,74,10,0]]);
     </script>
   </body>
 </html>

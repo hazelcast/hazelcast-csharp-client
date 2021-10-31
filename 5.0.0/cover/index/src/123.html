@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyList.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyKeyValuePairs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -28,98 +28,114 @@ using System.Collections.Generic;
 namespace Hazelcast.Serialization.Collections
 {
     /// &lt;summary&gt;
-    /// Represents a lazy list of values.
+    /// Represent a lazy dictionary of keys and values.
     /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
     /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
     /// &lt;remarks&gt;
+    /// &lt;para&gt;The key objects are always &lt;see cref=&quot;IData&quot;/&gt; instances.&lt;/para&gt;
     /// &lt;para&gt;This class is not thread-safe for writing: it should be entirely populated
     /// in a thread-safe way, before being returned to readers.&lt;/para&gt;
     /// &lt;para&gt;This class is thread-safe for reading, however for performance purposes, some values may
     /// be deserialized multiple times in multi-threaded situations.&lt;/para&gt;
     /// &lt;/remarks&gt;
-    internal sealed class ReadOnlyLazyList&lt;TValue&gt; : IReadOnlyList&lt;TValue&gt;
+    internal sealed class ReadOnlyLazyKeyValuePairs&lt;TKey, TValue&gt; : IReadOnlyCollection&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;
     {
-        private readonly List&lt;ReadOnlyLazyEntry&lt;TValue&gt;&gt; _content = new List&lt;ReadOnlyLazyEntry&lt;TValue&gt;&gt;();
         private readonly SerializationService _serializationService;
 
+        private readonly List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt; _entries = new List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt;();
+
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyList{TValue}&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyDictionary{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        public ReadOnlyLazyList(SerializationService serializationService)
+        public ReadOnlyLazyKeyValuePairs(SerializationService serializationService)
         {
             _serializationService = serializationService;
         }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyList{TValue}&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyDictionary{TKey,TValue}&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;valueData&quot;&gt;Value data items.&lt;/param&gt;
+        /// &lt;param name=&quot;entries&quot;&gt;&lt;/param&gt;
         /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
-        public ReadOnlyLazyList(IEnumerable&lt;IData&gt; valueData, SerializationService serializationService)
+        public ReadOnlyLazyKeyValuePairs(IEnumerable&lt;KeyValuePair&lt;IData, IData&gt;&gt; entries, SerializationService serializationService)
         {
             _serializationService = serializationService;
-            foreach (var valueObject in valueData)
-                _content.Add(new ReadOnlyLazyEntry&lt;TValue&gt;(valueObject));
+            Add(entries);
         }
 
         /// &lt;summary&gt;
-        /// Adds a value.
+        /// Gets the entries.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
-        public void Add(IData valueData)
+        public List&lt;ReadOnlyLazyEntry&lt;TKey, TValue&gt;&gt; Entries =&gt; _entries;
+
+        /// &lt;summary&gt;
+        /// Adds entries.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entries&quot;&gt;Entries.&lt;/param&gt;
+        public void Add(IEnumerable&lt;KeyValuePair&lt;IData, IData&gt;&gt; entries)
         {
-            _content.Add(new ReadOnlyLazyEntry&lt;TValue&gt;(valueData));
+            foreach (var (keyData, valueObject) in entries)
+                _entries.Add(new ReadOnlyLazyEntry&lt;TKey, TValue&gt;(keyData, valueObject));
         }
 
         /// &lt;summary&gt;
-        /// Ensures that a cache entry has a value.
+        /// Adds a key-value pair.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;entry&quot;&gt;The cache entry.&lt;/param&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        public void Add(IData keyData, TValue value)
+        {
+            _entries.Add(new ReadOnlyLazyEntry&lt;TKey, TValue&gt;(keyData, value));
+        }
+
+        /// &lt;summary&gt;
+        /// Ensures that an entry has a key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entry&quot;&gt;The entry.&lt;/param&gt;
+        private void EnsureKey(ReadOnlyLazyEntry&lt;TKey, TValue&gt; entry)
+        {
+            if (entry.HasKey) return;
+
+            entry.Key = _serializationService.ToObject&lt;TKey&gt;(entry.KeyData);
+        }
+
+        /// &lt;summary&gt;
+        /// Ensures that an entry has a value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;entry&quot;&gt;The entry.&lt;/param&gt;
         private void EnsureValue(ReadOnlyLazyEntry&lt;TValue&gt; entry)
         {
             if (entry.HasValue) return;
-
-            // accepted race-condition here
 
             entry.Value = _serializationService.ToObject&lt;TValue&gt;(entry.ValueData);
         }
 
         /// &lt;inheritdoc /&gt;
-        public IEnumerator&lt;TValue&gt; GetEnumerator()
+        public IEnumerator&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; GetEnumerator()
         {
-            foreach (var cacheEntry in _content)
+            foreach (var entry in _entries)
             {
-                EnsureValue(cacheEntry);
-                yield return cacheEntry.Value;
+                // deserialize
+                EnsureKey(entry);
+                EnsureValue(entry);
+
+                yield return new KeyValuePair&lt;TKey, TValue&gt;(entry.Key, entry.Value);
             }
         }
 
         /// &lt;inheritdoc /&gt;
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
+        IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator();
 
         /// &lt;inheritdoc /&gt;
-        public int Count =&gt; _content.Count;
-
-        /// &lt;inheritdoc /&gt;
-        public TValue this[int index]
-        {
-            get
-            {
-                var cacheEntry = _content[index];
-                EnsureValue(cacheEntry);
-                return cacheEntry.Value;
-            }
-        }
+        public int Count =&gt; _entries.Count;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[32,9,32,107,0],[32,9,32,107,1],[39,9,39,75,0],[41,13,41,58,0],[42,9,42,10,0],[49,9,49,105,1],[51,13,51,58,1],[52,22,52,37,1],[52,38,52,40,1],[52,41,52,50,1],[53,17,53,74,1],[54,9,54,10,1],[62,13,62,68,0],[63,9,63,10,0],[71,13,71,32,1],[71,33,71,40,1],[75,13,75,83,1],[76,9,76,10,1],[81,22,81,36,1],[81,37,81,39,1],[81,40,81,48,1],[83,17,83,41,1],[84,17,84,47,1],[86,9,86,10,1],[91,13,91,36,1],[95,29,95,43,1],[102,17,102,50,1],[103,17,103,41,1],[104,17,104,41,1]]);
+      highlightRanges([[36,9,36,119,0],[36,9,36,119,1],[42,9,42,84,0],[44,13,44,58,0],[45,9,45,10,0],[52,9,52,133,1],[54,13,54,58,1],[55,13,55,26,1],[56,9,56,10,1],[61,65,61,73,0],[69,22,69,48,1],[69,49,69,51,1],[69,52,69,59,1],[70,17,70,89,1],[71,9,71,10,1],[80,13,80,79,0],[81,9,81,10,0],[89,13,89,30,0],[89,31,89,38,0],[91,13,91,77,0],[92,9,92,10,0],[100,13,100,32,0],[100,33,100,40,0],[102,13,102,83,0],[103,9,103,10,0],[108,22,108,31,0],[108,32,108,34,0],[108,35,108,43,0],[111,17,111,34,0],[112,17,112,36,0],[114,17,114,85,0],[116,9,116,10,0],[119,52,119,67,0],[122,29,122,43,1]]);
     </script>
   </body>
 </html>

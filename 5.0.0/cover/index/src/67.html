@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableContext.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,162 +23,195 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Concurrent;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed class PortableSerializer : IStreamSerializer&lt;IPortable&gt;
+    internal sealed partial class PortableContext : IPortableContext
     {
-        private readonly PortableContext _context;
-        private readonly IDictionary&lt;int, IPortableFactory&gt; _factories = new Dictionary&lt;int, IPortableFactory&gt;();
+        private readonly ConcurrentDictionary&lt;int, ClassDefinitionContext&gt; _classDefContextMap =
+            new ConcurrentDictionary&lt;int, ClassDefinitionContext&gt;();
 
-        internal PortableSerializer(PortableContext context,
-            IEnumerable&lt;KeyValuePair&lt;int, IPortableFactory&gt;&gt; portableFactories)
+        private readonly SerializationService _serializationService;
+        private readonly int _version;
+
+        internal PortableContext(SerializationService serializationService, int version)
         {
-            _context = context;
-            _factories = _factories.Union(portableFactories).ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
+            _serializationService = serializationService;
+            _version = version;
         }
 
-        public int TypeId =&gt; SerializationConstants.ConstantTypePortable;
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public void Write(IObjectDataOutput output, IPortable p)
+        public int GetClassVersion(int factoryId, int classId)
         {
-            if (!(output is ObjectDataOutput))
-            {
-                throw new ArgumentException(&quot;ObjectDataOutput must be instance of BufferObjectDataOutput!&quot;);
-            }
-            if (p.ClassId == 0)
-            {
-                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
-            }
-            output.WriteInt(p.FactoryId);
-            output.WriteInt(p.ClassId);
-            WriteInternal((ObjectDataOutput) output, p);
+            return GetClassDefContext(factoryId).GetClassVersion(classId);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public IPortable Read(IObjectDataInput input)
+        public void SetClassVersion(int factoryId, int classId, int version)
         {
-            if (!(input is ObjectDataInput))
-            {
-                throw new ArgumentException(&quot;ObjectDataInput must be instance of BufferObjectDataInput!&quot;);
-            }
-            var factoryId = input.ReadInt();
-            var classId = input.ReadInt();
-            return Read((ObjectDataInput) input, factoryId, classId);
+            GetClassDefContext(factoryId).SetClassVersion(classId, version);
         }
 
-        public void Dispose()
+        public IClassDefinition LookupClassDefinition(int factoryId, int classId, int version)
         {
-            _factories.Clear();
+            return GetClassDefContext(factoryId).Lookup(classId, version);
         }
 
-        internal DefaultPortableReader CreateMorphingReader(ObjectDataInput input)
+        public IClassDefinition LookupClassDefinition(IData data)
         {
+            if (!data.IsPortable) throw new ArgumentException(&quot;Data is not Portable.&quot;, nameof(data));
+
+            using var input = _serializationService.CreateObjectDataInput(data);
+
             var factoryId = input.ReadInt();
             var classId = input.ReadInt();
             var version = input.ReadInt();
 
-            var portable = CreateNewPortableInstance(factoryId, classId);
-            var portableVersion = FindPortableVersion(factoryId, classId, portable);
-
-            return CreateReader(input, factoryId, classId, version, portableVersion);
+            return LookupClassDefinition(factoryId, classId, version) ??
+                   ReadClassDefinition(input, factoryId, classId, version);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        internal DefaultPortableReader CreateReader(ObjectDataInput input)
+        public IClassDefinition RegisterClassDefinition(IClassDefinition cd)
         {
-            var factoryId = input.ReadInt();
-            var classId = input.ReadInt();
-            var version = input.ReadInt();
-            return CreateReader(input, factoryId, classId, version, version);
+            return GetClassDefContext(cd.FactoryId).Register(cd);
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
-        internal void WriteInternal(ObjectDataOutput output, IPortable p)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public IClassDefinition LookupOrRegisterClassDefinition(IPortable p)
         {
-            var cd = _context.LookupOrRegisterClassDefinition(p);
-            output.WriteInt(cd.Version);
-            var writer = new DefaultPortableWriter(this, output, cd);
-            p.WritePortable(writer);
-            writer.End();
-        }
-
-        private IPortable CreateNewPortableInstance(int factoryId, int classId)
-        {
-            _factories.TryGetValue(factoryId, out var portableFactory);
-            if (portableFactory == null)
-            {
-                throw new SerializationException(&quot;Could not find PortableFactory for factory-id: &quot; + factoryId);
-            }
-            var portable = portableFactory.Create(classId);
-            if (portable == null)
-            {
-                throw new SerializationException(&quot;Could not create Portable for class-id: &quot; + classId);
-            }
-            return portable;
-        }
-
-        private DefaultPortableReader CreateReader(ObjectDataInput input, int factoryId, int classId, int version,
-            int portableVersion)
-        {
-            var effectiveVersion = version;
-            if (version &lt; 0)
-            {
-                effectiveVersion = _context.GetVersion();
-            }
-            var cd = _context.LookupClassDefinition(factoryId, classId, effectiveVersion);
+            var portableVersion = PortableVersionHelper.GetVersion(p, _version);
+            var cd = LookupClassDefinition(p.FactoryId, p.ClassId, portableVersion);
             if (cd == null)
             {
-                var begin = input.Position;
-                cd = _context.ReadClassDefinition(input, factoryId, classId, effectiveVersion);
-                input.Position = begin;
+                var writer = new ClassDefinitionWriter(this, p.FactoryId, p.ClassId, portableVersion);
+                p.WritePortable(writer);
+                cd = writer.RegisterAndGet();
             }
-            DefaultPortableReader reader;
-            if (portableVersion == effectiveVersion)
-            {
-                reader = new DefaultPortableReader(this, input, cd);
-            }
-            else
-            {
-                reader = new MorphingPortableReader(this, input, cd);
-            }
-            return reader;
+            return cd;
         }
 
-        private int FindPortableVersion(int factoryId, int classId, IPortable portable)
+        public IFieldDefinition GetFieldDefinition(IClassDefinition classDef, string name)
         {
-            var currentVersion = _context.GetClassVersion(factoryId, classId);
-            if (currentVersion &lt; 0)
+            var fd = classDef.GetField(name);
+            if (fd == null)
             {
-                currentVersion = PortableVersionHelper.GetVersion(portable, _context.GetVersion());
-                if (currentVersion &gt; 0)
+                var fieldNames = name.Split(&#39;.&#39;);
+                if (fieldNames.Length &gt; 1)
                 {
-                    _context.SetClassVersion(factoryId, classId, currentVersion);
+                    var currentClassDef = classDef;
+                    for (var i = 0; i &lt; fieldNames.Length; i++)
+                    {
+                        name = fieldNames[i];
+                        fd = currentClassDef.GetField(name);
+                        if (i == fieldNames.Length - 1)
+                        {
+                            break;
+                        }
+                        if (fd == null)
+                        {
+                            throw new ArgumentException(&quot;Unknown field: &quot; + name);
+                        }
+                        currentClassDef = LookupClassDefinition(fd.FactoryId, fd.ClassId,
+                            fd.Version);
+                        if (currentClassDef == null)
+                        {
+                            throw new ArgumentException(&quot;Not a registered Portable field: &quot; + fd);
+                        }
+                    }
                 }
             }
-            return currentVersion;
+            return fd;
         }
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
-        internal IPortable Read(ObjectDataInput @in, int factoryId, int classId)
+        public int GetVersion()
         {
-            var version = @in.ReadInt();
-            var portable = CreateNewPortableInstance(factoryId, classId);
-            var portableVersion = FindPortableVersion(factoryId, classId, portable);
-            var reader = CreateReader(@in, factoryId, classId, version, portableVersion);
-            portable.ReadPortable(reader);
-            reader.End();
-            return portable;
+            return _version;
+        }
+
+        public Endianness Endianness =&gt; _serializationService.Endianness;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        internal IClassDefinition ReadClassDefinition(ObjectDataInput @in, int factoryId, int classId,
+            int version)
+        {
+            var register = true;
+            var builder = new ClassDefinitionBuilder(factoryId, classId, version);
+            // final position after portable is read
+            @in.ReadInt();
+            // field count
+            var fieldCount = @in.ReadInt();
+            var offset = @in.Position;
+            for (var i = 0; i &lt; fieldCount; i++)
+            {
+                var pos = @in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
+                @in.Position = pos;
+                var len = @in.ReadShort();
+                var chars = new char[len];
+                for (var k = 0; k &lt; len; k++)
+                {
+                    chars[k] = (char) @in.ReadByte();
+                }
+                var type = (FieldType) (@in.ReadByte());
+                var name = new string(chars);
+                var fieldFactoryId = 0;
+                var fieldClassId = 0;
+                int fieldVersion = version;
+                if (type == FieldType.Portable)
+                {
+                    // is null
+                    if (@in.ReadBoolean())
+                    {
+                        register = false;
+                    }
+                    fieldFactoryId = @in.ReadInt();
+                    fieldClassId = @in.ReadInt();
+                    if (register)
+                    {
+                        fieldVersion = @in.ReadInt();
+                        ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
+                    }
+                }
+                else
+                {
+                    if (type == FieldType.PortableArray)
+                    {
+                        var k1 = @in.ReadInt();
+                        fieldFactoryId = @in.ReadInt();
+                        fieldClassId = @in.ReadInt();
+                        if (k1 &gt; 0)
+                        {
+                            var p = @in.ReadInt();
+                            @in.Position = p;
+                            fieldVersion = @in.ReadInt();
+                            ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
+                        }
+                        else
+                        {
+                            register = false;
+                        }
+                    }
+                }
+                builder.AddField(new FieldDefinition(i, name, type, fieldFactoryId, fieldClassId, fieldVersion));
+            }
+            var classDefinition = builder.Build();
+            if (register)
+            {
+                classDefinition = RegisterClassDefinition(classDefinition);
+            }
+            return classDefinition;
+        }
+
+        private ClassDefinitionContext GetClassDefContext(int factoryId)
+        {
+            return _classDefContextMap.GetOrAdd(factoryId,
+                theFactoryId =&gt; new ClassDefinitionContext(this, theFactoryId));
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,9,24,114,1],[26,9,27,80,1],[29,13,29,32,1],[30,13,30,80,1],[30,80,30,85,1],[30,85,30,92,1],[30,92,30,99,1],[30,99,30,101,1],[31,9,31,10,1],[33,30,33,73,1],[38,13,38,47,1],[40,17,40,109,0],[42,13,42,32,1],[44,17,44,82,0],[46,13,46,42,1],[47,13,47,40,1],[48,13,48,57,1],[49,9,49,10,1],[54,13,54,45,1],[56,17,56,107,0],[58,13,58,45,1],[59,13,59,43,1],[60,13,60,70,1],[65,13,65,32,1],[66,9,66,10,1],[70,13,70,45,1],[71,13,71,43,1],[72,13,72,43,1],[74,13,74,74,1],[75,13,75,85,1],[77,13,77,86,1],[83,13,83,45,1],[84,13,84,43,1],[85,13,85,43,1],[86,13,86,78,1],[92,13,92,66,1],[93,13,93,41,1],[94,13,94,70,1],[95,13,95,37,1],[96,13,96,26,1],[97,9,97,10,1],[101,13,101,72,1],[102,13,102,41,1],[104,17,104,113,0],[106,13,106,60,1],[107,13,107,34,1],[109,17,109,104,0],[111,13,111,29,1],[117,13,117,44,1],[118,13,118,29,1],[120,17,120,58,0],[122,13,122,91,1],[123,13,123,28,1],[125,17,125,44,1],[126,17,126,96,1],[127,17,127,40,1],[130,13,130,53,1],[132,17,132,69,1],[136,17,136,70,1],[138,13,138,27,1],[143,13,143,79,1],[144,13,144,36,1],[146,17,146,100,1],[147,17,147,40,1],[149,21,149,82,1],[152,13,152,35,1],[158,13,158,41,1],[159,13,159,74,1],[160,13,160,85,1],[161,13,161,90,1],[162,13,162,43,1],[163,13,163,26,1],[164,13,164,29,1]]);
+      highlightRanges([[23,9,24,69,1],[29,9,29,89,1],[31,13,31,58,1],[32,13,32,32,1],[33,9,33,10,1],[37,13,37,75,1],[42,13,42,77,1],[43,9,43,10,1],[47,13,47,75,1],[52,13,52,34,0],[52,35,52,102,0],[54,13,54,81,0],[56,13,56,45,0],[57,13,57,43,0],[58,13,58,43,0],[60,13,61,76,0],[62,9,62,10,0],[66,13,66,66,1],[72,13,72,81,1],[73,13,73,85,1],[74,13,74,28,1],[76,17,76,103,1],[77,17,77,41,1],[78,17,78,46,1],[80,13,80,23,1],[85,13,85,46,0],[86,13,86,28,0],[88,17,88,50,0],[89,17,89,43,0],[91,21,91,52,0],[92,26,92,35,0],[92,37,92,58,0],[92,60,92,63,0],[94,25,94,46,0],[95,25,95,61,0],[96,25,96,56,0],[100,25,100,40,0],[102,29,102,83,0],[104,25,105,41,0],[106,25,106,53,0],[108,29,108,99,0],[113,13,113,23,0],[118,13,118,29,1],[121,41,121,73,0],[127,13,127,33,1],[128,13,128,83,1],[130,13,130,27,1],[132,13,132,44,1],[133,13,133,39,1],[134,18,134,27,1],[134,29,134,43,1],[134,45,134,48,1],[136,17,136,78,1],[137,17,137,36,1],[138,17,138,43,1],[139,17,139,43,1],[140,22,140,31,1],[140,33,140,40,1],[140,42,140,45,1],[142,21,142,54,1],[144,17,144,57,1],[145,17,145,46,1],[146,17,146,40,1],[147,17,147,38,1],[148,17,148,44,1],[149,17,149,48,1],[152,21,152,43,1],[154,25,154,42,1],[156,21,156,52,1],[157,21,157,50,1],[158,21,158,34,1],[160,25,160,54,1],[161,25,161,94,1],[166,21,166,57,1],[168,25,168,48,1],[169,25,169,56,1],[170,25,170,54,1],[171,25,171,36,1],[173,29,173,51,1],[174,29,174,46,1],[175,29,175,58,1],[176,29,176,98,1],[180,29,180,46,1],[184,17,184,114,1],[186,13,186,51,1],[187,13,187,26,1],[189,17,189,76,1],[191,13,191,36,1],[196,13,197,33,1],[197,33,197,79,1],[197,79,197,81,1]]);
     </script>
   </body>
 </html>

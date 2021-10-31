@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapSetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapReplaceIfSameCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,23 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Associates the specified value with the specified key in this map. If the map previously contained a mapping for
-    /// the key, the old value is replaced by the specified value. This method is preferred to #put(Object, Object)
-    /// if the old value is not needed.
-    /// The object to be set will be accessible only in the current transaction context until the transaction is committed.
+    /// Replaces the entry for a key only if currently mapped to a given value. The object to be replaced will be
+    /// accessible only in the current transaction context until the transaction is committed.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapSetServerCodec
+    internal static class TransactionalMapReplaceIfSameServerCodec
 #else
-    internal static class TransactionalMapSetCodec
+    internal static class TransactionalMapReplaceIfSameCodec
 #endif
     {
-        public const int RequestMessageType = 919296; // 0x0E0700
-        public const int ResponseMessageType = 919297; // 0x0E0701
+        public const int RequestMessageType = 920064; // 0x0E0A00
+        public const int ResponseMessageType = 920065; // 0x0E0A01
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -87,23 +86,28 @@ namespace Hazelcast.Protocol.Codecs
             public long ThreadId { get; set; }
 
             /// &lt;summary&gt;
-            /// The specified key
+            /// The specified key.
             ///&lt;/summary&gt;
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The value to associate with key
+            /// Replace the key value if it is the old value.
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public IData OldValue { get; set; }
+
+            /// &lt;summary&gt;
+            /// The new value to replace the old value.
+            ///&lt;/summary&gt;
+            public IData NewValue { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key, IData @value)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key, IData oldValue, IData newValue)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.Set&quot;
+                OperationName = &quot;TransactionalMap.ReplaceIfSame&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -113,7 +117,8 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, @value);
+            DataCodec.Encode(clientMessage, oldValue);
+            DataCodec.Encode(clientMessage, newValue);
             return clientMessage;
         }
 
@@ -127,21 +132,28 @@ namespace Hazelcast.Protocol.Codecs
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
+            request.OldValue = DataCodec.Decode(iterator);
+            request.NewValue = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// true if the value was replaced.
+            ///&lt;/summary&gt;
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -151,7 +163,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -160,7 +173,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[93,13,97,15,1],[98,13,98,123,1],[99,13,99,104,1],[100,13,100,88,1],[101,13,101,75,1],[102,13,102,81,1],[103,13,103,48,1],[104,13,104,53,1],[105,13,105,50,1],[106,13,106,53,1],[107,13,107,34,1],[142,13,142,64,1],[143,13,143,53,1],[144,13,144,29,1],[145,13,145,29,1],[146,9,146,10,1]]);
+      highlightRanges([[97,13,101,15,1],[102,13,102,123,1],[103,13,103,104,1],[104,13,104,88,1],[105,13,105,75,1],[106,13,106,81,1],[107,13,107,48,1],[108,13,108,53,1],[109,13,109,50,1],[110,13,110,55,1],[111,13,111,55,1],[112,13,112,34,1],[137,36,137,40,1],[137,41,137,45,1],[154,13,154,64,1],[155,13,155,53,1],[156,13,156,48,1],[157,13,157,91,1],[158,13,158,29,1],[159,9,159,10,1]]);
     </script>
   </body>
 </html>

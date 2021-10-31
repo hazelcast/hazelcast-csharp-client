@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListIntegerGuidCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\EntryListCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,49 +24,71 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class EntryListIntegerUUIDCodec
+    internal static class EntryListCodec
     {
-        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfGuid;
-
-        public static void Encode(ClientMessage clientMessage, ICollection&lt;KeyValuePair&lt;int, Guid&gt;&gt; collection)
+        public static void Encode&lt;TKey, TValue&gt;(ClientMessage clientMessage, IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; collection,
+                                         Action&lt;ClientMessage, TKey&gt; encodeKeyFunc,
+                                         Action&lt;ClientMessage, TValue&gt; encodeValueFunc)
         {
-            var itemCount = collection.Count;
-            var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
+            clientMessage.Append(Frame.CreateBeginStruct());
 
-            var i = 0;
             foreach (var kvp in collection)
             {
-                frame.Bytes.WriteIntL(i * EntrySizeInBytes, kvp.Key);
-                frame.Bytes.WriteGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
-                i++;
+                encodeKeyFunc(clientMessage, kvp.Key);
+                encodeValueFunc(clientMessage, kvp.Value);
             }
-            clientMessage.Append(frame);
+
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static IList&lt;KeyValuePair&lt;int, Guid&gt;&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        // public static void EncodeNullable&lt;TKey, TValue&gt;(ClientMessage clientMessage, IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; collection,
+        //         Action&lt;ClientMessage, TKey&gt; encodeKeyFunc,
+        //         Action&lt;ClientMessage, TValue&gt; encodeValueFunc)
+        // {
+        //     if (collection == null)
+        //     {
+        //         clientMessage.Add(NullFrame.Copy());
+        //     }
+        //     else
+        //     {
+        //         Encode(clientMessage, collection, encodeKeyFunc, encodeValueFunc);
+        //     }
+        // }
+
+        public static IList&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; Decode&lt;TKey, TValue&gt;(IEnumerator&lt;Frame&gt; iterator,
+                                                          DecodeDelegate&lt;TKey&gt; decodeKeyFunc,
+                                                          DecodeDelegate&lt;TValue&gt; decodeValueFunc)
         {
-            var frame = iterator.Take();
-            var itemCount = frame.Bytes.Length / EntrySizeInBytes;
-            var result = new List&lt;KeyValuePair&lt;int, Guid&gt;&gt;();
-            for (var i = 0; i &lt; itemCount; i++)
+            var result = new List&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;();
+
+            //begin frame, map
+            iterator.Take();
+            while (!iterator.AtStructEnd())
             {
-                var key = frame.Bytes.ReadIntL(i * EntrySizeInBytes);
-                var value = frame.Bytes.ReadGuidL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt);
-                result.Add(new KeyValuePair&lt;int, Guid&gt;(key, value));
+                var key = decodeKeyFunc(iterator);
+                var value = decodeValueFunc(iterator);
+                result.Add(new KeyValuePair&lt;TKey, TValue&gt;(key, value));
             }
+            //end frame, map
+            iterator.Take();
             return result;
+        }
+
+        public static IEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; DecodeNullable&lt;TKey, TValue&gt;(IEnumerator&lt;Frame&gt; iterator,
+            DecodeDelegate&lt;TKey&gt; decodeKeyFunc, DecodeDelegate&lt;TValue&gt; decodeValueFunc)
+        {
+            return iterator.SkipNull() ? null : Decode(iterator, decodeKeyFunc, decodeValueFunc);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,13,28,46,0],[29,13,29,75,0],[31,13,31,23,0],[32,22,32,29,0],[32,30,32,32,0],[32,33,32,43,0],[34,17,34,70,0],[35,17,35,101,0],[36,17,36,21,0],[38,13,38,41,0],[39,9,39,10,0],[43,13,43,41,0],[44,13,44,67,0],[45,13,45,62,0],[46,18,46,27,0],[46,29,46,42,0],[46,44,46,47,0],[48,17,48,70,0],[49,17,49,101,0],[50,17,50,69,0],[52,13,52,27,0]]);
+      highlightRanges([[27,13,27,61,1],[29,22,29,29,1],[29,30,29,32,1],[29,33,29,43,1],[31,17,31,55,1],[32,17,32,59,1],[35,13,35,59,1],[36,9,36,10,1],[56,13,56,65,1],[59,13,59,29,1],[60,13,60,44,1],[62,17,62,51,1],[63,17,63,55,1],[64,17,64,72,1],[67,13,67,29,1],[68,13,68,27,1],[74,13,74,98,0]]);
     </script>
   </body>
 </html>

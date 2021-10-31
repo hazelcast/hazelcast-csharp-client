@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\ReplicatedMapEventHandlers.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MultiMapEventHandlers.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -29,20 +29,20 @@ using Hazelcast.Core;
 namespace Hazelcast.DistributedObjects
 {
     /// &lt;summary&gt;
-    /// Represents replicated distributed map event handlers.
+    /// Represents multi distributed map event handlers.
     /// &lt;/summary&gt;
     /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
     /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
-    public class ReplicatedMapEventHandlers&lt;TKey, TValue&gt; : EventHandlersBase&lt;IMapEventHandlerBase&gt;
+    public class MultiMapEventHandlers&lt;TKey, TValue&gt; : EventHandlersBase&lt;IMapEventHandlerBase&gt;
     {
         /// &lt;summary&gt;
         /// Adds an handler which runs when the map is cleared.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; Cleared(Action&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapClearedEventArgs&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; Cleared(Action&lt;IHMultiMap&lt;TKey, TValue&gt;, MapClearedEventArgs&gt; handler)
         {
-            Add(new MapClearedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            Add(new MapClearedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
             return this;
         }
 
@@ -51,9 +51,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; Cleared(Func&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapClearedEventArgs, ValueTask&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; Cleared(Func&lt;IHMultiMap&lt;TKey, TValue&gt;, MapClearedEventArgs, ValueTask&gt; handler)
         {
-            Add(new MapClearedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler));
+            Add(new MapClearedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler));
             return this;
         }
 
@@ -62,9 +62,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Action&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Action&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;&gt; handler)
         {
-            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
             return this;
         }
 
@@ -73,9 +73,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Func&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Func&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
         {
-            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler));
+            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler));
             return this;
         }
 
@@ -84,9 +84,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Action&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Action&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;&gt; handler)
         {
-            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
             return this;
         }
 
@@ -95,9 +95,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Func&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Func&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
         {
-            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler));
+            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler));
             return this;
         }
 
@@ -106,9 +106,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Action&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Action&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;&gt; handler)
         {
-            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
             return this;
         }
 
@@ -117,9 +117,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Func&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Func&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
         {
-            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler));
+            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler));
             return this;
         }
 
@@ -128,9 +128,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Action&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Action&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;&gt; handler)
         {
-            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
             return this;
         }
 
@@ -139,9 +139,9 @@ namespace Hazelcast.DistributedObjects
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
         /// &lt;returns&gt;The handlers.&lt;/returns&gt;
-        public ReplicatedMapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Func&lt;IHReplicatedMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        public MultiMapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Func&lt;IHMultiMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
         {
-            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHReplicatedMap&lt;TKey, TValue&gt;&gt;(handler));
+            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHMultiMap&lt;TKey, TValue&gt;&gt;(handler));
             return this;
         }
     }
@@ -149,7 +149,7 @@ namespace Hazelcast.DistributedObjects
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[35,13,35,109,1],[36,13,36,25,1],[46,13,46,99,0],[47,13,47,25,0],[57,13,57,114,1],[58,13,58,25,1],[68,13,68,104,0],[69,13,69,25,0],[79,13,79,114,1],[80,13,80,25,1],[90,13,90,104,0],[91,13,91,25,0],[101,13,101,112,1],[102,13,102,25,1],[112,13,112,102,0],[113,13,113,25,0],[123,13,123,113,0],[124,13,124,25,0],[134,13,134,103,0],[135,13,135,25,0]]);
+      highlightRanges([[35,13,35,104,0],[36,13,36,25,0],[46,13,46,94,0],[47,13,47,25,0],[57,13,57,109,0],[58,13,58,25,0],[68,13,68,99,0],[69,13,69,25,0],[79,13,79,109,1],[80,13,80,25,1],[90,13,90,99,0],[91,13,91,25,0],[101,13,101,107,1],[102,13,102,25,1],[112,13,112,97,0],[113,13,113,25,0],[123,13,123,108,0],[124,13,124,25,0],[134,13,134,98,0],[135,13,135,25,0]]);
     </script>
   </body>
 </html>

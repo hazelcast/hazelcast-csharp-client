@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\FlakeIdGenerator.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\Batch.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,45 +22,62 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading.Tasks;
-using Hazelcast.Clustering;
-using Hazelcast.Serialization;
-using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using Hazelcast.Core;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    /// &lt;inheritdoc cref=&quot;IFlakeIdGenerator&quot;/&gt;
-    internal sealed class FlakeIdGenerator: DistributedObjectBase, IFlakeIdGenerator
+    internal class Batch
     {
-        private static readonly FlakeIdGeneratorOptions DefaultOptions = new FlakeIdGeneratorOptions();
-        private readonly AutoBatcher _autoBatcher;
+        private readonly long _increment;
+        private readonly long _max;
+        private readonly DateTime _expires;
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;FlakeIdGenerator&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
-        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
-        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
-        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
-        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
-        /// &lt;param name=&quot;options&quot;&gt;A client options.&lt;/param&gt;
-        public FlakeIdGenerator(string name, DistributedObjectFactory factory, Cluster cluster,
-            SerializationService serializationService, ILoggerFactory loggerFactory,
-            FlakeIdGeneratorOptions options = null
-        )
-            : base(ServiceNames.FlakeIdGenerator, name, factory, cluster, serializationService, loggerFactory)
+        private long _current;
+
+        public Batch(long start, long increment, int count, TimeSpan timeout)
         {
-            _autoBatcher = new AutoBatcher(name, options ?? DefaultOptions, cluster.Messaging);
+            if (increment &lt;= 0)
+                throw new ArgumentException(&quot;Increment must be positive.&quot;, nameof(increment));
+            if (count &lt;= 0)
+                throw new ArgumentException(&quot;Batch count must be positive.&quot;, nameof(count));
+            if (timeout &lt;= TimeSpan.Zero &amp;&amp; timeout != Timeout.InfiniteTimeSpan)
+                throw new ArgumentException(&quot;Timeout must be positive or infinite.&quot;, nameof(timeout));
+
+            // a batch can provide &lt;count&gt; ids, starting with &lt;start&gt;, incrementing by &lt;increment&gt;
+            // so: &lt;start&gt;, &lt;start&gt; + &lt;increment&gt;, ..., &lt;start&gt; + &lt;increment&gt; * (&lt;count&gt; - 1)
+
+            _current = start - increment; // we will always increment before returning
+            _increment = increment;
+            _max = start + increment * (count - 1);
+
+            _expires = timeout == Timeout.InfiniteTimeSpan
+                ? DateTime.MaxValue
+                : Clock.Now + timeout;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public ValueTask&lt;long&gt; GetNewIdAsync() =&gt; _autoBatcher.GetNextIdAsync();
+        public bool TryGetNextId(out long id)
+        {
+            id = default;
+
+            // fail if the batch has expired
+            if (_expires != DateTime.MaxValue &amp;&amp; _expires &lt; Clock.Now)
+                return false;
+
+            // fail if the batch has been fully used
+            if (_current &gt; _max)
+                return false;
+
+            id = Interlocked.Add(ref _current, _increment);
+            return id &lt;= _max;
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,9,25,104,0],[41,15,41,111,1],[43,13,43,96,1],[44,9,44,10,1],[47,51,47,80,1]]);
+      highlightRanges([[29,9,29,78,1],[31,13,31,32,1],[32,17,32,95,0],[33,13,33,28,1],[34,17,34,93,0],[35,13,35,81,1],[36,17,36,103,0],[41,13,41,42,1],[42,13,42,36,1],[43,13,43,52,1],[45,13,47,39,1],[48,9,48,10,1],[52,13,52,26,1],[55,13,55,71,1],[56,17,56,30,1],[59,13,59,33,1],[60,17,60,30,1],[62,13,62,60,1],[63,13,63,31,1]]);
     </script>
   </body>
 </html>

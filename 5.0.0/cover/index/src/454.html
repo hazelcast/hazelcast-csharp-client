@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListUUIDCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListMultiFrameCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,50 +24,97 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Hazelcast.Core;
 using Hazelcast.Messaging;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ListUUIDCodec
+    internal static class ListMultiFrameCodec
     {
-        public static void Encode(ClientMessage clientMessage, IEnumerable&lt;Guid&gt; collection)
+        public static void Encode&lt;T&gt;(ClientMessage clientMessage, IEnumerable&lt;T&gt; collection, Action&lt;ClientMessage, T&gt; encodeFunction)
         {
-            var itemCount = collection.Count();
-            var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfGuid]);
+            clientMessage.Append(Frame.CreateBeginStruct());
 
-            var i = 0;
-            foreach (var guid in collection)
+            foreach (var item in collection)
             {
-                frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfGuid, guid);
-                i++;
+                encodeFunction(clientMessage, item);
             }
 
-            clientMessage.Append(frame);
+            clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static IList&lt;Guid&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static void EncodeContainsNullable&lt;T&gt;(ClientMessage clientMessage, IEnumerable&lt;T&gt; collection, Action&lt;ClientMessage, T&gt; encodeFunction)
         {
-            return Decode(iterator.Take());
-        }
+            clientMessage.Append(Frame.CreateBeginStruct());
 
-        public static List&lt;Guid&gt; Decode(Frame frame)
-        {
-            var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfGuid;
-            var result = new List&lt;Guid&gt;(itemCount);
-            for (var i = 0; i &lt; itemCount; i++)
+            foreach (var item in collection)
             {
-                result.Add(frame.Bytes.ReadGuidL(i * BytesExtensions.SizeOfGuid));
+#pragma warning disable CA1508 // Avoid dead conditional code - false positive, yes it can be null
+                if (item == null)
+#pragma warning restore CA1508
+                {
+                    clientMessage.Append(Frame.CreateNull());
+                }
+                else
+                {
+                    encodeFunction(clientMessage, item);
+                }
             }
+
+            clientMessage.Append(Frame.CreateEndStruct());
+        }
+
+        public static void EncodeNullable&lt;T&gt;(ClientMessage clientMessage, IEnumerable&lt;T&gt; collection, Action&lt;ClientMessage, T&gt; encodeFunction)
+        {
+            if (collection == null)
+            {
+                clientMessage.Append(Frame.CreateNull());
+            }
+            else
+            {
+                Encode(clientMessage, collection, encodeFunction);
+            }
+        }
+
+        public static List&lt;T&gt; Decode&lt;T&gt;(IEnumerator&lt;Frame&gt; iterator, DecodeDelegate&lt;T&gt; decodeFunction)
+        {
+            var result = new List&lt;T&gt;();
+            //begin frame, list
+            iterator.Take();
+            while (!iterator.AtStructEnd())
+            {
+                result.Add(decodeFunction(iterator));
+            }
+
+            //end frame, list
+            iterator.Take();
             return result;
+        }
+
+        public static List&lt;T&gt; DecodeContainsNullable&lt;T&gt;(IEnumerator&lt;Frame&gt; iterator, DecodeDelegate&lt;T&gt; decodeFunction) where T: class
+        {
+            var result = new List&lt;T&gt;();
+            //begin frame, list
+            iterator.Take();
+            while (!iterator.AtStructEnd())
+            {
+                result.Add(iterator.SkipNull() ? null : decodeFunction(iterator));
+            }
+
+            //end frame, list
+            iterator.Take();
+            return result;
+        }
+
+        public static List&lt;T&gt; DecodeNullable&lt;T&gt;(IEnumerator&lt;Frame&gt; iterator, DecodeDelegate&lt;T&gt; decodeFunction)
+        {
+            return iterator.SkipNull() ? null : Decode(iterator, decodeFunction);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,13,27,48,1],[28,13,28,85,1],[30,13,30,23,1],[31,22,31,30,1],[31,31,31,33,1],[31,34,31,44,1],[33,17,33,78,1],[34,17,34,21,1],[37,13,37,41,1],[38,9,38,10,1],[42,13,42,44,1],[47,13,47,77,1],[48,13,48,52,1],[49,18,49,27,1],[49,29,49,42,1],[49,44,49,47,1],[51,17,51,83,1],[53,13,53,27,1]]);
+      highlightRanges([[25,13,25,61,1],[27,22,27,30,1],[27,31,27,33,1],[27,34,27,44,1],[29,17,29,53,1],[32,13,32,59,1],[33,9,33,10,1],[37,13,37,61,1],[39,22,39,30,1],[39,31,39,33,1],[39,34,39,44,1],[42,17,42,34,1],[45,21,45,62,0],[49,21,49,57,1],[53,13,53,59,1],[54,9,54,10,1],[58,13,58,36,0],[60,17,60,58,0],[64,17,64,67,0],[66,9,66,10,0],[70,13,70,40,1],[72,13,72,29,1],[73,13,73,44,1],[75,17,75,54,1],[79,13,79,29,1],[80,13,80,27,1],[85,13,85,40,1],[87,13,87,29,1],[88,13,88,44,1],[90,17,90,83,1],[94,13,94,29,1],[95,13,95,27,1],[100,13,100,82,1]]);
     </script>
   </body>
 </html>

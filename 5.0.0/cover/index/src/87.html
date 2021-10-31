@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HazelcastJsonValueSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HashSetStreamSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,31 +22,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
+using System.Collections.Generic;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase&lt;HazelcastJsonValue&gt;
+    internal class HashSetStreamSerializer : CollectionStreamSerializerBase&lt;HashSet&lt;object&gt;&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavascriptJsonSerializationType;
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeHashSet;
 
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override HazelcastJsonValue Read(IObjectDataInput input)
+        public override HashSet&lt;object&gt; Read(IObjectDataInput input)
         {
-            return new HazelcastJsonValue(input.ReadString());
-        }
-
-        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
-        public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
-        {
-            output.WriteString(obj.ToString());
+            var size = input.ReadInt();
+            var set = new HashSet&lt;object&gt;();
+            return DeserializeEntries(input, size, set);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[21,39,21,93,1],[26,13,26,63,1],[32,13,32,48,1],[33,9,33,10,1]]);
+      highlightRanges([[21,39,21,84,1],[25,13,25,40,0],[26,13,26,45,0],[27,13,27,57,0]]);
     </script>
   </body>
 </html>

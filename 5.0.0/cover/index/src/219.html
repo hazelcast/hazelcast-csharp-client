@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListRemoveCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListListIteratorCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Removes the first occurrence of the specified element from this list, if it is present (optional operation).
-    /// If this list does not contain the element, it is unchanged.
-    /// Returns true if this list contained the specified element (or equivalently, if this list changed as a result of the call).
+    /// Returns a list iterator over the elements in this list (in proper sequence), starting at the specified position
+    /// in the list. The specified index indicates the first element that would be returned by an initial call to
+    /// ListIterator#next next. An initial call to ListIterator#previous previous would return the element with the
+    /// specified index minus one.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ListRemoveServerCodec
+    internal static class ListListIteratorServerCodec
 #else
-    internal static class ListRemoveCodec
+    internal static class ListListIteratorCodec
 #endif
     {
-        public const int RequestMessageType = 328960; // 0x050500
-        public const int ResponseMessageType = 328961; // 0x050501
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 333568; // 0x051700
+        public const int ResponseMessageType = 333569; // 0x051701
+        private const int RequestIndexFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -75,25 +76,25 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Element to be removed from this list, if present
+            /// index of the first element to be returned from the list iterator next
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public int Index { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData @value)
+        public static ClientMessage EncodeRequest(string name, int index)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;List.Remove&quot;
+                IsRetryable = true,
+                OperationName = &quot;List.ListIterator&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -102,9 +103,9 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -113,19 +114,20 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this list contained the specified element, false otherwise
+            /// a list iterator over the elements in this list (in proper
+            /// sequence), starting at the specified position in the list
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -134,8 +136,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -144,7 +146,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[76,13,80,15,1],[81,13,81,123,1],[82,13,82,104,1],[83,13,83,88,1],[84,13,84,48,1],[85,13,85,53,1],[86,13,86,53,1],[87,13,87,34,1],[108,36,108,40,1],[108,41,108,45,1],[125,13,125,64,1],[126,13,126,53,1],[127,13,127,48,1],[128,13,128,91,1],[129,13,129,29,1],[130,9,130,10,1]]);
+      highlightRanges([[77,13,81,15,0],[82,13,82,123,0],[83,13,83,104,0],[84,13,84,88,0],[85,13,85,74,0],[86,13,86,48,0],[87,13,87,53,0],[88,13,88,34,0],[110,44,110,48,0],[110,49,110,53,0],[127,13,127,64,0],[128,13,128,53,0],[129,13,129,29,0],[130,13,130,88,0],[131,13,131,29,0],[132,9,132,10,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ObjectDataInput.api.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\NullSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,297 +22,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Text;
-using Hazelcast.Core;
-
 namespace Hazelcast.Serialization
 {
-    internal partial class ObjectDataInput //public api
+    internal sealed class NullSerializer : SingletonSerializerBase&lt;object&gt;
     {
-        public Endianness Endianness { get; }
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeNull;
 
-        public bool ReadBoolean()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfBool);
-            var value = _buffer.ReadBool(Position);
-            Position += BytesExtensions.SizeOfBool;
-            return value;
-        }
+        public override object Read(IObjectDataInput input)
+            =&gt; null;
 
-        public byte ReadByte()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfByte);
-            var value = _buffer.ReadByte(Position);
-            Position += BytesExtensions.SizeOfByte;
-            return value;
-        }
-
-        public sbyte ReadSByte()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfByte);
-            var value = _buffer.ReadSByte(Position);
-            Position += BytesExtensions.SizeOfByte;
-            return (sbyte) value;
-        }
-
-        public char ReadChar()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfChar);
-            var value = _buffer.ReadChar(Position, Endianness);
-            Position += BytesExtensions.SizeOfChar;
-            return value;
-        }
-
-        public short ReadShort()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfShort);
-            var value = _buffer.ReadShort(Position, Endianness);
-            Position += BytesExtensions.SizeOfShort;
-            return value;
-        }
-
-        public ushort ReadUShort()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfUnsignedShort);
-            var value = _buffer.ReadUShort(Position, Endianness);
-            Position += BytesExtensions.SizeOfUnsignedShort;
-            return value;
-        }
-
-        public int ReadInt()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfInt);
-            var value = _buffer.ReadInt(Position, Endianness);
-            Position += BytesExtensions.SizeOfInt;
-            return value;
-        }
-
-        public long ReadLong()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfLong);
-            var value = _buffer.ReadLong(Position, Endianness);
-            Position += BytesExtensions.SizeOfLong;
-            return value;
-        }
-
-        public float ReadFloat()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfFloat);
-            var value = _buffer.ReadFloat(Position, Endianness);
-            Position += BytesExtensions.SizeOfFloat;
-            return value;
-        }
-
-        public double ReadDouble()
-        {
-            CheckAvailable(Position, BytesExtensions.SizeOfDouble);
-            var value = _buffer.ReadDouble(Position, Endianness);
-            Position += BytesExtensions.SizeOfDouble;
-            return value;
-        }
-
-        public string ReadString()
-        {
-            var numberOfBytes = ReadInt();
-            if (numberOfBytes == BytesExtensions.SizeOfNullArray) return null;
-
-            var result = Encoding.UTF8.GetString(_buffer, Position, numberOfBytes);
-            Position += numberOfBytes;
-            return result;
-        }
-
-        public bool[] ReadBooleanArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;bool&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfBool);
-
-            var values = new bool[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadBool(Position);
-                Position += BytesExtensions.SizeOfBool;
-            }
-
-            return values;
-        }
-
-        public byte[] ReadByteArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;byte&gt;();
-
-            var values = new byte[length];
-            Read(values);
-            return values;
-        }
-
-        public char[] ReadCharArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;char&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfChar);
-
-            var values = new char[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadChar(Position, Endianness);
-                Position += BytesExtensions.SizeOfChar;
-            }
-
-            return values;
-        }
-
-        public short[] ReadShortArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;short&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfShort);
-
-            var values = new short[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadShort(Position, Endianness);
-                Position += BytesExtensions.SizeOfShort;
-            }
-
-            return values;
-        }
-
-        public int[] ReadIntArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;int&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfInt);
-
-            var values = new int[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadInt(Position, Endianness);
-                Position += BytesExtensions.SizeOfInt;
-            }
-
-            return values;
-        }
-
-        public long[] ReadLongArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;long&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfLong);
-
-            var values = new long[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadLong(Position, Endianness);
-                Position += BytesExtensions.SizeOfLong;
-            }
-
-            return values;
-        }
-
-        public float[] ReadFloatArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;float&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfFloat);
-
-            var values = new float[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadFloat(Position, Endianness);
-                Position += BytesExtensions.SizeOfFloat;
-            }
-
-            return values;
-        }
-
-        public double[] ReadDoubleArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;double&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfDouble);
-
-            var values = new double[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = _buffer.ReadDouble(Position, Endianness);
-                Position += BytesExtensions.SizeOfDouble;
-            }
-
-            return values;
-        }
-
-        public string[] ReadStringArray()
-        {
-            var length = ReadInt();
-            if (length == BytesExtensions.SizeOfNullArray) return null;
-            if (length &lt;= 0) return Array.Empty&lt;string&gt;();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfDouble);
-
-            var values = new string[length];
-            for (var i = 0; i &lt; length; i++)
-            {
-                values[i] = ReadString();
-            }
-
-            return values;
-        }
-
-        public T ReadObject&lt;T&gt;() =&gt; _serializationService.ReadObject&lt;T&gt;(this);
-
-        public int Read(byte[] bytes)
-        {
-            return Read(bytes, 0, bytes.Length);
-        }
-
-        public int Read(byte[] bytes, int offset, int count)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-            if (offset &lt; 0 || offset &gt;= bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
-            if (count &lt; 0 || offset + count &gt; bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
-
-            if (count == 0) return 0;
-            if (Position &gt;= _length) return -1;
-
-            count = Math.Min(count, _length - Position);
-
-            System.Buffer.BlockCopy(_buffer, Position, bytes, offset, count);
-            Position += count;
-            return count;
-        }
-
-        public int SkipBytes(int count)
-        {
-            if (count &lt;= 0) return 0;
-
-            count = Math.Min(count, _length - Position);
-            Position += count;
-            return count;
-        }
+        public override void Write(IObjectDataOutput output, object obj)
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,40,23,44,1],[27,13,27,66,1],[28,13,28,52,1],[29,13,29,52,1],[30,13,30,26,1],[35,13,35,66,1],[36,13,36,52,1],[37,13,37,52,1],[38,13,38,26,1],[43,13,43,66,0],[44,13,44,53,0],[45,13,45,52,0],[46,13,46,34,0],[51,13,51,66,1],[52,13,52,64,1],[53,13,53,52,1],[54,13,54,26,1],[59,13,59,67,1],[60,13,60,65,1],[61,13,61,53,1],[62,13,62,26,1],[67,13,67,75,1],[68,13,68,66,1],[69,13,69,61,1],[70,13,70,26,1],[75,13,75,65,1],[76,13,76,63,1],[77,13,77,51,1],[78,13,78,26,1],[83,13,83,66,1],[84,13,84,64,1],[85,13,85,52,1],[86,13,86,26,1],[91,13,91,67,1],[92,13,92,65,1],[93,13,93,53,1],[94,13,94,26,1],[99,13,99,68,1],[100,13,100,66,1],[101,13,101,54,1],[102,13,102,26,1],[107,13,107,43,1],[108,13,108,66,1],[108,67,108,79,1],[110,13,110,84,1],[111,13,111,39,1],[112,13,112,27,1],[117,13,117,36,1],[118,13,118,59,1],[118,60,118,72,1],[119,13,119,29,1],[119,30,119,57,1],[121,13,121,75,1],[123,13,123,43,1],[124,18,124,27,1],[124,29,124,39,1],[124,41,124,44,1],[126,17,126,56,1],[127,17,127,56,1],[130,13,130,27,1],[135,13,135,36,1],[136,13,136,59,1],[136,60,136,72,1],[137,13,137,29,1],[137,30,137,57,1],[139,13,139,43,1],[140,13,140,26,1],[141,13,141,27,1],[146,13,146,36,1],[147,13,147,59,1],[147,60,147,72,1],[148,13,148,29,1],[148,30,148,57,1],[150,13,150,75,1],[152,13,152,43,1],[153,18,153,27,1],[153,29,153,39,1],[153,41,153,44,1],[155,17,155,68,1],[156,17,156,56,1],[159,13,159,27,1],[164,13,164,36,1],[165,13,165,59,1],[165,60,165,72,1],[166,13,166,29,1],[166,30,166,58,1],[168,13,168,76,1],[170,13,170,44,1],[171,18,171,27,1],[171,29,171,39,1],[171,41,171,44,1],[173,17,173,69,1],[174,17,174,57,1],[177,13,177,27,1],[182,13,182,36,1],[183,13,183,59,1],[183,60,183,72,1],[184,13,184,29,1],[184,30,184,56,1],[186,13,186,74,1],[188,13,188,42,1],[189,18,189,27,1],[189,29,189,39,1],[189,41,189,44,1],[191,17,191,67,1],[192,17,192,55,1],[195,13,195,27,1],[200,13,200,36,1],[201,13,201,59,1],[201,60,201,72,1],[202,13,202,29,1],[202,30,202,57,1],[204,13,204,75,1],[206,13,206,43,1],[207,18,207,27,1],[207,29,207,39,1],[207,41,207,44,1],[209,17,209,68,1],[210,17,210,56,1],[213,13,213,27,1],[218,13,218,36,1],[219,13,219,59,1],[219,60,219,72,1],[220,13,220,29,1],[220,30,220,58,1],[222,13,222,76,1],[224,13,224,44,1],[225,18,225,27,1],[225,29,225,39,1],[225,41,225,44,1],[227,17,227,69,1],[228,17,228,57,1],[231,13,231,27,1],[236,13,236,36,1],[237,13,237,59,1],[237,60,237,72,1],[238,13,238,29,1],[238,30,238,59,1],[240,13,240,77,1],[242,13,242,45,1],[243,18,243,27,1],[243,29,243,39,1],[243,41,243,44,1],[245,17,245,70,1],[246,17,246,58,1],[249,13,249,27,1],[254,13,254,36,1],[255,13,255,59,1],[255,60,255,72,1],[256,13,256,29,1],[256,30,256,59,0],[258,13,258,77,1],[260,13,260,45,1],[261,18,261,27,1],[261,29,261,39,1],[261,41,261,44,1],[263,17,263,42,1],[266,13,266,27,1],[269,37,269,78,1],[273,13,273,49,1],[278,13,278,31,1],[278,32,278,79,0],[279,13,279,54,1],[279,55,279,109,0],[280,13,280,60,1],[280,61,280,114,0],[282,13,282,28,1],[282,29,282,38,0],[283,13,283,37,1],[283,38,283,48,1],[285,13,285,57,1],[287,13,287,78,1],[288,13,288,31,1],[289,13,289,26,1],[294,13,294,28,1],[294,29,294,38,1],[296,13,296,57,1],[297,13,297,31,1],[298,13,298,26,1]]);
+      highlightRanges([[19,39,19,78,1],[22,16,22,20,1],[25,11,25,12,1]]);
     </script>
   </body>
 </html>

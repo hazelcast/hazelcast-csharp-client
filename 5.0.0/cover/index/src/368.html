@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\SetAddAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\RingbufferTailSequenceCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,52 +49,44 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds all of the elements in the specified collection to this set if they&#39;re not already present
-    /// (optional operation). If the specified collection is also a set, the addAll operation effectively modifies this
-    /// set so that its value is the union of the two sets. The behavior of this operation is undefined if the specified
-    /// collection is modified while the operation is in progress.
+    /// Returns the sequence of the tail. The tail is the side of the ringbuffer where the items are added to.
+    /// The initial value of the tail is -1.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class SetAddAllServerCodec
+    internal static class RingbufferTailSequenceServerCodec
 #else
-    internal static class SetAddAllCodec
+    internal static class RingbufferTailSequenceCodec
 #endif
     {
-        public const int RequestMessageType = 394752; // 0x060600
-        public const int ResponseMessageType = 394753; // 0x060601
+        public const int RequestMessageType = 1507840; // 0x170200
+        public const int ResponseMessageType = 1507841; // 0x170201
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the Set
+            /// Name of the Ringbuffer
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// Collection containing elements to be added to this set
-            ///&lt;/summary&gt;
-            public IList&lt;IData&gt; ValueList { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; valueList)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;Set.AddAll&quot;
+                IsRetryable = true,
+                OperationName = &quot;Ringbuffer.TailSequence&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            ListMultiFrameCodec.Encode(clientMessage, valueList, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -105,7 +97,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -114,18 +105,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this set changed as a result of the call
+            /// the sequence of the tail
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public long Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(long response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -136,7 +127,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadLongL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -145,7 +136,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,84,1],[88,13,88,34,1],[109,36,109,40,1],[109,41,109,45,1],[126,13,126,64,1],[127,13,127,53,1],[128,13,128,48,1],[129,13,129,91,1],[130,13,130,29,1],[131,9,131,10,1]]);
+      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[100,36,100,40,1],[100,41,100,45,1],[117,13,117,64,1],[118,13,118,53,1],[119,13,119,48,1],[120,13,120,91,1],[121,13,121,29,1],[122,9,122,10,1]]);
     </script>
   </body>
 </html>

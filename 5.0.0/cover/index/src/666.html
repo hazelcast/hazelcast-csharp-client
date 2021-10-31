@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\LoggingExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Int64Sequence.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,47 +22,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Microsoft.Extensions.Logging;
+using System.Threading;
 
 namespace Hazelcast.Core
 {
-    internal static class LoggingExtensions
+    /// &lt;summary&gt;
+    /// Implements an &lt;see cref=&quot;ISequence{Int64}&quot; /&gt;.
+    /// &lt;/summary&gt;
+    internal class Int64Sequence : ISequence&lt;long&gt;
     {
-        // TODO: log using message templates or IfDebug() for perf purposes!
+        private long _value;
 
-        /// &lt;summary&gt;
-        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if the specified &lt;see cref=&quot;LogLevel&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
-        /// &lt;param name=&quot;logLevel&quot;&gt;The &lt;see cref=&quot;LogLevel&quot;/&gt; which must be enabled.&lt;/param&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Usage: &lt;c&gt;logger.If(LogLevel.Xxx)?.LogXxx(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogXxx(...)&lt;/c&gt; when not needed.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public static ILogger If(this ILogger logger, LogLevel logLevel) =&gt; logger.IsEnabled(logLevel) ? logger : null;
-
-        /// &lt;summary&gt;
-        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if &lt;see cref=&quot;LogLevel.Debug&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Usage: &lt;c&gt;logger.IfDebug()?.LogDebug(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogDebug(...)&lt;/c&gt; when not needed.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public static ILogger IfDebug(this ILogger logger) =&gt; logger.IsEnabled(LogLevel.Debug) ? logger : null;
-
-        /// &lt;summary&gt;
-        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if &lt;see cref=&quot;LogLevel.Warning&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Usage: &lt;c&gt;logger.IfWarning()?.LogWarning(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogWarning(...)&lt;/c&gt; when not needed.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public static ILogger IfWarning(this ILogger logger) =&gt; logger.IsEnabled(LogLevel.Warning) ? logger : null;
+        /// &lt;inheritdoc /&gt;
+        public long GetNext()
+        {
+            return Interlocked.Increment(ref _value);
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[31,77,31,119,0],[40,63,40,111,1],[49,65,49,115,1]]);
+      highlightRanges([[29,13,29,54,1]]);
     </script>
   </body>
 </html>

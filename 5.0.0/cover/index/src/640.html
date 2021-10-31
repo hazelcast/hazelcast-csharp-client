@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\CancellationTokenSourceExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BytesExtensions.WriteToByteArray.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,37 +23,276 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
+using System.Diagnostics;
+using Hazelcast.Models;
 
 namespace Hazelcast.Core
 {
-    /// &lt;summary&gt;
-    /// Provides extension methods for the &lt;see cref=&quot;CancellationTokenSource&quot;/&gt; class.
-    /// &lt;/summary&gt;
-    internal static class CancellationTokenSourceExtensions
+    internal static partial class BytesExtensions // Write to byte[]
     {
         /// &lt;summary&gt;
-        /// Creates a cancellation source by combining a source and a cancellation token.
+        /// Writes a &lt;see cref=&quot;byte&quot;/&gt; value to an array of bytes.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;The source.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;The cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The combined cancellation.&lt;/returns&gt;
-        public static CancellationTokenSource LinkedWith(this CancellationTokenSource source, CancellationToken cancellationToken)
-            =&gt; CancellationTokenSource.CreateLinkedTokenSource(source.Token, cancellationToken);
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        public static void WriteByte(this byte[] bytes, int position, byte value)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfByte);
+            bytes[position] = value;
+        }
 
+        public static void WriteSbyte(this byte[] bytes, int position, sbyte value)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfUnsignedByte);
+            bytes[position] = (byte) value;
+        }
 
         /// &lt;summary&gt;
-        /// Throws an &lt;see cref=&quot;OperationCanceledException&quot;/&gt; if this source has had cancellation requested.
+        /// Writes a &lt;see cref=&quot;short&quot;/&gt; value to an array of bytes.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;source&quot;&gt;A cancellation token source.&lt;/param&gt;
-        public static void ThrowIfCancellationRequested(this CancellationTokenSource source)
-            =&gt; source.Token.ThrowIfCancellationRequested();
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteShort(this byte[] bytes, int position, short value, Endianness endianness)
+            =&gt; bytes.WriteUShort(position, (ushort)value, endianness);
+
+        /// &lt;summary&gt;
+        /// Writes an &lt;see cref=&quot;ushort&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfUnsignedShort);
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (value &gt;&gt; 8);
+                    bytes[position + 1] = (byte) value;
+                }
+                else
+                {
+                    bytes[position] = (byte) value;
+                    bytes[position + 1] = (byte) (value &gt;&gt; 8);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Writes an &lt;see cref=&quot;int&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteInt(this byte[] bytes, int position, int value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfInt);
+            var unsigned = (uint) value;
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 3] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 24);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Writes a &lt;see cref=&quot;long&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteLong(this byte[] bytes, int position, long value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfLong);
+            var unsigned = (ulong) value;
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned &gt;&gt; 56);
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 48);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 40);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 32);
+                    bytes[position + 4] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 5] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 6] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 7] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 4] = (byte) (unsigned &gt;&gt; 32);
+                    bytes[position + 5] = (byte) (unsigned &gt;&gt; 40);
+                    bytes[position + 6] = (byte) (unsigned &gt;&gt; 48);
+                    bytes[position + 7] = (byte) (unsigned &gt;&gt; 56);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Writes a &lt;see cref=&quot;float&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteFloat(this byte[] bytes, int position, float value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfFloat);
+
+#if NETSTANDARD2_0
+            var unsigned = (uint) BitConverter.ToInt32(BitConverter.GetBytes(value), 0);
+#else
+            // this is essentially an unsafe *((int*)&amp;value)
+            var unsigned = (uint) BitConverter.SingleToInt32Bits(value);
+#endif
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 3] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 24);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Writes a &lt;see cref=&quot;double&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteDouble(this byte[] bytes, int position, double value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfDouble);
+            // this is essentially an unsafe *((long*)&amp;value)
+            var unsigned = (ulong) BitConverter.DoubleToInt64Bits(value);
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned &gt;&gt; 56);
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 48);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 40);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 32);
+                    bytes[position + 4] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 5] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 6] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 7] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 2] = (byte) (unsigned &gt;&gt; 16);
+                    bytes[position + 3] = (byte) (unsigned &gt;&gt; 24);
+                    bytes[position + 4] = (byte) (unsigned &gt;&gt; 32);
+                    bytes[position + 5] = (byte) (unsigned &gt;&gt; 40);
+                    bytes[position + 6] = (byte) (unsigned &gt;&gt; 48);
+                    bytes[position + 7] = (byte) (unsigned &gt;&gt; 56);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Writes a &lt;see cref=&quot;bool&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        public static void WriteBool(this byte[] bytes, int position, bool value)
+            =&gt; bytes.WriteByte(position, value ? (byte) 0x01 : (byte) 0x00);
+
+        /// &lt;summary&gt;
+        /// Writes a &lt;see cref=&quot;char&quot;/&gt; value to an array of bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes to write to.&lt;/param&gt;
+        /// &lt;param name=&quot;position&quot;&gt;The position in the array where the value should be written.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to write.&lt;/param&gt;
+        /// &lt;param name=&quot;endianness&quot;&gt;The endianness.&lt;/param&gt;
+        public static void WriteChar(this byte[] bytes, int position, char value, Endianness endianness)
+        {
+            Debug.Assert(bytes != null &amp;&amp; position &gt;= 0 &amp;&amp; bytes.Length &gt;= position + SizeOfChar);
+            var unsigned = value;
+            unchecked
+            {
+                if (endianness.IsBigEndian())
+                {
+                    bytes[position] = (byte) (unsigned &gt;&gt; 8);
+                    bytes[position + 1] = (byte) unsigned;
+                }
+                else
+                {
+                    bytes[position] = (byte) unsigned;
+                    bytes[position + 1] = (byte) (unsigned &gt;&gt; 8);
+                }
+            }
+        }
+
+        public static void WriteLocalDate(this byte[] bytes, int position, HLocalDate localDate)
+        {
+            bytes.WriteIntL(position, localDate.Year);
+            bytes.WriteByte(position + SizeOfInt, localDate.Month);
+            bytes.WriteByte(position + SizeOfInt + SizeOfByte, localDate.Day);
+        }
+
+        public static void WriteLocalTime(this byte[] bytes, int position, HLocalTime localTime)
+        {
+            bytes.WriteByte(position, localTime.Hour);
+            bytes.WriteByte(position + SizeOfByte, localTime.Minute);
+            bytes.WriteByte(position + SizeOfByte * 2, localTime.Second);
+            bytes.WriteIntL(position + SizeOfByte * 3, localTime.Nanosecond);
+        }
+
+        public static void WriteLocalDateTime(this byte[] bytes, int position, HLocalDateTime localDateTime)
+        {
+            bytes.WriteLocalDate(position, localDateTime.Date);
+            bytes.WriteLocalTime(position + SizeOfLocalDate, localDateTime.Time);
+        }
+
+        public static void WriteOffsetDateTime(this byte[] bytes, int position, HOffsetDateTime offsetDateTime)
+        {
+            bytes.WriteLocalDateTime(position, offsetDateTime.LocalDateTime);
+            bytes.WriteIntL(position + SizeOfLocalDateTime, (int)offsetDateTime.Offset.TotalSeconds);
+        }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[32,16,32,96,1],[40,16,40,59,1]]);
+      highlightRanges([[32,13,32,37,1],[33,9,33,10,1],[38,13,38,44,0],[39,9,39,10,0],[49,16,49,70,1],[63,17,63,46,1],[65,21,65,59,1],[66,21,66,56,1],[70,21,70,52,1],[71,21,71,63,1],[74,9,74,10,1],[86,13,86,41,1],[89,17,89,46,1],[91,21,91,63,1],[92,21,92,67,1],[93,21,93,66,1],[94,21,94,59,1],[98,21,98,55,1],[99,21,99,66,1],[100,21,100,67,1],[101,21,101,67,1],[104,9,104,10,1],[116,13,116,42,1],[119,17,119,46,1],[121,21,121,63,1],[122,21,122,67,1],[123,21,123,67,1],[124,21,124,67,1],[125,21,125,67,1],[126,21,126,67,1],[127,21,127,66,1],[128,21,128,59,1],[132,21,132,55,1],[133,21,133,66,1],[134,21,134,67,1],[135,21,135,67,1],[136,21,136,67,1],[137,21,137,67,1],[138,21,138,67,1],[139,21,139,67,1],[142,9,142,10,1],[159,13,159,73,1],[163,17,163,46,1],[165,21,165,63,1],[166,21,166,67,1],[167,21,167,66,1],[168,21,168,59,1],[172,21,172,55,1],[173,21,173,66,1],[174,21,174,67,1],[175,21,175,67,1],[178,9,178,10,1],[191,13,191,74,1],[194,17,194,46,1],[196,21,196,63,1],[197,21,197,67,1],[198,21,198,67,1],[199,21,199,67,1],[200,21,200,67,1],[201,21,201,67,1],[202,21,202,66,1],[203,21,203,59,1],[207,21,207,55,1],[208,21,208,66,1],[209,21,209,67,1],[210,21,210,67,1],[211,21,211,67,1],[212,21,212,67,1],[213,21,213,67,1],[214,21,214,67,1],[217,9,217,10,1],[226,16,226,76,1],[238,13,238,34,1],[241,17,241,46,1],[243,21,243,62,1],[244,21,244,59,1],[248,21,248,55,1],[249,21,249,66,1],[252,9,252,10,1],[256,13,256,55,1],[257,13,257,68,1],[258,13,258,79,1],[259,9,259,10,1],[263,13,263,55,1],[264,13,264,70,1],[265,13,265,74,1],[266,13,266,78,1],[267,9,267,10,1],[271,13,271,64,1],[272,13,272,82,1],[273,9,273,10,1],[277,13,277,78,1],[278,13,278,102,1],[279,9,279,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalSetSizeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalSetRemoveCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,21 +49,21 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the size of the set.
+    /// Remove item from transactional set.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalSetSizeServerCodec
+    internal static class TransactionalSetRemoveServerCodec
 #else
-    internal static class TransactionalSetSizeCodec
+    internal static class TransactionalSetRemoveCodec
 #endif
     {
-        public const int RequestMessageType = 1049344; // 0x100300
-        public const int ResponseMessageType = 1049345; // 0x100301
+        public const int RequestMessageType = 1049088; // 0x100200
+        public const int ResponseMessageType = 1049089; // 0x100201
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -83,15 +83,20 @@ namespace Hazelcast.Protocol.Codecs
             /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
             ///&lt;/summary&gt;
             public long ThreadId { get; set; }
+
+            /// &lt;summary&gt;
+            /// Item removed from Transactional Set
+            ///&lt;/summary&gt;
+            public IData Item { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData item)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalSet.Size&quot;
+                OperationName = &quot;TransactionalSet.Remove&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -100,6 +105,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, item);
             return clientMessage;
         }
 
@@ -112,6 +118,7 @@ namespace Hazelcast.Protocol.Codecs
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Item = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -120,18 +127,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The size of the set
+            /// True if item is remove successfully
             ///&lt;/summary&gt;
-            public int Response { get; set; }
+            public bool Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(int response)
+        public static ClientMessage EncodeResponse(bool response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -142,7 +149,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -151,7 +158,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[81,13,85,15,1],[86,13,86,123,1],[87,13,87,104,1],[88,13,88,88,1],[89,13,89,75,1],[90,13,90,81,1],[91,13,91,48,1],[92,13,92,53,1],[93,13,93,34,1],[115,35,115,39,1],[115,40,115,44,1],[132,13,132,64,1],[133,13,133,53,1],[134,13,134,48,1],[135,13,135,90,1],[136,13,136,29,1],[137,9,137,10,1]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,75,1],[95,13,95,81,1],[96,13,96,48,1],[97,13,97,53,1],[98,13,98,51,1],[99,13,99,34,1],[122,36,122,40,1],[122,41,122,45,1],[139,13,139,64,1],[140,13,140,53,1],[141,13,141,48,1],[142,13,142,91,1],[143,13,143,29,1],[144,9,144,10,1]]);
     </script>
   </body>
 </html>

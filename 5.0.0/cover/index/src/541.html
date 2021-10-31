@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\DistributedObjectCreatedEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\ConnectionOpenedEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,30 +22,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using Hazelcast.Clustering;
 
 namespace Hazelcast.Events
 {
     /// &lt;summary&gt;
-    /// Represents event data for a cluster object created event.
+    /// Represents event data for the connection added event.
     /// &lt;/summary&gt;
-    public sealed class DistributedObjectCreatedEventArgs : DistributedObjectLifecycleEventArgs
+    internal class ConnectionOpenedEventArgs
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;DistributedObjectCreatedEventArgs&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionOpenedEventArgs&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;serviceName&quot;&gt;The service unique name.&lt;/param&gt;
-        /// &lt;param name=&quot;name&quot;&gt;The object unique name.&lt;/param&gt;
-        /// &lt;param name=&quot;sourceMemberId&quot;&gt;The unique identifier of the source member.&lt;/param&gt;
-        public DistributedObjectCreatedEventArgs(string serviceName, string name, Guid sourceMemberId)
-            : base(serviceName, name, sourceMemberId)
-        { }
+        /// &lt;param name=&quot;connection&quot;&gt;The connection that was opened.&lt;/param&gt;
+        /// &lt;param name=&quot;isNewCluster&quot;&gt;Whether the connection is the first connection to a new cluster.&lt;/param&gt;
+        public ConnectionOpenedEventArgs(MemberConnection connection, bool isNewCluster)
+        {
+            Connection = connection;
+            IsNewCluster = isNewCluster;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the connection that was opened.
+        /// &lt;/summary&gt;
+        public MemberConnection Connection { get; }
+
+        /// &lt;summary&gt;
+        /// Whether the connection is the first connection to a new cluster.
+        /// &lt;/summary&gt;
+        public bool IsNewCluster { get; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[31,15,31,54,1],[32,11,32,12,1]]);
+      highlightRanges([[29,9,29,89,1],[31,13,31,37,1],[32,13,32,41,1],[33,9,33,10,1],[38,46,38,50,0],[43,36,43,40,0]]);
     </script>
   </body>
 </html>

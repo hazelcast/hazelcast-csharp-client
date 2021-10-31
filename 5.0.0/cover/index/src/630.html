@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\AsyncQueue.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\AsyncContext.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
   <body>
     <pre id="content" class="source-code">
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
 // you may not use this file except in compliance with the License.
@@ -23,180 +23,125 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Threading;
-using System.Threading.Tasks;
+#if HZ_CONSOLE
+using System.Globalization;
+#endif
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Provides a lightweight asynchronous queue for multiple providers,
-    /// and one single sequential consumer.
+    /// Represents an ambient context that is local to a given asynchronous control flow, such as an asynchronous method.
     /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;T&quot;&gt;The type of the items.&lt;/typeparam&gt;
-    internal sealed class AsyncQueue&lt;T&gt; : IAsyncEnumerable&lt;T&gt;
+    public sealed class AsyncContext
     {
-        private readonly ConcurrentQueue&lt;T&gt; _items = new ConcurrentQueue&lt;T&gt;();
-        private readonly object _lock = new object();
-        private TaskCompletionSource&lt;bool&gt; _waiting;
-        private CancellationTokenRegistration _reg;
-        private T _current;
-        private bool _completed;
+        // the sequence of unique identifiers for contexts
+        private static ISequence&lt;long&gt; _idSequence = new Int64Sequence();
+
+#if !HZ_CONSOLE
+        private static readonly AsyncLocal&lt;AsyncContext&gt; AsyncLocalContext = new AsyncLocal&lt;AsyncContext&gt;();
+#else
+        private static readonly AsyncLocal&lt;AsyncContext&gt; AsyncLocalContext = new AsyncLocal&lt;AsyncContext&gt;(ValueChangedHandler);
+
+        private static AsyncContext HConsoleObject { get; } = new AsyncContext();
+
+        private static void ValueChangedHandler(AsyncLocalValueChangedArgs&lt;AsyncContext&gt; obj)
+        {
+            static string ToString(AsyncContext context) =&gt; context?.Id.ToString(CultureInfo.InvariantCulture) ?? &quot;x&quot;;
+
+            HConsole.WriteLine(HConsoleObject, 10, $&quot;AsyncContext [{Thread.CurrentThread.ManagedThreadId:00}] {ToString(obj.PreviousValue)} -&gt; {ToString(obj.CurrentValue)} {(obj.ThreadContextChanged ? &quot;(execution context change)&quot; : &quot;&quot;)}&quot;);
+        }
+#endif
 
         /// &lt;summary&gt;
-        /// Tries to write an item to the queue.
+        /// Initializes a new instance of the &lt;see cref=&quot;AsyncContext&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;item&quot;&gt;The item.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the item was written; otherwise (the queue is complete) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public bool TryWrite(T item)
+        private AsyncContext()
         {
-            TaskCompletionSource&lt;bool&gt; waiting = null;
+            // assign the unique identifier using the sequence
+            Id = _idSequence.GetNext();
+        }
 
-            // lock writes
-            lock (_lock)
+        /// &lt;summary&gt;
+        /// Gets the unique identifier for the current context.
+        /// &lt;/summary&gt;
+        public long Id { get; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets a value indicating whether the current asynchronous context is in a transaction.
+        /// &lt;/summary&gt;
+        internal bool InTransaction { get; set; } // see discussion in TransactionContext
+
+        /// &lt;summary&gt;
+        /// Gets the current context.
+        /// &lt;/summary&gt;
+        public static AsyncContext Current =&gt; AsyncLocalContext.Value ??= new AsyncContext();
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Whether there is a current context.
+        /// &lt;/summary&gt;
+        internal static bool HasCurrent =&gt; AsyncLocalContext.Value != null;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Clears the current context (removes it).
+        /// &lt;/summary&gt;
+        internal static void ClearCurrent() =&gt; AsyncLocalContext.Value = null;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Resets the sequence of unique identifiers.
+        /// &lt;/summary&gt;
+        internal static void ResetSequence()
+        {
+            _idSequence = new Int64Sequence();
+        }
+
+        /// &lt;summary&gt;
+        /// Ensures that a context exists.
+        /// &lt;/summary&gt;
+        internal static void Ensure()
+        {
+            AsyncLocalContext.Value ??= new AsyncContext();
+        }
+
+        /// &lt;summary&gt;
+        /// Requires a new context.
+        /// &lt;/summary&gt;
+        internal static void RequireNew()
+        {
+            AsyncLocalContext.Value = new AsyncContext();
+        }
+
+        /// &lt;summary&gt;
+        /// Replaces the current context with a new context.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;An &lt;see cref=&quot;IDisposable&quot;/&gt; object which will restore the replaced context when disposed.&lt;/returns&gt;
+        public static IDisposable New()
+        {
+            var replaced = AsyncLocalContext.Value;
+            AsyncLocalContext.Value = new AsyncContext();
+            return new UsedContext(replaced);
+        }
+
+        private class UsedContext : IDisposable
+        {
+            private readonly AsyncContext _replaced;
+
+            public UsedContext(AsyncContext replaced)
             {
-                if (_completed) return false;
-
-                if (_waiting == null)
-                {
-                    // if not waiting for an item, just enqueue it
-                    _items.Enqueue(item);
-                }
-                else
-                {
-                    // if waiting for an item, make the item the current item
-                    // and succeed the wait
-                    _current = item;
-                    waiting = _waiting;
-                    _waiting = null;
-                    _reg.Dispose();
-                }
+                _replaced = replaced;
             }
 
-            waiting?.TrySetResult(true);
-            return true;
-        }
-
-        /// &lt;summary&gt;
-        /// Completes the queue.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;The queue keeps providing its items for reading, but it is not possible to write items anymore.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public void Complete()
-        {
-            TaskCompletionSource&lt;bool&gt; waiting;
-
-            // lock writes
-            lock (_lock)
+            public void Dispose()
             {
-                _completed = true;
-                waiting = _waiting;
-                _waiting = null;
-                _reg.Dispose();
+                AsyncLocalContext.Value = _replaced;
             }
-
-            // in case we were waiting, fail the wait
-            waiting?.TrySetResult(false);
-        }
-
-        /// &lt;summary&gt;
-        /// Applies an action to each item in the queue (see notes in method).
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;action&quot;&gt;The action to apply.&lt;/param&gt;
-        public void ForEach(Action&lt;T&gt; action)
-        {
-            // this is a &quot;best effort&quot; approach: items can be queued after we take the snapshot of the queue,
-            // and they won&#39;t be processed, and items can be de-queued before we take the snapshot of the queue,
-            // and they won&#39;t be processed either, so ... we just do our best ... this is used to cancel some
-            // member connection requests, and if a request fails to cancel and goes through and we connect to
-            // the member, the connection will simply be rejected and discarded.
-
-            var current = _current;
-            foreach (var item in _items) // snapshot items and run the action
-                action(item);
-            if (current != null) // also run the action on whatever was the &quot;current&quot; item
-                action(current);
-        }
-
-        // there is going to be only 1 reader pumping items out and processing them
-        // sequentially, so if we enter this method and the queue is empty and we
-        // return a task, we are not going to enter this method again until that task
-        // has completed - in other words, there can only be one _waiting at a time
-
-        /// &lt;summary&gt;
-        /// Waits for an item to become available.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if an item is available; otherwise (the queue is complete) &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
-        public ValueTask&lt;bool&gt; WaitAsync(CancellationToken cancellationToken = default)
-        {
-            // if there is an item in the queue, return it immediately and synchronously
-            if (_items.TryDequeue(out _current))
-                return new ValueTask&lt;bool&gt;(true);
-
-            // else, lock writes
-            lock (_lock)
-            {
-                // (again)
-                if (_items.TryDequeue(out _current))
-                    return new ValueTask&lt;bool&gt;(true);
-
-                // if completed, fail
-                if (_completed)
-                    return new ValueTask&lt;bool&gt;(false);
-
-                // create the waiting task
-                _waiting = new TaskCompletionSource&lt;bool&gt;();
-                _reg = cancellationToken.Register(() =&gt; _waiting.TrySetCanceled());
-                return new ValueTask&lt;bool&gt;(_waiting.Task);
-            }
-        }
-
-        /// &lt;summary&gt;
-        /// Reads the last available item.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;The last available item, if any, or &lt;c&gt;default(T)&lt;/c&gt;.&lt;/returns&gt;
-        public T Read()
-        {
-            return _current;
-        }
-
-        // ---- IAsyncEnumerable ----
-
-        /// &lt;inheritdoc /&gt;
-        public IAsyncEnumerator&lt;T&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
-            =&gt; new AsyncEnumerator(this, cancellationToken);
-
-        // ---- IAsyncEnumerator ----
-
-        private class AsyncEnumerator : IAsyncEnumerator&lt;T&gt;
-        {
-            private readonly AsyncQueue&lt;T&gt; _queue;
-            private readonly CancellationToken _cancellationToken;
-
-            public AsyncEnumerator(AsyncQueue&lt;T&gt; queue, CancellationToken cancellationToken)
-            {
-                _queue = queue;
-                _cancellationToken = cancellationToken;
-            }
-
-            /// &lt;inheritdoc /&gt;
-            public ValueTask&lt;bool&gt; MoveNextAsync() =&gt; _queue.WaitAsync(_cancellationToken);
-
-            /// &lt;inheritdoc /&gt;
-            public T Current =&gt; _queue._current;
-
-            /// &lt;inheritdoc /&gt;
-            public ValueTask DisposeAsync() =&gt; default;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,79,1],[31,9,31,54,1],[44,13,44,55,1],[47,13,47,25,1],[49,17,49,32,1],[49,33,49,46,1],[51,17,51,38,1],[54,21,54,42,1],[60,21,60,37,1],[61,21,61,40,1],[62,21,62,37,1],[63,21,63,36,1],[65,13,65,14,1],[67,13,67,41,1],[68,13,68,25,1],[69,9,69,10,1],[82,13,82,25,1],[84,17,84,35,1],[85,17,85,36,1],[86,17,86,33,1],[87,17,87,32,1],[88,13,88,14,1],[91,13,91,42,1],[92,9,92,10,1],[106,13,106,36,1],[107,22,107,30,1],[107,31,107,33,1],[107,34,107,40,1],[108,17,108,30,1],[109,13,109,33,1],[110,17,110,33,1],[111,9,111,10,1],[126,13,126,49,1],[127,17,127,50,1],[130,13,130,25,1],[133,17,133,53,1],[134,21,134,54,1],[137,17,137,32,1],[138,21,138,55,1],[141,17,141,61,1],[142,17,142,57,1],[142,57,142,82,1],[142,82,142,84,1],[143,17,143,59,1],[145,9,145,10,1],[153,13,153,29,1],[160,16,160,60,1],[169,13,169,93,1],[171,17,171,32,1],[172,17,172,56,1],[173,13,173,14,1],[176,55,176,91,1],[179,33,179,48,1],[182,48,182,55,1]]);
+      highlightRanges([[29,9,29,74,1],[32,9,32,109,1],[49,9,49,31,1],[52,13,52,40,1],[53,9,53,10,1],[58,26,58,30,1],[63,39,63,43,1],[63,44,63,48,1],[68,47,68,93,1],[73,44,73,75,1],[78,48,78,78,1],[85,13,85,47,1],[86,9,86,10,1],[93,13,93,60,1],[94,9,94,10,1],[101,13,101,58,1],[102,9,102,10,1],[110,13,110,52,1],[111,13,111,58,1],[112,13,112,46,1],[119,13,119,54,1],[121,17,121,38,1],[122,13,122,14,1],[126,17,126,53,1],[127,13,127,14,1]]);
     </script>
   </body>
 </html>

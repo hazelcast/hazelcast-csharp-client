@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableVersionHelper.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,28 +23,162 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed class PortableVersionHelper
+    internal sealed class PortableSerializer : IStreamSerializer&lt;IPortable&gt;
     {
-        public static int GetVersion(IPortable portable, int defaultVersion)
+        private readonly PortableContext _context;
+        private readonly IDictionary&lt;int, IPortableFactory&gt; _factories = new Dictionary&lt;int, IPortableFactory&gt;();
+
+        internal PortableSerializer(PortableContext context,
+            IEnumerable&lt;KeyValuePair&lt;int, IPortableFactory&gt;&gt; portableFactories)
         {
-            var version = defaultVersion;
-            if (portable is IVersionedPortable versionedPortable)
+            _context = context;
+            _factories = _factories.Union(portableFactories).ToDictionary(x =&gt; x.Key, x =&gt; x.Value);
+        }
+
+        public int TypeId =&gt; SerializationConstants.ConstantTypePortable;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public void Write(IObjectDataOutput output, IPortable p)
+        {
+            if (!(output is ObjectDataOutput))
             {
-                version = versionedPortable.ClassVersion;
-                if (version &lt; 0)
-                    throw new ArgumentException(&quot;Version cannot be negative!&quot;);
+                throw new ArgumentException(&quot;ObjectDataOutput must be instance of BufferObjectDataOutput!&quot;);
             }
-            return version;
+            if (p.ClassId == 0)
+            {
+                throw new ArgumentException(&quot;Portable class id cannot be zero!&quot;);
+            }
+            output.WriteInt(p.FactoryId);
+            output.WriteInt(p.ClassId);
+            WriteInternal((ObjectDataOutput) output, p);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public IPortable Read(IObjectDataInput input)
+        {
+            if (!(input is ObjectDataInput))
+            {
+                throw new ArgumentException(&quot;ObjectDataInput must be instance of BufferObjectDataInput!&quot;);
+            }
+            var factoryId = input.ReadInt();
+            var classId = input.ReadInt();
+            return Read((ObjectDataInput) input, factoryId, classId);
+        }
+
+        public void Dispose()
+        {
+            _factories.Clear();
+        }
+
+        internal DefaultPortableReader CreateMorphingReader(ObjectDataInput input)
+        {
+            var factoryId = input.ReadInt();
+            var classId = input.ReadInt();
+            var version = input.ReadInt();
+
+            var portable = CreateNewPortableInstance(factoryId, classId);
+            var portableVersion = FindPortableVersion(factoryId, classId, portable);
+
+            return CreateReader(input, factoryId, classId, version, portableVersion);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        internal DefaultPortableReader CreateReader(ObjectDataInput input)
+        {
+            var factoryId = input.ReadInt();
+            var classId = input.ReadInt();
+            var version = input.ReadInt();
+            return CreateReader(input, factoryId, classId, version, version);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        internal void WriteInternal(ObjectDataOutput output, IPortable p)
+        {
+            var cd = _context.LookupOrRegisterClassDefinition(p);
+            output.WriteInt(cd.Version);
+            var writer = new DefaultPortableWriter(this, output, cd);
+            p.WritePortable(writer);
+            writer.End();
+        }
+
+        private IPortable CreateNewPortableInstance(int factoryId, int classId)
+        {
+            _factories.TryGetValue(factoryId, out var portableFactory);
+            if (portableFactory == null)
+            {
+                throw new SerializationException(&quot;Could not find PortableFactory for factory-id: &quot; + factoryId);
+            }
+            var portable = portableFactory.Create(classId);
+            if (portable == null)
+            {
+                throw new SerializationException(&quot;Could not create Portable for class-id: &quot; + classId);
+            }
+            return portable;
+        }
+
+        private DefaultPortableReader CreateReader(ObjectDataInput input, int factoryId, int classId, int version,
+            int portableVersion)
+        {
+            var effectiveVersion = version;
+            if (version &lt; 0)
+            {
+                effectiveVersion = _context.GetVersion();
+            }
+            var cd = _context.LookupClassDefinition(factoryId, classId, effectiveVersion);
+            if (cd == null)
+            {
+                var begin = input.Position;
+                cd = _context.ReadClassDefinition(input, factoryId, classId, effectiveVersion);
+                input.Position = begin;
+            }
+            DefaultPortableReader reader;
+            if (portableVersion == effectiveVersion)
+            {
+                reader = new DefaultPortableReader(this, input, cd);
+            }
+            else
+            {
+                reader = new MorphingPortableReader(this, input, cd);
+            }
+            return reader;
+        }
+
+        private int FindPortableVersion(int factoryId, int classId, IPortable portable)
+        {
+            var currentVersion = _context.GetClassVersion(factoryId, classId);
+            if (currentVersion &lt; 0)
+            {
+                currentVersion = PortableVersionHelper.GetVersion(portable, _context.GetVersion());
+                if (currentVersion &gt; 0)
+                {
+                    _context.SetClassVersion(factoryId, classId, currentVersion);
+                }
+            }
+            return currentVersion;
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;/&gt;
+        internal IPortable Read(ObjectDataInput @in, int factoryId, int classId)
+        {
+            var version = @in.ReadInt();
+            var portable = CreateNewPortableInstance(factoryId, classId);
+            var portableVersion = FindPortableVersion(factoryId, classId, portable);
+            var reader = CreateReader(@in, factoryId, classId, version, portableVersion);
+            portable.ReadPortable(reader);
+            reader.End();
+            return portable;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,13,23,42,1],[24,13,24,66,1],[26,17,26,58,1],[27,17,27,33,1],[28,21,28,80,0],[30,13,30,28,1]]);
+      highlightRanges([[24,9,24,114,1],[26,9,27,80,1],[29,13,29,32,1],[30,13,30,80,1],[30,80,30,85,1],[30,85,30,92,1],[30,92,30,99,1],[30,99,30,101,1],[31,9,31,10,1],[33,30,33,73,1],[38,13,38,47,1],[40,17,40,109,0],[42,13,42,32,1],[44,17,44,82,0],[46,13,46,42,1],[47,13,47,40,1],[48,13,48,57,1],[49,9,49,10,1],[54,13,54,45,1],[56,17,56,107,0],[58,13,58,45,1],[59,13,59,43,1],[60,13,60,70,1],[65,13,65,32,1],[66,9,66,10,1],[70,13,70,45,1],[71,13,71,43,1],[72,13,72,43,1],[74,13,74,74,1],[75,13,75,85,1],[77,13,77,86,1],[83,13,83,45,1],[84,13,84,43,1],[85,13,85,43,1],[86,13,86,78,1],[92,13,92,66,1],[93,13,93,41,1],[94,13,94,70,1],[95,13,95,37,1],[96,13,96,26,1],[97,9,97,10,1],[101,13,101,72,1],[102,13,102,41,1],[104,17,104,113,0],[106,13,106,60,1],[107,13,107,34,1],[109,17,109,104,0],[111,13,111,29,1],[117,13,117,44,1],[118,13,118,29,1],[120,17,120,58,0],[122,13,122,91,1],[123,13,123,28,1],[125,17,125,44,1],[126,17,126,96,1],[127,17,127,40,1],[130,13,130,53,1],[132,17,132,69,1],[136,17,136,70,1],[138,13,138,27,1],[143,13,143,79,1],[144,13,144,36,1],[146,17,146,100,1],[147,17,147,40,1],[149,21,149,82,1],[152,13,152,35,1],[158,13,158,41,1],[159,13,159,74,1],[160,13,160,85,1],[161,13,161,90,1],[162,13,162,43,1],[163,13,163,26,1],[164,13,164,29,1]]);
     </script>
   </body>
 </html>

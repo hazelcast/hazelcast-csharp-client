@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapSizeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapSetWithMaxIdleCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,44 +49,80 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Returns the number of key-value mappings in this map.  If the map contains more than Integer.MAX_VALUE elements,
-    /// returns Integer.MAX_VALUE
+    /// Puts an entry into this map with a given ttl (time to live) value and maxIdle.
+    /// Entry will expire and get evicted after the ttl or maxIdle, whichever comes first.
+    /// If ttl and maxIdle are 0, then the entry lives forever.
+    ///
+    /// Similar to the put operation except that set doesn&#39;t return the old value, which is more efficient.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapSizeServerCodec
+    internal static class MapSetWithMaxIdleServerCodec
 #else
-    internal static class MapSizeCodec
+    internal static class MapSetWithMaxIdleCodec
 #endif
     {
-        public const int RequestMessageType = 76288; // 0x012A00
-        public const int ResponseMessageType = 76289; // 0x012A01
-        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 83712; // 0x014700
+        public const int ResponseMessageType = 83713; // 0x014701
+        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestMaxIdleFieldOffset = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestInitialFrameSize = RequestMaxIdleFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// of map
+            /// Name of the map.
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// Key for the map entry.
+            ///&lt;/summary&gt;
+            public IData Key { get; set; }
+
+            /// &lt;summary&gt;
+            /// Value for the map entry.
+            ///&lt;/summary&gt;
+            public IData Value { get; set; }
+
+            /// &lt;summary&gt;
+            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
+            ///&lt;/summary&gt;
+            public long ThreadId { get; set; }
+
+            /// &lt;summary&gt;
+            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
+            ///&lt;/summary&gt;
+            public long Ttl { get; set; }
+
+            /// &lt;summary&gt;
+            /// The duration of maximum idle for this entry.
+            /// Milliseconds of idle, after which this entry shall be deleted. O means infinite.
+            ///&lt;/summary&gt;
+            public long MaxIdle { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl, long maxIdle)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;Map.Size&quot;
+                IsRetryable = false,
+                OperationName = &quot;Map.SetWithMaxIdle&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
+            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
+            initialFrame.Bytes.WriteLongL(RequestMaxIdleFieldOffset, maxIdle);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, key);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -95,8 +131,13 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            iterator.Take(); // empty initial frame
+            var initialFrame = iterator.Take();
+            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            request.MaxIdle = initialFrame.Bytes.ReadLongL(RequestMaxIdleFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -105,19 +146,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// the number of key-value mappings in this map
+            /// old value of the entry
             ///&lt;/summary&gt;
-            public int Response { get; set; }
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(int response)
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -126,8 +167,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
+            iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -136,7 +177,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[100,35,100,39,1],[100,40,100,44,1],[117,13,117,64,1],[118,13,118,53,1],[119,13,119,48,1],[120,13,120,90,1],[121,13,121,29,1],[122,9,122,10,1]]);
+      highlightRanges([[101,13,105,15,0],[106,13,106,123,0],[107,13,107,104,0],[108,13,108,88,0],[109,13,109,81,0],[110,13,110,71,0],[111,13,111,79,0],[112,13,112,48,0],[113,13,113,53,0],[114,13,114,50,0],[115,13,115,53,0],[116,13,116,34,0],[141,37,141,41,0],[141,42,141,46,0],[158,13,158,64,0],[159,13,159,53,0],[160,13,160,29,0],[161,13,161,86,0],[162,13,162,29,0],[163,9,163,10,0]]);
     </script>
   </body>
 </html>

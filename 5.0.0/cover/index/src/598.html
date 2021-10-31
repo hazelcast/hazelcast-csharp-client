@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Getting.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Events.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,387 +23,159 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Protocol.Models;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
-using Hazelcast.Serialization.Collections;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HMap&lt;TKey, TValue&gt; // Getting
+    internal partial class HMap&lt;TKey, TValue&gt; // Events
     {
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;TValue&gt; GetAsync(TKey key)
-            =&gt; GetAsync(key, CancellationToken.None);
-
-        private async Task&lt;TValue&gt; GetAsync(TKey key, CancellationToken cancellationToken)
-            =&gt; await GetAsync(ToSafeData(key), cancellationToken).CfAwait();
-
-        /// &lt;summary&gt;
-        /// Gets the value for a key, or null if the map does not contain an entry with this key.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The value for the specified key.&lt;/returns&gt;
-        protected virtual async Task&lt;TValue&gt; GetAsync(IData keyData, CancellationToken cancellationToken)
+        private async Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, Maybe&lt;TKey&gt; key, IPredicate predicate, bool includeValues, object state, CancellationToken cancellationToken)
         {
-            // TODO: avoid boxing when ToObject-ing the value
-            var valueData = await GetDataAsync(keyData, cancellationToken).CfAwait();
-            return ToObject&lt;TValue&gt;(valueData);
-        }
+            if (events == null) throw new ArgumentNullException(nameof(events));
 
-        /// &lt;summary&gt;
-        /// Gets the value data for a key, or null if the map does not contain an entry with this key.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The value data for the specified key, or null if the map does not contain an entry with this key.&lt;/returns&gt;
-        protected async Task&lt;IData&gt; GetDataAsync(IData keyData, CancellationToken cancellationToken)
-        {
-            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            var response = MapGetCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
+            var handlers = new MapEventHandlers&lt;TKey, TValue&gt;();
+            events(handlers);
 
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetAllAsync(ICollection&lt;TKey&gt; keys)
-            =&gt; GetAllAsync(keys, CancellationToken.None);
+            var flags = default (MapEventTypes);
+            foreach (var handler in handlers)
+                flags |= handler.EventType;
 
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetAllAsync(ICollection&lt;TKey&gt; keys, CancellationToken cancellationToken)
-        {
-            var ownerKeys = new Dictionary&lt;Guid, Dictionary&lt;int, List&lt;IData&gt;&gt;&gt;();
+            // 0: no entryKey, no predicate
+            // 1: entryKey, no predicate
+            // 2: no entryKey, predicate
+            // 3: entryKey, predicate
+            var mode = key.Match(1, 0) + (predicate != null ? 2 : 0);
+            var keyv = key.ValueOrDefault();
 
-            // verify keys + group by owner and partitions
-            foreach (var key in keys)
+            var subscribeRequest = mode switch
             {
-                var keyData = ToSafeData(key);
+                0 =&gt; MapAddEntryListenerCodec.EncodeRequest(Name, includeValues, (int) flags, Cluster.IsSmartRouting),
+                1 =&gt; MapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), includeValues, (int) flags, Cluster.IsSmartRouting),
+                2 =&gt; MapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
+                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(keyv), ToData(predicate), includeValues, (int) flags, Cluster.IsSmartRouting),
+                _ =&gt; throw new NotSupportedException()
+            };
 
-                var partitionId = Cluster.Partitioner.GetPartitionId(keyData.PartitionHash);
-                var ownerId = Cluster.Partitioner.GetPartitionOwner(partitionId);
-                if (!ownerKeys.TryGetValue(ownerId, out var part))
-                    part = ownerKeys[ownerId] = new Dictionary&lt;int, List&lt;IData&gt;&gt;();
-                if (!part.TryGetValue(partitionId, out var list))
-                    list = part[partitionId] = new List&lt;IData&gt;();
-                list.Add(keyData);
+            var subscription = new ClusterSubscription(
+                subscribeRequest,
+                ReadSubscribeResponse,
+                CreateUnsubscribeRequest,
+                ReadUnsubscribeResponse,
+                HandleEventAsync,
+                new MapSubscriptionState(mode, Name, handlers, state));
+
+            await Cluster.Events.AddSubscriptionAsync(subscription, cancellationToken).CfAwait();
+
+            return subscription.Id;
+        }
+
+        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, bool includeValues = true, object state = null)
+            =&gt; SubscribeAsync(events, Maybe.None, null, includeValues, state, CancellationToken.None);
+
+        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, bool includeValues = true, object state = null)
+            =&gt; SubscribeAsync(events, Maybe.Some(key), null, includeValues, state, CancellationToken.None);
+
+        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, IPredicate predicate, bool includeValues = true, object state = null)
+            =&gt; SubscribeAsync(events, Maybe.None, predicate, includeValues, state, CancellationToken.None);
+
+        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, IPredicate predicate, bool includeValues = true, object state = null)
+            =&gt; SubscribeAsync(events, Maybe.Some(key), predicate, includeValues, state, CancellationToken.None);
+
+        private class MapSubscriptionState : SubscriptionState&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;
+        {
+            public MapSubscriptionState(int mode, string name, MapEventHandlers&lt;TKey, TValue&gt; handlers, object state)
+                : base(name, handlers, state)
+            {
+                Mode = mode;
             }
 
-            var task = GetAllAsync(ownerKeys, cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
+            public int Mode { get; }
         }
 
-        /// &lt;summary&gt;
-        /// Gets all entries for keys.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;ownerKeys&quot;&gt;Keys.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;The values for the specified keys.&lt;/returns&gt;
-        protected virtual async Task&lt;ReadOnlyLazyDictionary&lt;TKey, TValue&gt;&gt; GetAllAsync(Dictionary&lt;Guid, Dictionary&lt;int, List&lt;IData&gt;&gt;&gt; ownerKeys, CancellationToken cancellationToken)
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
         {
-            // create parallel tasks to fire a request for each owner
-            var tasks = new List&lt;Task&lt;ClientMessage&gt;&gt;();
-            foreach (var (ownerId, part) in ownerKeys)
-            {
-                foreach (var (partitionId, list) in part)
-                {
-                    if (list.Count == 0) continue;
+            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
 
-                    var requestMessage = MapGetAllCodec.EncodeRequest(Name, list);
-                    requestMessage.PartitionId = partitionId;
-                    var task = Cluster.Messaging.SendToMemberAsync(requestMessage, ownerId, cancellationToken);
-                    tasks.Add(task);
+            return sstate.Mode switch
+            {
+                0 =&gt; MapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
+                1 =&gt; MapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
+                2 =&gt; MapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
+                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEvent, state, LoggerFactory),
+                _ =&gt; throw new NotSupportedException()
+            };
+        }
+
+        private async ValueTask HandleEntryEvent(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
+        {
+            if (eventTypeData == 0) return;
+            var eventType = (MapEventTypes) eventTypeData;
+
+            var member = Cluster.Members.GetMember(memberId);
+            var key = LazyArg&lt;TKey&gt;(keyData);
+            var value = LazyArg&lt;TValue&gt;(valueData);
+            var oldValue = LazyArg&lt;TValue&gt;(oldValueData);
+            var mergingValue = LazyArg&lt;TValue&gt;(mergingValueData);
+
+            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
+            {
+                if (handler.EventType.HasAll(eventType))
+                {
+                    var task = handler switch
+                    {
+                        IMapEntryEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt; entryHandler =&gt; entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, state),
+                        IMapEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt; mapHandler =&gt; mapHandler.HandleAsync(this, member, numberOfAffectedEntries, state),
+                        _ =&gt; throw new NotSupportedException()
+                    };
+                    await task.CfAwait();
                 }
             }
-
-            // and wait on all tasks, gathering the responses
-            await Task.WhenAll(tasks).CfAwait();
-
-            // decode all responses, in 1 thread: this is CPU-bound
-            // (we may want to introduce some parallelism, though, depending on # of cores)
-            var result = new ReadOnlyLazyDictionary&lt;TKey, TValue&gt;(SerializationService);
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var task in tasks)
-            {
-                var responseMessage = task.Result; // safe: we know the task has completed
-                var response = MapGetAllCodec.DecodeResponse(responseMessage).Response;
-                result.Add(response);
-            }
-
-            return result;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IMapEntryStats&lt;TKey, TValue&gt;&gt; GetEntryViewAsync(TKey key)
-            =&gt; GetEntryStatsAsync(key, CancellationToken.None);
-
-        private async Task&lt;IMapEntryStats&lt;TKey, TValue&gt;&gt; GetEntryStatsAsync(TKey key, CancellationToken cancellationToken)
+        private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
         {
-            var keyData = ToSafeData(key);
+            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
+            return MapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
+        }
 
-            var requestMessage = MapGetEntryViewCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            var response = MapGetEntryViewCodec.DecodeResponse(responseMessage).Response;
+        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
+        {
+            var sstate = ToSafeState&lt;MapSubscriptionState&gt;(state);
 
-            if (response == null) return null;
-
-            return new MapEntryStats&lt;TKey, TValue&gt;
+            return sstate.Mode switch
             {
-                Key = ToObject&lt;TKey&gt;(response.Key),
-                Value = ToObject&lt;TValue&gt;(response.Value),
-                Cost = response.Cost,
-                CreationTime = response.CreationTime,
-                ExpirationTime = response.ExpirationTime,
-                Hits = response.Hits,
-                LastAccessTime = response.LastAccessTime,
-                LastStoredTime = response.LastStoredTime,
-                LastUpdateTime = response.LastUpdateTime,
-                Version = response.Version,
-                EvictionCriteriaNumber = response.EvictionCriteriaNumber,
-                Ttl = response.Ttl
+                0 =&gt; MapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
+                1 =&gt; MapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response,
+                2 =&gt; MapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response,
+                3 =&gt; MapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response,
+                _ =&gt; throw new NotSupportedException()
             };
         }
 
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync()
-            =&gt; GetEntriesAsync(CancellationToken.None);
-
-        private async Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync(CancellationToken cancellationToken)
+        private static bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
         {
-            var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary&lt;TKey, TValue&gt;(SerializationService) { response };
+            return MapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync(IPredicate predicate)
-            =&gt; GetEntriesAsync(predicate, CancellationToken.None);
-
-        private async Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync(IPredicate predicate, CancellationToken cancellationToken)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            var pagingPredicate = UnwrapPagingPredicate(predicate);
-            if (pagingPredicate != null)
-            {
-                pagingPredicate.IterationType = IterationType.Entry;
-
-                var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapEntriesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-                var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyDictionary&lt;TKey, TValue&gt;(SerializationService) { response.Response };
-            }
-
-            {
-                var requestMessage = MapEntriesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-                var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
-                    .CfAwait();
-                var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyDictionary&lt;TKey, TValue&gt;(SerializationService) { response };
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync()
-            =&gt; GetKeysAsync(CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync(CancellationToken cancellationToken)
-        {
-            var requestMessage = MapKeySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TKey&gt;(response, SerializationService);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync(IPredicate predicate)
-            =&gt; GetKeysAsync(predicate, CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync(IPredicate predicate, CancellationToken cancellationToken)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            var pagingPredicate = UnwrapPagingPredicate(predicate);
-            if (pagingPredicate != null)
-            {
-                pagingPredicate.IterationType = IterationType.Key;
-
-                var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapKeySetWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-                var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyList&lt;TKey&gt;(response.Response, SerializationService);
-            }
-
-            {
-                var requestMessage = MapKeySetWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-                var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
-                    .CfAwait();
-                var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList&lt;TKey&gt;(response, SerializationService);
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync()
-            =&gt; GetValuesAsync(CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync(CancellationToken cancellationToken)
-        {
-            var requestMessage = MapValuesCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapValuesCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync(IPredicate predicate)
-            =&gt; GetValuesAsync(predicate, CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync(IPredicate predicate, CancellationToken cancellationToken)
-        {
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
-            var pagingPredicate = UnwrapPagingPredicate(predicate);
-            if (pagingPredicate != null)
-            {
-                pagingPredicate.IterationType = IterationType.Value;
-
-                var pagingPredicateHolder = PagingPredicateHolder.Of(predicate, SerializationService);
-                var requestMessage = MapValuesWithPagingPredicateCodec.EncodeRequest(Name, pagingPredicateHolder);
-                var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-                var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
-                pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyList&lt;TValue&gt;(response.Response, SerializationService);
-            }
-
-            {
-                var requestMessage = MapValuesWithPredicateCodec.EncodeRequest(Name, ToData(predicate));
-                var responseMessage = await (predicate is PartitionPredicate pp
-                    ? Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, SerializationService.ToData(pp.PartitionKey), cancellationToken)
-                    : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
-                    .CfAwait();
-                var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
-            }
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;int&gt; GetSizeAsync()
-            =&gt; CountAsync(CancellationToken.None);
-
-        private async Task&lt;int&gt; CountAsync(CancellationToken cancellationToken)
-        {
-            var requestMessage = MapSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapSizeCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;bool&gt; IsEmptyAsync()
-            =&gt; IsEmptyAsync(CancellationToken.None);
-
-        private async Task&lt;bool&gt; IsEmptyAsync(CancellationToken cancellationToken)
-        {
-            var requestMessage = MapIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapIsEmptyCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;bool&gt; ContainsKeyAsync(TKey key)
-            =&gt; ContainsKeyAsync(key, CancellationToken.None);
-
-        private
-#if !HZ_OPTIMIZE_ASYNC
-        async
-#endif
-        Task&lt;bool&gt; ContainsKeyAsync(TKey key, CancellationToken cancellationToken)
-        {
-            var task = ContainsKeyAsync(ToSafeData(key), cancellationToken);
-
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
-            return await task.CfAwait();
-#endif
-        }
-
-        /// &lt;summary&gt;
-        /// Determines whether this map contains an entry for a key.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;keyData&quot;&gt;The key.&lt;/param&gt;
-        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
-        /// &lt;returns&gt;True if the map contains an entry for the specified key; otherwise false.&lt;/returns&gt;
-        protected virtual async Task&lt;bool&gt; ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
-        {
-            var requestMessage = MapContainsKeyCodec.EncodeRequest(Name, keyData, ContextId);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
-            var response = MapContainsKeyCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;bool&gt; ContainsValueAsync(TValue value)
-            =&gt; ContainsValueAsync(value, CancellationToken.None);
-
-        private async Task&lt;bool&gt; ContainsValueAsync(TValue value, CancellationToken cancellationToken)
-        {
-            var valueData = ToSafeData(value);
-
-            var requestMessage = MapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapContainsValueCodec.DecodeResponse(responseMessage).Response;
-            return response;
-        }
-
-        private static PagingPredicate UnwrapPagingPredicate(IPredicate predicate)
-        {
-            return predicate switch
-            {
-                PagingPredicate paging =&gt; paging,
-                PartitionPredicate partition =&gt; partition.Target as PagingPredicate,
-                _ =&gt; null
-            };
-        }
-
-        public async IAsyncEnumerator&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            // all collections are async enumerable,
-            // but by default we load the whole items set at once,
-            // then iterate in memory
-            var items = await GetEntriesAsync(cancellationToken).CfAwait();
-            foreach (var item in items)
-                yield return item;
-        }
+        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
+            =&gt; UnsubscribeBaseAsync(subscriptionId);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[34,16,34,53,1],[37,16,37,76,1],[48,13,48,86,1],[49,13,49,48,1],[50,9,50,10,1],[60,13,60,86,1],[61,13,61,142,1],[62,13,62,81,1],[63,13,63,29,1],[64,9,64,10,1],[68,16,68,57,1],[76,13,76,82,1],[79,22,79,29,1],[79,30,79,32,1],[79,33,79,37,1],[81,17,81,47,1],[83,17,83,93,1],[84,17,84,82,1],[85,17,85,67,1],[86,21,86,84,1],[87,17,87,66,1],[88,21,88,66,1],[89,17,89,35,1],[92,13,92,66,1],[97,13,97,41,1],[99,9,99,10,1],[110,13,110,57,1],[111,22,111,41,1],[111,42,111,44,1],[111,45,111,54,1],[113,26,113,49,1],[113,50,113,52,1],[113,53,113,57,1],[115,21,115,41,1],[117,21,117,83,1],[118,21,118,62,1],[119,21,119,112,1],[120,21,120,37,1],[125,13,125,49,1],[129,13,129,89,1],[131,22,131,30,1],[131,31,131,33,1],[131,34,131,39,1],[133,17,133,51,1],[134,17,134,88,1],[135,17,135,38,1],[138,13,138,27,1],[139,9,139,10,1],[143,16,143,63,1],[147,13,147,43,1],[149,13,149,95,1],[150,13,150,142,1],[151,13,151,90,1],[153,13,153,34,1],[153,35,153,47,0],[155,13,169,15,1],[170,9,170,10,1],[174,16,174,55,1],[178,13,178,71,1],[179,13,179,114,1],[180,13,180,86,1],[181,13,181,96,1],[182,9,182,10,1],[186,16,186,66,1],[190,13,190,35,1],[190,36,190,87,0],[191,13,191,68,1],[192,13,192,41,1],[194,17,194,69,0],[196,17,196,103,0],[197,17,197,116,0],[198,17,198,118,0],[199,17,199,99,0],[200,17,200,111,0],[201,17,201,109,0],[205,17,205,106,1],[206,17,209,32,1],[210,17,210,102,1],[211,17,211,100,1],[213,9,213,10,1],[217,16,217,52,1],[221,13,221,69,1],[222,13,222,114,1],[223,13,223,84,1],[224,13,224,79,1],[225,9,225,10,1],[229,16,229,63,1],[233,13,233,35,1],[233,36,233,87,0],[234,13,234,68,1],[235,13,235,41,1],[237,17,237,67,0],[239,17,239,103,0],[240,17,240,115,0],[241,17,241,118,0],[242,17,242,98,0],[243,17,243,111,0],[244,17,244,92,0],[248,17,248,105,1],[249,17,252,32,1],[253,17,253,101,1],[254,17,254,83,1],[256,9,256,10,1],[260,16,260,54,1],[264,13,264,69,1],[265,13,265,114,1],[266,13,266,84,1],[267,13,267,81,1],[268,9,268,10,1],[272,16,272,65,1],[276,13,276,35,1],[276,36,276,87,0],[277,13,277,68,1],[278,13,278,41,1],[280,17,280,69,0],[282,17,282,103,0],[283,17,283,115,0],[284,17,284,118,0],[285,17,285,98,0],[286,17,286,111,0],[287,17,287,94,0],[291,17,291,105,1],[292,17,295,32,1],[296,17,296,101,1],[297,17,297,85,1],[299,9,299,10,1],[303,16,303,50,1],[307,13,307,67,1],[308,13,308,114,1],[309,13,309,82,1],[310,13,310,29,1],[311,9,311,10,1],[315,16,315,52,1],[319,13,319,70,1],[320,13,320,114,1],[321,13,321,85,1],[322,13,322,29,1],[323,9,323,10,1],[327,16,327,61,1],[335,13,335,77,1],[340,13,340,41,1],[342,9,342,10,1],[352,13,352,94,1],[353,13,353,142,1],[354,13,354,89,1],[355,13,355,29,1],[356,9,356,10,1],[360,16,360,65,1],[364,13,364,47,1],[366,13,366,87,1],[367,13,367,114,1],[368,13,368,91,1],[369,13,369,29,1],[370,9,370,10,1],[374,13,376,43,1],[376,43,376,49,0],[376,49,377,49,1],[377,49,377,84,0],[377,84,378,22,1],[378,22,378,26,1],[378,26,379,15,1],[387,13,387,76,0],[388,22,388,30,0],[388,31,388,33,0],[388,34,388,39,0],[389,17,389,35,0],[390,9,390,10,0]]);
+      highlightRanges([[32,13,32,32,1],[32,33,32,81,0],[34,13,34,65,1],[35,13,35,30,1],[37,13,37,49,1],[38,22,38,33,1],[38,34,38,36,1],[38,37,38,45,1],[39,17,39,44,1],[45,13,45,70,1],[46,13,46,45,1],[48,13,50,22,1],[50,22,50,118,1],[50,118,51,22,1],[51,22,51,137,1],[51,137,52,22,1],[52,22,52,150,1],[52,150,53,22,1],[53,22,53,169,1],[53,169,54,22,1],[54,22,54,55,0],[54,55,55,15,1],[57,13,63,72,1],[65,13,65,98,1],[67,13,67,36,1],[68,9,68,10,1],[71,16,71,102,1],[74,16,74,107,1],[77,16,77,107,1],[80,16,80,112,1],[85,19,85,46,1],[87,17,87,29,1],[88,13,88,14,1],[90,31,90,35,1],[95,13,95,67,1],[97,13,99,22,1],[99,22,99,117,1],[99,117,100,22,1],[100,22,100,122,1],[100,122,101,22,1],[101,22,101,130,1],[101,130,102,22,1],[102,22,102,135,1],[102,135,103,22,1],[103,22,103,55,0],[103,55,104,15,1],[109,13,109,36,1],[109,37,109,44,0],[110,13,110,59,1],[112,13,112,62,1],[113,13,113,46,1],[114,13,114,52,1],[115,13,115,58,1],[116,13,116,66,1],[118,13,118,67,1],[121,22,121,33,1],[121,34,121,36,1],[121,37,121,52,1],[123,17,123,57,1],[125,21,127,98,1],[127,98,127,215,1],[127,215,128,91,1],[128,91,128,159,1],[128,159,129,30,1],[129,30,129,63,0],[129,63,130,23,1],[131,21,131,42,1],[134,9,134,10,1],[138,13,138,67,1],[139,13,139,91,1],[144,13,144,67,1],[146,13,148,22,1],[148,22,148,87,1],[148,87,149,22,1],[149,22,149,92,1],[149,92,150,22,1],[150,22,150,100,1],[150,100,151,22,1],[151,22,151,105,1],[151,105,152,22,1],[152,22,152,55,0],[152,55,153,15,1],[158,13,158,100,1],[162,16,162,52,1]]);
     </script>
   </body>
 </html>

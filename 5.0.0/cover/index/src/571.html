@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryRemovedEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryMergedEventHandler.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,30 +23,25 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects
 {
-    public sealed class MapEntryRemovedEventArgs&lt;TKey, TValue&gt; : MapEntryEventArgsBase&lt;TKey&gt;
+    internal sealed class MapEntryMergedEventHandler&lt;TKey, TValue, TSender&gt; : MapEntryEventHandlerBase&lt;TKey, TValue, TSender, MapEntryMergedEventArgs&lt;TKey, TValue&gt;&gt;
     {
-        private readonly Lazy&lt;TValue&gt; _oldValue;
+        public MapEntryMergedEventHandler(Func&lt;TSender, MapEntryMergedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+            : base(MapEventTypes.Merged, handler)
+        { }
 
-        public MapEntryRemovedEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; oldValue, object state)
-            : base(member, key, state)
-        {
-            _oldValue = oldValue;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the value that was removed.
-        /// &lt;/summary&gt;
-        public TValue OldValue =&gt; _oldValue == null ? default : _oldValue.Value;
+        protected override MapEntryMergedEventArgs&lt;TKey, TValue&gt; CreateEventArgs(MemberInfo member, Lazy&lt;TKey&gt; key, Lazy&lt;TValue&gt; value, Lazy&lt;TValue&gt; oldValue, Lazy&lt;TValue&gt; mergeValue, MapEventTypes eventType, int numberOfAffectedEntries, object state)
+            =&gt; new MapEntryMergedEventArgs&lt;TKey, TValue&gt;(member, key, value, oldValue, mergeValue, state);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,15,25,39,1],[27,13,27,34,1],[28,9,28,10,1],[33,35,33,80,1]]);
+      highlightRanges([[24,15,24,50,0],[25,11,25,12,0],[28,16,28,106,0]]);
     </script>
   </body>
 </html>

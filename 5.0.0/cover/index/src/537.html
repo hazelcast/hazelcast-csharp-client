@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\TargetUnreachableException.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\TargetDisconnectedException.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,68 +24,68 @@
 
 using System;
 using System.Runtime.Serialization;
+using Hazelcast.Configuration;
 
 namespace Hazelcast.Exceptions
 {
     /// &lt;summary&gt;
-    /// Represents the exception that is thrown when the target of an invocation is not reachable.
+    /// Represents the exception that is thrown when the target of an invocation disconnects.
     /// &lt;/summary&gt;
     [Serializable]
-    public class TargetUnreachableException : HazelcastException
+    public sealed class TargetDisconnectedException : TargetUnreachableException
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ConfigurationException&quot;/&gt; class.
         /// &lt;/summary&gt;
-        public TargetUnreachableException()
-            : base(ExceptionMessages.TargetUnreachableException)
+        public TargetDisconnectedException()
+            : base(ExceptionMessages.TargetDisconnectedException)
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a specified error message.
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a specified error message.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
-        public TargetUnreachableException(string message)
+        public TargetDisconnectedException(string message)
             : base(message)
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a reference to
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a reference to
         /// the inner exception that is the cause of this exception.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.&lt;/param&gt;
-        public TargetUnreachableException(Exception innerException)
-            : base(ExceptionMessages.TargetUnreachableException, innerException)
+        public TargetDisconnectedException(Exception innerException)
+            : base(ExceptionMessages.TargetDisconnectedException, innerException)
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a specified error message
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with a specified error message
         /// and a reference to the inner exception that is the cause of this exception.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
         /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
         /// reference if no inner exception is specified.&lt;/param&gt;
-        public TargetUnreachableException(string message, Exception innerException)
+        public TargetDisconnectedException(string message, Exception innerException)
             : base(message, innerException)
         { }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with serialized data.
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; class with serialized data.
         /// &lt;/summary&gt;
         /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
         /// about the exception being thrown.&lt;/param&gt;
         /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
         /// about the source or destination.&lt;/param&gt;
-        protected TargetUnreachableException(SerializationInfo info, StreamingContext context)
+        private TargetDisconnectedException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
-
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,15,30,65,0],[31,11,31,12,0],[38,15,38,28,1],[39,11,39,12,1],[48,15,48,81,0],[49,11,49,12,0],[59,15,59,44,1],[60,11,60,12,1],[70,15,70,34,1],[71,11,71,12,1]]);
+      highlightRanges([[31,15,31,66,1],[32,11,32,12,1],[39,15,39,28,1],[40,11,40,12,1],[49,15,49,82,1],[50,11,50,12,1],[60,15,60,44,1],[61,11,61,12,1],[71,15,71,34,1],[72,11,72,12,1]]);
     </script>
   </body>
 </html>

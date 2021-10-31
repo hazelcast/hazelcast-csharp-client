@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\ConcurrentHashMapStreamSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\CollectionStreamSerializerBase.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,29 +22,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class ConcurrentHashMapStreamSerializer : DictStreamSerializerBase&lt;ConcurrentDictionary&lt;object, object&gt;&gt;
+    internal abstract class CollectionStreamSerializerBase&lt;CollectionType&gt; : IStreamSerializer&lt;CollectionType&gt;
+        where CollectionType : ISet&lt;object&gt;
     {
-        private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
+        public virtual void Dispose()
+        { }
 
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeConcurrentHashMap;
+        public abstract int TypeId { get; }
 
-        public override ConcurrentDictionary&lt;object, object&gt; Read(IObjectDataInput input)
+        public abstract CollectionType Read(IObjectDataInput input);
+
+        public void Write(IObjectDataOutput output, CollectionType obj)
         {
-            var size = input.ReadInt();
-            var dict = new ConcurrentDictionary&lt;object, object&gt;(DefaultConcurrencyLevel, size);
-            return DeserializeEntries(input, size, dict);
+            var size = obj.Count;
+            output.WriteInt(size);
+            if (size &gt; 0)
+            {
+                foreach (var o in obj)
+                {
+                    output.WriteObject(o);
+                }
+            }
+        }
+
+        protected static CollectionType DeserializeEntries(IObjectDataInput input, int size, CollectionType collection)
+        {
+            for (var i = 0; i &lt; size; i++)
+            {
+                collection.Add(input.ReadObject&lt;object&gt;());
+            }
+            return collection;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,9,22,90,0],[24,39,24,94,1],[28,13,28,40,0],[29,13,29,96,0],[30,13,30,58,0]]);
+      highlightRanges([[23,11,23,12,0],[31,13,31,34,0],[32,13,32,35,0],[33,13,33,26,0],[35,26,35,31,0],[35,32,35,34,0],[35,35,35,38,0],[37,21,37,43,0],[40,9,40,10,0],[44,18,44,27,0],[44,29,44,37,0],[44,39,44,42,0],[46,17,46,60,0],[48,13,48,31,0]]);
     </script>
   </body>
 </html>

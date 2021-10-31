@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.AggrProj.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HList.Events.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,83 +22,37 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using System.Threading;
+using System;
 using System.Threading.Tasks;
-using Hazelcast.Aggregation;
-using Hazelcast.Core;
-using Hazelcast.Projection;
+using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Query;
-using Hazelcast.Serialization.Collections;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    // ReSharper disable UnusedTypeParameter
-    internal partial class HMap&lt;TKey, TValue&gt; // Aggregations and Projections
-    // ReSharper restore NonReadonlyMemberInGetHashCode
+    internal partial class HList&lt;T&gt; // Events
     {
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator)
-            =&gt; AggregateAsync(aggregator, CancellationToken.None);
+        protected override ClientMessage CreateSubscribeRequest(bool includeValue, bool isSmartRouting)
+            =&gt; ListAddListenerCodec.EncodeRequest(Name, includeValue, isSmartRouting);
 
-        private async Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, CancellationToken cancellationToken)
-        {
-            var aggregatorData = ToSafeData(aggregator);
+        protected override ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; ListRemoveListenerCodec.EncodeRequest(Name, subscriptionId);
 
-            var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TResult&gt;(response);
-        }
+        protected override Guid ReadSubscribeResponse(ClientMessage responseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; ListAddListenerCodec.DecodeResponse(responseMessage).Response;
 
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, IPredicate predicate)
-            =&gt; AggregateAsync(aggregator, predicate, CancellationToken.None);
+        protected override bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, SubscriptionState&lt;CollectionItemEventHandlers&lt;T&gt;&gt; state)
+            =&gt; ListRemoveListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
 
-        private async Task&lt;TResult&gt; AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt; aggregator, IPredicate predicate, CancellationToken cancellationToken)
-        {
-            var (aggregatorData, predicateData) = ToSafeData(aggregator, predicate);
-
-            var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TResult&gt;(response);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection)
-            =&gt; ProjectAsync&lt;TResult&gt;(projection, CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, CancellationToken cancellationToken)
-        {
-            var projectionData = ToSafeData(projection);
-
-            var requestMessage = MapProjectCodec.EncodeRequest(Name, projectionData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapProjectCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TResult&gt;(response, SerializationService);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, IPredicate predicate)
-            =&gt; ProjectAsync&lt;TResult&gt;(projection, predicate, CancellationToken.None);
-
-        private async Task&lt;IReadOnlyCollection&lt;TResult&gt;&gt; ProjectAsync&lt;TResult&gt;(IProjection projection, IPredicate predicate, CancellationToken cancellationToken)
-        {
-            var (projectionData, predicateData) = ToSafeData(projection, predicate);
-
-            var requestMessage = MapProjectWithPredicateCodec.EncodeRequest(Name, projectionData, predicateData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
-            var response = MapProjectWithPredicateCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TResult&gt;(response, SerializationService);
-        }
+        protected override ValueTask CodecHandleEventAsync(ClientMessage eventMessage, Func&lt;IData, Guid, int, object, ValueTask&gt; handler, object state, ILoggerFactory loggerFactory)
+            =&gt; ListAddListenerCodec.HandleEventAsync(eventMessage, handler, state, loggerFactory);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[33,16,33,66,1],[37,13,37,57,1],[39,13,39,88,1],[40,13,40,114,1],[41,13,41,87,1],[42,13,42,48,1],[43,9,43,10,1],[47,16,47,77,1],[51,13,51,85,1],[53,13,53,116,1],[54,13,54,114,1],[55,13,55,100,1],[56,13,56,48,1],[57,9,57,10,1],[61,16,61,73,1],[65,13,65,57,1],[67,13,67,86,1],[68,13,68,114,1],[69,13,69,85,1],[70,13,70,82,1],[71,9,71,10,1],[75,16,75,84,1],[79,13,79,85,1],[81,13,81,114,1],[82,13,82,114,1],[83,13,83,98,1],[84,13,84,82,1],[85,9,85,10,1]]);
+      highlightRanges([[27,16,27,86,1],[30,16,30,75,1],[33,16,33,77,1],[36,16,36,91,1],[39,16,39,98,1]]);
     </script>
   </body>
 </html>

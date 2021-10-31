@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNLocalTimeCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\BuiltInCodecs\ListCNLocalDateTimeCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -29,18 +29,18 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
 {
-    internal static class ListCNLocalTimeCodec
+    internal static class ListCNLocalDateTimeCodec
     {
-        public static IList&lt;HLocalTime&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static IList&lt;HLocalDateTime&gt; Decode(IEnumerator&lt;Frame&gt; iterator)
         {
-            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfLocalTime, BytesExtensions.ReadLocalTime);
+            return ListCNFixedSizeCodec.Decode(iterator.Take(), BytesExtensions.SizeOfLocalDateTime, BytesExtensions.ReadLocalDateTime);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[26,13,26,129,1]]);
+      highlightRanges([[26,13,26,137,1]]);
     </script>
   </body>
 </html>

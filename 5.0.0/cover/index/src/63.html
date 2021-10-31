@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ObjectDataInput.positional.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ObjectDataInput.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,74 +22,69 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Diagnostics;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Serialization
 {
-    internal partial class ObjectDataInput //public api
+    internal partial class ObjectDataInput : IObjectDataInput, IDisposable
     {
-        public bool ReadBoolean(int position)
+        private byte[] _buffer;
+        private readonly SerializationService _serializationService;
+        private int _length;
+
+        public ObjectDataInput(byte[] buffer, SerializationService serializationService, Endianness endianness, int offset = 0)
         {
-            CheckAvailable(position, BytesExtensions.SizeOfBool);
-            var value = _buffer.ReadBool(position);
-            return value;
+            _buffer = buffer;
+            _serializationService = serializationService;
+            Endianness = endianness;
+            _length = buffer?.Length ?? 0;
+            Debug.Assert(offset &gt;= 0 &amp;&amp; offset &lt;= _length, &quot;Wrong offset value for input&quot;);
+            Position = offset;
         }
 
-        public byte ReadByte(int position)
+        /// &lt;summary&gt;
+        /// Initializes the buffer.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;data&quot;&gt;The buffer data.&lt;/param&gt;
+        /// &lt;param name=&quot;offset&quot;&gt;The buffer data offset.&lt;/param&gt;
+        public void Initialize(byte[] buffer, int offset)
         {
-            CheckAvailable(position, BytesExtensions.SizeOfByte);
-            var value = _buffer.ReadByte(position);
-            return value;
+            _buffer = buffer;
+            Position = offset;
+            _length = buffer?.Length ?? 0;
         }
 
-        public char ReadChar(int position)
+        internal int Position { get; set; }
+
+        //test only
+        internal byte[] Buffer =&gt; _buffer;
+
+        public void Dispose()
         {
-            CheckAvailable(position, BytesExtensions.SizeOfChar);
-            var value = _buffer.ReadChar(position, Endianness);
-            return value;
+            _buffer = null;
+            Position = 0;
+            _length = 0;
         }
 
-        public short ReadShort(int position)
+        internal void CheckAvailable(int position, int count)
         {
-            CheckAvailable(position, BytesExtensions.SizeOfShort);
-            var value = _buffer.ReadShort(position, Endianness);
-            return value;
-        }
+            if (position &lt; 0)
+                throw new ArgumentOutOfRangeException(nameof(position));
+            if (count &lt; 0)
+                throw new ArgumentOutOfRangeException(nameof(count));
 
-        public int ReadInt(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfInt);
-            var value = _buffer.ReadInt(position, Endianness);
-            return value;
+            if (_length - position &lt; count)
+                throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
         }
-
-        public long ReadLong(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfLong);
-            var value = _buffer.ReadLong(position, Endianness);
-            return value;
-        }
-
-        public float ReadFloat(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfFloat);
-            var value = _buffer.ReadFloat(position, Endianness);
-            return value;
-        }
-
-        public double ReadDouble(int position)
-        {
-            CheckAvailable(position, BytesExtensions.SizeOfDouble);
-            var value = _buffer.ReadDouble(position, Endianness);
-            return value;
-        }
-
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,13,23,66,1],[24,13,24,52,1],[25,13,25,26,1],[30,13,30,66,1],[31,13,31,52,1],[32,13,32,26,1],[37,13,37,66,1],[38,13,38,64,1],[39,13,39,26,1],[44,13,44,67,1],[45,13,45,65,1],[46,13,46,26,1],[51,13,51,65,1],[52,13,52,63,1],[53,13,53,26,1],[58,13,58,66,1],[59,13,59,64,1],[60,13,60,26,1],[65,13,65,67,1],[66,13,66,65,1],[67,13,67,26,1],[72,13,72,68,1],[73,13,73,66,1],[74,13,74,26,1]]);
+      highlightRanges([[28,9,28,128,1],[30,13,30,30,1],[31,13,31,58,1],[32,13,32,37,1],[33,13,33,43,1],[35,13,35,31,1],[36,9,36,10,1],[45,13,45,30,1],[46,13,46,31,1],[47,13,47,43,1],[48,9,48,10,1],[50,33,50,37,1],[50,38,50,42,1],[53,35,53,42,1],[57,13,57,28,1],[58,13,58,26,1],[59,13,59,25,1],[60,9,60,10,1],[64,13,64,30,1],[65,17,65,73,0],[66,13,66,27,1],[67,17,67,70,0],[69,13,69,44,1],[70,17,70,87,0],[71,9,71,10,1]]);
     </script>
   </body>
 </html>

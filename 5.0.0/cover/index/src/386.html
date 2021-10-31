@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TopicPublishCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TopicPublishAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Publishes the message to all subscribers of this topic
+    /// Publishes all messages to all subscribers of this topic
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TopicPublishServerCodec
+    internal static class TopicPublishAllServerCodec
 #else
-    internal static class TopicPublishCodec
+    internal static class TopicPublishAllCodec
 #endif
     {
-        public const int RequestMessageType = 262400; // 0x040100
-        public const int ResponseMessageType = 262401; // 0x040101
+        public const int RequestMessageType = 263168; // 0x040400
+        public const int ResponseMessageType = 263169; // 0x040401
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -72,25 +72,25 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The message to publish to all subscribers of this topic
+            /// The messages to publish to all subscribers of this topic
             ///&lt;/summary&gt;
-            public IData Message { get; set; }
+            public IList&lt;IData&gt; Messages { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData message)
+        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; messages)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Topic.Publish&quot;
+                OperationName = &quot;Topic.PublishAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, message);
+            ListMultiFrameCodec.Encode(clientMessage, messages, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -101,7 +101,7 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Message = DataCodec.Decode(iterator);
+            request.Messages = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -134,7 +134,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[73,13,77,15,1],[78,13,78,123,1],[79,13,79,104,1],[80,13,80,88,1],[81,13,81,48,1],[82,13,82,53,1],[83,13,83,54,1],[84,13,84,34,1],[116,13,116,64,0],[117,13,117,53,0],[118,13,118,29,0],[119,13,119,29,0],[120,9,120,10,0]]);
+      highlightRanges([[73,13,77,15,0],[78,13,78,123,0],[79,13,79,104,0],[80,13,80,88,0],[81,13,81,48,0],[82,13,82,53,0],[83,13,83,83,0],[84,13,84,34,0],[116,13,116,64,0],[117,13,117,53,0],[118,13,118,29,0],[119,13,119,29,0],[120,9,120,10,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ClassDefinition.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ByteArraySerializerAdapter.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,147 +22,59 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Hazelcast.Serialization
 {
-    internal class ClassDefinition : IClassDefinition
+    internal class ByteArraySerializerAdapter&lt;T&gt; : ISerializerAdapter
     {
-        private readonly int _classId;
-        private readonly int _factoryId;
+        private readonly IByteArraySerializer&lt;T&gt; _serializer;
 
-        private readonly IDictionary&lt;string, IFieldDefinition&gt; _fieldDefinitionsMap =
-            new Dictionary&lt;string, IFieldDefinition&gt;();
-
-        private int _version = -1;
-
-        public ClassDefinition()
-        { }
-
-        public ClassDefinition(int factoryId, int classId, int version)
+        public ByteArraySerializerAdapter(IByteArraySerializer&lt;T&gt; serializer)
         {
-            _factoryId = factoryId;
-            _classId = classId;
-            _version = version;
+            _serializer = serializer;
         }
 
-        public virtual IFieldDefinition GetField(string name)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public virtual void Write(IObjectDataOutput output, object obj)
         {
-            return _fieldDefinitionsMap.TryGetValue(name, out var val) ? val : null;
+            var bytes = _serializer.Write((T) obj);
+            output.WriteByteArray(bytes);
         }
 
-        public virtual IFieldDefinition GetField(int fieldIndex)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public virtual object Read(IObjectDataInput @in)
         {
-            if (fieldIndex &lt; 0 || fieldIndex &gt;= _fieldDefinitionsMap.Count)
-                throw new ArgumentOutOfRangeException(nameof(fieldIndex), $&quot;Cannot get field with index {fieldIndex}, map contains {_fieldDefinitionsMap.Count} fields.&quot;);
-
-            var fieldDefinition = _fieldDefinitionsMap.Values.FirstOrDefault(x =&gt; x.Index == fieldIndex);
-            if (fieldDefinition != null) return fieldDefinition;
-
-            throw new InvalidOperationException($&quot;Failed to find field with index {fieldIndex} in map containing {_fieldDefinitionsMap.Count} fields.&quot;);
-        }
-
-        public virtual bool HasField(string fieldName)
-        {
-            return _fieldDefinitionsMap.ContainsKey(fieldName);
-        }
-
-        public virtual ICollection&lt;string&gt; GetFieldNames()
-        {
-            return new HashSet&lt;string&gt;(_fieldDefinitionsMap.Keys);
-        }
-
-        public virtual FieldType GetFieldType(string fieldName)
-        {
-            var fd = GetField(fieldName);
-            if (fd != null)
+            var bytes = @in.ReadByteArray();
+            if (bytes == null || bytes.Length == 0)
             {
-                return fd.FieldType;
+                return null;
             }
-            throw new ArgumentException(&quot;Unknown field: &quot; + fieldName);
+            return _serializer.Read(bytes);
         }
 
-        public virtual int GetFieldClassId(string fieldName)
+        public int TypeId =&gt; _serializer.TypeId;
+
+        public virtual void Dispose()
         {
-            var fd = GetField(fieldName);
-            if (fd != null)
-            {
-                return fd.ClassId;
-            }
-            throw new ArgumentException(&quot;Unknown field: &quot; + fieldName);
+            _serializer.Dispose();
         }
 
-        public virtual int GetFieldCount()
-        {
-            return _fieldDefinitionsMap.Count;
-        }
-
-        public int FactoryId =&gt; _factoryId;
-
-        public int ClassId =&gt; _classId;
-
-        public int Version =&gt; _version;
-
-        public override bool Equals(object obj)
-        {
-            if (obj is null) return false;
-            if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((ClassDefinition) obj);
-        }
-
-        public override int GetHashCode()
-        {
-            var result = _classId;
-            result = 31*result + _version;
-            return result;
-        }
+        public virtual ISerializer Serializer =&gt; _serializer;
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
-            sb.Append(&quot;ClassDefinition&quot;);
-            sb.Append(&quot;{factoryId=&quot;).Append(_factoryId);
-            sb.Append(&quot;, classId=&quot;).Append(_classId);
-            sb.Append(&quot;, version=&quot;).Append(_version);
-            sb.Append(&quot;, fieldDefinitions=&quot;).Append(_fieldDefinitionsMap.Values);
+            var sb = new StringBuilder(&quot;SerializerAdapter{&quot;);
+            sb.Append(&quot;serializer=&quot;).Append(_serializer);
             sb.Append(&#39;}&#39;);
             return sb.ToString();
-        }
-
-        protected bool Equals(ClassDefinition other)
-        {
-            return _factoryId == other._factoryId &amp;&amp; _classId == other._classId &amp;&amp; _version == other._version &amp;&amp;
-                   _fieldDefinitionsMap.Count == other._fieldDefinitionsMap.Count &amp;&amp;
-                   !_fieldDefinitionsMap.Except(other._fieldDefinitionsMap).Any();
-        }
-
-        internal virtual void AddFieldDef(FieldDefinition fd)
-        {
-            _fieldDefinitionsMap[fd.Name] = fd;
-        }
-
-        internal virtual ICollection&lt;IFieldDefinition&gt; GetFieldDefinitions()
-        {
-            return _fieldDefinitionsMap.Values;
-        }
-
-        internal virtual void SetVersionIfNotSet(int version)
-        {
-            if (Version &lt; 0)
-            {
-                _version = version;
-            }
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,9,28,56,0],[27,9,28,56,1],[30,9,30,35,0],[30,9,30,35,1],[32,9,32,33,0],[33,11,33,12,0],[35,9,35,72,1],[37,13,37,36,1],[38,13,38,32,1],[39,13,39,32,1],[40,9,40,10,1],[44,13,44,85,1],[49,13,49,76,1],[50,17,50,171,0],[52,13,52,83,1],[52,83,52,104,1],[52,104,52,106,1],[53,13,53,41,1],[53,42,53,65,1],[55,13,55,153,0],[60,13,60,64,1],[65,13,65,67,0],[70,13,70,42,1],[71,13,71,28,1],[73,17,73,37,1],[75,13,75,72,0],[80,13,80,42,1],[81,13,81,28,1],[83,17,83,35,1],[85,13,85,72,0],[90,13,90,47,1],[93,33,93,43,1],[95,31,95,39,1],[97,31,97,39,1],[101,13,101,29,1],[101,30,101,43,0],[102,13,102,44,1],[102,45,102,57,0],[103,13,103,44,1],[103,45,103,58,1],[104,13,104,50,1],[109,13,109,35,1],[110,13,110,43,1],[111,13,111,27,1],[116,13,116,42,1],[117,13,117,42,1],[118,13,118,57,1],[119,13,119,54,1],[120,13,120,54,1],[121,13,121,82,1],[122,13,122,28,1],[123,13,123,34,1],[128,13,130,83,1],[135,13,135,48,1],[136,9,136,10,1],[140,13,140,48,0],[145,13,145,29,1],[147,17,147,36,0],[149,9,149,10,1]]);
+      highlightRanges([[23,9,23,78,1],[25,13,25,38,1],[26,9,26,10,1],[31,13,31,52,1],[32,13,32,42,1],[33,9,33,10,1],[38,13,38,45,1],[39,13,39,52,1],[41,17,41,29,0],[43,13,43,44,1],[46,30,46,48,1],[50,13,50,35,0],[51,9,51,10,0],[53,50,53,61,0],[57,13,57,62,0],[58,13,58,58,0],[59,13,59,28,0],[60,13,60,34,0]]);
     </script>
   </body>
 </html>

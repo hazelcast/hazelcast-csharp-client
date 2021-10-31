@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicRefContainsCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicRefCompareAndSetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,16 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Checks if the reference contains the value.
+    /// Alters the currently stored value by applying a function on it.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class AtomicRefContainsServerCodec
+    internal static class AtomicRefCompareAndSetServerCodec
 #else
-    internal static class AtomicRefContainsCodec
+    internal static class AtomicRefCompareAndSetCodec
 #endif
     {
-        public const int RequestMessageType = 656128; // 0x0A0300
-        public const int ResponseMessageType = 656129; // 0x0A0301
+        public const int RequestMessageType = 655872; // 0x0A0200
+        public const int ResponseMessageType = 655873; // 0x0A0201
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
@@ -78,18 +78,23 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// The value to check (is allowed to be null).
+            /// The expected value
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public IData OldValue { get; set; }
+
+            /// &lt;summary&gt;
+            /// The new value
+            ///&lt;/summary&gt;
+            public IData NewValue { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, IData @value)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, IData oldValue, IData newValue)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = true,
-                OperationName = &quot;AtomicRef.Contains&quot;
+                IsRetryable = false,
+                OperationName = &quot;AtomicRef.CompareAndSet&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -97,7 +102,8 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             RaftGroupIdCodec.Encode(clientMessage, groupId);
             StringCodec.Encode(clientMessage, name);
-            CodecUtil.EncodeNullable(clientMessage, @value, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, oldValue, DataCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, newValue, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -109,7 +115,8 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take(); // empty initial frame
             request.GroupId = RaftGroupIdCodec.Decode(iterator);
             request.Name = StringCodec.Decode(iterator);
-            request.Value = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            request.OldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            request.NewValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -118,7 +125,8 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if the value is found, false otherwise.
+            /// true if successful; or false if the actual value
+            /// was not equal to the expected value.
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -149,7 +157,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[79,13,83,15,0],[84,13,84,123,0],[85,13,85,104,0],[86,13,86,88,0],[87,13,87,48,0],[88,13,88,61,0],[89,13,89,53,0],[90,13,90,79,0],[91,13,91,34,0],[113,36,113,40,0],[113,41,113,45,0],[130,13,130,64,0],[131,13,131,53,0],[132,13,132,48,0],[133,13,133,91,0],[134,13,134,29,0],[135,9,135,10,0]]);
+      highlightRanges([[84,13,88,15,1],[89,13,89,123,1],[90,13,90,104,1],[91,13,91,88,1],[92,13,92,48,1],[93,13,93,61,1],[94,13,94,53,1],[95,13,95,81,1],[96,13,96,81,1],[97,13,97,34,1],[121,36,121,40,1],[121,41,121,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,91,1],[142,13,142,29,1],[143,9,143,10,1]]);
     </script>
   </body>
 </html>

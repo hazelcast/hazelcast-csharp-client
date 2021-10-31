@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\AutoBatcherBase.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\AutoBatcher.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,86 +22,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal abstract class AutoBatcherBase
+    internal sealed class AutoBatcher : AutoBatcherBase
     {
-        private readonly object _mutex = new object();
+        private readonly string _name;
+        private readonly FlakeIdGeneratorOptions _options;
+        private readonly ClusterMessaging _messaging;
 
-        private volatile Task&lt;Batch&gt; _fetchingBatch;
-        private volatile Batch _batch;
-
-        public ValueTask&lt;long&gt; GetNextIdAsync(CancellationToken cancellationToken = default)
+        public AutoBatcher(string name, FlakeIdGeneratorOptions options, ClusterMessaging messaging)
         {
-            // synchronously return next identifier if possible, else trigger the async operation
-
-            var batch = _batch;
-            return batch != null &amp;&amp; batch.TryGetNextId(out var id)
-                ? new ValueTask&lt;long&gt;(id)
-                : GetNextIdAsync2(cancellationToken);
+            _name = name;
+            _options = options;
+            _messaging = messaging;
         }
 
-        // async method that returns a batch *and* assigns _batch through SetBatch() - this is important: because
-        // _batch is assigned by the fetching task, it&#39;s assigned only once and always assigned before tha task
-        // completes, thus avoiding having to lock
-        protected abstract Task&lt;Batch&gt; FetchBatch();
-
-        protected void SetBatch(Batch batch) =&gt; _batch = batch;
-
-        private async ValueTask&lt;long&gt; GetNextIdAsync2(CancellationToken cancellationToken)
+        protected override async Task&lt;Batch&gt; FetchBatch()
         {
-            while (true)
-            {
-                cancellationToken.ThrowIfCancellationRequested();
+            var requestMessage = FlakeIdGeneratorNewIdBatchCodec.EncodeRequest(_name, _options.PrefetchCount);
+            var responseMessage = await _messaging.SendAsync(requestMessage).CfAwait();
+            var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
 
-                var fetchingBatch = _fetchingBatch;
-
-                if (fetchingBatch != null)
-                {
-                    // await fetchingBatch - this may throw, in which case we raise the exception to the
-                    // caller, but before that we make sure to clear _fetchingBatch so that FetchBatch()
-                    // will be tried again next time - also, ensure we raise only once (i.e. only to the
-                    // original caller) through _mutex
-                    try
-                    {
-                        var batch = await fetchingBatch.CfAwait();
-                        if (batch.TryGetNextId(out var id)) return id;
-                    }
-                    catch
-                    {
-                        lock (_mutex) if (_fetchingBatch == fetchingBatch) { _fetchingBatch = null; throw; }
-                    }
-                }
-
-                lock (_mutex)
-                {
-                    // if no other thread has updated _fetchingBatch yet, do it - and then calling FetchBatch() may
-                    // throw immediately, in which case we raise the exception to the caller, but before that
-                    // we make sure to clear _fetchingBatch so that FetchBatch() will be tried again next time
-                    if (_fetchingBatch != fetchingBatch) continue;
-
-                    try
-                    {
-                        _fetchingBatch = FetchBatch();
-                    }
-                    catch
-                    {
-                        _fetchingBatch = null;
-                        throw;
-                    }
-                }
-            }
+            var batch = new Batch(response.Base, response.Increment, response.BatchSize, _options.PrefetchValidityPeriod);
+            SetBatch(batch); // important!
+            return batch;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,9,23,55,1],[32,13,32,32,1],[33,13,35,54,1],[43,49,43,63,1],[47,13,47,25,1],[49,17,49,66,1],[51,17,51,52,1],[53,17,53,43,1],[61,25,61,67,1],[62,25,62,60,1],[62,61,62,71,1],[63,21,63,22,1],[64,21,64,26,1],[66,25,66,38,1],[66,39,66,75,1],[66,78,66,100,1],[66,101,66,107,1],[67,21,67,22,0],[70,17,70,30,1],[75,21,75,57,1],[75,58,75,67,1],[79,25,79,55,1],[80,21,80,22,1],[81,21,81,26,1],[83,25,83,47,1],[84,25,84,31,1],[86,17,86,18,1],[87,13,87,14,1],[88,9,88,10,1]]);
+      highlightRanges([[28,9,28,101,1],[30,13,30,26,1],[31,13,31,32,1],[32,13,32,36,1],[33,9,33,10,1],[37,13,37,111,1],[38,13,38,88,1],[39,13,39,92,1],[41,13,41,123,1],[42,13,42,29,1],[43,13,43,26,1],[44,9,44,10,1]]);
     </script>
   </body>
 </html>

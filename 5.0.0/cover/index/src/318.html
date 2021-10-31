@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\PNCounterAddCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MultiMapValuesCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,81 +49,43 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds a delta to the PNCounter value. The delta may be negative for a
-    /// subtraction.
-    /// &lt;p&gt;
-    /// The invocation will return the replica timestamps (vector clock) which
-    /// can then be sent with the next invocation to keep session consistency
-    /// guarantees.
-    /// The target replica is determined by the {@code targetReplica} parameter.
-    /// If smart routing is disabled, the actual member processing the client
-    /// message may act as a proxy.
+    /// Returns the collection of values in the multimap.The collection is NOT backed by the map, so changes to the map
+    /// are NOT reflected in the collection, and vice-versa.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class PNCounterAddServerCodec
+    internal static class MultiMapValuesServerCodec
 #else
-    internal static class PNCounterAddCodec
+    internal static class MultiMapValuesCodec
 #endif
     {
-        public const int RequestMessageType = 1901056; // 0x1D0200
-        public const int ResponseMessageType = 1901057; // 0x1D0201
-        private const int RequestDeltaFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestGetBeforeUpdateFieldOffset = RequestDeltaFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestTargetReplicaUUIDFieldOffset = RequestGetBeforeUpdateFieldOffset + BytesExtensions.SizeOfBool;
-        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int ResponseValueFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + BytesExtensions.SizeOfLong;
-        private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 132352; // 0x020500
+        public const int ResponseMessageType = 132353; // 0x020501
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// the name of the PNCounter
+            /// Name of the MultiMap
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// the delta to add to the counter value, can be negative
-            ///&lt;/summary&gt;
-            public long Delta { get; set; }
-
-            /// &lt;summary&gt;
-            /// {@code true} if the operation should return the
-            /// counter value before the addition, {@code false}
-            /// if it should return the value after the addition
-            ///&lt;/summary&gt;
-            public bool GetBeforeUpdate { get; set; }
-
-            /// &lt;summary&gt;
-            /// last observed replica timestamps (vector clock)
-            ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;Guid, long&gt;&gt; ReplicaTimestamps { get; set; }
-
-            /// &lt;summary&gt;
-            /// the target replica
-            ///&lt;/summary&gt;
-            public Guid TargetReplicaUUID { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, long delta, bool getBeforeUpdate, ICollection&lt;KeyValuePair&lt;Guid, long&gt;&gt; replicaTimestamps, Guid targetReplicaUUID)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;PNCounter.Add&quot;
+                IsRetryable = true,
+                OperationName = &quot;MultiMap.Values&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestDeltaFieldOffset, delta);
-            initialFrame.Bytes.WriteBoolL(RequestGetBeforeUpdateFieldOffset, getBeforeUpdate);
-            initialFrame.Bytes.WriteGuidL(RequestTargetReplicaUUIDFieldOffset, targetReplicaUUID);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
             return clientMessage;
         }
 
@@ -132,12 +94,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.Delta = initialFrame.Bytes.ReadLongL(RequestDeltaFieldOffset);
-            request.GetBeforeUpdate = initialFrame.Bytes.ReadBoolL(RequestGetBeforeUpdateFieldOffset);
-            request.TargetReplicaUUID = initialFrame.Bytes.ReadGuidL(RequestTargetReplicaUUIDFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -146,31 +104,19 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Value of the counter.
+            /// The collection of values in the multimap. the returned collection might be modifiable but it has no effect on the multimap.
             ///&lt;/summary&gt;
-            public long Value { get; set; }
-
-            /// &lt;summary&gt;
-            /// last observed replica timestamps (vector clock)
-            ///&lt;/summary&gt;
-            public IList&lt;KeyValuePair&lt;Guid, long&gt;&gt; ReplicaTimestamps { get; set; }
-
-            /// &lt;summary&gt;
-            /// Number of replicas that keep the state of this counter.
-            ///&lt;/summary&gt;
-            public int ReplicaCount { get; set; }
+            public IList&lt;IData&gt; Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(long @value, ICollection&lt;KeyValuePair&lt;Guid, long&gt;&gt; replicaTimestamps, int replicaCount)
+        public static ClientMessage EncodeResponse(ICollection&lt;IData&gt; response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteLongL(ResponseValueFieldOffset, @value);
-            initialFrame.Bytes.WriteIntL(ResponseReplicaCountFieldOffset, replicaCount);
             clientMessage.Append(initialFrame);
-            EntryListUUIDLongCodec.Encode(clientMessage, replicaTimestamps);
+            ListMultiFrameCodec.Encode(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -179,10 +125,8 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
-            var initialFrame = iterator.Take();
-            response.Value = initialFrame.Bytes.ReadLongL(ResponseValueFieldOffset);
-            response.ReplicaCount = initialFrame.Bytes.ReadIntL(ResponseReplicaCountFieldOffset);
-            response.ReplicaTimestamps = EntryListUUIDLongCodec.Decode(iterator);
+            iterator.Take(); // empty initial frame
+            response.Response = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -191,7 +135,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[103,13,107,15,0],[108,13,108,123,0],[109,13,109,104,0],[110,13,110,88,0],[111,13,111,75,0],[112,13,112,95,0],[113,13,113,99,0],[114,13,114,48,0],[115,13,115,53,0],[116,13,116,77,0],[117,13,117,34,0],[141,33,141,37,0],[141,38,141,42,0],[146,72,146,76,0],[146,77,146,81,0],[151,39,151,43,0],[151,44,151,48,0],[170,13,170,64,0],[171,13,171,53,0],[172,13,172,48,0],[173,13,173,85,0],[174,13,174,98,0],[175,13,175,82,0],[176,13,176,29,0],[177,9,177,10,0]]);
+      highlightRanges([[69,13,73,15,1],[74,13,74,123,1],[75,13,75,104,1],[76,13,76,88,1],[77,13,77,48,1],[78,13,78,53,1],[79,13,79,34,1],[99,44,99,48,1],[99,49,99,53,1],[116,13,116,64,1],[117,13,117,53,1],[118,13,118,29,1],[119,13,119,88,1],[120,13,120,29,1],[121,9,121,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\MetaData.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\LruComparer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,106 +23,38 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
+using System.Collections.Generic;
 
 namespace Hazelcast.NearCaching
 {
-    internal class MetaData
+    /// &lt;summary&gt;
+    /// Compares &lt;see cref=&quot;NearCacheEntry&quot;/&gt; using the least-recently-used comparison.
+    /// &lt;/summary&gt;
+    internal class LruComparer : IComparer&lt;NearCacheEntry&gt;
     {
-        private readonly object _guidMutex = new object();
-
-        // Number of missed sequence count
-        private long _missedSequenceCount;
-
-        // sequence number of the last received invalidation event
-        private long _sequence;
-
-        // Holds the biggest sequence number that is lost, lower sequences from this sequence are accepted as stale
-        private long _staleSequence;
-
-        // UUID of the source partition that generates invalidation events
-
-        public Guid Guid { get; set; }
-
-        public long Sequence
+        /// &lt;inheritdoc /&gt;
+        public int Compare(NearCacheEntry x, NearCacheEntry y)
         {
-            get =&gt; Interlocked.Read(ref _sequence);
-            set =&gt; Interlocked.Exchange(ref _sequence, value);
-        }
+            if (x == null) throw new ArgumentNullException(nameof(x));
+            if (y == null) throw new ArgumentNullException(nameof(y));
 
-        public long StaleSequence
-        {
-            get =&gt; Interlocked.Read(ref _staleSequence);
-            set =&gt; Interlocked.Exchange(ref _staleSequence, value);
-        }
+            var cx = x.LastHitTime;
+            var cy = y.LastHitTime;
 
-        public long MissedSequenceCount =&gt; Interlocked.Read(ref _missedSequenceCount);
+            var c = cx.CompareTo(cy);
+            if (c != 0) return c;
 
-        public long AddMissedSequences(long count)
-            =&gt; Interlocked.Add(ref _missedSequenceCount, count);
+            cx = x.ValueObject.GetHashCode();
+            cy = y.ValueObject.GetHashCode();
 
-        public bool UpdateSequence(long expectedValue, long newValue)
-            =&gt; Interlocked.CompareExchange(ref _sequence, newValue, expectedValue) == expectedValue;
-
-        private bool UpdateStaleSequence(long expectedValue, long newValue)
-            =&gt; Interlocked.CompareExchange(ref _staleSequence, newValue, expectedValue) == expectedValue;
-
-        public void ResetSequences()
-        {
-            ResetSequence();
-            ResetStaleSequence();
-        }
-
-        public void ResetSequence()
-        {
-            Sequence = 0;
-        }
-
-        public void ResetStaleSequence()
-        {
-            StaleSequence = 0;
-        }
-
-        // TODO: it is unclear why we need this method
-        // only place where the mutex is used and it is used only
-        // once and it is unclear what decision is made based on
-        // the returned value
-        public bool TrySetGuid(Guid guid)
-        {
-            if (Monitor.TryEnter(_guidMutex))
-            {
-                try
-                {
-                    Guid = guid;
-                    return true;
-                }
-                finally
-                {
-                    Monitor.Exit(_guidMutex);
-                }
-            }
-            return false;
-        }
-
-        public void UpdateStaleSequence()
-        {
-            long sequence;
-            long staleSequence;
-            do
-            {
-                sequence = Interlocked.Read(ref _sequence);
-                staleSequence = Interlocked.Read(ref _staleSequence);
-
-                if (staleSequence &gt;= sequence) break;
-
-            } while (!UpdateStaleSequence(staleSequence, sequence));
+            return cx.CompareTo(cy);
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,9,22,59,1],[35,28,35,32,1],[35,33,35,37,1],[39,20,39,51,1],[40,20,40,62,1],[45,20,45,56,1],[46,20,46,67,1],[49,44,49,86,1],[52,16,52,64,1],[55,16,55,100,1],[58,16,58,105,1],[62,13,62,29,1],[63,13,63,34,1],[64,9,64,10,1],[68,13,68,26,1],[69,9,69,10,1],[73,13,73,31,1],[74,9,74,10,1],[82,13,82,46,1],[86,21,86,33,1],[87,21,87,33,1],[91,21,91,46,1],[92,17,92,18,1],[94,13,94,26,0],[95,9,95,10,1],[103,17,103,60,1],[104,17,104,70,1],[106,17,106,47,1],[108,15,108,69,1],[109,9,109,10,1]]);
+      highlightRanges([[28,13,28,27,1],[28,28,28,71,0],[29,13,29,27,1],[29,28,29,71,0],[31,13,31,36,1],[32,13,32,36,1],[34,13,34,38,1],[35,13,35,24,1],[35,25,35,34,1],[37,13,37,46,1],[38,13,38,46,1],[40,13,40,37,1]]);
     </script>
   </body>
 </html>

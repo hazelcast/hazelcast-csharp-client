@@ -2,72 +2,120 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Logging\SingletonLoggerFactoryServiceFactory.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\MessagingOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
   <body>
     <pre id="content" class="source-code">
 // Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
-using Microsoft.Extensions.Logging;
-
-namespace Hazelcast.Logging
+namespace Hazelcast.Messaging
 {
     /// &lt;summary&gt;
-    /// Represents a singleton &lt;see cref=&quot;ILoggerFactory&quot;/&gt; service factory.
+    /// Represents messaging options.
     /// &lt;/summary&gt;
-    /// &lt;remarks&gt;&lt;/remarks&gt;
-    public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory&lt;ILoggerFactory&gt;, ILoggerFactory
+    public class MessagingOptions
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;SingletonLoggerFactoryServiceFactory&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;MessagingOptions&quot;/&gt; class.
         /// &lt;/summary&gt;
-        internal SingletonLoggerFactoryServiceFactory() { }
+        public MessagingOptions(PreviewOptions preview = null)
+        {
+            Preview = preview ?? new PreviewOptions();
+        }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;SingletonLoggerFactoryServiceFactory&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;MessagingOptions&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;other&quot;&gt;Another factory.&lt;/param&gt;
-        /// &lt;param name=&quot;shallow&quot;&gt;Whether to shallow- or deep-clone the factory.&lt;/param&gt;
-        private SingletonLoggerFactoryServiceFactory(SingletonLoggerFactoryServiceFactory other, bool shallow) : base(other, shallow) { }
+        private MessagingOptions(MessagingOptions other, PreviewOptions preview)
+        {
+            Preview = preview;
 
-        /// &lt;inheritdoc /&gt;
-        public ILogger CreateLogger(string categoryName) =&gt; Service.CreateLogger(categoryName);
-
-        /// &lt;inheritdoc /&gt;
-        public void AddProvider(ILoggerProvider provider) =&gt; Service.AddProvider(provider);
+            MaxFastInvocationCount = other.MaxFastInvocationCount;
+            MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
+            RetryTimeoutSeconds = other.RetryTimeoutSeconds;
+            RetryUnsafeOperations = other.RetryUnsafeOperations;
+            RetryOnClientReconnecting = other.RetryOnClientReconnecting;
+        }
 
         /// &lt;summary&gt;
-        /// Clones this service factory.
+        /// (unsupported) Gets the &lt;see cref=&quot;PreviewOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        internal PreviewOptions Preview { get; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the max fast invocation count.
+        /// &lt;/summary&gt;
+        internal int MaxFastInvocationCount { get; set; } = 5;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the min retry delay.
+        /// &lt;/summary&gt;
+        public int MinRetryDelayMilliseconds { get; set; } = 1_000;
+
+        /// &lt;summary&gt;
+        /// Whether to retry all operations including unsafe operations.
         /// &lt;/summary&gt;
         /// &lt;remarks&gt;
-        /// &lt;para&gt;When cloning a singleton service factory, a shallow clones is performed
-        /// by default, meaning that the (lazy) service instance is cloned too. In other
-        /// words, the singleton remains a singleton across clones.&lt;/para&gt;
-        /// &lt;para&gt;If &lt;paramref name=&quot;shallow&quot;/&gt; is set to false, a deep clone is created,
-        /// which would create an entirely new singleton.&lt;/para&gt;
+        /// &lt;para&gt;Operations can fail due to various reasons. Read-only operations are retried by
+        /// default. If you want to enable retry for all operations, set this property to &lt;c&gt;true&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;para&gt;However, note that a failed operation leaves the cluster in an undecided state. The
+        /// cluster may have received the request and executed the operation, but failed to respond
+        /// to the client. For idempotent operations this is harmless, but for non idempotent ones retrying
+        /// can cause undesirable effects. Also note that the redo can perform on any member.&lt;/para&gt;
+        /// &lt;para&gt;For these reasons, this is &lt;c&gt;false&lt;/c&gt; by default.&lt;/para&gt;
         /// &lt;/remarks&gt;
-        /// &lt;returns&gt;A clone of the service factory.&lt;/returns&gt;
-        internal new SingletonLoggerFactoryServiceFactory Clone(bool shallow = true) =&gt; new SingletonLoggerFactoryServiceFactory(this, shallow);
+        public bool RetryUnsafeOperations { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the invocation timeout.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;RetryTimeoutSeconds&quot;/&gt; is a soft timeout that prevents
+        /// retrying an invocation for too long in case it fails. It does *not* controls
+        /// the duration of a single try, and does *not* abort it. And invocation single
+        /// try can run for as long as the connection that supports it remains open.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int RetryTimeoutSeconds { get; set; } = 120;
+
+        /// &lt;summary&gt;
+        /// Whether to retry an invocation that has failed to start because the client was offline
+        /// but still active and reconnecting.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is &lt;c&gt;true&lt;/c&gt; by default, i.e. if the client got disconnected and is reconnecting,
+        /// invocations will be retried until they reach their timeout, or the client reconnects. Set this
+        /// to &lt;c&gt;false&lt;/c&gt; if you want invocations to fail immediately in case the client gets
+        /// disconnected, even if it is trying to reconnect.&lt;/para&gt;
+        /// &lt;para&gt;Note that this only applies to invocation that failed to start, and therefore this is
+        /// safe for all invocations. See &lt;see cref=&quot;RetryUnsafeOperations&quot;/&gt; for what happens once the
+        /// invocation has started.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool RetryOnClientReconnecting { get; set; } = true;
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal MessagingOptions Clone(PreviewOptions preview = null) =&gt; new MessagingOptions(this, preview ?? Preview.Clone());
     }
 }
+
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,56,1],[29,59,29,60,1],[36,114,36,134,1],[36,137,36,138,1],[39,61,39,95,0],[42,62,42,91,0],[55,89,55,144,1]]);
+      highlightRanges([[25,9,25,63,1],[27,13,27,55,1],[28,9,28,10,1],[33,9,33,81,1],[35,13,35,31,1],[37,13,37,67,1],[38,13,38,73,1],[39,13,39,61,1],[40,13,40,65,1],[41,13,41,73,1],[42,9,42,10,1],[47,43,47,47,1],[52,47,52,51,1],[52,52,52,56,1],[52,61,52,62,1],[52,61,52,62,1],[57,48,57,52,1],[57,53,57,57,1],[57,62,57,67,1],[57,62,57,67,1],[71,45,71,49,1],[71,50,71,54,1],[82,42,82,46,1],[82,47,82,51,1],[82,56,82,59,1],[82,56,82,59,1],[97,49,97,53,1],[97,54,97,58,1],[97,63,97,67,1],[97,63,97,67,1],[102,75,102,129,1]]);
     </script>
   </body>
 </html>

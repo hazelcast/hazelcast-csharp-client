@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastMemoryConfigurationSource.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastMemoryConfigurationProvider.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,32 +22,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Memory;
 
 namespace Hazelcast.Configuration
 {
     /// &lt;summary&gt;
-    /// Represents Hazelcast in-memory arguments as an &lt;see cref=&quot;IConfigurationSource&quot;/&gt;.
+    /// An in-memory based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
     /// &lt;/summary&gt;
-    internal class HazelcastMemoryConfigurationSource : IConfigurationSource
+    internal class HazelcastMemoryConfigurationProvider : MemoryConfigurationProvider
     {
-        /// &lt;summary&gt;
-        /// Gets or sets the initial key value configuration pairs.
-        /// &lt;/summary&gt;
-        public IEnumerable&lt;KeyValuePair&lt;string, string&gt;&gt; InitialData { get; set; }
+        public HazelcastMemoryConfigurationProvider(HazelcastMemoryConfigurationSource source)
+            : base(FilterSource(source))
+        { }
 
-        /// &lt;inheritdoc /&gt;
-        public IConfigurationProvider Build(IConfigurationBuilder builder)
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Filters a configuration source.
+        /// &lt;/summary&gt;
+        internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
         {
-            return new HazelcastMemoryConfigurationProvider(this);
+            static KeyValuePair&lt;string, string&gt; Filter(KeyValuePair&lt;string, string&gt; kvp)
+                =&gt; kvp.Key.StartsWith(&quot;hazelcast.&quot;, StringComparison.Ordinal)
+                    ? new KeyValuePair&lt;string, string&gt;(kvp.Key.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal), kvp.Value)
+                    : kvp;
+
+            return new MemoryConfigurationSource
+            {
+                InitialData = source.InitialData.Select(Filter)
+            };
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,72,28,76,1],[28,77,28,81,1],[33,13,33,67,1]]);
+      highlightRanges([[29,15,29,41,1],[30,11,30,12,1],[39,20,41,26,1],[43,13,46,15,1]]);
     </script>
   </body>
 </html>

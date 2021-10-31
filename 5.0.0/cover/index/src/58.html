@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\JavaClass.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\InvalidPortableFieldException.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,59 +23,69 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Serialization
 {
     /// &lt;summary&gt;
-    ///  Class for serializing/deserializing Java Class types
+    /// Represents the exception that is thrown when the portable reader reads a field of an invalid type.
     /// &lt;/summary&gt;
-    public class JavaClass
+    [Serializable]
+    internal class InvalidPortableFieldException : HazelcastException
     {
-        public JavaClass(string name)
-        {
-            Name = name;
-        }
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;InvalidPortableFieldException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public InvalidPortableFieldException()
+            : base(ExceptionMessages.InvalidPortableFieldException)
+        { }
 
-        public string Name { get; }
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;InvalidPortableFieldException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public InvalidPortableFieldException(string message)
+            : base(message)
+        { }
 
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(this, obj)) return true;
-            return obj is JavaClass thing &amp;&amp; EqualsN(this, thing);
-        }
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;InvalidPortableFieldException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public InvalidPortableFieldException(Exception innerException)
+            : base(ExceptionMessages.InvalidPortableFieldException, innerException)
+        { }
 
-        protected bool Equals(JavaClass other)
-        {
-            if (other is null) return false;
-            return ReferenceEquals(this, other) || EqualsN(this, other);
-        }
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;InvalidPortableFieldException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public InvalidPortableFieldException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
 
-        public static bool Equals(JavaClass left, JavaClass right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (left is null || right is null) return false;
-            return EqualsN(left, right);
-        }
-
-        private static bool EqualsN(JavaClass left, JavaClass right)
-            =&gt; string.Equals(left.Name, right.Name, StringComparison.Ordinal);
-
-        public override int GetHashCode()
-        {
-            return Name != null ? Name.GetHashCode(StringComparison.Ordinal) : 0;
-        }
-
-        public override string ToString()
-        {
-            return $&quot;Name: {Name}&quot;;
-        }
-
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;InvalidPortableFieldException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        public InvalidPortableFieldException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,9,24,38,1],[26,13,26,25,1],[27,9,27,10,1],[29,30,29,34,1],[33,13,33,44,1],[33,45,33,57,0],[34,13,34,67,1],[39,13,39,31,0],[39,32,39,45,0],[40,13,40,73,0],[45,13,45,46,0],[45,47,45,59,0],[46,13,46,47,0],[46,48,46,61,0],[47,13,47,41,0],[51,16,51,78,1],[55,13,55,82,0],[60,13,60,36,0]]);
+      highlightRanges([[31,15,31,68,1],[32,11,32,12,1],[39,15,39,28,0],[40,11,40,12,0],[49,15,49,84,0],[50,11,50,12,0],[60,15,60,44,0],[61,11,61,12,0],[71,15,71,34,0],[72,11,72,12,0]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\ClientMetricSource.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\MemberVersion.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -24,108 +24,151 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using Hazelcast.Clustering;
-using Hazelcast.Core;
-using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.Metrics
+namespace Hazelcast.Models
 {
-    // the source of metrics for the client
-    internal class ClientMetricSource : IMetricSource
+    /// &lt;summary&gt;
+    /// Represents the version of a cluster member.
+    /// &lt;/summary&gt;
+    public class MemberVersion: IEquatable&lt;MemberVersion&gt;, IComparable&lt;MemberVersion&gt;
     {
-        private readonly Cluster _cluster;
-        private readonly ILogger _logger;
-
-        public ClientMetricSource(Cluster cluster, ILoggerFactory loggerFactory)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberVersion&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;major&quot;&gt;The major version number.&lt;/param&gt;
+        /// &lt;param name=&quot;minor&quot;&gt;The minor version number.&lt;/param&gt;
+        /// &lt;param name=&quot;patch&quot;&gt;The patch version number.&lt;/param&gt;
+        public MemberVersion(byte major, byte minor, byte patch)
         {
-            _cluster = cluster;
-            _logger = loggerFactory.CreateLogger&lt;ClientMetricSource&gt;();
+            Major = major;
+            Minor = minor;
+            Patch = patch;
         }
 
-        public static class MetricDescriptors
+        /// &lt;summary&gt;
+        /// Gets the major version number.
+        /// &lt;/summary&gt;
+        public byte Major { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the minor version number.
+        /// &lt;/summary&gt;
+        public byte Minor { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the patch version number.
+        /// &lt;/summary&gt;
+        public byte Patch { get; }
+
+        /// &lt;summary&gt;
+        /// Returns a string that represents current member version.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;ignorePatchVersion&quot;&gt;Whether to skip or include path version to the string.&lt;/param&gt;
+        public string ToString(bool ignorePatchVersion)
         {
-            public static readonly MetricDescriptor&lt;long&gt; LastStatisticsCollectionTime = new MetricDescriptor&lt;long&gt;(&quot;lastStatisticsCollectionTime&quot;);
-            public static readonly MetricDescriptor&lt;bool&gt; Enterprise = new MetricDescriptor&lt;bool&gt;(&quot;enterprise&quot;);
-            public static readonly MetricDescriptor&lt;string&gt; ClientType = new MetricDescriptor&lt;string&gt;(&quot;clientType&quot;);
-            public static readonly MetricDescriptor&lt;string&gt; ClientVersion = new MetricDescriptor&lt;string&gt;(&quot;clientVersion&quot;);
-            public static readonly MetricDescriptor&lt;string&gt; ClientName = new MetricDescriptor&lt;string&gt;(&quot;clientName&quot;);
-            public static readonly MetricDescriptor&lt;long&gt; ClusterConnectionTimestamp = new MetricDescriptor&lt;long&gt;(&quot;clusterConnectionTimestamp&quot;);
-            public static readonly MetricDescriptor&lt;string&gt; ClientAddress = new MetricDescriptor&lt;string&gt;(&quot;clientAddress&quot;);
-
-            public static class Credentials
-            {
-                public static readonly MetricDescriptor&lt;string&gt; Principal = new MetricDescriptor&lt;string&gt;(&quot;credentials&quot;, &quot;principal&quot;);
-            }
-
-            // ReSharper disable once InconsistentNaming
-            public static class OS
-            {
-                public static readonly MetricDescriptor&lt;long&gt; CommittedVirtualMemorySize = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;committedVirtualMemorySize&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; FreePhysicalMemorySize = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;freePhysicalMemorySize&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; FreeSwapSpaceSize = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;freeSwapSpaceSize&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; MaxFileDescriptorCount = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;maxFileDescriptorCount&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; OpenFileDescriptorCount = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;openFileDescriptorCount&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; ProcessCpuTime = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;processCpuTime&quot;);
-                public static readonly MetricDescriptor&lt;double&gt; SystemLoadAverage = new MetricDescriptor&lt;double&gt;(&quot;os&quot;, &quot;systemLoadAverage&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; TotalPhysicalMemorySize = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;totalPhysicalMemorySize&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; TotalSwapSpaceSize = new MetricDescriptor&lt;long&gt;(&quot;os&quot;, &quot;totalSwapSpaceSize&quot;);
-            }
-
-            public static class Runtime
-            {
-                public static readonly MetricDescriptor&lt;int&gt; AvailableProcessors = new MetricDescriptor&lt;int&gt;(&quot;runtime&quot;, &quot;availableProcessors&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; FreeMemory = new MetricDescriptor&lt;long&gt;(&quot;runtime&quot;, &quot;freeMemory&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; MaxMemory = new MetricDescriptor&lt;long&gt;(&quot;runtime&quot;, &quot;maxMemory&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; TotalMemory = new MetricDescriptor&lt;long&gt;(&quot;runtimes&quot;, &quot;totalMemory&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; Uptime = new MetricDescriptor&lt;long&gt;(&quot;runtime&quot;, &quot;uptime&quot;);
-                public static readonly MetricDescriptor&lt;long&gt; UsedMemory = new MetricDescriptor&lt;long&gt;(&quot;runtime&quot;, &quot;usedMemory&quot;);
-            }
+            return ignorePatchVersion
+                ? $&quot;{Major}.{Minor}&quot;
+                : $&quot;{Major}.{Minor}.{Patch}&quot;;
         }
 
-        public IEnumerable&lt;Metric&gt; PublishMetrics()
+        /// &lt;summary&gt;
+        /// Returns a string that represents current member version.
+        /// &lt;/summary&gt;
+        public override string ToString() =&gt; ToString(ignorePatchVersion: false);
+
+        #region Equality members
+
+        /// &lt;summary&gt;
+        /// Checks if this member version is equal to &lt;paramref name=&quot;other&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;other&quot;&gt;Other member version to compare with.&lt;/param&gt;
+        /// &lt;param name=&quot;ignorePatchVersion&quot;&gt;Whether to ignore Patch number differences.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if versions are equal, &lt;c&gt;false&lt;/c&gt; otherwise.&lt;/returns&gt;
+        public bool Equals(MemberVersion other, bool ignorePatchVersion)
         {
-            // the Java client gets these from a random connection
-            // we try to be more consistent and always pick the oldest active connection
-            var connection = _cluster.Members.GetOldestConnection();
-            if (connection == null)
-            {
-                _logger.LogDebug(&quot;Cannot send metrics, client is not connected.&quot;);
-                yield break;
-            }
+            if (ReferenceEquals(null, other)) return false;
+            if (ReferenceEquals(this, other)) return true;
 
-            yield return MetricDescriptors.Enterprise.WithValue(false);
-            yield return MetricDescriptors.ClientType.WithValue(&quot;CSHARP&quot;);
-            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.Version);
-            yield return MetricDescriptors.ClientName.WithValue(_cluster.ClientName);
-            yield return MetricDescriptors.ClusterConnectionTimestamp.WithValue(Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
-            yield return MetricDescriptors.ClientAddress.WithValue(connection.LocalEndPoint.Address.ToString());
-
-            yield return MetricDescriptors.Credentials.Principal.WithValue(connection.Principal);
-
-            yield return MetricDescriptors.OS.CommittedVirtualMemorySize.WithValue(Process.GetCurrentProcess().VirtualMemorySize64);
-            yield return MetricDescriptors.OS.FreePhysicalMemorySize.WithoutValue();
-            yield return MetricDescriptors.OS.FreeSwapSpaceSize.WithoutValue();
-            yield return MetricDescriptors.OS.MaxFileDescriptorCount.WithoutValue();
-            yield return MetricDescriptors.OS.OpenFileDescriptorCount.WithValue(Process.GetCurrentProcess().HandleCount);
-            yield return MetricDescriptors.OS.ProcessCpuTime.WithValue((long)Process.GetCurrentProcess().TotalProcessorTime.TotalMilliseconds * 1000000);
-            yield return MetricDescriptors.OS.SystemLoadAverage.WithoutValue();
-            yield return MetricDescriptors.OS.TotalPhysicalMemorySize.WithoutValue();
-            yield return MetricDescriptors.OS.TotalSwapSpaceSize.WithoutValue();
-
-            yield return MetricDescriptors.Runtime.AvailableProcessors.WithValue(Environment.ProcessorCount);
-            yield return MetricDescriptors.Runtime.FreeMemory.WithoutValue();
-            yield return MetricDescriptors.Runtime.MaxMemory.WithValue(Process.GetCurrentProcess().MaxWorkingSet.ToInt64());
-            yield return MetricDescriptors.Runtime.TotalMemory.WithValue(Process.GetCurrentProcess().WorkingSet64);
-            yield return MetricDescriptors.Runtime.Uptime.WithValue((long)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds);
-            yield return MetricDescriptors.Runtime.UsedMemory.WithValue(Process.GetCurrentProcess().WorkingSet64);
+            return Major == other.Major &amp;&amp; Minor == other.Minor &amp;&amp;
+                (ignorePatchVersion || Patch == other.Patch);
         }
+
+        /// &lt;summary&gt;
+        /// Checks if this member version is equal to &lt;paramref name=&quot;other&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;other&quot;&gt;Other member version to compare with.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if versions are equal, &lt;c&gt;false&lt;/c&gt; otherwise.&lt;/returns&gt;
+        public bool Equals(MemberVersion other) =&gt; Equals(other, ignorePatchVersion: false);
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((MemberVersion)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Major, Minor, Patch);
+        }
+
+        public static bool operator ==(MemberVersion left, MemberVersion right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(MemberVersion left, MemberVersion right)
+        {
+            return !Equals(left, right);
+        }
+
+        #endregion
+
+        #region Relational members
+
+        public int CompareTo(MemberVersion other)
+        {
+            if (ReferenceEquals(this, other)) return 0;
+            if (ReferenceEquals(null, other)) return 1;
+
+            var majorComparison = Major.CompareTo(other.Major);
+            if (majorComparison != 0) return majorComparison;
+
+            var minorComparison = Minor.CompareTo(other.Minor);
+            if (minorComparison != 0) return minorComparison;
+
+            return Patch.CompareTo(other.Patch);
+        }
+
+        public static bool operator &lt;(MemberVersion left, MemberVersion right)
+        {
+            return Comparer&lt;MemberVersion&gt;.Default.Compare(left, right) &lt; 0;
+        }
+
+        public static bool operator &gt;(MemberVersion left, MemberVersion right)
+        {
+            return Comparer&lt;MemberVersion&gt;.Default.Compare(left, right) &gt; 0;
+        }
+
+        public static bool operator &lt;=(MemberVersion left, MemberVersion right)
+        {
+            return Comparer&lt;MemberVersion&gt;.Default.Compare(left, right) &lt;= 0;
+        }
+
+        public static bool operator &gt;=(MemberVersion left, MemberVersion right)
+        {
+            return Comparer&lt;MemberVersion&gt;.Default.Compare(left, right) &gt;= 0;
+        }
+
+        #endregion
+
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,9,30,81,0],[32,13,32,32,0],[33,13,33,72,0],[34,9,34,10,0],[38,13,38,149,0],[39,13,39,113,0],[40,13,40,117,0],[41,13,41,123,0],[42,13,42,117,0],[43,13,43,145,0],[44,13,44,123,0],[48,17,48,134,0],[54,17,54,155,0],[55,17,55,147,0],[56,17,56,137,0],[57,17,57,147,0],[58,17,58,149,0],[59,17,59,131,0],[60,17,60,141,0],[61,17,61,149,0],[62,17,62,139,0],[67,17,67,144,0],[68,17,68,128,0],[69,17,69,126,0],[70,17,70,131,0],[71,17,71,120,0],[72,17,72,128,0],[80,13,80,69,0],[81,13,81,36,0],[83,17,83,83,0],[84,17,84,29,0],[87,13,87,72,0],[88,13,88,75,0],[89,13,89,91,0],[90,13,90,86,0],[91,13,91,132,0],[92,13,92,113,0],[94,13,94,98,0],[96,13,96,133,0],[97,13,97,85,0],[98,13,98,80,0],[99,13,99,85,0],[100,13,100,122,0],[101,13,101,154,0],[102,13,102,80,0],[103,13,103,86,0],[104,13,104,81,0],[106,13,106,110,0],[107,13,107,78,0],[108,13,108,125,0],[109,13,109,116,0],[110,13,110,149,0],[111,13,111,115,0],[112,9,112,10,0]]);
+      highlightRanges([[31,9,31,65,1],[33,13,33,27,1],[34,13,34,27,1],[35,13,35,27,1],[36,9,36,10,1],[41,29,41,33,1],[46,29,46,33,1],[51,29,51,33,1],[59,13,61,46,1],[67,46,67,81,1],[79,13,79,46,1],[79,47,79,60,0],[80,13,80,46,1],[80,47,80,59,1],[82,13,83,62,1],[91,52,91,92,0],[95,13,95,44,0],[95,45,95,58,0],[96,13,96,44,0],[96,45,96,57,0],[97,13,97,49,0],[97,50,97,63,0],[98,13,98,47,0],[103,13,103,58,0],[108,13,108,40,1],[113,13,113,41,0],[122,13,122,46,0],[122,47,122,56,0],[123,13,123,46,0],[123,47,123,56,0],[125,13,125,64,0],[126,13,126,38,0],[126,39,126,62,0],[128,13,128,64,0],[129,13,129,38,0],[129,39,129,62,0],[131,13,131,49,0],[136,13,136,77,0],[141,13,141,77,0],[146,13,146,78,0],[151,13,151,78,0]]);
     </script>
   </body>
 </html>

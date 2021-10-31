@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\ConnectionOpenedEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\ConnectionClosedEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -27,36 +27,29 @@ using Hazelcast.Clustering;
 namespace Hazelcast.Events
 {
     /// &lt;summary&gt;
-    /// Represents event data for the connection added event.
+    /// Represents event data for the connection closed event.
     /// &lt;/summary&gt;
-    internal class ConnectionOpenedEventArgs
+    internal class ConnectionClosedEventArgs
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionOpenedEventArgs&quot;/&gt; class.
+        /// Initializes a new instance of the &lt;see cref=&quot;ConnectionClosedEventArgs&quot;/&gt; class.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;connection&quot;&gt;The connection that was opened.&lt;/param&gt;
-        /// &lt;param name=&quot;isNewCluster&quot;&gt;Whether the connection is the first connection to a new cluster.&lt;/param&gt;
-        public ConnectionOpenedEventArgs(MemberConnection connection, bool isNewCluster)
+        /// &lt;param name=&quot;connection&quot;&gt;The connection that was closed.&lt;/param&gt;
+        public ConnectionClosedEventArgs(MemberConnection connection)
         {
             Connection = connection;
-            IsNewCluster = isNewCluster;
         }
 
         /// &lt;summary&gt;
-        /// Gets the connection that was opened.
+        /// Gets the connection that was closed.
         /// &lt;/summary&gt;
         public MemberConnection Connection { get; }
-
-        /// &lt;summary&gt;
-        /// Whether the connection is the first connection to a new cluster.
-        /// &lt;/summary&gt;
-        public bool IsNewCluster { get; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,89,1],[31,13,31,37,1],[32,13,32,41,1],[33,9,33,10,1],[38,46,38,50,0],[43,36,43,40,0]]);
+      highlightRanges([[28,9,28,70,1],[30,13,30,37,1],[31,9,31,10,1],[36,46,36,50,0]]);
     </script>
   </body>
 </html>

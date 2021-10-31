@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.Getting.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HList.Setting.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,82 +22,68 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
-using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Serialization;
-using Hazelcast.Serialization.Collections;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal partial class HMapWithCache&lt;TKey, TValue&gt; // Getting
+    internal partial class HList&lt;T&gt; // Setting
     {
         /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;TValue&gt; GetAsync(IData keyData, CancellationToken cancellationToken)
+        public async Task&lt;T&gt; Set(int index, T item)
         {
-            var fromCache = await _cache.TryGetOrAddAsync(keyData, _ =&gt; GetDataAsync(keyData, cancellationToken)).CfAwait();
-            return fromCache.ValueOrDefault();
+            var itemData = ToSafeData(item);
+            var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = ListSetCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;T&gt;(response);
         }
 
         /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;ReadOnlyLazyDictionary&lt;TKey, TValue&gt;&gt; GetAllAsync(Dictionary&lt;Guid, Dictionary&lt;int, List&lt;IData&gt;&gt;&gt; ownersKeys, CancellationToken cancellationToken)
+        public async Task AddAsync(int index, T item)
         {
-            // owner keys are grouped by owners (members) and partitions
-
-            var cachedValues = new Dictionary&lt;IData, TValue&gt;();
-            var cachedKeys = new List&lt;IData&gt;();
-
-            foreach (var (_, ownerKeys) in ownersKeys)
-            {
-                foreach (var (_, partitionKeys) in ownerKeys)
-                {
-                    cachedKeys.Clear();
-                    foreach (var keyData in partitionKeys)
-                    {
-                        var (hasValue, value) = await _cache.TryGetAsync(keyData).CfAwait();
-                        if (hasValue)
-                        {
-                            cachedKeys.Add(keyData);
-                            cachedValues[keyData] = value;
-                        }
-                    }
-
-                    foreach (var keyData in cachedKeys)
-                        partitionKeys.Remove(keyData);
-                }
-            }
-
-            var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CfAwait();
-
-            // &#39;entries&#39; is a ReadOnlyLazyDictionary that contains values that are lazily
-            // deserialized - and since we just fetched the entries, none have been deserialized
-            // yet - so entry.ValueObject here is not null, and is an IData that we can pass
-            // to the cache - which will either deserialized or not depending on InMemoryFormat
-
-            // cache retrieved entries
-            foreach (var (key, entry) in entries.Entries)
-                await _cache.TryAddAsync(key, entry.ValueData).CfAwait();
-
-            // merge cached entries and retrieved entries
-            foreach (var (keyData, valueObject) in cachedValues)
-                entries.Add(keyData, valueObject);
-
-            return entries;
+            var itemData = ToSafeData(item);
+            var requestMessage = ListAddWithIndexCodec.EncodeRequest(Name, index, itemData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            _ = ListAddWithIndexCodec.DecodeResponse(responseMessage);
         }
 
         /// &lt;inheritdoc /&gt;
-        protected override async Task&lt;bool&gt; ContainsKeyAsync(IData keyData, CancellationToken cancellationToken)
+        public override async Task&lt;bool&gt; AddAsync(T item)
         {
-            return await _cache.ContainsKeyAsync(keyData).CfAwait() || await base.ContainsKeyAsync(keyData, cancellationToken).CfAwait();
+            var itemData = ToSafeData(item);
+            var requestMessage = ListAddCodec.EncodeRequest(Name, itemData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListAddCodec.DecodeResponse(responseMessage).Response;
         }
+
+        /// &lt;inheritdoc /&gt;
+        public override async Task&lt;bool&gt; AddAll&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
+        {
+            var itemsData = ToSafeData(items);
+            var requestMessage = ListAddAllCodec.EncodeRequest(Name, itemsData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListAddAllCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;bool&gt; AddAllAsync&lt;TItem&gt;(int index, ICollection&lt;TItem&gt; items)
+            where TItem : T
+        {
+            var itemsData = ToSafeData(items);
+            var requestMessage = ListAddAllWithIndexCodec.EncodeRequest(Name, index, itemsData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return ListAddAllWithIndexCodec.DecodeResponse(responseMessage).Response;
+        }
+
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[30,13,30,125,1],[30,73,30,113,1],[31,13,31,47,1],[32,9,32,10,1],[39,13,39,64,1],[40,13,40,48,1],[42,22,42,40,1],[42,41,42,43,1],[42,44,42,54,1],[44,26,44,48,1],[44,49,44,51,1],[44,52,44,61,1],[46,21,46,40,1],[47,30,47,41,1],[47,42,47,44,1],[47,45,47,58,1],[49,25,49,93,1],[50,25,50,38,1],[52,29,52,53,1],[53,29,53,59,1],[55,21,55,22,1],[57,30,57,41,1],[57,42,57,44,1],[57,45,57,55,1],[58,25,58,55,1],[59,17,59,18,1],[62,13,62,91,1],[70,22,70,38,1],[70,39,70,41,1],[70,42,70,57,1],[71,17,71,74,1],[74,22,74,48,1],[74,49,74,51,1],[74,52,74,64,1],[75,17,75,51,1],[77,13,77,28,1],[78,9,78,10,1],[83,13,83,138,1],[84,9,84,10,1]]);
+      highlightRanges([[27,13,27,45,1],[28,13,28,84,1],[29,13,29,124,1],[30,13,30,82,1],[31,13,31,42,1],[32,9,32,10,1],[37,13,37,45,1],[38,13,38,93,1],[39,13,39,124,1],[40,13,40,71,1],[41,9,41,10,1],[46,13,46,45,1],[47,13,47,77,1],[48,13,48,124,1],[49,13,49,74,1],[50,9,50,10,1],[55,13,55,47,1],[56,13,56,81,1],[57,13,57,124,1],[58,13,58,77,1],[59,9,59,10,1],[65,13,65,47,1],[66,13,66,97,1],[67,13,67,124,1],[68,13,68,86,1],[69,9,69,10,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicRefCompareAndSetCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\AtomicLongGetCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,52 +49,42 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Alters the currently stored value by applying a function on it.
+    /// Gets the current value.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class AtomicRefCompareAndSetServerCodec
+    internal static class AtomicLongGetServerCodec
 #else
-    internal static class AtomicRefCompareAndSetCodec
+    internal static class AtomicLongGetCodec
 #endif
     {
-        public const int RequestMessageType = 655872; // 0x0A0200
-        public const int ResponseMessageType = 655873; // 0x0A0201
+        public const int RequestMessageType = 591104; // 0x090500
+        public const int ResponseMessageType = 591105; // 0x090501
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// CP group id of this IAtomicReference instance.
+            /// CP group id of this IAtomicLong instance.
             ///&lt;/summary&gt;
             public Hazelcast.CP.CPGroupId GroupId { get; set; }
 
             /// &lt;summary&gt;
-            /// Name of this IAtomicReference instance.
+            /// Name of this IAtomicLong instance.
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// The expected value
-            ///&lt;/summary&gt;
-            public IData OldValue { get; set; }
-
-            /// &lt;summary&gt;
-            /// The new value
-            ///&lt;/summary&gt;
-            public IData NewValue { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name, IData oldValue, IData newValue)
+        public static ClientMessage EncodeRequest(Hazelcast.CP.CPGroupId groupId, string name)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;AtomicRef.CompareAndSet&quot;
+                IsRetryable = true,
+                OperationName = &quot;AtomicLong.Get&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -102,8 +92,6 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             RaftGroupIdCodec.Encode(clientMessage, groupId);
             StringCodec.Encode(clientMessage, name);
-            CodecUtil.EncodeNullable(clientMessage, oldValue, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, newValue, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -115,8 +103,6 @@ namespace Hazelcast.Protocol.Codecs
             iterator.Take(); // empty initial frame
             request.GroupId = RaftGroupIdCodec.Decode(iterator);
             request.Name = StringCodec.Decode(iterator);
-            request.OldValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            request.NewValue = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -125,19 +111,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// true if successful; or false if the actual value
-            /// was not equal to the expected value.
+            /// The current value
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public long Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(long response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteLongL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -148,7 +133,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadLongL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -157,7 +142,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[84,13,88,15,1],[89,13,89,123,1],[90,13,90,104,1],[91,13,91,88,1],[92,13,92,48,1],[93,13,93,61,1],[94,13,94,53,1],[95,13,95,81,1],[96,13,96,81,1],[97,13,97,34,1],[121,36,121,40,1],[121,41,121,45,1],[138,13,138,64,1],[139,13,139,53,1],[140,13,140,48,1],[141,13,141,91,1],[142,13,142,29,1],[143,9,143,10,1]]);
+      highlightRanges([[74,13,78,15,1],[79,13,79,123,1],[80,13,80,104,1],[81,13,81,88,1],[82,13,82,48,1],[83,13,83,61,1],[84,13,84,53,1],[85,13,85,34,1],[106,36,106,40,1],[106,41,106,45,1],[123,13,123,64,1],[124,13,124,53,1],[125,13,125,48,1],[126,13,126,91,1],[127,13,127,29,1],[128,9,128,10,1]]);
     </script>
   </body>
 </html>

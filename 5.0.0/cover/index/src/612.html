@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HReplicatedMap.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HQueue.Setting.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -26,286 +26,69 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
-using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
-using Hazelcast.Query;
-using Hazelcast.Serialization;
-using Hazelcast.Serialization.Collections;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal class HReplicatedMap&lt;TKey, TValue&gt; : DistributedObjectBase, IHReplicatedMap&lt;TKey, TValue&gt;
+    internal partial class HQueue&lt;T&gt; // Setting (Enqueue)
     {
-        private readonly int _partitionId;
+        // &lt;inheritdoc /&gt;
+        // need that one because we are an HCollection - weird?
+        // tries to enqueue immediately, does not wait &amp; does not throw
+        public override async Task&lt;bool&gt; AddAsync(T item) =&gt; await OfferAsync(item).CfAwait();
 
-        public HReplicatedMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, int partitionId, ILoggerFactory loggerFactory)
-            : base(ServiceNames.ReplicatedMap, name, factory, cluster, serializationService, loggerFactory)
+        // &lt;inheritdoc /&gt;
+        public async Task&lt;bool&gt; OfferAsync(T item, TimeSpan timeToWait = default)
+            =&gt; await TryEnqueueAsync(item, timeToWait, CancellationToken.None).CfAwait();
+
+        // &lt;inheritdoc /&gt;
+        // was: Put - enqueue, wait indefinitely, may throw
+        public Task PutAsync(T item) =&gt; EnqueueAsync(item, CancellationToken.None);
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+            Task EnqueueAsync(T item, CancellationToken cancellationToken)
         {
-            _partitionId = partitionId;
+            var itemData = ToSafeData(item);
+            var requestMessage = QueuePutCodec.EncodeRequest(Name, itemData);
+            var task = Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            await task.CfAwait();
+#endif
         }
 
-        public Task&lt;TValue&gt; PutAsync(TKey key, TValue value)
-            =&gt; PutAsync(key, value, TimeSpan.Zero);
-
-        public async Task&lt;TValue&gt; PutAsync(TKey key, TValue value, TimeSpan timeToLive)
+        private async Task&lt;bool&gt; TryEnqueueAsync(T item, TimeSpan timeToWait, CancellationToken cancellationToken)
         {
-            var (keyData, valueData) = ToSafeData(key, value);
+            var itemData = ToSafeData(item);
 
-            // server wants 0 for infinite, no negative value
-            var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 = infinite, -1 = not supported?
-
-            var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
-            var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TValue&gt;(response);
+            var timeToWaitMilliseconds = (long)timeToWait.TotalMilliseconds;
+            var requestMessage = QueueOfferCodec.EncodeRequest(Name, itemData, timeToWaitMilliseconds);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId, cancellationToken).CfAwait();
+            return QueueOfferCodec.DecodeResponse(responseMessage).Response;
         }
 
-        public async Task SetAllAsync(IDictionary&lt;TKey, TValue&gt; entries)
+        // &lt;inheritdoc /&gt;
+        // need to have it because HCollection but feels weird
+        // maybe we need to have something above HCollection?
+        public override async Task&lt;bool&gt; AddAll&lt;TItem&gt;(ICollection&lt;TItem&gt; items)
         {
-            var entriesData = new List&lt;KeyValuePair&lt;IData, IData&gt;&gt;(entries.Count);
-            foreach (var (key, value) in entries)
-            {
-                var (keyData, valueData) = ToSafeData(key, value);
-                entriesData.Add(new KeyValuePair&lt;IData, IData&gt;(keyData, valueData));
-            }
-
-            var requestMessage = ReplicatedMapPutAllCodec.EncodeRequest(Name, entriesData);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            _ = ReplicatedMapPutAllCodec.DecodeResponse(responseMessage);
-        }
-
-        public async Task&lt;TValue&gt; RemoveAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
-            var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject&lt;TValue&gt;(response);
-        }
-
-        public async Task ClearAsync()
-        {
-            var requestMessage = ReplicatedMapClearCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            _ = ReplicatedMapClearCodec.DecodeResponse(responseMessage);
-        }
-
-        public async Task&lt;TValue&gt; GetAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapGetCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
-            var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
-
-            return ToObject&lt;TValue&gt;(response);
-        }
-
-        public async Task&lt;IReadOnlyCollection&lt;TKey&gt;&gt; GetKeysAsync()
-        {
-            var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TKey&gt;(response, SerializationService);
-        }
-
-        public async Task&lt;IReadOnlyCollection&lt;TValue&gt;&gt; GetValuesAsync()
-        {
-            var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList&lt;TValue&gt;(response, SerializationService);
-        }
-
-        public Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync() =&gt; GetEntriesAsync(CancellationToken.None);
-
-        private async Task&lt;IReadOnlyDictionary&lt;TKey, TValue&gt;&gt; GetEntriesAsync(CancellationToken cancellationToken)
-        {
-            var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CfAwait();
-            var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary&lt;TKey, TValue&gt;(SerializationService) { response };
-        }
-
-        public async Task&lt;int&gt; GetSizeAsync()
-        {
-            var requestMessage = ReplicatedMapSizeCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            return ReplicatedMapSizeCodec.DecodeResponse(responseMessage).Response;
-        }
-
-        public async Task&lt;bool&gt; IsEmptyAsync()
-        {
-            var requestMessage = ReplicatedMapIsEmptyCodec.EncodeRequest(Name);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            return ReplicatedMapIsEmptyCodec.DecodeResponse(responseMessage).Response;
-        }
-
-        public async Task&lt;bool&gt; ContainsKeyAsync(TKey key)
-        {
-            var keyData = ToSafeData(key);
-            var requestMessage = ReplicatedMapContainsKeyCodec.EncodeRequest(Name, keyData);
-            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
-            return ReplicatedMapContainsKeyCodec.DecodeResponse(responseMessage).Response;
-        }
-
-        public async Task&lt;bool&gt; ContainsValueAsync(TValue value)
-        {
-            var valueData = ToSafeData(value);
-            var requestMessage = ReplicatedMapContainsValueCodec.EncodeRequest(Name, valueData);
-            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
-            return ReplicatedMapContainsValueCodec.DecodeResponse(responseMessage).Response;
-        }
-
-        private async Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt; events, Maybe&lt;TKey&gt; key, IPredicate predicate, object state)
-        {
-            if (events == null) throw new ArgumentNullException(nameof(events));
-
-            var handlers = new ReplicatedMapEventHandlers&lt;TKey, TValue&gt;();
-            events(handlers);
-
-            // 0: no entryKey, no predicate
-            // 1: entryKey, no predicate
-            // 2: no entryKey, predicate
-            // 3: entryKey, predicate
-            var mode = key.Match(1, 0) + (predicate != null ? 2 : 0);
-            var keyv = key.ValueOrDefault();
-
-            var subscribeRequest = mode switch
-            {
-                0 =&gt; ReplicatedMapAddEntryListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
-                1 =&gt; ReplicatedMapAddEntryListenerToKeyCodec.EncodeRequest(Name, ToData(keyv), Cluster.IsSmartRouting),
-                2 =&gt; ReplicatedMapAddEntryListenerWithPredicateCodec.EncodeRequest(Name, ToData(predicate), Cluster.IsSmartRouting),
-                3 =&gt; ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.EncodeRequest(Name, ToData(keyv), ToData(predicate), Cluster.IsSmartRouting),
-                _ =&gt; throw new NotSupportedException()
-            };
-
-            var subscription = new ClusterSubscription(
-                subscribeRequest,
-                ReadSubscribeResponse,
-                CreateUnsubscribeRequest,
-                ReadUnsubscribeResponse,
-                HandleEventAsync,
-                new SubscriptionState(mode, Name, handlers, state));
-
-            await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
-
-            return subscription.Id;
-        }
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt; events, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.None, null, state);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.Some(key), null, state);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt; events, IPredicate predicate, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.None, predicate, state);
-
-        public Task&lt;Guid&gt; SubscribeAsync(Action&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt; events, TKey key, IPredicate predicate, object state = null)
-            =&gt; SubscribeAsync(events, Maybe.Some(key), predicate, state);
-
-        private class SubscriptionState : SubscriptionState&lt;ReplicatedMapEventHandlers&lt;TKey, TValue&gt;&gt;
-        {
-            public SubscriptionState(int mode, string name, ReplicatedMapEventHandlers&lt;TKey, TValue&gt; handlers, object state)
-                : base(name, handlers, state)
-            {
-                Mode = mode;
-            }
-
-            public int Mode { get; }
-        }
-
-        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&gt;(state);
-
-            return sstate.Mode switch
-            {
-                0 =&gt; ReplicatedMapAddEntryListenerCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
-                1 =&gt; ReplicatedMapAddEntryListenerToKeyCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
-                2 =&gt; ReplicatedMapAddEntryListenerWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
-                3 =&gt; ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.HandleEventAsync(eventMessage, HandleEntryEventAsync, state, LoggerFactory),
-                _ =&gt; throw new NotSupportedException()
-            };
-        }
-
-        private async ValueTask HandleEntryEventAsync(IData keyData, IData valueData, IData oldValueData, IData mergingValueData, int eventTypeData, Guid memberId, int numberOfAffectedEntries, object state)
-        {
-            if (eventTypeData == 0) return;
-            var eventType = (MapEventTypes) eventTypeData;
-
-            var member = Cluster.Members.GetMember(memberId);
-            var key = LazyArg&lt;TKey&gt;(keyData);
-            var value = LazyArg&lt;TValue&gt;(valueData);
-            var oldValue = LazyArg&lt;TValue&gt;(oldValueData);
-            var mergingValue = LazyArg&lt;TValue&gt;(mergingValueData);
-
-            var sstate = ToSafeState&lt;SubscriptionState&gt;(state);
-
-            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
-            foreach (var handler in sstate.Handlers)
-            {
-                if (handler.EventType.HasAll(eventType))
-                {
-                    var task = handler switch
-                    {
-                        IMapEntryEventHandler&lt;TKey, TValue, HReplicatedMap&lt;TKey, TValue&gt;&gt; entryHandler =&gt; entryHandler.HandleAsync(this, member, key, value, oldValue, mergingValue, eventType, numberOfAffectedEntries, sstate.HandlerState),
-                        IMapEventHandler&lt;TKey, TValue, HReplicatedMap&lt;TKey, TValue&gt;&gt; mapHandler =&gt; mapHandler.HandleAsync(this, member, numberOfAffectedEntries, sstate.HandlerState),
-                        _ =&gt; throw new NotSupportedException()
-                    };
-                    await task.CfAwait();
-                }
-            }
-        }
-
-        private static ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&gt;(state);
-            return ReplicatedMapRemoveEntryListenerCodec.EncodeRequest(sstate.Name, subscriptionId);
-        }
-
-        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
-        {
-            var sstate = ToSafeState&lt;SubscriptionState&gt;(state);
-
-            return sstate.Mode switch
-            {
-                0 =&gt; ReplicatedMapAddEntryListenerCodec.DecodeResponse(responseMessage).Response,
-                1 =&gt; ReplicatedMapAddEntryListenerToKeyCodec.DecodeResponse(responseMessage).Response,
-                2 =&gt; ReplicatedMapAddEntryListenerWithPredicateCodec.DecodeResponse(responseMessage).Response,
-                3 =&gt; ReplicatedMapAddEntryListenerToKeyWithPredicateCodec.DecodeResponse(responseMessage).Response,
-                _ =&gt; throw new NotSupportedException()
-            };
-        }
-
-        private static bool ReadUnsubscribeResponse(ClientMessage unsubscribeResponseMessage, object state)
-        {
-            return ReplicatedMapRemoveEntryListenerCodec.DecodeResponse(unsubscribeResponseMessage).Response;
-        }
-
-        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
-            =&gt; UnsubscribeBaseAsync(subscriptionId);
-
-
-        public async IAsyncEnumerator&lt;KeyValuePair&lt;TKey, TValue&gt;&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            // all collections are async enumerable,
-            // but by default we load the whole items set at once,
-            // then iterate in memory
-            var items = await GetEntriesAsync(cancellationToken).CfAwait();
-            foreach (var item in items)
-                yield return item;
+            var itemsData = ToSafeData(items);
+            var requestMessage = QueueAddAllCodec.EncodeRequest(Name, itemsData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return QueueAddAllCodec.DecodeResponse(responseMessage).Response;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[36,15,36,108,1],[38,13,38,40,1],[39,9,39,10,1],[42,16,42,51,1],[46,13,46,63,1],[49,13,49,70,1],[51,13,51,110,1],[52,13,52,123,1],[53,13,53,91,1],[54,13,54,47,1],[55,9,55,10,1],[59,13,59,83,1],[60,22,60,38,1],[60,39,60,41,1],[60,42,60,49,1],[62,17,62,67,1],[63,17,63,85,1],[66,13,66,92,1],[67,13,67,95,1],[68,13,68,74,1],[69,9,69,10,1],[73,13,73,43,1],[74,13,74,88,1],[75,13,75,123,1],[76,13,76,94,1],[77,13,77,47,1],[78,9,78,10,1],[82,13,82,78,1],[83,13,83,95,1],[84,13,84,73,1],[85,9,85,10,1],[89,13,89,43,1],[90,13,90,85,1],[91,13,91,123,1],[92,13,92,91,1],[94,13,94,47,1],[95,9,95,10,1],[99,13,99,79,1],[100,13,100,125,1],[101,13,101,94,1],[102,13,102,79,1],[103,9,103,10,1],[107,13,107,79,1],[108,13,108,125,1],[109,13,109,94,1],[110,13,110,81,1],[111,9,111,10,1],[113,77,113,116,1],[117,13,117,81,1],[118,13,118,144,1],[119,13,119,96,1],[120,13,120,96,1],[121,9,121,10,1],[125,13,125,77,1],[126,13,126,125,1],[127,13,127,84,1],[128,9,128,10,1],[132,13,132,80,1],[133,13,133,125,1],[134,13,134,87,1],[135,9,135,10,1],[139,13,139,43,1],[140,13,140,93,1],[141,13,141,123,1],[142,13,142,91,1],[143,9,143,10,1],[147,13,147,47,1],[148,13,148,97,1],[149,13,149,125,1],[150,13,150,93,1],[151,9,151,10,1],[155,13,155,32,1],[155,33,155,81,0],[157,13,157,75,1],[158,13,158,30,1],[164,13,164,70,1],[165,13,165,45,1],[167,13,169,22,1],[169,22,169,100,1],[169,100,170,22,1],[170,22,170,119,1],[170,119,171,22,1],[171,22,171,132,1],[171,132,172,22,1],[172,22,172,151,1],[172,151,173,22,1],[173,22,173,55,0],[173,55,174,15,1],[176,13,182,69,1],[184,13,184,79,1],[186,13,186,36,1],[187,9,187,10,1],[190,16,190,63,1],[193,16,193,68,1],[196,16,196,68,1],[199,16,199,73,1],[204,19,204,46,1],[206,17,206,29,1],[207,13,207,14,1],[209,31,209,35,1],[214,13,214,64,1],[216,13,218,22,1],[218,22,218,132,1],[218,132,219,22,1],[219,22,219,137,1],[219,137,220,22,1],[220,22,220,145,1],[220,145,221,22,1],[221,22,221,150,1],[221,150,222,22,1],[222,22,222,55,0],[222,55,223,15,1],[228,13,228,36,1],[228,37,228,44,0],[229,13,229,59,1],[231,13,231,62,1],[232,13,232,46,1],[233,13,233,52,1],[234,13,234,58,1],[235,13,235,66,1],[237,13,237,64,1],[240,22,240,33,1],[240,34,240,36,1],[240,37,240,52,1],[242,17,242,57,1],[244,21,246,107,1],[246,107,246,238,1],[246,238,247,100,1],[247,100,247,182,1],[247,182,248,30,1],[248,30,248,63,0],[248,63,249,23,1],[250,21,250,42,1],[253,9,253,10,1],[257,13,257,64,1],[258,13,258,101,1],[263,13,263,64,1],[265,13,267,22,1],[267,22,267,97,1],[267,97,268,22,1],[268,22,268,102,1],[268,102,269,22,1],[269,22,269,110,1],[269,110,270,22,1],[270,22,270,115,1],[270,115,271,22,1],[271,22,271,55,0],[271,55,272,15,1],[277,13,277,110,1],[281,16,281,52,1],[289,13,289,76,0],[290,22,290,30,0],[290,31,290,33,0],[290,34,290,39,0],[291,17,291,35,0],[292,9,292,10,0]]);
+      highlightRanges([[29,62,29,94,1],[33,16,33,89,1],[37,41,37,83,1],[45,13,45,45,1],[46,13,46,78,1],[47,13,47,116,1],[52,13,52,34,1],[54,9,54,10,1],[58,13,58,45,1],[60,13,60,77,1],[61,13,61,104,1],[62,13,62,143,1],[63,13,63,77,1],[64,9,64,10,1],[71,13,71,47,1],[72,13,72,82,1],[73,13,73,124,1],[74,13,74,78,1],[75,9,75,10,1]]);
     </script>
   </body>
 </html>

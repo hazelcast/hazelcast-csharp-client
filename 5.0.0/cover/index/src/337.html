@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueRemoveCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueRemainingCapacityCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Retrieves and removes the head of this queue.  This method differs from poll only in that it throws an exception
-    /// if this queue is empty.
+    /// Returns the number of additional elements that this queue can ideally (in the absence of memory or resource
+    /// constraints) accept without blocking, or Integer.MAX_VALUE if there is no intrinsic limit. Note that you cannot
+    /// always tell if an attempt to insert an element will succeed by inspecting remainingCapacity because it may be
+    /// the case that another thread is about to insert or remove an element.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class QueueRemoveServerCodec
+    internal static class QueueRemainingCapacityServerCodec
 #else
-    internal static class QueueRemoveCodec
+    internal static class QueueRemainingCapacityCodec
 #endif
     {
-        public const int RequestMessageType = 197632; // 0x030400
-        public const int ResponseMessageType = 197633; // 0x030401
+        public const int RequestMessageType = 201472; // 0x031300
+        public const int ResponseMessageType = 201473; // 0x031301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -72,27 +74,21 @@ namespace Hazelcast.Protocol.Codecs
             /// Name of the Queue
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// Element to be removed from this queue, if present
-            ///&lt;/summary&gt;
-            public IData Value { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData @value)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Queue.Remove&quot;
+                OperationName = &quot;Queue.RemainingCapacity&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -103,7 +99,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -112,18 +107,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// &lt;tt&gt;true&lt;/tt&gt; if this queue changed as a result of the call
+            /// The remaining capacity
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public int Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(int response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -134,7 +129,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -143,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[75,13,79,15,1],[80,13,80,123,1],[81,13,81,104,1],[82,13,82,88,1],[83,13,83,48,1],[84,13,84,53,1],[85,13,85,53,1],[86,13,86,34,1],[107,36,107,40,1],[107,41,107,45,1],[124,13,124,64,1],[125,13,125,53,1],[126,13,126,48,1],[127,13,127,91,1],[128,13,128,29,1],[129,9,129,10,1]]);
+      highlightRanges([[72,13,76,15,1],[77,13,77,123,1],[78,13,78,104,1],[79,13,79,88,1],[80,13,80,48,1],[81,13,81,53,1],[82,13,82,34,1],[102,35,102,39,1],[102,40,102,44,1],[119,13,119,64,1],[120,13,120,53,1],[121,13,121,48,1],[122,13,122,90,1],[123,13,123,29,1],[124,9,124,10,1]]);
     </script>
   </body>
 </html>

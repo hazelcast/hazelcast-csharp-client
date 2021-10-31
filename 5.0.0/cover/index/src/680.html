@@ -2,13 +2,13 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\SimpleObjectPool.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ServiceFactory`TService.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
   <body>
     <pre id="content" class="source-code">
-// Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
 // you may not use this file except in compliance with the License.
@@ -23,71 +23,48 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
-
-#nullable enable
 
 namespace Hazelcast.Core
 {
-    // this is equivalent to MS&#39; DefaultObjectPool with the default policy
-    // a fixed-size object pool
-
-    internal class SimpleObjectPool&lt;T&gt;
-        where T : class
+    /// &lt;summary&gt;
+    /// Represents a service factory.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TService&quot;&gt;The type of the service.&lt;/typeparam&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The &lt;see cref=&quot;ServiceFactory{TService}&quot;/&gt; class supports defining how
+    /// a service should be created, via its &lt;see cref=&quot;Creator&quot;/&gt; property, and then creates
+    /// new instances of that service via its &lt;see cref=&quot;Create&quot;/&gt; method.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public class ServiceFactory&lt;TService&gt;
+        where TService : class
     {
-        private readonly Func&lt;T&gt; _create;
-        private readonly ObjectWrapper[] _items;
-        private T? _item;
+        /// &lt;summary&gt;
+        /// Gets or sets the service creator.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Do not set the creator after a service has been created,
+        /// as that could have unspecified consequences.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Func&lt;TService&gt; Creator { get; set; }
 
-        public SimpleObjectPool(Func&lt;T&gt; create, int size)
-        {
-            _create = create;
-            _items = new ObjectWrapper[size - 1];
-        }
+        /// &lt;summary&gt;
+        /// Creates a new instance of the service.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A new instance of the service, or null if no creator has been set.&lt;/returns&gt;
+        internal TService Create() =&gt; Creator?.Invoke();
 
-        public T Get()
-        {
-            var item = _item;
-            if (item == null || Interlocked.CompareExchange(ref _item, null, item) != item)
-            {
-                var items = _items;
-                for (var i = 0; i &lt; items.Length; i++)
-                {
-                    item = items[i].Item;
-                    if (item != null &amp;&amp; Interlocked.CompareExchange(ref items[i].Item, null, item) == item)
-                    {
-                        return item;
-                    }
-                }
-
-                item = _create();
-            }
-
-            return item;
-        }
-
-        public void Return(T obj)
-        {
-            if (_item != null || Interlocked.CompareExchange(ref _item, obj, null) != null)
-            {
-                var items = _items;
-                for (var i = 0; i &lt; items.Length &amp;&amp; Interlocked.CompareExchange(ref items[i].Item, obj, null) != null; ++i)
-                { }
-            }
-        }
-
-        // borrowed from MS&#39; DefaultObjectPool
-        // PERF: the struct wrapper avoids array-covariance-checks from the runtime when assigning to elements of the array.
-        private protected struct ObjectWrapper
-        {
-            public T? Item;
-        }
+        /// &lt;summary&gt;
+        /// Clones this service factory.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A clone of the service factory.&lt;/returns&gt;
+        internal ServiceFactory&lt;TService&gt; Clone()
+            =&gt; new ServiceFactory&lt;TService&gt; { Creator = Creator };
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[32,9,32,58,1],[34,13,34,30,1],[35,13,35,50,1],[36,9,36,10,1],[40,13,40,30,1],[41,13,41,92,1],[43,17,43,36,1],[44,22,44,31,1],[44,33,44,49,1],[44,51,44,54,1],[46,21,46,42,1],[47,21,47,108,1],[49,25,49,37,0],[53,17,53,34,1],[56,13,56,25,1],[61,13,61,92,1],[63,17,63,36,1],[64,22,64,31,1],[64,33,64,118,1],[64,120,64,123,1],[67,9,67,10,1]]);
+      highlightRanges([[38,41,38,45,1],[38,46,38,50,1],[44,39,44,56,1],[51,16,51,66,1]]);
     </script>
   </body>
 </html>

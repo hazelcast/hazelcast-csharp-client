@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapClearCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapAggregateWithPredicateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// This method clears the map and invokes MapStore#deleteAll deleteAll on MapStore which, if connected to a database,
-    /// will delete the records from that database. The MAP_CLEARED event is fired for any registered listeners.
-    /// To clear a map without calling MapStore#deleteAll, use #evictAll.
+    /// Applies the aggregation logic on map entries filtered with the Predicate and returns the result
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapClearServerCodec
+    internal static class MapAggregateWithPredicateServerCodec
 #else
-    internal static class MapClearCodec
+    internal static class MapAggregateWithPredicateCodec
 #endif
     {
-        public const int RequestMessageType = 77056; // 0x012D00
-        public const int ResponseMessageType = 77057; // 0x012D01
+        public const int RequestMessageType = 80384; // 0x013A00
+        public const int ResponseMessageType = 80385; // 0x013A01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
@@ -69,24 +67,36 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// of map
+            /// Name of the map.
             ///&lt;/summary&gt;
             public string Name { get; set; }
+
+            /// &lt;summary&gt;
+            /// aggregator to aggregate the entries with
+            ///&lt;/summary&gt;
+            public IData Aggregator { get; set; }
+
+            /// &lt;summary&gt;
+            /// predicate to filter the entries with
+            ///&lt;/summary&gt;
+            public IData Predicate { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name)
+        public static ClientMessage EncodeRequest(string name, IData aggregator, IData predicate)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;Map.Clear&quot;
+                IsRetryable = true,
+                OperationName = &quot;Map.AggregateWithPredicate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, aggregator);
+            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -97,21 +107,29 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
+            request.Aggregator = DataCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
+
+            /// &lt;summary&gt;
+            /// the aggregation result
+            ///&lt;/summary&gt;
+            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse()
+        public static ClientMessage EncodeResponse(IData response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
+            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -121,6 +139,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
+            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -129,7 +148,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[70,13,74,15,1],[75,13,75,123,1],[76,13,76,104,1],[77,13,77,88,1],[78,13,78,48,1],[79,13,79,53,1],[80,13,80,34,1],[111,13,111,64,0],[112,13,112,53,0],[113,13,113,29,0],[114,13,114,29,0],[115,9,115,10,0]]);
+      highlightRanges([[78,13,82,15,1],[83,13,83,123,1],[84,13,84,104,1],[85,13,85,88,1],[86,13,86,48,1],[87,13,87,53,1],[88,13,88,57,1],[89,13,89,56,1],[90,13,90,34,1],[112,37,112,41,1],[112,42,112,46,1],[129,13,129,64,1],[130,13,130,53,1],[131,13,131,29,1],[132,13,132,86,1],[133,13,133,29,1],[134,9,134,10,1]]);
     </script>
   </body>
 </html>

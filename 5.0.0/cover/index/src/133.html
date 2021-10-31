@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\AndPredicate.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\UsernamePasswordCredentialsFactory.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,30 +22,38 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
 
-namespace Hazelcast.Query
+namespace Hazelcast.Security
 {
-    internal class AndPredicate : LogicalPredicateBase
+    /// &lt;summary&gt;
+    /// Provides an implementation of &lt;see cref=&quot;ICredentialsFactory&quot;/&gt; that returns a static username+password &lt;see cref=&quot;ICredentials&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class UsernamePasswordCredentialsFactory : StaticCredentialsFactory
     {
-        public AndPredicate()
-            : this(Array.Empty&lt;IPredicate&gt;())
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;UsernamePasswordCredentialsFactory&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;username&quot;&gt;A username.&lt;/param&gt;
+        /// &lt;param name=&quot;password&quot;&gt;A password.&lt;/param&gt;
+        public UsernamePasswordCredentialsFactory(string username, string password)
+            : base(new UsernamePasswordCredentials { Name = username, Password = password })
         { }
 
-        public AndPredicate(params IPredicate[] predicates)
-            : base(predicates)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;UsernamePasswordCredentialsFactory&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;args&quot;&gt;Arguments.&lt;/param&gt;
+        public UsernamePasswordCredentialsFactory(IReadOnlyDictionary&lt;string, string&gt; args)
+            : this(args.GetStringValue(&quot;username&quot;), args.GetStringValue(&quot;password&quot;))
         { }
-
-        public AndPredicate Concat(IPredicate predicate)
-            =&gt; new AndPredicate(ConcatInternal(predicate));
-
-        public override int ClassId =&gt; PredicateDataSerializerHook.AndPredicate;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[22,15,22,46,1],[23,11,23,12,1],[26,15,26,31,1],[27,11,27,12,1],[30,16,30,59,0],[32,40,32,80,1]]);
+      highlightRanges([[31,15,31,93,1],[32,11,32,12,1],[39,15,39,85,1],[40,11,40,12,1]]);
     </script>
   </body>
 </html>

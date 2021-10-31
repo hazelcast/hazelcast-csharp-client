@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\InstanceofPredicate.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\InPredicate.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,69 +23,104 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
 {
-    internal class InstanceofPredicate : IPredicate, IIdentifiedDataSerializable
-    {
-        private string _className;
+    // TODO: avoid boxing?
+    // this predicate and others, by treating their args as object, cause boxing.
+    // we could (should) have InPredicate&lt;T&gt; treating args as T and avoiding
+    // boxing, but then this would require an output.WriteObject&lt;T&gt;(T o) method
+    // and, deep down, that the serializers don&#39;t box as they do today.
 
-        public InstanceofPredicate()
+    internal class InPredicate : IPredicate, IIdentifiedDataSerializable
+    {
+        private string _attributeName;
+        private ICollection&lt;object&gt; _values;
+
+        public InPredicate()
+        { }
+
+        public InPredicate(string attributeName, ICollection&lt;object&gt; values)
         {
+            _attributeName = attributeName;
+            _values = values ?? throw new ArgumentNullException(nameof(values));
         }
 
-        public InstanceofPredicate(string className)
+        public InPredicate(string attributeName, params object[] values)
         {
-            _className = className;
+            _attributeName = attributeName;
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
+            _values = values ?? throw new ArgumentNullException(nameof(values));
+#pragma warning restore CA1508 // Avoid dead conditional code
         }
 
         public void ReadData(IObjectDataInput input)
         {
-            _className = input.ReadString();
+            _attributeName = input.ReadString();
+            var size = input.ReadInt();
+            var values = new object[size];
+            for (var i = 0; i &lt; size; i++)
+            {
+                values[i] = input.ReadObject&lt;object&gt;();
+            }
+            _values = values;
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteString(_className);
+            output.WriteString(_attributeName);
+            output.WriteInt(_values.Count);
+            foreach (var value in _values)
+            {
+                output.WriteObject(value);
+            }
         }
 
         public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
 
-        public int ClassId =&gt; PredicateDataSerializerHook.InstanceofPredicate;
+        public int ClassId =&gt; PredicateDataSerializerHook.InPredicate;
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
             if (obj is null) return false;
-            return obj is InstanceofPredicate other &amp;&amp; Equals(this, other);
+            return obj is InPredicate other &amp;&amp; Equals(this, other);
         }
 
-        private static bool Equals(InstanceofPredicate left, InstanceofPredicate right)
+        private static bool Equals(InPredicate left, InPredicate right)
         {
             if (ReferenceEquals(left, right)) return true;
             if (left is null || right is null) return false;
 
-            return left._className == right._className;
+            return left._attributeName == right._attributeName &amp;&amp;
+                   left._values.SequenceEqual(right._values);
         }
 
         public override int GetHashCode()
         {
-            // ReSharper disable NonReadonlyMemberInGetHashCode
-            return _className != null ? _className.GetHashCode(StringComparison.Ordinal) : 0;
-            // ReSharper enable NonReadonlyMemberInGetHashCode
+            unchecked
+            {
+                // ReSharper disable NonReadonlyMemberInGetHashCode
+                return ((_attributeName != null ? _attributeName.GetHashCode(StringComparison.Ordinal) : 0)*397) ^
+                       (_values != null ? _values.GetHashCode() : 0);
+                // ReSharper restore NonReadonlyMemberInGetHashCode
+            }
         }
 
         public override string ToString()
         {
-            return &quot;INSTANCEOF(&quot; + _className + &quot;)&quot;;
+            return &quot;(&quot; + _attributeName + &quot; IN &quot; + string.Join(&quot;, &quot;, _values) + &quot;)&quot;;
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[24,9,24,37,1],[26,9,26,10,1],[28,9,28,53,1],[30,13,30,36,1],[31,9,31,10,1],[35,13,35,45,1],[36,9,36,10,1],[40,13,40,44,1],[41,9,41,10,1],[43,33,43,62,1],[45,31,45,78,1],[49,13,49,44,1],[49,45,49,57,1],[50,13,50,29,1],[50,30,50,43,1],[51,13,51,76,1],[56,13,56,46,1],[56,47,56,59,1],[57,13,57,47,1],[57,48,57,61,1],[59,13,59,56,1],[65,13,65,94,1],[71,13,71,53,1]]);
+      highlightRanges([[33,9,33,29,1],[34,11,34,12,1],[36,9,36,77,1],[38,13,38,44,1],[39,13,39,81,1],[40,9,40,10,1],[42,9,42,73,1],[44,13,44,44,1],[47,13,47,81,1],[49,9,49,10,1],[53,13,53,49,1],[54,13,54,40,1],[55,13,55,43,1],[56,18,56,27,1],[56,29,56,37,1],[56,39,56,42,1],[58,17,58,56,1],[60,13,60,30,1],[61,9,61,10,1],[65,13,65,48,1],[66,13,66,44,1],[67,22,67,31,1],[67,32,67,34,1],[67,35,67,42,1],[69,17,69,43,1],[71,9,71,10,1],[73,33,73,62,1],[75,31,75,70,1],[79,13,79,44,1],[79,45,79,57,1],[80,13,80,29,1],[80,30,80,43,1],[81,13,81,68,1],[86,13,86,46,1],[86,47,86,59,1],[87,13,87,47,1],[87,48,87,61,1],[89,13,90,62,1],[98,17,99,70,1],[106,13,106,85,1]]);
     </script>
   </body>
 </html>

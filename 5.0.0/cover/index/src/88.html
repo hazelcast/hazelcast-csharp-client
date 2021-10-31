@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HBigDecimalSerializer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HazelcastJsonValueSerializer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,45 +22,31 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Numerics;
-using Hazelcast.Models;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.DefaultSerializers
 {
-    internal class HBigDecimalSerializer : SingletonSerializerBase&lt;HBigDecimal&gt;
+    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase&lt;HazelcastJsonValue&gt;
     {
-        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeBigDecimal;
+        public override int TypeId =&gt; SerializationConstants.JavascriptJsonSerializationType;
 
-        public override HBigDecimal Read(IObjectDataInput input)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public override HazelcastJsonValue Read(IObjectDataInput input)
         {
-            var body = input.ReadByteArray();
-            var scale = input.ReadInt();
-
-#if NETSTANDARD2_0
-            Array.Reverse(body);
-            var unscaled = new BigInteger(body);
-#else
-            var unscaled = new BigInteger(body, isUnsigned: false, isBigEndian: true);
-#endif
-
-            return new HBigDecimal(unscaled, scale);
+            return new HazelcastJsonValue(input.ReadString());
         }
 
-        public override void Write(IObjectDataOutput output, HBigDecimal obj)
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
         {
-            var body = obj.UnscaledValue.ToByteArray();
-            Array.Reverse(body);
-
-            output.WriteByteArray(body);
-            output.WriteInt(obj.Scale);
+            output.WriteString(obj.ToString());
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,39,23,87,1],[27,13,27,46,0],[28,13,28,41,0],[34,13,34,87,0],[37,13,37,53,0],[42,13,42,56,1],[43,13,43,33,1],[45,13,45,41,1],[46,13,46,40,1],[47,9,47,10,1]]);
+      highlightRanges([[21,39,21,93,1],[26,13,26,63,1],[32,13,32,48,1],[33,9,33,10,1]]);
     </script>
   </body>
 </html>

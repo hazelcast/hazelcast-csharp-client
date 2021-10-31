@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\QueueAddAllCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\PNCounterGetConfiguredReplicaCountCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,52 +49,46 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds all of the elements in the specified collection to this collection (optional operation).The behavior of this
-    /// operation is undefined if the specified collection is modified while the operation is in progress.
-    /// (This implies that the behavior of this call is undefined if the specified collection is this collection,
-    /// and this collection is nonempty.)
+    /// Returns the configured number of CRDT replicas for the PN counter with
+    /// the given {@code name}.
+    /// The actual replica count may be less, depending on the number of data
+    /// members in the cluster (members that own data).
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class QueueAddAllServerCodec
+    internal static class PNCounterGetConfiguredReplicaCountServerCodec
 #else
-    internal static class QueueAddAllCodec
+    internal static class PNCounterGetConfiguredReplicaCountCodec
 #endif
     {
-        public const int RequestMessageType = 200704; // 0x031000
-        public const int ResponseMessageType = 200705; // 0x031001
+        public const int RequestMessageType = 1901312; // 0x1D0300
+        public const int ResponseMessageType = 1901313; // 0x1D0301
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfInt;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the Queue
+            /// the name of the PNCounter
             ///&lt;/summary&gt;
             public string Name { get; set; }
-
-            /// &lt;summary&gt;
-            /// Collection containing elements to be added to this collection
-            ///&lt;/summary&gt;
-            public IList&lt;IData&gt; DataList { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; dataList)
+        public static ClientMessage EncodeRequest(string name)
         {
             var clientMessage = new ClientMessage
             {
-                IsRetryable = false,
-                OperationName = &quot;Queue.AddAll&quot;
+                IsRetryable = true,
+                OperationName = &quot;PNCounter.GetConfiguredReplicaCount&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            ListMultiFrameCodec.Encode(clientMessage, dataList, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -105,7 +99,6 @@ namespace Hazelcast.Protocol.Codecs
             var request = new RequestParameters();
             iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
-            request.DataList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
         }
 #endif
@@ -114,18 +107,18 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// &lt;tt&gt;true&lt;/tt&gt; if this collection changed as a result of the call
+            /// the configured replica count
             ///&lt;/summary&gt;
-            public bool Response { get; set; }
+            public int Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(bool response)
+        public static ClientMessage EncodeResponse(int response)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
-            initialFrame.Bytes.WriteBoolL(ResponseResponseFieldOffset, response);
+            initialFrame.Bytes.WriteIntL(ResponseResponseFieldOffset, response);
             clientMessage.Append(initialFrame);
             return clientMessage;
         }
@@ -136,7 +129,7 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
-            response.Response = initialFrame.Bytes.ReadBoolL(ResponseResponseFieldOffset);
+            response.Response = initialFrame.Bytes.ReadIntL(ResponseResponseFieldOffset);
             return response;
         }
 
@@ -145,7 +138,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,83,1],[88,13,88,34,1],[109,36,109,40,1],[109,41,109,45,1],[126,13,126,64,1],[127,13,127,53,1],[128,13,128,48,1],[129,13,129,91,1],[130,13,130,29,1],[131,9,131,10,1]]);
+      highlightRanges([[72,13,76,15,0],[77,13,77,123,0],[78,13,78,104,0],[79,13,79,88,0],[80,13,80,48,0],[81,13,81,53,0],[82,13,82,34,0],[102,35,102,39,0],[102,40,102,44,0],[119,13,119,64,0],[120,13,120,53,0],[121,13,121,48,0],[122,13,122,90,0],[123,13,123,29,0],[124,9,124,10,0]]);
     </script>
   </body>
 </html>

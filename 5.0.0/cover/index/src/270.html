@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,24 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Puts an entry into this map with a given ttl (time to live) value.Entry will expire and get evicted after the ttl
-    /// If ttl is 0, then the entry lives forever.This method returns a clone of the previous value, not the original
-    /// (identically equal) value previously put into the map.Time resolution for TTL is seconds. The given TTL value is
-    /// rounded to the next closest second value.
+    /// Copies all of the mappings from the specified map to this map (optional operation).The effect of this call is
+    /// equivalent to that of calling put(Object,Object) put(k, v) on this map once for each mapping from key k to value
+    /// v in the specified map.The behavior of this operation is undefined if the specified map is modified while the
+    /// operation is in progress.
+    /// Please note that all the keys in the request should belong to the partition id to which this request is being sent, all keys
+    /// matching to a different partition id shall be ignored. The API implementation using this request may need to send multiple
+    /// of these request messages for filling a request for a key set if the keys belong to different partitions.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapPutServerCodec
+    internal static class MapPutAllServerCodec
 #else
-    internal static class MapPutCodec
+    internal static class MapPutAllCodec
 #endif
     {
-        public const int RequestMessageType = 65792; // 0x010100
-        public const int ResponseMessageType = 65793; // 0x010101
-        private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
+        public const int RequestMessageType = 76800; // 0x012C00
+        public const int ResponseMessageType = 76801; // 0x012C01
+        private const int RequestTriggerMapLoaderFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
+        private const int RequestInitialFrameSize = RequestTriggerMapLoaderFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -72,48 +74,42 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// Name of the map.
+            /// name of map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// Key for the map entry.
+            /// mappings to be stored in this map
             ///&lt;/summary&gt;
-            public IData Key { get; set; }
+            public IList&lt;KeyValuePair&lt;IData, IData&gt;&gt; Entries { get; set; }
 
             /// &lt;summary&gt;
-            /// Value for the map entry.
+            /// should trigger MapLoader for elements not in this map
             ///&lt;/summary&gt;
-            public IData Value { get; set; }
+            public bool TriggerMapLoader { get; set; }
 
             /// &lt;summary&gt;
-            /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
-            ///&lt;/summary&gt;
-            public long ThreadId { get; set; }
-
-            /// &lt;summary&gt;
-            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
-            ///&lt;/summary&gt;
-            public long Ttl { get; set; }
+            /// &lt;c&gt;true&lt;/c&gt; if the triggerMapLoader is received from the client, &lt;c&gt;false&lt;/c&gt; otherwise.
+            /// If this is false, triggerMapLoader has the default value for its type.
+            /// &lt;/summary&gt;
+            public bool IsTriggerMapLoaderExists { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long ttl)
+        public static ClientMessage EncodeRequest(string name, ICollection&lt;KeyValuePair&lt;IData, IData&gt;&gt; entries, bool triggerMapLoader)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.Put&quot;
+                OperationName = &quot;Map.PutAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
-            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
+            initialFrame.Bytes.WriteBoolL(RequestTriggerMapLoaderFieldOffset, triggerMapLoader);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
-            DataCodec.Encode(clientMessage, key);
-            DataCodec.Encode(clientMessage, @value);
+            EntryListCodec.Encode(clientMessage, entries, DataCodec.Encode, DataCodec.Encode);
             return clientMessage;
         }
 
@@ -123,32 +119,29 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
-            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
+            if (initialFrame.Bytes.Length &gt;= RequestTriggerMapLoaderFieldOffset + BytesExtensions.SizeOfBool)
+            {
+                request.TriggerMapLoader = initialFrame.Bytes.ReadBoolL(RequestTriggerMapLoaderFieldOffset);
+                request.IsTriggerMapLoaderExists = true;
+            }
+            else request.IsTriggerMapLoaderExists = false;
             request.Name = StringCodec.Decode(iterator);
-            request.Key = DataCodec.Decode(iterator);
-            request.Value = DataCodec.Decode(iterator);
+            request.Entries = EntryListCodec.Decode(iterator, DataCodec.Decode, DataCodec.Decode);
             return request;
         }
 #endif
 
         public sealed class ResponseParameters
         {
-
-            /// &lt;summary&gt;
-            /// old value of the entry
-            ///&lt;/summary&gt;
-            public IData Response { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IData response)
+        public static ClientMessage EncodeResponse()
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             clientMessage.Append(initialFrame);
-            CodecUtil.EncodeNullable(clientMessage, response, DataCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -158,7 +151,6 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var response = new ResponseParameters();
             iterator.Take(); // empty initial frame
-            response.Response = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             return response;
         }
 
@@ -167,7 +159,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[93,13,97,15,1],[98,13,98,123,1],[99,13,99,104,1],[100,13,100,88,1],[101,13,101,81,1],[102,13,102,71,1],[103,13,103,48,1],[104,13,104,53,1],[105,13,105,50,1],[106,13,106,53,1],[107,13,107,34,1],[131,37,131,41,1],[131,42,131,46,1],[148,13,148,64,1],[149,13,149,53,1],[150,13,150,29,1],[151,13,151,86,1],[152,13,152,29,1],[153,9,153,10,1]]);
+      highlightRanges([[91,13,95,15,1],[96,13,96,123,1],[97,13,97,104,1],[98,13,98,88,1],[99,13,99,97,1],[100,13,100,48,1],[101,13,101,53,1],[102,13,102,95,1],[103,13,103,34,1],[141,13,141,64,0],[142,13,142,53,0],[143,13,143,29,0],[144,13,144,29,0],[145,9,145,10,0]]);
     </script>
   </body>
 </html>

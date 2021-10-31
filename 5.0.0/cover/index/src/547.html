@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\CollectionItemEventArgs.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Events\PartitionLostEventArgs.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,47 +22,33 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Hazelcast.Models;
 
-namespace Hazelcast.DistributedObjects
+namespace Hazelcast.Events
 {
-    /// &lt;summary&gt;
-    /// Represents event data for the &lt;see cref=&quot;CollectionItemEventTypes&quot;/&gt; events.
-    /// &lt;/summary&gt;
-    /// &lt;typeparam name=&quot;T&quot;&gt;The topic object type.&lt;/typeparam&gt;
-    public sealed class CollectionItemEventArgs&lt;T&gt; : EventArgsBase
+    public class PartitionLostEventArgs
     {
-        private readonly Lazy&lt;T&gt; _item;
-
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;CollectionItemEventArgs{T}&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
-        /// &lt;param name=&quot;item&quot;&gt;The item.&lt;/param&gt;
-        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
-        public CollectionItemEventArgs(MemberInfo member, Lazy&lt;T&gt; item, object state)
-            : base(state)
+        public PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, MemberInfo member)
         {
+            PartitionId = partitionId;
+            LostBackupCount = lostBackupCount;
+            IsAllReplicasInPartitionLost = isAllReplicasInPartitionLost;
             Member = member;
-            _item = item;
         }
 
-        /// &lt;summary&gt;
-        /// Gets the member that fired the event.
-        /// &lt;/summary&gt;
-        public MemberInfo Member { get; }
+        public int PartitionId { get; }
 
-        /// &lt;summary&gt;
-        /// Gets the item.
-        /// &lt;/summary&gt;
-        public T Item =&gt; _item.Value;
+        public int LostBackupCount { get; }
+
+        public bool IsAllReplicasInPartitionLost { get; }
+
+        public MemberInfo Member { get; }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[35,15,35,26,1],[37,13,37,29,1],[38,13,38,26,1],[39,9,39,10,1],[44,36,44,40,0],[49,26,49,37,0]]);
+      highlightRanges([[21,9,21,130,1],[23,13,23,39,1],[24,13,24,47,1],[25,13,25,73,1],[26,13,26,29,1],[27,9,27,10,1],[29,34,29,38,1],[31,38,31,42,1],[33,52,33,56,1],[35,36,35,40,1]]);
     </script>
   </body>
 </html>

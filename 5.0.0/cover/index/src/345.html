@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapAddNearCacheEntryListenerCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ReplicatedMapAddEntryListenerWithPredicateCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Adds a near cache entry listener for this map. This listener will be notified when an entry is added/removed/updated/evicted/expired etc. so that the near cache entries can be invalidated.
+    /// Adds an continuous entry listener for this map. The listener will be notified for map add/remove/update/evict
+    /// events filtered by the given predicate.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ReplicatedMapAddNearCacheEntryListenerServerCodec
+    internal static class ReplicatedMapAddEntryListenerWithPredicateServerCodec
 #else
-    internal static class ReplicatedMapAddNearCacheEntryListenerCodec
+    internal static class ReplicatedMapAddEntryListenerWithPredicateCodec
 #endif
     {
-        public const int RequestMessageType = 856576; // 0x0D1200
-        public const int ResponseMessageType = 856577; // 0x0D1201
-        private const int RequestIncludeValueFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestLocalOnlyFieldOffset = RequestIncludeValueFieldOffset + BytesExtensions.SizeOfBool;
+        public const int RequestMessageType = 854784; // 0x0D0B00
+        public const int ResponseMessageType = 854785; // 0x0D0B01
+        private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
@@ -68,21 +68,21 @@ namespace Hazelcast.Protocol.Codecs
         private const int EventEntryUuidFieldOffset = EventEntryEventTypeFieldOffset + BytesExtensions.SizeOfInt;
         private const int EventEntryNumberOfAffectedEntriesFieldOffset = EventEntryUuidFieldOffset + BytesExtensions.SizeOfGuid;
         private const int EventEntryInitialFrameSize = EventEntryNumberOfAffectedEntriesFieldOffset + BytesExtensions.SizeOfInt;
-        private const int EventEntryMessageType = 856578; // 0x0D1202
+        private const int EventEntryMessageType = 854786; // 0x0D0B02
 
 #if SERVER_CODEC
         public sealed class RequestParameters
         {
 
             /// &lt;summary&gt;
-            /// Name of the ReplicatedMap
+            /// Name of the Replicated Map
             ///&lt;/summary&gt;
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// True if EntryEvent should contain the value,false otherwise
+            /// The predicate for filtering entries
             ///&lt;/summary&gt;
-            public bool IncludeValue { get; set; }
+            public IData Predicate { get; set; }
 
             /// &lt;summary&gt;
             /// if true fires events that originated from this node only, otherwise fires all events
@@ -91,20 +91,20 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, bool includeValue, bool localOnly)
+        public static ClientMessage EncodeRequest(string name, IData predicate, bool localOnly)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;ReplicatedMap.AddNearCacheEntryListener&quot;
+                OperationName = &quot;ReplicatedMap.AddEntryListenerWithPredicate&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteBoolL(RequestIncludeValueFieldOffset, includeValue);
             initialFrame.Bytes.WriteBoolL(RequestLocalOnlyFieldOffset, localOnly);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
+            DataCodec.Encode(clientMessage, predicate);
             return clientMessage;
         }
 
@@ -114,9 +114,9 @@ namespace Hazelcast.Protocol.Codecs
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
             var initialFrame = iterator.Take();
-            request.IncludeValue = initialFrame.Bytes.ReadBoolL(RequestIncludeValueFieldOffset);
             request.LocalOnly = initialFrame.Bytes.ReadBoolL(RequestLocalOnlyFieldOffset);
             request.Name = StringCodec.Decode(iterator);
+            request.Predicate = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -194,7 +194,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[86,13,90,15,0],[91,13,91,123,0],[92,13,92,104,0],[93,13,93,88,0],[94,13,94,89,0],[95,13,95,83,0],[96,13,96,48,0],[97,13,97,53,0],[98,13,98,34,0],[120,36,120,40,0],[120,41,120,45,0],[137,13,137,64,0],[138,13,138,53,0],[139,13,139,48,0],[140,13,140,91,0],[141,13,141,29,0],[142,9,142,10,0],[165,13,165,64,0],[166,13,166,57,0],[167,13,167,54,0],[169,17,169,52,0],[170,17,170,94,0],[171,17,171,85,0],[172,17,172,122,0],[173,17,173,80,0],[174,17,174,83,0],[175,17,175,85,0],[176,17,176,89,0],[177,17,177,132,0],[179,13,179,137,0],[180,13,180,28,0],[181,9,181,10,0]]);
+      highlightRanges([[86,13,90,15,1],[91,13,91,123,1],[92,13,92,104,1],[93,13,93,88,1],[94,13,94,83,1],[95,13,95,48,1],[96,13,96,53,1],[97,13,97,56,1],[98,13,98,34,1],[120,36,120,40,1],[120,41,120,45,1],[137,13,137,64,1],[138,13,138,53,1],[139,13,139,48,1],[140,13,140,91,1],[141,13,141,29,1],[142,9,142,10,1],[165,13,165,64,1],[166,13,166,57,1],[167,13,167,54,1],[169,17,169,52,1],[170,17,170,94,1],[171,17,171,85,1],[172,17,172,122,1],[173,17,173,80,1],[174,17,174,83,1],[175,17,175,85,1],[176,17,176,89,1],[177,17,177,132,1],[179,13,179,137,0],[180,13,180,28,0],[181,9,181,10,1]]);
     </script>
   </body>
 </html>

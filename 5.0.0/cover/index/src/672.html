@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\PatternMatcherExtensions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\NumericExtensions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,26 +22,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System;
 
 namespace Hazelcast.Core
 {
-    internal static class PatternMatcherExtensions
+    /// &lt;summary&gt;
+    /// Provides extension methods to the numeric value type (&lt;see cref=&quot;long&quot;/&gt;, &lt;see cref=&quot;int&quot;/&gt;...).
+    /// &lt;/summary&gt;
+    internal static class NumericExtensions
     {
-        public static T FindValue&lt;T&gt;(this IPatternMatcher patternMatcher, IDictionary&lt;string, T&gt; dictionary, string pattern)
+        /// &lt;summary&gt;
+        /// Converts this value to an equivalent &lt;see cref=&quot;int&quot;/&gt; clamped value.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;This value.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;see cref=&quot;int&quot;/&gt; clamped value equivalent to this &lt;paramref name=&quot;value&quot;/&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Contrary to &lt;see cref=&quot;Convert.ToInt32(long)&quot;/&gt; which throws if the value is outside
+        /// the &lt;see cref=&quot;int&quot;/&gt; min-max values, this method clamps the returned value with those min-max
+        /// values.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static int ClampToInt32(this long value)
         {
-            if (dictionary.TryGetValue(pattern, out var configuration))
-                return configuration;
-
-            var key = patternMatcher.Matches(dictionary.Keys, pattern);
-            return key == null ? default : dictionary[key];
+#if NETSTANDARD2_0
+            if (value &gt; int.MaxValue) return int.MaxValue;
+            if (value &lt; int.MinValue) return int.MinValue;
+            return (int) value;
+#else
+            return (int) Math.Clamp(value, int.MinValue, int.MaxValue);
+#endif
         }
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[23,13,23,72,1],[24,17,24,38,0],[26,13,26,72,1],[27,13,27,60,1]]);
+      highlightRanges([[41,13,41,72,1]]);
     </script>
   </body>
 </html>

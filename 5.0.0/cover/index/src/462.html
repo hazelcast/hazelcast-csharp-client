@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\SingleAttributeProjection.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\Projections.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,64 +22,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using Hazelcast.Exceptions;
-using Hazelcast.Serialization;
-
 namespace Hazelcast.Projection
 {
     /// &lt;summary&gt;
-    /// Represents a simple attribute projection.
+    /// Creates &lt;see cref=&quot;IProjection&quot;/&gt; instances.
     /// &lt;/summary&gt;
-    internal class SingleAttributeProjection : IProjection, IIdentifiedDataSerializable
+    public static class Projections
     {
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;SingleAttributeProjection&quot;/&gt; class/.
+        /// Projects a single attribute.
         /// &lt;/summary&gt;
-        public SingleAttributeProjection()
-        { }
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute.&lt;/param&gt;
+        /// &lt;returns&gt;A projection.&lt;/returns&gt;
+        public static IProjection SingleAttribute(string attributePath)
+            =&gt; new SingleAttributeProjection(attributePath);
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;SingleAttributeProjection&quot;/&gt; class/.
+        /// Projects multiple attributes.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
-        public SingleAttributeProjection(string attributePath)
-        {
-            if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
-            AttributePath = attributePath;
-        }
-
-        /// &lt;summary&gt;
-        /// (internal for tests only)
-        /// Get the attribute path.
-        /// &lt;/summary&gt;
-        internal string AttributePath { get; private set; }
-
-        /// &lt;inheritdoc /&gt;
-        public void ReadData(IObjectDataInput input)
-        {
-            if (input == null) throw new ArgumentNullException(nameof(input));
-            AttributePath = input.ReadString();
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public void WriteData(IObjectDataOutput output)
-        {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-            output.WriteString(AttributePath);
-        }
-
-        /// &lt;inheritdoc /&gt;
-        public int FactoryId =&gt; FactoryIds.ProjectionDsFactoryId;
-
-        /// &lt;inheritdoc /&gt;
-        public int ClassId =&gt; ProjectionDataSerializerHook.SingleAttribute;
+        /// &lt;param name=&quot;attributePaths&quot;&gt;The attribute paths.&lt;/param&gt;
+        /// &lt;returns&gt;A projection.&lt;/returns&gt;
+        public static IProjection MultipleAttribute(params string[] attributePaths)
+            =&gt; new MultiAttributeProjection(attributePaths);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[29,9,29,43,1],[30,11,30,12,1],[36,9,36,63,1],[38,13,38,58,1],[38,59,38,141,1],[39,13,39,43,1],[40,9,40,10,1],[46,41,46,45,1],[46,46,46,58,1],[51,13,51,31,1],[51,32,51,79,1],[52,13,52,48,1],[53,9,53,10,1],[58,13,58,32,1],[58,33,58,81,1],[59,13,59,47,1],[60,9,60,10,1],[63,33,63,65,1],[66,31,66,75,1]]);
+      highlightRanges([[28,16,28,60,1],[36,16,36,60,0]]);
     </script>
   </body>
 </html>

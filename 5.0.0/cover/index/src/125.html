@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\DefaultCredentialsFactory.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyObjectList.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,33 +22,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Security
-{
-    /// &lt;summary&gt;
-    /// Represents a default &lt;see cref=&quot;ICredentialsFactory&quot;/&gt;.
-    /// &lt;/summary&gt;
-    /// &lt;remarks&gt;This factory provides username + password credentials, with username being &#39;default&#39;
-    /// and password being &#39;&#39;, and is used whenever no other factory has been configured.&lt;/remarks&gt;
-    internal sealed class DefaultCredentialsFactory : ICredentialsFactory
-    {
-        // by default, go with username+password
-        private static readonly ICredentials DefaultCredentials = new UsernamePasswordCredentials();
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 
-        /// &lt;inheritdoc /&gt;
-        public ICredentials NewCredentials()
+namespace Hazelcast.Serialization.Collections
+{
+    internal sealed class ReadOnlyObjectList&lt;T&gt;: IReadOnlyList&lt;object&gt;
+    {
+        private readonly IList&lt;T&gt; _list;
+
+        public int Count =&gt; _list.Count;
+
+        public ReadOnlyObjectList(IList&lt;T&gt; list)
         {
-            return DefaultCredentials;
+            _list = list;
         }
 
-        /// &lt;inheritdoc /&gt;
-        public void Dispose()
-        { }
+        // If T is struct, this leads to boxing on each enumeration
+        public IEnumerator&lt;object&gt; GetEnumerator() =&gt; _list.Cast&lt;object&gt;().GetEnumerator();
+
+        IEnumerator IEnumerable.GetEnumerator() =&gt; GetEnumerator();
+
+        // If T is struct, this leads to boxing on each access
+        public object this[int index] =&gt; _list[index];
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,9,25,101,1],[30,13,30,39,1],[35,11,35,12,1]]);
+      highlightRanges([[25,29,25,40,1],[27,9,27,49,1],[29,13,29,26,1],[30,9,30,10,1],[33,55,33,91,0],[35,52,35,67,0],[38,42,38,54,1]]);
     </script>
   </body>
 </html>

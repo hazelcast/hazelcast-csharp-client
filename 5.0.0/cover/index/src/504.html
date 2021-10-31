@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\IndexOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\HOffsetDateTime.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,116 +23,141 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Globalization;
+using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
     /// &lt;summary&gt;
-    /// Configuration of an index.
+    /// Represents Hazelcast SQL &lt;c&gt;TIMESTAMP_WITH_TIME_ZONE&lt;/c&gt; type corresponding to &lt;c&gt;java.time.OffsetDateTime&lt;/c&gt; in Java.
     /// &lt;/summary&gt;
-    /// &lt;remarks&gt;
-    /// &lt;para&gt;Hazelcast support three types of indexes: sorted, hash and bitmap indexes. They can be
-    /// created on one or more attributes, specified by their name.&lt;/para&gt;
-    /// &lt;para&gt;Sorted indexes can be used with equality and range predicates and have logarithmic
-    /// search time.&lt;/para&gt;
-    /// &lt;para&gt;Hash indexes can be used with equality predicates and have constant search time assuming
-    /// the hash function of the indexed field disperses the elements properly.&lt;/para&gt;
-    /// &lt;para&gt;Bitmap indexes (to be completed).&lt;/para&gt;
-    /// &lt;/remarks&gt;
-    public class IndexOptions
+    public readonly struct HOffsetDateTime : IEquatable&lt;HOffsetDateTime&gt;
     {
-        public static readonly IndexType DefaultType = IndexType.Sorted;
+        private static readonly Regex ParseRegex = new Regex(
+            @&quot;^(?&#39;local&#39;.+)(Z|(?&#39;offset&#39;(\+|\-)\d+:\d+))$&quot;,
+            RegexOptions.Compiled | RegexOptions.ExplicitCapture
+        );
+
+        public static readonly TimeSpan MaxOffset = TimeSpan.FromHours(18);
+        public static readonly TimeSpan MinOffset = TimeSpan.FromHours(-18);
+
+        public static readonly HOffsetDateTime Max = new HOffsetDateTime(HLocalDateTime.Max, MinOffset);
+        public static readonly HOffsetDateTime Min = new HOffsetDateTime(HLocalDateTime.Min, MaxOffset);
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;IndexOptions&quot;/&gt; class.
+        /// Local part represented as &lt;see cref=&quot;HLocalDateTime&quot;/&gt;.
         /// &lt;/summary&gt;
-        public IndexOptions()
-        {}
+        public HLocalDateTime LocalDateTime { get; }
 
         /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;IndexOptions&quot;/&gt; class.
+        /// Offset value.
+        /// Ranges between &lt;see cref=&quot;MinOffset&quot;/&gt; and &lt;see cref=&quot;MaxOffset&quot;/&gt; inclusive.
+        /// Precision is 1 second, smaller values will be rounded and lost during serialization.
         /// &lt;/summary&gt;
-        public IndexOptions(IEnumerable&lt;string&gt; attributes)
+        public TimeSpan Offset { get; }
+
+        public HOffsetDateTime(HLocalDateTime localDateTime, TimeSpan offset = default)
         {
-            Attributes = attributes.ToList();
+            if (offset &lt; MinOffset || offset &gt; MaxOffset)
+                throw new ArgumentOutOfRangeException(nameof(offset), $@&quot;Offset must be between {MinOffset:hh\:mm} and {MaxOffset:hh\:mm}.&quot;);
+
+            LocalDateTime = localDateTime;
+            Offset = offset;
         }
 
-        /// &lt;summary&gt;
-        /// Gets or sets the name of the index.
-        /// &lt;/summary&gt;
-        public string Name { get; set; }
+        public HOffsetDateTime(DateTime localDateTime, TimeSpan offset = default) :
+            this(new HLocalDateTime(localDateTime), offset)
+        { }
 
-        /// &lt;summary&gt;
-        /// Gets or sets the type of the index.
-        /// &lt;/summary&gt;
-        public IndexType Type { get; set; } = DefaultType;
+        public HOffsetDateTime(DateTimeOffset dateTimeOffset) :
+            this(new HLocalDateTime(dateTimeOffset.DateTime), dateTimeOffset.Offset)
+        { }
 
-        /// &lt;summary&gt;
-        /// Gets the indexed attributes.
-        /// &lt;/summary&gt;
-        public IList&lt;string&gt; Attributes { get; } = new List&lt;string&gt;();
-
-        /// &lt;summary&gt;
-        /// Gets or sets the bitmap index options.
-        /// &lt;/summary&gt;
-        public BitmapIndexOptions BitmapIndexOptions{ get; set; } = new BitmapIndexOptions();
-
-        /// &lt;summary&gt;
-        /// Adds an indexed attribute.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;attribute&quot;&gt;The name of the attribute.&lt;/param&gt;
-        /// &lt;returns&gt;This instance for chaining.&lt;/returns&gt;
-        public IndexOptions AddAttribute(string attribute)
+        public bool TryToDateTimeOffset(out DateTimeOffset dateTimeOffset)
         {
-            ValidateAttribute(this, attribute);
-            Attributes.Add(attribute);
-            return this;
+            dateTimeOffset = default;
+
+            if (!LocalDateTime.TryToDateTime(out var dateTime))
+                return false;
+
+            dateTimeOffset = new DateTimeOffset(dateTime, Offset);
+            return true;
         }
 
-        /// &lt;summary&gt;
-        /// Adds indexed attributes.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;attributes&quot;&gt;The names of the attributes.&lt;/param&gt;
-        /// &lt;returns&gt;This instance for chaining.&lt;/returns&gt;
-        public IndexOptions AddAttributes(params string[] attributes)
-        {
-            foreach (var attribute in attributes)
-            {
-                ValidateAttribute(this, attribute);
-            }
-            foreach (var attribute in attributes)
-            {
-                Attributes.Add(attribute);
-            }
-            return this;
-        }
+        public DateTimeOffset ToDateTimeOffset() =&gt; new DateTimeOffset(LocalDateTime.ToDateTime().Ticks, Offset);
 
-        internal static void ValidateAttribute(IndexOptions options, string attributeName)
-        {
-            if (attributeName == null)
-                throw new ArgumentNullException(nameof(attributeName), $&quot;Attribute name cannot be null: {options}&quot;);
+        public static explicit operator DateTimeOffset(HOffsetDateTime offsetDateTime) =&gt; offsetDateTime.ToDateTimeOffset();
+        public static explicit operator HOffsetDateTime(DateTimeOffset dateTimeOffset) =&gt; new HOffsetDateTime(dateTimeOffset);
 
-            attributeName = attributeName.Trim();
-
-            if (attributeName.Length == 0)
-                throw new ArgumentException($&quot;Attribute name cannot be empty: {options}&quot;, nameof(attributeName));
-
-            if (attributeName.EndsWith(&quot;.&quot;, StringComparison.Ordinal))
-                throw new ArgumentException($&quot;Attribute name cannot end with dot: {attributeName}&quot;, nameof(attributeName));
-        }
-
-        /// &lt;inheritdoc /&gt;
         public override string ToString()
         {
-            return $&quot;IndexConfig[Name={Name}, IndexType= {Type}, Attributes={string.Join(&quot;,&quot;, Attributes)}]&quot;;
+            return Offset switch
+            {
+                var s when s &lt; TimeSpan.Zero =&gt; LocalDateTime + &quot;-&quot; + Offset.ToString(@&quot;hh\:mm&quot;, CultureInfo.InvariantCulture),
+                var s when s &gt; TimeSpan.Zero =&gt; LocalDateTime + &quot;+&quot; + Offset.ToString(@&quot;hh\:mm&quot;, CultureInfo.InvariantCulture),
+                _ =&gt; LocalDateTime + &quot;Z&quot;
+            };
         }
+
+        public static bool TryParse(string s, out HOffsetDateTime offsetDateTime)
+        {
+            offsetDateTime = default;
+
+            var offset = TimeSpan.Zero;
+            var match = ParseRegex.Match(s);
+            if (!match.Success ||
+                !HLocalDateTime.TryParse(match.Groups[&quot;local&quot;].Value, out var localDateTime) ||
+                (match.Groups[&quot;offset&quot;].Success &amp;&amp; !TimeSpan.TryParse(match.Groups[&quot;offset&quot;].Value.TrimStart(&#39;+&#39;), out offset)))
+            {
+                return false;
+            }
+
+            offsetDateTime = new HOffsetDateTime(localDateTime, offset);
+            return true;
+        }
+
+        public static HOffsetDateTime Parse(string s)
+        {
+            return TryParse(s, out var offsetDateTime)
+                ? offsetDateTime
+                : throw new FormatException($&quot;Failed to parse \&quot;{s}\&quot; as {nameof(HOffsetDateTime)}.&quot;);
+        }
+
+        #region Equality members
+
+        public bool Equals(HOffsetDateTime other)
+        {
+            return LocalDateTime.Equals(other.LocalDateTime) &amp;&amp; Offset.Equals(other.Offset);
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is HOffsetDateTime other &amp;&amp; Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(LocalDateTime, Offset);
+        }
+
+        public static bool operator ==(HOffsetDateTime left, HOffsetDateTime right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(HOffsetDateTime left, HOffsetDateTime right)
+        {
+            return !left.Equals(right);
+        }
+
+        #endregion
+
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[40,9,40,30,1],[41,10,41,11,1],[46,9,46,60,1],[48,13,48,46,1],[49,9,49,10,1],[54,30,54,34,1],[54,35,54,39,1],[59,33,59,37,1],[59,38,59,42,1],[59,47,59,58,1],[59,47,59,58,1],[64,43,64,47,1],[64,52,64,70,1],[64,52,64,70,1],[69,55,69,59,1],[69,60,69,64,1],[69,69,69,93,1],[69,69,69,93,1],[78,13,78,48,1],[79,13,79,39,1],[80,13,80,25,1],[90,22,90,35,1],[90,36,90,38,1],[90,39,90,49,1],[92,17,92,52,1],[94,22,94,35,1],[94,36,94,38,1],[94,39,94,49,1],[96,17,96,43,1],[98,13,98,25,1],[103,13,103,39,1],[104,17,104,117,1],[106,13,106,50,1],[108,13,108,43,1],[109,17,109,114,1],[111,13,111,71,1],[112,17,112,124,1],[113,9,113,10,1],[118,13,118,110,1]]);
+      highlightRanges([[26,9,29,11,1],[31,9,31,76,1],[32,9,32,77,1],[34,9,34,105,1],[35,9,35,105,1],[40,47,40,51,1],[47,34,47,38,1],[51,13,51,58,1],[52,17,52,142,0],[54,13,54,43,1],[55,13,55,29,1],[56,9,56,10,1],[59,13,59,60,0],[60,11,60,12,0],[63,13,63,85,1],[64,11,64,12,1],[68,13,68,38,0],[70,13,70,64,0],[71,17,71,30,0],[73,13,73,67,0],[74,13,74,25,0],[77,53,77,113,1],[79,91,79,124,1],[80,91,80,126,1],[84,13,86,23,1],[86,23,86,45,1],[86,45,86,49,1],[86,49,86,127,1],[86,127,87,23,1],[87,23,87,45,1],[87,45,87,49,1],[87,49,87,127,1],[87,127,88,22,1],[88,22,88,41,1],[88,41,89,15,1],[94,13,94,38,1],[96,13,96,40,1],[97,13,97,45,1],[98,13,100,129,1],[102,17,102,30,0],[105,13,105,73,1],[106,13,106,25,1],[111,13,113,103,1],[120,13,120,93,1],[125,13,125,66,0],[130,13,130,60,0],[135,13,135,39,0],[140,13,140,40,0]]);
     </script>
   </body>
 </html>

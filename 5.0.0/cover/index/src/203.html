@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListAddAllWithIndexCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\ListAddAllCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,22 +49,20 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Inserts all of the elements in the specified collection into this list at the specified position (optional operation).
-    /// Shifts the element currently at that position (if any) and any subsequent elements to the right (increases their indices).
-    /// The new elements will appear in this list in the order that they are returned by the specified collection&#39;s iterator.
+    /// Appends all of the elements in the specified collection to the end of this list, in the order that they are
+    /// returned by the specified collection&#39;s iterator (optional operation).
     /// The behavior of this operation is undefined if the specified collection is modified while the operation is in progress.
     /// (Note that this will occur if the specified collection is this list, and it&#39;s nonempty.)
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class ListAddAllWithIndexServerCodec
+    internal static class ListAddAllServerCodec
 #else
-    internal static class ListAddAllWithIndexCodec
+    internal static class ListAddAllCodec
 #endif
     {
-        public const int RequestMessageType = 331264; // 0x050E00
-        public const int ResponseMessageType = 331265; // 0x050E01
-        private const int RequestIndexFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestIndexFieldOffset + BytesExtensions.SizeOfInt;
+        public const int RequestMessageType = 329216; // 0x050600
+        public const int ResponseMessageType = 329217; // 0x050601
+        private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfBool;
 
@@ -78,28 +76,22 @@ namespace Hazelcast.Protocol.Codecs
             public string Name { get; set; }
 
             /// &lt;summary&gt;
-            /// index at which to insert the first element from the specified collection.
-            ///&lt;/summary&gt;
-            public int Index { get; set; }
-
-            /// &lt;summary&gt;
-            /// The list of value to insert into the list.
+            /// Collection containing elements to be added to this list
             ///&lt;/summary&gt;
             public IList&lt;IData&gt; ValueList { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, int index, ICollection&lt;IData&gt; valueList)
+        public static ClientMessage EncodeRequest(string name, ICollection&lt;IData&gt; valueList)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;List.AddAllWithIndex&quot;
+                OperationName = &quot;List.AddAll&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
-            initialFrame.Bytes.WriteIntL(RequestIndexFieldOffset, index);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             ListMultiFrameCodec.Encode(clientMessage, valueList, DataCodec.Encode);
@@ -111,8 +103,7 @@ namespace Hazelcast.Protocol.Codecs
         {
             using var iterator = clientMessage.GetEnumerator();
             var request = new RequestParameters();
-            var initialFrame = iterator.Take();
-            request.Index = initialFrame.Bytes.ReadIntL(RequestIndexFieldOffset);
+            iterator.Take(); // empty initial frame
             request.Name = StringCodec.Decode(iterator);
             request.ValueList = ListMultiFrameCodec.Decode(iterator, DataCodec.Decode);
             return request;
@@ -123,7 +114,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// True if this list changed as a result of the call, false otherwise.
+            /// True if this list changed as a result of the call, false otherwise
             ///&lt;/summary&gt;
             public bool Response { get; set; }
         }
@@ -154,7 +145,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[84,13,88,15,1],[89,13,89,123,1],[90,13,90,104,1],[91,13,91,88,1],[92,13,92,74,1],[93,13,93,48,1],[94,13,94,53,1],[95,13,95,84,1],[96,13,96,34,1],[118,36,118,40,1],[118,41,118,45,1],[135,13,135,64,1],[136,13,136,53,1],[137,13,137,48,1],[138,13,138,91,1],[139,13,139,29,1],[140,9,140,10,1]]);
+      highlightRanges([[77,13,81,15,1],[82,13,82,123,1],[83,13,83,104,1],[84,13,84,88,1],[85,13,85,48,1],[86,13,86,53,1],[87,13,87,84,1],[88,13,88,34,1],[109,36,109,40,1],[109,41,109,45,1],[126,13,126,64,1],[127,13,127,53,1],[128,13,128,48,1],[129,13,129,91,1],[130,13,130,29,1],[131,9,131,10,1]]);
     </script>
   </body>
 </html>

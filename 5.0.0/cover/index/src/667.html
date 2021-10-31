@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\MatchingPointPatternMatcher.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\LoggingExtensions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,67 +22,47 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using Hazelcast.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Core
 {
-    internal class MatchingPointPatternMatcher : IPatternMatcher
+    internal static class LoggingExtensions
     {
-        public virtual string Matches(IEnumerable&lt;string&gt; patterns, string name)
-        {
-            string candidate = null;
-            string duplicate = null;
-            var lastMatchingPoint = -1;
-            foreach (var pattern in patterns)
-            {
-                var matchingPoint = GetMatchingPoint(pattern, name);
-                if (matchingPoint &gt; -1 &amp;&amp; matchingPoint &gt;= lastMatchingPoint)
-                {
-                    duplicate = matchingPoint == lastMatchingPoint ? candidate : null;
-                    lastMatchingPoint = matchingPoint;
-                    candidate = pattern;
-                }
-            }
-            if (duplicate != null)
-            {
-                throw new ConfigurationException(
-                    $&quot;Found ambiguous configurations for item \&quot;{name}\&quot;: \&quot;{candidate}\&quot; vs. \&quot;{duplicate}\&quot;\nPlease specify your configuration.&quot;);
-            }
-            return candidate;
-        }
+        // TODO: log using message templates or IfDebug() for perf purposes!
 
-        /// &lt;summary&gt;This method returns higher values the better the matching is.&lt;/summary&gt;
-        /// &lt;param name=&quot;pattern&quot;&gt;configuration pattern to match with&lt;/param&gt;
-        /// &lt;param name=&quot;itemName&quot;&gt;item name to match&lt;/param&gt;
-        /// &lt;returns&gt;-1 if name does not match at all, zero or positive otherwise&lt;/returns&gt;
-        private static int GetMatchingPoint(string pattern, string itemName)
-        {
-            var index = pattern.IndexOf(&#39;*&#39;, StringComparison.Ordinal);
-            if (index == -1)
-            {
-                // exact name always wins over any kind of pattern
-                return pattern == itemName ? int.MaxValue : -1;
-            }
-            var firstPart = pattern.Substring(0, index);
-            if (!itemName.StartsWith(firstPart, StringComparison.Ordinal))
-            {
-                return -1;
-            }
-            var secondPart = pattern.Substring(index + 1);
-            if (!itemName.EndsWith(secondPart, StringComparison.Ordinal))
-            {
-                return -1;
-            }
-            return firstPart.Length + secondPart.Length;
-        }
+        /// &lt;summary&gt;
+        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if the specified &lt;see cref=&quot;LogLevel&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
+        /// &lt;param name=&quot;logLevel&quot;&gt;The &lt;see cref=&quot;LogLevel&quot;/&gt; which must be enabled.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Usage: &lt;c&gt;logger.If(LogLevel.Xxx)?.LogXxx(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogXxx(...)&lt;/c&gt; when not needed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ILogger If(this ILogger logger, LogLevel logLevel) =&gt; logger.IsEnabled(logLevel) ? logger : null;
+
+        /// &lt;summary&gt;
+        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if &lt;see cref=&quot;LogLevel.Debug&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Usage: &lt;c&gt;logger.IfDebug()?.LogDebug(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogDebug(...)&lt;/c&gt; when not needed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ILogger IfDebug(this ILogger logger) =&gt; logger.IsEnabled(LogLevel.Debug) ? logger : null;
+
+        /// &lt;summary&gt;
+        /// Returns this &lt;see cref=&quot;ILogger&quot;/&gt; if &lt;see cref=&quot;LogLevel.Warning&quot;/&gt; is enabled, otherwise &lt;c&gt;null&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;logger&quot;&gt;This logger.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Usage: &lt;c&gt;logger.IfWarning()?.LogWarning(...)&lt;/c&gt; - avoids building arguments for &lt;c&gt;LogWarning(...)&lt;/c&gt; when not needed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ILogger IfWarning(this ILogger logger) =&gt; logger.IsEnabled(LogLevel.Warning) ? logger : null;
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,13,25,37,1],[26,13,26,37,1],[27,13,27,40,1],[28,22,28,33,1],[28,34,28,36,1],[28,37,28,45,1],[30,17,30,69,1],[31,17,31,78,1],[33,21,33,87,1],[34,21,34,55,1],[35,21,35,41,1],[38,13,38,35,1],[40,17,41,149,1],[43,13,43,30,1],[52,13,52,72,1],[53,13,53,29,1],[56,17,56,64,1],[58,13,58,57,1],[59,13,59,75,1],[61,17,61,27,1],[63,13,63,59,1],[64,13,64,74,1],[66,17,66,27,1],[68,13,68,57,1]]);
+      highlightRanges([[31,77,31,119,0],[40,63,40,111,1],[49,65,49,115,1]]);
     </script>
   </body>
 </html>

@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapPutIfAbsentCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\TransactionalMapPutCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,20 +49,22 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// If the specified key is not already associated with a value, associate it with the given value.
-    /// The object to be put will be accessible only in the current transaction context until the transaction is committed.
+    /// Associates the specified value with the specified key in this map. If the map previously contained a mapping for
+    /// the key, the old value is replaced by the specified value. The object to be put will be accessible only in the
+    /// current transaction context till transaction is committed.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class TransactionalMapPutIfAbsentServerCodec
+    internal static class TransactionalMapPutServerCodec
 #else
-    internal static class TransactionalMapPutIfAbsentCodec
+    internal static class TransactionalMapPutCodec
 #endif
     {
-        public const int RequestMessageType = 919552; // 0x0E0800
-        public const int ResponseMessageType = 919553; // 0x0E0801
+        public const int RequestMessageType = 919040; // 0x0E0600
+        public const int ResponseMessageType = 919041; // 0x0E0601
         private const int RequestTxnIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestTxnIdFieldOffset + BytesExtensions.SizeOfGuid;
-        private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
+        private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
 
 #if SERVER_CODEC
@@ -90,24 +92,30 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// The value to associate with the key when there is no previous value.
+            /// The value to associate with the key.
             ///&lt;/summary&gt;
             public IData Value { get; set; }
+
+            /// &lt;summary&gt;
+            /// The duration in milliseconds after which this entry shall be deleted. O means infinite.
+            ///&lt;/summary&gt;
+            public long Ttl { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key, IData @value)
+        public static ClientMessage EncodeRequest(string name, Guid txnId, long threadId, IData key, IData @value, long ttl)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;TransactionalMap.PutIfAbsent&quot;
+                OperationName = &quot;TransactionalMap.Put&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.PartitionId, -1);
             initialFrame.Bytes.WriteGuidL(RequestTxnIdFieldOffset, txnId);
             initialFrame.Bytes.WriteLongL(RequestThreadIdFieldOffset, threadId);
+            initialFrame.Bytes.WriteLongL(RequestTtlFieldOffset, ttl);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
@@ -123,6 +131,7 @@ namespace Hazelcast.Protocol.Codecs
             var initialFrame = iterator.Take();
             request.TxnId = initialFrame.Bytes.ReadGuidL(RequestTxnIdFieldOffset);
             request.ThreadId = initialFrame.Bytes.ReadLongL(RequestThreadIdFieldOffset);
+            request.Ttl = initialFrame.Bytes.ReadLongL(RequestTtlFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
             request.Value = DataCodec.Decode(iterator);
@@ -134,7 +143,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// The previous value associated with key, or null if there was no mapping for key.
+            /// Previous value associated with key or  null if there was no mapping for key
             ///&lt;/summary&gt;
             public IData Response { get; set; }
         }
@@ -165,7 +174,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[91,13,95,15,1],[96,13,96,123,1],[97,13,97,104,1],[98,13,98,88,1],[99,13,99,75,1],[100,13,100,81,1],[101,13,101,48,1],[102,13,102,53,1],[103,13,103,50,1],[104,13,104,53,1],[105,13,105,34,1],[129,37,129,41,1],[129,42,129,46,1],[146,13,146,64,1],[147,13,147,53,1],[148,13,148,29,1],[149,13,149,86,1],[150,13,150,29,1],[151,9,151,10,1]]);
+      highlightRanges([[98,13,102,15,1],[103,13,103,123,1],[104,13,104,104,1],[105,13,105,88,1],[106,13,106,75,1],[107,13,107,81,1],[108,13,108,71,1],[109,13,109,48,1],[110,13,110,53,1],[111,13,111,50,1],[112,13,112,53,1],[113,13,113,34,1],[138,37,138,41,1],[138,42,138,46,1],[155,13,155,64,1],[156,13,156,53,1],[157,13,157,29,1],[158,13,158,86,1],[159,13,159,29,1],[160,9,160,10,1]]);
     </script>
   </body>
 </html>

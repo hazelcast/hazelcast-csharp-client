@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HConsoleTargetOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HConsoleOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -23,67 +23,36 @@
 // limitations under the License.
 
 using System;
+
 #if HZ_CONSOLE
-using System.Globalization;
-using System.Threading;
+using System.Collections.Generic;
 #else
-#pragma warning disable CA1801 // Review unused parameters0
+// ReSharper disable UnusedTypeParameter
+#pragma warning disable CA1801 // Review unused parameters
 #pragma warning disable CA1822 // Mark members as static
 #endif
 
 namespace Hazelcast.Core
 {
     /// &lt;summary&gt;
-    /// Represents the options for a target.
+    /// Represents the options for the console.
     /// &lt;/summary&gt;
 #if HZ_CONSOLE_PUBLIC
     public
 #else
     internal
 #endif
-    sealed class HConsoleTargetOptions
+    class HConsoleOptions
     {
 #if HZ_CONSOLE
-        private readonly HConsoleOptions _options;
-        private bool _hasIndent;
-        private bool _hasPrefix;
-        private bool _hasLevel;
-        private bool _hasTimeStamp;
+        private readonly Dictionary&lt;object, HConsoleTargetOptions&gt; _targetConfigs = new Dictionary&lt;object, HConsoleTargetOptions&gt;();
+        private readonly Dictionary&lt;Type, HConsoleTargetOptions&gt; _typeConfigs = new Dictionary&lt;Type, HConsoleTargetOptions&gt;();
 #endif
 
-#if HZ_CONSOLE
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;HConsoleTargetOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;options&quot;&gt;&lt;/param&gt;
-        public HConsoleTargetOptions(HConsoleOptions options)
-        {
-            _options = options;
-        }
-
-        /// &lt;summary&gt;
-        /// Clones these options.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;A clone of these options.&lt;/returns&gt;
-        public HConsoleTargetOptions Clone()
-        {
-           var clone = new HConsoleTargetOptions(_options);
-           if (_hasIndent) clone.SetIndent(Indent);
-           if (_hasPrefix) clone.SetPrefix(Prefix);
-           if (_hasLevel) clone.SetLevel(Level);
-           if (_hasTimeStamp) clone.EnableTimeStamp(TimeStampEnabled, TimeStampOrigin);
-           return clone;
-        }
-
-        /// &lt;summary&gt;
-        /// Gets the default options.
-        /// &lt;/summary&gt;
-        private static HConsoleTargetOptions Default { get; } = new HConsoleTargetOptions(null)
-           .SetPrefix(default)
-           .SetLevel(-1)
-           .SetIndent(0)
-           .EnableTimeStamp(false);
-#endif
+        // Configure methods are not conditional (since they have a non-void return type)
+        // but that does not matter because they will be invoked from within the
+        // HConsole.Configure() method, which *is* conditional, so they won&#39;t be
+        // compiled either when HZ_CONSOLE is not defined.
 
         #region Configure
 
@@ -105,7 +74,7 @@ namespace Hazelcast.Core
         /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
         public HConsoleTargetOptions Configure&lt;TSource&gt;()
 #if HZ_CONSOLE
-            =&gt; _options.Configure&lt;TSource&gt;();
+            =&gt; Configure(typeof (TSource));
 #else
             =&gt; default;
 #endif
@@ -116,11 +85,15 @@ namespace Hazelcast.Core
         /// &lt;param name=&quot;sourceType&quot;&gt;The source type.&lt;/param&gt;
         /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
         public HConsoleTargetOptions Configure(Type sourceType)
+        {
 #if HZ_CONSOLE
-            =&gt; _options.Configure(sourceType);
+            if (!_typeConfigs.TryGetValue(sourceType ?? throw new ArgumentNullException(nameof(sourceType)), out var info))
+                info = _typeConfigs[sourceType] = new HConsoleTargetOptions(this);
+            return info;
 #else
-            =&gt; default;
+            return default;
 #endif
+        }
 
         /// &lt;summary&gt;
         /// Configures options for a source type.
@@ -129,7 +102,7 @@ namespace Hazelcast.Core
         /// &lt;returns&gt;The options for the source type.&lt;/returns&gt;
         public HConsoleTargetOptions Configure(string sourceTypeName)
 #if HZ_CONSOLE
-            =&gt; _options.Configure(sourceTypeName);
+            =&gt; Configure(Type.GetType(sourceTypeName) ?? throw new ArgumentException($&quot;Could not find type {sourceTypeName}.&quot;, nameof(sourceTypeName)));
 #else
             =&gt; default;
 #endif
@@ -140,254 +113,122 @@ namespace Hazelcast.Core
         /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
         /// &lt;returns&gt;The options for the source object.&lt;/returns&gt;
         public HConsoleTargetOptions Configure(object source)
+        {
 #if HZ_CONSOLE
-            =&gt; _options.Configure(source);
+            if (!_targetConfigs.TryGetValue(source ?? throw new ArgumentNullException(nameof(source)), out var info))
+                info = _targetConfigs[source] = new HConsoleTargetOptions(this);
+            return info;
 #else
-            =&gt; default;
+            return default;
 #endif
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the default options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The console options.&lt;/returns&gt;
+        public HConsoleOptions Clear() =&gt; Clear&lt;object&gt;();
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TSource&quot;&gt;The source type.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear&lt;TSource&gt;()
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(typeof(TSource));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceType&quot;&gt;The source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear(Type sourceType)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(sourceType ?? throw new ArgumentNullException(nameof(sourceType)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a source type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;sourceTypeName&quot;&gt;The name of the source type.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions Clear(string sourceTypeName)
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Remove(Type.GetType(sourceTypeName) ?? throw new ArgumentException($&quot;Could not find type {sourceTypeName}.&quot;, nameof(sourceTypeName)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears the options for a specific object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;target&quot;&gt;The object.&lt;/param&gt;
+        /// &lt;returns&gt;The console options.&lt;/returns&gt;
+        public HConsoleOptions Clear(object target)
+        {
+#if HZ_CONSOLE
+            _targetConfigs.Remove(target ?? throw new ArgumentNullException(nameof(target)));
+#endif
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Clears all options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HConsoleOptions ClearAll()
+        {
+#if HZ_CONSOLE
+            _typeConfigs.Clear();
+            _targetConfigs.Clear();
+#endif
+            return this;
+        }
 
         #endregion
 
-        #region Options
-
+#if HZ_CONSOLE
         /// &lt;summary&gt;
-        /// Sets the indentation level.
+        /// Gets the options for a source object.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;indent&quot;&gt;The indentation level.&lt;/param&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-
-        public HConsoleTargetOptions SetIndent(int indent)
+        /// &lt;param name=&quot;source&quot;&gt;The source object.&lt;/param&gt;
+        /// &lt;returns&gt;The complete options that apply to the specified source object.&lt;/returns&gt;
+        public HConsoleTargetOptions GetOptions(object source)
         {
-#if HZ_CONSOLE
-            Indent = indent;
-            _hasIndent = true;
-#endif
-            return this;
-        }
+            if (source != null &amp;&amp; _targetConfigs.TryGetValue(source, out var config))
+                config = config.Clone();
+            else
+                config = new HConsoleTargetOptions(this);
 
-        /// &lt;summary&gt;
-        /// Clears the indentation level.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions ClearIndent()
-        {
-#if HZ_CONSOLE
-            Indent = default;
-            _hasIndent = false;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Sets the prefix.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;prefix&quot;&gt;The prefix.&lt;/param&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions SetPrefix(string prefix)
-        {
-#if HZ_CONSOLE
-            Prefix = prefix;
-            _hasPrefix = true;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Clears the prefix.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions ClearPrefix()
-        {
-#if HZ_CONSOLE
-            Prefix = default;
-            _hasPrefix = false;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Sets the log level.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;maxLevel&quot;&gt;The log level.&lt;/param&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions SetLevel(int maxLevel)
-        {
-#if HZ_CONSOLE
-            Level = maxLevel;
-            _hasLevel = true;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Clears the log level.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions ClearLevel()
-        {
-#if HZ_CONSOLE
-            Level = default;
-            _hasLevel = false;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Enables or disables timestamp.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;enableTimeStamp&quot;&gt;Whether to enable timestamps.&lt;/param&gt;
-        /// &lt;param name=&quot;origin&quot;&gt;An optional timestamp origin.&lt;/param&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions EnableTimeStamp(bool enableTimeStamp = true, DateTime origin = default)
-        {
-#if HZ_CONSOLE
-            TimeStampEnabled = enableTimeStamp;
-            TimeStampOrigin = origin;
-            _hasTimeStamp = true;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Clears timestamp.
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions ClearTimeStamp()
-        {
-#if HZ_CONSOLE
-            TimeStampEnabled = false;
-            TimeStampOrigin = default;
-            _hasTimeStamp = false;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Sets the log level to -1 (never writes).
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions SetMinLevel()
-        {
-#if HZ_CONSOLE
-            Level = -1;
-            _hasLevel = true;
-#endif
-            return this;
-        }
-
-        /// &lt;summary&gt;
-        /// Sets the log level to int.MaxValue (always writes).
-        /// &lt;/summary&gt;
-        /// &lt;returns&gt;This configuration object.&lt;/returns&gt;
-        public HConsoleTargetOptions SetMaxLevel()
-        {
-#if HZ_CONSOLE
-            Level = int.MaxValue;
-            _hasLevel = true;
-#endif
-            return this;
-        }
-
-#if HZ_CONSOLE
-        /// &lt;summary&gt;
-        /// Gets the indentation level.
-        /// &lt;/summary&gt;
-        public int Indent { get; private set; }
-
-        /// &lt;summary&gt;
-        /// Gets the prefix.
-        /// &lt;/summary&gt;
-        public string Prefix { get; private set; }
-
-        /// &lt;summary&gt;
-        /// Gets the log level.
-        /// &lt;/summary&gt;
-        public int Level { get; private set; }
-
-        /// &lt;summary&gt;
-        /// Whether to enable timestamps.
-        /// &lt;/summary&gt;
-        public bool TimeStampEnabled { get; private set; }
-
-        /// &lt;summary&gt;
-        /// Gets the timestamps origin.
-        /// &lt;/summary&gt;
-        public DateTime TimeStampOrigin { get; private set; }
-#endif
-
-        /// &lt;summary&gt;
-        /// Determines whether this configuration has an indentation level, a prefix and a maximal log level.
-        /// &lt;/summary&gt;
-        public bool IsComplete
-#if HZ_CONSOLE
-            =&gt; _hasIndent &amp;&amp; _hasPrefix &amp;&amp; _hasLevel;
-#else
-            =&gt; true;
-#endif
-
-#if HZ_CONSOLE
-        /// &lt;summary&gt;
-        /// Merges another configuration into this configuration.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;options&quot;&gt;The other configuration.&lt;/param&gt;
-        /// &lt;returns&gt;This configuration.&lt;/returns&gt;
-        public HConsoleTargetOptions Merge(HConsoleTargetOptions options)
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-            if (!_hasIndent &amp;&amp; options._hasIndent) SetIndent(options.Indent);
-            if (!_hasPrefix &amp;&amp; options._hasPrefix) SetPrefix(options.Prefix);
-            if (!_hasLevel &amp;&amp; options._hasLevel) SetLevel(options.Level);
-            if (!_hasTimeStamp &amp;&amp; options._hasTimeStamp) EnableTimeStamp(options.TimeStampEnabled, options.TimeStampOrigin);
-            return this;
-        }
-
-        public HConsoleTargetOptions Complete()
-            =&gt; Merge(Default);
-#endif
-
-        /// &lt;summary&gt;
-        /// Gets the formatted prefix (with thread identifier etc).
-        /// &lt;/summary&gt;
-        public string FormattedPrefix
-        {
-            get
+            var type = source?.GetType();
+            while (type != null &amp;&amp; !config.IsComplete)
             {
-#if HZ_CONSOLE
-                var timestamp = TimeStampEnabled ? (DateTime.Now - TimeStampOrigin).ToString(&quot;hhmmss\\.fff\\ &quot;, CultureInfo.InvariantCulture) : &quot;&quot;;
-                return $&quot;[{Thread.CurrentThread.ManagedThreadId:00}] {timestamp}{new string(&#39; &#39;, Indent)}{Prefix}: &quot;;
-#else
-                return &quot;&quot;;
-#endif
+                if (_typeConfigs.TryGetValue(type, out var typeConfig)) config = config.Merge(typeConfig);
+                if (type.IsGenericType &amp;&amp; _typeConfigs.TryGetValue(type.GetGenericTypeDefinition(), out var gendefConfig)) config = config.Merge(gendefConfig);
+                type = type.BaseType;
             }
+
+            if (!config.IsComplete)
+                config = config.Complete();
+
+            return config;
         }
-
-        /// &lt;summary&gt;
-        /// Determines whether a log level should be ignored.
-        /// &lt;/summary&gt;
-        /// &lt;param name=&quot;level&quot;&gt;The level.&lt;/param&gt;
-        /// &lt;returns&gt;true if the level should be ignored; otherwise false.&lt;/returns&gt;
-        public bool Ignore(int level)
-#if HZ_CONSOLE
-            =&gt; level &gt; Level;
-#else
-            =&gt; true;
-#endif
-
-        #endregion
-
-        /// &lt;inheritdoc /&gt;
-        public override string ToString()
-#if HZ_CONSOLE
-            =&gt; $&quot;indent = {(_hasIndent ? Indent.ToString(CultureInfo.InvariantCulture) : &quot;?&quot;)}, prefix = {(_hasPrefix ? (&quot;\&quot;&quot; + Prefix + &quot;\&quot;&quot;) : &quot;?&quot;)}, level = {(_hasLevel ? Level.ToString(CultureInfo.InvariantCulture) : &quot;?&quot;)}&quot;;
-#else
-            =&gt; &quot;&quot;;
 #endif
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[88,16,88,23,0],[100,16,100,23,0],[112,16,112,23,0],[124,16,124,23,0],[136,16,136,23,0],[155,13,155,25,0],[168,13,168,25,0],[182,13,182,25,0],[195,13,195,25,0],[209,13,209,25,0],[222,13,222,25,0],[238,13,238,25,0],[252,13,252,25,0],[265,13,265,25,0],[278,13,278,25,0],[315,16,315,20,0],[349,17,349,27,0],[363,16,363,20,0],[373,16,373,18,0]]);
+      highlightRanges([[57,16,57,23,0],[69,16,69,23,0],[84,13,84,28,0],[97,16,97,23,0],[112,13,112,28,0],[120,43,120,58,0],[132,13,132,25,0],[145,13,145,25,0],[158,13,158,25,0],[171,13,171,25,0],[184,13,184,25,0]]);
     </script>
   </body>
 </html>

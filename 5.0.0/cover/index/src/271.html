@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutIfAbsentCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapPutCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,17 +49,19 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Puts an entry into this map with a given ttl (time to live) value if the specified key is not already associated
-    /// with a value. Entry will expire and get evicted after the ttl.
+    /// Puts an entry into this map with a given ttl (time to live) value.Entry will expire and get evicted after the ttl
+    /// If ttl is 0, then the entry lives forever.This method returns a clone of the previous value, not the original
+    /// (identically equal) value previously put into the map.Time resolution for TTL is seconds. The given TTL value is
+    /// rounded to the next closest second value.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapPutIfAbsentServerCodec
+    internal static class MapPutServerCodec
 #else
-    internal static class MapPutIfAbsentCodec
+    internal static class MapPutCodec
 #endif
     {
-        public const int RequestMessageType = 69120; // 0x010E00
-        public const int ResponseMessageType = 69121; // 0x010E01
+        public const int RequestMessageType = 65792; // 0x010100
+        public const int ResponseMessageType = 65793; // 0x010101
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestTtlFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestInitialFrameSize = RequestTtlFieldOffset + BytesExtensions.SizeOfLong;
@@ -80,7 +82,7 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
-            /// New value for the map entry.
+            /// Value for the map entry.
             ///&lt;/summary&gt;
             public IData Value { get; set; }
 
@@ -101,7 +103,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.PutIfAbsent&quot;
+                OperationName = &quot;Map.Put&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -134,7 +136,7 @@ namespace Hazelcast.Protocol.Codecs
         {
 
             /// &lt;summary&gt;
-            /// returns a clone of the previous value, not the original (identically equal) value previously put into the map.
+            /// old value of the entry
             ///&lt;/summary&gt;
             public IData Response { get; set; }
         }
@@ -165,7 +167,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[91,13,95,15,1],[96,13,96,123,1],[97,13,97,104,1],[98,13,98,88,1],[99,13,99,81,1],[100,13,100,71,1],[101,13,101,48,1],[102,13,102,53,1],[103,13,103,50,1],[104,13,104,53,1],[105,13,105,34,1],[129,37,129,41,1],[129,42,129,46,1],[146,13,146,64,1],[147,13,147,53,1],[148,13,148,29,1],[149,13,149,86,1],[150,13,150,29,1],[151,9,151,10,1]]);
+      highlightRanges([[93,13,97,15,1],[98,13,98,123,1],[99,13,99,104,1],[100,13,100,88,1],[101,13,101,81,1],[102,13,102,71,1],[103,13,103,48,1],[104,13,104,53,1],[105,13,105,50,1],[106,13,106,53,1],[107,13,107,34,1],[131,37,131,41,1],[131,42,131,46,1],[148,13,148,64,1],[149,13,149,53,1],[150,13,150,29,1],[151,13,151,86,1],[152,13,152,29,1],[153,9,153,10,1]]);
     </script>
   </body>
 </html>

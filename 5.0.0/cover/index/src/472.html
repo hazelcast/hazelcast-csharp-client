@@ -2,201 +2,76 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\ConnectAddressResolver.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\CloudOptions.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
   <body>
     <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Hazelcast.Core;
-using Hazelcast.Models;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
 {
     /// &lt;summary&gt;
-    /// Resolves connect addresses for members by determining whether to use internal or public addresses.
+    /// Represents the Hazelcast Cloud options.
     /// &lt;/summary&gt;
-    internal class ConnectAddressResolver
+    public class CloudOptions
     {
-        // TODO: consider making these options
-        private const int NumberOfMembersToCheck = 3;
-        private static readonly TimeSpan InternalAddressTimeout = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan PublicAddressTimeout = TimeSpan.FromSeconds(3);
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CloudOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public CloudOptions()
+        { }
 
-        private readonly NetworkingOptions _options;
-        private readonly ILogger _logger;
-
-        public ConnectAddressResolver(NetworkingOptions options, ILoggerFactory loggerFactory)
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CloudOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private CloudOptions(CloudOptions other)
         {
-            _options = options;
-            _logger = loggerFactory.CreateLogger&lt;ConnectAddressResolver&gt;();
+            DiscoveryToken = other.DiscoveryToken;
+            Url = other.Url;
         }
 
         /// &lt;summary&gt;
-        /// Determines whether to use public addresses.
+        /// Whether Hazelcast Cloud is enabled.
         /// &lt;/summary&gt;
-        /// &lt;param name=&quot;members&quot;&gt;A collection of members.&lt;/param&gt;
-        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if public addresses must be used; otherwise &lt;c&gt;false&lt;/c&gt;, indicating that internal addresses can be used.&lt;/returns&gt;
-        public async Task&lt;bool&gt; DetermineUsePublicAddresses(IReadOnlyCollection&lt;MemberInfo&gt; members)
-        {
-            // if the user has specified its intention, respect it, otherwise try to decide
-            // automatically whether to use private or public addresses by trying to reach
-            // a few members
+        /// &lt;remarks&gt;This property is read-only and is set automatically when &lt;see cref=&quot;DiscoveryToken&quot;/&gt; is not null nor empty.&lt;/remarks&gt;
+        public bool Enabled =&gt; !string.IsNullOrWhiteSpace(DiscoveryToken);
 
-            if (_options.UsePublicAddresses is {} usePublicAddresses)
-            {
-                _logger.LogDebug(usePublicAddresses
-                    ? &quot;NetworkingOptions.UsePublicAddresses is true, the client will use public addresses.&quot;
-                    : &quot;NetworkingOptions.UsePublicAddresses is false, the client will use internal addresses.&quot;);
-                return usePublicAddresses;
-            }
+        /// &lt;summary&gt;
+        /// Gets or sets the discovery token of the cluster.
+        /// &lt;/summary&gt;
+        public string DiscoveryToken { get; set; }
 
-            _logger.LogDebug(&quot;NetworkingOptions.UsePublicAddresses is not set, decide by ourselves.&quot;);
+        /// &lt;summary&gt;
+        /// Gets or sets the cloud url base.
+        /// &lt;/summary&gt;
+        public Uri Url { get; set; } = new Uri(&quot;https://coordinator.hazelcast.cloud&quot;);
 
-            // if ssl is enabled, the the client uses internal addresses
-            if (_options.Ssl.Enabled)
-            {
-                _logger.LogDebug(&quot;Ssl is enabled, the client will use internal addresses.&quot;);
-                return false;
-            }
-
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-                var text = new StringBuilder();
-                text.Append(&quot;Members [&quot;);
-                text.Append(members.Count);
-                text.Append(&quot;] {&quot;);
-                text.AppendLine();
-                foreach (var member in members)
-                {
-                    text.Append(&quot;    &quot;);
-                    text.Append(member.ToShortString(false));
-                    text.AppendLine();
-                    foreach (var entry in member.AddressMap)
-                    {
-                        text.Append(&quot;        &quot;);
-                        text.Append(entry.Key);
-                        text.Append(&quot;: &quot;);
-                        text.Append(entry.Value);
-                        text.AppendLine();
-                    }
-                }
-                text.Append(&#39;}&#39;);
-                _logger.LogDebug(text.ToString());
-            }
-
-            // if at least one member has its internal address that matches options, assume we can use internal addresses
-            if (DetermineAnyMemberInternalAddressMatchesOptions(members))
-            {
-                _logger.LogDebug(&quot;At least one member&#39;s internal address matches options, assume that the client can use internal addresses.&quot;);
-                return false;
-            }
-
-            // if one member does not have a public address, then the client has to use internal addresses
-            if (members.Any(x =&gt; x.PublicAddress is null))
-            {
-                _logger.LogDebug(&quot;At least one member does not have a public address, the client has to use internal addresses.&quot;);
-                return false;
-            }
-
-            // else try to reach addresses to figure out which ones to use
-            return await DeterminePublicAddressesAreRequired(members).CfAwait();
-        }
-
-        // determines whether at least one member has its internal address specified in options,
-        // which would mean that the client can reach the configured addresses and we can use
-        // internal addresses
-        private bool DetermineAnyMemberInternalAddressMatchesOptions(IReadOnlyCollection&lt;MemberInfo&gt; members)
-        {
-            // both NodeJS and Java code plainly ignore ports and only focus on the host name
-
-            var optionHosts = _options.Addresses
-                .Select(x =&gt; NetworkAddress.TryParse(x, out var a) ? a : null)
-                .Where(x =&gt; x != null)
-                .Select(x =&gt; x.HostName);
-
-            var memberHosts = members.Select(x =&gt; x.Address.HostName);
-
-            return memberHosts.Intersect(optionHosts).Any();
-        }
-
-        // determines whether using public addresses is required
-        // by testing a subset of all members
-        private Task&lt;bool&gt; DeterminePublicAddressesAreRequired(IReadOnlyCollection&lt;MemberInfo&gt; members)
-            =&gt; DeterminePublicAddressesAreRequired(members.Shuffle(), NumberOfMembersToCheck);
-
-        // determines whether using public addresses is required
-        private async Task&lt;bool&gt; DeterminePublicAddressesAreRequired(IReadOnlyCollection&lt;MemberInfo&gt; members, int sampleCount)
-        {
-            var count = 0;
-            var requirePublic = false;
-
-            foreach (var member in members)
-            {
-                // we failed to find a member that can be reached at its internal address, but enough members can
-                // be reached at their public addresses, so assume public addresses are required for all
-                if (count++ == sampleCount &amp;&amp; requirePublic)
-                {
-                    _logger.LogDebug(&quot;At least {Count} members can only be reached at their public address, the client has to use public addresses.&quot;, sampleCount);
-                    return true;
-                }
-
-                // TODO: we could try both in parallel and would it be a good idea?
-                //var (canReachInternal, canReachPublic) = await Task.WhenAll(
-                //        member.Address.TryReachAsync(_internalAddressTimeout),
-                //        member.PublicAddress.TryReachAsync(_publicAddressTimeout)
-                //    ).CfAwait();
-
-                var canReachInternal = await member.Address.TryReachAsync(InternalAddressTimeout).CfAwait();
-
-                // if one member can be reached at its internal address then assume internal addresses are ok for all
-                if (canReachInternal)
-                {
-                    _logger.LogDebug(&quot;Member at {Address} can be reached at this internal address, assume that the client can use internal addresses.&quot;, member.Address);
-                    return false;
-                }
-
-                var canReachPublic = await member.PublicAddress.TryReachAsync(PublicAddressTimeout).CfAwait();
-
-                // if the member cannot be reached at its internal address but can be reached at its public address,
-                // this would indicate that the client has to use public addresses, but we are going to try a few
-                // more members just to be sure - maybe the failure to reach the internal address was a glitch and
-                // another member will make it
-                if (canReachPublic)
-                {
-                    _logger.LogDebug(&quot;Member at {Address} cannot be reached at this internal address, but can be reached at its {PublicAddress} public address.&quot;, member.Address, member.PublicAddress);
-                    requirePublic = true;
-                }
-
-                // otherwise, the client cannot be reached at all - both NodeJS and Java immediately return false,
-                // but really - this could very well be a glitch and we should probably try a few more members
-            }
-
-            // we failed to find a member that can be reached at its internal address, but members can be reached at
-            // their public addresses, so assume public addresses are required for all
-            if (requirePublic)
-            {
-                _logger.LogDebug(&quot;Members can only be reached at their public address, the client has to use public addresses.&quot;);
-                return true;
-            }
-
-            // otherwise, we tested all members and could not reach any or them, neither on internal nor on public address,
-            // and this is a sad situation indeed - we&#39;re going to go with internal addresses but... something is wrong
-            _logger.LogDebug(&quot;Could not connect to any member. Assume the client can use internal addresses.&quot;);
-            return false;
-        }
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal CloudOptions Clone() =&gt; new CloudOptions(this);
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[19,9,19,91,0],[20,9,20,89,0],[25,9,25,95,1],[27,13,27,32,1],[28,13,28,76,1],[29,9,29,10,1],[42,13,42,70,1],[44,17,46,113,1],[47,17,47,43,1],[50,13,50,103,1],[53,13,53,38,1],[55,17,55,93,1],[56,17,56,30,1],[59,13,59,51,1],[61,17,61,48,1],[62,17,62,42,1],[63,17,63,44,1],[64,17,64,36,1],[65,17,65,35,1],[66,26,66,36,1],[66,37,66,39,1],[66,40,66,47,1],[68,21,68,41,1],[69,21,69,62,1],[70,21,70,39,1],[71,30,71,39,1],[71,40,71,42,1],[71,43,71,60,1],[73,25,73,49,1],[74,25,74,48,1],[75,25,75,43,1],[76,25,76,50,1],[77,25,77,43,1],[80,17,80,34,1],[81,17,81,51,1],[85,13,85,74,1],[87,17,87,144,1],[88,17,88,30,1],[92,13,92,59,1],[92,34,92,57,1],[94,17,94,131,1],[95,17,95,30,1],[99,13,99,81,0],[100,9,100,10,1],[109,13,110,30,1],[110,30,110,78,1],[110,78,111,29,1],[111,29,111,38,1],[111,38,112,30,1],[112,30,112,40,1],[112,40,112,42,1],[114,13,114,51,1],[114,51,114,69,1],[114,69,114,71,1],[116,13,116,61,1],[122,16,122,94,0],[127,13,127,27,0],[128,13,128,39,0],[130,22,130,32,0],[130,33,130,35,0],[130,36,130,43,0],[134,17,134,61,0],[136,21,136,164,0],[137,21,137,33,0],[146,17,146,109,0],[149,17,149,38,0],[151,21,151,169,0],[152,21,152,34,0],[155,17,155,111,0],[161,17,161,36,0],[163,21,163,201,0],[164,21,164,42,0],[169,13,169,14,0],[173,13,173,31,0],[175,17,175,130,0],[176,17,176,29,0],[181,13,181,112,0],[182,13,182,26,0],[183,9,183,10,0]]);
+      highlightRanges([[27,9,27,30,1],[28,11,28,12,1],[33,9,33,49,1],[35,13,35,51,1],[36,13,36,29,1],[37,9,37,10,1],[43,32,43,74,1],[48,40,48,44,1],[48,45,48,49,1],[53,26,53,30,1],[53,31,53,35,1],[53,40,53,86,1],[53,40,53,86,1],[58,42,58,64,1]]);
     </script>
   </body>
 </html>

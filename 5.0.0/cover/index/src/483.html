@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\LfuComparer.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\DefaultComparer.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -28,9 +28,9 @@ using System.Collections.Generic;
 namespace Hazelcast.NearCaching
 {
     /// &lt;summary&gt;
-    /// Compares &lt;see cref=&quot;NearCacheEntry&quot;/&gt; using the least-frequently-used comparison.
+    /// Compares &lt;see cref=&quot;NearCacheEntry&quot;/&gt; using the default comparison.
     /// &lt;/summary&gt;
-    internal class LfuComparer : IComparer&lt;NearCacheEntry&gt;
+    internal class DefaultComparer : IComparer&lt;NearCacheEntry&gt;
     {
         /// &lt;inheritdoc /&gt;
         public int Compare(NearCacheEntry x, NearCacheEntry y)
@@ -38,14 +38,8 @@ namespace Hazelcast.NearCaching
             if (x == null) throw new ArgumentNullException(nameof(x));
             if (y == null) throw new ArgumentNullException(nameof(y));
 
-            var cx = x.Hits;
-            var cy = y.Hits;
-
-            var c = cx.CompareTo(cy);
-            if (c != 0) return c;
-
-            cx = x.KeyData.GetHashCode();
-            cy = y.KeyData.GetHashCode();
+            var cx = x.KeyData.GetHashCode();
+            var cy = y.KeyData.GetHashCode();
 
             return cx.CompareTo(cy);
         }
@@ -54,7 +48,7 @@ namespace Hazelcast.NearCaching
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[28,13,28,27,1],[28,28,28,71,0],[29,13,29,27,1],[29,28,29,71,0],[31,13,31,29,1],[32,13,32,29,1],[34,13,34,38,1],[35,13,35,24,1],[35,25,35,34,1],[37,13,37,42,1],[38,13,38,42,1],[40,13,40,37,1]]);
+      highlightRanges([[28,13,28,27,0],[28,28,28,71,0],[29,13,29,27,0],[29,28,29,71,0],[31,13,31,46,0],[32,13,32,46,0],[34,13,34,37,0]]);
     </script>
   </body>
 </html>

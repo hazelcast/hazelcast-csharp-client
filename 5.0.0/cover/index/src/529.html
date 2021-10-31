@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\MessagingOptions.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\MessageTypeConstants.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,100 +22,81 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#if DEBUG
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+#endif
+
 namespace Hazelcast.Messaging
 {
-    /// &lt;summary&gt;
-    /// Represents messaging options.
-    /// &lt;/summary&gt;
-    public class MessagingOptions
+    // this is a utility class used for debugging, that analyzes the codecs via
+    // reflection and builds a table that can map the type of a received message
+    // to its actual type name (from the codec).
+    //
+    // it is only compiled, and used, in DEBUG mode.
+
+    internal static class MessageTypeConstants
     {
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;MessagingOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        public MessagingOptions(PreviewOptions preview = null)
+#if DEBUG
+        private static readonly Dictionary&lt;int, string&gt; MessageNames = new Dictionary&lt;int, string&gt;();
+
+        static MessageTypeConstants()
         {
-            Preview = preview ?? new PreviewOptions();
-        }
+            var codecTypes = typeof (MessageTypeConstants).Assembly
+                .GetTypes()
+                .Where(x =&gt; x.Namespace != null &amp;&amp;
+                            x.Namespace.StartsWith(&quot;Hazelcast.Protocol&quot;, StringComparison.Ordinal) &amp;&amp;
+                            x.Name.EndsWith(&quot;Codec&quot;, StringComparison.Ordinal));
 
-        /// &lt;summary&gt;
-        /// Initializes a new instance of the &lt;see cref=&quot;MessagingOptions&quot;/&gt; class.
-        /// &lt;/summary&gt;
-        private MessagingOptions(MessagingOptions other, PreviewOptions preview)
+            var typeOfInt = typeof (int);
+
+            foreach (var codecType in codecTypes)
+            {
+                var codecConstants = codecType
+                    .GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static)
+                    .Where(x =&gt; x.IsLiteral &amp;&amp;
+                                !x.IsInitOnly &amp;&amp;
+                                x.FieldType == typeOfInt &amp;&amp;
+                                x.Name.EndsWith(&quot;MessageType&quot;, StringComparison.Ordinal));
+
+                var codecName = codecType.Name;
+                codecName = codecName.Substring(0, codecName.Length - &quot;Codec&quot;.Length);
+
+                foreach (var codecConstant in codecConstants)
+                {
+                    var name = codecConstant.Name;
+                    var value = (int) codecConstant.GetValue(null);
+
+                    name = name.Substring(0, name.Length - &quot;MessageType&quot;.Length);
+                    if (name.StartsWith(&quot;Event&quot;, StringComparison.Ordinal))
+                        name = name.Substring(&quot;Event&quot;.Length);
+
+                    MessageNames[value] = codecName + &quot;.&quot; + name;
+                }
+            }
+        }
+#endif
+
+#if !DEBUG
+#pragma warning disable CA1801 // Review unused parameters - not going to use type if !DEBUG
+#endif
+        public static string GetMessageTypeName(int type)
+#pragma warning restore CA1801
         {
-            Preview = preview;
-
-            MaxFastInvocationCount = other.MaxFastInvocationCount;
-            MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
-            RetryTimeoutSeconds = other.RetryTimeoutSeconds;
-            RetryUnsafeOperations = other.RetryUnsafeOperations;
-            RetryOnClientReconnecting = other.RetryOnClientReconnecting;
+#if DEBUG
+            return MessageNames.TryGetValue(type, out var name) ? name : &quot;(unknown)&quot;;
+#else
+            return string.Empty;
+#endif
         }
-
-        /// &lt;summary&gt;
-        /// (unsupported) Gets the &lt;see cref=&quot;PreviewOptions&quot;/&gt;.
-        /// &lt;/summary&gt;
-        internal PreviewOptions Preview { get; }
-
-        /// &lt;summary&gt;
-        /// Gets or sets the max fast invocation count.
-        /// &lt;/summary&gt;
-        internal int MaxFastInvocationCount { get; set; } = 5;
-
-        /// &lt;summary&gt;
-        /// Gets or sets the min retry delay.
-        /// &lt;/summary&gt;
-        public int MinRetryDelayMilliseconds { get; set; } = 1_000;
-
-        /// &lt;summary&gt;
-        /// Whether to retry all operations including unsafe operations.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;Operations can fail due to various reasons. Read-only operations are retried by
-        /// default. If you want to enable retry for all operations, set this property to &lt;c&gt;true&lt;/c&gt;.&lt;/para&gt;
-        /// &lt;para&gt;However, note that a failed operation leaves the cluster in an undecided state. The
-        /// cluster may have received the request and executed the operation, but failed to respond
-        /// to the client. For idempotent operations this is harmless, but for non idempotent ones retrying
-        /// can cause undesirable effects. Also note that the redo can perform on any member.&lt;/para&gt;
-        /// &lt;para&gt;For these reasons, this is &lt;c&gt;false&lt;/c&gt; by default.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool RetryUnsafeOperations { get; set; }
-
-        /// &lt;summary&gt;
-        /// Gets or sets the invocation timeout.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;The &lt;see cref=&quot;RetryTimeoutSeconds&quot;/&gt; is a soft timeout that prevents
-        /// retrying an invocation for too long in case it fails. It does *not* controls
-        /// the duration of a single try, and does *not* abort it. And invocation single
-        /// try can run for as long as the connection that supports it remains open.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public int RetryTimeoutSeconds { get; set; } = 120;
-
-        /// &lt;summary&gt;
-        /// Whether to retry an invocation that has failed to start because the client was offline
-        /// but still active and reconnecting.
-        /// &lt;/summary&gt;
-        /// &lt;remarks&gt;
-        /// &lt;para&gt;This is &lt;c&gt;true&lt;/c&gt; by default, i.e. if the client got disconnected and is reconnecting,
-        /// invocations will be retried until they reach their timeout, or the client reconnects. Set this
-        /// to &lt;c&gt;false&lt;/c&gt; if you want invocations to fail immediately in case the client gets
-        /// disconnected, even if it is trying to reconnect.&lt;/para&gt;
-        /// &lt;para&gt;Note that this only applies to invocation that failed to start, and therefore this is
-        /// safe for all invocations. See &lt;see cref=&quot;RetryUnsafeOperations&quot;/&gt; for what happens once the
-        /// invocation has started.&lt;/para&gt;
-        /// &lt;/remarks&gt;
-        public bool RetryOnClientReconnecting { get; set; } = true;
-
-        /// &lt;summary&gt;
-        /// Clones the options.
-        /// &lt;/summary&gt;
-        internal MessagingOptions Clone(PreviewOptions preview = null) =&gt; new MessagingOptions(this, preview ?? Preview.Clone());
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[25,9,25,63,1],[27,13,27,55,1],[28,9,28,10,1],[33,9,33,81,1],[35,13,35,31,1],[37,13,37,67,1],[38,13,38,73,1],[39,13,39,61,1],[40,13,40,65,1],[41,13,41,73,1],[42,9,42,10,1],[47,43,47,47,1],[52,47,52,51,1],[52,52,52,56,1],[52,61,52,62,1],[52,61,52,62,1],[57,48,57,52,1],[57,53,57,57,1],[57,62,57,67,1],[57,62,57,67,1],[71,45,71,49,1],[71,50,71,54,1],[82,42,82,46,1],[82,47,82,51,1],[82,56,82,59,1],[82,56,82,59,1],[97,49,97,53,1],[97,54,97,58,1],[97,63,97,67,1],[97,63,97,67,1],[102,75,102,129,1]]);
+      highlightRanges([[81,13,81,33,1]]);
     </script>
   </body>
 </html>

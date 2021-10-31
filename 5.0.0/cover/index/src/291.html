@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapTryRemoveCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\Codecs\MapTryPutCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -49,18 +49,18 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// &lt;summary&gt;
-    /// Tries to remove the entry with the given key from this map within the specified timeout value.
-    /// If the key is already locked by another thread and/or member, then this operation will wait the timeout
-    /// amount for acquiring the lock.
+    /// Tries to put the given key and value into this map within a specified timeout value. If this method returns false,
+    /// it means that the caller thread could not acquire the lock for the key within the timeout duration,
+    /// thus the put operation is not successful.
     ///&lt;/summary&gt;
 #if SERVER_CODEC
-    internal static class MapTryRemoveServerCodec
+    internal static class MapTryPutServerCodec
 #else
-    internal static class MapTryRemoveCodec
+    internal static class MapTryPutCodec
 #endif
     {
-        public const int RequestMessageType = 68352; // 0x010B00
-        public const int ResponseMessageType = 68353; // 0x010B01
+        public const int RequestMessageType = 68608; // 0x010C00
+        public const int ResponseMessageType = 68609; // 0x010C01
         private const int RequestThreadIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestTimeoutFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestInitialFrameSize = RequestTimeoutFieldOffset + BytesExtensions.SizeOfLong;
@@ -82,6 +82,11 @@ namespace Hazelcast.Protocol.Codecs
             public IData Key { get; set; }
 
             /// &lt;summary&gt;
+            /// New value for the map entry.
+            ///&lt;/summary&gt;
+            public IData Value { get; set; }
+
+            /// &lt;summary&gt;
             /// The id of the user thread performing the operation. It is used to guarantee that only the lock holder thread (if a lock exists on the entry) can perform the requested operation.
             ///&lt;/summary&gt;
             public long ThreadId { get; set; }
@@ -93,12 +98,12 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string name, IData key, long threadId, long timeout)
+        public static ClientMessage EncodeRequest(string name, IData key, IData @value, long threadId, long timeout)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = false,
-                OperationName = &quot;Map.TryRemove&quot;
+                OperationName = &quot;Map.TryPut&quot;
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -108,6 +113,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, name);
             DataCodec.Encode(clientMessage, key);
+            DataCodec.Encode(clientMessage, @value);
             return clientMessage;
         }
 
@@ -121,6 +127,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Timeout = initialFrame.Bytes.ReadLongL(RequestTimeoutFieldOffset);
             request.Name = StringCodec.Decode(iterator);
             request.Key = DataCodec.Decode(iterator);
+            request.Value = DataCodec.Decode(iterator);
             return request;
         }
 #endif
@@ -160,7 +167,7 @@ namespace Hazelcast.Protocol.Codecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[88,13,92,15,1],[93,13,93,123,1],[94,13,94,104,1],[95,13,95,88,1],[96,13,96,81,1],[97,13,97,79,1],[98,13,98,48,1],[99,13,99,53,1],[100,13,100,50,1],[101,13,101,34,1],[124,36,124,40,1],[124,41,124,45,1],[141,13,141,64,1],[142,13,142,53,1],[143,13,143,48,1],[144,13,144,91,1],[145,13,145,29,1],[146,9,146,10,1]]);
+      highlightRanges([[93,13,97,15,1],[98,13,98,123,1],[99,13,99,104,1],[100,13,100,88,1],[101,13,101,81,1],[102,13,102,79,1],[103,13,103,48,1],[104,13,104,53,1],[105,13,105,50,1],[106,13,106,53,1],[107,13,107,34,1],[131,36,131,40,1],[131,41,131,45,1],[148,13,148,64,1],[149,13,149,53,1],[150,13,150,48,1],[151,13,151,91,1],[152,13,152,29,1],[153,9,153,10,1]]);
     </script>
   </body>
 </html>

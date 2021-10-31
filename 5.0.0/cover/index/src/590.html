@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HCollectionBase.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\FlakeIdGenerator.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,37 +22,45 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
-using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
-    internal abstract partial class HCollectionBase&lt;T&gt; : DistributedObjectBase, IHCollection&lt;T&gt;
+    /// &lt;inheritdoc cref=&quot;IFlakeIdGenerator&quot;/&gt;
+    internal sealed class FlakeIdGenerator: DistributedObjectBase, IFlakeIdGenerator
     {
-        protected HCollectionBase(string serviceName, string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
-            : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
-        { }
+        private static readonly FlakeIdGeneratorOptions DefaultOptions = new FlakeIdGeneratorOptions();
+        private readonly AutoBatcher _autoBatcher;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;FlakeIdGenerator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory that owns this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;A client options.&lt;/param&gt;
+        public FlakeIdGenerator(string name, DistributedObjectFactory factory, Cluster cluster,
+            SerializationService serializationService, ILoggerFactory loggerFactory,
+            FlakeIdGeneratorOptions options = null
+        )
+            : base(ServiceNames.FlakeIdGenerator, name, factory, cluster, serializationService, loggerFactory)
+        {
+            _autoBatcher = new AutoBatcher(name, options ?? DefaultOptions, cluster.Messaging);
+        }
 
         /// &lt;inheritdoc /&gt;
-        public virtual async IAsyncEnumerator&lt;T&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
-        {
-            // all collections are async enumerable,
-            // but by default we load the whole items set at once,
-            // then iterate in memory
-            var items = await GetAllAsync().CfAwait();
-            foreach (var item in items)
-                yield return item;
-        }
+        public ValueTask&lt;long&gt; GetNewIdAsync() =&gt; _autoBatcher.GetNextIdAsync();
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[27,15,27,93,1],[28,11,28,12,1],[36,13,36,55,1],[37,22,37,30,1],[37,31,37,33,1],[37,34,37,39,1],[38,17,38,35,1],[39,9,39,10,1]]);
+      highlightRanges([[25,9,25,104,0],[41,15,41,111,1],[43,13,43,96,1],[44,9,44,10,1],[47,51,47,80,1]]);
     </script>
   </body>
 </html>

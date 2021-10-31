@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\OrPredicate.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\NotPredicate.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -22,110 +22,67 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Linq;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Query
 {
-    internal abstract class LogicalPredicateBase : IPredicate, IIdentifiedDataSerializable
+    internal class NotPredicate : IPredicate, IIdentifiedDataSerializable
     {
-        // TODO: consider using a list instead of an array?
-        private IPredicate[] _predicates;
+        private IPredicate _predicate;
 
-        internal LogicalPredicateBase(IPredicate[] predicates)
+        public NotPredicate()
         {
-            _predicates = predicates;
         }
 
-        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
-
-        public abstract int ClassId { get; }
-
-        protected internal IPredicate[] ConcatInternal(IPredicate predicate)
+        public NotPredicate(IPredicate predicate)
         {
-            var predicates = new IPredicate[_predicates.Length + 1];
-            Array.Copy(_predicates, predicates, _predicates.Length);
-            predicates[_predicates.Length] = predicate;
-            return predicates;
-        }
-
-        protected internal IPredicate Last
-        {
-            get =&gt; _predicates[^1];
-            set =&gt; _predicates[^1] = value;
+            _predicate = predicate;
         }
 
         public void ReadData(IObjectDataInput input)
         {
-            var size = input.ReadInt();
-            _predicates = new IPredicate[size];
-            for (var i = 0; i &lt; size; i++)
-            {
-                _predicates[i] = input.ReadObject&lt;IPredicate&gt;();
-            }
+            _predicate = input.ReadObject&lt;IPredicate&gt;();
         }
 
         public void WriteData(IObjectDataOutput output)
         {
-            output.WriteInt(_predicates.Length);
-            foreach (var predicate in _predicates)
-            {
-                output.WriteObject(predicate);
-            }
+            output.WriteObject(_predicate);
         }
 
-        private static bool Equals(LogicalPredicateBase left, LogicalPredicateBase right)
-        {
-            if (ReferenceEquals(left, right)) return true;
-            if (left is null || right is null) return false;
+        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
 
-            return left._predicates.SequenceEqual(right._predicates);
-        }
+        public int ClassId =&gt; PredicateDataSerializerHook.NotPredicate;
 
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(this, obj)) return true;
             if (obj is null) return false;
-            return obj is LogicalPredicateBase other &amp;&amp;
-                   obj.GetType() == GetType() &amp;&amp;
-                   Equals(this, other);
+            return obj is NotPredicate other &amp;&amp; Equals(this, other);
+        }
+
+        private static bool Equals(NotPredicate left, NotPredicate right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+
+            return Equals(left._predicate, right._predicate);
         }
 
         public override int GetHashCode()
         {
-            // ReSharper disable NonReadonlyMemberInGetHashCode
-            return _predicates != null ? _predicates.GetHashCode() : 0;
-            // ReSharper restore NonReadonlyMemberInGetHashCode
+            return (_predicate != null ? _predicate.GetHashCode() : 0);
         }
 
         public override string ToString()
         {
-            var op = GetType() == typeof (OrPredicate) ? &quot;OR&quot; : &quot;AND&quot;;
-            return op + &quot;(&quot; + string.Join(&quot;, &quot;, _predicates.Select(x =&gt; x.ToString())) + &quot;)&quot;;
+            return &quot;NOT(&quot; + _predicate + &quot;)&quot;;
         }
-    }
-
-    internal class OrPredicate : LogicalPredicateBase
-    {
-        public OrPredicate()
-            : this(Array.Empty&lt;IPredicate&gt;())
-        { }
-
-        public OrPredicate(params IPredicate[] predicates)
-            : base(predicates)
-        { }
-
-        public override int ClassId =&gt; PredicateDataSerializerHook.OrPredicate;
-
-        public OrPredicate Concat(IPredicate predicate)
-            =&gt; new OrPredicate(ConcatInternal(predicate));
     }
 }
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[26,9,26,63,1],[28,13,28,38,1],[29,9,29,10,1],[31,33,31,62,1],[37,13,37,69,0],[38,13,38,69,0],[39,13,39,56,0],[40,13,40,31,0],[45,20,45,35,0],[46,20,46,43,0],[51,13,51,40,1],[52,13,52,48,1],[53,18,53,27,1],[53,29,53,37,1],[53,39,53,42,0],[55,17,55,65,0],[57,9,57,10,1],[61,13,61,49,1],[62,22,62,35,0],[62,36,62,38,1],[62,39,62,50,1],[64,17,64,47,0],[66,9,66,10,1],[70,13,70,46,1],[70,47,70,59,1],[71,13,71,47,1],[71,48,71,61,1],[73,13,73,70,1],[78,13,78,44,1],[78,45,78,57,1],[79,13,79,29,1],[79,30,79,43,1],[80,13,82,40,1],[88,13,88,72,1],[94,13,94,71,1],[95,13,95,73,1],[95,73,95,85,1],[95,85,95,94,1],[102,15,102,46,1],[103,11,103,12,1],[106,15,106,31,1],[107,11,107,12,1],[109,40,109,79,1],[112,16,112,58,0]]);
+      highlightRanges([[23,9,23,30,1],[25,9,25,10,1],[27,9,27,50,1],[29,13,29,36,1],[30,9,30,10,1],[34,13,34,57,1],[35,9,35,10,1],[39,13,39,44,1],[40,9,40,10,1],[42,33,42,62,1],[44,31,44,71,1],[48,13,48,44,1],[48,45,48,57,1],[49,13,49,29,1],[49,30,49,43,1],[50,13,50,69,1],[55,13,55,46,1],[55,47,55,59,1],[56,13,56,47,1],[56,48,56,61,1],[58,13,58,62,1],[63,13,63,72,1],[68,13,68,46,1]]);
     </script>
   </body>
 </html>

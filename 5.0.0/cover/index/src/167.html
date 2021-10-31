@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8" />
-    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\PagingPredicateHolderCodec.cs</title>
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Protocol\CustomCodecs\MemberVersionCodec.cs</title>
     <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
   </head>
@@ -46,48 +46,38 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class PagingPredicateHolderCodec
+    internal static class MemberVersionCodec
     {
-        private const int PageSizeFieldOffset = 0;
-        private const int PageFieldOffset = PageSizeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int IterationTypeIdFieldOffset = PageFieldOffset + BytesExtensions.SizeOfInt;
-        private const int InitialFrameSize = IterationTypeIdFieldOffset + BytesExtensions.SizeOfByte;
+        private const int MajorFieldOffset = 0;
+        private const int MinorFieldOffset = MajorFieldOffset + BytesExtensions.SizeOfByte;
+        private const int PatchFieldOffset = MinorFieldOffset + BytesExtensions.SizeOfByte;
+        private const int InitialFrameSize = PatchFieldOffset + BytesExtensions.SizeOfByte;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Protocol.Models.PagingPredicateHolder pagingPredicateHolder)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemberVersion memberVersion)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(PageSizeFieldOffset, pagingPredicateHolder.PageSize);
-            initialFrame.Bytes.WriteIntL(PageFieldOffset, pagingPredicateHolder.Page);
-            initialFrame.Bytes.WriteByteL(IterationTypeIdFieldOffset, pagingPredicateHolder.IterationTypeId);
+            initialFrame.Bytes.WriteByteL(MajorFieldOffset, memberVersion.Major);
+            initialFrame.Bytes.WriteByteL(MinorFieldOffset, memberVersion.Minor);
+            initialFrame.Bytes.WriteByteL(PatchFieldOffset, memberVersion.Patch);
             clientMessage.Append(initialFrame);
-
-            AnchorDataListHolderCodec.Encode(clientMessage, pagingPredicateHolder.AnchorDataListHolder);
-            CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PredicateData, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.ComparatorData, DataCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PartitionKeyData, DataCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Protocol.Models.PagingPredicateHolder Decode(IEnumerator&lt;Frame&gt; iterator)
+        public static Hazelcast.Models.MemberVersion Decode(IEnumerator&lt;Frame&gt; iterator)
         {
             // begin frame
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var pageSize = initialFrame.Bytes.ReadIntL(PageSizeFieldOffset);
+            var major = initialFrame.Bytes.ReadByteL(MajorFieldOffset);
 
-            var page = initialFrame.Bytes.ReadIntL(PageFieldOffset);
-            var iterationTypeId = initialFrame.Bytes.ReadByteL(IterationTypeIdFieldOffset);
-            var anchorDataListHolder = AnchorDataListHolderCodec.Decode(iterator);
-            var predicateData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            var comparatorData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-            var partitionKeyData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
-
+            var minor = initialFrame.Bytes.ReadByteL(MinorFieldOffset);
+            var patch = initialFrame.Bytes.ReadByteL(PatchFieldOffset);
             iterator.SkipToStructEnd();
-            return new Hazelcast.Protocol.Models.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
+            return new Hazelcast.Models.MemberVersion(major, minor, patch);
         }
     }
 }
@@ -96,7 +86,7 @@ namespace Hazelcast.Protocol.CustomCodecs
 
     </pre>
     <script type="text/javascript">
-      highlightRanges([[48,13,48,61,0],[50,13,50,70,0],[51,13,51,95,0],[52,13,52,87,0],[53,13,53,110,0],[54,13,54,48,0],[56,13,56,105,0],[57,13,57,108,0],[58,13,58,109,0],[59,13,59,111,0],[61,13,61,59,0],[62,9,62,10,0],[67,13,67,29,0],[69,13,69,48,0],[70,13,70,77,0],[72,13,72,69,0],[73,13,73,92,0],[74,13,74,83,0],[75,13,75,86,0],[76,13,76,87,0],[77,13,77,89,0],[79,13,79,40,0],[80,13,80,176,0]]);
+      highlightRanges([[48,13,48,61,1],[50,13,50,70,1],[51,13,51,82,1],[52,13,52,82,1],[53,13,53,82,1],[54,13,54,48,1],[56,13,56,59,1],[57,9,57,10,1],[62,13,62,29,1],[64,13,64,48,1],[65,13,65,72,1],[67,13,67,72,1],[68,13,68,72,1],[69,13,69,40,1],[70,13,70,76,1]]);
     </script>
   </body>
 </html>
