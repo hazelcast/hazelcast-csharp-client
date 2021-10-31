@@ -22,6 +22,8 @@ namespace Hazelcast.Tests.Sql
     [TestFixture]
     public class SqlQueryTests : SqlTestBase
     {
+        protected override bool EnableJet => true;
+
         [Test]
         [TestCase(3, 1)]
         [TestCase(3, 3)]
@@ -30,16 +32,17 @@ namespace Hazelcast.Tests.Sql
         [TestCase(6, 3)]
         public async Task ExecuteQuery(int total, int pageSize)
         {
-            await using var map = await CreateIntMapAsync(total);
+            var entries = Enumerable.Range(1, total).ToDictionary(i => i, i => i.ToString());
+
+            await using var map = await CreateIntMapAsync(entries);
 
             var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} ORDER BY __key",
                 options: new SqlStatementOptions { CursorBufferSize = pageSize }
             );
 
-            var expectedValues = GenerateIntMapValues(total);
             var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
 
-            CollectionAssert.AreEquivalent(expectedValues, resultValues);
+            CollectionAssert.AreEquivalent(entries, resultValues);
         }
 
         [Test]
@@ -49,11 +52,13 @@ namespace Hazelcast.Tests.Sql
         [TestCase(10, 100)]
         public async Task ExecuteQueryWithParameter(int total, int minValue)
         {
-            await using var map = await CreateIntMapAsync(total);
+            var entries = Enumerable.Range(1, total).ToDictionary(i => i, i => i.ToString());
+
+            await using var map = await CreateIntMapAsync(entries);
 
             var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE __key >= ?", minValue);
 
-            var expectedValues = GenerateIntMapValues(total).Where(p => p.Key >= minValue);
+            var expectedValues = entries.Where(p => p.Key >= minValue);
             var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);

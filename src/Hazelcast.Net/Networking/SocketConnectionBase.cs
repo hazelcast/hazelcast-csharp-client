@@ -273,7 +273,7 @@ namespace Hazelcast.Networking
                 // on error, shutdown and report
                 HConsole.WriteLine(this, "SendAsync:ERROR");
                 HConsole.WriteLine(this, e);
-                _streamReadCancellationTokenSource.Cancel();
+                try { _streamReadCancellationTokenSource.Cancel(); } catch { /* nothing */ } // can be disposed already
                 return false;
             }
 
