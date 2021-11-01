@@ -549,7 +549,7 @@ jobs:
           echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
           echo "Update 'latest' link"
-          git -C ./temp/gh-pages update-index --add --cacheinfo 120000 "$(echo "${{ needs.analyze.outputs.version }}" | git hash-object -w --stdin)" "latest"
+          git -C ./temp/gh-pages update-index --add --cacheinfo 120000 "$(echo -n "${{ needs.analyze.outputs.version }}" | git hash-object -w --stdin)" "latest"
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
