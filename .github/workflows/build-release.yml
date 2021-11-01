@@ -62,7 +62,7 @@ jobs:
                 echo "Triggered by commit in version $HZVERSION release branch $HZBRANCH"
                 git fetch origin refs/tags/v$HZVERSION:refs/tags/v$HZVERSION >/dev/null 2>&1
                 if [ $? -ne 0 ]; then
-                    echo "Tag v$HZVERSION does not exist, proceed"
+                    echo "Tag v$HZVERSION does not exist, proceed with build"
                     # set step/job output
                     echo "::set-output name=todo::build"
                     echo "::set-output name=version::$HZVERSION"
@@ -101,7 +101,7 @@ jobs:
                       echo "::error::Tag parent is not HEAD of release/$HZVERSION but $HZPARENTSHA"
                       exit 1
                     else
-                        echo "Tag parent is HEAD of release/$HZVERSION, proceed"
+                        echo "Tag parent is HEAD of release/$HZVERSION, proceed with release"
                         # set step/job output
                         echo "::set-output name=todo::release"
                         echo "::set-output name=version::$HZVERSION"
@@ -548,6 +548,8 @@ jobs:
         run: |
           echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
+          echo "Update 'latest' link"
+          git -C ./temp/gh-pages update-index --add --cacheinfo 120000 "$(echo "${{ needs.analyze.outputs.version }}" | git hash-object -w --stdin)" "latest"
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 

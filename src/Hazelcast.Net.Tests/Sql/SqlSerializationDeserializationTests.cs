@@ -23,7 +23,6 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
-using Hazelcast.Testing;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
@@ -33,8 +32,10 @@ namespace Hazelcast.Tests.Sql
     /// Tests serialization of parameters and result deserialization of SQL queries for all <see cref="SqlColumnType"/>s.
     /// </summary>
     [TestFixture]
-    public class SqlSerializationDeserializationTests : SingleMemberClientRemoteTestBase
+    public class SqlSerializationDeserializationTests : SqlTestBase
     {
+        protected override bool EnableJet => true;
+
         [Test]
         [TestCase(
             "",
@@ -253,7 +254,7 @@ namespace Hazelcast.Tests.Sql
         )]
         public async Task Time(params string[] expectedValues)
         {
-            await using var map = await CreateNewMap<object>();
+            await using var map = await CreateNewMap<HLocalTime>();
 
             var expectedTimes = expectedValues.Select(HLocalTime.Parse).ToList();
 
@@ -335,26 +336,33 @@ namespace Hazelcast.Tests.Sql
             int.MaxValue,
             int.MinValue
         })]
-        public async Task Object(params int[] expectedValues)
+        public async Task Portable(params int[] expectedValues)
         {
-            var expectedObjects = expectedValues.Select(i => new PortableObject(i, $"{i}", i % 2 == 0)).ToArray();
+            var entries = expectedValues.Select(i => new PortableObject(i, $"value_{i}", i % 2 == 0)).ToArray();
 
-            await using var map = await CreateNewMap(expectedObjects);
+            await using var map = await CreateNewMap(entries);
 
-            await AssertSqlResultMatchAsync(map.Name, expectedObjects);
+            await AssertSqlResultMatchAsync(map.Name, entries);
 
-            await using var fieldsQuery = await Client.Sql.ExecuteQueryAsync($@"
+            // in order to query "per field" a valid mapping needs to exist for each column
+            // TODO: the portable querying mechanism needs to be greatly simplified with Linq
+            // FIXME is the portable knows in Java?!
+
+            await Client.Sql.DropMapping(map);
+            await Client.Sql.CreateMapping(map, p => p.IntValue, p => p.StringValue, p => p.BoolValue);
+
+            await using var queryResult = await Client.Sql.ExecuteQueryAsync($@"
                 SELECT {nameof(PortableObject.IntValue)}, {nameof(PortableObject.StringValue)}, {nameof(PortableObject.BoolValue)}
                 FROM {map.Name}"
             );
 
-            var objects = await fieldsQuery.Select(r => new PortableObject(
+            var objects = await queryResult.Select(r => new PortableObject(
                 r.GetColumn<int>(nameof(PortableObject.IntValue)),
                 r.GetColumn<string>(nameof(PortableObject.StringValue)),
                 r.GetColumn<bool>(nameof(PortableObject.BoolValue))
             )).ToListAsync();
 
-            CollectionAssert.AreEquivalent(expectedObjects, objects);
+            CollectionAssert.AreEquivalent(entries, objects);
         }
 
         private async Task<IHMap<int, TValue>> CreateNewMap<TValue>(TValue[] values = null,
@@ -365,18 +373,22 @@ namespace Hazelcast.Tests.Sql
 
             if (values?.Any() ?? false)
             {
-                await map.SetAllAsync(
-                    values.Select((val, index) => new KeyValuePair<int, TValue>(index, val)).ToDictionary()
-                );
+                await map.SetAllAsync(values.Select((value, index) => (index, value)).ToDictionary());
             }
+
+            await Client.Sql.CreateMapping(map);
+
+            var mappings = await Client.Sql.ShowMappings();
+            Assert.That(mappings, Contains.Item(map.Name));
 
             return map;
         }
 
         private async Task AssertSqlResultMatchAsync<TValue>(string mapName, IEnumerable<TValue> expectedValues)
         {
-            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT this FROM {mapName} ORDER BY __key");
-            var resultValues = await result.Select(r => r.GetValue<TValue>()).ToListAsync();
+            await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {mapName} ORDER BY __key");
+
+            var resultValues = await result.Select(row => row.GetValue<TValue>()).ToListAsync();
 
             CollectionAssert.AreEqual(expectedValues, resultValues);
         }
@@ -408,7 +420,7 @@ namespace Hazelcast.Tests.Sql
             public string StringValue { get; private set; }
             public bool BoolValue { get; private set; }
 
-            private PortableObject()
+            public PortableObject()
             { }
 
             public PortableObject(int intValue, string stringValue, bool boolValue)

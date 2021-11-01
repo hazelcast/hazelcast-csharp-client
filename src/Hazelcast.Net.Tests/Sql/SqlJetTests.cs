@@ -15,6 +15,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.Sql;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -85,7 +86,9 @@ namespace Hazelcast.Tests.Sql
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
 
-            var updateRowsCount = await Client.Sql.ExecuteCommandAsync(
+            await Client.Sql.CreateMapping(map);
+
+            var updatedRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"UPDATE {map.Name} SET this = {update.value} WHERE __key = {update.key}"
             );
             //Assert.AreEqual(expected: 1, updateRowsCount);
@@ -109,6 +112,8 @@ namespace Hazelcast.Tests.Sql
 
             await using var map = await Client.GetMapAsync<int, int>(GenerateMapName());
             await map.SetAllAsync(values);
+
+            await Client.Sql.CreateMapping(map);
 
             var deleteRowsCount = await Client.Sql.ExecuteCommandAsync(
                 $@"DELETE FROM {map.Name} WHERE __key = {deleteKey}"
@@ -136,27 +141,27 @@ namespace Hazelcast.Tests.Sql
         [Test]
         public async Task SelectSum()
         {
-            var count = 10;
+            const int count = 10;
             await using var map = await CreateIntMapAsync(count);
 
             await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT SUM(__key) FROM {map.Name}");
             var selectSum = await result.Select(r => r.GetColumn<long>(0)).SingleAsync();
 
-            var expectedSum = GenerateIntMapValues(count).Sum(p => p.Key);
+            var expectedSum = count * (count + 1) / 2;
             Assert.AreEqual(expectedSum, selectSum);
         }
 
         [Test]
         public async Task SelectMax()
         {
-            var count = 10;
+            const int count = 10;
             await using var map = await CreateIntMapAsync(count);
 
             await using var result = await Client.Sql.ExecuteQueryAsync($"SELECT MAX(__key) FROM {map.Name}");
-            var selectSum = await result.Select(r => r.GetColumn<int>(0)).SingleAsync();
+            var selectMax = await result.Select(r => r.GetColumn<int>(0)).SingleAsync();
 
-            var expectedSum = GenerateIntMapValues(count).Max(p => p.Key);
-            Assert.AreEqual(expectedSum, selectSum);
+            var expectedMax = count;
+            Assert.AreEqual(expectedMax, selectMax);
         }
     }
 }
