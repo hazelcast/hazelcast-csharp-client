@@ -182,17 +182,17 @@
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Count.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Count.html",
     "title": "Count Property | Hazelcast .NET Documentation",
-    "keywords": "Count Property Count Gets the number of members. Declaration public virtual int Count { get; } Property Value Int32 Implements ILoadBalancer.Count"
+    "keywords": "Count Property Count Declaration public virtual int Count { get; } Property Value Int32 Implements ILoadBalancer.Count"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMember.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public abstract Guid GetMember() Returns Guid The unique identifier of the selected member, if any; otherwise Guid.Empty . Implements ILoadBalancer.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public abstract Guid GetMember() Returns Guid Implements ILoadBalancer.GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.html",
     "title": "LoadBalancerBase Class | Hazelcast .NET Documentation",
-    "keywords": "LoadBalancerBase Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Provides a base class for load balancers. public abstract class LoadBalancerBase : ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer RoundRobinLoadBalancer StaticLoadBalancer Implements ILoadBalancer Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Properties Count Gets the number of members. Members Gets the members. Methods GetMember() Selects a member. SetMembers(IEnumerable<Guid>) Sets the members."
+    "keywords": "LoadBalancerBase Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Provides a base class for load balancers. public abstract class LoadBalancerBase : ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer RoundRobinLoadBalancer StaticLoadBalancer Implements ILoadBalancer Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Properties Count Members Gets the members. Methods GetMember() SetMembers(IEnumerable<Guid>)"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Members.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Members.html",
@@ -202,7 +202,7 @@
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.SetMembers.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.SetMembers.html",
     "title": "SetMembers Method | Hazelcast .NET Documentation",
-    "keywords": "SetMembers Method SetMembers(IEnumerable<Guid>) Sets the members. Declaration public virtual void SetMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds The identifiers of the members. Implements ILoadBalancer.SetMembers(IEnumerable<Guid>) Remarks The set of members that fully replaces the existing members."
+    "keywords": "SetMembers Method SetMembers(IEnumerable<Guid>) Declaration public virtual void SetMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds Implements ILoadBalancer.SetMembers(IEnumerable<Guid>)"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.-ctor.html",
@@ -212,12 +212,12 @@
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.GetMember.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member, if any; otherwise Guid.Empty . Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.html",
     "title": "RandomLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "RandomLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a random load balancer. public class RandomLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.SetMembers(IEnumerable<Guid>) Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A random load balancer returns random members. Constructors RandomLoadBalancer() Initializes a new instance of the RandomLoadBalancer class. Methods GetMember() Selects a member."
+    "keywords": "RandomLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a random load balancer. public class RandomLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RandomLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.SetMembers(IEnumerable<Guid>) Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A random load balancer returns random members. Constructors RandomLoadBalancer() Initializes a new instance of the RandomLoadBalancer class. Methods GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.-ctor.html",
@@ -227,17 +227,17 @@
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.GetMember.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member, if any; otherwise Guid.Empty . Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html",
     "title": "RoundRobinLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "RoundRobinLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a round-robin load balancer. public class RoundRobinLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RoundRobinLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.SetMembers(IEnumerable<Guid>) Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A round-robin load balancer returns members one after another. Constructors RoundRobinLoadBalancer() Initializes a new instance of the RoundRobinLoadBalancer class. Methods GetMember() Selects a member."
+    "keywords": "RoundRobinLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a round-robin load balancer. public class RoundRobinLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase RoundRobinLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members LoadBalancerBase.Count LoadBalancerBase.SetMembers(IEnumerable<Guid>) Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A round-robin load balancer returns members one after another. Constructors RoundRobinLoadBalancer() Initializes a new instance of the RoundRobinLoadBalancer class. Methods GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.html",
     "title": "Count Property | Hazelcast .NET Documentation",
-    "keywords": "Count Property Count Gets the number of members. Declaration public override int Count { get; } Property Value Int32 Overrides LoadBalancerBase.Count"
+    "keywords": "Count Property Count Declaration public override int Count { get; } Property Value Int32 Overrides LoadBalancerBase.Count"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html",
@@ -247,17 +247,17 @@
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember.html",
     "title": "GetMember Method | Hazelcast .NET Documentation",
-    "keywords": "GetMember Method GetMember() Selects a member. Declaration public override Guid GetMember() Returns Guid The unique identifier of the selected member, if any; otherwise Guid.Empty . Overrides LoadBalancerBase.GetMember()"
+    "keywords": "GetMember Method GetMember() Declaration public override Guid GetMember() Returns Guid Overrides LoadBalancerBase.GetMember()"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html",
     "title": "StaticLoadBalancer Class | Hazelcast .NET Documentation",
-    "keywords": "StaticLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a static load balancer. public class StaticLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase StaticLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A static load balancer knows only one member and always return that member. Constructors StaticLoadBalancer(IReadOnlyDictionary<String, String>) Initializes a new instance of the RandomLoadBalancer class. StaticLoadBalancer(Guid) Initializes a new instance of the StaticLoadBalancer class. Properties Count Gets the number of members. Methods GetMember() Selects a member. SetMembers(IEnumerable<Guid>) Sets the members."
+    "keywords": "StaticLoadBalancer Class Namespace: Hazelcast.Clustering.LoadBalancing Assembly: Hazelcast.Net.dll Represents a static load balancer. public class StaticLoadBalancer : LoadBalancerBase, ILoadBalancer Inheritance Object LoadBalancerBase StaticLoadBalancer Implements ILoadBalancer Inherited Members LoadBalancerBase.Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Remarks A static load balancer knows only one member and always return that member. Constructors StaticLoadBalancer(IReadOnlyDictionary<String, String>) Initializes a new instance of the RandomLoadBalancer class. StaticLoadBalancer(Guid) Initializes a new instance of the StaticLoadBalancer class. Properties Count Methods GetMember() SetMembers(IEnumerable<Guid>)"
   },
   "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.SetMembers.html": {
     "href": "5.0.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.SetMembers.html",
     "title": "SetMembers Method | Hazelcast .NET Documentation",
-    "keywords": "SetMembers Method SetMembers(IEnumerable<Guid>) Sets the members. Declaration public override void SetMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds The identifiers of the members. Overrides LoadBalancerBase.SetMembers(IEnumerable<Guid>) Remarks The set of members that fully replaces the existing members."
+    "keywords": "SetMembers Method SetMembers(IEnumerable<Guid>) Declaration public override void SetMembers(IEnumerable<Guid> memberIds) Parameters IEnumerable < Guid > memberIds Overrides LoadBalancerBase.SetMembers(IEnumerable<Guid>)"
   },
   "5.0.0/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcast.html": {
     "href": "5.0.0/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcast.html",
@@ -2877,7 +2877,7 @@
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Day.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Day.html",
     "title": "Day Property | Hazelcast .NET Documentation",
-    "keywords": "Day Property Day Day value. Ranges between 1 and max number of days in given Year and Month inclusive. Declaration public readonly byte Day { get; } Property Value Byte"
+    "keywords": "Day Property Day Declaration public readonly byte Day { get; } Property Value Byte"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Equals.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Equals.html",
@@ -2892,12 +2892,12 @@
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Hour.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Hour.html",
     "title": "Hour Property | Hazelcast .NET Documentation",
-    "keywords": "Hour Property Hour Hour value. Ranges between 0 and 23 inclusive. Declaration public readonly byte Hour { get; } Property Value Byte"
+    "keywords": "Hour Property Hour Declaration public readonly byte Hour { get; } Property Value Byte"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.html",
     "title": "HLocalDateTime Struct | Hazelcast .NET Documentation",
-    "keywords": "HLocalDateTime Struct Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll Represents Hazelcast SQL TIMESTAMP type corresponding to java.time.LocalDateTime in Java. public readonly struct HLocalDateTime : IEquatable<HLocalDateTime> Implements IEquatable < HLocalDateTime > Inherited Members Object.Equals(Object, Object) Object.GetType() Object.ReferenceEquals(Object, Object) Constructors HLocalDateTime(HLocalDate, HLocalTime) HLocalDateTime(DateTime) HLocalDateTime(Int32, Byte, Byte) HLocalDateTime(Int32, Byte, Byte, Byte, Byte, Byte, Int32) Fields Max Min Properties Date Date part represented as HLocalDate . Day Day value. Ranges between 1 and max number of days in given Year and Month inclusive. Hour Hour value. Ranges between 0 and 23 inclusive. Minute Minute value. Ranges between 0 and 59 inclusive. Month Month value. Ranges between 1 and 12 inclusive. Nanosecond Nanosecond value. Ranges between 0 and 999999999 inclusive. Second Second value. Ranges between 0 and 59 inclusive. Time Time part represented as HLocalTime . Year Year value. Ranges between MinYear and MaxYear inclusive. Methods Equals(HLocalDateTime) Equals(Object) GetHashCode() Parse(String) ToDateTime() ToString() TryParse(String, out HLocalDateTime) TryToDateTime(out DateTime) Operators Equality(HLocalDateTime, HLocalDateTime) Explicit(HLocalDateTime to DateTime) Explicit(DateTime to HLocalDateTime) Inequality(HLocalDateTime, HLocalDateTime)"
+    "keywords": "HLocalDateTime Struct Namespace: Hazelcast.Models Assembly: Hazelcast.Net.dll Represents Hazelcast SQL TIMESTAMP type corresponding to java.time.LocalDateTime in Java. public readonly struct HLocalDateTime : IEquatable<HLocalDateTime> Implements IEquatable < HLocalDateTime > Inherited Members Object.Equals(Object, Object) Object.GetType() Object.ReferenceEquals(Object, Object) Constructors HLocalDateTime(HLocalDate, HLocalTime) HLocalDateTime(DateTime) HLocalDateTime(Int32, Byte, Byte) HLocalDateTime(Int32, Byte, Byte, Byte, Byte, Byte, Int32) Fields Max Min Properties Date Date part represented as HLocalDate . Day Hour Minute Month Nanosecond Second Time Time part represented as HLocalTime . Year Methods Equals(HLocalDateTime) Equals(Object) GetHashCode() Parse(String) ToDateTime() ToString() TryParse(String, out HLocalDateTime) TryToDateTime(out DateTime) Operators Equality(HLocalDateTime, HLocalDateTime) Explicit(HLocalDateTime to DateTime) Explicit(DateTime to HLocalDateTime) Inequality(HLocalDateTime, HLocalDateTime)"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Max.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Max.html",
@@ -2912,17 +2912,17 @@
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Minute.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Minute.html",
     "title": "Minute Property | Hazelcast .NET Documentation",
-    "keywords": "Minute Property Minute Minute value. Ranges between 0 and 59 inclusive. Declaration public readonly byte Minute { get; } Property Value Byte"
+    "keywords": "Minute Property Minute Declaration public readonly byte Minute { get; } Property Value Byte"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Month.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Month.html",
     "title": "Month Property | Hazelcast .NET Documentation",
-    "keywords": "Month Property Month Month value. Ranges between 1 and 12 inclusive. Declaration public readonly byte Month { get; } Property Value Byte"
+    "keywords": "Month Property Month Declaration public readonly byte Month { get; } Property Value Byte"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Nanosecond.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Nanosecond.html",
     "title": "Nanosecond Property | Hazelcast .NET Documentation",
-    "keywords": "Nanosecond Property Nanosecond Nanosecond value. Ranges between 0 and 999999999 inclusive. Declaration public readonly int Nanosecond { get; } Property Value Int32"
+    "keywords": "Nanosecond Property Nanosecond Declaration public readonly int Nanosecond { get; } Property Value Int32"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.op_Equality.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.op_Equality.html",
@@ -2947,7 +2947,7 @@
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Second.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Second.html",
     "title": "Second Property | Hazelcast .NET Documentation",
-    "keywords": "Second Property Second Second value. Ranges between 0 and 59 inclusive. Declaration public readonly byte Second { get; } Property Value Byte"
+    "keywords": "Second Property Second Declaration public readonly byte Second { get; } Property Value Byte"
   },
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Time.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Time.html",
@@ -2977,7 +2977,7 @@
   "5.0.0/api/Hazelcast.Models.HLocalDateTime.Year.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalDateTime.Year.html",
     "title": "Year Property | Hazelcast .NET Documentation",
-    "keywords": "Year Property Year Year value. Ranges between MinYear and MaxYear inclusive. Declaration public readonly int Year { get; } Property Value Int32"
+    "keywords": "Year Property Year Declaration public readonly int Year { get; } Property Value Int32"
   },
   "5.0.0/api/Hazelcast.Models.HLocalTime.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Models.HLocalTime.-ctor.html",
@@ -4267,12 +4267,12 @@
   "5.0.0/api/Hazelcast.Security.StaticCredentialsFactory.html": {
     "href": "5.0.0/api/Hazelcast.Security.StaticCredentialsFactory.html",
     "title": "StaticCredentialsFactory Class | Hazelcast .NET Documentation",
-    "keywords": "StaticCredentialsFactory Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Provides an implementation of ICredentialsFactory that returns a static ICredentials instance. public class StaticCredentialsFactory : ICredentialsFactory, IDisposable Inheritance Object StaticCredentialsFactory Implements ICredentialsFactory IDisposable Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors StaticCredentialsFactory(ICredentials) Initializes a new instance of the StaticCredentialsFactory class. Methods Dispose() Dispose(Boolean) Disposes resources. NewCredentials() Creates and returns a new ICredentials object."
+    "keywords": "StaticCredentialsFactory Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Provides an implementation of ICredentialsFactory that returns a static ICredentials instance. public class StaticCredentialsFactory : ICredentialsFactory, IDisposable Inheritance Object StaticCredentialsFactory Implements ICredentialsFactory IDisposable Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Object.ToString() Constructors StaticCredentialsFactory(ICredentials) Initializes a new instance of the StaticCredentialsFactory class. Methods Dispose() Dispose(Boolean) Disposes resources. NewCredentials()"
   },
   "5.0.0/api/Hazelcast.Security.StaticCredentialsFactory.NewCredentials.html": {
     "href": "5.0.0/api/Hazelcast.Security.StaticCredentialsFactory.NewCredentials.html",
     "title": "NewCredentials Method | Hazelcast .NET Documentation",
-    "keywords": "NewCredentials Method NewCredentials() Creates and returns a new ICredentials object. Declaration public ICredentials NewCredentials() Returns ICredentials The new credentials object. Implements ICredentialsFactory.NewCredentials() Remarks This method is invoked any time a new connection is authenticated."
+    "keywords": "NewCredentials Method NewCredentials() Declaration public ICredentials NewCredentials() Returns ICredentials Implements ICredentialsFactory.NewCredentials()"
   },
   "5.0.0/api/Hazelcast.Security.TokenCredentials.-ctor.html": {
     "href": "5.0.0/api/Hazelcast.Security.TokenCredentials.-ctor.html",
@@ -4287,12 +4287,12 @@
   "5.0.0/api/Hazelcast.Security.TokenCredentials.html": {
     "href": "5.0.0/api/Hazelcast.Security.TokenCredentials.html",
     "title": "TokenCredentials Class | Hazelcast .NET Documentation",
-    "keywords": "TokenCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements ITokenCredentials for simple token-based protocols. [Serializable] public class TokenCredentials : ITokenCredentials, ICredentials Inheritance Object TokenCredentials KerberosCredentials Implements ITokenCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Constructors TokenCredentials(Byte[]) Initializes a new instance of the TokenCredentials class with a token. Properties Name Gets the name of the entity. Methods GetToken() Gets the token representing the credentials. ToString()"
+    "keywords": "TokenCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements ITokenCredentials for simple token-based protocols. [Serializable] public class TokenCredentials : ITokenCredentials, ICredentials Inheritance Object TokenCredentials KerberosCredentials Implements ITokenCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Constructors TokenCredentials(Byte[]) Initializes a new instance of the TokenCredentials class with a token. Properties Name Methods GetToken() Gets the token representing the credentials. ToString()"
   },
   "5.0.0/api/Hazelcast.Security.TokenCredentials.Name.html": {
     "href": "5.0.0/api/Hazelcast.Security.TokenCredentials.Name.html",
     "title": "Name Property | Hazelcast .NET Documentation",
-    "keywords": "Name Property Name Gets the name of the entity. Declaration public string Name { get; } Property Value String Implements ICredentials.Name"
+    "keywords": "Name Property Name Declaration public string Name { get; } Property Value String Implements ICredentials.Name"
   },
   "5.0.0/api/Hazelcast.Security.TokenCredentials.ToString.html": {
     "href": "5.0.0/api/Hazelcast.Security.TokenCredentials.ToString.html",
@@ -4302,17 +4302,17 @@
   "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.html": {
     "href": "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.html",
     "title": "UsernamePasswordCredentials Class | Hazelcast .NET Documentation",
-    "keywords": "UsernamePasswordCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements IPasswordCredentials . [Serializable] public class UsernamePasswordCredentials : IPasswordCredentials, ICredentials Inheritance Object UsernamePasswordCredentials Implements IPasswordCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Properties Name Gets the name of the entity. Password Gets the password. Methods ToString()"
+    "keywords": "UsernamePasswordCredentials Class Namespace: Hazelcast.Security Assembly: Hazelcast.Net.dll Implements IPasswordCredentials . [Serializable] public class UsernamePasswordCredentials : IPasswordCredentials, ICredentials Inheritance Object UsernamePasswordCredentials Implements IPasswordCredentials ICredentials Inherited Members Object.Equals(Object) Object.Equals(Object, Object) Object.GetHashCode() Object.GetType() Object.MemberwiseClone() Object.ReferenceEquals(Object, Object) Properties Name Password Methods ToString()"
   },
   "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Name.html": {
     "href": "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Name.html",
     "title": "Name Property | Hazelcast .NET Documentation",
-    "keywords": "Name Property Name Gets the name of the entity. Declaration public string Name { get; set; } Property Value String Implements ICredentials.Name"
+    "keywords": "Name Property Name Declaration public string Name { get; set; } Property Value String Implements ICredentials.Name"
   },
   "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Password.html": {
     "href": "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.Password.html",
     "title": "Password Property | Hazelcast .NET Documentation",
-    "keywords": "Password Property Password Gets the password. Declaration public string Password { get; set; } Property Value String Implements IPasswordCredentials.Password"
+    "keywords": "Password Property Password Declaration public string Password { get; set; } Property Value String Implements IPasswordCredentials.Password"
   },
   "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.ToString.html": {
     "href": "5.0.0/api/Hazelcast.Security.UsernamePasswordCredentials.ToString.html",
@@ -5842,6 +5842,6 @@
   "versions.html": {
     "href": "versions.html",
     "title": "Versions | Hazelcast .NET Documentation",
-    "keywords": "Versions Hazelcast .NET brings the full power of the Hazelcast high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The Hazelcast .NET Client allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication. This page indexes documentation for all versions. Current version 4.1.0 general documentation and API reference Preview version $version general documentation and API reference Previous versions 4.0.2 general documentation and API reference 4.0.1 general documentation and API reference 4.0.0 general documentation and API reference 3.12.3 API reference 3.12.2 API reference"
+    "keywords": "Versions Hazelcast .NET brings the full power of the Hazelcast high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The Hazelcast .NET Client allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication. This page indexes documentation for all versions. Current version 5.0.0 general documentation and API reference Preview version $version general documentation and API reference Previous versions 4.1.0 general documentation and API reference 4.0.2 general documentation and API reference 4.0.1 general documentation and API reference 4.0.0 general documentation and API reference 3.12.3 API reference 3.12.2 API reference"
   }
 }
