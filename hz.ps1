@@ -1386,10 +1386,12 @@ function start-remote-controller() {
     Write-Output "Starting Remote Controller..."
     Write-Output "ClassPath: $($script:options.classpath)"
 
+    $quotedClassPath = '"{0}"' -f $script:options.classpath
+
     # start the remote controller
     $args = @(
         "-Dhazelcast.enterprise.license.key=$script:enterpriseKey",
-        "-cp", "$($script:options.classpath)",
+        "-cp", $quotedClassPath,
         "com.hazelcast.remotecontroller.Main"
     )
 
