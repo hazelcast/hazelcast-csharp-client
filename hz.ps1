@@ -641,7 +641,7 @@ function ensure-server-files {
             $p0 = $v.IndexOf('.')
             $p1 = $v.LastIndexOf('.')
             if ($p0 -ne $p1) {
-                $v = $v.SubString($p0, $p1); # 4.2.1 -> 4.2 but 4.3 remains 4.3
+                $v = $v.SubString(0, $p1) # 4.2.1 -> 4.2 but 4.3 remains 4.3
             }
 
             # try branch eg '4.2.z' or '4.3.z'
