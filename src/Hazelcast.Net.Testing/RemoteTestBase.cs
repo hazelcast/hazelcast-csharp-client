@@ -35,7 +35,7 @@ namespace Hazelcast.Testing
             {
                 builder.AddHazelcastAndDefaults(null);
                 builder.AddUserSecrets(GetType().Assembly, true);
-            }, null, ConfigurationSecretsKey);
+            }, null, null, ConfigurationSecretsKey);
 
             options.Networking.Addresses.Clear();
             options.Networking.Addresses.Add("127.0.0.1:5701");

@@ -60,6 +60,7 @@ namespace Hazelcast.Tests.Remote
                     builder.AddInMemoryCollection(keyValues);
                     builder.AddUserSecrets(GetType().Assembly, true);
                 },
+                null,
                 (configuration, options) =>
                 {
                     options.Networking.Addresses.Clear();

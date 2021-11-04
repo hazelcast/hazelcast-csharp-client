@@ -41,7 +41,7 @@ namespace Hazelcast.Tests.Configuration
         public void BuildExceptions()
         {
             Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, null, "key"));
         }
 
         [Test]
@@ -504,7 +504,7 @@ namespace Hazelcast.Tests.Configuration
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
             options = HazelcastOptions.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
-                null, "alt");
+                null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);
             Assert.AreEqual("cluster", options.ClusterName);
