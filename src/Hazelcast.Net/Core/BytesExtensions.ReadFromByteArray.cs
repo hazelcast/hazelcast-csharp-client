@@ -21,6 +21,20 @@ namespace Hazelcast.Core
     internal static partial class BytesExtensions // Read from byte[]
     {
         /// <summary>
+        /// Verifies that it is possible to read <param name="count"/> at position <param name="position"/>
+        /// of the <param name="bytes"/> array.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to read from.</param>
+        /// <param name="position">The position.</param>
+        /// <param name="count">The number of bytes to read.</param>
+        /// <returns>The array of bytes to read from.</returns>
+        public static byte[] CanRead(this byte[] bytes, int position, int count)
+        {
+            if (position + count <= bytes.Length) return bytes;
+            throw new OverflowException($"Cannot read {count} bytes at {position} of {bytes.Length} bytes array.");
+        }
+
+        /// <summary>
         /// Reads a <see cref="byte"/> value from an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to read from.</param>
