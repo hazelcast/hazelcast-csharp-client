@@ -13,44 +13,51 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Text;
 
 namespace Hazelcast.Metrics
 {
+    internal static class MetricDescriptor
+    {
+        public static MetricDescriptor<TValue> Create<TValue>(string name, MetricUnit unit = MetricUnit.None)
+            => MetricDescriptor<TValue>.Create(name, unit);
+
+        public static MetricDescriptor<TValue> Create<TValue>(string prefix, string name, MetricUnit unit = MetricUnit.None)
+            => MetricDescriptor<TValue>.Create(prefix, name, unit);
+    }
+
     // a metric descriptor for values of a given type
     internal class MetricDescriptor<TValue> : IMetricDescriptor
     {
         private IDictionary<string, string> _tags;
 
-        public MetricDescriptor(string name)
+        private MetricDescriptor(string prefix, string name)
         {
+            Prefix = prefix;
             Name = name;
         }
 
-        public MetricDescriptor(string prefix, string name)
-            : this(name)
-        {
-            Prefix = prefix;
-        }
+        public static MetricDescriptor<TValue> Create(string name, MetricUnit unit)
+            => new MetricDescriptor<TValue>(null, name) { Unit = unit };
 
-        public string Prefix { get; set; }
+        public static MetricDescriptor<TValue> Create(string prefix, string name, MetricUnit unit)
+            => new MetricDescriptor<TValue>(prefix, name) { Unit = unit };
 
-        public string Name { get; set; }
+        public string Prefix { get; }
+
+        public string[] AttributePrefixes { get; set; }
+
+        public string Name { get; }
 
         public string DiscriminatorKey { get; set; }
 
         public string DiscriminatorValue { get; set; }
 
-        public MetricUnit Unit { get; set; }
+        public MetricUnit Unit { get; private set; }
 
         public IDictionary<string, string> Tags => _tags ??= new Dictionary<string, string>();
 
         public int TagCount => _tags?.Count ?? 0;
-
-        public MetricDescriptor<TValue> WithUnit(MetricUnit unit)
-        {
-            Unit = unit;
-            return this;
-        }
 
         public MetricDescriptor<TValue> WithDiscriminator(string key, string value)
         {
@@ -65,6 +72,43 @@ namespace Hazelcast.Metrics
             return this;
         }
 
+        public MetricDescriptor<TValue> WithAttributePrefixes(params string[] prefixes)
+        {
+            AttributePrefixes = prefixes;
+            return this;
+        }
+
         // "excluded targets" are not supported
+
+        public override string ToString()
+        {
+            var text = new StringBuilder();
+            text.Append('[');
+
+            text.Append("metric=");
+
+            if (Prefix != null)
+            {
+                text.Append(Prefix);
+                text.Append('.');
+            }
+
+            text.Append(Name);
+
+            text.Append(',');
+            text.Append("unit=");
+            text.Append(Unit);
+
+            if (DiscriminatorKey != null)
+            {
+                text.Append(',');
+                text.Append(DiscriminatorKey);
+                text.Append('=');
+                text.Append(DiscriminatorValue);
+            }
+
+            text.Append(']');
+            return text.ToString();
+        }
     }
 }

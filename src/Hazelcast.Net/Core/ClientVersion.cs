@@ -23,10 +23,14 @@ namespace Hazelcast.Core
     internal static class ClientVersion
     {
         private static string _clientVersion;
+        private static string _clientVersionPure;
 
         /// <summary>
         /// Gets the version of this assembly.
         /// </summary>
+        /// <remarks>
+        /// <para>Returns the informational, SemVer compliant version ie it can be 5.1.2.preview-0+ab16ec43.</para>
+        /// </remarks>
         internal static string Version
         {
             get
@@ -51,6 +55,34 @@ namespace Hazelcast.Core
                 }
 
                 return _clientVersion;
+            }
+        }
+
+        /// <summary>
+        /// Gets the "pure" version of this assembly.
+        /// </summary>
+        /// <remarks>
+        /// <para>Returns the pure version, ie major.minor.patch.</para>
+        /// </remarks>
+        internal static string PureVersion
+        {
+            get
+            {
+                if (_clientVersionPure != null) return _clientVersionPure;
+                var version = Version;
+                var pos0 = version.IndexOf('.');
+                var pos1 = version.IndexOf('.', pos0 + 1);
+                if (pos1 >= 0)
+                {
+                    version = version[..pos1];
+                }
+                else
+                {
+                    var pos = version.IndexOf('+');
+                    if (pos >= 0) version = version[..pos];
+                }
+                _clientVersionPure = version;
+                return _clientVersionPure;
             }
         }
     }

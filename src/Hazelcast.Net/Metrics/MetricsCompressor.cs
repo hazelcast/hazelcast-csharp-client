@@ -161,9 +161,12 @@ namespace Hazelcast.Metrics
             if (mask.HasNone(DescriptorMask.Unit))
                 _tempOutput.WriteByte((byte) descriptor.Unit);
 
-            //if (mask.HasNone(DescriptorMask.ExcludedTargets))
-            //    tmpDos.WriteByte(MetricTarget.BitSet(descriptor.ExcludedTargets));
+            // include excludeTargets for compatibility purposes (but it's always zero)
+            if (mask.HasNone(DescriptorMask.ExcludedTargets))
+                _tempOutput.WriteByte(0);
 
+            // include excludeTargets for compatibility purposes (but it's always zero)
+            // (the Python client for instance always writes zero here)
             if (mask.HasNone(DescriptorMask.TagCount))
                 _tempOutput.WriteByte((byte) descriptor.Tags.Count);
 
@@ -327,7 +330,7 @@ namespace Hazelcast.Metrics
         }
 
         [Flags]
-        private enum DescriptorMask : byte
+        internal enum DescriptorMask : byte
         {
             None = 0,
             Prefix = 1,

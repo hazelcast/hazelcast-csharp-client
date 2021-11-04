@@ -72,7 +72,7 @@ namespace Hazelcast.NearCaching
         internal int CleanupPeriodSeconds { get; set; } = 5;
 
         /// <summary>
-        /// Gets or sets the maximum size of the cache before entries get evicted.
+        /// Gets or sets the maximum size of the cache (number of entries) before entries get evicted.
         /// </summary>
         public int MaxSize { get; set; } = int.MaxValue;
 
