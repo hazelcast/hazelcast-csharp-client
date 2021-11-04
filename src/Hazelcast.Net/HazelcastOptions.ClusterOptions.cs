@@ -39,10 +39,10 @@ namespace Hazelcast
         internal const string DefaultClusterName = "dev";
 
         /// <summary>
-        /// Gets the default client name prefix, which is <c>"hz.client_"</c>.
+        /// Gets the default client name prefix, which is <c>"hznet.client_"</c>.
         /// </summary>
-        /// <returns>The default client name prefix, which is <c>"hz.client_"</c>.</returns>
-        internal const string DefaultClientNamePrefix = "hz.client_";
+        /// <returns>The default client name prefix, which is <c>"hznet.client_"</c>.</returns>
+        internal const string DefaultClientNamePrefix = "hznet.client_";
 
         /// <summary>
         /// Gets or sets the name of the cluster.
