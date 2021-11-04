@@ -23,14 +23,29 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
 {
+    /// <summary>
+    /// Provides addresses to connect to a cluster.
+    /// </summary>
+    /// <remarks>
+    /// <para>The addresses can either come from configuration, or from a discovery
+    /// service such as the Cloud Discovery service. They can be retrieved, in order to
+    /// establish the very first to the cluster, via <see cref="GetAddresses"/>.</para>
+    /// <para>When using a discovery service, it may be that the members are only
+    /// aware of their own internal address, but the discovery service knows that they
+    /// can only be reached through their public address. In which case, the address
+    /// provider also provides a map from internal to public. When receiving members
+    /// through the members view event, this map can be used to assign public addresses
+    /// to members.</para>
+    /// </remarks>
     internal class AddressProvider
     {
         private readonly Func<IDictionary<NetworkAddress, NetworkAddress>> _createMap;
         private readonly IList<string> _configurationAddresses;
         private readonly NetworkingOptions _networkingOptions;
+        private readonly ILogger _logger;
 
-        private IDictionary<NetworkAddress, NetworkAddress> _privateToPublic;
-        private readonly bool _isMapping;
+        // maps internal addresses to public addresses
+        private IDictionary<NetworkAddress, NetworkAddress> _internalToPublicMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AddressProvider"/> class.
@@ -41,6 +56,8 @@ namespace Hazelcast.Networking
         {
             _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+
+            _logger = loggerFactory.CreateLogger<AddressProvider>();
 
             var cloudConfiguration = networkingOptions.Cloud;
             var addresses = networkingOptions.Addresses;
@@ -59,7 +76,7 @@ namespace Hazelcast.Networking
                 var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
 
                 _createMap = () => cloudScanner.Scan();
-                _isMapping = true;
+                HasMap = true;
             }
             else
             {
@@ -69,48 +86,72 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// Whether the address provider has a map of internal addresses to public addresses.
+        /// </summary>
+        public bool HasMap { get; }
+
+        /// <summary>
         /// Gets known possible addresses for a cluster.
         /// </summary>
         /// <returns>All addresses.</returns>
         public IEnumerable<NetworkAddress> GetAddresses()
         {
-            _privateToPublic ??= _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
-            return _privateToPublic.Keys;
+            _internalToPublicMap ??= _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
+            return _internalToPublicMap.Values;
         }
 
         /// <summary>
-        /// Maps a private address to a public address.
+        /// Maps an internal address to a public address.
         /// </summary>
         /// <param name="address">The private address.</param>
         /// <returns>The public address, or null if no address was found.</returns>
         public NetworkAddress Map(NetworkAddress address)
         {
-            if (address == null || !_isMapping)
+            if (address == null || !HasMap)
                 return address;
 
             var fresh = false;
-            if (_privateToPublic == null)
+            if (_internalToPublicMap == null)
             {
-                _privateToPublic = _createMap() ?? throw new HazelcastException("Failed to obtain an address map.");
-
+                _internalToPublicMap = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
                 fresh = true;
             }
 
             // if we can map, return
-            if (_privateToPublic.TryGetValue(address, out var publicAddress))
+            if (_internalToPublicMap.TryGetValue(address, out var publicAddress))
                 return publicAddress;
+
+            if (fresh)
+            {
+                // if we just created the map, no point re-creating it
+                _logger.LogDebug($"Address {address} was not found in the map.");
+                return null;
+            }
+
+            // otherwise, re-scan
+            _logger.LogDebug($"Address {address} was not found in the map, re-scanning.");
 
             // if the map is not 'fresh' recreate the map and try again, else give up
             // TODO: throttle?
-            if (fresh) return null;
-            _privateToPublic = _createMap();
+            _internalToPublicMap = _createMap();
 
-            if (_privateToPublic == null)
-                throw new HazelcastException("Failed to obtain an address map.");
+            if (_internalToPublicMap == null) throw new HazelcastException("Failed to obtain addresses.");
 
-            return _privateToPublic.TryGetValue(address, out publicAddress) ? publicAddress : null;
+            // now try again
+            if (_internalToPublicMap.TryGetValue(address, out publicAddress))
+                return publicAddress;
+
+            _logger.LogDebug($"Address {address} was not found in the map.");
+            return null;
         }
 
+        /// <summary>
+        /// (internal for tests only)
+        /// Creates an address map from the configuration.
+        /// </summary>
+        /// <returns>An address map.</returns>
+        /// <remarks>When the address map is created from the configuration, keys and values
+        /// are identical, since no mapping is actually required.</remarks>
         internal IDictionary<NetworkAddress, NetworkAddress> CreateMapFromConfiguration()
         {
             var addresses = new Dictionary<NetworkAddress, NetworkAddress>();
@@ -155,7 +196,7 @@ namespace Hazelcast.Networking
         /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
         /// </summary>
         /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
-        internal static IEnumerable<IPAddress> GetV6LocalAddresses()
+        private static IEnumerable<IPAddress> GetV6LocalAddresses()
         {
             // if the address is IP v6 local without a scope,
             // resolve -> the local address, with all avail scopes?
@@ -169,7 +210,19 @@ namespace Hazelcast.Networking
             }
         }
 
-        internal IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
+        /// <summary>
+        /// Expands the port of an address.
+        /// </summary>
+        /// <param name="address">The address.</param>
+        /// <param name="ipAddress"></param>
+        /// <returns>Addresses with ports.</returns>
+        /// <remarks>
+        /// <para>If the <paramref name="address"/> has a specified port, this yields the address, and
+        /// only the address. But if it does not have a specified port, this yields the address with
+        /// different ports obtained through the <see cref="NetworkingOptions.DefaultPort"/> and
+        /// <see cref="NetworkingOptions.PortRange"/> configuration options.</para>
+        /// </remarks>
+        private IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
         {
             if (address.Port > 0)
             {
@@ -187,6 +240,5 @@ namespace Hazelcast.Networking
                         : new NetworkAddress(address.HostName, ipAddress, port);
             }
         }
-
     }
 }

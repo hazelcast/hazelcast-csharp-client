@@ -115,10 +115,10 @@ namespace Hazelcast.Tests.Networking
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
 
                 Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(4));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.6:5788")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.7:5701")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.8:5777")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.0.0.9:5707")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.6:5701")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.7:5701")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.8:5703")));
+                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.9:5707")));
 
                 addressProvider = new AddressProvider(options, loggerFactory);
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);

@@ -287,12 +287,19 @@ namespace Hazelcast.Clustering
             msg.Append("Members [");
             msg.Append(table.Count);
             msg.AppendLine("] {");
-            foreach (var member in table.Members)
+            foreach (var (m, d) in diff)
             {
                 msg.Append("    ");
-                msg.Append(member.ToShortString(true));
-                if (diff.TryGetValue(member, out var d) && d == 2)
-                    msg.Append(" - new");
+                msg.Append(m.ToShortString(true));
+                var status = d switch
+                {
+                    1 => "Removing",
+                    2 => "Adding",
+                    3 => "Unchanged",
+                    _ => ""
+                };
+                msg.Append(' ');
+                msg.Append(status);
                 msg.AppendLine();
             }
             msg.Append('}');
@@ -326,8 +333,24 @@ namespace Hazelcast.Clustering
             // anymore, see note in GetMember)
             _loadBalancer.SetMembers(members.Select(x => x.Id));
 
-            // if this is the initial list of members, determine how to connect to members
-            if (previous.Count == 0)
+            // members provided through the members view event always provide their own internal address,
+            // and may (e.g. for Kubernetes clusters) also provide their public address - but in a Cloud
+            // setup for instance, members are not aware of their public address. so, we try to "fix"
+            // the members using the AddressProvider map, if any.
+            if (_clusterState.AddressProvider.HasMap)
+            {
+                foreach (var member in members.Where(x => !x.HasPublicAddress))
+                    member.PublicAddress = _clusterState.AddressProvider.Map(member.Address);
+            }
+
+            // and then we need to determine whether to connect to members through their internal address
+            // or their public address - this is the role of the ConnectAddressResolver - it can be forced
+            // through configuration options, or determined through rules:
+            // - if one member responds on its internal address, assume internal addresses are OK
+            // - if enough (sample size) members respond only on their public address, use public addresses
+            // for performance reasons (and this is what other clients e.g. Java do) we determine this
+            // once when getting the first members view, and don't change our mind later on, ever.
+            if (previous.Count == 0) // first members view
             {
                 var resolver = new ConnectAddressResolver(_clusterState.Options.Networking, _clusterState.LoggerFactory);
                 if (!(members is IReadOnlyCollection<MemberInfo> mro)) throw new HazelcastException("panic"); // TODO: not exactly pretty
@@ -357,8 +380,8 @@ namespace Hazelcast.Clustering
                     else diff[m] = 2;
             }
 
-            // log, if the members have changed (one of them at least is not 3=unchanged)
-            if (_logger.IsEnabled(LogLevel.Information) && diff.Any(d => d.Value != 3))
+            // log
+            if (_logger.IsEnabled(LogLevel.Information))
                 LogDiffs(table, diff);
 
             // process changes, gather events
