@@ -44,6 +44,11 @@ namespace Hazelcast.Examples.Sql
             // Install-Package System.Linq.Async
             // Or add directly to the project file, see Hazelcast.Net.Examples.csproj for example:
             // <PackageReference Include="System.Linq.Async" Version="5.0.0"
+            
+            //Before you can query data in a map, you need to create a mapping to one, using the map connector.
+            //see details: https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping
+            await client.Sql.ExecuteCommandAsync(
+                $"CREATE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')");
 
             await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name}");
 
