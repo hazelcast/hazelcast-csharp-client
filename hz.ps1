@@ -482,6 +482,8 @@ function ensure-server-version {
                    | select-object -first 1 # so this is required
     $version2 = $node.innerText
 
+    Write-Output "Server: found version $version2 on Maven, using this version"
+
     $script:serverVersion = $version2
 
     # update server version
