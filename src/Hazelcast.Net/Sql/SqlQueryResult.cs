@@ -136,9 +136,20 @@ namespace Hazelcast.Sql
 
                     // otherwise, hydrate the current row, cache it, and return it
                     var columns = new List<object>(_result._page.ColumnCount);
+                    
                     for (var columnIndex = 0; columnIndex < _result._page.ColumnCount; columnIndex++)
-                        columns.Add(_result._serializationService.ToObject(_result._page[_result._currentRowIndex, columnIndex]));
-                    return _result._currentRow = new SqlRow(columns, _result._metadata);
+                    {
+                        columns.Add(_result._page[_result._currentRowIndex, columnIndex]);
+                    }
+
+                    var row = new SqlRow(columns, _result._metadata)
+                    {
+                        // use lazy deserialization by assigning the service 
+                        SerializationService = _result._serializationService
+                    };
+                    _result._currentRow = row;
+
+                    return _result._currentRow;
                 }
             }
 

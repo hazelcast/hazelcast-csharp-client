@@ -13,12 +13,17 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Sql;
 using Hazelcast.Core;
+using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Remote;
+using Hazelcast.Tests.Networking;
+using Hazelcast.Tests.TestObjects;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
@@ -140,6 +145,33 @@ namespace Hazelcast.Tests.Sql
             await result.DisposeAsync();
 
             await AssertEx.ThrowsAsync<HazelcastSqlException>(async () => await moveNextTask);
+        }
+
+        [Test]
+        public async Task TestSqlLazyDeserializationThrowsExceptionAtGetValue()
+        {
+            var map = await Client.GetMapAsync<int, DummyPortable>(nameof(SqlQueryResultTests));
+
+            //DummyPortable implements IPortable but HZ client is not aware from deserialization,
+            //so, client doesn't know how to deserialize. Hence, client can get sql results and can read keys
+            //until trying to get value of the row -> throws SerializationException
+            var myPortableObject = new DummyPortable();
+            await map.PutAsync(1, myPortableObject);
+
+            await Client.Sql.ExecuteCommandAsync(
+                $"CREATE MAPPING {nameof(SqlQueryResultTests)} (name VARCHAR,id INT) TYPE IMap " +
+                $"OPTIONS ('keyFormat'='int', 'valueFormat' = 'portable','valuePortableFactoryId' = '1','valuePortableClassId' = '1')");
+
+            var result = await Client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {nameof(SqlQueryResultTests)}");
+
+            await foreach (var row in result)
+            {
+                //this works, since key is int -> can be deserialized
+                Assert.NotZero(row.GetKey<int>());
+
+                //cause an exception since there is no deserializer for the value
+                Assert.Throws<SerializationException>(() => row.GetValue<DummyPortable>());
+            }
         }
     }
 }
