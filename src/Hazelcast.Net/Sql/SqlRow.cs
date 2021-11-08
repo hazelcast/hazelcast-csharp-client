@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
 {
@@ -25,6 +26,7 @@ namespace Hazelcast.Sql
         private const string KeyColumnName = "__key";
         private const string ValueColumnName = "this";
         private readonly IList<object> _values;
+        internal SerializationService SerializationService { get; set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SqlRow"/> class.
@@ -43,12 +45,22 @@ namespace Hazelcast.Sql
         public SqlRowMetadata Metadata { get; }
 
         /// <summary>
-        /// Gets th
+        /// Gets the value of the column by identified by index
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="index"></param>
         /// <returns></returns>
-        public T GetColumn<T>(int index) => (T)_values[index];
+        public T GetColumn<T>(int index)
+        {
+            // Accept that column is already deserialized
+            if (SerializationService == null)
+            {
+                return (T) _values[index];
+            }
+            
+            //Lazy deserialization 
+            return (T) SerializationService.ToObject(_values[index]);
+        }
 
         /// <summary>
         /// Gets the value of a column identified by its name.
