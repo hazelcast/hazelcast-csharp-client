@@ -186,6 +186,12 @@ $actions = @(
        note = "This command downloads the required JARs and configuration file.";
        need = @( "java", "server-files", "server-version", "enterprise-key" )
     },
+    @{ name = "get-server";
+       uniq = $true;
+       desc = "gets a server for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "server-version", "enterprise-key" )
+    },
     @{ name = "generate-codecs";
        uniq = $true;
        desc = "generates the codec source files";
@@ -1710,6 +1716,17 @@ function hz-run-remote-controller {
 
         stop-remote-controller
     }
+}
+
+# gets the Server
+function hz-get-server {
+
+    Write-Output "Server"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Enterprise     : $($options.enterprise)"
+    Write-Output "  Configuration  : $($options.serverConfig)"
+
+    # nothing to do
 }
 
 # runs the server
