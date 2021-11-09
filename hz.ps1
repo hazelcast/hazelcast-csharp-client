@@ -453,44 +453,54 @@ function ensure-server-version {
     }
 
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
+    Write-Output "Maven: $url"
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
-        Write-Output "  (at $url)"
         return;
     }
 
-    Write-Output "Server: could not find $version on Maven"
-    Write-Output "  (at $url)"
+    Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
 
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
+    Write-Output "Maven: $url2"
     $response2 = invoke-web-request $url2
     if ($response2.StatusCode -ne 200) {
-        Die "Error: could not download metadata from Maven ($url)"
+        Die "Error: could not download metadata from Maven ($($response2.StatusCode))"
     }
 
     $metadata = [xml] $response2.Content
+
+    $version0 = $version
     $version = $version.SubString(0, $version.Length - "-SNAPSHOT".Length)
     $nodes = $metadata.SelectNodes("//version [starts-with(., '$version')]")
 
     if ($nodes.Count -lt 1) {
-        Die "Server: could not find a version starting with '$version' on Maven ($url)"
+        Die "Server: could not find a version starting with '$version' on Maven"
     }
 
-    # sort-object does not return an array, it enumerates results, and if there
-    # are more than one, PS creates an array, otherwise we just get the one object,
-    # and somebody thought it would make sense ;()
-    $node = $nodes | sort-object -descending -property innerText `
-                   | select-object -first 1 # so this is required
-    $version2 = $node.innerText
+    foreach ($node in $nodes | sort-object -descending -property innerText) {
+        $nodeVersion = $node.innerText
+        if ($nodeVersion -eq $version0) {  # we 404ed on that one already (why is it listed?!)
+            Write-Output "Server: skip listed version $nodeVersion"
+            continue
+        }
+        Write-Output "Server: try listed version $nodeVersion"
+        $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$nodeVersion/maven-metadata.xml"
+        Write-Output "Maven: $url"
+        $response = invoke-web-request $url
+        if ($response.StatusCode -eq 200) {
+            Write-Output "Server: found version $nodeVersion on Maven, using this version"
+            $script:serverVersion = $nodeVersion
+            $env:HAZELCAST_SERVER_VERSION=$nodeVersion.TrimEnd("-SNAPSHOT")
+            return;
+        }
+        else {
+            Write-Output "Server: could not find version $nodeVersion on Maven ($($response.StatusCode))"
+        }
+    }
 
-    Write-Output "Server: found version $version2 on Maven, using this version"
-    Write-Output "  (at $url)"
-
-    $script:serverVersion = $version2
-
-    # update server version
-    $env:HAZELCAST_SERVER_VERSION=$version2.TrimEnd("-SNAPSHOT")
+    Die "Server: could not find a version."
 }
 
 # get a Maven artifact
@@ -636,7 +646,7 @@ function ensure-server-files {
 
         # try tag eg 'v4.2.1' or 'v4.3'
         $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
-        $dest = "$buildDir\hazelcast-$serverVersion.xml"
+        $dest = "$buildDir/hazelcast-$serverVersion.xml"
         $response = invoke-web-request $url $dest
 
         if ($response.StatusCode -ne 200) {
