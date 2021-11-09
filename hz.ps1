@@ -456,15 +456,17 @@ function ensure-server-version {
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
+        Write-Output "  (at $url)"
         return;
     }
 
     Write-Output "Server: could not find $version on Maven"
+    Write-Output "  (at $url)"
 
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
     $response2 = invoke-web-request $url2
     if ($response2.StatusCode -ne 200) {
-        Die "Error: could not download metadata from Maven"
+        Die "Error: could not download metadata from Maven ($url)"
     }
 
     $metadata = [xml] $response2.Content
@@ -472,7 +474,7 @@ function ensure-server-version {
     $nodes = $metadata.SelectNodes("//version [starts-with(., '$version')]")
 
     if ($nodes.Count -lt 1) {
-        Die "Server: could not find a version starting with '$version' on Maven"
+        Die "Server: could not find a version starting with '$version' on Maven ($url)"
     }
 
     # sort-object does not return an array, it enumerates results, and if there
@@ -483,6 +485,7 @@ function ensure-server-version {
     $version2 = $node.innerText
 
     Write-Output "Server: found version $version2 on Maven, using this version"
+    Write-Output "  (at $url)"
 
     $script:serverVersion = $version2
 
