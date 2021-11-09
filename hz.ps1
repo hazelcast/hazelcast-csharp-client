@@ -555,7 +555,7 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
     $classpath += "$tmpDir/lib/$jar"
-    # condiser to quote the path to escape from white space 
+    # Be sure to quote the path to escape from white space 
     # where you call the $script:options.classpath
     # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
