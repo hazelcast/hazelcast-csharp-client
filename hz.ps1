@@ -1043,6 +1043,15 @@ function ensure-java {
             `
             "--add-opens",   "java.base/java.io=ALL-UNNAMED" `
         )
+
+        # "Scripting is currently unsupported for Java 15 and newer. These versions
+        #  of Java do not come with a JavaScript engine, which is necessary for this
+        #  feature to work."
+        $pos = $javaVersion.IndexOf('.')
+        $javaMajor = $javaVersion.SubString(0, $pos)
+        if (-not ($javaVersion -lt "12") ) {
+            Die "Java version >11 not supported (JavaScript scripting not supported)"
+        }
 	}
 }
 
@@ -2048,9 +2057,9 @@ $needs = new-object Collections.Specialized.OrderedDictionary
 function register-needs { $args | foreach-object { $script:needs[$_] = $false } }
 register-needs git
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
-register-needs build-proj can-sign docfx
 register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
+register-needs build-proj can-sign docfx
 
 # gather needs from actions
 $actions | foreach-object {
