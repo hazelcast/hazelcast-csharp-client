@@ -16,9 +16,9 @@
     <!--
         see https://blog.jetbrains.com/dotnet/2019/08/26/cross-platform-dotcover-console-runner-whats-new-dotcover-2019-2/
 
-        For .NET Framework (net462) we use the dotCover.exe which comes with the CommandLineTools package, we
+        For .NET Framework (net462, net48) we use the dotCover.exe which comes with the CommandLineTools package, we
         cannot use the .NET Core approach because 'dotnet' does not support .NET Framework.
-        For .NET Core (netcoreappX.X) we use 'dotnet dotcover' which relies on the DotNetCliTool, and that
+        For .NET Core+ (netcoreapp3.1, net50) we use 'dotnet dotcover' which relies on the DotNetCliTool, and that
         works cross-platform, both on Windows and Linux.
 
         Therefore, we need to restore both.
@@ -33,7 +33,7 @@
 
     <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
     <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
-    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' != 'net462' ">
+    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
