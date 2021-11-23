@@ -25,6 +25,7 @@ using Hazelcast.Testing.Remote;
 using Hazelcast.Tests.Networking;
 using Hazelcast.Tests.TestObjects;
 using NUnit.Framework;
+using Hazelcast.Testing.Conditions;
 
 namespace Hazelcast.Tests.Sql
 {
@@ -148,6 +149,7 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
+
         public async Task TestSqlLazyDeserializationThrowsExceptionAtGetValue()
         {
             var map = await Client.GetMapAsync<int, DummyPortable>(nameof(SqlQueryResultTests));
@@ -171,6 +173,26 @@ namespace Hazelcast.Tests.Sql
 
                 //cause an exception since there is no deserializer for the value
                 Assert.Throws<SerializationException>(() => row.GetValue<DummyPortable>());
+            }
+        }
+
+        [Test]
+        [ServerConditionAttribute("5.0")]
+        public async Task SqlErrorHasSuggestion()
+        {
+            string dummyMapName = "testingMap";
+            var map = await Client.GetMapAsync<int, string>(dummyMapName);
+            await map.PutAsync(0, "some value");
+
+            try
+            {
+                //query the map without creating map to get exception with suggestion in it.
+                var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {dummyMapName}");
+            }
+            catch (HazelcastSqlException ex)
+            {
+                Assert.IsNotEmpty(ex.Message);
+                Assert.IsFalse(string.IsNullOrEmpty(ex.Suggestion));
             }
         }
     }

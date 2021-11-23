@@ -77,7 +77,9 @@ namespace Hazelcast.Sql
         /// </summary>
         internal HazelcastSqlException(Guid clientId, SqlError error)
             : this(clientId, error.OriginatingMemberId, error.Code, error.Message)
-        { }
+        {
+            Suggestion = error.Suggestion;
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastSqlException"/> class with serialized data.
@@ -115,6 +117,12 @@ namespace Hazelcast.Sql
         /// <para>If the exception was thrown by the client and not reported by a member, then the value is <c>Guid.Empty</c>.</para>
         /// </remarks>
         public Guid MemberId { get; }
+
+
+        /// <summary>
+        /// Suggests a solution for the exception if any, or <c>String.Empty</c>
+        /// </summary>
+        public string Suggestion { get; }
 
         /// <summary>
         /// Gets the code representing the error that occurred.
