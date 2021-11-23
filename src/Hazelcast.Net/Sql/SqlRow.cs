@@ -55,8 +55,6 @@ namespace Hazelcast.Sql
         /// but NOT cached. Avoid getting the value of a column multiple times. Cache it in a local variable
         /// instead, if needed.</para>
         /// </remarks>
-        /// <param name="index"></param>
-        /// <returns></returns>
         public T GetColumn<T>(int index)
         {
             // Accept that column is already deserialized
