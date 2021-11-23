@@ -576,6 +576,9 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
     $classpath += "$tmpDir/lib/$jar"
+    # Be sure to quote the path to escape from white space 
+    # where you call the $script:options.classpath
+    # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
 }
 
@@ -1407,10 +1410,12 @@ function start-remote-controller() {
     Write-Output "Starting Remote Controller..."
     Write-Output "ClassPath: $($script:options.classpath)"
 
+    $quotedClassPath = '"{0}"' -f $script:options.classpath
+
     # start the remote controller
     $args = @(
         "-Dhazelcast.enterprise.license.key=$script:enterpriseKey",
-        "-cp", "$($script:options.classpath)",
+        "-cp", $quotedClassPath,
         "com.hazelcast.remotecontroller.Main"
     )
 
@@ -1456,11 +1461,14 @@ function start-server() {
         $mainClass = "com.hazelcast.core.server.start-server" # 3.x
     }
 
+    $quotedClassPath = '"{0}"' -f $script:options.classpath
+    $quotedConfig = '"{0}"' -f $options.serverConfig
+
     # start the server
     $args = @(
         "-Dhazelcast.enterprise.license.key=$enterpriseKey",
-        "-cp", $script:options.classpath,
-        "-Dhazelcast.config=$($options.serverConfig)",
+        "-cp", $quotedClassPath,
+        "-Dhazelcast.config=$quotedConfig",
         "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true",
         "$mainClass"
     )
