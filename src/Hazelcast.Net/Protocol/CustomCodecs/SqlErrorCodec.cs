@@ -66,9 +66,16 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var originatingMemberId = initialFrame.Bytes.ReadGuidL(OriginatingMemberIdFieldOffset);
             var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            string suggestion = String.Empty;
+
+            if (!iterator.AtStructEnd())
+            {
+                //second frame is suggestion
+                suggestion = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            }
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId);
+            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId, suggestion);
         }
     }
 }
