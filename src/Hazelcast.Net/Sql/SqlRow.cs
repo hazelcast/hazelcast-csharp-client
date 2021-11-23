@@ -47,7 +47,14 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Gets the value of the column by identified by index
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="T">The type of the column value.</typeparam>
+        /// <param name="index">The index.</param>
+        /// <returns>The value of the column.</returns>
+        /// <remarks>
+        /// <para>For performance purposes and to reduce allocations, the column value is deserialized 
+        /// but NOT cached. Avoid getting the value of a column multiple times. Cache it in a local variable
+        /// instead, if needed.</para>
+        /// </remarks>
         /// <param name="index"></param>
         /// <returns></returns>
         public T GetColumn<T>(int index)
