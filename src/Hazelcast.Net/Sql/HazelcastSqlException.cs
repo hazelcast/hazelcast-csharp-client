@@ -122,7 +122,7 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Suggests a solution for the exception if any, or <c>String.Empty</c>
         /// </summary>
-        public string Suggestion { get; }
+        public string Suggestion { get; } = String.Empty;
 
         /// <summary>
         /// Gets the code representing the error that occurred.
