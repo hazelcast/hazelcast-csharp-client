@@ -257,6 +257,18 @@ $actions = @(
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
+    },
+    @{ name = "generate-certs";
+       desc = "generates the test certificates";
+       need = @( "certs-tools" )
+    },
+    @{ name = "install-root-ca";
+       desc = "(experimental) installs the ROOT CA test certificate";
+       note = "Works only as Administrator on Windows. Not supported."
+    },
+    @{ name = "remove-root-ca";
+       desc = "(experimental) removes the ROOT CA test certificate";
+       note = "Works only as Administrator on Windows. Not supported."
     }
 )
 
@@ -749,9 +761,6 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
         }
-
-        # ensure we have the hazelcast enterprise test jar
-        ensure-jar "hazelcast-enterprise-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}:jar:tests"
     }
     else {
 
@@ -1043,11 +1052,47 @@ function ensure-build-proj {
     }
 }
 
+# ensure we have openssl and keytool for certs
+function ensure-certs-tools {
+    ensure-command "openssl"
+    ensure-command "keytool"
+}
+
 function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
         remove-item $dir -force -recurse
     }
+}
+
+# generate the test certificates
+function hz-generate-certs {
+    . "$buildDir/certs.ps1"
+    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
+    if ($CERTSEXITCODE) {
+        Die "Failed to generate test certificates."
+    }
+    Write-Output ""
+}
+
+# install the root-ca certificate
+function hz-install-root-ca {
+    . "$buildDir/certs.ps1"
+    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to install the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
+# remove the root-ca certificate
+function hz-remove-root-ca {
+    . "$buildDir/certs.ps1"
+    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to remove the ROOT CA certificate."
+    }
+    Write-Output ""
 }
 
 # cleans the solution

@@ -54,12 +54,7 @@ namespace Hazelcast.Testing
         /// <returns>The text content of the file.</returns>
         public static string ReadAllText(Assembly assembly, string path)
         {
-            var assemblyLocation = Path.GetDirectoryName(Path.GetFullPath(assembly.Location));
-            if (assemblyLocation == null) throw new ArgumentException($"Could not locate assembly \"{assembly.FullName}\".");
-            var sourceLocation = Path.Combine(assemblyLocation, "../../.."); // bin/<configuration>/<target>
-            var resourceLocation = Path.Combine(sourceLocation, "Resources", path);
-            var filepath = Path.GetFullPath(resourceLocation);
-
+            var filepath = GetFullPath(assembly, path);
             try
             {
                 return File.ReadAllText(filepath);
@@ -68,6 +63,40 @@ namespace Hazelcast.Testing
             {
                 throw new ArgumentException($"There is no resource corresponding to \"{path}\" at \"{filepath}\".", nameof(path), e);
             }
+        }
+
+        /// <summary>
+        /// Gets the full path of an assembly project file.
+        /// </summary>
+        /// <typeparam name="T">A type contained by the assembly.</typeparam>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <returns>The full path to the file.</returns>
+        public static string GetFullPath<T>(string path)
+            => GetFullPath(typeof(T).Assembly, path);
+        
+        /// <summary>
+        /// Gets the full path of an assembly project file.
+        /// </summary>
+        /// <param name="o">An object of a type contained by the assembly.</param>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <returns>The full path to the file.</returns>
+        public static string GetFullPath(object o, string path)
+            => GetFullPath(o.GetType().Assembly, path);
+        
+        /// <summary>
+        /// Gets the full path of an assembly project file.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <returns>The full path to the file.</returns>
+        public static string GetFullPath(Assembly assembly, string path)
+        {
+            var assemblyLocation = Path.GetDirectoryName(Path.GetFullPath(assembly.Location));
+            if (assemblyLocation == null) throw new ArgumentException($"Could not locate assembly \"{assembly.FullName}\".");
+            var sourceLocation = Path.Combine(assemblyLocation, "../../.."); // bin/<configuration>/<target>
+            var resourceLocation = Path.Combine(sourceLocation, "Resources", path);
+            var filepath = Path.GetFullPath(resourceLocation);
+            return filepath;
         }
     }
 }
