@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -21,73 +21,80 @@ namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     [Category("enterprise")]
-    [KnownIssue(304, "fail erratically")]
     public class ClientSslMutualAuthTests : ClientSslTestBase
     {
         [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1()
+        public async Task MutualAuthRequired_ServerKnowsClient()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ma(required: true),
                 true,
                 true,
                 null,
                 null,
                 null,
-                Resources.Cert_Client1,
-                Password);
+                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
+                ClientCertificatePassword);
         }
 
         [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1_clientDoesNotProvideCerts()
+        public async Task MutualAuthRequired_ServerKnowsClient_ClientDoesNotProvideCert()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
-                true,
-                true,
-                null,
-                null,
-                null,
-                null,
-                null,
-                true);
-            });
-        }
-
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1NotKnowsClient2()
-        {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
-            {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
+                await using var client = await StartClientAsync(
+                    GetServerXml_Ma(required: true),
                     true,
                     true,
                     null,
                     null,
                     null,
-                    Resources.Cert_Client2,
-                    Password,
+                    null,
+                    null,
                     true);
             });
+
+            // TODO: assert e
         }
 
         [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1()
+        public async Task MutualAuthRequired_ServerDoesNotKnowClient()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
+            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+            {
+                await using var client = await StartClientAsync(
+                    GetServerXml_Ma(required: true),
+                    true,
+                    true,
+                    null,
+                    null,
+                    null,
+                    TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client2.pfx"),
+                    ClientCertificatePassword,
+                    true);
+            });
+            // TODO: assert e
+        }
+
+        [Test]
+        public async Task MutualAuthOptional_ServerKnowsClient()
+        {
+            await using var client = await StartClientAsync(
+                GetServerXml_Ma(required: false),
                 true,
                 true,
                 null,
                 null,
                 null,
-                Resources.Cert_Client1,
-                Password);
+                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
+                ClientCertificatePassword);
         }
 
         [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
+        public async Task MutualAuthOptional_ServerKnowsClient_ClientDoesNotProvideCert()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ma(required: false),
                 true,
                 true,
                 null,
@@ -98,33 +105,36 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1NotKnowsClient2()
+        public async Task MutualAuthOptional_ServerDoesNotKnowClient()
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
+                await using var client = await StartClientAsync(
+                    GetServerXml_Ma(required: false),
                     true,
                     true,
                     null,
                     null,
                     null,
-                    Resources.Cert_Client2,
-                    Password,
+                    TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client2.pfx"),
+                    ClientCertificatePassword,
                     true);
             });
+            // TODO: assert e
         }
 
         [Test]
-        public async Task TestSSLEnabled_mutualAuthDisabled_Client1()
+        public async Task MutualAuthDisabled()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 true,
                 null,
                 null,
                 null,
-                Resources.Cert_Client1,
-                Password);
+                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
+                ClientCertificatePassword);
         }
     }
 }

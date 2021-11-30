@@ -24,46 +24,48 @@ namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     [Category("enterprise")]
-    [Timeout(30_000)]
     public class ClientSslTests : ClientSslTestBase
     {
         [Test]
-        public async Task Test_NoSSL()
+        public async Task SSL_NotEnabled()
         {
-            await using var client = await StartClientAsync(Hazelcast.Testing.Remote.Resources.hazelcast,
+            await using var client = await StartClientAsync(
+                Hazelcast.Testing.Remote.Resources.hazelcast,
                 false,
                 true,
                 true,
                 null,
-                ValidCertNameSigned,
+                ServerCertificateValidName,
                 null,
                 null);
         }
 
         [Test]
-        public async Task TestSSLEnabled_validateName_validName()
+        public async Task SSL_ValidateName_ValidName()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 true,
                 true,
                 null,
-                ValidCertNameSigned,
+                ServerCertificateValidName,
                 null,
                 null);
         }
 
         [Test]
-        public async Task TestSSLEnabled_validateName_invalidName()
+        public async Task SSL_ValidateName_InvalidName()
         {
             await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
-                await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+                await using var client = await StartClientAsync(
+                    GetServerXml_Ssl(signed: true),
                     true,
                     true,
                     true,
                     null,
-                    "Invalid Cert Name",
+                    ServerCertificateInvalidName,
                     null,
                     null,
                     true);
@@ -71,47 +73,38 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public async Task TestSSLEnabled_validateChain_DoNotValidateName_invalidName()
+        public async Task SSL_ValidateChainNotName_InvalidName()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 true,
                 false,
                 null,
-                "Invalid Cert Name",
+                ServerCertificateInvalidName,
                 null,
                 null);
         }
 
         [Test]
-        public async Task TestSSLEnabled_DoNotValidateChain_DoNotValidateName_invalidName()
+        public async Task SSL_ValidateNothing_InvalidName()
         {
-            // note: if we let the test timeout (via the [Timeout] attribute) then HConsole
-            // does not log => timeout the StartClientAsync within the test so that the
-            // test fails properly, and HConsole can log.
-
-            using var _ = HConsole.Capture(consoleOptions => consoleOptions
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET")
-            );
-
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 false,
                 false,
                 null,
-                "Invalid Cert Name",
+                ServerCertificateInvalidName,
                 null,
-                null).AsTask().CfAwait(TimeSpan.FromSeconds(20));
+                null);
         }
 
         [Test]
-        public async Task TestSSLDisabled()
+        public async Task TestSSLDisabled() // FIXME isn't this a duplicate?!
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Default,
+            await using var client = await StartClientAsync(
+                Resources.Cluster_Default,
                 false,
                 null,
                 null,
@@ -122,11 +115,12 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public async Task TestSSLEnabled_self_signed_remote_cert()
+        public async Task SSL_SelfSignedRemoteCert()
         {
             await AssertEx.ThrowsAsync<ConnectionException>(async () =>
             {
-                await using var client = await StartClientAsync(Resources.Cluster_Ssl,
+                await using var client = await StartClientAsync(
+                    GetServerXml_Ssl(signed: false),
                     true,
                     null,
                     null,
@@ -139,9 +133,10 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public async Task TestSSLEnabled_signed_remote_cert()
+        public async Task SSL_SignedRemoteCert()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 null,
                 null,
@@ -152,14 +147,15 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public async Task TestSSLEnabled_validateChain_validateName_validName()
+        public async Task SSL_ValidateChainAndName_ValidName()
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
+            await using var client = await StartClientAsync(
+                GetServerXml_Ssl(signed: true),
                 true,
                 null,
                 true,
                 null,
-                ValidCertNameSigned,
+                ServerCertificateValidName,
                 null,
                 null);
         }
