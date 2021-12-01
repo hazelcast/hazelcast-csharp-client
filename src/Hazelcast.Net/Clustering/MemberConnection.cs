@@ -375,7 +375,9 @@ namespace Hazelcast.Clustering
         /// </summary>
         /// <param name="invocation">The invocation.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <remarks>After first connection is established, <b>TargetDisconnectedException</b> can be throwed. If connected member registers to cluster with different IP address apart from configured one. In this case, connection will be swicthed, and exception will be throwed.</remarks>
+        /// <remarks>After first connection is established, <b>TargetDisconnectedException</b> can be throwed. If
+        // the connected member reports an IP address different from the configured one. In this case, connection 
+        // will be switched, and an exception will be thrown.</remarks>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken = default)
         {
