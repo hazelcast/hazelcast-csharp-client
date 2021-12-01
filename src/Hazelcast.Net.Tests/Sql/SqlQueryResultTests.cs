@@ -149,7 +149,6 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
-
         public async Task TestSqlLazyDeserializationThrowsExceptionAtGetValue()
         {
             var map = await Client.GetMapAsync<int, DummyPortable>(nameof(SqlQueryResultTests));
@@ -186,7 +185,7 @@ namespace Hazelcast.Tests.Sql
 
             try
             {
-                //query the map without creating map to get exception with suggestion in it.
+                //query the map without creating mapping to get exception with suggestion in it.
                 var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {dummyMapName}");
             }
             catch (HazelcastSqlException ex)
