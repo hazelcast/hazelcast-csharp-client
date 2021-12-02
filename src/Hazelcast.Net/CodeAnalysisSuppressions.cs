@@ -197,6 +197,13 @@ using System.Diagnostics.CodeAnalysis;
 #endif
 
 #region Accepted Checks
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Usage",
+    "CA2254:Template should be a static expression",
+    Justification = "String interpolations are removed.")]
+
+[assembly: System.Diagnostics.CodeAnalysis.SuppressMessage("Performance",
+    "CA1848:Use the LoggerMessage delegates",
+    Justification = "LoggerMessage is not backward compitable.")]
 
 [assembly: SuppressMessage("Security", "CA5394:Do not use insecure randomness",
     //Scope = "all",

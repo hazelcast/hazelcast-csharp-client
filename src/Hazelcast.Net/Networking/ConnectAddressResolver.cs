@@ -41,18 +41,18 @@ namespace Hazelcast.Networking
 
             if (_options.UsePublicAddresses is {} usePublicAddresses)
             {
-                _logger.LogDebug(usePublicAddresses
+                _logger.IfDebug()?.LogDebug(usePublicAddresses
                     ? "NetworkingOptions.UsePublicAddresses is true, the client will use public addresses."
                     : "NetworkingOptions.UsePublicAddresses is false, the client will use internal addresses.");
                 return usePublicAddresses;
             }
 
-            _logger.LogDebug("NetworkingOptions.UsePublicAddresses is not set, decide by ourselves.");
+            _logger.IfDebug()?.LogDebug("NetworkingOptions.UsePublicAddresses is not set, decide by ourselves.");
 
             // if ssl is enabled, the the client uses internal addresses
             if (_options.Ssl.Enabled)
             {
-                _logger.LogDebug("Ssl is enabled, the client will use internal addresses.");
+                _logger.IfDebug()?.LogDebug("Ssl is enabled, the client will use internal addresses.");
                 return false;
             }
 
@@ -78,20 +78,20 @@ namespace Hazelcast.Networking
                     }
                 }
                 text.Append('}');
-                _logger.LogDebug(text.ToString());
+                _logger.IfDebug()?.LogDebug(text.ToString());
             }
 
             // if at least one member has its internal address that matches options, assume we can use internal addresses
             if (DetermineAnyMemberInternalAddressMatchesOptions(members))
             {
-                _logger.LogDebug("At least one member's internal address matches options, assume that the client can use internal addresses.");
+                _logger.IfDebug()?.LogDebug("At least one member's internal address matches options, assume that the client can use internal addresses.");
                 return false;
             }
 
             // if one member does not have a public address, then the client has to use internal addresses
             if (members.Any(x => x.PublicAddress is null))
             {
-                _logger.LogDebug("At least one member does not have a public address, the client has to use internal addresses.");
+                _logger.IfDebug()?.LogDebug("At least one member does not have a public address, the client has to use internal addresses.");
                 return false;
             }
 
@@ -133,7 +133,7 @@ namespace Hazelcast.Networking
                 // be reached at their public addresses, so assume public addresses are required for all
                 if (count++ == sampleCount && requirePublic)
                 {
-                    _logger.LogDebug("At least {Count} members can only be reached at their public address, the client has to use public addresses.", sampleCount);
+                    _logger.IfDebug()?.LogDebug("At least {Count} members can only be reached at their public address, the client has to use public addresses.", sampleCount);
                     return true;
                 }
 
@@ -148,7 +148,7 @@ namespace Hazelcast.Networking
                 // if one member can be reached at its internal address then assume internal addresses are ok for all
                 if (canReachInternal)
                 {
-                    _logger.LogDebug("Member at {Address} can be reached at this internal address, assume that the client can use internal addresses.", member.Address);
+                    _logger.IfDebug()?.LogDebug("Member at {Address} can be reached at this internal address, assume that the client can use internal addresses.", member.Address);
                     return false;
                 }
 
@@ -160,7 +160,7 @@ namespace Hazelcast.Networking
                 // another member will make it
                 if (canReachPublic)
                 {
-                    _logger.LogDebug("Member at {Address} cannot be reached at this internal address, but can be reached at its {PublicAddress} public address.", member.Address, member.PublicAddress);
+                    _logger.IfDebug()?.LogDebug("Member at {Address} cannot be reached at this internal address, but can be reached at its {PublicAddress} public address.", member.Address, member.PublicAddress);
                     requirePublic = true;
                 }
 
@@ -172,13 +172,13 @@ namespace Hazelcast.Networking
             // their public addresses, so assume public addresses are required for all
             if (requirePublic)
             {
-                _logger.LogDebug("Members can only be reached at their public address, the client has to use public addresses.");
+                _logger.IfDebug()?.LogDebug("Members can only be reached at their public address, the client has to use public addresses.");
                 return true;
             }
 
             // otherwise, we tested all members and could not reach any or them, neither on internal nor on public address,
             // and this is a sad situation indeed - we're going to go with internal addresses but... something is wrong
-            _logger.LogDebug("Could not connect to any member. Assume the client can use internal addresses.");
+            _logger.IfDebug()?.LogDebug("Could not connect to any member. Assume the client can use internal addresses.");
             return false;
         }
     }
