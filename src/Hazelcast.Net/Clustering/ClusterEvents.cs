@@ -438,7 +438,7 @@ namespace Hazelcast.Clustering
                 _correlatedSubscriptions.TryRemove(_clusterViewsCorrelationId, out _);
                 _clusterViewsCorrelationId = 0;
 
-                _logger.IfDebug()?.LogDebug($"Cleared cluster views connection (was {connection.Id.ToShortString()}).");
+                _logger.IfDebug()?.LogDebug("Cleared cluster views connection (was {ConnectionId}).", connection.Id.ToShortString());
 
                 // assign another connection (async)
                 _clusterViewsTask ??= AssignClusterViewsConnectionAsync(null, _cancel.Token);
@@ -539,7 +539,7 @@ namespace Hazelcast.Clustering
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
             // aka subscribe to member/partition view events
-            _logger.IfDebug()?.LogDebug($"Subscribe to cluster views on connection {connection.Id.ToShortString()}.");
+            _logger.IfDebug()?.LogDebug("Subscribe to cluster views on connection {ConnectionId}.", connection.Id.ToShortString());
 
             // handles the event
             ValueTask HandleEventAsync(ClientMessage message, object _)
@@ -554,7 +554,7 @@ namespace Hazelcast.Clustering
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
-                _logger.IfDebug()?.LogDebug($"Subscribed to cluster views on connection {connection.Id.ToShortString()}.");
+                _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}.", connection.Id.ToShortString());
                 return true;
             }
             catch (TargetDisconnectedException)
@@ -562,13 +562,13 @@ namespace Hazelcast.Clustering
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
                 // if the connection has died... and that can happen when switching members... no need to worry the
                 // user with a warning, a debug message should be enough
-                _logger.IfDebug()?.LogDebug($"Failed to subscribe to cluster views on connection {connection.Id.ToShortString()} (disconnected), may retry.");
+                _logger.IfDebug()?.LogDebug("Failed to subscribe to cluster views on connection {ConnectionId)} (disconnected), may retry.", connection.Id.ToShortString());
                 return false;
             }
             catch (Exception e)
             {
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
-                _logger.IfWarning()?.LogWarning(e, $"Failed to subscribe to cluster views on connection {connection.Id.ToShortString()}, may retry.");
+                _logger.IfWarning()?.LogWarning(e, "Failed to subscribe to cluster views on connection {ConnectionId}, may retry.", connection.Id.ToShortString());
                 return false;
             }
         }
@@ -598,7 +598,7 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecPartitionViewEvent(int version, IList<KeyValuePair<Guid, IList<int>>> partitions, object state)
         {
-            var clientId = (Guid) state;
+            var clientId = (Guid)state;
 
             var updated = _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
             if (!updated) return;
@@ -621,8 +621,8 @@ namespace Hazelcast.Clustering
         {
             var map = new Dictionary<int, Guid>();
             foreach (var (memberId, partitionIds) in partitions)
-            foreach (var partitionId in partitionIds)
-                map[partitionId] = memberId;
+                foreach (var partitionId in partitionIds)
+                    map[partitionId] = memberId;
             return map;
         }
 
@@ -843,7 +843,7 @@ namespace Hazelcast.Clustering
             if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
             {
                 _clusterState.Instrumentation.CountMissedEvent(message);
-                _logger.LogWarning($"No event handler for [{message.CorrelationId}]");
+                _logger.IfWarning()?.LogWarning("No event handler for [{CorrelationId}]", message.CorrelationId);
                 HConsole.WriteLine(this, $"No event handler for [{message.CorrelationId}]");
                 return;
             }

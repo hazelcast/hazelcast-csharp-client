@@ -151,7 +151,7 @@ namespace Hazelcast.Clustering
                     else
                     {
                         // we cannot accept this connection, it's a duplicate (internal error?)
-                        _logger.LogWarning($"Cannot add connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}, a connection to that member at that address already exists.");
+                        _logger.IfWarning()?.LogWarning("Cannot add connection {ConnectionId} to member {MemberId} at {Address}, a connection to that member at that address already exists.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
                         _terminateConnections.Add(connection); // kill.kill.kill
                         return;
                     }
@@ -176,7 +176,7 @@ namespace Hazelcast.Clustering
                     if (!_connected)
                     {
                         // change Started | Disconnected -> Connected, ignore otherwise, it could be ShuttingDown or Shutdown
-                        _logger.LogDebug($"Added connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address}, now connected.");
+                        _logger.IfDebug()?.LogDebug("Added connection {ConnectionId} to member {MemberId} at {Address}, now connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
                         _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
                         _connected = true;
                     }
@@ -186,12 +186,12 @@ namespace Hazelcast.Clustering
                         msg += existingConnection == null
                             ? "."
                             : $", replacing connection {existingConnection.Id.ToShortString()} at {existingConnection.Address}.";
-                        _logger.LogDebug(msg);
+                        _logger.IfDebug()?.LogDebug(msg);
                     }
                 }
                 else
                 {
-                    _logger.IfDebug()?.LogDebug($"Added orphan connection {connection.Id.ToShortString()} at {connection.Address} (member {connection.MemberId.ToShortString()}).");
+                    _logger.IfDebug()?.LogDebug("Added orphan connection {ConnectionId} at {Address} (member {MemberId}).", connection.Id.ToShortString(), connection.Address, connection.MemberId.ToShortString());
                 }
             }
         }
@@ -208,7 +208,7 @@ namespace Hazelcast.Clustering
                 // or that have been replaced with another connection to the same member
                 if (!_connections.TryGetValue(connection.MemberId, out var c) || connection.Id != c.Id)
                 {
-                    _logger.IfDebug()?.LogDebug($"Removed orphan connection {connection.Id.ToShortString()}.");
+                    _logger.IfDebug()?.LogDebug("Removed orphan connection {ConnectionId}.", connection.Id.ToShortString());
                     return;
                 }
 
@@ -221,7 +221,7 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.");
+                    _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, remain connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
 
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
@@ -256,13 +256,13 @@ namespace Hazelcast.Clustering
                             // if the disconnected member is still a member, queue it for reconnection
                             if (_members.TryGetMember(connection.MemberId, out var member))
                                 _memberConnectionQueue?.Add(member);
-                            _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain connected.");
+                            _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, remain connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
                             return;
                         }
 
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
-                        _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, disconnecting.");
+                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
@@ -270,7 +270,7 @@ namespace Hazelcast.Clustering
                     }
                     else
                     {
-                        _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, already disconnected (?).");
+                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, already disconnected (?).", connection.Id.ToShortString(), connection.MemberId.ToShortString());
                     }
                 }
             }
@@ -402,7 +402,7 @@ namespace Hazelcast.Clustering
                 {
                     if (_connections.TryGetValue(member.Id, out var c))
                     {
-                        _logger.LogDebug($"Set members: remove obsolete connection {c.Id.ToShortString()} to {c.MemberId.ToShortString()} at {c.Address}.");
+                        _logger.IfDebug()?.LogDebug("Set members: remove obsolete connection {ConnectionId} to {MemberId} at {Address}.", c.Id.ToShortString(), c.MemberId.ToShortString(), c.Address);
                         _connections.Remove(member.Id);
                         _terminateConnections.Add(c);
                     }
@@ -422,7 +422,7 @@ namespace Hazelcast.Clustering
                     foreach (var c in toRemove)
                     {
                         _connections.Remove(c.Id);
-                        _logger.LogDebug($"Set members: remove orphaned connection {c.Id.ToShortString()} to {c.MemberId.ToShortString()} at {c.Address}.");
+                        _logger.IfDebug()?.LogDebug("Set members: remove orphaned connection {ConnectionId} to {MemberId} at {Address}.", c.Id.ToShortString(), c.MemberId.ToShortString(), c.Address);
                         _terminateConnections.Add(c);
                     }
                 }
@@ -435,14 +435,14 @@ namespace Hazelcast.Clustering
                     {
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
-                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.");
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, now connected.", removed.Count, added.Count, members.Count);
                         _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
                         _connected = true;
                     }
                     else
                     {
                         // remain disconnected
-                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none is connected, remain disconnected.");
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none is connected, remain disconnected.", removed.Count, added.Count, members.Count);
                     }
                 }
                 else
@@ -450,7 +450,7 @@ namespace Hazelcast.Clustering
                     if (isAnyMemberConnected)
                     {
                         // remain connected
-                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.");
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, remain connected.", removed.Count, added.Count, members.Count);
                     }
                     else
                     {
@@ -476,14 +476,14 @@ namespace Hazelcast.Clustering
                     if (!isAnyMemberConnected)
                     {
                         // no more connected member, we are now disconnected
-                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and none connected, disconnecting.");
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
                         _connected = false;
                         disconnected = true;
                     }
                     else
                     {
-                        _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, remain connected.");
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, remain connected.", removed.Count, added.Count, members.Count);
                     }
                 }
             }

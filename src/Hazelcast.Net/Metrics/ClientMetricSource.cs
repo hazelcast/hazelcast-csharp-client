@@ -80,7 +80,7 @@ namespace Hazelcast.Metrics
             var connection = _cluster.Members.GetOldestConnection();
             if (connection == null)
             {
-                _logger.LogDebug("Cannot send metrics, client is not connected.");
+                _logger.IfDebug()?.LogDebug("Cannot send metrics, client is not connected.");
                 yield break;
             }
 
