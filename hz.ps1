@@ -34,9 +34,33 @@ $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 # ensure we have the right platform
 Validate-Platform
 
+# pwsh handling of args is... interesting
+$clargs = [Environment]::GetCommandLineArgs()
+$script = [IO.Path]::GetFileName($PSCommandPath)  # this is always going to be 'script.ps1'
+$clarg0 = [IO.Path]::GetFileName($clargs[0])      # this is always going to be the pwsh exe/dll
+$clarg1 = $null
+if ($clargs.Count -gt 1) {
+    $clarg1 = [IO.Path]::GetFileName($clargs[1])  # this is going to be either 'script.ps1' or the first arg
+}
+if ($script -eq $clarg1) {
+    # the pwsh exe/dll running the script (e.g. launched from bash, cmd...)
+    $ignore, $ignore, $argx = $clargs
+}
+else {
+    # the script running within pwsh (e.g. script launched from the pwsh prompt)
+    $argx = $args
+    # still, unquoted -- is stripped by pwsh no matter what
+    # and, --foo:bar is OK but -foo:bar is still processed by pwsh
+    # need to use pwsh --% escape
+}
+
 # say hello
-Write-Output "Hazelcast .NET Command Line"
-Write-Output "PowerShell $powershellVersion on $platform"
+$quiet = $true
+$argx | foreach-object { if ($_ -ne "completion-commands") { $quiet = $false } }
+if (-not $quiet) {
+    Write-Output "Hazelcast .NET Command Line"
+    Write-Output "PowerShell $powershellVersion on $platform"
+}
 
 # PowerShell args can *also* be a pain - because 'pwsh' loves to pre-handle
 # args when run directly but not when run from a scrip, etc - so we have our
@@ -131,8 +155,21 @@ $params = @(
 # first one is the default one
 # order is important as they will run in the specified order
 $actions = @(
+    # keep 'help' in the first position!
     @{ name = "help";
        desc = "display this help"
+    },
+    @{ name = "completion-initialize";
+       desc = "initialize command tab-completion";
+       internal = $true
+    },
+    @{ name = "completion-commands";
+       desc = "list commands for tab-completion";
+       internal = $true
+    },
+    @{ name = "noop";
+       desc = "no operation";
+       internal = $true
     },
     @{ name = "clean";
        desc = "cleans the solution"
@@ -227,26 +264,6 @@ $actions = @(
 $devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
 if (test-path $devops_actions) { . $devops_actions }
 
-# pwsh handling of args is... interesting
-$clargs = [Environment]::GetCommandLineArgs()
-$script = [IO.Path]::GetFileName($PSCommandPath)  # this is always going to be 'script.ps1'
-$clarg0 = [IO.Path]::GetFileName($clargs[0])      # this is always going to be the pwsh exe/dll
-$clarg1 = $null
-if ($clargs.Count -gt 1) {
-    $clarg1 = [IO.Path]::GetFileName($clargs[1])  # this is going to be either 'script.ps1' or the first arg
-}
-if ($script -eq $clarg1) {
-    # the pwsh exe/dll running the script (e.g. launched from bash, cmd...)
-    $ignore, $ignore, $argx = [Environment]::GetCommandLineArgs()
-}
-else {
-    # the script running within pwsh (e.g. script launched from the pwsh prompt)
-    $argx = $args
-    # still, unquoted -- is stripped by pwsh no matter what
-    # and, --foo:bar is OK but -foo:bar is still processed by pwsh
-    # need to use pwsh --% escape
-}
-
 # process args
 $options = Parse-Args $argx $params
 if ($options -is [string]) {
@@ -259,6 +276,12 @@ if ($err -is [string]) {
 
 if ((get-action $actions help).run) {
     Write-Usage $params $actions
+    exit 0
+}
+
+if ((get-action $actions completion-commands).run) {
+    $out = ($actions | foreach-object { $_.name } | where-object { -not $_.internal } )
+    [string]::Join(" ", $out)
     exit 0
 }
 
@@ -2040,6 +2063,29 @@ function hz-publish-examples {
             dotnet publish $publishArgs
             compress-archive -path "$tmpDir/examples/examples-$framework/" -destinationPath "$tmpDir/examples/examples-$framework.zip"
         }
+}
+
+# install completion
+function hz-completion-initialize {
+    $scriptblock = {
+        # see https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/register-argumentcompleter
+        # we should compare against $wordToComplete not $commandName ?!
+        param($commandName,$parameterName,$wordToComplete,$commandAst,$fakeBoundParameters)
+        $allCommands = (./hz.ps1 completion-commands).Split(' ')
+        $commands0 = @()
+        $commands1 = @()
+        $allCommands | foreach-object {
+          if ($_.StartsWith($commandName)) {
+            $commands0 += $_
+          }
+          elseif ($_.Contains($commandName)) {
+            $commands1 += $_
+          }
+        }
+        return $commands0 + $commands1
+    }
+
+    register-argumentCompleter -CommandName hz -ScriptBlock $scriptBlock
 }
 
 # ########

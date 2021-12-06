@@ -88,16 +88,18 @@ function Write-Usage ( $params, $actions ) {
     $actions | `
         foreach-object {
             $action = $_
-            $name = "    $($action.name)"
-            $infos = $action.desc
-            if ($action.alias -ne $null) {
-                $alias = [string]::Join(", ", ($action.alias.Replace(" ", "").Split(',')))
-                $infos = "$infos (alias: $alias)"
+            if (-not $action.internal) {
+                $name = "    $($action.name)"
+                $infos = $action.desc
+                if ($action.alias -ne $null) {
+                    $alias = [string]::Join(", ", ($action.alias.Replace(" ", "").Split(',')))
+                    $infos = "$infos (alias: $alias)"
+                }
+                if ($action.note -ne $null) {
+                    $infos = "$infos`n$($action.note)"
+                }
+                @{ name = $name; infos = $infos }
             }
-            if ($action.note -ne $null) {
-                $infos = "$infos`n$($action.note)"
-            }
-            @{ name = $name; infos = $infos }
         } |`
         foreach-object { new-object PSObject -property $_ } | `
         format-table -autosize -property name,infos -hideTableHeaders -wrap
