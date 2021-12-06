@@ -24,12 +24,10 @@ namespace Hazelcast.Benchmarks
         public LogLevel _level;
 
         [GlobalSetup]
-        public void Setup() { _logger = LoggerFactory.Create(opt => opt.SetMinimumLevel(_level)).CreateLogger("dummy"); }
-
-        //lets keep it short-> Si = String Interpolation
+        public void Setup() { _logger = LoggerFactory.Create(opt => opt.SetMinimumLevel(_level)).CreateLogger("dummy"); } 
 
         [Benchmark]
-        public void LogWithEnabledWithCheck()
+        public void LogWithEnabledCheck()
         {
             string msg = "we are sailing to Key Largo, goodluck";
 
