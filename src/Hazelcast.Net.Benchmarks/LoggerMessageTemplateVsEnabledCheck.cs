@@ -9,12 +9,12 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Benchmarks
 {
 
-    //|                    Method |      _level |      Mean |     Error |    StdDev |  Gen 0 | Allocated |
-    //|-------------------------- |------------ |----------:|----------:|----------:|-------:|----------:|
-    //| LogWithEnabledWithSiCheck |       Debug |  3.198 ns | 0.0650 ns | 0.0608 ns |      - |         - |
-    //|   LogWithMsgTemplateCheck |       Debug | 49.542 ns | 1.0134 ns | 1.0407 ns | 0.0038 |      32 B |
-    //| LogWithEnabledWithSiCheck | Information |  3.228 ns | 0.0407 ns | 0.0381 ns |      - |         - |
-    //|   LogWithMsgTemplateCheck | Information | 51.612 ns | 1.0422 ns | 0.9749 ns | 0.0038 |      32 B |
+    //|                  Method |      _level |      Mean |     Error |    StdDev |  Gen 0 | Allocated |
+    //|------------------------ |------------ |----------:|----------:|----------:|-------:|----------:|
+    //| LogWithEnabledWithCheck |       Debug |  3.419 ns | 0.0159 ns | 0.0124 ns |      - |         - |
+    //| LogWithMsgTemplateCheck |       Debug | 49.457 ns | 0.2508 ns | 0.2346 ns | 0.0038 |      32 B |
+    //| LogWithEnabledWithCheck | Information |  3.455 ns | 0.0182 ns | 0.0161 ns |      - |         - |
+    //| LogWithMsgTemplateCheck | Information | 48.586 ns | 0.3233 ns | 0.3024 ns | 0.0038 |      32 B |
 
     public class LoggerMessageTemplateVsEnabledCheck
     {
