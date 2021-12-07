@@ -107,7 +107,7 @@ namespace Hazelcast.Clustering
         // background task that connect members
         private async Task ConnectMembers(CancellationToken cancellationToken)
         {
-            await foreach(var connectionRequest in _clusterMembers.MemberConnectionRequests.WithCancellation(cancellationToken))
+            await foreach (var connectionRequest in _clusterMembers.MemberConnectionRequests.WithCancellation(cancellationToken))
             {
                 var member = connectionRequest.Member;
 
@@ -127,7 +127,7 @@ namespace Hazelcast.Clustering
                 else
                 {
                     var details = wasCanceled ? "canceled" : "failed";
-                    if (exception is RemoteException { Error : RemoteError.HazelcastInstanceNotActive })
+                    if (exception is RemoteException { Error: RemoteError.HazelcastInstanceNotActive })
                     {
                         exception = null;
                         details = "failed (member is not active)";
@@ -471,8 +471,7 @@ namespace Hazelcast.Clustering
         private async Task ConnectFirstAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
-            List<Exception> exceptions = null;
-            bool canRetry;
+            bool canRetry, isExceptionThrown = false;
 
             _connectRetryStrategy.Restart();
 
@@ -490,7 +489,9 @@ namespace Hazelcast.Clustering
 
                         HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to server at {address}");
                         _logger.LogDebug("Try to connect {ClientName} to cluster {ClusterName} server at {MemberAddress}", _clusterState.ClientName, _clusterState.ClusterName, address);
+
                         var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
+
                         if (attempt)
                         {
                             var connection = attempt.Value;
@@ -500,26 +501,25 @@ namespace Hazelcast.Clustering
 
                         HConsole.WriteLine(this, $"Failed to connect to address {address}");
 
-                        if (attempt.HasException) // else gather exceptions
+                        if (attempt.HasException)
                         {
                             if (attempt.Exception is RemoteException { Error: RemoteError.HazelcastInstanceNotActive })
                             {
-                                _logger.LogDebug($"Failed to connect to address {address} (member is not active).");
+                                _logger.LogWarning($"Failed to connect to address {address} (member is not active).");
                             }
                             else if (attempt.Exception is TimeoutException)
                             {
-                                _logger.LogDebug($"Failed to connect to address {address} (socket timeout).");
+                                _logger.LogWarning($"Failed to connect to address {address} (socket timeout).");
                             }
                             else
                             {
-                                exceptions ??= new List<Exception>();
-                                exceptions.Add(attempt.Exception);
-
-                                _logger.LogDebug(attempt.Exception, $"Failed to connect to address {address}.");
+                                isExceptionThrown = true;
+                                _logger.LogError(attempt.Exception, "Failed to connect to address {address}.", address.ToString());
                             }
                         }
                         else
                         {
+                            //is !attempt.HasException possible here?
                             _logger.LogDebug($"Failed to connect to address {address}.");
                         }
                     }
@@ -529,11 +529,8 @@ namespace Hazelcast.Clustering
                     // the GetClusterAddresses() enumerator itself can throw, if a configured
                     // address is invalid or cannot be resolved via DNS... a DNS problem may
                     // be transient: better retry
-
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(e);
-
-                    _logger.LogDebug(e, "Connection attempt has thrown.");
+                    isExceptionThrown = true;
+                    _logger.LogError(e, "Connection attempt has thrown.");
 
                     // TODO: it's the actual DNS that should retry!
                 }
@@ -549,23 +546,24 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception e) // gather exceptions
                 {
-                    exceptions ??= new List<Exception>();
-                    exceptions.Add(e);
+                    _logger.LogError(e, "Connection attempt has thrown.");
                     canRetry = false; // retry strategy threw
+                    isExceptionThrown = true;
                 }
 
             } while (canRetry);
 
-            var aggregate = exceptions == null ? null : new AggregateException(exceptions);
+            string msgSomeThingWentWrong = "";
+
+            if (isExceptionThrown)
+                msgSomeThingWentWrong = "Exception(s) is thrown in the past. Please, see the logs.";
 
             // canceled exception?
             if (cancellationToken.IsCancellationRequested)
-                throw new OperationCanceledException($"The cluster connection operation to \"{_clusterState.ClusterName}\" has been canceled. " +
-                    $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
+                throw new OperationCanceledException($"The cluster connection operation to \"{_clusterState.ClusterName}\" has been canceled. {msgSomeThingWentWrong}");
 
             // other exception
-            throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". " +
-                $"The following addresses where tried: {string.Join(", ", tried)}.", aggregate);
+            throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". {msgSomeThingWentWrong}");
         }
 
 
@@ -715,7 +713,7 @@ namespace Hazelcast.Clustering
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
             // report
-            _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}"+
+            _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}" +
                                    " on connection {ConnectionId} from {LocalAddress}" +
                                    " to member {MemberId} at {Address}" +
                                    " of cluster '{ClusterName}' ({ClusterId}) running version {HazelcastServerVersion}.",
