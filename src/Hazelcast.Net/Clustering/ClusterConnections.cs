@@ -519,7 +519,6 @@ namespace Hazelcast.Clustering
                         }
                         else
                         {
-                            //is !attempt.HasException possible here?
                             _logger.LogDebug($"Failed to connect to address {address}.");
                         }
                     }
@@ -544,7 +543,7 @@ namespace Hazelcast.Clustering
                 {
                     canRetry = false; // retry strategy was canceled
                 }
-                catch (Exception e) // gather exceptions
+                catch (Exception e)
                 {
                     _logger.LogError(e, "Connection attempt has thrown.");
                     canRetry = false; // retry strategy threw
@@ -556,14 +555,18 @@ namespace Hazelcast.Clustering
             string msgSomeThingWentWrong = "";
 
             if (isExceptionThrown)
-                msgSomeThingWentWrong = "Exception(s) is thrown in the past. Please, see the logs.";
+                msgSomeThingWentWrong = "Some exceptions were thrown and have been written to the log. Please refer to the log for details.";
 
             // canceled exception?
             if (cancellationToken.IsCancellationRequested)
-                throw new OperationCanceledException($"The cluster connection operation to \"{_clusterState.ClusterName}\" has been canceled. {msgSomeThingWentWrong}");
+                throw new OperationCanceledException($"The cluster connection operation to \"{_clusterState.ClusterName}\" has been canceled. " +
+                    $"The following addresses where tried: {string.Join(", ", tried)}." +
+                    $" {msgSomeThingWentWrong}");
 
             // other exception
-            throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". {msgSomeThingWentWrong}");
+            throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". " +
+                $"The following addresses where tried: {string.Join(", ", tried)}." +
+                $"{msgSomeThingWentWrong}");
         }
 
 
