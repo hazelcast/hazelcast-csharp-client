@@ -57,6 +57,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
 		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
+		.github\workflows\jira-label.yml = .github\workflows\jira-label.yml
 		.github\workflows\report-pr.yml = .github\workflows\report-pr.yml
 	EndProjectSection
 EndProject
