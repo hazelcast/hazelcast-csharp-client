@@ -1,7 +1,7 @@
 name: Create Jira issue
 
 # runs: whenever a label is added to an issue
-# if: the issue title does not yet contain '[API-' and
+# if: the issue title does not yet contain 'API-' and
 #     the label is 'to-jira' or 'Jira'
 # does: create corresponding Jira issue and link the two issues
 
@@ -13,7 +13,7 @@ jobs:
   jira:
     runs-on: ubuntu-latest
     if: |
-      !contains(github.event.issue.title, '[API-') &&
+      !contains(github.event.issue.title, 'API-') &&
       (
         github.event.label.name == 'to-jira' ||
         github.event.label.name == 'Jira'
