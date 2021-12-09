@@ -1,13 +1,23 @@
 name: Create Jira issue
 
+# runs: whenever a label is added to an issue
+# if: the issue title does not yet contain 'API-' and
+#     the label is 'to-jira' or 'Jira'
+# does: create corresponding Jira issue and link the two issues
+
 on:
   issues:
     types: labeled
 
 jobs:
   jira:
-    if: ${{ github.event.label.name == 'to-jira' }}
     runs-on: ubuntu-latest
+    if: |
+      !contains(github.event.issue.title, 'API-') &&
+      (
+        github.event.label.name == 'to-jira' ||
+        github.event.label.name == 'Jira'
+      )
     steps:
       - name: Call composite action
         uses: hazelcast/github-jira-tool-action@v3
