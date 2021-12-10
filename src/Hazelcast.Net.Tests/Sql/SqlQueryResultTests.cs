@@ -181,18 +181,13 @@ namespace Hazelcast.Tests.Sql
         {
             string dummyMapName = "testingMap";
             var map = await Client.GetMapAsync<int, string>(dummyMapName);
-            await map.PutAsync(0, "some value");
+            await map.PutAsync(0, "some value");           
 
-            try
-            {
-                //query the map without creating mapping to get exception with suggestion in it.
-                var result = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {dummyMapName}");
-            }
-            catch (HazelcastSqlException ex)
-            {
-                Assert.IsNotEmpty(ex.Message);
-                Assert.IsFalse(string.IsNullOrEmpty(ex.Suggestion));
-            }
+            //query the map without creating mapping to get exception with suggestion in it.
+            var ex = Assert.ThrowsAsync<HazelcastSqlException>(async () => await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {dummyMapName}"));
+
+            Assert.IsFalse(string.IsNullOrEmpty(ex.Suggestion));
+            Assert.IsFalse(string.IsNullOrEmpty(ex.Message));       
         }
     }
 }
