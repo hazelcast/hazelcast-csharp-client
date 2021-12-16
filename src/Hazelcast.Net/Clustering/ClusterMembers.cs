@@ -348,7 +348,7 @@ namespace Hazelcast.Clustering
             // through configuration options, or determined through rules:
             // - if one member responds on its internal address, assume internal addresses are OK
             // - if enough (sample size) members respond only on their public address, use public addresses
-            // for performance reasons (and this is what other clients e.g. Java do) we determine this
+            // for performance reasons (and this is what the Java client does) we determine this
             // once when getting the first members view, and don't change our mind later on, ever.
             if (previous.Count == 0) // first members view
             {
