@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Configuration;
+using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -128,6 +130,18 @@ namespace Hazelcast.Tests.Networking
             {
                 CloudDiscovery.SetResponse(null);
             }
+        }
+
+        [Test]
+        public void Meh()
+        {
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap() => null;
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            // if createMap is bogus we get an exception
+            Assert.Throws<HazelcastException>(() => addressProvider.GetAddresses());
         }
     }
 }

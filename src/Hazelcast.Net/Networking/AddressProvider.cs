@@ -85,20 +85,36 @@ namespace Hazelcast.Networking
             }
         }
 
+        // internal constructor for tests (so we can test with a bogus create map method)
+        internal AddressProvider(NetworkingOptions networkingOptions, Func<IDictionary<NetworkAddress, NetworkAddress>> createMap, bool hasMap, ILoggerFactory loggerFactory)
+        {
+          _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
+          if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+
+          _logger = loggerFactory.CreateLogger<AddressProvider>();
+
+          _createMap = createMap;
+          HasMap = hasMap;
+        }
+
         /// <summary>
         /// Whether the address provider has a map of internal addresses to public addresses.
         /// </summary>
         public bool HasMap { get; }
 
+        // ensures that we have a map, returns the map + whether it's a new map
+        private (bool NewMap, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap()
+        {
+            if (_internalToPublicMap != null) return (false, _internalToPublicMap);
+            _internalToPublicMap = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
+            return (true, _internalToPublicMap);
+        }
+
         /// <summary>
         /// Gets known possible addresses for a cluster.
         /// </summary>
         /// <returns>All addresses.</returns>
-        public IEnumerable<NetworkAddress> GetAddresses()
-        {
-            _internalToPublicMap ??= _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
-            return _internalToPublicMap.Values;
-        }
+        public IEnumerable<NetworkAddress> GetAddresses() => EnsureMap().Map.Values;
 
         /// <summary>
         /// Maps an internal address to a public address.
@@ -110,15 +126,10 @@ namespace Hazelcast.Networking
             if (address == null || !HasMap)
                 return address;
 
-            var fresh = false;
-            if (_internalToPublicMap == null)
-            {
-                _internalToPublicMap = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
-                fresh = true;
-            }
+            var (fresh, map) = EnsureMap();
 
             // if we can map, return
-            if (_internalToPublicMap.TryGetValue(address, out var publicAddress))
+            if (map.TryGetValue(address, out var publicAddress))
                 return publicAddress;
 
             if (fresh)
@@ -133,12 +144,10 @@ namespace Hazelcast.Networking
 
             // if the map is not 'fresh' recreate the map and try again, else give up
             // TODO: throttle?
-            _internalToPublicMap = _createMap();
-
-            if (_internalToPublicMap == null) throw new HazelcastException("Failed to obtain addresses.");
+            map = EnsureMap().Map;
 
             // now try again
-            if (_internalToPublicMap.TryGetValue(address, out publicAddress))
+            if (map.TryGetValue(address, out publicAddress))
                 return publicAddress;
 
             _logger.LogDebug($"Address {address} was not found in the map.");
