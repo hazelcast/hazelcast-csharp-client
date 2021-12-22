@@ -169,7 +169,7 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public void CreateMapCachedAndInvokedOnlyIfMappingFails()
+        public void CreateMapCachedForMapping()
         {
             var count = 0;
 
@@ -193,9 +193,81 @@ namespace Hazelcast.Tests.Networking
 
             var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
             Assert.That(count, Is.EqualTo(1)); // successful Map = use cached map
+        }
 
-            var address2 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
+        [Test]
+        public void CreateMapReInvokedIfMappingFails()
+        {
+            var count = 0;
+
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap()
+            {
+                Interlocked.Increment(ref count);
+
+                return new Dictionary<NetworkAddress, NetworkAddress>
+                {
+                    { NetworkAddress.Parse("192.168.0.1"), NetworkAddress.Parse("192.168.1.1") }
+                };
+            }
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            Assert.That(count, Is.EqualTo(0));
+
+            var addresses1 = addressProvider.GetAddresses();
+            Assert.That(count, Is.EqualTo(1));
+
+            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
             Assert.That(count, Is.EqualTo(2)); // failed Map = tried again
+        }
+
+        [Test]
+        public void CreateMapInvokedOnFirstMapping()
+        {
+            var count = 0;
+
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap()
+            {
+                Interlocked.Increment(ref count);
+
+                return new Dictionary<NetworkAddress, NetworkAddress>
+                {
+                    { NetworkAddress.Parse("192.168.0.1"), NetworkAddress.Parse("192.168.1.1") }
+                };
+            }
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            Assert.That(count, Is.EqualTo(0));
+
+            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
+            Assert.That(count, Is.EqualTo(1)); // created a map, then successful Map
+        }
+
+        [Test]
+        public void CreateMapInvokedOnceOnFirstMapping()
+        {
+            var count = 0;
+
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap()
+            {
+                Interlocked.Increment(ref count);
+
+                return new Dictionary<NetworkAddress, NetworkAddress>
+                {
+                    { NetworkAddress.Parse("192.168.0.1"), NetworkAddress.Parse("192.168.1.1") }
+                };
+            }
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            Assert.That(count, Is.EqualTo(0));
+
+            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
+            Assert.That(count, Is.EqualTo(1)); // created a map, then failed Map, no point re-creating
         }
     }
 }
