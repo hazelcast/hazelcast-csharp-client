@@ -165,8 +165,6 @@ namespace Hazelcast.Metrics
             if (mask.HasNone(DescriptorMask.ExcludedTargets))
                 _tempOutput.WriteByte(0);
 
-            // include excludeTargets for compatibility purposes (but it's always zero)
-            // (the Python client for instance always writes zero here)
             if (mask.HasNone(DescriptorMask.TagCount))
                 _tempOutput.WriteByte((byte) descriptor.Tags.Count);
 
