@@ -103,9 +103,9 @@ namespace Hazelcast.Networking
         public bool HasMap { get; }
 
         // ensures that we have a map, returns the map + whether it's a new map
-        private (bool NewMap, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap()
+        private (bool NewMap, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap(bool forceRenew)
         {
-            if (_internalToPublicMap != null) return (false, _internalToPublicMap);
+            if (!forceRenew && _internalToPublicMap != null) return (false, _internalToPublicMap);
             _internalToPublicMap = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
             return (true, _internalToPublicMap);
         }
@@ -114,7 +114,7 @@ namespace Hazelcast.Networking
         /// Gets known possible addresses for a cluster.
         /// </summary>
         /// <returns>All addresses.</returns>
-        public IEnumerable<NetworkAddress> GetAddresses() => EnsureMap().Map.Values;
+        public IEnumerable<NetworkAddress> GetAddresses() => EnsureMap(true).Map.Values;
 
         /// <summary>
         /// Maps an internal address to a public address.
@@ -126,7 +126,7 @@ namespace Hazelcast.Networking
             if (address == null || !HasMap)
                 return address;
 
-            var (fresh, map) = EnsureMap();
+            var (fresh, map) = EnsureMap(false);
 
             // if we can map, return
             if (map.TryGetValue(address, out var publicAddress))
@@ -142,9 +142,9 @@ namespace Hazelcast.Networking
             // otherwise, re-scan
             _logger.LogDebug($"Address {address} was not found in the map, re-scanning.");
 
-            // if the map is not 'fresh' recreate the map and try again, else give up
+            // if the map is not 'fresh' force-recreate the map and try again, else give up
             // TODO: throttle?
-            map = EnsureMap().Map;
+            map = EnsureMap(true).Map;
 
             // now try again
             if (map.TryGetValue(address, out publicAddress))

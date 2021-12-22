@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
 using Hazelcast.Networking;
@@ -133,7 +134,7 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        public void Meh()
+        public void BogusCreateMapThrows()
         {
             IDictionary<NetworkAddress, NetworkAddress> CreateMap() => null;
 
@@ -142,6 +143,59 @@ namespace Hazelcast.Tests.Networking
 
             // if createMap is bogus we get an exception
             Assert.Throws<HazelcastException>(() => addressProvider.GetAddresses());
+        }
+
+        [Test]
+        public void CreateMapInvokedOnEachGetAddresses()
+        {
+            var count = 0;
+
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap()
+            {
+                Interlocked.Increment(ref count);
+                return new Dictionary<NetworkAddress, NetworkAddress>();
+            }
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            Assert.That(count, Is.EqualTo(0));
+
+            var addresses1 = addressProvider.GetAddresses();
+            Assert.That(count, Is.EqualTo(1));
+
+            var addresses2 = addressProvider.GetAddresses();
+            Assert.That(count, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void CreateMapCachedAndInvokedOnlyIfMappingFails()
+        {
+            var count = 0;
+
+            IDictionary<NetworkAddress, NetworkAddress> CreateMap()
+            {
+                Interlocked.Increment(ref count);
+
+                return new Dictionary<NetworkAddress, NetworkAddress>
+                {
+                    { NetworkAddress.Parse("192.168.0.1"), NetworkAddress.Parse("192.168.1.1") }
+                };
+            }
+
+            var options = new NetworkingOptions();
+            var addressProvider = new AddressProvider(options, CreateMap, true, new NullLoggerFactory());
+
+            Assert.That(count, Is.EqualTo(0));
+
+            var addresses1 = addressProvider.GetAddresses();
+            Assert.That(count, Is.EqualTo(1));
+
+            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
+            Assert.That(count, Is.EqualTo(1)); // successful Map = use cached map
+
+            var address2 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
+            Assert.That(count, Is.EqualTo(2)); // failed Map = tried again
         }
     }
 }
