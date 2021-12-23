@@ -14,9 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Sockets;
 using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -39,9 +36,7 @@ namespace Hazelcast.Networking
     /// </remarks>
     internal class AddressProvider
     {
-        private readonly Func<IDictionary<NetworkAddress, NetworkAddress>> _createMap;
-        private readonly IList<string> _configurationAddresses;
-        private readonly NetworkingOptions _networkingOptions;
+        private readonly IAddressProviderSource _source;
         private readonly ILogger _logger;
 
         // maps internal addresses to public addresses
@@ -52,61 +47,42 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <param name="networkingOptions">The networking configuration.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public AddressProvider(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
+        public AddressProvider(IAddressProviderSource source, ILoggerFactory loggerFactory)
         {
-            _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
 
+            _source = source ?? throw new ArgumentNullException(nameof(source));
             _logger = loggerFactory.CreateLogger<AddressProvider>();
-
-            var cloudConfiguration = networkingOptions.Cloud;
-            var addresses = networkingOptions.Addresses;
-
-            if (cloudConfiguration != null && cloudConfiguration.Enabled)
-            {
-                // fail fast
-                if (addresses.Count > 0)
-                    throw new ConfigurationException("Only one address configuration method can be enabled at a time.");
-
-                // initialize cloud discovery
-                var token = cloudConfiguration.DiscoveryToken;
-                var urlBase = cloudConfiguration.Url;
-                var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
-                connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
-                var cloudScanner = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
-
-                _createMap = () => cloudScanner.Scan();
-                HasMap = true;
-            }
-            else
-            {
-                _configurationAddresses = addresses.Count > 0 ? addresses : new List<string> { "localhost" };
-                _createMap = CreateMapFromConfiguration;
-            }
         }
 
-        // internal constructor for tests (so we can test with a bogus create map method)
-        internal AddressProvider(NetworkingOptions networkingOptions, Func<IDictionary<NetworkAddress, NetworkAddress>> createMap, bool hasMap, ILoggerFactory loggerFactory)
+        /// <summary>
+        /// Obtains the <see cref="IAddressProviderSource"/> as per configuration.
+        /// </summary>
+        /// <param name="networkingOptions">The networking options.</param>
+        /// <param name="loggerFactory">A logger factory.</param>
+        /// <returns>The <see cref="IAddressProviderSource"/> corresponding the the configuration.</returns>
+        public static IAddressProviderSource GetSource(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
         {
-          _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
-          if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+            if (networkingOptions.Cloud.Enabled)
+            {
+                if (networkingOptions.Addresses.Count > 0)
+                    throw new ConfigurationException("Only one address configuration method can be enabled at a time.");
+                return new CloudAddressProviderSource(networkingOptions, loggerFactory);
+            }
 
-          _logger = loggerFactory.CreateLogger<AddressProvider>();
-
-          _createMap = createMap;
-          HasMap = hasMap;
+            return new ConfigurationAddressProviderSource(networkingOptions, loggerFactory);
         }
 
         /// <summary>
         /// Whether the address provider has a map of internal addresses to public addresses.
         /// </summary>
-        public bool HasMap { get; }
+        public bool HasMap => _source.Maps;
 
         // ensures that we have a map, returns the map + whether it's a new map
         private (bool NewMap, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap(bool forceRenew)
         {
             if (!forceRenew && _internalToPublicMap != null) return (false, _internalToPublicMap);
-            _internalToPublicMap = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
+            _internalToPublicMap = _source.CreateInternalToPublicMap() ?? throw new HazelcastException("Failed to obtain addresses.");
             return (true, _internalToPublicMap);
         }
 
@@ -152,102 +128,6 @@ namespace Hazelcast.Networking
 
             _logger.LogDebug($"Address {address} was not found in the map.");
             return null;
-        }
-
-        /// <summary>
-        /// (internal for tests only)
-        /// Creates an address map from the configuration.
-        /// </summary>
-        /// <returns>An address map.</returns>
-        /// <remarks>When the address map is created from the configuration, keys and values
-        /// are identical, since no mapping is actually required.</remarks>
-        internal IDictionary<NetworkAddress, NetworkAddress> CreateMapFromConfiguration()
-        {
-            var addresses = new Dictionary<NetworkAddress, NetworkAddress>();
-            foreach (var configurationAddressString in _configurationAddresses)
-            {
-                if (!NetworkAddress.TryParse(configurationAddressString, out var configurationAddress))
-                    throw new FormatException($"The string \"{configurationAddressString}\" does not represent a valid network address.");
-
-                // got to be v6 - cannot get IPAddress to parse anything that would not be v4 or v6
-                //if (!address.IsIpV6)
-                //    throw new NotSupportedException($"Address family {address.IPAddress.AddressFamily} is not supported.");
-
-                // see https://4sysops.com/archives/ipv6-tutorial-part-6-site-local-addresses-and-link-local-addresses/
-                // loopback - is ::1 exclusively
-                // site-local - equivalent to private IP addresses in v4 = fe:c0:...
-                // link-local - hosts on the link
-                // global - globally route-able addresses
-
-                IEnumerable<NetworkAddress> networkAddresses;
-                if (configurationAddress.IsIpV4 || configurationAddress.IsIpV6GlobalOrScoped)
-                {
-                    // v4, or v6 global or has a scope = qualified, can return
-                    networkAddresses = ExpandPorts(configurationAddress);
-                }
-                else
-                {
-                    // address is v6 site-local or link-local, and has no scopeId
-                    // get localhost addresses
-                    networkAddresses = GetV6LocalAddresses()
-                        .SelectMany(x => ExpandPorts(configurationAddress, x));
-                }
-
-                foreach (var networkAddress in networkAddresses)
-                    addresses.Add(networkAddress, networkAddress);
-            }
-
-            return addresses;
-        }
-
-        /// <summary>
-        /// (internal for tests only)
-        /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
-        /// </summary>
-        /// <returns>All scoped IP addresses corresponding to the specified address.</returns>
-        private static IEnumerable<IPAddress> GetV6LocalAddresses()
-        {
-            // if the address is IP v6 local without a scope,
-            // resolve -> the local address, with all avail scopes?
-
-            var hostname = HDns.GetHostName();
-            var entry = HDns.GetHostEntry(hostname);
-            foreach (var address in entry.AddressList)
-            {
-                if (address.AddressFamily == AddressFamily.InterNetworkV6)
-                    yield return address;
-            }
-        }
-
-        /// <summary>
-        /// Expands the port of an address.
-        /// </summary>
-        /// <param name="address">The address.</param>
-        /// <param name="ipAddress"></param>
-        /// <returns>Addresses with ports.</returns>
-        /// <remarks>
-        /// <para>If the <paramref name="address"/> has a specified port, this yields the address, and
-        /// only the address. But if it does not have a specified port, this yields the address with
-        /// different ports obtained through the <see cref="NetworkingOptions.DefaultPort"/> and
-        /// <see cref="NetworkingOptions.PortRange"/> configuration options.</para>
-        /// </remarks>
-        private IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
-        {
-            if (address.Port > 0)
-            {
-                // qualified with a port = can only be this address
-                yield return address;
-            }
-            else
-            {
-                // not qualified with a port = can be a port range
-                for (var port = _networkingOptions.DefaultPort;
-                    port < _networkingOptions.DefaultPort + _networkingOptions.PortRange;
-                    port++)
-                    yield return ipAddress == null
-                        ? new NetworkAddress(address, port)
-                        : new NetworkAddress(address.HostName, ipAddress, port);
-            }
         }
     }
 }

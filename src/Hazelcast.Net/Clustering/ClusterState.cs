@@ -46,7 +46,8 @@ namespace Hazelcast.Clustering
             ClientName = clientName;
             Partitioner = partitioner;
             LoggerFactory = loggerFactory;
-            AddressProvider = new AddressProvider(Options.Networking, LoggerFactory);
+
+            AddressProvider = new AddressProvider(AddressProvider.GetSource(options.Networking, loggerFactory), LoggerFactory);
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 

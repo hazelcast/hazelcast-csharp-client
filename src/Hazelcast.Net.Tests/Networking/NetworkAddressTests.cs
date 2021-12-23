@@ -96,8 +96,8 @@ namespace Hazelcast.Tests.Networking
             var options = new NetworkingOptions();
             options.Addresses.Clear();
             options.Addresses.Add(address);
-            var a = new AddressProvider(options, new NullLoggerFactory());
-            return a.CreateMapFromConfiguration().Values;
+            var addressProviderSource = new ConfigurationAddressProviderSource(options, new NullLoggerFactory());
+            return addressProviderSource.CreateInternalToPublicMap().Values;
         }
 
         [Test]
