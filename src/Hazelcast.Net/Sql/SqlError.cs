@@ -25,14 +25,17 @@ namespace Hazelcast.Sql
         public string Message { get; }
         public Guid OriginatingMemberId { get; }
 
+        public string Suggestion { get; }
+
         /// <summary>
         /// Creates a new instance of <see cref="SqlError"/> class.
         /// </summary>
-        public SqlError(int code, string message, Guid originatingMemberId)
+        public SqlError(int code, string message, Guid originatingMemberId, string suggestion = "")
         {
             Code = code;
             Message = message;
             OriginatingMemberId = originatingMemberId;
+            Suggestion = suggestion;
         }
     }
 }
