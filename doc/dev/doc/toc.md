@@ -20,6 +20,7 @@
 ## [HTopic](distributed-objects/htopic.md)
 ## [AtomicLong](distributed-objects/atomiclong.md)
 ## [AtomicRef](distributed-objects/atomicref.md)
+## [FlakeIdGenerator](distributed-objects/flakeidgenerator.md)
 # [Distributed Computing](distributedComputing.md)
 # [Distributed Query](distributedQuery.md)
 # [CP SubSystem](cpsubsystem.md)
