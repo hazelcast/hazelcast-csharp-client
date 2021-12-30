@@ -529,7 +529,7 @@ namespace Hazelcast.Clustering
                     // address is invalid or cannot be resolved via DNS... a DNS problem may
                     // be transient: better retry
                     isExceptionThrown = true;
-                    _logger.LogError(e, "Connection attempt has thrown.");
+                    _logger.LogError(e, "Connection attempt failed due to possible DNS error.");
 
                     // TODO: it's the actual DNS that should retry!
                 }
