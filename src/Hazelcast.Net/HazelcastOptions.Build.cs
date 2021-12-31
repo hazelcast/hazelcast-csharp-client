@@ -48,8 +48,8 @@ namespace Hazelcast
         /// (internal for tests only) Builds Hazelcast options, using an alternate key.
         /// </summary>
         /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
-        /// <param name="preConfigure">An <see cref="HazelcastOptions"/> pre-configuration delegate.</param>
-        /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
+        /// <param name="preConfigure">A <see cref="HazelcastOptions"/> pre-configuration delegate.</param>
+        /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <param name="altKey">An alternate key.</param>
         /// <returns>Hazelcast options.</returns>
         /// <remarks>
