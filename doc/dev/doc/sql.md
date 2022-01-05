@@ -1,40 +1,39 @@
 # SQL
 
-- [Example: How to Query an IHMap using SQL](#example-how-to-query-an-ihmap-using-sql)
-- [Querying IHMap](#querying-ihmap)
-  - [Map Names](#map-names)
-  - [Field Names](#field-names)
-    - [Key and Value Objects](#key-and-value-objects)
-    - [Key and Value Fields](#key-and-value-fields)
-    - ["SELECT *" Queries](#select--queries)
-  - [Special characters in names](#special-characters-in-names)
-  - [Enumerating query result](#enumerating-query-result)
-  - [Disposing query result](#disposing-query-result)
-  - [Cancelling query enumeration](#cancelling-query-enumeration)
-- [Data Types](#data-types)
-  - [Decimal String Format](#decimal-string-format)
-  - [Date String Format](#date-string-format)
-  - [Time String Format](#time-string-format)
-  - [Timestamp String Format](#timestamp-string-format)
-  - [Timestamp with Timezone String Format](#timestamp-with-timezone-string-format)
-- [Casting](#casting)
-  - [How to Cast](#how-to-cast)
-  - [Casting Between Types](#casting-between-types)
-  - [An Example of Implicit Cast](#an-example-of-implicit-cast)
-  - [An Example of Explicit Cast](#an-example-of-explicit-cast)
-  - [Important Notes About Comparison and Casting](#important-notes-about-comparison-and-casting)
-- [SELECT](#select)
-  - [Synopsis](#synopsis)
-  - [Description](#description)
-  - [Sorting](#sorting)
-  - [Unsupported Features](#unsupported-features)
-- [Expressions](#expressions)
-- [Lite Members](#lite-members)
-- [More Information](#more-information)
+- [SQL](#sql)
+  - [Example: How to Query an IHMap using SQL](#example-how-to-query-an-ihmap-using-sql)
+  - [Querying IHMap](#querying-ihmap)
+    - [Map Names](#map-names)
+    - [Field Names](#field-names)
+      - [Key and Value Objects](#key-and-value-objects)
+      - [Key and Value Fields](#key-and-value-fields)
+      - ["SELECT *" Queries](#select--queries)
+    - [Special characters in names](#special-characters-in-names)
+    - [Enumerating query result](#enumerating-query-result)
+    - [Disposing query result](#disposing-query-result)
+    - [Cancelling query enumeration](#cancelling-query-enumeration)
+  - [Data Types](#data-types)
+    - [Decimal String Format](#decimal-string-format)
+    - [Date String Format](#date-string-format)
+    - [Time String Format](#time-string-format)
+    - [Timestamp String Format](#timestamp-string-format)
+    - [Timestamp with Timezone String Format](#timestamp-with-timezone-string-format)
+  - [Casting](#casting)
+    - [How to Cast](#how-to-cast)
+    - [Casting Between Types](#casting-between-types)
+    - [An Example of Implicit Cast](#an-example-of-implicit-cast)
+    - [An Example of Explicit Cast](#an-example-of-explicit-cast)
+    - [Important Notes About Comparison and Casting](#important-notes-about-comparison-and-casting)
+  - [SELECT](#select)
+    - [Synopsis](#synopsis)
+    - [Description](#description)
+    - [Sorting](#sorting)
+    - [Unsupported Features](#unsupported-features)
+  - [Expressions](#expressions)
+  - [Lite Members](#lite-members)
+  - [More Information](#more-information)
 
 The SQL service provided by Hazelcast .NET client allows you to query data stored in `IHMap` declaratively.
-
-> **WARNING: The SQL feature is currently in beta. The compatibility between versions is not guaranteed. API might change between versions without notice. While in beta, SQL feature is tested against the same version of the IMDG, e.g 5.0-BETA
 
 ## Example: How to Query an IHMap using SQL
 
@@ -42,6 +41,9 @@ This SQL query returns map entries whose values are more than 1:
 
 ```csharp
 await using var map = await client.GetMapAsync<int, string>("MyMap");
+
+await client.Sql.ExecuteCommandAsync($"CREATE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')");
+
 await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"{v}"));
 
 await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} WHERE this > 2");
@@ -53,6 +55,9 @@ await foreach (var row in result.EnumerateOnceAsync())
 ## Querying IHMap
 
 The following subsections describe how you can access Hazelcast map objects and perform queries on them.
+
+>Before querying data in a map, you need to create a mapping to one.
+See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/latest/sql/create-mapping)
 
 ### Map Names
 
@@ -86,10 +91,9 @@ SELECT __key, this FROM employee
 You may also access the nested fields of a key or value. The list of exposed fields depends on the serialization format, as described below:
 
 * For [IdentifiedDataSerializable](serialization.md#identifieddataserializable-serialization) objects, you can use public field name or getter names.
-  See [IMDG docs](https://docs.hazelcast.com/imdg/4.2/sql/querying-imap.html#key-and-value-fields) for more information.
+  See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/sql/querying-maps-sql) for more information.
 * For [Portable](serialization.md#portable-serialization) objects, the fields written with `IPortableWriter` methods are exposed using their exact names.
-
-> **NOTE: You cannot query JSON fields in SQL. If you want to query JSON, see [Querying with JSON Strings](distributedQuery.md#querying-with-json-strings).**
+* For `Json` objects, the fields can be accessed with `JSON_QUERY(..)` or `JSON_VALUE(..)`.
 
 For example, consider this portable class:
 
@@ -210,6 +214,7 @@ The SQL service supports a set of SQL data types represented by `Hazelcast.Sql.S
 | **TIMESTAMP**                | `Hazelcast.Sql.HLocalDateTime`  |
 | **TIMESTAMP_WITH_TIME_ZONE** | `Hazelcast.Sql.HOffsetDateTime` |
 | **OBJECT**                   | Any class                       |
+| **JSON**                     | `Hazelcast.Core.HazelcastJsonValue`|
 | **NULL**                     | `null`                          |
 
 All `Hazelcast.Sql.*` types has conversion to and from their closest built-in counterparts. Table below lists possible conversions:
@@ -326,7 +331,7 @@ An optional `WHERE` clause defines a condition, that is any expression that eval
 
 ### Sorting
 
-You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and limit the result set. In order to do so, you need server configuration. See [IMDG docs](https://docs.hazelcast.com/imdg/4.2/sql/select-statement.html#sorting) for more.
+You can use the standard SQL clauses ORDER BY, LIMIT, and OFFSET to sort and limit the result set. In order to do so, you need server configuration. See [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/query/indexing-maps) for more.
 
 ### Unsupported Features
 
@@ -338,7 +343,7 @@ The following features are **not supported** and are planned for future releases
 ## Expressions
 
 Hazelcast SQL supports logical predicates, `IS` predicates, comparison operators, mathematical functions and operators, string functions, and special functions.
-Refer to [IMDG docs](https://docs.hazelcast.com/imdg/4.2/sql/expressions.html) for all possible operations.
+Refer to [Hazelcast docs](https://docs.hazelcast.com/hazelcast/5.0/sql/expressions) for all possible operations.
 
 ## Lite Members
 
@@ -346,6 +351,6 @@ You cannot start SQL queries on lite members. This limitation will be removed in
 
 ## More Information
 
-Please refer to [IMDG SQL docs](https://docs.hazelcast.com/imdg/4.2/sql/distributed-sql.html) for more information.
+Please refer to [Hazelcast SQL docs](https://docs.hazelcast.com/imdg/4.2/sql/distributed-sql.html) for more information.
 
-For basic usage of SQL, see `SqlBasicQueryExample` in *Hazelcast.Net.Examples* project.
+For basic usage of SQL, see `SqlBasicQueryExample` and `SqlJsonExample` in *Hazelcast.Net.Examples* project.
