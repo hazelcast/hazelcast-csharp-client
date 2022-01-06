@@ -197,7 +197,7 @@ namespace Hazelcast.Tests.Sql
         [TestCase(true)]
         //Put objects via map.put
         [TestCase(false)]
-        //[ServerConditionAttribute("5.1")]
+        [ServerConditionAttribute("5.1")]
         public async Task CanQueryComplexJsonValue(bool useSql)
         {
             var expectedObjects = EmployeeTestObjectTestData.EmployeeTestObjects.ToDictionary(p => p.Id, p => p);
