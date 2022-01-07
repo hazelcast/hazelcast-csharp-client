@@ -58,7 +58,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"
+    @{ name = "server";          type = [string];  default = "5.1-SNAPSHOT"
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -685,6 +685,29 @@ function ensure-server-files {
         if (-not $found) {
             # try branch eg '4.3' because '5.0' exists but not '5.0.z'
             $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml (404) from branch $v"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from branch $v"
+                $found = $true
+            }
+        }
+
+        if (-not $found) {
+            # try previous version eg 5.1->5.0 since config xml changes rarely
+            # this is useful against to prelease server versions
+            $p0 = $v.IndexOf('.')
+            $minor = [int]$v.SubString($p0+1) # 4.2 -> 2 
+            $minor = $minor - 1;
+            $major = $v.SubString(0, $p0);
+
+            $v = "$major.$minor";
+
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
