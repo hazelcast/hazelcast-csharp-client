@@ -1,0 +1,46 @@
+name: Assign Milestones
+on:
+  project_card:
+    # ignore: moved, converted, edited
+    types: [ created, deleted, moved ] # FIXME temp
+    
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    name: Assign
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Assign
+      uses: actions/github-script@v5
+      with:
+        github-token: ${{ secrets.MY_GITHUB_TOKEN_TESTREPO }}
+        script: |
+        
+            // see https://github.com/actions/github-script
+            //
+            // note: 'github' below is not the same as the yml-level 'github' context
+            //       see https://docs.github.com/en/actions/learn-github-actions/contexts
+            //       for yml contexts
+            //
+            // github    A pre-authenticated octokit/rest.js client with pagination plugins
+            //  .rest        The REST API (e.g. github.rest.issues.get(...) gets an issue)
+            //  .request
+            //  .paginate
+            //  .graphql
+            // context   An object containing the context of the workflow run
+            //           see https://github.com/actions/toolkit/blob/main/packages/github/src/context.ts
+            // core      A reference to the @actions/core package
+            // glob      A reference to the @actions/glob package
+            // io        A reference to the @actions/io package
+            // exec      A reference to the @actions/exec package
+            // require   A proxy wrapper around the normal Node.js require to enable requiring relative paths
+            //           (relative to the current working directory) + requiring npm packages installed in the
+            //           current working directory.
+
+            const script = require('./.github/workflows/assign-milestones.js')
+            await script({github, context, core})
