@@ -75,7 +75,25 @@ namespace Hazelcast.Networking
                 httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;
                 httpWebRequest.Headers.Set("Accept-Charset", "UTF-8");
                 var resp = ReadFromResponse(httpWebRequest.GetResponse());
-                return ParseResponse(resp);
+                var map = ParseResponse(resp);
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    var msg = new StringBuilder();
+                    msg.Append("Cloud Members [");
+                    msg.Append(map.Count);
+                    msg.AppendLine("] {");
+                    foreach (var (privateAddress, publicAddress) in map)
+                    {
+                        msg.Append("    Private=");
+                        msg.Append(privateAddress);
+                        msg.Append(" Public=");
+                        msg.Append(publicAddress);
+                        msg.AppendLine();
+                    }
+                    msg.Append('}');
+                    _logger.LogDebug(msg.ToString());
+                }
+                return map;
             }
             catch (WebException we)
             {
