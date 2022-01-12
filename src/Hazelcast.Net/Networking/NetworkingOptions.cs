@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 
@@ -130,6 +131,19 @@ namespace Hazelcast.Networking
         /// use, the public addresses. When <c>null</c> (by default), the client will try
         /// to determine which address to use automatically.</remarks>
         public bool? UsePublicAddresses { get; set; }
+
+        // options below are internal options (constants for now)
+        // TODO: consider making them public
+        // (in a AddressResolverOptions class of some sort)
+
+        // the timeout when trying to reach a member on its internal address
+        internal TimeSpan AddressResolver_InternalAddressTryReachTimeout { get; set; } = TimeSpan.FromSeconds(1);
+
+        // the timeout when trying to reach a member on its public address
+        internal TimeSpan AddressResolver_PublicAddressTryReachTimeout { get; set; } = TimeSpan.FromSeconds(3);
+
+        // the number of members to scan before deciding to use public addresses
+        internal int AddressResolver_SampleSize { get; set; } = 3;
 
         /// <summary>
         /// Gets the <see cref="SslOptions"/>.

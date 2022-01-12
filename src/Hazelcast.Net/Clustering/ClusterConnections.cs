@@ -37,7 +37,6 @@ namespace Hazelcast.Clustering
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
         private readonly Authenticator _authenticator;
-        private readonly AddressProvider _addressProvider;
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
 
@@ -68,7 +67,6 @@ namespace Hazelcast.Clustering
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
             _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
-            _addressProvider = new AddressProvider(_clusterState.Options.Networking, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
             if (_clusterState.IsSmartRouting)
@@ -453,7 +451,7 @@ namespace Hazelcast.Clustering
                 yield return address;
 
             // get configured addresses that haven't been tried already
-            addresses = _addressProvider.GetAddresses();
+            addresses = _clusterState.AddressProvider.GetAddresses();
             foreach (var address in Distinct(addresses, distinct, shuffle))
                 yield return address;
         }
@@ -694,8 +692,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
         private async Task<MemberConnection> ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
         {
-            // map private address to public address
-            address = _addressProvider.Map(address);
+            // directly connect to the specified address (internal/public determination happened beforehand)
 
             // create the connection to the member
             var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
