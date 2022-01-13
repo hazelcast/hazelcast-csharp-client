@@ -55,76 +55,87 @@ Write-Output "PowerShell $powershellVersion on $platform"
 
 $params = @(
     @{ name = "enterprise";      type = [switch];  default = $false;
-       desc = "whether to run enterprise tests";
+       desc = "Whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"
+    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"; alias="server-version";
        parm = "<version>";
-       desc = "the server version when running tests, the remote controller, or a server";
+       desc = "The server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
     },
     @{ name = "framework";       type = [string];  default = $null;       alias = "f"
        parm = "<version>";
-       desc = "the framework to build (default is all)";
-       note = "The framework <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
+       desc = "The framework to build (default is all)";
+       note = "The <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
     },
     @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"
        parm = "<config>";
-       desc = "the build configuration";
+       desc = "The build configuration";
        note = "Configuration is 'Release' by default but can be forced to be 'Debug'."
     },
-    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf";
+    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf,test-filter";
        parm = "<filter>";
-       desc = "a test filter (default is all tests)";
+       desc = "A test filter (default is all tests)";
        note = "The test <filter> can be used to filter the tests to run, it must respect the NUnit test selection language, which is detailed at: https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html. Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
     },
     @{ name = "test";            type = [string];  default = $null;       alias = "t";
        parm = "<pattern>";
-       desc = "a simplified test filter";
+       desc = "A simplified test filter";
        note = "The simplified test <pattern> filter is equivalent to the full `"name =~ /<pattern>/`" filter."
     },
-    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf";
+    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf,coverage-filter";
        parm = "<filter>";
-       desc = "a test coverage filter (default is all)";
+       desc = "A test coverage filter (default is all)";
        note = "The coverage <filter> can be used to filter the tests to cover, it must respect the dotCover language, which is detailed at: https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters."
     },
     @{ name = "sign";            type = [switch];  default = $false;
-       desc = "whether to sign assemblies";
+       desc = "Whether to sign assemblies";
        note = "Signing assemblies requires the private signing key in build/hazelcast.snk file."
     },
     @{ name = "cover";           type = [switch];  default = $false;
-       desc = "whether to run test coverage during tests"
+       desc = "Whether to run test coverage during tests"
     },
     @{ name = "version";         type = [string];  default = $null;
        parm = "<version>";
-       desc = "the version to build, set, tag, etc.";
+       desc = "The version to build, set, tag, etc.";
        note = "The <version> must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2. If no value is specified then the version is obtained from src/Directory.Build.props."
     },
-    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr";
-       desc = "do not restore global NuGet packages"
+    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr,no-restore";
+       desc = "Whether to not restore global NuGet packages";
+       note = "When this option is set, no attempt to restore packages is made, and building may fail."
     },
-    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr";
-       desc = "restore all NuGet packages locally"
+    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr,local-restore";
+       desc = "Whether to store NuGet packages locally";
+       note = "Changes the NuGet packages location from the default user-level (e.g. ~/.nuget) directory to a solution-local (.nuget) directory."
     },
     @{ name = "constants";       type = [string];  default = $null;
        parm = "<constants>";
-       desc = "additional MSBuild constants"
+       desc = "Additional MSBuild constants"
     },
     @{ name = "classpath";       type = [string];  default = $null;       alias = "cp";
        parm = "<classpath>";
-       desc = "define an additional classpath";
+       desc = "Define an additional classpath";
        info = "The classpath is appended to the default remote controller or server classpath." },
     @{ name = "reproducible";    type = [switch];  default = $false;      alias = "repro";
-       desc = "build reproducible assemblies" },
-    @{ name = "serverConfig";    type = [string];  default = $null;
+       desc = "Build reproducible assemblies" },
+    @{ name = "serverConfig";    type = [string];  default = $null;      alias = "server-config";
        parm = "<path>";
-       desc = "the full path to the server configuration xml file"
+       desc = "The full path to the server configuration xml file"
     },
-    @{ name = "verbose-tests";   type = [switch];  default = $false;
-       desc = "verbose tests results with errors"
+    @{ name = "verboseTests";   type = [switch];  default = $false;      alias = "verbose-tests";
+       desc = "Verbose tests results with errors"
+    },
+    @{ name = "localLib" ;      type=[switch];    default=$false;         alias = "local-lib";
+       desc = "Whether to not download JAR files";
+       note = "When this option is set, no attempt is made to verify the server version, nor to download any JAR or configuration files."
+    },
+    @{ name = "libpath";         type=[string];    default=$null;
+       parm="<libpath>";
+       desc="Defines the JAR files location";
+       info="Changes the JAR files location from the default ./build/lib to the specified <jarpath> directory."
     },
     @{ name = "yolo";            type = [switch]; default = $false;
-       desc = "confirms excution of sensitive actions"
+       desc = "Confirms excution of sensitive actions"
     }
 )
 
@@ -315,6 +326,12 @@ $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
+# JAR and XML files
+$libDir = [System.IO.Path]::GetFullPath("$tmpDir/lib")
+if ($options.libpath -ne $null) {
+    $libDir = [System.IO.Path]::GetFullPath($options.libpath)
+}
+
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
 if ($options.localRestore) {
@@ -444,12 +461,17 @@ function ensure-server-version {
 
     $version = $script:serverVersion
 
+    if ($options.localLib) {
+        Write-Output "Server: -localLibs is set, assume version is correct"
+        return
+    }
+
     # set server version (to filter tests)
     $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
 
     if (-not ($version.EndsWith("-SNAPSHOT"))) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
-        return;
+        return
     }
 
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
@@ -457,7 +479,7 @@ function ensure-server-version {
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
-        return;
+        return
     }
 
     Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
@@ -553,9 +575,14 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
 # add the jar to the $script:options.classpath
 function ensure-jar ( $jar, $repo, $artifact ) {
 
-    if(Test-Path "$tmpDir/lib/$jar") {
+    if (Test-Path "$libDir/$jar") {
 
         Write-Output "Detected $jar"
+    } elseif ($options.localLib) {
+
+        Write-Output "Missing $jar in $libDir"
+        Write-Output "Option 'local-lib' is set, not downloading"
+        Die "Some JARs are missing."
     } else {
         Write-Output "Downloading $jar ..."
 
@@ -569,14 +596,14 @@ function ensure-jar ( $jar, $repo, $artifact ) {
             $cls = "tests"
         }
 
-        download-maven-artifact $repo $group $art $ver $cls "$tmpDir/lib/$jar"
+        download-maven-artifact $repo $group $art $ver $cls "$libDir/$jar"
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
-    $classpath += "$tmpDir/lib/$jar"
-    # Be sure to quote the path to escape from white space 
+    $classpath += "$libDir/$jar"
+    # Be sure to quote the path to escape from white space
     # where you call the $script:options.classpath
     # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
@@ -587,7 +614,7 @@ function ensure-jar ( $jar, $repo, $artifact ) {
 function ensure-server-files {
 
     Write-Output "Prepare server/rc..."
-    if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
+    if (-not (test-path "$libDir")) { mkdir "$libDir" >$null }
 
     # ensure we have the remote controller + hazelcast test jar
     ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
@@ -629,18 +656,24 @@ function ensure-server-files {
             Die "Configuration file $($options.serverConfig) is missing."
         }
     }
-    elseif (test-path "$buildDir\hazelcast-$($options.server).xml") {
+    elseif (test-path "$libDir\hazelcast-$($options.server).xml") {
         # config was not specified, try with specified server version
         Write-Output "Detected hazelcast-$($options.server).xml"
-        $options.serverConfig = "$buildDir\hazelcast-$($options.server).xml"
+        $options.serverConfig = "$libDir\hazelcast-$($options.server).xml"
     }
-    elseif (test-path "$buildDir\hazelcast-$serverVersion.xml") {
+    elseif (test-path "$libDir\hazelcast-$serverVersion.xml") {
         # config was not specified, try with fixed server version
         Write-Output "Detected hazelcast-$serverVersion.xml"
-        $options.serverConfig = "$buildDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
     }
     else {
         # no config found, try to download
+
+        if ($options.localLib) {
+            Write-Output "Missing hazelcast-$serverVersion.xml in $libDir"
+            Write-Output "Option local-lib is set, not downloading"
+            Die "Default server configuration file is missing"
+        }
 
         $v = $serverVersion
         if ($v.EndsWith('-SNAPSHOT')) { $v = $v.SubString(0, $v.Length - '-SNAPSHOT'.Length)}
@@ -649,7 +682,7 @@ function ensure-server-files {
 
         # try tag eg 'v4.2.1' or 'v4.3'
         $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
-        $dest = "$buildDir/hazelcast-$serverVersion.xml"
+        $dest = "$libDir/hazelcast-$serverVersion.xml"
         $response = invoke-web-request $url $dest
 
         if ($response.StatusCode -ne 200) {
@@ -701,7 +734,7 @@ function ensure-server-files {
             Die "Running out of options... failed to download hazelcast-default.xml."
         }
 
-        $options.serverConfig = "$buildDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
     }
 }
 
