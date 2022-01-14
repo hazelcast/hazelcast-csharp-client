@@ -129,11 +129,6 @@ $params = @(
        desc = "Whether to not download JAR files";
        note = "When this option is set, no attempt is made to verify the server version, nor to download any JAR or configuration files."
     },
-    @{ name = "libpath";         type=[string];    default=$null;
-       parm="<libpath>";
-       desc="Defines the JAR files location";
-       info="Changes the JAR files location from the default ./build/lib to the specified <jarpath> directory."
-    },
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "Confirms excution of sensitive actions"
     }
@@ -323,14 +318,9 @@ if ($options.server.Contains("SNAPSHOT")) {
 # more directories
 $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
+$libDir = [System.IO.Path]::GetFullPath("$tmpDir/lib")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
-
-# JAR and XML files
-$libDir = [System.IO.Path]::GetFullPath("$tmpDir/lib")
-if ($options.libpath -ne $null) {
-    $libDir = [System.IO.Path]::GetFullPath($options.libpath)
-}
 
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
