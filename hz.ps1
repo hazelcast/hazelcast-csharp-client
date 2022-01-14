@@ -125,10 +125,6 @@ $params = @(
     @{ name = "verboseTests";   type = [switch];  default = $false;      alias = "verbose-tests";
        desc = "Verbose tests results with errors"
     },
-    @{ name = "localLib" ;      type=[switch];    default=$false;         alias = "local-lib";
-       desc = "Whether to not download JAR files";
-       note = "When this option is set, no attempt is made to verify the server version, nor to download any JAR or configuration files."
-    },
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "Confirms excution of sensitive actions"
     }
@@ -161,7 +157,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "server-version", "build-proj", "enterprise-key" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -184,19 +180,19 @@ $actions = @(
        uniq = $true;
        desc = "runs the remote controller for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "run-server";
        uniq = $true;
        desc = "runs a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "get-server";
        uniq = $true;
        desc = "gets a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "generate-codecs";
        uniq = $true;
@@ -447,14 +443,9 @@ function ensure-command($command) {
 # ensure that $script:serverVersion does not contain a -SNAPSHOT version,
 # or contains a valid -SNAPSHOT version, by updating the version if necessary,
 # e.g. '4.0-SNAPSHOT' may become '4.0.4-SNAPSHOT'
-function ensure-server-version {
+function determine-server-version {
 
     $version = $script:serverVersion
-
-    if ($options.localLib) {
-        Write-Output "Server: -localLibs is set, assume version is correct"
-        return
-    }
 
     # set server version (to filter tests)
     $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
@@ -568,11 +559,6 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     if (Test-Path "$libDir/$jar") {
 
         Write-Output "Detected $jar"
-    } elseif ($options.localLib) {
-
-        Write-Output "Missing $jar in $libDir"
-        Write-Output "Option 'local-lib' is set, not downloading"
-        Die "Some JARs are missing."
     } else {
         Write-Output "Downloading $jar ..."
 
@@ -599,12 +585,59 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     $script:options.classpath = $classpath
 }
 
+function verify-server-files {
+    if (-not (test-path "$libDir")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-remote-controller-${hzRCVersion}.jar")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-${serverVersion}-tests.jar")) { return $false }
+
+    if ($options.enterprise) {
+
+        # ensure we have the hazelcast enterprise server
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-enterprise-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+
+        # ensure we have the hazelcast enterprise test jar
+        if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}-tests.jar")) { return $false }
+    }
+    else {
+
+        # ensure we have the hazelcast server jar
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+    }
+
+    # specified file not found
+    if (-not [string]::IsNullOrWhiteSpace($options.serverConfig) -and -not (test-path $options.serverConfig)) { return $false }
+
+    # defaults?
+    if (-not (test-path "$libDir\hazelcast-$($options.server).xml") -or
+        -not (test-path "$libDir\hazelcast-$serverVersion.xml")) { return $false }
+
+    # all clear
+    return $true
+}
+
 # ensures we have all jars & config required for the remote controller and the server,
 # by downloading them if needed, and add them to the $script:options.classpath
 function ensure-server-files {
 
     Write-Output "Prepare server/rc..."
     if (-not (test-path "$libDir")) { mkdir "$libDir" >$null }
+
+    # if we don't have all server files for the specified version,
+    # we're going to try and download things below, but beforehand
+    # let's determine which server version we *really* want
+    if (-not (verify-server-files)) { determine-server-version }
 
     # ensure we have the remote controller + hazelcast test jar
     ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
@@ -635,7 +668,7 @@ function ensure-server-files {
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
         }
     }
-
+    
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
         if  (test-path $options.serverConfig) {
             # config was specified and exists
@@ -658,12 +691,6 @@ function ensure-server-files {
     }
     else {
         # no config found, try to download
-
-        if ($options.localLib) {
-            Write-Output "Missing hazelcast-$serverVersion.xml in $libDir"
-            Write-Output "Option local-lib is set, not downloading"
-            Die "Default server configuration file is missing"
-        }
 
         $v = $serverVersion
         if ($v.EndsWith('-SNAPSHOT')) { $v = $v.SubString(0, $v.Length - '-SNAPSHOT'.Length)}
@@ -1935,7 +1962,7 @@ function register-needs { $args | foreach-object { $script:needs[$_] = $false } 
 register-needs git
 register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
 register-needs build-proj can-sign docfx
-register-needs java server-version server-files # ensure server files *after* server version!
+register-needs java server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 
 # gather needs from actions
