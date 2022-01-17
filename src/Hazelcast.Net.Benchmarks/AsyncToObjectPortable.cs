@@ -88,7 +88,7 @@ namespace Hazelcast.Benchmarks
       as a non-async one ie a synchronous one.
 
      */
-    public class AsyncToObject
+    public class AsyncToObjectPortable
     {
         private SerializationService _serializationService;
         private IData _serializedThing;
