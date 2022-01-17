@@ -82,6 +82,11 @@ namespace Hazelcast.Benchmarks
 
     Therefore, go with AsyncOptimized.
 
+    More notes:
+
+    - some methods do 'await Task.Yield()' - this achieves nothing but prevents the compiler from optimizing the method
+      as a non-async one ie a synchronous one.
+
      */
     public class AsyncToObject
     {
