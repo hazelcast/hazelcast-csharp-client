@@ -19,6 +19,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Microsoft.Extensions.Logging;
@@ -134,6 +135,14 @@ namespace Hazelcast.Serialization
 
         #endregion
 
+        #region Schema TEMP
+
+        public Task FetchSchema(long schemaId) => Task.CompletedTask;
+
+        public Task PublishSchema(long schemaId) => Task.CompletedTask;
+
+        #endregion
+
         #region ToData, WriteObject, ToObject, ReadObject
 
         public IData ToData(object o)
@@ -164,6 +173,9 @@ namespace Hazelcast.Serialization
                 ReturnDataOutput(output);
             }
         }
+
+        public (IData, long) ToData2(object o)
+            => (ToData(o, GlobalPartitioningStrategy), -1);
 
         public T ToObject<T>(object o)
         {
@@ -199,6 +211,9 @@ namespace Hazelcast.Serialization
                 ReturnDataInput(input);
             }
         }
+
+        public (T, long) ToObject2<T>(object o)
+            => (ToObject<T>(o), -1);
 
         public void WriteObject(IObjectDataOutput output, object o)
         {

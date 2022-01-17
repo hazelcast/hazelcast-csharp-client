@@ -73,6 +73,58 @@ namespace Hazelcast.DistributedObjects.Impl
             return GetAndSetAsync(keyData, valueData, timeToLive, maxIdle);
         }
 
+        public async Task<TValue> PutAsync2(TKey key, TValue value)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+            if (value == null) throw new ArgumentNullException(nameof(value));
+
+            // FIXME this is where we need to introduce some async stuff
+            //var keyData = SerializationService.ToData(key);
+            //var valueData = SerializationService.ToData(value);
+
+            // so, doing this means we've turned this method into an async state machine,
+            // because of the potential awaits that were not there before, and then why
+            // do it this way and not push the serialization to the GetAndSetAsync so at
+            // least there is only 1 state machine running?
+
+            var (keyData, keySchemaId) = SerializationService.ToData2(key);
+            while (keySchemaId > 0) // may happen several times
+            {
+                await SerializationService.FetchSchema(keySchemaId).CfAwait();
+                (keyData, keySchemaId) = SerializationService.ToData2(key);
+            }
+
+            var (valueData, valueSchemaId) = SerializationService.ToData2(key);
+            while (valueSchemaId > 0) // may happen several times
+            {
+                await SerializationService.FetchSchema(keySchemaId).CfAwait();
+                (valueData, valueSchemaId) = SerializationService.ToData2(key);
+            }
+
+            var timeToLiveMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+
+            var response = withMaxIdle
+                ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
+                : MapPutCodec.DecodeResponse(responseMessage).Response;
+
+            var (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            while (resultSchemaId > 0) // may happen several times
+            {
+                await SerializationService.PublishSchema(resultSchemaId).CfAwait();
+                (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            }
+
+            return result;
+        }
+
         protected virtual async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server

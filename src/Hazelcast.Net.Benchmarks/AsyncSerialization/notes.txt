@@ -74,3 +74,51 @@ AsyncSerializationPortable
     that, but the SyncOrFalse could be an option - which needs to be balanced against the associated quite more
     complicated code pattern.
 
+AsyncSerialization
+
+    Requirements
+    - 2 members, 1 client, 1 thread
+    - 4 variations:
+      - puts as per master
+      - puts with 'eager de-serialization' + 'controlled serialization'
+      - gets as per master
+      - gets with 'eager de-serialization' + 'controlled serialization'
+
+    Where
+    - 'eager deserialization' = we deserialize *everything* we receive before returning to the user, i.e. while
+      we are still in the async call, so that we can asynchronously fetch missing schemas if needed.
+    - 'controlled serialization' = the serializer throws (or reports in any meaningful way) when it cannot
+      serialize, synchronously, and then the caller fetches the schemas, and then tries again.
+
+    Notes
+    - 'eager deserialization' means we kill lazy-values support everywhere in the .NET client = bad
+    - alternative is async-lazy-values which means that every value access has to become async = expensive
+
+    Put
+
+    | Method |     Mean |    Error |   StdDev | Ratio | RatioSD |    Gen 0 | Allocated |
+    |------- |---------:|---------:|---------:|------:|--------:|---------:|----------:|
+    |    Put | 17.65 ms | 0.339 ms | 0.813 ms |  1.00 |    0.00 | 250.0000 |      1 MB |
+    |   Put2 | 17.21 ms | 0.355 ms | 1.024 ms |  0.99 |    0.07 | 250.0000 |      1 MB |
+
+    As far as Put is concerned, we are marginally faster thanks to a marginal refactoring of the method, so it
+    probably is fair to say that the impact is non-detectable or can be mitigated - because the overheads we
+    were discussing above are few orders of magnitude smaller than the actual duration of a put operation?
+
+Discussion
+
+    Turning a sync method into an async method *has* a non-null performance penalty.
+    Either we accept it, or?
+    Any missing schema situation blows into the face of the user.
+
+    For reading, we *could* go the exception way + enqueue the schema request into a background queue, that would
+    fetch it from the server, and since the invocation would be retried... eventually it could succeed. Except,
+    that does not apply to anything lazy-deserialized.
+
+    For writing, that is not going to work as the invocation is not retryable by default. So either we don't
+    support it at all, or we need to accept that ToData takes the penalty (and maybe not ToObject)?
+
+    'Controlled serialization' pretty much is SyncOrThrow in the original design, we'd probably better want
+    to use SyncOrFalse, and accept the code complexity around each ToData calls. That probably can be done.
+
+    'Eager deserialization' seems like a big meh for .NET?

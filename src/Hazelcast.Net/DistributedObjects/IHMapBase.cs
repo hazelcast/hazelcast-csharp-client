@@ -110,6 +110,7 @@ namespace Hazelcast.DistributedObjects
         /// <returns>The previous value for the specified key, if any; otherwise <c>default(TValue)</c>.</returns>
         // TODO: document MapStore behavior
         Task<TValue> PutAsync(TKey key, TValue value);
+        Task<TValue> PutAsync2(TKey key, TValue value);
 
         /// <summary>
         /// Sets (adds or updates) an entry with a time-to-live, and returns the previous value, if any.
