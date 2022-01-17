@@ -1,0 +1,76 @@
+﻿run with: hz build && src/Hazelcast.Net.Benchmarks/bin/Release/netcoreapp5.0/hb.exe AsyncSerialization.AsyncSerializationBare
+
+AsyncSerializationBare
+
+    No serialization is involved. The objective is to evaluate the bare cost of async vs async, both for
+    - true async, where the invoked async method runs the async state machine
+    - non async, where the invoked async methods synchronously returns a completed ValueTask<>
+
+    |        Method |        Mean |     Error |    StdDev |  Ratio | RatioSD |   Gen 0 | Allocated |
+    |-------------- |------------:|----------:|----------:|-------:|--------:|--------:|----------:|
+    |          Sync |    10.15 us |  0.149 us |  0.139 us |   1.00 |    0.00 |  0.0305 |     136 B |
+    | BareTrueAsync | 1,047.54 us | 12.255 us | 11.463 us | 103.23 |    1.66 | 31.2500 | 128,232 B |
+    |  BareNonAsync |    22.74 us |  0.454 us |  0.445 us |   2.24 |    0.05 |  0.0305 |     175 B |
+
+    These results show that the true async is ~100 times slower, whereas the non async is only ~2.2 times slower. Another
+    maybe more useful way to read the results is that true async introduces a ~1,050 us overhead, whereas non async
+    introduces a ~12 us overhead.
+
+AsyncSerializationInteger
+
+    Serialization of a simple int value.
+
+    |                    Method |         Mean |      Error |     StdDev |       Median |  Ratio | RatioSD |    Gen 0 | Allocated |
+    |-------------------------- |-------------:|-----------:|-----------:|-------------:|-------:|--------:|---------:|----------:|
+    |                      Sync |     74.65 us |   1.471 us |   2.970 us |     74.19 us |   1.00 |    0.00 |  17.2119 |     71 KB |
+    |                     Async |  1,207.83 us |  20.906 us |  19.555 us |  1,209.13 us |  16.40 |    0.39 |  46.8750 |    196 KB |
+    |        AsyncOptimizedBest |     93.19 us |   1.862 us |   4.773 us |     92.30 us |   1.25 |    0.09 |  17.2119 |     71 KB |
+    |       AsyncOptimizedWorst |  1,242.53 us |  24.658 us |  35.364 us |  1,227.44 us |  16.71 |    0.92 |  46.8750 |    196 KB |
+    |       AsyncOptimized2Best |     81.77 us |   1.412 us |   1.251 us |     81.48 us |   1.11 |    0.03 |  17.2119 |     71 KB |
+    |      AsyncOptimized2Worst |  1,213.42 us |   8.491 us |   7.090 us |  1,215.40 us |  16.42 |    0.32 |  46.8750 |    196 KB |
+    |  SyncOrFalseThenAsyncBest |     87.65 us |   2.017 us |   5.851 us |     84.89 us |   1.18 |    0.10 |  17.2119 |     71 KB |
+    | SyncOrFalseThenAsyncWorst |  1,215.42 us |  17.711 us |  16.567 us |  1,210.06 us |  16.50 |    0.34 |  46.8750 |    196 KB |
+    |  SyncOrThrowThenAsyncBest |     85.46 us |   1.705 us |   4.150 us |     84.07 us |   1.15 |    0.07 |  17.2119 |     71 KB |
+    | SyncOrThrowThenAsyncWorst | 11,698.90 us | 287.774 us | 839.450 us | 11,428.19 us | 158.29 |   14.21 | 125.0000 |    508 KB |
+
+    AsyncOptimized returns a ValueTask<> if possible, else goes the true async way. We drive the benchmark with a
+    condition which, in the 'best' case, is always true, and in the 'worst' case, is always false.
+
+    The result show that an optimized async version synchronously returning a ValueTask<> when possible introduces a
+    ~20 us overhead, which is consistent with the Bare benchmark. Of course, triggering the true async state machine
+    has a cost, which here is ~1,130 us, again consistent with the Bare benchmark. In terms of ratios, it means that
+    the best case is still 25% slower, versus sync, though.
+
+    The AsyncOptimized2 version does the condition test at the caller's side instead of doing it in the invoked method,
+    SyncOrFalseThenAsync signals whether a sync execution is possible via a boolean, and SyncOrThrowThenAsync signals
+    whether a sync execution is possible via an exception. We see that they provide marginally better results, at the
+    expense of more complex code.
+
+AsyncSerializationPortable
+
+    Serialization of a simple portable class.
+
+    |                    Method |        Mean |     Error |      StdDev | Ratio | RatioSD |    Gen 0 | Allocated |
+    |-------------------------- |------------:|----------:|------------:|------:|--------:|---------:|----------:|
+    |                      Sync |    336.5 us |   6.73 us |    14.04 us |  1.00 |    0.00 |  61.0352 |    250 KB |
+    |                     Async |  1,534.9 us |  31.93 us |    94.13 us |  4.56 |    0.35 |  91.7969 |    375 KB |
+    |        AsyncOptimizedBest |    377.2 us |   7.52 us |    14.67 us |  1.12 |    0.06 |  61.0352 |    250 KB |
+    |       AsyncOptimizedWorst |  1,631.4 us |  32.58 us |    38.78 us |  4.87 |    0.23 |  91.7969 |    375 KB |
+    |       AsyncOptimized2Best |    366.9 us |   7.94 us |    22.38 us |  1.13 |    0.08 |  61.0352 |    250 KB |
+    |      AsyncOptimized2Worst |  1,525.5 us |  29.61 us |    82.55 us |  4.55 |    0.35 |  91.7969 |    375 KB |
+    |  SyncOrFalseThenAsyncBest |    345.8 us |   6.79 us |    11.15 us |  1.03 |    0.04 |  61.0352 |    250 KB |
+    | SyncOrFalseThenAsyncWorst |  1,522.7 us |  30.23 us |    75.84 us |  4.56 |    0.28 |  91.7969 |    375 KB |
+    |  SyncOrThrowThenAsyncBest |    345.3 us |   6.58 us |    10.63 us |  1.03 |    0.06 |  61.0352 |    250 KB |
+    | SyncOrThrowThenAsyncWorst | 12,676.6 us | 396.97 us | 1,145.34 us | 37.89 |    3.62 | 156.2500 |    688 KB |
+
+    The result show that an optimized async version synchronously returning a ValueTask<> when possible introduces a
+    ~40 us overhead, which remains consistent with the Bare benchmark. True async adds ~1,200 us and remains again
+    consistent. In terms of ratio, we get down to 12% slower.
+
+    Note: still, I don't explain why the overheads are larger.
+
+    Since all ratios go down, the SyncOrFalse or SyncOrThrow ratios fall below 5%. We definitively want to avoid
+    the SyncOrThrow version as the worst-case cost is quite expensive and exceptions are not meant to be used like
+    that, but the SyncOrFalse could be an option - which needs to be balanced against the associated quite more
+    complicated code pattern.
+
