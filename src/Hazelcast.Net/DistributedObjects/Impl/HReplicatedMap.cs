@@ -97,6 +97,8 @@ namespace Hazelcast.DistributedObjects.Impl
             return ToObject<TValue>(response);
         }
 
+        public Task<TValue> GetAsync2(TKey key) => throw new NotImplementedException();
+
         public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
         {
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);

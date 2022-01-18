@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Security.Permissions;
 using System.Threading.Tasks;
 using BenchmarkDotNet.Attributes;
 using Hazelcast.Core;
@@ -20,7 +19,7 @@ using Hazelcast.DistributedObjects;
 
 namespace Hazelcast.Benchmarks.AsyncSerialization
 {
-    public class AsyncSerializationPut
+    public class AsyncSerializationGet
     {
         private IHMap<int, int> _map;
 
@@ -36,23 +35,28 @@ namespace Hazelcast.Benchmarks.AsyncSerialization
                 .Build();
             var client = await HazelcastClientFactory.StartNewClientAsync(options).CfAwait();
             _map = await client.GetMapAsync<int, int>("map").CfAwait();
+
+            for (var i = 0; i < 10; i++)
+            {
+                await _map.PutAsync(i % 10, i % 10).CfAwait();
+            }
         }
 
         [Benchmark(Baseline = true)]
-        public async Task Put()
+        public async Task Get()
         {
             for (var i = 0; i < 100; i++)
             {
-                var previous = await _map.PutAsync(i % 10, i % 10).CfAwait();
+                var value = await _map.GetAsync(i % 10).CfAwait();
             }
         }
 
         [Benchmark]
-        public async Task Put2()
+        public async Task Get2()
         {
             for (var i = 0; i < 100; i++)
             {
-                var previous = await _map.PutAsync2(i % 10, i % 10).CfAwait();
+                var value = await _map.GetAsync2(i % 10).CfAwait();
             }
         }
     }

@@ -78,14 +78,19 @@ namespace Hazelcast.DistributedObjects.Impl
             if (key == null) throw new ArgumentNullException(nameof(key));
             if (value == null) throw new ArgumentNullException(nameof(value));
 
-            // FIXME this is where we need to introduce some async stuff
+            // this is what we used to do
             //var keyData = SerializationService.ToData(key);
             //var valueData = SerializationService.ToData(value);
 
-            // so, doing this means we've turned this method into an async state machine,
-            // because of the potential awaits that were not there before, and then why
-            // do it this way and not push the serialization to the GetAndSetAsync so at
-            // least there is only 1 state machine running?
+            // we replace it by retry loops for ToData and ToObject, which means
+            // that we await in this method = introduces a new state machine, so
+            // we will probably want to flatten the call stack by duplicating
+            // code in methods, thus reducing the number of state machines and
+            // controlling the cost of async.
+
+            // for the same reason, pushing the loops into their own method implementation
+            // would mean that these methods in turn require their state machine, so...
+            // not sure it is feasible. need to investigate.
 
             var (keyData, keySchemaId) = SerializationService.ToData2(key);
             while (keySchemaId > 0) // may happen several times
