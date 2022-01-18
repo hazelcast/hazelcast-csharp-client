@@ -63,6 +63,31 @@ namespace Hazelcast.DistributedObjects.Impl
             return response;
         }
 
+        public async Task<TValue> GetAsync2(TKey key)
+        {
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var (keyData, keySchemaId) = SerializationService.ToData2(key);
+            while (keySchemaId > 0)
+            {
+                await SerializationService.PublishSchema(keySchemaId).CfAwait();
+                (keyData, keySchemaId) = SerializationService.ToData2(key);
+            }
+
+            var requestMessage = MapGetCodec.EncodeRequest(Name, keyData, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, CancellationToken.None).CfAwait();
+            var response = MapGetCodec.DecodeResponse(responseMessage).Response;
+
+            var (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            while (resultSchemaId > 0)
+            {
+                await SerializationService.FetchSchema(resultSchemaId).CfAwait();
+                (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            }
+
+            return result;
+        }
+
         /// <inheritdoc />
         public Task<IReadOnlyDictionary<TKey, TValue>> GetAllAsync(ICollection<TKey> keys)
             => GetAllAsync(keys, CancellationToken.None);

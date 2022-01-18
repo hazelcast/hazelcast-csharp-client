@@ -105,6 +105,19 @@ AsyncSerialization
     probably is fair to say that the impact is non-detectable or can be mitigated - because the overheads we
     were discussing above are few orders of magnitude smaller than the actual duration of a put operation?
 
+    Get
+
+    | Method |     Mean |    Error |   StdDev | Ratio | RatioSD |    Gen 0 | Allocated |
+    |------- |---------:|---------:|---------:|------:|--------:|---------:|----------:|
+    |    Get | 18.71 ms | 0.536 ms | 1.485 ms |  1.00 |    0.00 | 156.2500 |    671 KB |
+    |   Get2 | 17.29 ms | 0.338 ms | 0.810 ms |  0.92 |    0.09 | 156.2500 |    644 KB |
+
+    Similar results for Get, a clear rewrite of the method with less clutter and less chained async state
+    machines even creates a small perf gain.
+
+    So we can even probably improve perf by paying more attentions to our async methods chains, and do the
+    eager / controlled thing without a performance loss. OTOH, eager is *not* compatible with lazy?
+
 Discussion
 
     Turning a sync method into an async method *has* a non-null performance penalty.

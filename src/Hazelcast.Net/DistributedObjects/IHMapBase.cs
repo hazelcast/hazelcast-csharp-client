@@ -41,6 +41,8 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         Task<TValue> GetAsync(TKey key);
 
+        Task<TValue> GetAsync2(TKey key);
+
         /// <summary>
         /// Gets a <see cref="IReadOnlyCollection{TKey}" /> of the keys contained in this map.
         /// </summary>
