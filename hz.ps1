@@ -369,11 +369,33 @@ else {
     $docMessage = "Version $($options.version) documentation"
 }
 
-# determine framework(s) - for building and running tests
-$frameworks = @( "net462", "net48", "netcoreapp3.1", "net5.0" )
-if (-not $isWindows) {
-    $frameworks = @( "netcoreapp3.1", "net5.0" )
+function determine-target-frameworks {
+    $csproj = [xml] (get-content "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj")
+    $csproj.Project.PropertyGroup | foreach-object {
+        if ($_.Condition -ne $null -and $_.Condition.Contains("Windows_NT")) {
+            if ($_.Condition.Contains("==")) {
+                $targetsOnWindows = $_.TargetFrameworks
+            }
+            if ($_.Condition.Contains("!=")) {
+                $targetsOnLinux = $_.TargetFrameworks
+            }
+        }
+    }
+    if ($isWindows) {
+        $frameworks = $targetsOnWindows
+    }
+    else {
+        $frameworks = $targetsOnLinux
+    }
+    $frameworks = $frameworks.Split(";", [StringSplitOptions]::RemoveEmptyEntries)
+    for ($i = 0; $i -lt $framework.Length; $i++) {
+        $frameworks[$i] = $frameworks[$i].Trim()
+    }
+    return $frameworks
 }
+
+# determine framework(s) - for building and running tests
+$frameworks = determine-target-frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
     $framework = $options.framework.ToLower()
     if ($framework.Contains(',')) {
