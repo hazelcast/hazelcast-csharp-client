@@ -192,7 +192,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "server-version", "build-proj", "enterprise-key" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -215,13 +215,13 @@ $actions = @(
        uniq = $true;
        desc = "runs the remote controller for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "start-remote-controller";
        uniq = $true;
        desc = "starts the remote controller for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "stop-remote-controller";
        uniq = $true;
@@ -231,13 +231,13 @@ $actions = @(
        uniq = $true;
        desc = "runs a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "get-server";
        uniq = $true;
        desc = "gets a server for tests";
        note = "This command downloads the required JARs and configuration file.";
-       need = @( "java", "server-files", "server-version", "enterprise-key" )
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "generate-codecs";
        uniq = $true;
@@ -346,6 +346,7 @@ if ($isSnapshot) {
 # more directories
 $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
+$libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
 
@@ -501,7 +502,7 @@ function ensure-command($command) {
 # if, from the specified $options.server, we can derive a $script:serverVersion
 # that is an available, actual server version.
 # or, $options.serverActual
-function ensure-server-version {
+function determine-server-version {
 
     $version = $options.server
 
@@ -515,7 +516,7 @@ function ensure-server-version {
 
     if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
-        return;
+        return
     }
 
     if ($version -eq "master") {
@@ -547,7 +548,7 @@ function ensure-server-version {
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
-        return;
+        return
     }
 
     Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
@@ -643,7 +644,7 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
 # add the jar to the $script:options.classpath
 function ensure-jar ( $jar, $repo, $artifact ) {
 
-    if(Test-Path "$tmpDir/lib/$jar") {
+    if(Test-Path "$libDir/$jar") {
 
         Write-Output "Detected $jar"
     } else {
@@ -659,17 +660,59 @@ function ensure-jar ( $jar, $repo, $artifact ) {
             $cls = "tests"
         }
 
-        download-maven-artifact $repo $group $art $ver $cls "$tmpDir/lib/$jar"
+        download-maven-artifact $repo $group $art $ver $cls "$libDir/$jar"
     }
     $s = ";"
     if (-not $isWindows) { $s = ":" }
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
-    $classpath += "$tmpDir/lib/$jar"
+    $classpath += "$libDir/$jar"
     # Be sure to quote the path to escape from white space
     # where you call the $script:options.classpath
     # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
+}
+
+function verify-server-files {
+    if (-not (test-path "$libDir")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-remote-controller-${hzRCVersion}.jar")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-${serverVersion}-tests.jar")) { return $false }
+
+    if ($options.enterprise) {
+
+        # ensure we have the hazelcast enterprise server
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-enterprise-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+
+        # ensure we have the hazelcast enterprise test jar
+        if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}-tests.jar")) { return $false }
+    }
+    else {
+
+        # ensure we have the hazelcast server jar
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+    }
+
+    # specified file not found
+    if (-not [string]::IsNullOrWhiteSpace($options.serverConfig) -and -not (test-path $options.serverConfig)) { return $false }
+
+    # defaults?
+    if (-not (test-path "$libDir\hazelcast-$($options.server).xml") -or
+        -not (test-path "$libDir\hazelcast-$serverVersion.xml")) { return $false }
+
+    # all clear
+    return $true
 }
 
 # ensures we have all jars & config required for the remote controller and the server,
@@ -677,7 +720,12 @@ function ensure-jar ( $jar, $repo, $artifact ) {
 function ensure-server-files {
 
     Write-Output "Prepare server/rc..."
-    if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
+    if (-not (test-path "$libDir")) { mkdir "$libDir" >$null }
+
+    # if we don't have all server files for the specified version,
+    # we're going to try and download things below, but beforehand
+    # let's determine which server version we *really* want
+    if (-not (verify-server-files)) { determine-server-version }
 
     # ensure we have the remote controller + hazelcast test jar
     ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
@@ -718,15 +766,15 @@ function ensure-server-files {
             Die "Configuration file $($options.serverConfig) is missing."
         }
     }
-    elseif (test-path "$buildDir\hazelcast-$($options.server).xml") {
+    elseif (test-path "$libDir\hazelcast-$($options.server).xml") {
         # config was not specified, try with exact specified server version
         Write-Output "Detected hazelcast-$($options.server).xml"
-        $options.serverConfig = "$buildDir\hazelcast-$($options.server).xml"
+        $options.serverConfig = "$libDir\hazelcast-$($options.server).xml"
     }
-    elseif (test-path "$buildDir\hazelcast-$serverVersion.xml") {
+    elseif (test-path "$libDir\hazelcast-$serverVersion.xml") {
         # config was not specified, try with detected server version
         Write-Output "Detected hazelcast-$serverVersion.xml"
-        $options.serverConfig = "$buildDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
     }
     else {
         # no config found, try to download
@@ -738,11 +786,11 @@ function ensure-server-files {
         # special master case
         if ($options.server -eq "master") {
             $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
-            $dest = "$buildDir/hazelcast-$serverVersion.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
             $response = invoke-web-request $url $dest
             if ($response.StatusCode -ne 200) {
                 if (test-path $dest) { rm $dest }
-                Die "Error: failed to download hazelcast-default.xml (${response.StatusCode}) from branch master"
+                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
             }
             Write-Output "Found hazelcast-default.xml from branch master"
             $found = $true
@@ -751,11 +799,11 @@ function ensure-server-files {
         if (-not $found) {
             # try tag eg 'v4.2.1' or 'v4.3'
             $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
-            $dest = "$buildDir/hazelcast-$serverVersion.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from tag v$v"
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from tag v$v"
                 if (test-path $dest) { rm $dest }
             }
             else {
@@ -776,7 +824,7 @@ function ensure-server-files {
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from branch $v.z"
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v.z"
                 if (test-path $dest) { rm $dest }
             }
             else {
@@ -791,7 +839,7 @@ function ensure-server-files {
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from branch $v"
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
                 if (test-path $dest) { rm $dest }
             }
             else {
@@ -804,7 +852,7 @@ function ensure-server-files {
             Die "Running out of options... failed to download hazelcast-default.xml."
         }
 
-        $options.serverConfig = "$buildDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
     }
 }
 
