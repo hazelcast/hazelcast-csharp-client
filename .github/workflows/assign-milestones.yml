@@ -18,7 +18,7 @@ jobs:
     - name: Assign
       uses: actions/github-script@v5
       with:
-        github-token: ${{ secrets.MY_GITHUB_TOKEN_TESTREPO }}
+        github-token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
         script: |
         
             // see https://github.com/actions/github-script
