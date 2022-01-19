@@ -82,7 +82,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"
+    @{ name = "server";          type = [string];  default = "5.0-SNAPSHOT"; alias="server-version";
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -97,7 +97,7 @@ $params = @(
        desc = "the build configuration";
        note = "Configuration is 'Release' by default but can be forced to be 'Debug'."
     },
-    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf";
+    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf,test-filter";
        parm = "<filter>";
        desc = "a test filter (default is all tests)";
        note = "The test <filter> can be used to filter the tests to run, it must respect the NUnit test selection language, which is detailed at: https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html. Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
@@ -107,7 +107,7 @@ $params = @(
        desc = "a simplified test filter";
        note = "The simplified test <pattern> filter is equivalent to the full `"name =~ /<pattern>/`" filter."
     },
-    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf";
+    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf,coverage-filter";
        parm = "<filter>";
        desc = "a test coverage filter (default is all)";
        note = "The coverage <filter> can be used to filter the tests to cover, it must respect the dotCover language, which is detailed at: https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters."
@@ -124,10 +124,10 @@ $params = @(
        desc = "the version to build, set, tag, etc.";
        note = "The <version> must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2. If no value is specified then the version is obtained from src/Directory.Build.props."
     },
-    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr";
+    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr,no-restore";
        desc = "do not restore global NuGet packages"
     },
-    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr";
+    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr,local-restore";
        desc = "restore all NuGet packages locally"
     },
     @{ name = "constants";       type = [string];  default = $null;
@@ -140,7 +140,7 @@ $params = @(
        info = "The classpath is appended to the default remote controller or server classpath." },
     @{ name = "reproducible";    type = [switch];  default = $false;      alias = "repro";
        desc = "build reproducible assemblies" },
-    @{ name = "serverConfig";    type = [string];  default = $null;
+    @{ name = "serverConfig";    type = [string];  default = $null;       alias = "server-config";
        parm = "<path>";
        desc = "the full path to the server configuration xml file"
     },
