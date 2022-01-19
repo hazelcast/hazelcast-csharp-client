@@ -29,6 +29,9 @@ namespace Hazelcast.Tests.Networking
     public class NetworkAddressTests
     {
         [TestCase("127.0.0.1", true, "127.0.0.1:0")]
+        [TestCase(" 127.0.0.1", true, "127.0.0.1:0")]
+        [TestCase("127.0.0.1 ", true, "127.0.0.1:0")]
+        [TestCase(" 127.0.0.1 ", true, "127.0.0.1:0")]
         [TestCase("127.0.0.1:81", true, "127.0.0.1:81")]
         [TestCase("1", true, "0.0.0.1:0")]
         [TestCase(":82", false, "")]

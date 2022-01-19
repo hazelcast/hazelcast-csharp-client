@@ -204,7 +204,7 @@ namespace Hazelcast.Networking
         {
             address = null;
 
-            var span = s.AsSpan();
+            var span = s.Trim().AsSpan();
             var colon1 = span.IndexOf(':');
             var colon2 = span.LastIndexOf(':');
             var brket1 = span.IndexOf('[');
