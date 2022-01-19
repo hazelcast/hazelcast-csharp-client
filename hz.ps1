@@ -180,6 +180,16 @@ $actions = @(
        note = "This command downloads the required JARs and configuration file.";
        need = @( "java", "server-files", "server-version", "enterprise-key" )
     },
+    @{ name = "start-remote-controller";
+       uniq = $true;
+       desc = "starts the remote controller for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "server-version", "enterprise-key" )
+    },
+    @{ name = "stop-remote-controller";
+       uniq = $true;
+       desc = "stops the remote controller";
+    },
     @{ name = "run-server";
        uniq = $true;
        desc = "runs a server for tests";
@@ -1454,6 +1464,9 @@ function get-java-kerberos-args() {
 function start-remote-controller() {
 
     if (-not (test-path "$tmpDir/rc")) { mkdir "$tmpDir/rc" >$null }
+    if (test-path "$tmpDir/rc/pid") {
+        Die "Error: cannot start remote controller, pid file found in $tmpDir/rc"
+    }
 
     Write-Output "Starting Remote Controller..."
     Write-Output "ClassPath: $($script:options.classpath)"
@@ -1485,6 +1498,7 @@ function start-remote-controller() {
         Die "Remote controller has exited immediately."
 	}
     else {
+        set-content "$tmpDir/rc/pid" $script:remoteController.Id
         Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
     }
 }
@@ -1548,10 +1562,32 @@ function stop-remote-controller() {
     if ($script:remoteController -and $script:remoteController.Id -and -not $script:remoteController.HasExited) {
         Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
         $script:remoteController.Kill($true) # entire tree
+        rm "$tmpDir/rc/pid"
 	}
     else {
         Write-Output "Remote controller is not running."
 	}
+}
+
+# kills a process tree
+function kill-tree ([int] $ppid) {
+    get-cimInstance Win32_Process | `
+        where-object { $_.ParentProcessId -eq $ppid } | `
+        foreach-object { kill-tree $_.ProcessId }
+    stop-process -force -id $ppid
+}
+
+# kills the remote controller
+function kill-remote-controller() {
+    if (-not (test-path "$tmpDir/rc/pid")) {
+        Write-Output "Remote controller is not running."
+    }
+    else {
+        $rcpid = get-content "$tmpDir/rc/pid"
+        kill-tree $rcpid
+        rm "$tmpDir/rc/pid"
+        Write-Output "Remote controller process $pid has been killed"
+    }
 }
 
 # stops the server
@@ -1787,6 +1823,26 @@ function hz-run-remote-controller {
 
         stop-remote-controller
     }
+}
+
+# starts the remote controller
+function hz-start-remote-controller {
+
+    Write-Output "Remote Controller"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  RC Version     : $hzRCVersion"
+    Write-Output "  Enterprise     : $($options.enterprise)"
+    Write-Output "  Logging to     : $tmpDir/rc"
+
+    start-remote-controller
+
+    Write-Output ""
+    Write-Output "Remote controller is running..."
+}
+
+# stops the remote Controller
+function hz-stop-remote-controller {
+    kill-remote-controller
 }
 
 # gets the Server
