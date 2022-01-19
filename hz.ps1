@@ -1576,6 +1576,11 @@ function start-server() {
     }
 }
 
+# tests the remote controller
+function test-remote-controller() {
+    return test-path "$tmpDir/rc/pid"
+}
+
 # stops the remote controller
 function stop-remote-controller() {
 
@@ -1758,9 +1763,13 @@ function hz-test {
 
     rm "$tmpDir\tests\results\results-*" >$null 2>&1
 
+    $ownsrc = $false
     try {
 
-        start-remote-controller
+        if (!(test-remote-controller)) {
+            start-remote-controller
+            $ownsrc = $true # we own it and need to stop it
+        }
 
         Write-Output ""
         Write-Output "Run tests..."
@@ -1772,7 +1781,9 @@ function hz-test {
     }
     finally {
 
-        stop-remote-controller
+        if ($ownsrc) {
+            stop-remote-controller
+        }
     }
 
     Write-Output ""
