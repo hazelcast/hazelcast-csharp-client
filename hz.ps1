@@ -288,7 +288,8 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-$serverVersion = $options.server
+$serverVersion = $options.server # use specified value by default FIXME KILL THIS?
+$isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
@@ -298,7 +299,7 @@ $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
-if ($options.server.Contains("SNAPSHOT")) {
+if ($isSnapshot) {
 
     $mvnOssRepo = $mvnOssSnapshotRepo
     $mvnEntRepo = $mvnEntSnapshotRepo
@@ -437,23 +438,57 @@ function ensure-command($command) {
     }
 }
 
-# ensure that $script:serverVersion does not contain a -SNAPSHOT version,
-# or contains a valid -SNAPSHOT version, by updating the version if necessary,
-# e.g. '4.0-SNAPSHOT' may become '4.0.4-SNAPSHOT'
+# $options.server contains the specified server version, which can be 5.0, 5.0.1,
+# 5.0-SNAPSHOT, 5.0.1-SNAPSHOT, master, or anything really - and it may match an
+# actual server version, but also be master, or 4.0-SNAPSHOT that would be n/a on
+# Maven, because for some reason we don't keep .0-SNAPSHOT on Maven, but Maven
+# would advertise the 4.0.x-SNAPSHOT instead - so here we are going to figure out
+# if, from the specified $options.server, we can derive a $script:serverVersion
+# that is an available, actual server version.
+# or, $options.serverActual
 function ensure-server-version {
 
-    $version = $script:serverVersion
+    $version = $options.server
+
+    # set the actual server version
+    # this will be updated below if required
+    $script:serverVersion = $version
 
     # set server version (to filter tests)
+    # this will be updated below if required
     $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
 
-    if (-not ($version.EndsWith("-SNAPSHOT"))) {
+    if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
         return;
     }
 
+    if ($version -eq "master") {
+        Write-Output "Server: version is $version, determine actual version from GitHub"
+        $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/pom.xml"
+        Write-Output "GET $url"
+        $response = invoke-web-request $url
+        if ($response.StatusCode -ne 200) {
+            Die "Error: could not download POM file from GitHub ($($response.StatusCode))"
+        }
+        $pom = [xml] $response.Content
+        if ($pom.project -eq $null -or $pom.project.version -eq $null) {
+            Die "Error: got invalid POM file from GitHub (could not find version)"
+        }
+        $version = $pom.project.version
+        if ([string]::IsNullOrWhiteSpace($version)) {
+            Die "Error: got invalid POM file from GitHub (could not find version)"
+        }
+        if (-not $version.EndsWith("-SNAPSHOT")) {
+            $version += "-SNAPSHOT"
+        }
+        Write-Output "Server: determined version $version from GitHub"
+        $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
+        $script:serverVersion = $version
+    }
+
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
-    Write-Output "Maven: $url"
+    Write-Output "GET $url"
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
@@ -463,7 +498,7 @@ function ensure-server-version {
     Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
 
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
-    Write-Output "Maven: $url2"
+    Write-Output "GET $url2"
     $response2 = invoke-web-request $url2
     if ($response2.StatusCode -ne 200) {
         Die "Error: could not download metadata from Maven ($($response2.StatusCode))"
@@ -576,7 +611,7 @@ function ensure-jar ( $jar, $repo, $artifact ) {
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
     $classpath += "$tmpDir/lib/$jar"
-    # Be sure to quote the path to escape from white space 
+    # Be sure to quote the path to escape from white space
     # where you call the $script:options.classpath
     # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
@@ -620,45 +655,58 @@ function ensure-server-files {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
+        # config was specified, it must exist
         if  (test-path $options.serverConfig) {
-            # config was specified and exists
             Write-Output "Detected $($options.serverConfig)"
         }
         else {
-            # config was specified but is missing
             Die "Configuration file $($options.serverConfig) is missing."
         }
     }
     elseif (test-path "$buildDir\hazelcast-$($options.server).xml") {
-        # config was not specified, try with specified server version
+        # config was not specified, try with exact specified server version
         Write-Output "Detected hazelcast-$($options.server).xml"
         $options.serverConfig = "$buildDir\hazelcast-$($options.server).xml"
     }
     elseif (test-path "$buildDir\hazelcast-$serverVersion.xml") {
-        # config was not specified, try with fixed server version
+        # config was not specified, try with detected server version
         Write-Output "Detected hazelcast-$serverVersion.xml"
         $options.serverConfig = "$buildDir\hazelcast-$serverVersion.xml"
     }
     else {
         # no config found, try to download
 
-        $v = $serverVersion
-        if ($v.EndsWith('-SNAPSHOT')) { $v = $v.SubString(0, $v.Length - '-SNAPSHOT'.Length)}
         Write-Output "Downloading hazelcast-default.xml -> hazelcast-$serverVersion.xml..."
         $found = $false
+        $v = $serverVersion.TrimEnd("-SNAPSHOT")
 
-        # try tag eg 'v4.2.1' or 'v4.3'
-        $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
-        $dest = "$buildDir/hazelcast-$serverVersion.xml"
-        $response = invoke-web-request $url $dest
-
-        if ($response.StatusCode -ne 200) {
-            Write-Output "Failed to download hazelcast-default.xml (404) from tag v$v"
-            if (test-path $dest) { rm $dest }
-        }
-        else {
-            Write-Output "Found hazelcast-default.xml from tag v$v"
+        # special master case
+        if ($options.server -eq "master") {
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$buildDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+            if ($response.StatusCode -ne 200) {
+                if (test-path $dest) { rm $dest }
+                Die "Error: failed to download hazelcast-default.xml (${response.StatusCode}) from branch master"
+            }
+            Write-Output "Found hazelcast-default.xml from branch master"
             $found = $true
+        }
+
+        if (-not $found) {
+            # try tag eg 'v4.2.1' or 'v4.3'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$buildDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from tag v$v"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from tag v$v"
+                $found = $true
+            }
         }
 
         if (-not $found) {
@@ -673,7 +721,7 @@ function ensure-server-files {
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml (404) from branch $v.z"
+                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from branch $v.z"
                 if (test-path $dest) { rm $dest }
             }
             else {
@@ -688,7 +736,7 @@ function ensure-server-files {
             $response = invoke-web-request $url $dest
 
             if ($response.StatusCode -ne 200) {
-                Write-Output "Failed to download hazelcast-default.xml (404) from branch $v"
+                Write-Output "Failed to download hazelcast-default.xml (${response.StatusCode}) from branch $v"
                 if (test-path $dest) { rm $dest }
             }
             else {
