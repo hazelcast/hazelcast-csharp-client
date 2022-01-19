@@ -91,6 +91,10 @@ namespace Hazelcast.Sql
                 .Select(p => _serializationService.ToData(p))
                 .ToList(parameters.Length);
 
+            // note: skipUpdateStatistics was introduced at one point in the Java code and it's true if
+            // the client connection type is MC_JAVA_CLIENT ie if the client is the MC client, and we
+            // are not the MC client, we are the .NET client.
+
             var requestMessage = SqlExecuteCodec.EncodeRequest(
                 sql,
                 serializedParameters,
@@ -98,7 +102,8 @@ namespace Hazelcast.Sql
                 options.CursorBufferSize,
                 options.Schema,
                 (byte)resultType,
-                queryId
+                queryId,
+                skipUpdateStatistics: false
             );
 
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
