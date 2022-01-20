@@ -158,7 +158,7 @@ namespace Hazelcast.Tests.Messaging
                 e.MoveNext(); // to 3
                 Assert.That(e.NextIsNotTheEnd());
                 e.MoveNext(); // to 4
-                Assert.That(!e.NextIsNotTheEnd()); // next is 5 which is EndStruct
+                Assert.That(e.NextIsNotTheEnd()); // next is 5 which is EndStruct
                 e.MoveNext(); // to 5
                 Assert.That(!e.NextIsNotTheEnd()); // current is 5 which is EndStruct
                 e.MoveNext(); // to 6
