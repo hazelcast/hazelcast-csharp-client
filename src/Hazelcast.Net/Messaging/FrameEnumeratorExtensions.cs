@@ -25,11 +25,9 @@ namespace Hazelcast.Messaging
         /// <returns><c>true</c> is the enumerator can move next to a non-end frame; otherwise <c>false</c>.</returns>
         public static bool NextIsNotTheEnd(this IEnumerator<Frame> enumerator)
         {
-            var current = enumerator.Current;
+            var current = enumerator.Current; // current frame is what Take() would return
             if (current == null) return false; // what else?
-            if (current.IsEndStruct) return false;
-            var next = current.Next;
-            return next != null && !next.IsEndStruct;
+            return !current.IsEndStruct; // would Take() return an end frame?
         }
     }
 }
