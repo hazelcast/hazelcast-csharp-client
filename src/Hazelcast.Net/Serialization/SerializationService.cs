@@ -226,7 +226,7 @@ namespace Hazelcast.Serialization
 
 #pragma warning disable CA1508 // Avoid dead conditional code
             // false positive, https://github.com/dotnet/roslyn-analyzers/issues/4763
-            var isNullableType = typeOfT.IsNullableType();
+            var isNullableType = typeOfT.IsNullableOfT();
 #pragma warning restore CA1508
             if (isNullableType) return true;
 

@@ -24,15 +24,44 @@ namespace Hazelcast.Core
     internal static class TypeExtensions
     {
         /// <summary>
-        /// Determines whether this type is a nullable type.
+        /// Determines whether this type is a <see cref="Nullable{T}"/> type.
         /// </summary>
         /// <param name="type">This type.</param>
-        /// <returns><c>true</c> if this type is a nullable type; otherwise <c>false</c>.</returns>
-        public static bool IsNullableType(this Type type)
+        /// <returns><c>true</c> if this type is a <see cref="Nullable{T}"/> type; otherwise <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">This <paramref name="type"/> is <c>null</c>.</exception>
+        public static bool IsNullableOfT(this Type type)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof (Nullable<>);
+        }
+
+        /// <summary>
+        /// Determines whether this type is nullable, i.e. when it supports <c>null</c> value.
+        /// </summary>
+        /// <param name="type">This type.</param>
+        /// <returns><c>true</c> if this type is nullable; otherwise <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">This <paramref name="type"/> is <c>null</c>.</exception>
+        /// <remarks>
+        /// <para>A type is nullable when it is a reference type, or a <see cref="Nullable{T}"/> value type.</para>
+        /// </remarks>
+        public static bool IsNullable(this Type type)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
+            // references are nullable
+            var isValueType = type.IsValueType;
+            if (!isValueType) return true;
+
+            // Nullable<T> are nullable
+#pragma warning disable CA1508 // Avoid dead conditional code
+            // false positive, https://github.com/dotnet/roslyn-analyzers/issues/4763
+            var isNullableType = type.IsNullableOfT();
+#pragma warning restore CA1508
+            if (isNullableType) return true;
+
+            // anything else is not nullable
+            return false;
         }
 
         /// <summary>

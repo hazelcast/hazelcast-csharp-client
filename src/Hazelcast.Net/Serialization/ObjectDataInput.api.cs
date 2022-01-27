@@ -64,9 +64,9 @@ namespace Hazelcast.Serialization
 
         public ushort ReadUShort()
         {
-            CheckAvailable(Position, BytesExtensions.SizeOfUnsignedShort);
+            CheckAvailable(Position, BytesExtensions.SizeOfShort);
             var value = _buffer.ReadUShort(Position, Endianness);
-            Position += BytesExtensions.SizeOfUnsignedShort;
+            Position += BytesExtensions.SizeOfShort;
             return value;
         }
 

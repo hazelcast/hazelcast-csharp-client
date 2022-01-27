@@ -36,9 +36,9 @@ namespace Hazelcast.Serialization
 
         public void WriteSByte(sbyte value)
         {
-            EnsureAvailable(BytesExtensions.SizeOfUnsignedByte);
+            EnsureAvailable(BytesExtensions.SizeOfByte);
             _buffer.WriteSbyte(_position, value);
-            _position += BytesExtensions.SizeOfUnsignedByte;
+            _position += BytesExtensions.SizeOfByte;
         }
 
         public void WriteChar(char value)
@@ -57,9 +57,9 @@ namespace Hazelcast.Serialization
 
         public void WriteUShort(ushort value)
         {
-            EnsureAvailable(BytesExtensions.SizeOfUnsignedShort);
+            EnsureAvailable(BytesExtensions.SizeOfShort);
             _buffer.WriteUShort(_position, value, Endianness);
-            _position += BytesExtensions.SizeOfUnsignedShort;
+            _position += BytesExtensions.SizeOfShort;
         }
 
         public void WriteInt(int value)

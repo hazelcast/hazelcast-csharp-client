@@ -30,9 +30,9 @@ namespace Hazelcast.Tests.Core
         public void Nullable(Type type, bool isNullable)
         {
             if (isNullable)
-                Assert.That(type.IsNullableType());
+                Assert.That(type.IsNullableOfT());
             else
-                Assert.That(type.IsNullableType(), Is.False);
+                Assert.That(type.IsNullableOfT(), Is.False);
         }
 
         [TestCase(typeof(int), true, "int")]
@@ -48,7 +48,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ArgumentExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => ((Type) null).IsNullableType());
+            Assert.Throws<ArgumentNullException>(() => ((Type) null).IsNullableOfT());
             Assert.Throws<ArgumentNullException>(() => ((Type) null).ToCsString());
         }
 

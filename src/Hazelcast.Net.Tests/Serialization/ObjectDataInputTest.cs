@@ -291,7 +291,7 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void TestReadForBOffLen_null_array()
         {
-            _input.Read(null, 0, 1);
+            _input.Read((byte[])null, 0, 1);
         }
 
         [Test]

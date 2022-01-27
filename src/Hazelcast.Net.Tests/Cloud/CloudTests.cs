@@ -467,105 +467,22 @@ namespace Hazelcast.Tests.Cloud
             var metrics = MetricsDecompressor.GetMetrics(bytes, true);
             foreach (var metric in metrics) Console.WriteLine(metric);
 
-            // consume in Java
-            var rc = JavaConsume(bytes);
-            Assert.That(rc, Is.Zero, "Java failed.");
+            // consume in Java - will throw if exit code is not zero
+            JavaConsume(bytes);
         }
 
-        private int JavaConsume(byte[] bytes)
+        private static void JavaConsume(byte[] bytes)
         {
-            // determine solution path
-            var assemblyLocation = GetType().Assembly.Location;
-            var solutionPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assemblyLocation), "../../../../.."));
+            var serverVersion = ServerVersion.GetVersion("5.0");
+            Console.WriteLine($"Server Version: {serverVersion}");
 
-            // name a temp directory
-            var tempPath = Path.Combine(Path.GetTempPath(), $"hz-tests-{Guid.NewGuid():N}");
-
-            var serverVersion = "5.0";  // TODO: need a better way of passing the server's version
-
-            try
-            {
-                return JavaConsume(bytes, solutionPath, tempPath, serverVersion);
-            }
-            finally
-            {
-                // get rid of the temp directory
-                Directory.Delete(tempPath, true);
-            }
-        }
-
-        private int JavaConsume(byte[] bytes, string solutionPath, string tempPath, string serverVersion)
-        {
-            // create the temp directory and copy the source files
-            Directory.CreateDirectory(tempPath);
-            File.WriteAllText(Path.Combine(tempPath, "Program.java"), TestFiles.ReadAllText(this, "Java/CloudTests/Program.java"));
-            File.WriteAllText(Path.Combine(tempPath, "TestConsumer.java"), TestFiles.ReadAllText(this, "Java/Cloudtests/TestConsumer.java"));
-
-            // validate that we have the server JAR
-            var version = ServerVersion.GetVersion(NuGetVersion.Parse(serverVersion));
-            Console.WriteLine($"Server Version: {version}");
-            var serverJarPath = Path.Combine(solutionPath, $"temp/lib/hazelcast-{version}.jar");
-            Assert.That(File.Exists(serverJarPath), Is.True, $"Could not find JAR file {serverJarPath}, try 'hz get-server -server {version}");
-
-            // compile
-            Console.WriteLine("Compile...");
-            Assert.That(Directory.GetFiles(tempPath, "*.java").Any(), "Could not find source files.");
-
-            var p = Process.Start(new ProcessStartInfo(Path.Combine(JdkPath, "bin/javac.exe"), $"-cp {serverJarPath} {Path.Combine(tempPath, "*.java")}")
-                .WithRedirects(true, true, false));
-            Assert.That(p, Is.Not.Null);
-            p.WaitForExit();
-            Console.WriteLine($"Compilation exit code: {p.ExitCode}");
-            Console.WriteLine("Compilation stderr:");
-            Console.WriteLine(p.StandardError.ReadToEnd());
-            Console.WriteLine("Compilation stdout:");
-            Console.WriteLine(p.StandardOutput.ReadToEnd());
-            Assert.That(p.ExitCode, Is.Zero, "Java compilation failed.");
-
-            // execute
-            Console.WriteLine("Execute...");
-            var asyncReads = true; // syncReads can hang if output is too big?
-            p = new Process
-            {
-                StartInfo = new ProcessStartInfo(Path.Combine(JdkPath, "bin/java.exe"), $"-cp {serverJarPath};{tempPath} Program")
-                    .WithRedirects(true, true, true)
-            };
-
-            if (asyncReads)
-            {
-                p.OutputDataReceived += (sender, args) => { Console.WriteLine(args.Data); };
-                p.ErrorDataReceived += (sender, args) =>
-                {
-                    var color = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("ERR: " + args.Data);
-                    Console.ForegroundColor = color;
-                };
-            }
-
-            p.Start();
-
-            if (asyncReads)
-            {
-                p.BeginOutputReadLine();
-                p.BeginErrorReadLine();
-            }
-
-            Console.WriteLine($"Writing {bytes.Length} bytes to java");
-            p.StandardInput.BaseStream.Write(bytes, 0, bytes.Length);
-            p.StandardInput.Close();
-            Console.WriteLine("Waiting for completion...");
-            p.WaitForExit();
-            Console.WriteLine($"Execution exit code: {p.ExitCode}");
-            if (!asyncReads)
-            {
-                Console.WriteLine("Execution stderr:");
-                Console.WriteLine(p.StandardError.ReadToEnd());
-                Console.WriteLine("Execution stdout:");
-                Console.WriteLine(p.StandardOutput.ReadToEnd());
-            }
-
-            return p.ExitCode;
+            using var run = new JavaRun()
+                .WithSource("Java/CloudTests/Program.java")
+                .WithSource("Java/Cloudtests/TestConsumer.java")
+                .WithLib($"hazelcast-{serverVersion}.jar");
+            run.Compile();
+            var output = run.Execute("Program", bytes);
+            Console.WriteLine(output);
         }
 
         private IDisposable HConsoleForTest()
@@ -580,20 +497,6 @@ namespace Hazelcast.Tests.Cloud
 
     public static class CloudTestsExtensions
     {
-        public static ProcessStartInfo WithRedirects(this ProcessStartInfo info, bool redirectOutput, bool redirectError, bool redirectInput)
-        {
-            info.CreateNoWindow = true;
-            info.RedirectStandardOutput = redirectOutput;
-            info.RedirectStandardError = redirectError;
-            info.RedirectStandardInput = redirectInput;
-
-#if !NETCOREAPP
-            info.UseShellExecute = false;
-#endif
-
-            return info;
-        }
-
         public static HazelcastOptionsBuilder WithHConsoleLogger(this HazelcastOptionsBuilder builder)
         {
             return builder
