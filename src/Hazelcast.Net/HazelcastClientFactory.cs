@@ -18,13 +18,12 @@ using System.Threading.Tasks;
 using Hazelcast.Aggregation;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Projection;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
-using Hazelcast.Serialization.DefaultSerializers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -179,25 +178,26 @@ namespace Hazelcast
             return new HazelcastOptionsBuilder().With(configure).Build();
         }
 
-        // (internal for tests only) creates the serialization service
-        internal static SerializationService CreateSerializationService(SerializationOptions options, ILoggerFactory loggerFactory)
+        // (internal for tests only) creates the default serialization service
+        internal static SerializationService CreateSerializationService(SerializationOptions options, IClusterMessaging messaging, ILoggerFactory loggerFactory)
         {
-            // TODO: refactor serialization service entirely
-            // there should not be a 'builder'
-            // it's all configuration or service
-            var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
-            serializationServiceBuilder
-                .SetConfig(options)
+            return new SerializationServiceBuilder(options, loggerFactory)
+
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
-                .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
-                .AddHook<PredicateDataSerializerHook>() // shouldn't they be configurable?
+                .SetVersion(SerializationService.SerializerVersion) // FIXME versions confusion w/portable?
+
+                // add hooks that construct and provide IIdentifiedDataSerialization factories for more
+                // built-in types such as predicates, aggregators or projections.
+                .AddHook<PredicateDataSerializerHook>()
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
-                .AddDefinitions(new ConstantSerializerDefinitions())
-                .AddDefinitions(new DefaultSerializerDefinitions())
-                ;
 
-            return serializationServiceBuilder.Build();
+                // define serializers for a range of primitive types (int, lists...)
+                .AddDefinitions(new ConstantSerializerDefinitions())
+
+                // and build
+                .Build()
+                ;
         }
 
         // creates the client
@@ -215,11 +215,12 @@ namespace Hazelcast
             Clock.Initialize(options.Core.Clock);
 
             var loggerFactory = options.LoggerFactory.Service ?? new NullLoggerFactory();
-            var serializationService = CreateSerializationService(options.Serialization, loggerFactory);
-            var cluster = new Cluster(options, serializationService, loggerFactory);
-            var client = new HazelcastClient(options, cluster, serializationService, loggerFactory);
-
-            return client;
+            var cluster = new Cluster(
+                options,
+                messaging => CreateSerializationService(options.Serialization, messaging, loggerFactory), 
+                loggerFactory
+            );
+            return new HazelcastClient(options, cluster, loggerFactory);
         }
     }
 }

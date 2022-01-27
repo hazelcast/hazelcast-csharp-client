@@ -14,7 +14,7 @@
 
 using Hazelcast.Models;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class HLocalDateTimeSerializer : SingletonSerializerBase<HLocalDateTime>
     {

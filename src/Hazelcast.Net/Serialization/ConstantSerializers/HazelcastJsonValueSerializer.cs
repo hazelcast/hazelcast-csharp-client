@@ -12,28 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Models;
+using Hazelcast.Core;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal class HLocalDateSerializer : SingletonSerializerBase<HLocalDate>
+    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase<HazelcastJsonValue>
     {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeLocalDate;
+        public override int TypeId => SerializationConstants.JavascriptJsonSerializationType;
 
-        public override HLocalDate Read(IObjectDataInput input)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override HazelcastJsonValue Read(IObjectDataInput input)
         {
-            var year = input.ReadInt();
-            var month = input.ReadByte();
-            var date = input.ReadByte();
-
-            return new HLocalDate(year, month, date);
+            return new HazelcastJsonValue(input.ReadString());
         }
 
-        public override void Write(IObjectDataOutput output, HLocalDate obj)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
         {
-            output.WriteInt(obj.Year);
-            output.WriteByte(obj.Month);
-            output.WriteByte(obj.Day);
+            output.WriteString(obj.ToString());
         }
     }
 }

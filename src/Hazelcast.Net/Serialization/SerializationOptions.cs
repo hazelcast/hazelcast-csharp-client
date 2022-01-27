@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
@@ -77,6 +78,7 @@ namespace Hazelcast.Serialization
             Endianness = other.Endianness;
             ValidateClassDefinitions = other.ValidateClassDefinitions;
             PortableVersion = other.PortableVersion;
+            EnableClrSerialization = other.EnableClrSerialization;
 
             ClassDefinitions = new HashSet<IClassDefinition>(other.ClassDefinitions);
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
@@ -86,6 +88,16 @@ namespace Hazelcast.Serialization
             Serializers = new List<SerializerOptions>(other.Serializers);
         }
 
+        /// <summary>
+        /// Whether to enable CLR serialization via <see cref="BinaryFormatter"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para><see cref="BinaryFormatter"/> is now considered insecure, and CLR serialization
+        /// is disabled by default. In order to enable CLR serialization, set this value to <c>true</c>.
+        /// Note that if a global serializer is configured <see cref="GlobalSerializer"/>, then both
+        /// CLR serialization options must be true for it to be enabled.</para>
+        /// </remarks>
+        public bool EnableClrSerialization { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Endianness"/>. This value should match the server configuration.

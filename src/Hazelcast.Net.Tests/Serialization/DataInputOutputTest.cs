@@ -15,6 +15,7 @@
 using System;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -26,8 +27,7 @@ namespace Hazelcast.Tests.Serialization
         private static readonly Endianness[] Endiannesses =
         {
             Endianness.BigEndian,
-            Endianness.LittleEndian,
-            //Endianness.NativeOrder()
+            Endianness.LittleEndian
         };
 
         [TestCaseSource(nameof(Endiannesses))]
@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
 
-            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(config, new NullLoggerFactory())
                 .SetEndianness(endianness).Build();
 
             IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
@@ -59,7 +59,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
 
-            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(config, new NullLoggerFactory())
                 .SetEndianness(endianness).Build();
 
             var data = ss.ToData(portable);
@@ -78,6 +78,7 @@ namespace Hazelcast.Tests.Serialization
             obj.Serializable = KitchenSinkDataSerializable.Generate();
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
                 .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
                 {
                     () => new KitchenSinkDataSerializable(),
@@ -125,7 +126,8 @@ namespace Hazelcast.Tests.Serialization
         public void TestNullValue_When_NullableType()
         {
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
-               .Build();
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
             ss.WriteObject(output, 1);

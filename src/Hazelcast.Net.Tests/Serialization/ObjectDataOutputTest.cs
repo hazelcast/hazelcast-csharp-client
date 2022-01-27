@@ -127,6 +127,7 @@ namespace Hazelcast.Tests.Serialization
         public virtual void TestWriteForNullByteArray()
         {
             Assert.Throws<ArgumentNullException>(() => { _output.Write((byte[]) null, 0, 1); });
+            Assert.Throws<ArgumentNullException>(() => { _output.Write((sbyte[])null, 0, 1); });
         }
 
         [Test]

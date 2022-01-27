@@ -580,7 +580,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Cluster?");
 
-            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+            var serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
                 .SetVersion(1)
                 .Build();
 
@@ -589,7 +589,7 @@ namespace Hazelcast.Tests.Networking
             //options.Networking.Addresses.Add("sgay-l4");
             options.Networking.Addresses.Add("localhost");
 
-            var cluster = new Cluster(options, serializationService, new NullLoggerFactory());
+            var cluster = new Cluster(options, messaging => serializationService, new NullLoggerFactory());
             await cluster.Connections.ConnectAsync(CancellationToken.None).CfAwait();
 
             // now we can send messages...

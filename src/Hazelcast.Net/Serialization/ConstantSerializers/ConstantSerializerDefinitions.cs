@@ -13,36 +13,67 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Numerics;
+using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.ConstantSerializers
 {
+    /// <summary>
+    /// Defines serializers for a range of primitive types.
+    /// </summary>
     internal class ConstantSerializerDefinitions : ISerializerDefinitions
     {
+        /// <inheritdoc />
         public void AddSerializers(SerializationService service)
         {
-            service.AddConstantSerializer<byte>(new ByteSerializer());
-            service.AddConstantSerializer<bool>(new BooleanSerializer());
-            service.AddConstantSerializer<char>(new CharSerializer());
-            service.AddConstantSerializer<short>(new ShortSerializer());
-            service.AddConstantSerializer<int>(new IntegerSerializer());
-            service.AddConstantSerializer<long>(new LongSerializer());
-            service.AddConstantSerializer<float>(new FloatSerializer());
-            service.AddConstantSerializer<double>(new DoubleSerializer());
-            service.AddConstantSerializer<string>(new StringSerializer());
+            service.RegisterConstantSerializer<byte>(new ByteSerializer());
+            service.RegisterConstantSerializer<bool>(new BooleanSerializer());
+            service.RegisterConstantSerializer<char>(new CharSerializer());
+            service.RegisterConstantSerializer<short>(new ShortSerializer());
+            service.RegisterConstantSerializer<int>(new IntegerSerializer());
+            service.RegisterConstantSerializer<long>(new LongSerializer());
+            service.RegisterConstantSerializer<float>(new FloatSerializer());
+            service.RegisterConstantSerializer<double>(new DoubleSerializer());
+            service.RegisterConstantSerializer<string>(new StringSerializer());
 
-            service.AddConstantSerializer<byte[]>(new ByteArraySerializer());
-            service.AddConstantSerializer<bool[]>(new BooleanArraySerializer());
-            service.AddConstantSerializer<char[]>(new CharArraySerializer());
-            service.AddConstantSerializer<short[]>(new ShortArraySerializer());
-            service.AddConstantSerializer<int[]>(new IntegerArraySerializer());
-            service.AddConstantSerializer<long[]>(new LongArraySerializer());
-            service.AddConstantSerializer<float[]>(new FloatArraySerializer());
-            service.AddConstantSerializer<double[]>(new DoubleArraySerializer());
-            service.AddConstantSerializer<string[]>(new StringArraySerializer());
+            service.RegisterConstantSerializer<byte[]>(new ByteArraySerializer());
+            service.RegisterConstantSerializer<bool[]>(new BooleanArraySerializer());
+            service.RegisterConstantSerializer<char[]>(new CharArraySerializer());
+            service.RegisterConstantSerializer<short[]>(new ShortArraySerializer());
+            service.RegisterConstantSerializer<int[]>(new IntegerArraySerializer());
+            service.RegisterConstantSerializer<long[]>(new LongArraySerializer());
+            service.RegisterConstantSerializer<float[]>(new FloatArraySerializer());
+            service.RegisterConstantSerializer<double[]>(new DoubleArraySerializer());
+            service.RegisterConstantSerializer<string[]>(new StringArraySerializer());
 
-            service.AddConstantSerializer<Guid>(new GuidSerializer());
-            service.AddConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
+            service.RegisterConstantSerializer<Guid>(new GuidSerializer());
+            service.RegisterConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
+
+            //TODO: proper support for generic types
+            service.RegisterConstantSerializer<JavaClass>(new JavaClassSerializer());
+            service.RegisterConstantSerializer<DateTime>(new DateSerializer());
+            service.RegisterConstantSerializer<BigInteger>(new BigIntegerSerializer());
+
+            service.RegisterConstantSerializer<object[]>(new ArrayStreamSerializer());
+
+            //TODO map server side collection types.
+            service.RegisterConstantSerializer<List<object>>(new ListSerializer<object>());
+            service.RegisterConstantSerializer<LinkedList<object>>(new LinkedListSerializer<object>());
+            service.RegisterConstantSerializer<Dictionary<object, object>>(new HashMapStreamSerializer());
+            service.RegisterConstantSerializer<ConcurrentDictionary<object, object>>(new ConcurrentHashMapStreamSerializer());
+            service.RegisterConstantSerializer<HashSet<object>>(new HashSetStreamSerializer());
+
+            service.RegisterConstantSerializer<HazelcastJsonValue>(new HazelcastJsonValueSerializer());
+
+            service.RegisterConstantSerializer<HLocalDate>(new HLocalDateSerializer());
+            service.RegisterConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
+            service.RegisterConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
+            service.RegisterConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
+
+            service.RegisterConstantSerializer<HBigDecimal>(new HBigDecimalSerializer());
         }
     }
 }

@@ -12,20 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.DefaultSerializers
-{
-    internal class JavaClassSerializer : SingletonSerializerBase<JavaClass>
-    {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeClass;
+using System;
+using System.Numerics;
 
-        public override JavaClass Read(IObjectDataInput input)
+namespace Hazelcast.Serialization.ConstantSerializers
+{
+    internal class BigIntegerSerializer : SingletonSerializerBase<BigInteger>
+    {
+        public override int TypeId => SerializationConstants.JavaDefaultTypeBigInteger;
+
+        public override BigInteger Read(IObjectDataInput input)
         {
-            return new JavaClass(input.ReadString());
+            var bytes = input.ReadByteArray();
+            Array.Reverse(bytes);
+            return new BigInteger(bytes);
         }
 
-        public override void Write(IObjectDataOutput output, JavaClass obj)
+        public override void Write(IObjectDataOutput output, BigInteger obj)
         {
-            output.WriteString(obj.Name);
+            var bytes = obj.ToByteArray();
+            Array.Reverse(bytes);
+            output.WriteByteArray(bytes);
         }
     }
 }

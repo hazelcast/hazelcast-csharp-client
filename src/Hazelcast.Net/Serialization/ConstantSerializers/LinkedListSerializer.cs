@@ -15,7 +15,7 @@
 using System.Collections.Generic;
 using Hazelcast.Core;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class LinkedListSerializer<T> : SingletonSerializerBase<LinkedList<T>>
     {

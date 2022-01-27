@@ -14,7 +14,7 @@
 
 using System.Collections.Generic;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
     // TODO: BigDecimal
 

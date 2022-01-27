@@ -37,12 +37,12 @@ namespace Hazelcast.Clustering
         /// Initializes a new instance of the <see cref="Cluster"/> class.
         /// </summary>
         /// <param name="options">The cluster configuration.</param>
-        /// <param name="serializationService">The serialization service.</param>
+        /// <param name="serializationServiceFactory">The serialization service factory.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Cluster(IClusterOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
+        public Cluster(IClusterOptions options, Func<ClusterMessaging, SerializationService> serializationServiceFactory, ILoggerFactory loggerFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
+            if (serializationServiceFactory == null) throw new ArgumentNullException(nameof(serializationServiceFactory));
             if (loggerFactory is null) throw new ArgumentNullException(nameof(loggerFactory));
 
             var clientName = string.IsNullOrWhiteSpace(options.ClientName)
@@ -65,7 +65,8 @@ namespace Hazelcast.Clustering
             Members = new ClusterMembers(State, _terminateConnections);
             Messaging = new ClusterMessaging(State, Members);
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
-            Connections = new ClusterConnections(State, Members, serializationService);
+            SerializationService = serializationServiceFactory(Messaging);
+            Connections = new ClusterConnections(State, Members, SerializationService);
             _heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
 
             // wire components
@@ -94,6 +95,11 @@ namespace Hazelcast.Clustering
             Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { _heartbeat.AddConnection(conn); return default; };
             Connections.ConnectionClosed += conn => { _heartbeat.RemoveConnection(conn); return default; };
         }
+
+        /// <summary>
+        /// Gets the serialization service.
+        /// </summary>
+        public SerializationService SerializationService { get; }
 
         /// <summary>
         /// Gets the cluster state.
@@ -245,6 +251,9 @@ namespace Hazelcast.Clustering
             // at that point we can get rid of members
             HConsole.WriteLine(this, "Dispose Members");
             await Members.DisposeAsync().CfAwait();
+
+            HConsole.WriteLine(this, "Dispose SerializationService");
+            SerializationService.Dispose();
 
             // and finally, of the state itself
             // which will shutdown

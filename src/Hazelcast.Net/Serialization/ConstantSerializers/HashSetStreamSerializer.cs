@@ -14,17 +14,17 @@
 
 using System.Collections.Generic;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal class HashMapStreamSerializer : DictStreamSerializerBase<Dictionary<object, object>>
+    internal class HashSetStreamSerializer : CollectionStreamSerializerBase<HashSet<object>>
     {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeHashMap;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeHashSet;
 
-        public override Dictionary<object, object> Read(IObjectDataInput input)
+        public override HashSet<object> Read(IObjectDataInput input)
         {
             var size = input.ReadInt();
-            var dict = new Dictionary<object, object>(size);
-            return DeserializeEntries(input, size, dict);
+            var set = new HashSet<object>();
+            return DeserializeEntries(input, size, set);
         }
     }
 }

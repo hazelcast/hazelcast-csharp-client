@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
-
 namespace Hazelcast.Serialization
 {
     internal sealed class StreamSerializerAdapter<T> : ISerializerAdapter
@@ -25,33 +23,16 @@ namespace Hazelcast.Serialization
             _serializer = serializer;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public void Write(IObjectDataOutput output, object obj)
-        {
-            _serializer.Write(output, (T) obj);
-        }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        public object Read(IObjectDataInput input)
-        {
-            return _serializer.Read(input);
-        }
-
         public int TypeId => _serializer.TypeId;
-
-        public void Dispose()
-        {
-            _serializer.Dispose();
-        }
 
         public ISerializer Serializer => _serializer;
 
-        public override string ToString()
-        {
-            var sb = new StringBuilder("SerializerAdapter{");
-            sb.Append("serializer=").Append(_serializer);
-            sb.Append('}');
-            return sb.ToString();
-        }
+        public void Write(IObjectDataOutput output, object obj)
+            => _serializer.Write(output, (T) obj);
+
+        public object Read(IObjectDataInput input)
+            => _serializer.Read(input);
+
+        public void Dispose() => _serializer.Dispose();
     }
 }

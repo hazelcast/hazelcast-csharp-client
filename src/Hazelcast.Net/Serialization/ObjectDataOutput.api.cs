@@ -15,6 +15,7 @@
 using System;
 using System.Text;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization
 {
@@ -90,6 +91,16 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfDouble;
         }
 
+        public void WriteBigDecimal(decimal value)
+        {
+            throw new NotImplementedException(); // FIXME - implement
+        }
+
+        public void WriteBigDecimal(HBigDecimal value)
+        {
+            throw new NotImplementedException(); // FIXME - implement
+        }
+
         public void WriteString(string value)
         {
             var byteCount = value != null ? Encoding.UTF8.GetByteCount(value) : BytesExtensions.SizeOfNullArray;
@@ -137,6 +148,16 @@ namespace Hazelcast.Serialization
         }
 
         public void WriteByteArray(byte[] bytes)
+        {
+            var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (bytes == null || length <= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfByte);
+            Write(bytes);
+        }
+
+        public void WriteSByteArray(sbyte[] bytes)
         {
             var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
             WriteInt(length);
@@ -253,6 +274,24 @@ namespace Hazelcast.Serialization
         }
 
         public void Write(byte[] bytes, int offset, int count)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset < 0 || offset > bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (count <= 0) return;
+
+            EnsureAvailable(count);
+            System.Buffer.BlockCopy(bytes, offset, _buffer, _position, count);
+            _position += count;
+        }
+
+        public void Write(sbyte[] bytes)
+        {
+            Write(bytes, 0, bytes.Length);
+        }
+
+        public void Write(sbyte[] bytes, int offset, int count)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (offset < 0 || offset > bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));

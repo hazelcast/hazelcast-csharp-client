@@ -1,0 +1,164 @@
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Serialization
+{
+    internal partial class SerializationService
+    {
+        /// <summary>
+        /// Looks up a serializer for a type-id.
+        /// </summary>
+        /// <param name="typeId">The type-id.</param>
+        /// <returns>The serializer for the <paramref name="typeId"/>.</returns>
+        /// <exception cref="SerializationException">Cannot find a serializer matching the <paramref name="typeId"/>.</exception>
+        private ISerializerAdapter LookupSerializer(int typeId)
+        {
+            return typeId > 0 ? LookupCustomSerializer(typeId) : LookupConstantSerializer(typeId);
+        }
+
+        /// <summary>
+        /// Looks up a constant serializer for a negative type-id.
+        /// </summary>
+        /// <param name="typeId">The type-id.</param>
+        /// <returns>The serializer for the <paramref name="typeId"/>.</returns>
+        /// <exception cref="SerializationException">Cannot find a constant serializer matching the <paramref name="typeId"/>.</exception>
+        private ISerializerAdapter LookupConstantSerializer(int typeId)
+        {
+            // FIXME - see also SerializationService.ctor
+            // Why would the CLR serialization be registered as a custom serializer despite its negative id?
+            // and thus, excluded here? I am reverting this all since it is not documented, but meh?
+
+            ISerializerAdapter adapter = null;
+            if (-typeId < ConstantSerializersCount /*&& typeId != SerializationConstants.CsharpClrSerializationType*/)
+                adapter = _constantById[-typeId]; // type-id key is >0 because _constantById is an array
+
+            if (adapter != null) return adapter;
+
+            throw new SerializationException($"Could not find a serializer for type {typeId}.");
+        }
+
+        /// <summary>
+        /// Looks up a custom serializer for a positive type-id.
+        /// </summary>
+        /// <param name="typeId">The type-id.</param>
+        /// <returns>The serializer for the <paramref name="typeId"/>.</returns>
+        /// <exception cref="SerializationException">Cannot find a custom serializer matching the <paramref name="typeId"/>.</exception>
+        private ISerializerAdapter LookupCustomSerializer(int typeId)
+        {
+            if (_customById.TryGetValue(typeId, out var result)) return result;
+
+            throw new SerializationException($"Could not find a serializer for type {typeId}.");
+        }
+
+        /// <summary>
+        /// Looks up a serializer for an object.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The serializer for the object.</returns>
+        /// <exception cref="SerializationException">Cannot find a custom serializer for the <paramref name="obj"/>.</exception>
+        private ISerializerAdapter LookupSerializer(object obj)
+        {
+            if (obj == null) return _nullSerializerAdapter;
+
+            var typeOfObj = obj.GetType();
+
+            var serializer = LookupKnownSerializer(typeOfObj) ??
+                             LookupConstantSerializer(typeOfObj) ??
+                             LookupCustomSerializer(typeOfObj) ??
+                             LookupSerializableSerializer(typeOfObj) ??
+                             LookupGlobalSerializer(typeOfObj);
+
+            if (serializer != null) return serializer;
+
+            throw new SerializationException($"Could not find a serializer for type {typeOfObj}.");
+        }
+
+        private ISerializerAdapter LookupKnownSerializer(Type type)
+        {
+            // fast path for some known serializers
+
+            if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
+                return _dataSerializerAdapter;
+
+            if (typeof(IPortable).IsAssignableFrom(type))
+                return _portableSerializerAdapter;
+
+            return null;
+        }
+
+        private ISerializerAdapter LookupConstantSerializer(Type type)
+        {
+            return _constantByType.TryGetValue(type, out var serializer)
+                ? serializer
+                : null;
+        }
+
+        private ISerializerAdapter LookupCustomSerializer(Type type)
+        {
+            // direct lookup
+            if (_customByType.TryGetValue(type, out var serializer)) return serializer;
+
+            bool TryLookupSerializer(Type lookupType, Type forType, out ISerializerAdapter foundSerializer)
+            {
+                if (!_customByType.TryGetValue(lookupType, out foundSerializer)) return false;
+
+                // register so we find it faster next time
+                _ = TryRegisterCustomSerializer(foundSerializer, forType);
+                return true;
+            }
+
+            // try its interfaces
+            if (type.GetInterfaces().Any(lookupType => TryLookupSerializer(lookupType, type, out serializer)))
+                return serializer;
+
+            // try its hierarchy
+            for (var lookupType = type.BaseType; lookupType != null; lookupType = lookupType.BaseType)
+                if (TryLookupSerializer(lookupType, type, out serializer))
+                    return serializer;
+
+            return null;
+        }
+
+        private ISerializerAdapter LookupSerializableSerializer(Type type)
+        {
+            if (!_enableClrSerialization) return null;
+            if (!type.IsSerializable) return null;
+
+            // register so we find it faster next time
+            if (TryRegisterConstantSerializer(_serializableSerializerAdapter, type))
+            {
+                // with a warning
+                _logger.LogWarning("Performance hint: Serialization service will use the CLR serialization " +
+                                   $"for type {type}. Please consider using a faster serialization option such as " +
+                                   "IIdentifiedDataSerializable.");
+            }
+
+            return _serializableSerializerAdapter;
+        }
+
+        private ISerializerAdapter LookupGlobalSerializer(Type type)
+        {
+            var serializer = _globalSerializerAdapter;
+
+            // register so we find it faster next time
+            if (serializer != null) _ = TryRegisterCustomSerializer(serializer, type);
+
+            return serializer;
+        }
+    }
+}
