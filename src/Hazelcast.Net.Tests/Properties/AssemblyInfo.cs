@@ -16,9 +16,12 @@ using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 // defines the default server version used by tests.
-// this can be overriden on each test fixture and each test method, with a [ServerVersion(...)] attribute.
-// this is overriden by the HAZELCAST_SERVER_VERSION environment variable
-[assembly:ServerVersion("4.0")]
+// - this *is* overriden by the HAZELCAST_SERVER_VERSION environment variable
+// - this can be overriden on each test fixture and each test method,
+//   with a [ServerVersion(...)] attribute.
+// so, this is always ignored when running tests with hz.ps1 which sets the
+// environment variable - it only applies to, for instance, VS or Rider
+[assembly:ServerVersion("5.0")]
 
 // sets a default (large) timeout so tests eventually abort
 // 10 min * 60 sec * 1000 ms - no test should last more that 10 mins
