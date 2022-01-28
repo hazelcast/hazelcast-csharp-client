@@ -23,7 +23,7 @@ namespace Hazelcast.Testing.Conditions
     public static class ServerVersion
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultVersionString = "5.0";
+        private const string DefaultVersionString = "5.1-SNAPSHOT";
 
         /// <summary>
         /// Gets the default server version.

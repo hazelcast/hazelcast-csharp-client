@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
@@ -59,6 +60,8 @@ namespace Hazelcast.Serialization
         private readonly ISerializerAdapter _globalSerializerAdapter; // global serializer
         private readonly ISerializerAdapter _dataSerializerAdapter; // identified data serialization
         private readonly ISerializerAdapter _portableSerializerAdapter; // portable serialization
+        private readonly ISerializerAdapter _compactSerializerAdapter; // compact serialization
+        private readonly ISerializerAdapter _compactWithSchemaSerializerAdapter; // compact serialization with schema
         private readonly ISerializerAdapter _serializableSerializerAdapter; // CLR serialization
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
@@ -66,7 +69,11 @@ namespace Hazelcast.Serialization
 #pragma warning disable CA2213 // Disposable fields should be disposed - they are
         private readonly PortableContext _portableContext;
         private readonly PortableSerializer _portableSerializer;
+        private readonly CompactSerializer _compactSerializer;
 #pragma warning restore CA2213 // Disposable fields should be disposed
+
+        // FIXME - missing new ToDataWithSchema method
+        // and how and where would it be used?
 
         internal SerializationService(
             SerializationOptions options,
@@ -78,6 +85,7 @@ namespace Hazelcast.Serialization
             IEnumerable<ISerializerDefinitions> definitions,
             bool validatePortableClassDefinitions, IPartitioningStrategy partitioningStrategy, 
             int initialOutputBufferSize,
+            ISchemas schemas,
             ILoggerFactory loggerFactory)
         {
             _options = options;
@@ -99,6 +107,7 @@ namespace Hazelcast.Serialization
             // - IdentifiedDataSerializable - identified data serialization, requires serializer & factory
             // - Portable - portable serialization, requires serializer & factory
             // - Custom - custom serialization, requires serializer & plug-in
+            // - Compact - compact serialization
 
             // Registers the constant 'identified data serializer', which implements identified data serialization.
             //   IDataSerializableHook each instantiate one single IDataSerializableFactory that is registered
@@ -108,6 +117,18 @@ namespace Hazelcast.Serialization
             var dataSerializer = new DataSerializer(hooks.Hooks, dataSerializableFactories, loggerFactory);
             _dataSerializerAdapter = CreateSerializerAdapter<IIdentifiedDataSerializable>(dataSerializer);
             RegisterConstantSerializer(_dataSerializerAdapter, typeof(IIdentifiedDataSerializable));
+
+            // Registers the constant 'compact serializer', which implements compact serialization.
+            // The two adapters are *not* registered, but handled as special cases by the Lookup methods.
+            _compactSerializer = new CompactSerializer(
+                options.Compact,
+                schemas,
+                bytes => CreateObjectDataInput(bytes, Endianness.LittleEndian),
+                () => CreateObjectDataOutput(Endianness.LittleEndian));
+            _compactSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer, false));
+            _compactWithSchemaSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer, true));
+            RegisterConstantSerializer(_compactSerializerAdapter);
+            RegisterConstantSerializer(_compactWithSchemaSerializerAdapter);
 
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
             // serialization of objects marked with the [Serializable] attributes.

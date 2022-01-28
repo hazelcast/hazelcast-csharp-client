@@ -15,9 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
@@ -42,6 +45,7 @@ namespace Hazelcast.Serialization
         private ICollection<IClassDefinition> _portableClassDefinitions = new HashSet<IClassDefinition>();
 
         private IPartitioningStrategy _partitioningStrategy;
+        private ISchemas _compactSchemas;
 
         public SerializationServiceBuilder(ILoggerFactory loggerFactory)
             : this(new SerializationOptions(), loggerFactory)
@@ -137,6 +141,12 @@ namespace Hazelcast.Serialization
             return this;
         }
 
+        public SerializationServiceBuilder SetCompactSchemas(ISchemas schemas)
+        {
+            _compactSchemas = schemas;
+            return this;
+        }
+
         public SerializationService Build()
         {
             // merge lists
@@ -156,6 +166,7 @@ namespace Hazelcast.Serialization
                 _validatePortableClassDefinitions,
                 _partitioningStrategy,
                 _initialOutputBufferSize,
+                _compactSchemas,
                 _loggerFactory);
 
             return service;

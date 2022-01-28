@@ -122,7 +122,7 @@ namespace Hazelcast.Serialization
 
             try
             {
-                var serializer = LookupSerializer(obj);
+                var serializer = LookupSerializer(obj, false); // FIXME - withSchema?!
 
                 // root object (from ToData) type-id is always big-endian, whereas
                 // nested objects type-id uses whatever is the default endianness

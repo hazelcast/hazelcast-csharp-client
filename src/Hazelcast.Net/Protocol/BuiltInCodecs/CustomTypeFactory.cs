@@ -14,10 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Compact;
 using Hazelcast.Sql;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
@@ -88,5 +90,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 nullable || !isNullableExists
             );
         }
+
+        public static SchemaField CreateFieldDescriptor(string name, int kind)
+          => new SchemaField(name, FieldKindEnum.Parse(kind));
+
+        public static Schema CreateSchema(string typename, IEnumerable<SchemaField> fields)
+          => new Schema(typename, fields.ToArray());
     }
 }

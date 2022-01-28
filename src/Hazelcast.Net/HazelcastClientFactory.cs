@@ -23,6 +23,7 @@ using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Projection;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Compact;
 using Hazelcast.Serialization.ConstantSerializers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -185,12 +186,18 @@ namespace Hazelcast
 
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
                 .SetVersion(SerializationService.SerializerVersion) // FIXME versions confusion w/portable?
+                .SetCompactSchemas(new Schemas(messaging))
 
                 // add hooks that construct and provide IIdentifiedDataSerialization factories for more
                 // built-in types such as predicates, aggregators or projections.
                 .AddHook<PredicateDataSerializerHook>()
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
+
+                // add a hook that constructs and provides the compact IIdentifiedDataSerialization factory
+                // because some basic compact functionality such as schema distribution don't use compact
+                // serialization themselves.
+                .AddHook<CompactSerializationHook>()
 
                 // define serializers for a range of primitive types (int, lists...)
                 .AddDefinitions(new ConstantSerializerDefinitions())
