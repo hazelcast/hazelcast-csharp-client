@@ -16,21 +16,54 @@ using System.Collections.Generic;
 
 namespace Hazelcast.Metrics
 {
-    // a metric descriptor
+    /// <summary>
+    /// Defines a metric descriptor.
+    /// </summary>
     internal interface IMetricDescriptor
     {
+        /// <summary>
+        /// Gets the metric prefix.
+        /// </summary>
         string Prefix { get; }
 
+        /// <summary>
+        /// Gets the metric attribute prefixes.
+        /// </summary>
+        /// <remarks>
+        /// <para>These prefix are used when writing the descriptor in text form as an attribute i.e. in the
+        /// "key=value,key=value,..." human-readable form, in place of the Prefix. If this is <c>null</c>
+        /// then Prefix is used.</para>
+        /// </remarks>
+        string[] AttributePrefixes { get; }
+
+        /// <summary>
+        /// Gets the name of the metric.
+        /// </summary>
         string Name { get; }
 
+        /// <summary>
+        /// Gets the metric discriminator key.
+        /// </summary>
         string DiscriminatorKey { get; }
 
+        /// <summary>
+        /// Gets the metric discriminator value.
+        /// </summary>
         string DiscriminatorValue { get; }
 
+        /// <summary>
+        /// Gets the unit of the metric.
+        /// </summary>
         MetricUnit Unit { get; }
 
+        /// <summary>
+        /// Gets the number of tags.
+        /// </summary>
         int TagCount { get; }
 
+        /// <summary>
+        /// Gets the tags.
+        /// </summary>
         IDictionary<string, string> Tags { get; }
     }
 }

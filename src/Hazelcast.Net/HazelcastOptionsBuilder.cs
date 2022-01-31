@@ -35,6 +35,7 @@ namespace Hazelcast
         private string _environmentName;
         private string _altKey;
         private List<Action<IConfiguration, HazelcastOptions>> _configureActions;
+        private List<Action<HazelcastOptions>> _preConfigureActions;
         private List<Action<IConfigurationBuilder>> _setups;
 
         /// <summary>
@@ -161,6 +162,19 @@ namespace Hazelcast
         }
 
         /// <summary>
+        /// Adds an <see cref="HazelcastOptions"/> default configuration delegate.
+        /// </summary>
+        /// <param name="configure">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithDefault(Action<HazelcastOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            _preConfigureActions ??= new List<Action<HazelcastOptions>>();
+            _preConfigureActions.Add(configure);
+            return this;
+        }
+
+        /// <summary>
         /// Adds an <see cref="HazelcastOptions"/> configuration delegate.
         /// </summary>
         /// <param name="configure">The delegate.</param>
@@ -194,6 +208,14 @@ namespace Hazelcast
         public HazelcastOptionsBuilder Bind(string key, object instance)
             => With((configuration, _) => configuration.HzBind(key, instance));
 
+        private void PreConfigure(HazelcastOptions options)
+        {
+            if (_preConfigureActions == null) return;
+
+            foreach (var preConfigure in _preConfigureActions)
+                preConfigure(options);
+        }
+
         private void Configure(IConfiguration configuration, HazelcastOptions options)
         {
             if (_configureActions == null) return;
@@ -218,7 +240,7 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public HazelcastOptions Build()
         {
-            return HazelcastOptions.Build(Setup, Configure, _altKey);
+            return HazelcastOptions.Build(Setup, PreConfigure, Configure, _altKey);
         }
     }
 }
