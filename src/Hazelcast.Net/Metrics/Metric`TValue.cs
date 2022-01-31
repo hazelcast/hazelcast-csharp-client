@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Globalization;
 
 namespace Hazelcast.Metrics
@@ -26,15 +25,22 @@ namespace Hazelcast.Metrics
         {
             get
             {
-                var value = Value;
-                switch (value)
+                // beware! it is important to serialize values in the Java-expected way!
+#pragma warning disable CA1308 // Normalize strings to uppercase - well, no
+                return Value switch
                 {
-                    // beware! it is important to serialize values in the Java-expected way!
-                    case double d: return d.ToString(CultureInfo.InvariantCulture);
-                    case null: return "";
-                    default: return value.ToString();
-                }
+                    double d => d.ToString(CultureInfo.InvariantCulture),
+                    null     => "",
+                    bool b   => b.ToString().ToLowerInvariant(),
+                    _        => Value.ToString()
+                };
+#pragma warning restore CA1308
             }
+        }
+
+        public override string ToString()
+        {
+            return $"{Descriptor} = ({typeof (TValue).Name}) {StringValue}";
         }
     }
 }
