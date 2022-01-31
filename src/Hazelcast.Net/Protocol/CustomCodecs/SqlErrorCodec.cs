@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             clientMessage.Append(initialFrame);
 
             CodecUtil.EncodeNullable(clientMessage, sqlError.Message, StringCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, sqlError.Suggestion, StringCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
@@ -66,16 +67,16 @@ namespace Hazelcast.Protocol.CustomCodecs
 
             var originatingMemberId = initialFrame.Bytes.ReadGuidL(OriginatingMemberIdFieldOffset);
             var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            string suggestion = String.Empty;
-
-            if (!iterator.AtStructEnd())
+            var isSuggestionExists = false;
+            string suggestion = default;
+            if (iterator.NextIsNotTheEnd())
             {
-                //second frame is suggestion
                 suggestion = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+                isSuggestionExists = true;
             }
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId, suggestion);
+            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId, isSuggestionExists, suggestion);
         }
     }
 }

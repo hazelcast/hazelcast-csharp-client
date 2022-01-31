@@ -179,15 +179,15 @@ namespace Hazelcast.Tests.Sql
         [ServerConditionAttribute("5.0")]
         public async Task SqlErrorHasSuggestion()
         {
-            string dummyMapName = "testingMap";
+            var dummyMapName = "testingMap";
             var map = await Client.GetMapAsync<int, string>(dummyMapName);
-            await map.PutAsync(0, "some value");           
+            await map.PutAsync(0, "some value");
 
             //query the map without creating mapping to get exception with suggestion in it.
             var ex = Assert.ThrowsAsync<HazelcastSqlException>(async () => await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {dummyMapName}"));
 
             Assert.IsFalse(string.IsNullOrEmpty(ex.Suggestion));
-            Assert.IsFalse(string.IsNullOrEmpty(ex.Message));       
+            Assert.IsFalse(string.IsNullOrEmpty(ex.Message));
         }
     }
 }
