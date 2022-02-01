@@ -89,7 +89,7 @@ $params = @(
     },
     @{ name = "framework";       type = [string];  default = $null;       alias = "f"
        parm = "<version>";
-       desc = "the framework to build (default is all)";
+       desc = "the framework to run tests for (default is all)";
        note = "The framework <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
     },
     @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"
@@ -418,8 +418,9 @@ function determine-target-frameworks {
     return $frameworks
 }
 
-# determine framework(s) - for building and running tests
-# note: if more than 1 framework is specified then *all* frameworks are built
+# determine framework(s) - for running tests
+# we always need to build *all* frameworks because e.g. some projects need to be built
+# for netstandard in order to run on .NET Core - so one single framework cannot do it
 $frameworks = determine-target-frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
     $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
@@ -1247,18 +1248,10 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
-    if ($frameworks.Count -eq 1) {
-        $framework = $frameworks[0]
-    }
-    else {
-        $framework = "(all)"
-    }
-
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
     Write-Output "  Define         : $($options.constants)"
-    Write-Output "  Framework      : $framework"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
@@ -1274,9 +1267,7 @@ function hz-build {
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
 
         # exclude
-        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and (
-            !$isWindows -or            # not on linux
-            $frameworks.Count -eq 1 )  # not for specific framework
+        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows)
         ) {
             Write-Output "  $(get-project-name $k) -> (excluded) "
             return  # continue
@@ -1312,11 +1303,6 @@ function hz-build {
         "-c", $options.configuration,
         "--packages", $nugetPackages
     )
-
-    if ($frameworks.Count -eq 1) {
-        $buildArgs += "-f"
-        $buildArgs += $frameworks[0]
-    }
 
     if ($options.reproducible) {
         $buildArgs += "-p:ContinuousIntegrationBuild=true"
