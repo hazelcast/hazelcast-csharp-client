@@ -1267,8 +1267,7 @@ function hz-build {
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
 
         # exclude
-        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows)
-        ) {
+        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows) {
             Write-Output "  $(get-project-name $k) -> (excluded) "
             return  # continue
         }
