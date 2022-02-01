@@ -419,24 +419,16 @@ function determine-target-frameworks {
 }
 
 # determine framework(s) - for building and running tests
+# note: if more than 1 framework is specified then *all* frameworks are built
 $frameworks = determine-target-frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
-    $framework = $options.framework.ToLower()
-    if ($framework.Contains(',')) {
-        $fwks = $framework.Split(',')
-        foreach ($fwk in $fwks) {
-            if (-not $frameworks.Contains($fwk)) {
-                Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
-            }
+    $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
+    foreach ($fwk in $fwks) {
+        if (-not $frameworks.Contains($fwk)) {
+            Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
         }
-        $frameworks = $fwks
     }
-    else {
-        if (-not $frameworks.Contains($framework)) {
-            Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
-        }
-        $frameworks = @( $framework )
-    }
+    $frameworks = $fwks
 }
 
 # ensure we have the enterprise key for testing
@@ -871,13 +863,47 @@ function get-dotnet-sdk ( $sdks, $v, $preview ) {
     else { return $sdk.ToString() }
 }
 
+function require-dotnet-version ( $sdks, $search, $frameworks, $framework, $name, $allowPrerelease ) {
+
+    $release = get-dotnet-sdk $sdks $search $false
+    $preview = get-dotnet-sdk $sdks $search $true
+
+    if ("n/a" -eq $release) {
+        if ($allowPrerelease -and "n/a" -ne $preview) {
+            return $true, $preview # only have preview, and preview is allowed = will use preview
+        }
+        else {
+            $ok = $frameworks.Contains($framework)
+            if (-not $ok) { Write-Output "This script requires the Microsoft .NET $name SDK." }
+            return $ok, "${search}:n/a" # have nothing usable, is an issue only if required
+        }
+    } 
+    else {
+        if ("n/a" -eq $preview) {
+            return $true, $release # only have release = will use release
+        }
+        elseif ($allowPrerelease) {
+            return $true, $preview # have both, and preview is allowed = will use preview
+        }
+        else {
+            return $true, "$release ($preview)" # have both, and preview is not allowed = will use release
+        }
+    }
+
+}
+
 function require-dotnet ( $full ) {
 
     if ($script:ensuredDotnet) { return }
 
+    # note: beware of x86 vs x64 versions of dotnet
     ensure-command "dotnet"
-
     $dotnetVersion = (&dotnet --version)
+    $validDotnet = $true
+    if ([string]::IsNullOrWhiteSpace($dotnetVersion)) {
+        $dotnetVersion = "<none>"
+        $validDotnet = $false
+    }
     Write-Output "  Version $dotnetVersion"
 
     $allowPrerelease = $true
@@ -889,46 +915,53 @@ function require-dotnet ( $full ) {
     }
 
     if ($allowPrerelease) {
-        Write-Output "  (global.json is missing or allows pre-release versions)"
+        Write-Output "  (global.json is missing, or allows pre-release versions)"
     }
     else {
-        Write-Output "  (global.json does not allow pre-release versions)"
+        Write-Output "  (global.json exists and does not allow pre-release versions)"
     }
 
     $sdks = (&dotnet --list-sdks)
+    $validSdks = $true
+    $sdkInfo = "  SDKs:"
 
-    $v21 = get-dotnet-sdk $sdks "2.1" $false
-    if ($full -and $null -eq $v21) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 2.1.x"
-    }
-    $v31 = get-dotnet-sdk $sdks "3.1" $false
-    if ($full -and $null -eq $v31) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 3.1.x"
-    }
-    $v50 = get-dotnet-sdk $sdks "5.0" $false
-    if ($null -eq $v50) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.x"
-    }
-    if ($v50 -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.200+"
-    }
-    $v60 = get-dotnet-sdk $sdks "6.0" $false # 6.0 is not required
+    # validate that we have the required SDKs based upon the complete list of
+    # frameworks for the test project, as determined by determine-target-frameworks.
 
-    $v50preview = get-dotnet-sdk $sdks "5.0" $true
-    $v60preview = get-dotnet-sdk $sdks "6.0" $true
+    $ok, $info = require-dotnet-version $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $allowPrerelease
+    $validSdks = $validSdks -and $ok
+    $sdkInfo += " $info"
 
-    if ($allowPrerelease) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
-    if ($allowPrerelease) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v60preview)" }
+    $ok, $info = require-dotnet-version $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $allowPrerelease
+    $validSdks = $validSdks -and $ok
+    $sdkInfo += " $info"
 
-    Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
+    $ok, $info = require-dotnet-version $sdks "5.0" $frameworks "net5.0" "5.0.x" $allowPrerelease
+    $validSdks = $validSdks -and $ok
+    $sdkInfo += " $info"
+
+    if ($ok -and $frameworks.Contains("net5.0")) {
+        # we found 5.0 and 5.0 is required and ...
+        $v = $sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
+        if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
+            Write-Output "This script requires a Microsoft .NET 5.0.200+ SDK."
+            $validSdks = $false
+        }
+    }
+
+    $ok, $info = require-dotnet-version $sdks "6.0" $frameworks "net6.0" "6.0.x" $allowPrerelease
+    $validSdks = $validSdks -and $ok
+    $sdkInfo += " $info"
+
+    # report
+    Write-Output $sdkInfo
+
+    if (-not $validDotnet) {
+        Die "Could not determine dotnet version."
+    }
+    if (-not $validSdks) {
+        Die "Could not find all required SDKs (download from: https://dotnet.microsoft.com/download/dotnet-core)."
+    }
 
     $script:ensuredDotnet = $true
 }
@@ -2188,6 +2221,10 @@ Write-Output ""
 $s = ""
 if ($isNewVersion) { $s += " (new, was $currentVersion)" }
 Write-Output "Client version $($options.version)$s"
+Write-Output ""
+Write-Output "Target frameworks"
+Write-Output "  $([string]::Join(", ", $frameworks))"
+
 
 # this goes first
 $clean = get-action $actions clean

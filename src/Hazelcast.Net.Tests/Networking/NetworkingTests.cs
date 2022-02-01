@@ -18,7 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Runtime.InteropServices;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -37,6 +37,7 @@ using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast.Tests.Networking
 {
@@ -611,6 +612,204 @@ namespace Hazelcast.Tests.Networking
             var buffer = new ReadOnlySequence<byte>(bytes);
             var value = BytesExtensions.ReadInt(ref buffer, Endianness.BigEndian);
             NUnit.Framework.Assert.AreEqual(origin, value);
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        [Repeat(2)]
+        public async Task Net6Repro()
+        {
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
+            var socket = new Socket(endpoint.Address.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            socket.Bind(endpoint);
+            socket.Listen(10);
+            var okToDispose = new TaskCompletionSource<object>();
+            socket.BeginAccept(asyncResult =>
+            {
+                try
+                {
+                    var s = (Socket)asyncResult.AsyncState;
+                    var accepted = s.EndAccept(asyncResult);
+                }
+                catch (ObjectDisposedException)
+                {
+                    Console.WriteLine("caught ObjectDisposedException");
+
+                    try
+                    {
+                        var taskField = asyncResult.GetType().GetField("_task", BindingFlags.NonPublic | BindingFlags.Instance);
+                        var task = (Task<Socket>)taskField.GetValue(asyncResult);
+                        task.GetAwaiter().GetResult();
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine("caught! " + e);
+                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine("caught " + e);
+                }
+                okToDispose.TrySetResult(null);
+            }, socket);
+            await Task.Delay(1000);
+
+            // meh - SocketException: cannot shutdown a socket that was not connected
+            //socket.Shutdown(SocketShutdown.Both);
+
+            // meh - Close does Dispose immediately
+            //socket.Close();
+
+            //await okToDispose.Task; // if we dispose before the callback, EndAccept cannot run
+            socket.Dispose();
+        }
+
+        [Test]
+        [Repeat(4)]
+        [Timeout(20_000)]
+        public async Task NetReproAsync()
+        {
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
+            var socket = new Socket(endpoint.Address.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+            socket.Bind(endpoint);
+            socket.Listen(10);
+
+            var e = new SocketAsyncEventArgs
+            {
+                UserToken = null // could be used to pass a user state
+            };
+            e.Completed += (sender, args) =>
+            {
+                var socket2 = args.AcceptSocket; // the new socket for the accepted connection
+            };
+            var pending = socket.AcceptAsync(e);
+            Assert.That(pending, Is.True);
+
+            await Task.Delay(1000);
+            socket.Dispose();
+        }
+
+        class Net6ServerAsync
+        {
+            private readonly IPEndPoint _endpoint;
+            private readonly TaskCompletionSource<object> _stop;
+            private Task _accepting;
+
+            public Net6ServerAsync(IPEndPoint endpoint)
+            {
+                _endpoint = endpoint;
+                _stop = new TaskCompletionSource<object>();
+            }
+            public Task StartAsync()
+            {
+                var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                socket.Bind(_endpoint);
+                socket.Listen(10);
+                _accepting = Accept(socket);
+                return Task.CompletedTask;
+            }
+
+            private async Task Accept(Socket socket)
+            {
+                while (!_stop.Task.IsCompleted)
+                {
+                    var acceptedCompletion = new TaskCompletionSource<object>();
+
+                    var e = new SocketAsyncEventArgs();
+                    e.UserToken = acceptedCompletion;
+                    e.Completed += (sender, args) =>
+                    {
+                        var acceptedSocket = args.AcceptSocket;
+                        ((TaskCompletionSource<object>) args.UserToken).SetResult(null);
+                    };
+                    var pending = socket.AcceptAsync(e);
+                    // if !pending we should run the callback immediately
+
+                    var t = await Task.WhenAny(acceptedCompletion.Task, _stop.Task);
+                    if (t == _stop.Task) break;
+                }
+
+                socket.Close();
+                socket.Dispose();
+            }
+
+            public Task StopAsync()
+            {
+                _stop.TrySetResult(null);
+                return _accepting;
+            }
+        }
+
+        class Net6Server
+        {
+            private readonly IPEndPoint _endpoint;
+            private readonly TaskCompletionSource<object> _stop;
+            private Task _accepting;
+
+            public Net6Server(IPEndPoint endpoint)
+            {
+                _endpoint = endpoint;
+                _stop = new TaskCompletionSource<object>();
+            }
+
+            public Task StartAsync()
+            {
+                var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, System.Net.Sockets.ProtocolType.Tcp);
+                socket.Bind(_endpoint);
+                socket.Listen(10);
+                _accepting = Accept(socket);
+                return Task.CompletedTask;
+            }
+
+            private async Task Accept(Socket socket)
+            {
+                while (!_stop.Task.IsCompleted)
+                {
+                    var acceptedCompletion = new TaskCompletionSource<object>();
+
+                    socket.BeginAccept(asyncResult =>
+                    {
+                        // if we don't do this then we reproduce the unobserved exception
+                        // OTOH if we do this, we *never* reproduce the exception
+                        try
+                        {
+                            var socket = (Socket)asyncResult.AsyncState;
+                            var accepted = socket.EndAccept(asyncResult);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("caught " + e);
+                        }
+                        finally
+                        {
+                            acceptedCompletion.SetResult(null);
+                        }
+                    }, socket);
+
+                    var t = await Task.WhenAny(acceptedCompletion.Task, _stop.Task);
+                    if (t == _stop.Task) break;
+                }
+
+                socket.Close();
+                socket.Dispose();
+            }
+
+            public Task StopAsync()
+            {
+                _stop.TrySetResult(null);
+                return _accepting;
+            }
+        }
+
+        [Test]
+        [Timeout(20_000)]
+        public async Task Net6Repro2()
+        {
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 11000);
+            var server = new Net6ServerAsync(endpoint);
+            await server.StartAsync().CfAwait();
+            await Task.Delay(1000);
+            await server.StopAsync().CfAwait();
         }
 
         [Test]

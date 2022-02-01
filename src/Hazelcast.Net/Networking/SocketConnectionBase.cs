@@ -235,13 +235,9 @@ namespace Hazelcast.Networking
             if (otherTask != null) await otherTask.CfAwait();
 
             // kill socket and stream
-            try
-            {
-                _stream.Close();
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-            }
-            catch { /* ignore */ }
+            try { _stream.Close(); } catch { /* ignore */ }
+            try { _socket.Shutdown(SocketShutdown.Both); } catch { /* ignore */ }
+            try { _socket.Dispose(); } catch { /* ignore */ }
 
             HConsole.WriteLine(this, "Connection is down");
 
@@ -499,19 +495,9 @@ namespace Hazelcast.Networking
             HConsole.WriteLine(this, "Pipe is down");
 
             // dispose, ignore exceptions
-            try
-            {
-                _stream.Close();
-                _stream.Dispose();
-            }
-            catch { /* ignore */ }
-
-            try
-            {
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Dispose();
-            }
-            catch { /* ignore */ }
+            try { _stream.Dispose(); } catch { /* ignore */ }
+            try { _socket.Shutdown(SocketShutdown.Both); } catch { /* ignore */ }
+            try { _socket.Dispose(); } catch { /* ignore */ }
 
             // ok to dispose again
             _streamReadCancellationTokenSource.Dispose();
