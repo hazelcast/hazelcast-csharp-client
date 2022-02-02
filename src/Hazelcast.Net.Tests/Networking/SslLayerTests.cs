@@ -30,6 +30,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
+    [Category("enterprise")]
     public class SslLayerTests
     {
         [Test]
