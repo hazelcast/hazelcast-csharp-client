@@ -74,14 +74,6 @@ namespace Hazelcast.Serialization.Compact
             _names.Add(schema.TypeName);
             _types.Add(typeof (T));
 
-            // FIXME - can 2 types point to the same schema?
-            //
-            // later:
-            // derive schemas from code, whatever
-            // beware! if we derive the schema from the serializer,
-            // what-if the serializer does *not* write some fields
-            // in some cases? as an optimization?
-
             var registration = new Registration
             (
                 schema,

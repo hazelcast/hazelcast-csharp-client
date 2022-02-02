@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Exceptions;
 
+#pragma warning disable CA1724 // 'Schema' conflicts with System.Xml.Schema - well, yes. 
+
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
@@ -56,16 +58,14 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Gets the compact type-name.
         /// </summary>
-        public string TypeName { get; private set; }
+        public string TypeName { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
         /// <summary>
-        /// Gets the schema fields.
+        /// Gets the ordered schema fields.
         /// </summary>
-        public SchemaField[] Fields { get; private set; } // ordered
+        public IReadOnlyList<SchemaField> Fields { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
-        internal Dictionary<string, SchemaField> FieldMap { get; private set; }
-
-        internal int ValueFieldCount { get; private set; }
+        internal Dictionary<string, SchemaField> FieldMap { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
         internal int ValueFieldLength { get; private set; }
 
@@ -73,21 +73,30 @@ namespace Hazelcast.Serialization.Compact
 
         internal bool HasReferenceFields => ReferenceFieldCount > 0;
 
-        private void Initialize(string typeName, IEnumerable<SchemaField> typeFields) // FIXME shall we expose more stuff? for, like, writing things out?
+        private void Initialize(string typeName, IEnumerable<SchemaField> typeFields)
         {
             TypeName = typeName;
 
-            // FIXME need to revisit the ordering + field names must be unique
-
             // the ordered list of fields, which will be used for fingerprinting
+            // order is:
+            // - value fields, ordered by size DESC then by name ASC
+            // - boolean fields, ordered by name ASC
+            // - reference fields, ordered by name ASC
             var fieldsList = new List<SchemaField>();
 
-            List<SchemaField> booleanFields = null;
-            List<SchemaField> valueFields = null;
-            List<SchemaField> referenceFields = null;
+            // ensure no duplicate field name
+            var fieldNames = new HashSet<string>();
+
+            // different type of fields
+            List<SchemaField>? booleanFields = null;
+            List<SchemaField>? valueFields = null;
+            List<SchemaField>? referenceFields = null;
 
             foreach (var field in typeFields.OrderBy(x => x.FieldName))
             {
+                if (fieldNames.Contains(field.FieldName))
+                    throw new ArgumentException($"Fields contain duplicate field name {field.FieldName}.", nameof(typeFields));
+                fieldNames.Add(field.FieldName);
                 if (field.Kind == FieldKind.Boolean)
                     (booleanFields ??= new List<SchemaField>()).Add(field);
                 else if (field.Kind.IsValueType())
@@ -100,6 +109,7 @@ namespace Hazelcast.Serialization.Compact
 
             if (valueFields != null)
             {
+                // value fields come first, ordered by size DESC then by name ASC
                 var fields = valueFields
                     .Select(x => (x, x.Kind.GetValueTypeSize()))
                     .OrderByDescending(x => x.Item2)
@@ -114,6 +124,7 @@ namespace Hazelcast.Serialization.Compact
 
             if (booleanFields != null)
             {
+                // boolean fields come next, ordered by name ASC
                 byte bitOffset = 0;
                 var fields = booleanFields.OrderBy(x => x.FieldName);
                 foreach (var field in fields)
@@ -132,11 +143,9 @@ namespace Hazelcast.Serialization.Compact
                 if (bitOffset != 0) offset += 1;
             }
 
-            // FIXME Java also determines this + the number of reference type fields
-            var valueFieldsLength = offset;
-
             if (referenceFields != null)
             {
+                // reference fields come last, ordered by name ASC
                 var index = 0;
                 var fields = referenceFields.OrderBy(x => x.FieldName);
                 foreach (var field in fields)
@@ -146,7 +155,6 @@ namespace Hazelcast.Serialization.Compact
                 }
             }
 
-            ValueFieldCount = valueFields?.Count ?? 0; // FIXME include booleans?
             ValueFieldLength = offset;
             ReferenceFieldCount = referenceFields?.Count ?? 0;
 
@@ -158,13 +166,10 @@ namespace Hazelcast.Serialization.Compact
 
         private long ComputeId()
         {
-            // FIXME in what order are FIELDS when calculating these things?!
-            // we need a TEST that shows that swapping fields is not an issue!
-
             var fingerprint = RabinFingerprint.InitialValue;
             fingerprint = RabinFingerprint.Fingerprint(fingerprint, TypeName);
-            fingerprint = RabinFingerprint.Fingerprint(fingerprint, Fields.Length);
-            foreach (var field in Fields)
+            fingerprint = RabinFingerprint.Fingerprint(fingerprint, Fields.Count);
+            foreach (var field in Fields) // fields are ordered for reproducible fingerprint
             {
                 fingerprint = RabinFingerprint.Fingerprint(fingerprint, field.FieldName);
                 fingerprint = RabinFingerprint.Fingerprint(fingerprint, (int)field.Kind);
@@ -178,7 +183,7 @@ namespace Hazelcast.Serialization.Compact
             if (output == null) throw new ArgumentNullException(nameof(output));
 
             output.WriteString(TypeName);
-            output.WriteInt(Fields.Length);
+            output.WriteInt(Fields.Count);
             foreach (var field in Fields)
             {
                 output.WriteString(field.FieldName);

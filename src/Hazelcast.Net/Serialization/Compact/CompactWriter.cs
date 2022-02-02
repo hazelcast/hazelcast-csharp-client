@@ -16,14 +16,13 @@
 
 using System;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact
 {
     // notes:
     // when passing a lambda as an Action<> parameter, the compiler generates a supporting
     // class which statically caches the Action<> object so it's only instantiated once.
-
-    // TODO: add support for writing HBigDecimal (and what else?)
 
     internal class CompactWriter : CompactReaderWriterBase, ICompactWriter
     {
@@ -33,10 +32,10 @@ namespace Hazelcast.Serialization.Compact
         private int _dataPosition;
         private bool _completed;
 
-        public CompactWriter(ObjectDataOutput output, Schema schema)
-            : base(schema, output.Position)
+        public CompactWriter(CompactSerializer serializer, ObjectDataOutput output, Schema schema, bool withSchema)
+            : base(serializer, schema, output.Position, withSchema)
         {
-            _output = output;
+            _output = output ?? throw new ArgumentNullException(nameof(output));
 
             if (schema.HasReferenceFields) _offsets = new int[schema.ReferenceFieldCount];
 
@@ -110,7 +109,8 @@ namespace Hazelcast.Serialization.Compact
             _dataPosition = _output.Position;
         }
 
-        private void WriteReference<T>(string name, FieldKind kind, T value, Action<ObjectDataOutput, T> write)
+        private void WriteReference<T>(string name, FieldKind kind, T? value, Action<ObjectDataOutput, T> write)
+            where T: class
         {
             var field = GetValidField(name, kind);
 
@@ -279,20 +279,20 @@ namespace Hazelcast.Serialization.Compact
         public void WriteBooleanRefs(string name, bool?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfBooleanRef, value, (output, v) => output.WriteBoolean(v));
 
-        public void WriteSignedByte(string name, sbyte value)
+        public void WriteSByte(string name, sbyte value)
         {
             var position = GetValueFieldPosition(name, FieldKind.SignedInteger8);
             _output.MoveTo(position, BytesExtensions.SizeOfByte);
             _output.WriteSByte(value);
         }
 
-        public void WriteSignedByteRef(string name, sbyte? value)
+        public void WriteSByteRef(string name, sbyte? value)
             => WriteNullable(name, FieldKind.SignedInteger8, value, (output, v) => output.WriteSByte(v));
 
-        public void WriteSignedBytes(string name, sbyte[]? value)
+        public void WriteSBytes(string name, sbyte[]? value)
             => WriteReference(name, FieldKind.ArrayOfSignedInteger8, value, (output, v) => output.WriteSByteArray(v));
 
-        public void WriteSignedByteRefs(string name, sbyte?[]? value)
+        public void WriteSByteRefs(string name, sbyte?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfSignedInteger8Ref, value, (output, v) => output.WriteSByte(v));
 
         public void WriteShort(string name, short value)
@@ -375,11 +375,11 @@ namespace Hazelcast.Serialization.Compact
         public void WriteDoubleRefs(string name, double?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDoubleRef, value, (output, v) => output.WriteDouble(v));
 
-        public void WriteString(string name, string? value)
-            => WriteReference(name, FieldKind.String, value, (output, v) => output.WriteString(v));
+        public void WriteStringRef(string name, string? value)
+            => WriteReference(name, FieldKind.StringRef, value, (output, v) => output.WriteString(v));
 
-        public void WriteStrings(string name, string?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfString, value, (output, v) => output.WriteString(v));
+        public void WriteStringRefs(string name, string?[]? value)
+            => WriteArrayOfReference(name, FieldKind.ArrayOfStringRef, value, (output, v) => output.WriteString(v));
 
         public void WriteDecimalRef(string name, decimal? value)
             => WriteNullable(name, FieldKind.DecimalRef, value, (output, v) => output.WriteBigDecimal(v));
@@ -387,57 +387,65 @@ namespace Hazelcast.Serialization.Compact
         public void WriteDecimalRefs(string name, decimal?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, value, (output, v) => output.WriteBigDecimal(v));
 
-        public void WriteTime(string name, TimeSpan? value)
+        public void WriteDecimalRef(string name, HBigDecimal? value)
+            => WriteNullable(name, FieldKind.DecimalRef, value, (output, v) => output.WriteBigDecimal(v));
+
+        public void WriteDecimalRefs(string name, HBigDecimal?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, value, (output, v) => output.WriteBigDecimal(v));
+
+        public void WriteTimeRef(string name, TimeSpan? value)
         {
-            // TODO: range-check
-            throw new NotImplementedException();
+            // beware of range-check
+            throw new NotImplementedException(); // FIXME - implement WriteTimeRef
         }
 
-        public void WriteTimes(string name, TimeSpan?[]? value)
+        public void WriteTimeRefs(string name, TimeSpan?[]? value)
         {
-            throw new NotImplementedException();
+            // beware of range-check
+            throw new NotImplementedException(); // FIXME - implement WriteTimeRefs
         }
 
-        public void WriteDate(string name, DateTime? value)
+        public void WriteDateRef(string name, DateTime? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteDateRef
         }
 
-        public void WriteDates(string name, DateTime?[]? value)
+        public void WriteDateRefs(string name, DateTime?[]? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteDateRefs
         }
 
-        public void WriteDateTime(string name, DateTime? value)
+        public void WriteTimeStampRef(string name, DateTime? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteTimeStampRef
         }
 
-        public void WriteDateTimes(string name, DateTime?[]? value)
+        public void WriteTimeStampRefs(string name, DateTime?[]? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteTimeStampRefs
         }
 
-        public void WriteDateTimeOffset(string name, DateTimeOffset? value)
+        public void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRef
         }
 
-        public void WriteDateTimeOffsets(string name, DateTimeOffset?[]? value)
+        public void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRefs
         }
 
-        public void WriteObject(string name, object? value)
-            // FIXME Java uses serializer.writeObject(out, val, includeSchemaOnBinary)
-            // where serializer is a CompactStreamSerializer which is passed along with includeSchemaOnBinary when creating the writer
-            //   CompactStreamSerializer is a StreamSerializer<object> and yes we have the IStreamSerializer<T> interface in csharp
-            // and it's only used for writing objects and generic records really
-            //=> WriteReference(name, FieldKind.Object, value, (output, v) => output.WriteObject(v));
-            => throw new NotImplementedException();
+        // NOTE
+        // Java has
+        // - WriteCompact for writing a compact object (any kind of object, which is compact-serialized)
+        // - WriteGenericRecord for writing a generic record (the written value has to be a compact generic record object)
+        // We want
+        // - WriteObject which will do different things depending on what the object is (generic record...)
 
-        public void WriteObjects(string name, object?[]? value)
-            //=> WriteReference(name, FieldKind.ArrayOfObject, value, (output, v) => output.WriteObjectArray(v));
-            => throw new NotImplementedException();
+        public void WriteObjectRef(string name, object? value)
+            => WriteReference(name, FieldKind.ObjectRef, value, (output, v) => Serializer.WriteObject(output, v, WithSchema));
+
+        public void WriteObjectRefs(string name, object?[]? value)
+            => WriteArrayOfReference(name, FieldKind.ArrayOfObjectRef, value, (output, v) => Serializer.WriteObject(output, v, WithSchema));
     }
 }

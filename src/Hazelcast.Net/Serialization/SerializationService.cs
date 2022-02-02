@@ -72,9 +72,6 @@ namespace Hazelcast.Serialization
         private readonly CompactSerializer _compactSerializer;
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
-        // FIXME - missing new ToDataWithSchema method
-        // and how and where would it be used?
-
         internal SerializationService(
             SerializationOptions options,
             Endianness endianness, int portableVersion,

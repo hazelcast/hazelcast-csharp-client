@@ -13,8 +13,12 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Models;
 
 #nullable enable
+
+// FIXME - eventually remove ReSharper disable when all methods are tested
+// ReSharper disable UnusedMember.Global
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -26,6 +30,9 @@ namespace Hazelcast.Serialization.Compact
         // for types that support both a nullable and a non-nullable version, we define
         // the two methods, thus avoiding allocating an extra nullable struct and/or
         // boxing when it is not necessary.
+
+        // FIXME - implement support for default value?
+        // see Java DefaultCompactReader - default value for ?!
 
         /// <summary>Reads a <see cref="FieldKind.Boolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -50,22 +57,22 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.SignedInteger8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte ReadSignedByte(string name);
+        sbyte ReadSByte(string name);
 
         /// <summary>Reads a <see cref="FieldKind.SignedInteger8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte? ReadSignedByteRef(string name);
+        sbyte? ReadSByteRef(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte[]? ReadSignedBytes(string name);
+        sbyte[]? ReadSBytes(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte?[]? ReadSignedByteRefs(string name);
+        sbyte?[]? ReadSByteRefs(string name);
 
         /// <summary>Reads a <see cref="FieldKind.SignedInteger16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -167,69 +174,126 @@ namespace Hazelcast.Serialization.Compact
         /// <returns>The value of the field.</returns>
         double?[]? ReadDoubleRefs(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.String"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.StringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        string? ReadString(string name);
+        string? ReadStringRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfString"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        string?[]? ReadStrings(string name);
+        string?[]? ReadStringRefs(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="decimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
+        /// <remarks>
+        /// <para>This methods reads a <see cref="FieldKind.DecimalRef"/> primitive type. The range
+        /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
+        /// primitive type documentation for details.</para>
+        /// </remarks>
+        /// <exception cref="SerializationException">A specified value is outside the range of the
+        /// <see cref="decimal"/> type.</exception>
         decimal? ReadDecimalRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="decimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
+        /// <remarks>
+        /// <para>This methods reads a <see cref="FieldKind.DecimalRef"/> primitive type. The range
+        /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
+        /// primitive type documentation for details.</para>
+        /// </remarks>
+        /// <exception cref="SerializationException">A specified value is outside the range of the
+        /// <see cref="decimal"/> type.</exception>
         decimal?[]? ReadDecimalRefs(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="HBigDecimal"/>.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        HBigDecimal? ReadBigDecimalRef(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="HBigDecimal"/> values.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        HBigDecimal?[]? ReadBigDecimalRefs(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeSpan"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         TimeSpan? ReadTimeRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeSpan"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeSpan?[]? ReadTimeSpanRefs(string name);
+        TimeSpan?[]? ReadTimeRefs(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.DateRef"/> field.</summary>
+#if NET6_0_OR_GREATER
+        /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime? ReadDateTimeRef(string name);
+        TimeOnly? ReadTimeOnlyRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime?[]? ReadDateTimeRefs(string name);
+        TimeOnly?[]? ReadTimeOnlyRefs(string name);
+#endif
 
-        // FIXME - reader and writer, refactor date/time support
-        // FIXME - reader and writer, refactor BigDecimal support
-        // FIXME - reader and writer, WriteCompact vs WriteObject?
-        // FIXME - reader and writer, WriteTimeRef the *ref* is important
-
-        /// <summary>Reads a <see cref="FieldKind.TimeStampWithOffsetRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateTime"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTimeOffset? ReadDateTimeOffsetRef(string name);
+        DateTime? ReadDateRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampWithOffsetRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateTime"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTimeOffset?[]? ReadDateTimeOffsetRefs(string name);
+        DateTime?[]? ReadDateRefs(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Object"/> field.</summary>
+#if NET6_0_OR_GREATER
+        /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        object? ReadObject(string name);
+        DateOnly? ReadDateOnlyRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfObject"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        object?[]? ReadObjects(string name);
+        DateOnly?[]? ReadDateOnlyRefs(string name);
+#endif
+
+        // FIXME - document date & time ranges when reading
+
+        /// <summary>Reads a <see cref="FieldKind.TimeStampRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        DateTime? ReadTimeStampRef(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        DateTime?[]? ReadTimeStampRefs(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        DateTimeOffset? ReadTimeStampWithTimeZoneRef(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        DateTimeOffset?[]? ReadTimeStampWithTimeZoneRefs(string name);
+
+        /// <summary>Reads a <see cref="FieldKind.ObjectRef"/> field.</summary>
+        /// <typeparam name="T">The expected type of the object.</typeparam>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        T? ReadObjectRef<T>(string name) where T: class;
+
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfObjectRef"/> field.</summary>
+        /// <typeparam name="T">The expected type of the objects.</typeparam>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The value of the field.</returns>
+        T?[]? ReadObjectRefs<T>(string name) where T : class;
     }
 }

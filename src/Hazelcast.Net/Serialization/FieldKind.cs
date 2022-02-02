@@ -19,6 +19,11 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Defines the kind of a field for serialization.
     /// </summary>
+    /// <remarks>
+    /// <para>In order to stay close to C# nullable names, arrays and everything named "Ref"
+    /// is nullable, whereas everything else is non-nullable. Therefore, for instance,
+    /// <see cref="StringRef"/> indicates a reference (which may be null) to a string.</para>
+    /// </remarks>
     public enum FieldKind
     {
 #pragma warning disable CA1720 // Identifier contains type name
@@ -115,7 +120,7 @@ namespace Hazelcast.Serialization
         DecimalRef = 18,
 
         /// <summary>The nullable-string primitive type.</summary>
-        String = 16,
+        StringRef = 16,
 
         /// <summary>The nullable-time primitive type.</summary>
         /// <remarks>
@@ -154,7 +159,7 @@ namespace Hazelcast.Serialization
         /// <para>The object primitive type represents any object which is, in turn, composed of fields
         /// with primitive type values.</para>
         /// </remarks>
-        Object = 28,
+        ObjectRef = 28,
 
 
         // ---- arrays of nullable types ----
@@ -196,10 +201,10 @@ namespace Hazelcast.Serialization
         ArrayOfTimeStampWithTimeZoneRef = 27,
 
         /// <summary>The array-of-string primitive type.</summary>
-        ArrayOfString = 17,
+        ArrayOfStringRef = 17,
 
         /// <summary>The array-of-object primitive type.</summary>
-        ArrayOfObject = 29
+        ArrayOfObjectRef = 29
 
 #pragma warning restore CA1720 // Identifier contains type name
     }

@@ -32,16 +32,18 @@ namespace Hazelcast.Serialization.Compact
 
             _schemas = schemas;
 
-            // FIXME why is the _schemasMap managed here and not by the schema service?
-            // ok it does not belong but then whenever we create a schema or whatever
-            // we HAVE to register it here!
+            // FIXME - schema registration
+            // we currently do *not* support creating schemas on the fly, plus they are registered as "published"
+            // with ISchemas and we do not push schemas to the cluster not fetch schemas from the cluster, at all.
+            //
+            // this is a *big* MPV limitation as we don't have to deal with sync/async and missing schemas.
 
             foreach (var option in options.Registrations)
             {
                 var registration = new CompactSerializableRegistration(option.Schema.TypeName, option.Type, option.Serializer);
                 _registrationsById[option.Schema.Id] = registration;
                 _registrationsByType[option.Type] = registration;
-                _schemas.Add(option.Schema, true); // FIXME published?
+                _schemas.Add(option.Schema, true);
             }
         }
 
@@ -51,7 +53,7 @@ namespace Hazelcast.Serialization.Compact
 
         public void Dispose()
         {
-            // FIXME who's in charge of disposing _schemas which may have background tasks etc?
+            // FIXME - who's in charge of disposing _schemas which may have background tasks etc?
         }
 
         public object Read(IObjectDataInput input)
@@ -64,6 +66,9 @@ namespace Hazelcast.Serialization.Compact
 
             return ReadObject(inputInstance, withSchema);
         }
+
+        public T Read<T>(IObjectDataInput input, bool withSchema)
+            => SerializationService.CastObject<T>(Read(input, withSchema), true);
 
         public void Write(IObjectDataOutput output, object obj)
             => Write(output, obj, false);
@@ -106,29 +111,44 @@ namespace Hazelcast.Serialization.Compact
             {
                 // no schema was registered for this type, so we are going to serialize
                 // the object, capture the fields, and generate a schema for it
+                // FIXME - implies restriction on the serialization
+                // because, what-if the serializer for optimization reasons does not
+                // write out all the fields?
                 schema = BuildSchema(registration, obj);
                 _schemasMap[typeOfObj] = schema;
 
                 // and now, we need to publish this new schema - which we have to assume
                 // is not published yet, but if withSchema is true, the schema is
                 // about to be sent, and can we assume this means it is published?
-                // FIXME what-if sending the message eventually fails?
+                // FIXME - what-if sending the message eventually fails?
+                // we end-up with a 'published' schema that will never be published ever
+                // again and yet, it does not exist on the cluster maybe?
                 var published = withSchema;
                 _schemas.Add(schema, published);
 
                 if (!published)
                 {
-                    // FIXME here, Java does an blocking async call and we cannot
-                    // or, we really don't want to do it - so instead we should queue
-                    // the schema for publishing - meaning the schema service just
-                    // takes care of publishing schemas...? BUT we cannot try to send
-                    // again before the schema has been pushed entirely - so we need
-                    // to return "something" that's awaitable somehow?
+                    // FIXME - Java does blocking async
+                    //
+                    // in order to publish the schema on the cluster but we *cannot* do
+                    // this in C# and then what shall we do? if we just let the schemas
+                    // service publish in the background, then we may end up sending data
+                    // before the schema has been published entirely. so we want to wait.
+                    //
+                    // but how? we would need to return an awaitable something (Task) that
+                    // would bubble up to SerializationService.ToData and then whoever is
+                    // invoking ToData would need to check whether to await it before
+                    // proceeding with sending the message?
+                    //
+                    // and then what about reading (ToObject)? it's sync by default but
+                    // if the schema is n/a then we return a non-completed ValueTask that
+                    // the caller would need to await? that just cannot work with lazy
+                    // deserialization - have we made a decision?!
                 }
             }
 
             WriteSchema(output, schema, withSchema);
-            var writer = new CompactWriter(output, schema);
+            var writer = new CompactWriter(this, output, schema, withSchema);
             registration.Serializer.Write(writer, obj);
             writer.Complete();
         }
@@ -144,7 +164,7 @@ namespace Hazelcast.Serialization.Compact
 
             // note: don't output.WriteObject(schema) else it's serialized as identified serializable
             output.WriteString(schema.TypeName);
-            output.WriteInt(schema.Fields.Length);
+            output.WriteInt(schema.Fields.Count);
             foreach (var field in schema.Fields)
             {
                 output.WriteString(field.FieldName);
@@ -168,8 +188,10 @@ namespace Hazelcast.Serialization.Compact
         {
             var schema = ReadSchema(input, withSchema);
             var registration = GetOrCreateRegistration(schema);
-            var reader = new CompactReader(input, schema);
-            return registration.Serializer.Read(reader);
+            var reader = new CompactReader(this, input, schema, withSchema);
+            var obj = registration.Serializer.Read(reader);
+            if (obj == null) throw new SerializationException("Read illegal null object.");
+            return obj;
         }
 
         private Schema ReadSchema(ObjectDataInput input, bool withSchema)
@@ -178,8 +200,9 @@ namespace Hazelcast.Serialization.Compact
             if (_schemas.TryGet(schemaId, out var schema)) return schema;
             if (!withSchema)
             {
-                // FIXME is this really what we want to do? vs ... return null here?
-                throw new SerializationException("Meh No Schema");
+                // FIXME - throw or return null?
+                // and then properly bubble the error up so we can try to fetch from cluster etc?
+                throw new SerializationException("Failed.");
             }
 
             // note: don't input.ReadObject<Schema>() else it's serialized as identified serializable

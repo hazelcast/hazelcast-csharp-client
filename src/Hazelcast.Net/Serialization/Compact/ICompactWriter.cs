@@ -14,7 +14,11 @@
 
 #nullable enable
 
+// FIXME - eventually remove ReSharper disable when all methods are tested
+// ReSharper disable UnusedMember.Global
+
 using System;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -50,22 +54,22 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Writes a <see cref="FieldKind.SignedInteger8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSignedByte(string name, sbyte value);
+        void WriteSByte(string name, sbyte value);
 
         /// <summary>Writes a <see cref="FieldKind.SignedInteger8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSignedByteRef(string name, sbyte? value);
+        void WriteSByteRef(string name, sbyte? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSignedBytes(string name, sbyte[]? value);
+        void WriteSBytes(string name, sbyte[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSignedByteRefs(string name, sbyte?[]? value);
+        void WriteSByteRefs(string name, sbyte?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.SignedInteger16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -167,15 +171,15 @@ namespace Hazelcast.Serialization.Compact
         /// <param name="value">The value of the field.</param>
         void WriteDoubleRefs(string name, double?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.String"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.StringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteString(string name, string? value);
+        void WriteStringRef(string name, string? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfString"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteStrings(string name, string?[]? value);
+        void WriteStringRefs(string name, string?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -197,6 +201,16 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         void WriteDecimalRefs(string name, decimal?[]? value);
 
+        /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        void WriteDecimalRef(string name, HBigDecimal? value);
+
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfDecimalRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        void WriteDecimalRefs(string name, HBigDecimal?[]? value);
+
         /// <summary>Writes a <see cref="FieldKind.TimeRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
@@ -207,7 +221,7 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">A specified value is outside the range of the
         /// <see cref="FieldKind.TimeRef"/> primitive type.</exception>
-        void WriteTime(string name, TimeSpan? value);
+        void WriteTimeRef(string name, TimeSpan? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -219,7 +233,31 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">A specified value is outside the range of the
         /// <see cref="FieldKind.TimeRef"/> primitive type.</exception>
-        void WriteTimes(string name, TimeSpan?[]? value);
+        void WriteTimeRefs(string name, TimeSpan?[]? value);
+
+#if NET6_0_OR_GREATER
+        /// <summary>Writes a <see cref="FieldKind.TimeRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        /// <remarks>
+        /// <para>This method writes a <see cref="FieldKind.TimeRef"/> primitive type. The range of this
+        /// primitive type is different from the range of <see cref="TimeOnly"/>. Refer to the primitive
+        /// type documentation for details.</para>
+        /// </remarks>
+        /// FIXME - document range of TimeOnly
+        void WriteTimeRef(string name, TimeOnly? value);
+
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        /// <remarks>
+        /// <para>This method writes a <see cref="FieldKind.TimeRef"/> primitive type. The range of this
+        /// primitive type is different from the range of <see cref="TimeOnly"/>. Refer to the primitive
+        /// type documentation for details.</para>
+        /// </remarks>
+        /// FIXME - document range of TimeOnly
+        void WriteTimeRefs(string name, TimeOnly?[]? value);
+#endif
 
         /// <summary>Writes a <see cref="FieldKind.DateRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -229,7 +267,7 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDate(string name, DateTime? value);
+        void WriteDateRef(string name, DateTime? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfDateRef"/> field</summary>
         /// <param name="name">The name of the field.</param>
@@ -239,7 +277,31 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDates(string name, DateTime?[]? value);
+        void WriteDateRefs(string name, DateTime?[]? value);
+
+#if NET6_0_OR_GREATER
+        /// <summary>Writes a <see cref="FieldKind.DateRef"/> field.</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        /// <remarks>
+        /// <para>This method writes a <see cref="FieldKind.DateRef"/> primitive type. The range of this
+        /// primitive type is different from the range of <see cref="DateOnly"/>. Refer to the primitive
+        /// type documentation for details.</para>
+        /// </remarks>
+        /// FIXME - document range of DateOnly
+        void WriteDateRef(string name, DateOnly? value);
+
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfDateRef"/> field</summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="value">The value of the field.</param>
+        /// <remarks>
+        /// <para>This method writes a <see cref="FieldKind.ArrayOfDateRef"/> primitive type. The range of this
+        /// primitive type is different from the range of <see cref="DateOnly"/>. Refer to the primitive
+        /// type documentation for details.</para>
+        /// </remarks>
+        /// FIXME - document range of DateOnly
+        void WriteDateRefs(string name, DateOnly?[]? value);
+#endif
 
         /// <summary>Writes a <see cref="FieldKind.TimeStampRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -249,7 +311,7 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDateTime(string name, DateTime? value);
+        void WriteTimeStampRef(string name, DateTime? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -259,7 +321,7 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDateTimes(string name, DateTime?[]? value);
+        void WriteTimeStampRefs(string name, DateTime?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -269,7 +331,7 @@ namespace Hazelcast.Serialization.Compact
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
-        void WriteDateTimeOffset(string name, DateTimeOffset? value);
+        void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -279,16 +341,16 @@ namespace Hazelcast.Serialization.Compact
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
-        void WriteDateTimeOffsets(string name, DateTimeOffset?[]? value);
+        void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.Object"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ObjectRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteObject(string name, object? value);
+        void WriteObjectRef(string name, object? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfObject"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfObjectRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteObjects(string name, object?[]? value);
+        void WriteObjectRefs(string name, object?[]? value);
     }
 }

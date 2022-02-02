@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         private static Schema GetSchema(string typename, string fieldname) => new Schema(typename, new[]
         {
-            new SchemaField(fieldname, FieldKind.String)
+            new SchemaField(fieldname, FieldKind.StringRef)
         });
 
         [Test]

@@ -67,7 +67,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var schema = new Schema("typename", new[]
             {
-                new SchemaField("fieldname", FieldKind.String)
+                new SchemaField("fieldname", FieldKind.StringRef)
             });
             var fingerprint = schema.Id;
 

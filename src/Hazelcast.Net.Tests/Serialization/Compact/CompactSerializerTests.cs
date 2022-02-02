@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             // explicitly via code, we don't support any other mean of configuring schemas
             var thingSchema = SchemaBuilder
                 .For("thing")
-                .WithField("name", FieldKind.String)
+                .WithField("name", FieldKind.StringRef)
                 .WithField("value", FieldKind.SignedInteger32)
                 .Build();
 
@@ -75,7 +75,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Console.WriteLine();
 
             // validate a few basic things
-            // note: type-id of root object is *always* big-endian, whereas schema-id FIXME well?
+            // note: type-id of root object is *always* big-endian, whereas schema-id depends on options
             Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(SerializationConstants.ConstantTypeCompact));
             Assert.That(bytes.ReadLong(8, endianness), Is.EqualTo(thingSchema.Id));
 
@@ -101,6 +101,64 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(thing2.Value, Is.EqualTo(thing2.Value));
         }
 
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void SerializationServiceCanToDataThenToObjectNested(Endianness endianness)
+        {
+            // define schemas
+            var thingSchema = SchemaBuilder
+                .For("thing")
+                .WithField("name", FieldKind.StringRef)
+                .WithField("value", FieldKind.SignedInteger32)
+                .Build();
+
+            var thingNestSchema = SchemaBuilder
+                .For("thingNest")
+                .WithField("name", FieldKind.StringRef)
+                .WithField("thing", FieldKind.ObjectRef)
+                .Build();
+
+            var options = new SerializationOptions
+            {
+                Endianness = endianness,
+                Compact = { Enabled = true }
+            };
+
+            options.Compact.Register(thingSchema, new ThingCompactSerializer());
+            options.Compact.Register(thingNestSchema, new ThingNestCompactSerializer());
+
+            var messaging = Mock.Of<IClusterMessaging>();
+            var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
+
+            var nest = new ThingNest
+            {
+                Name = "nestName",
+                Thing = new Thing
+                {
+                    Name = "thingName",
+                    Value = 42
+                }
+            };
+
+            Console.WriteLine("ToData:");
+            var data = service.ToData(nest);
+
+            var bytes = data.ToByteArray();
+            Console.WriteLine(bytes.Dump());
+            Console.WriteLine();
+
+            Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(SerializationConstants.ConstantTypeCompact));
+            Assert.That(bytes.ReadLong(8, endianness), Is.EqualTo(thingNestSchema.Id));
+
+            Console.WriteLine("ToObject:");
+            var nest2 = service.ToObject<ThingNest>(data);
+
+            Assert.That(nest2.Name, Is.EqualTo(nest.Name));
+            Assert.That(nest2.Thing, Is.Not.Null);
+            Assert.That(nest2.Thing.Name, Is.EqualTo(nest.Thing.Name));
+            Assert.That(nest2.Thing.Value, Is.EqualTo(nest.Thing.Value));
+        }
+
         private class Thing
         {
             public string Name { get; set; }
@@ -114,15 +172,40 @@ namespace Hazelcast.Tests.Serialization.Compact
             {
                 return new Thing
                 {
-                    Name = reader.ReadString("name"),
+                    Name = reader.ReadStringRef("name"),
                     Value = reader.ReadInt("value")
                 };
             }
 
             public void Write(ICompactWriter writer, Thing obj)
             {
-                writer.WriteString("name", obj.Name);
+                writer.WriteStringRef("name", obj.Name);
                 writer.WriteInt("value", obj.Value);
+            }
+        }
+
+        private class ThingNest
+        {
+            public string Name { get; set; }
+
+            public Thing Thing { get; set; }
+        }
+
+        private class ThingNestCompactSerializer : ICompactSerializer<ThingNest>
+        {
+            public ThingNest Read(ICompactReader reader)
+            {
+                return new ThingNest
+                {
+                    Name = reader.ReadStringRef("name"),
+                    Thing = reader.ReadObjectRef<Thing>("thing")
+                };
+            }
+
+            public void Write(ICompactWriter writer, ThingNest obj)
+            {
+                writer.WriteStringRef("name", obj.Name);
+                writer.WriteObjectRef("thing", obj.Thing);
             }
         }
     }

@@ -56,7 +56,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = new Schema("sometype", new[]
             {
-                new SchemaField("somefield", FieldKind.String)
+                new SchemaField("somefield", FieldKind.StringRef)
             });
 
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
@@ -83,7 +83,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = new Schema("sometype", new[]
             {
-                new SchemaField("somefield", FieldKind.String)
+                new SchemaField("somefield", FieldKind.StringRef)
             });
 
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);

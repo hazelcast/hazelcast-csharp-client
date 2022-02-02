@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -47,16 +48,16 @@ namespace Hazelcast.Serialization.Compact
         public void WriteBooleanRefs(string name, bool?[]? value)
             => AddField(name, FieldKind.ArrayOfBooleanRef);
 
-        public void WriteSignedByte(string name, sbyte value)
+        public void WriteSByte(string name, sbyte value)
             => AddField(name, FieldKind.SignedInteger8);
 
-        public void WriteSignedByteRef(string name, sbyte? value)
+        public void WriteSByteRef(string name, sbyte? value)
             => AddField(name, FieldKind.SignedInteger8Ref);
 
-        public void WriteSignedBytes(string name, sbyte[]? value)
+        public void WriteSBytes(string name, sbyte[]? value)
             => AddField(name, FieldKind.ArrayOfSignedInteger8);
 
-        public void WriteSignedByteRefs(string name, sbyte?[]? value)
+        public void WriteSByteRefs(string name, sbyte?[]? value)
             => AddField(name, FieldKind.ArrayOfSignedInteger8Ref);
 
         public void WriteShort(string name, short value)
@@ -119,11 +120,11 @@ namespace Hazelcast.Serialization.Compact
         public void WriteDoubleRefs(string name, double?[]? value)
             => AddField(name, FieldKind.ArrayOfDoubleRef);
 
-        public void WriteString(string name, string? value)
-            => AddField(name, FieldKind.String);
+        public void WriteStringRef(string name, string? value)
+            => AddField(name, FieldKind.StringRef);
 
-        public void WriteStrings(string name, string?[]? value)
-            => AddField(name, FieldKind.ArrayOfString);
+        public void WriteStringRefs(string name, string?[]? value)
+            => AddField(name, FieldKind.ArrayOfStringRef);
 
         public void WriteDecimalRef(string name, decimal? value)
             => AddField(name, FieldKind.DecimalRef);
@@ -131,34 +132,40 @@ namespace Hazelcast.Serialization.Compact
         public void WriteDecimalRefs(string name, decimal?[]? value)
             => AddField(name, FieldKind.ArrayOfDecimalRef);
 
-        public void WriteTime(string name, TimeSpan? value)
+        public void WriteDecimalRef(string name, HBigDecimal? value)
+            => AddField(name, FieldKind.DecimalRef);
+
+        public void WriteDecimalRefs(string name, HBigDecimal?[]? value)
+            => AddField(name, FieldKind.ArrayOfDecimalRef);
+
+        public void WriteTimeRef(string name, TimeSpan? value)
             => AddField(name, FieldKind.TimeRef);
 
-        public void WriteTimes(string name, TimeSpan?[]? value)
+        public void WriteTimeRefs(string name, TimeSpan?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeRef);
 
-        public void WriteDate(string name, DateTime? value)
+        public void WriteDateRef(string name, DateTime? value)
             => AddField(name, FieldKind.DateRef);
 
-        public void WriteDates(string name, DateTime?[]? value)
+        public void WriteDateRefs(string name, DateTime?[]? value)
             => AddField(name, FieldKind.ArrayOfDateRef);
 
-        public void WriteDateTime(string name, DateTime? value)
+        public void WriteTimeStampRef(string name, DateTime? value)
             => AddField(name, FieldKind.TimeStampRef);
 
-        public void WriteDateTimes(string name, DateTime?[]? value)
+        public void WriteTimeStampRefs(string name, DateTime?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeStampRef);
 
-        public void WriteDateTimeOffset(string name, DateTimeOffset? value)
+        public void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value)
             => AddField(name, FieldKind.TimeStampWithTimeZoneRef);
 
-        public void WriteDateTimeOffsets(string name, DateTimeOffset?[]? value)
+        public void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeStampWithTimeZoneRef);
 
-        public void WriteObject(string name, object? value)
-            => AddField(name, FieldKind.Object);
+        public void WriteObjectRef(string name, object? value)
+            => AddField(name, FieldKind.ObjectRef);
 
-        public void WriteObjects(string name, object?[]? value)
-            => AddField(name, FieldKind.ArrayOfObject);
+        public void WriteObjectRefs(string name, object?[]? value)
+            => AddField(name, FieldKind.ArrayOfObjectRef);
     }
 }

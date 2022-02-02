@@ -16,6 +16,7 @@
 
 using System;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -26,10 +27,10 @@ namespace Hazelcast.Serialization.Compact
         private readonly int _offsetPosition;
         private readonly Func<ObjectDataInput, int, int, int> _offsetReader;
 
-        public CompactReader(ObjectDataInput input, Schema schema)
-            : base(schema, input.Position)
+        public CompactReader(CompactSerializer serializer, ObjectDataInput input, Schema schema, bool withSchema)
+            : base(serializer, schema, input.Position, withSchema)
         {
-            _input = input;
+            _input = input ?? throw new ArgumentNullException(nameof(input));
 
             if (schema.HasReferenceFields)
             {
@@ -153,38 +154,38 @@ namespace Hazelcast.Serialization.Compact
 
         public bool ReadBoolean(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadBoolean
         }
 
         public bool? ReadBooleanRef(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadBooleanRef
         }
 
         public bool[]? ReadBooleans(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadBooleans
         }
 
         public bool?[]? ReadBooleanRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadBooleanRefs
         }
 
-        public sbyte ReadSignedByte(string name)
+        public sbyte ReadSByte(string name)
         {
             var position = GetValueFieldPosition(name, FieldKind.SignedInteger8);
             _input.MoveTo(position);
             return _input.ReadSByte();
         }
 
-        public sbyte? ReadSignedByteRef(string name)
+        public sbyte? ReadSByteRef(string name)
             => ReadNullable(name, FieldKind.SignedInteger8, input => input.ReadSByte());
 
-        public sbyte[]? ReadSignedBytes(string name)
+        public sbyte[]? ReadSBytes(string name)
             => ReadReference(name, FieldKind.ArrayOfSignedInteger8, input => input.ReadSByteArray());
 
-        public sbyte?[]? ReadSignedByteRefs(string name)
+        public sbyte?[]? ReadSByteRefs(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfSignedInteger8Ref, input => input.ReadSByte());
 
         public short ReadShort(string name)
@@ -267,11 +268,11 @@ namespace Hazelcast.Serialization.Compact
         public double?[]? ReadDoubleRefs(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfDoubleRef, input => input.ReadDouble());
 
-        public string? ReadString(string name)
-            => ReadReference(name, FieldKind.String, input => input.ReadString());
+        public string? ReadStringRef(string name)
+            => ReadReference(name, FieldKind.StringRef, input => input.ReadString());
 
-        public string?[]? ReadStrings(string name)
-            => ReadArrayOfReference(name, FieldKind.ArrayOfString, input => input.ReadString());
+        public string?[]? ReadStringRefs(string name)
+            => ReadArrayOfReference(name, FieldKind.ArrayOfStringRef, input => input.ReadString());
 
         private static decimal ReadBigDecimalIntoDecimal(ObjectDataInput input)
         {
@@ -286,44 +287,82 @@ namespace Hazelcast.Serialization.Compact
         public decimal?[]? ReadDecimalRefs(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, ReadBigDecimalIntoDecimal);
 
+        public HBigDecimal? ReadBigDecimalRef(string name)
+            => ReadNullable(name, FieldKind.DecimalRef, input => input.ReadBigDecimal());
+
+        public HBigDecimal?[]? ReadBigDecimalRefs(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, input => input.ReadBigDecimal());
+
         public TimeSpan? ReadTimeRef(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadTimeRef
         }
 
-        public TimeSpan?[]? ReadTimeSpanRefs(string name)
+        public TimeSpan?[]? ReadTimeRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadTimeRefs
         }
 
-        public DateTime? ReadDateTimeRef(string name)
+#if NET6_0_OR_GREATER
+        public TimeOnly? ReadTimeOnlyRef(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadTimeOnlyRef
         }
 
-        public DateTime?[]? ReadDateTimeRefs(string name)
+        public TimeTimeOnlySpan?[]? ReadTimeOnlyRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadTimeOnlyRefs
+        }
+#endif
+
+        public DateTime? ReadDateRef(string name)
+        {
+            throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-        public DateTimeOffset? ReadDateTimeOffsetRef(string name)
+        public DateTime?[]? ReadDateRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-        public DateTimeOffset?[]? ReadDateTimeOffsetRefs(string name)
+#if NET6_0_OR_GREATER
+        public DateOnly? ReadDateOnlyRef(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadDateOnlyRef
         }
 
-        public object? ReadObject(string name)
+        public DateOnly?[]? ReadDateOnlyRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadDateOnlyRef
+        }
+#endif
+
+        public DateTime? ReadTimeStampRef(string name)
+        {
+            throw new NotImplementedException(); // FIXME - implement ReadTimeStampRef
         }
 
-        public object?[]? ReadObjects(string name)
+        public DateTime?[]? ReadTimeStampRefs(string name)
         {
-            throw new NotImplementedException();
+            throw new NotImplementedException(); // FIXME - implement ReadTimeStampRefs
         }
+
+        public DateTimeOffset? ReadTimeStampWithTimeZoneRef(string name)
+        {
+            throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRef
+        }
+
+        public DateTimeOffset?[]? ReadTimeStampWithTimeZoneRefs(string name)
+        {
+            throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRefs
+        }
+
+        public T? ReadObjectRef<T>(string name)
+            where T: class
+            => ReadReference(name, FieldKind.ObjectRef, input => Serializer.Read<T>(input, WithSchema));
+
+        public T?[]? ReadObjectRefs<T>(string name)
+            where T : class
+            => ReadArrayOfReference(name, FieldKind.ArrayOfObjectRef, input => Serializer.Read<T>(input, WithSchema));
     }
 }

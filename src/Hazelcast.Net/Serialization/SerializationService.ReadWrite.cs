@@ -38,16 +38,49 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
         public IData ToData(object obj, IPartitioningStrategy strategy)
         {
-            if (obj is null) return null;
-            if (obj is IData data) return data;
+            return obj switch
+            {
+                null => null,
+                IData data => data,
+                _ => ToData(obj, strategy, false)
+            };
+        }
 
+        /// <summary>
+        /// Serializes an object to an <see cref="IData"/> blob with Compact Serialization schemas.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The <see cref="IData"/> blob.</returns>
+        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
+        /// <remarks>
+        /// <para>If the object is serialized with Compact Serialization then schemas are included.</para>
+        /// </remarks>
+        public IData ToDataWithSchema(object obj)
+        {
+            if (obj is null) return null;
+            if (obj is IData data)
+            {
+                // either it's already compact with schema, or not compact at all - all good
+                if (data.TypeId != SerializationConstants.ConstantTypeCompact)
+                    return data;
+
+                // it's compact but without schema, we need to deserialize so we can add the schema,
+                // there is not other way round due to nested level, but this is massively inefficient
+                obj = ToObject(data);
+            }
+
+            return ToData(obj, _globalPartitioningStrategy, true);
+        }
+
+        private IData ToData(object obj, IPartitioningStrategy strategy, bool withSchema)
+        {
             var output = GetDataOutput();
 
             try
             {
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
-                WriteObject(output, obj, true);
+                WriteObject(output, obj, true, withSchema);
                 return new HeapData(output.ToByteArray());
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
@@ -113,16 +146,16 @@ namespace Hazelcast.Serialization
             if (output == null) throw new ArgumentNullException(nameof(output));
             if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
 
-            WriteObject(output, obj, false);
+            WriteObject(output, obj, false, false);
         }
 
-        private void WriteObject(ObjectDataOutput output, object obj, bool isRootObject)
+        private void WriteObject(ObjectDataOutput output, object obj, bool isRootObject, bool withSchema)
         {
             // args checks performed by callers
 
             try
             {
-                var serializer = LookupSerializer(obj, false); // FIXME - withSchema?!
+                var serializer = LookupSerializer(obj, withSchema);
 
                 // root object (from ToData) type-id is always big-endian, whereas
                 // nested objects type-id uses whatever is the default endianness

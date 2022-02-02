@@ -14,21 +14,26 @@
 
 #nullable enable
 
+using System;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Compact
 {
     internal abstract class CompactReaderWriterBase
     {
+        protected readonly CompactSerializer Serializer;
+        protected readonly bool WithSchema;
         protected readonly Schema Schema;
         protected readonly int StartPosition;
         protected readonly int DataStartPosition;
 
-        protected CompactReaderWriterBase(Schema schema, int startPosition)
+        protected CompactReaderWriterBase(CompactSerializer serializer, Schema schema, int startPosition, bool withSchema)
         {
-            Schema = schema;
+            Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
+            Schema = schema ?? throw new ArgumentNullException(nameof(schema));
 
             StartPosition = startPosition;
+            WithSchema = withSchema;
 
             DataStartPosition = schema.HasReferenceFields
                 ? StartPosition + BytesExtensions.SizeOfInt

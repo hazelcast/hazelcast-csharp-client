@@ -45,12 +45,12 @@ namespace Hazelcast.Serialization
                 case FieldKind.FloatRef:
                 case FieldKind.DoubleRef:
                 case FieldKind.DecimalRef:
-                case FieldKind.String:
+                case FieldKind.StringRef:
                 case FieldKind.TimeRef:
                 case FieldKind.DateRef:
                 case FieldKind.TimeStampRef:
                 case FieldKind.TimeStampWithTimeZoneRef:
-                case FieldKind.Object:
+                case FieldKind.ObjectRef:
                 case FieldKind.ArrayOfBooleanRef:
                 case FieldKind.ArrayOfSignedInteger8Ref:
                 case FieldKind.ArrayOfSignedInteger16Ref:
@@ -63,8 +63,8 @@ namespace Hazelcast.Serialization
                 case FieldKind.ArrayOfDateRef:
                 case FieldKind.ArrayOfTimeStampRef:
                 case FieldKind.ArrayOfTimeStampWithTimeZoneRef:
-                case FieldKind.ArrayOfString:
-                case FieldKind.ArrayOfObject:
+                case FieldKind.ArrayOfStringRef:
+                case FieldKind.ArrayOfObjectRef:
                     return kind;
                 default:
                     throw new ArgumentException($"Value {value} is not a valid FieldKind value.", nameof(value));
