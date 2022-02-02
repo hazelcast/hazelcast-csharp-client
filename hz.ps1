@@ -192,7 +192,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -264,11 +264,11 @@ $actions = @(
     },
     @{ name = "install-root-ca";
        desc = "(experimental) installs the ROOT CA test certificate";
-       note = "Works only as Administrator on Windows. Not supported."
+       note = "Requires priviledges. Not supported."
     },
     @{ name = "remove-root-ca";
        desc = "(experimental) removes the ROOT CA test certificate";
-       note = "Works only as Administrator on Windows. Not supported."
+       note = "Requires priviledges. Not supported."
     }
 )
 
@@ -1062,6 +1062,13 @@ function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
         remove-item $dir -force -recurse
+    }
+}
+
+# ensure we have the test certificates, or create them
+function ensure-certs {
+    if ($options.enterprise -and -not (test-path "$tmpDir/certs")) {
+        hz-generate-certs
     }
 }
 
@@ -2228,6 +2235,7 @@ register-needs dotnet-complete dotnet-minimal # order is important, if we need b
 register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 register-needs build-proj can-sign docfx
+register-needs certs
 
 # gather needs from actions
 $actions | foreach-object {

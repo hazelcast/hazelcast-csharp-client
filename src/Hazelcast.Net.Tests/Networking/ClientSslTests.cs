@@ -12,11 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
-using Hazelcast.Core;
 using Hazelcast.Exceptions;
-using Hazelcast.Networking;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -27,137 +24,86 @@ namespace Hazelcast.Tests.Networking
     public class ClientSslTests : ClientSslTestBase
     {
         [Test]
-        public async Task SSL_NotEnabled()
+        public async Task InvalidChainAndName_SslNotEnabled_IsOk()
         {
             await using var client = await StartClientAsync(
-                Hazelcast.Testing.Remote.Resources.hazelcast,
-                false,
-                true,
-                true,
-                null,
-                ServerCertificateValidName,
-                null,
-                null);
+                serverXml: Hazelcast.Testing.Remote.Resources.hazelcast,
+                enableSsl: false,
+                validateCertificateChain: true,
+                validateCertificateName: true,
+                serverCertificateName: ServerCertificateInvalidName
+            );
         }
 
-        [Test]
-        public async Task SSL_ValidateName_ValidName()
+        // when the name is valid, every combination of validation is OK
+        [TestCase(true, true, true, true)]
+        [TestCase(true, false, true, true)]
+        [TestCase(false, true, true, true)]
+        [TestCase(false, false, true, true)]
+
+        // when the name is invalid, fail if the name is to be validated
+        [TestCase(true, true, false, false)]
+        [TestCase(true, false, false, true)]
+        [TestCase(false, true, false, false)]
+        [TestCase(false, false, false, true)]
+
+        public async Task ValidateName(bool validateChain, bool validateName, bool validName, bool succeeds)
         {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                true,
-                true,
-                null,
-                ServerCertificateValidName,
-                null,
-                null);
+            async ValueTask TryStartClientAsync()
+            {
+                var certName = validName ? ServerCertificateValidName : ServerCertificateInvalidName;
+
+                await using var client = await StartClientAsync(
+                    serverXml: GetServerXml_Ssl(signed: true), // the chain is *always* valid here
+                    enableSsl: true,
+                    validateCertificateChain: validateChain,
+                    validateCertificateName: validateName,
+                    serverCertificateName: certName,
+                    failFast: !succeeds // when we expect to fail, reduce timeouts, no point retrying
+                );
+            }
+
+            if (succeeds)
+            {
+                await TryStartClientAsync();
+            }
+            else
+            {
+                await AssertEx.ThrowsAsync<ConnectionException>(TryStartClientAsync);
+            }
         }
 
-        [Test]
-        public async Task SSL_ValidateName_InvalidName()
+        // TODO: add certificate revocation tests
+
+        // a valid chain is a chain that can be validated by the client
+        // i.e. that is signed, by an ultimately trusted authority
+        [TestCase(true, true, true)]
+        [TestCase(true, false, false)]
+        [TestCase(false, true, true)]
+        [TestCase(false, false, true)]
+
+        public async Task ValidateChain(bool validateChain, bool validChain, bool succeeds)
         {
-            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+            async ValueTask TryStartClientAsync()
             {
                 await using var client = await StartClientAsync(
-                    GetServerXml_Ssl(signed: true),
-                    true,
-                    true,
-                    true,
-                    null,
-                    ServerCertificateInvalidName,
-                    null,
-                    null,
-                    true);
-            });
-        }
+                    serverXml: GetServerXml_Ssl(signed: validChain),
+                    enableSsl: true,
+                    validateCertificateChain: validateChain,
+                    validateCertificateName: false,
+                    serverCertificateName: ServerCertificateValidName,
+                    failFast: !succeeds // when we expect to fail, reduce timeouts, no point retrying
+                );
+            }
 
-        [Test]
-        public async Task SSL_ValidateChainNotName_InvalidName()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                true,
-                false,
-                null,
-                ServerCertificateInvalidName,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task SSL_ValidateNothing_InvalidName()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                false,
-                false,
-                null,
-                ServerCertificateInvalidName,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task TestSSLDisabled() // FIXME isn't this a duplicate?!
-        {
-            await using var client = await StartClientAsync(
-                Resources.Cluster_Default,
-                false,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task SSL_SelfSignedRemoteCert()
-        {
-            await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+            if (succeeds)
             {
-                await using var client = await StartClientAsync(
-                    GetServerXml_Ssl(signed: false),
-                    true,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    true);
-            });
-        }
-
-        [Test]
-        public async Task SSL_SignedRemoteCert()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task SSL_ValidateChainAndName_ValidName()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                null,
-                true,
-                null,
-                ServerCertificateValidName,
-                null,
-                null);
+                await TryStartClientAsync();
+            }
+            else
+            {
+                await AssertEx.ThrowsAsync<ConnectionException>(TryStartClientAsync);
+            }
         }
     }
 }
