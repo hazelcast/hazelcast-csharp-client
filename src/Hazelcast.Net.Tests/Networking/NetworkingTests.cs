@@ -581,7 +581,6 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Cluster?");
 
             var serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
-                .SetVersion(1)
                 .Build();
 
             var options = new HazelcastOptions();

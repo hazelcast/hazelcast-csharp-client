@@ -93,12 +93,12 @@ namespace Hazelcast.Serialization
 
         public void WriteBigDecimal(decimal value)
         {
-            throw new NotImplementedException(); // FIXME - implement
+            throw new NotImplementedException(); // FIXME - implement WriteBigDecimal
         }
 
         public void WriteBigDecimal(HBigDecimal value)
         {
-            throw new NotImplementedException(); // FIXME - implement
+            throw new NotImplementedException(); // FIXME - implement WriteBigDecimal
         }
 
         public void WriteString(string value)

@@ -15,10 +15,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Hazelcast.Clustering;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
@@ -38,7 +36,6 @@ namespace Hazelcast.Serialization
         private Endianness _endianness;
         private bool _validatePortableClassDefinitions;
         private int _portableVersion;
-        private byte _version = SerializationService.SerializerVersion; // FIXME - versions confusion
 
         private readonly IDictionary<int, IDataSerializableFactory> _dataSerializableFactories = new Dictionary<int, IDataSerializableFactory>();
         private readonly IDictionary<int, IPortableFactory> _portableFactories = new Dictionary<int, IPortableFactory>();
@@ -61,15 +58,6 @@ namespace Hazelcast.Serialization
 
             _validatePortableClassDefinitions = options.ValidateClassDefinitions;
             _endianness = options.Endianness;
-        }
-
-        public SerializationServiceBuilder SetVersion(byte version)
-        {
-            if (version > SerializationService.SerializerVersion)
-                throw new ArgumentException($"Value cannot be higher than the max supported version ({SerializationService.SerializerVersion}).");
-
-            _version = version;
-            return this;
         }
 
         public SerializationServiceBuilder AddHook<T>() => AddHook(typeof (T));

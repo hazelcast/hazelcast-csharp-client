@@ -167,7 +167,7 @@ namespace Hazelcast.Serialization
             }
         }
 
-        private static T CastObject<T>(object obj, bool enforceNullable)
+        public static T CastObject<T>(object obj, bool enforceNullable)
         {
             // when getting a IHMap<int, int> value for a non-existing key, the cluster will return
             // a null value, and this is not an error, so ToObject<T> has to deserialize it somehow,

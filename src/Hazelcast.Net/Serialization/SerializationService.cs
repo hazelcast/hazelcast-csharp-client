@@ -77,7 +77,7 @@ namespace Hazelcast.Serialization
 
         internal SerializationService(
             SerializationOptions options,
-            Endianness endianness, int version,
+            Endianness endianness, int portableVersion,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
             IDictionary<int, IPortableFactory> portableFactories, 
             ICollection<IClassDefinition> portableClassDefinitions,
@@ -134,13 +134,15 @@ namespace Hazelcast.Serialization
             // serialization of objects marked with the [Serializable] attributes.
             _serializableSerializerAdapter = CreateSerializerAdapter<object>(new SerializableSerializer());
 
-            // FIXME - see also LookupConstantSerializer
+            // NOTE
             // In Java the javaSerializerAdapter, which would correspond to the _serializableSerializerAdapter here,
             // is 'safeRegister'-ed somehow which means it is registered as a custom serializer, not a constant one.
             // In .NET the _serializableSerializerAdapter was also force-registered as a custom serializer although
-            // its type-id is <0, and therefore TryRegisterCustomSerializer now throws. I am reverting this and
-            // registering it as a constant serializer but meh?!
-            //_ = TryRegisterCustomSerializer(_serializableSerializerAdapter);
+            // its type-id is <0, and that would cause TryRegisterCustomSerializer to throw.
+            // I cannot find any reason why this constant serializer would need to be registered as custom, breaking
+            // all internal conventions, therefore I am not following Java here and I am registering it as constant.
+            // This also means that LookupConstantSerializer does not need to exclude the CsharpClrSerializationType
+            // anymore as, again, it just is a constant serializer to begin with.
             RegisterConstantSerializer(_serializableSerializerAdapter);
 
             // Invoke ISerializerDefinitions, which are classes that can register more serializers.
@@ -152,7 +154,7 @@ namespace Hazelcast.Serialization
             RegisterConstantSerializer(_nullSerializerAdapter);
 
             // Registers the constant 'portable serializer', which implements portable serialization.
-            _portableContext = new PortableContext(this, version);
+            _portableContext = new PortableContext(this, portableVersion);
             _portableSerializer = new PortableSerializer(_portableContext, portableFactories);
             _portableSerializerAdapter = CreateSerializerAdapter<IPortable>(_portableSerializer);
             RegisterConstantSerializer(_portableSerializerAdapter, typeof(IPortable));

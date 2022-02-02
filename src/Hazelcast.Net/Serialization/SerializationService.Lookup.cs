@@ -39,9 +39,12 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Cannot find a constant serializer matching the <paramref name="typeId"/>.</exception>
         private ISerializerAdapter LookupConstantSerializer(int typeId)
         {
-            // FIXME - see also SerializationService.ctor
-            // Why would the CLR serialization be registered as a custom serializer despite its negative id?
-            // and thus, excluded here? I am reverting this all since it is not documented, but meh?
+            // NOTE
+            // In Java the javaSerializerAdapter, which would correspond to the _serializableSerializerAdapter here,
+            // is somehow registered as a custom serializer and therefore is excluded here. See the note in the
+            // SerializationService constructor: I fail to understand the reason for this and revert to registering
+            // the _serializableSerializerAdapter as constant.
+            // Which means we don't need to exclude it here. But I keep the code commented out as a reference.
 
             ISerializerAdapter adapter = null;
             if (-typeId < ConstantSerializersCount /*&& typeId != SerializationConstants.CsharpClrSerializationType*/)

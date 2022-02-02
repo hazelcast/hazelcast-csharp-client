@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization
             CheckAvailable(Position, BytesExtensions.SizeOfByte);
             var value = _buffer.ReadSByte(Position);
             Position += BytesExtensions.SizeOfByte;
-            return (sbyte) value;
+            return value;
         }
 
         public char ReadChar()
@@ -105,7 +105,7 @@ namespace Hazelcast.Serialization
 
         public HBigDecimal ReadBigDecimal()
         {
-            throw new NotImplementedException(); // FIXME - implement
+            throw new NotImplementedException(); // FIXME - implement ReadBigDecimal
         }
 
         public string ReadString()

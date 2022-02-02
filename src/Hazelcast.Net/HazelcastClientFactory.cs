@@ -185,7 +185,6 @@ namespace Hazelcast
             return new SerializationServiceBuilder(options, loggerFactory)
 
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
-                .SetVersion(SerializationService.SerializerVersion) // FIXME versions confusion w/portable?
                 .SetCompactSchemas(new Schemas(messaging))
 
                 // add hooks that construct and provide IIdentifiedDataSerialization factories for more
