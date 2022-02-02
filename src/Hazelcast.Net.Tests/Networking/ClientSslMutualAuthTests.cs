@@ -23,118 +23,68 @@ namespace Hazelcast.Tests.Networking
     [Category("enterprise")]
     public class ClientSslMutualAuthTests : ClientSslTestBase
     {
-        [Test]
-        public async Task MutualAuthRequired_ServerKnowsClient()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ma(required: true),
-                true,
-                true,
-                null,
-                null,
-                null,
-                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
-                ClientCertificatePassword);
-        }
+        // when mutual auth is required, the client must provide a cert, and the server must know about it
+        [TestCase(true, true, true, true)]
+        [TestCase(true, true, false, false)]
+        [TestCase(true, false, true, false)]
+        [TestCase(true, false, false, false)]
 
-        [Test]
-        public async Task MutualAuthRequired_ServerKnowsClient_ClientDoesNotProvideCert()
+        // when mutual auth is optional, the client can provide a cert, and then the server must know about it
+        [TestCase(false, true, true, true)]
+        [TestCase(false, true, false, true)]
+        [TestCase(false, false, true, false)]
+        [TestCase(false, false, false, true)]
+
+        public async Task MutualAuth(bool required, bool knowsClient, bool withCert, bool succeeds)
         {
-            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+            async ValueTask TryStartClientAsync()
             {
+                var clientCertNumber = knowsClient ? 1 : 2;
+                var clientCertPath = withCert 
+                    ? TestFiles.GetFullPath(this, ClientCertificatePath, $"{ClientCertificatePrefix}client{clientCertNumber}.pfx") 
+                    : null;
+
                 await using var client = await StartClientAsync(
-                    GetServerXml_Ma(required: true),
-                    true,
-                    true,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null,
-                    true);
-            });
+                    serverXml: GetServerXml_Ma(required: required),
+                    enableSsl: true,
+                    validateCertificateChain: true,
+                    validateCertificateName: false,
+                    clientCertificatePath: clientCertPath,
+                    clientCertificatePassword: ClientCertificatePassword,
+                    failFast: !succeeds // when we expect to fail, reduce timeouts, no point retrying
+                );
+            }
 
-            // TODO: assert e
-        }
-
-        [Test]
-        public async Task MutualAuthRequired_ServerDoesNotKnowClient()
-        {
-            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+            if (succeeds)
             {
-                await using var client = await StartClientAsync(
-                    GetServerXml_Ma(required: true),
-                    true,
-                    true,
-                    null,
-                    null,
-                    null,
-                    TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client2.pfx"),
-                    ClientCertificatePassword,
-                    true);
-            });
-            // TODO: assert e
-        }
-
-        [Test]
-        public async Task MutualAuthOptional_ServerKnowsClient()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ma(required: false),
-                true,
-                true,
-                null,
-                null,
-                null,
-                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
-                ClientCertificatePassword);
-        }
-
-        [Test]
-        public async Task MutualAuthOptional_ServerKnowsClient_ClientDoesNotProvideCert()
-        {
-            await using var client = await StartClientAsync(
-                GetServerXml_Ma(required: false),
-                true,
-                true,
-                null,
-                null,
-                null,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task MutualAuthOptional_ServerDoesNotKnowClient()
-        {
-            var e = await AssertEx.ThrowsAsync<ConnectionException>(async () =>
+                await TryStartClientAsync();
+            }
+            else
             {
-                await using var client = await StartClientAsync(
-                    GetServerXml_Ma(required: false),
-                    true,
-                    true,
-                    null,
-                    null,
-                    null,
-                    TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client2.pfx"),
-                    ClientCertificatePassword,
-                    true);
-            });
-            // TODO: assert e
+                await AssertEx.ThrowsAsync<ConnectionException>(TryStartClientAsync);
+            }
         }
 
-        [Test]
-        public async Task MutualAuthDisabled()
+        // when mutual auth is disabled, the client cert does not matter
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+
+        public async Task MutualAuthDisabled(bool knowsClient, bool withCert)
         {
+            var clientCertNumber = knowsClient ? 1 : 2;
+            var clientCertPath = withCert
+                ? TestFiles.GetFullPath(this, ClientCertificatePath, $"{ClientCertificatePrefix}client{clientCertNumber}.pfx")
+                : null;
+
             await using var client = await StartClientAsync(
-                GetServerXml_Ssl(signed: true),
-                true,
-                true,
-                null,
-                null,
-                null,
-                TestFiles.GetFullPath(this, $"Certificates/{ClientCertificatePrefix}client1.pfx"),
-                ClientCertificatePassword);
+                serverXml: GetServerXml_Ssl(signed: true),
+                enableSsl: true,
+                validateCertificateChain: true,
+                validateCertificateName: null,
+                clientCertificatePath: clientCertPath,
+                clientCertificatePassword: ClientCertificatePassword);
         }
     }
 }

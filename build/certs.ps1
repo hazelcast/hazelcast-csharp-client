@@ -439,6 +439,11 @@ function gen-test-certs ( $cert_dir, $src_dir, $config_dir ) {
     keytool-importkeystore-pfx $cert_dir -cert_name "client2" -password $password
     if (failed) { return }
 
+    # copy both clients to the same place
+    mkdirf "$cert_dir/clients"
+    cp "$cert_dir/client1/client1.pfx" "$cert_dir/clients/client1.pfx"
+    cp "$cert_dir/client2/client2.pfx" "$cert_dir/clients/client2.pfx"
+
     Write-Output ""
     Write-Output "CERTS: -------- CREATE SERVER1.TRUSTSTORE (CONTAINS CLIENT1 TRUSTED) --------"
 
@@ -469,15 +474,16 @@ function gen-test-certs ( $cert_dir, $src_dir, $config_dir ) {
     keytool -list -keystore "$cert_dir/server1/server1.keystore" -storepass $password
     if (failed) { return }
 
-    Write-Output ""
-    Write-Output "CERTS: -------- COPY FILES --------"
-
-    $res_dir = "$src_dir/Hazelcast.Net.Tests/Resources/Certificates/"
-    cp "$cert_dir/client1/client1.pfx" "$res_dir/client1.pfx"
-    cp "$cert_dir/client2/client2.pfx" "$res_dir/client2.pfx"
-    cp "$cert_dir/keystore/keystore.jks" "$res_dir/keystore.jks"
-    cp "$cert_dir/server1/server1.keystore" "$res_dir/server1.keystore"
-    cp "$cert_dir/server1/server1.truststore" "$res_dir/server1.truststore"
+    # not anymore - directly use the files from the temp directory - keep this for reference
+    #Write-Output ""
+    #Write-Output "CERTS: -------- COPY FILES --------"
+    #
+    #$res_dir = "$src_dir/Hazelcast.Net.Tests/Resources/Certificates/"
+    #cp "$cert_dir/clients/client1.pfx" "$res_dir/client1.pfx"
+    #cp "$cert_dir/clients/client2.pfx" "$res_dir/client2.pfx"
+    #cp "$cert_dir/keystore/keystore.jks" "$res_dir/keystore.jks"
+    #cp "$cert_dir/server1/server1.keystore" "$res_dir/server1.keystore"
+    #cp "$cert_dir/server1/server1.truststore" "$res_dir/server1.truststore"
 
     Write-Output ""
     Write-Output "CERTS: -------- DONE --------"
