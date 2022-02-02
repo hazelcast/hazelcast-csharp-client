@@ -128,12 +128,12 @@ namespace Hazelcast.Tests.Networking
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
-            var path = TestFiles.GetFullPath(this, $"Certificates/{ClientSslTestBase.ClientCertificatePrefix}client1.pfx");
+            var path = TestFiles.GetFullPath(this, ClientSslTestBase.ClientCertificatePath, $"{ClientSslTestBase.ClientCertificatePrefix}client1.pfx");
             Console.WriteLine("Path: " + path);
 
             var options = new SslOptions
             {
-                CertificateName = "cert1",
+                CertificateName = "client1",
                 CertificatePath = path,
                 CertificatePassword = ClientSslTestBase.ClientCertificatePassword
             };
@@ -149,20 +149,19 @@ namespace Hazelcast.Tests.Networking
             var text = new StringBuilder();
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
-            var path = TestFiles.GetFullPath(this, $"Certificates/{ClientSslTestBase.ClientCertificatePrefix}client-not.pfx");
+            var path = TestFiles.GetFullPath(this, ClientSslTestBase.ClientCertificatePath, $"{ClientSslTestBase.ClientCertificatePrefix}client0.pfx");
             Console.WriteLine("Path: " + path);
 
             var options = new SslOptions
             {
-                CertificateName = "cert-not",
-                CertificatePath = Path.Combine(path, "client-not.pfx"),
+                CertificateName = "client0",
+                CertificatePath = path,
                 CertificatePassword = ClientSslTestBase.ClientCertificatePassword
             };
             var ssl = new SslLayer(options, loggerFactory);
-            X509Certificate2Collection certs = null;
             try
             {
-                certs = ssl.GetClientCertificatesOrDefault();
+                ssl.GetClientCertificatesOrDefault();
                 Assert.Fail("Expected an exception.");
             }
             catch (Exception e)
