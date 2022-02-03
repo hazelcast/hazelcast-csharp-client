@@ -11,9 +11,6 @@ References:
 
 Our tooling:
 
-  ExpectedObjects
-    dll: netstandard2.0 (tooling)
-    
   Hazelcast.Net.DocAsCode
     dll: net48 (tooling, net48 required by DocFX 2.x)
   
