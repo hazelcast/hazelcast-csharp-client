@@ -13,22 +13,19 @@
 // limitations under the License.
 
 using Hazelcast.Clustering.LoadBalancing;
-using Hazelcast.Core;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Represents Cluster level option arrangments. <see cref"IClusterOptions"> could use the <see cref="ClusterOptions"> 
-    /// as propety like other option interfaces but <see cref="HazelcastOptions"> have to change hierarchy of all options in <see cref"IClusterOptions">. 
-    /// This is the reason <see cref="ClusterOptions"> implements <see cref"IClusterOptions">.
+    /// Represents cluster-level options. <see cref"LoadBalancerOptions"/> absrtact class provides the creation instance functionalities of <see cref"LoadBalancer"/>
     /// </summary>
-    internal interface IClusterOptions
+    public class ClusterOptions : LoadBalancerOptions, IClusterOptions
     {
         /// <summary>
         /// Gets or sets the cluster name.
         /// </summary>
-        string ClusterName { get; set; }
+        public string ClusterName { get; set; }
 
         /// <summary>
         /// Gets or sets the delay to pause for when looking for a client
@@ -40,36 +37,21 @@ namespace Hazelcast.Clustering
         /// <see cref="ClusterMembers.WaitRandomConnection"/> which will try to return an available
         /// connection, else will wait for <see cref="WaitForConnectionMilliseconds"/> before retrying.</para>
         /// </remarks>
-        int WaitForConnectionMilliseconds { get; set; }
-
-        /// <summary>
-        /// Gets the service factory for <see cref="ILoadBalancer"/>.
-        /// </summary>
-        /// <returns>The service factory for <see cref="ILoadBalancer"/>.</returns>
-        /// <remarks>
-        /// <para>Load balancing determines how the Hazelcast client selects the member to
-        /// talk to, when it could talk to any member. By default it uses a round-robin
-        /// mechanism (see <see cref="RoundRobinLoadBalancer"/>), but it can also be random
-        /// (see <see cref="RandomLoadBalancer"/>) or static (see <see cref="StaticLoadBalancer"/>)
-        /// or any type that implements <see cref="ILoadBalancer"/>. In the configuration file,
-        /// the short names <c>roundrobin</c>, <c>random</c> and <c>static</c> can be used
-        /// in place of the full type name.</para>
-        /// </remarks>
-        SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
-
+        public int WaitForConnectionMilliseconds { get; set; }
+   
         /// <summary>
         /// Gets the authentication options.
         /// </summary>
-        AuthenticationOptions Authentication { get; }
+        public AuthenticationOptions Authentication { get; }
 
         /// <summary>
         /// Gets the heartbeat options.
         /// </summary>
-        HeartbeatOptions Heartbeat { get; }
+        public HeartbeatOptions Heartbeat { get; }
 
         /// <summary>
         /// Gets the networking options.
         /// </summary>
-        NetworkingOptions Networking { get; }
+        public NetworkingOptions Networking { get; }
     }
 }

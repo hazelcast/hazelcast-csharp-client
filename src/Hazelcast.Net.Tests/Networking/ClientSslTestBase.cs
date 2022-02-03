@@ -15,7 +15,6 @@
 using System;
 using System.IO;
 using System.Threading.Tasks;
-using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Remote;
@@ -100,7 +99,7 @@ namespace Hazelcast.Tests.Networking
             options.Networking.Addresses.Clear();
             //options.Networking.Addresses.Add("localhost:5701");
             options.Networking.Addresses.Add("127.0.0.1:5701");
-            ((IClusterOptions) options).ClusterName = RcCluster.Id;
+            ((IHazelcastOptions) options).ClusterName = RcCluster.Id;
             options.LoggerFactory.Creator = () => LoggerFactory;
 
             var sslOptions = options.Networking.Ssl;

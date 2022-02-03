@@ -19,7 +19,6 @@ using System.Security.Authentication;
 using System.Text;
 using System.Threading.Tasks;
 using ExpectedObjects;
-using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
@@ -124,7 +123,7 @@ namespace Hazelcast.Tests.Configuration
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
 
-            var clusterOptions = (IClusterOptions) options;
+            var clusterOptions = (IHazelcastOptions) options;
             Assert.AreEqual(1000, clusterOptions.WaitForConnectionMilliseconds);
         }
 

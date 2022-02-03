@@ -58,7 +58,7 @@ namespace Hazelcast
             LoggerFactory = other.LoggerFactory.Clone();
             PatternMatcher = other.PatternMatcher;
 
-            ((IClusterOptions) this).ClientNamePrefix = ((IClusterOptions) other).ClientNamePrefix;
+            ((IClientOptions) this).ClientNamePrefix = ((IClientOptions) other).ClientNamePrefix;
 
             Preview = other.Preview.Clone();
             Core = other.Core.Clone();

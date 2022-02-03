@@ -28,7 +28,7 @@ namespace Hazelcast
     // beware! the IClusterOptions is internal, and therefore its /// documentation
     // is NOT inherited = do NOT use <inheritdoc /> here but DO duplicate the docs
 
-    public partial class HazelcastOptions : IClusterOptions // ClusterName, Subscribers
+    public partial class HazelcastOptions : LoadBalancerOptions, IHazelcastOptions // ClusterName, Subscribers
     {
         private string _clientNamePrefix;
 
@@ -61,7 +61,7 @@ namespace Hazelcast
         public string ClientName { get; set; } // null by default
 
         /// <inheritdoc />
-        string IClusterOptions.ClientNamePrefix
+        string IClientOptions.ClientNamePrefix
         {
             get => string.IsNullOrWhiteSpace(_clientNamePrefix) ? DefaultClientNamePrefix : _clientNamePrefix;
             set => _clientNamePrefix = value;
@@ -79,55 +79,6 @@ namespace Hazelcast
         /// Gets the <see cref="AuthenticationOptions"/>.
         /// </summary>
         public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
-
-        /// <summary>
-        /// Gets the <see cref="SingletonServiceFactory{TService}"/> for the <see cref="ILoadBalancer"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>When set in the configuration file, it is defined as an injected type, for instance:
-        /// <code>
-        /// "loadBalancer":
-        /// {
-        ///   "typeName": "My.LoadBalancer",
-        ///   "args":
-        ///   {
-        ///     "foo": 42
-        ///   }
-        /// }
-        /// </code>
-        /// where <c>typeName</c> is the name of the type, and <c>args</c> is an optional dictionary
-        /// of arguments for the type constructor.</para>
-        /// <para>In addition to custom type names, <c>typeName</c> can be any of the
-        /// predefined <c>Random</c>, <c>RoundRobin</c> or <c>Static</c> values.</para>
-        /// <para>The default load balancer is the <see cref="RoundRobinLoadBalancer"/>.</para>
-        /// </remarks>
-        [BinderIgnore]
-        public SingletonServiceFactory<ILoadBalancer> LoadBalancer { get; }
-            = new SingletonServiceFactory<ILoadBalancer> { Creator = () => new RoundRobinLoadBalancer() };
-
-        [BinderName("loadBalancer")]
-        [BinderIgnore(false)]
-#pragma warning disable IDE0051 // Remove unused private members
-        // ReSharper disable once UnusedMember.Local
-        private InjectionOptions LoadBalancerBinder
-#pragma warning restore IDE0051 // Remove unused private members
-        {
-            get => default;
-            set
-            {
-                var typeName = value.TypeName;
-                if (string.IsNullOrWhiteSpace(typeName))
-                    throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
-
-                LoadBalancer.Creator = typeName.ToUpperInvariant() switch
-                {
-                    "RANDOM" => () => new RandomLoadBalancer(),
-                    "ROUNDROBIN" => () => new RoundRobinLoadBalancer(),
-                    "STATIC" => () => new StaticLoadBalancer(value.Args),
-                    _ => () => ServiceFactory.CreateInstance<ILoadBalancer>(value.TypeName, value.Args)
-                };
-            }
-        }
 
         /// <summary>
         /// Gets the <see cref="HeartbeatOptions"/>.

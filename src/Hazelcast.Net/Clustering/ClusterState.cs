@@ -39,7 +39,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
         /// </summary>
-        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
+        public ClusterState(IHazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
             ClusterName = clusterName;
@@ -364,7 +364,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the options.
         /// </summary>
-        public IClusterOptions Options { get; }
+        public IHazelcastOptions Options { get; }
 
         /// <summary>
         /// Whether smart routing is enabled.
