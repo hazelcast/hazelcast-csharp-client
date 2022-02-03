@@ -346,7 +346,6 @@ namespace Hazelcast.Tests.Sql
 
             // in order to query "per field" a valid mapping needs to exist for each column
             // TODO: the portable querying mechanism needs to be greatly simplified with Linq
-            // FIXME is the portable knows in Java?!
 
             await Client.Sql.DropMapping(map);
             await Client.Sql.CreateMapping(map, p => p.IntValue, p => p.StringValue, p => p.BoolValue);
