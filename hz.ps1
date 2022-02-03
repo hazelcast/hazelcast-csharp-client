@@ -1067,8 +1067,14 @@ function clean-dir ( $dir ) {
 
 # ensure we have the test certificates, or create them
 function ensure-certs {
-    if ($options.enterprise -and -not (test-path "$tmpDir/certs")) {
-        hz-generate-certs
+    if ($options.enterprise) {
+        if (test-path "$tmpDir/certs") {
+            Write-Output "Detected $tmpDir/certs directory"
+        }
+        else {
+            Write-Output "Missing $tmpDir/certs directory, generating"
+            hz-generate-certs
+        }
     }
 }
 
