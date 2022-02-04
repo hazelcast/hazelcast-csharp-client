@@ -20,6 +20,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
+using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -157,6 +158,34 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(count, Is.EqualTo(0)); // no message has been responded yet
 
             await schemas.PublishAsync().CfAwait();
+            Assert.That(count, Is.EqualTo(1)); // a ClientSendAllSchemasCodec message was responded
+
+            await schemas.PublishAsync().CfAwait();
+            Assert.That(count, Is.EqualTo(1)); // no additional message was responded
+        }
+
+        [Test]
+        public async Task AddedSingleSchemaIsAutoPublished()
+        {
+            var count = 0;
+
+            var schemas = new Schemas(new ClusterMessagingStub(requestMessage =>
+            {
+                Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
+                Interlocked.Increment(ref count);
+                return ClientSendSchemaServerCodec.EncodeResponse();
+            }));
+
+            var schema = GetSchema();
+
+            Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
+            schemas.Add(schema);
+
+            Assert.That(count, Is.EqualTo(0)); // no message has been responded yet
+
+            // FIXME - do better
+            await schemas.IsReadyAsync().CfAwait();
+            Assert.That(schemas.IsReadyAsync().IsCompletedSuccessfully, Is.True);
             Assert.That(count, Is.EqualTo(1)); // a ClientSendAllSchemasCodec message was responded
 
             await schemas.PublishAsync().CfAwait();

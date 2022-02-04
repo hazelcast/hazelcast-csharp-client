@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -33,6 +34,12 @@ namespace Hazelcast.Serialization.Compact
             public Schema Schema { get; set; }
 
             public bool Published { get; set; }
+
+            public PublishedSchema SetPublished()
+            {
+                Published = true;
+                return this;
+            }
         }
 
         private readonly IClusterMessaging _messaging;
@@ -49,22 +56,41 @@ namespace Hazelcast.Serialization.Compact
         // see notes on Compact Serialization design documents about collision risks with ids
         private readonly ConcurrentDictionary<long, PublishedSchema> _schemas = new ConcurrentDictionary<long, PublishedSchema>();
 
+        private readonly HashSet<long> _unpublished = new HashSet<long>(); // protected by _mutex
+        private readonly object _mutex = new object();
+        private volatile bool _hasUnpublished; // protected by _mutex
+        private volatile int _disposed;
+
         public Schemas(IClusterMessaging messaging)
         {
             _messaging = messaging;
         }
 
+        private void ThrowIfDisposed()
+        {
+            if (_disposed != 0) throw new ObjectDisposedException("Schemas");
+        }
+
         /// <inheritdoc />
         public void Add(Schema schema, bool published = false)
         {
-            // don't _schemas[]= because the schema might have be there already
-            // we assume that if two schemas have the same id, they are the same
-            _schemas.GetOrAdd(schema.Id, _ => new PublishedSchema { Schema = schema, Published = false });
+            ThrowIfDisposed();
+
+            if (_schemas.TryAdd(schema.Id, new PublishedSchema { Schema = schema, Published = published }) && !published)
+            {
+                lock (_mutex)
+                {
+                    _unpublished.Add(schema.Id);
+                    _hasUnpublished = true;
+                }
+            }
         }
 
         /// <inheritdoc />
         public bool TryGet(long id, out Schema schema)
         {
+            ThrowIfDisposed();
+
             if (_schemas.TryGetValue(id, out var publishedSchema))
             {
                 schema = publishedSchema.Schema;
@@ -78,6 +104,8 @@ namespace Hazelcast.Serialization.Compact
         /// <inheritdoc />
         public ValueTask<Schema> GetOrFetchAsync(long id)
         {
+            ThrowIfDisposed();
+
             return _schemas.TryGetValue(id, out var publishedSchema)
                 ? new ValueTask<Schema>(publishedSchema.Schema)
                 : FetchAsync(id);
@@ -86,26 +114,65 @@ namespace Hazelcast.Serialization.Compact
         // internal for tests
         internal async ValueTask<Schema> FetchAsync(long id)
         {
+            ThrowIfDisposed();
+
             var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
             var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
             var schema = ClientFetchSchemaCodec.DecodeResponse(response).Schema;
             if (schema == null) return null;
-            // don't _schemas[]= because the schema might have been added already
-            _schemas.GetOrAdd(schema.Id, _ => new PublishedSchema { Schema = schema, Published = true });
+
+            // if found, add or at least update the published state
+            _schemas.AddOrUpdate(schema.Id,
+                addValueFactory: key => new PublishedSchema { Schema = schema, Published = true },
+                updateValueFactory: (key, value) => value.SetPublished());
+
+            lock (_mutex) _unpublished.Remove(schema.Id);
+
             return schema;
         }
 
-        /// <inheritdoc />
-        public async ValueTask PublishAsync()
+        // FIXME - document
+        public ValueTask IsReadyAsync()
         {
-            // ConcurrentDictionary.Values is creating a snapshot that is safe to enumerate
-            var schemas = _schemas.Values.Where(x => !x.Published).ToList();
+            // don't bother about being disposed, go fast
+            // we are adding 1 lock + 1 boolean test to *every* message we send
+            lock (_mutex) return _hasUnpublished ? PublishWhileNeedsToBePublishedAsync() : default;
+        }
 
+        public async ValueTask PublishWhileNeedsToBePublishedAsync()
+        {
+            while (_disposed == 0)
+            {
+                // ConcurrentDictionary.Values is creating a snapshot which is safe to enumerate
+                var schemas = _schemas.Values.Where(x => !x.Published).ToList();
+                await PublishAsync(schemas).CfAwait();
+
+                lock (_mutex)
+                {
+                    foreach (var schema in schemas) _unpublished.Remove(schema.Schema.Id);
+                    if (_unpublished.Count == 0)
+                    {
+                        _hasUnpublished = false;
+                        return;
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc />
+        public ValueTask PublishAsync()
+        {
+            ThrowIfDisposed();
+
+            // ConcurrentDictionary.Values is creating a snapshot which is safe to enumerate
+            var schemas = _schemas.Values.Where(x => !x.Published).ToList();
+            return schemas.Count == 0 ? default : PublishAsync(schemas);
+        }
+
+        private async ValueTask PublishAsync(List<PublishedSchema> schemas)
+        {
             switch (schemas.Count)
             {
-                case 0:
-                    break;
-
                 case 1:
                 {
                     var schema = schemas[0];

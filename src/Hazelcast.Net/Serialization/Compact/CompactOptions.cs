@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Exceptions;
 
 #nullable enable
 
@@ -28,7 +29,6 @@ namespace Hazelcast.Serialization.Compact
         // and compact options are expected to be refactored at some point in time.
         private readonly HashSet<string> _names = new HashSet<string>();
         private readonly HashSet<Type> _types = new HashSet<Type>();
-        private readonly List<Registration> _registrations = new List<Registration>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompactOptions"/> class.
@@ -44,7 +44,7 @@ namespace Hazelcast.Serialization.Compact
             Enabled = other.Enabled;
             _names = new HashSet<string>(other._names);
             _types = new HashSet<Type>(other._types);
-            _registrations = new List<Registration>(other._registrations);
+            Registrations = new List<Registration>(other.Registrations);
         }
 
         /// <summary>
@@ -68,55 +68,104 @@ namespace Hazelcast.Serialization.Compact
 
             // 1 unique registration per type-name
             if (_names.Contains(schema.TypeName))
-                throw new InvalidOperationException();
+                throw new ArgumentException($"A type with type name {schema.TypeName} has already been registered.", nameof(schema));
 
             // 1 unique registration per type
             if (_types.Contains(typeof(T)))
-                throw new InvalidOperationException();
+                throw new ArgumentException($"A serializer for type {typeof(T)} has already been registered.", nameof(serializer));
 
             _names.Add(schema.TypeName);
             _types.Add(typeof (T));
 
-            var registration = new Registration
-            (
-                schema,
-                typeof (T),
-                CompactSerializerWrapper.Create(serializer)
-            );
-            _registrations.Add(registration);
+            var registration = Registration.New(schema, typeof (T), CompactSerializerWrapper.Create(serializer));
+            Registrations.Add(registration);
+        }
+
+        /// <summary>
+        /// Registers a type to be compact-serialized.
+        /// </summary>
+        /// <typeparam name="T">The type.</typeparam>
+        /// <param name="typeName">The schema type name.</param>
+        /// <param name="serializer">The compact serializer.</param>
+        public void Register<T>(string typeName, ICompactSerializer<T> serializer)
+        {
+            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            // 1 unique registration per type-name
+            if (_names.Contains(typeName))
+                throw new ArgumentException($"A type with type name {typeName} has already been registered.", nameof(typeName));
+
+            // 1 unique registration per type
+            if (_types.Contains(typeof(T)))
+                throw new ArgumentException($"A serializer for type {typeof(T)} has already been registered.", nameof(serializer));
+
+            _names.Add(typeName);
+            _types.Add(typeof(T));
+
+            var registration = Registration.New(typeName, typeof(T), CompactSerializerWrapper.Create(serializer));
+            Registrations.Add(registration);
         }
 
         /// <summary>
         /// Gets the registrations.
         /// </summary>
-        internal List<Registration> Registrations => _registrations;
+        internal List<Registration> Registrations { get; } = new List<Registration>();
 
         /// <summary>
         /// Represents a registration.
         /// </summary>
-        internal class Registration
+        internal abstract class Registration
         {
-            public Registration(Schema schema, Type type, CompactSerializerWrapper serializer)
+            protected Registration(Type type, CompactSerializerWrapper serializer)
             {
-                Schema = schema;
                 Type = type;
                 Serializer = serializer;
             }
 
-            /// <summary>
-            /// The schema.
-            /// </summary>
-            public Schema Schema { get; }
+            public static Registration New(Schema schema, Type type, CompactSerializerWrapper serializer)
+                => new RegistrationWithSchema(schema, type, serializer);
+
+            public static Registration New(string typeName, Type type, CompactSerializerWrapper serializer)
+                => new RegistrationWithTypeName(typeName, type, serializer);
 
             /// <summary>
-            /// The type.
+            /// Gets the type.
             /// </summary>
             public Type Type { get; }
 
             /// <summary>
-            /// The serializer.
+            /// Gets the serializer.
             /// </summary>
             public CompactSerializerWrapper Serializer { get; }
+        }
+
+        internal class RegistrationWithSchema : Registration
+        {
+            public RegistrationWithSchema(Schema schema, Type type, CompactSerializerWrapper serializer)
+                : base(type, serializer)
+            {
+                Schema = schema;
+            }
+
+            /// <summary>
+            /// Gets the schema.
+            /// </summary>
+            public Schema Schema { get; }
+        }
+
+        internal class RegistrationWithTypeName : Registration
+        {
+            public RegistrationWithTypeName(string typeName, Type type, CompactSerializerWrapper serializer) 
+                : base(type, serializer)
+            {
+                TypeName = typeName;
+            }
+
+            /// <summary>
+            /// Gets the type name.
+            /// </summary>
+            public string TypeName { get; }
         }
 
         /// <summary>

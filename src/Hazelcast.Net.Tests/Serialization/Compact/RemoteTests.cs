@@ -25,17 +25,72 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
-    public class RemoteTests : SingleMemberRemoteTestBase
+    internal class RemoteTests : ClusterRemoteTestBase
     {
+        // needed for SQL
         protected override string RcClusterConfiguration => Resources.jet_enabled;
 
-        [Test]
-        public async Task RemoteTest()
+        // we have to have 1 member per test else the schemas may end up being cached
+        private Hazelcast.Testing.Remote.Member _rcMember;
+
+        [SetUp]
+        public async Task SetUp()
         {
-            var thingSchema = SchemaBuilder
+            _rcMember = await RcClient.StartMemberAsync(RcCluster);
+        }
+
+        [TearDown]
+        public async Task TearDown()
+        {
+            if (_rcMember != null)
+            {
+                await RcClient.StopMemberAsync(RcCluster, _rcMember);
+                _rcMember = null;
+            }
+        }
+
+        // FIXME - figure out a way to register published schemas
+        // ie schemas that we *know* the cluster already knows about and should not be published
+
+        // register a type + type name + serializer, but not the schema
+        // so the type can be a plain POCO, we write the serializer independently, and the
+        // schema will be derived from the serializer (which must plainly write all fields
+        // without any clever optimization that would skip fields) and pushed to the cluster.
+        //
+        [Test]
+        public async Task RegisterWithoutSchema()
+        {
+            var options = new HazelcastOptionsBuilder().Build();
+
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            options.Serialization.Compact.Enabled = true;
+            options.Serialization.Compact.Register(Thing.TypeName, new ThingCompactSerializer());
+
+            var things = new Thing[4];
+            for (var i = 0; i < 4; i++) things[i] = new Thing { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(Thing t1, Thing t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, Thing.TypeName, Thing.FieldNames.Value, AssertIdentical);
+        }
+
+        // register a type + schema + serializer
+        // so the type can be a plain POCO, we write the serializer independently, and we
+        // also provide the schema, which will be pushed to the cluster.
+        //
+        [Test]
+        public async Task RegisterWithSchema()
+        {
+            var schema = SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNameOf.Name, FieldKind.StringRef)
-                .WithField(Thing.FieldNameOf.Value, FieldKind.SignedInteger32)
+                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Value, FieldKind.SignedInteger32)
                 .Build();
 
             var options = new HazelcastOptionsBuilder().Build();
@@ -44,10 +99,90 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Networking.Addresses.Add("127.0.0.1:5701");
 
             options.Serialization.Compact.Enabled = true;
-            options.Serialization.Compact.Register(thingSchema, new ThingCompactSerializer());
+            options.Serialization.Compact.Register(schema, new ThingCompactSerializer());
 
+            var things = new Thing[4];
+            for (var i = 0; i < 4; i++) things[i] = new Thing { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(Thing t1, Thing t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, Thing.TypeName, Thing.FieldNames.Value, AssertIdentical);
+        }
+
+        // register nothing, compactable (from ICompactable) will provide its serializer,
+        // and the schema will be derived from the serializer (which must plainly write
+        // all fields without any clever optimization that would skip fields) and pushed
+        // to the cluster.
+        // type name will derive from the class name.
+        [Test]
+        public async Task CompactableFromInterface()
+        {
+            var options = new HazelcastOptionsBuilder().Build();
+
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            options.Serialization.Compact.Enabled = true;
+
+            var things = new ThingCompactableInterface[4];
+            for (var i = 0; i < 4; i++) things[i] = new ThingCompactableInterface { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(ThingCompactableInterface t1, ThingCompactableInterface t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, ThingCompactableInterface.TypeName, Thing.FieldNames.Value, AssertIdentical);
+        }
+
+        // register nothing, compactable (from ICompactable) will provide its serializer,
+        // and the schema will be derived from the serializer (which must plainly write
+        // all fields without any clever optimization that would skip fields) and pushed
+        // to the cluster.
+        // type name is provided by the compactable (from ICompactableWithTypeName).
+        [Test]
+        public async Task CompactableWithTypeNameFromInterface()
+        {
+            var options = new HazelcastOptionsBuilder().Build();
+
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            options.Serialization.Compact.Enabled = true;
+
+            var things = new ThingCompactableInterfaceWithTypeName[4];
+            for (var i = 0; i < 4; i++) things[i] = new ThingCompactableInterfaceWithTypeName { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(ThingCompactableInterfaceWithTypeName t1, ThingCompactableInterfaceWithTypeName t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, ThingCompactableInterfaceWithTypeName.TypeName, Thing.FieldNames.Value, AssertIdentical);
+        }
+
+        [Test]
+        [Ignore("not implemented")]
+        public async Task CompactableFromAttribute()
+        {
+            // TODO: consider Local/RemoteWithAttribute
+            // ie [Compactable("compactable", typeof(CompactableSerializer))]
+        }
+
+        private static async Task AssertCompact<T>(
+            HazelcastOptions options,
+            T[] things, Func<T, string> getKey, 
+            string typeName, string valueFieldName,
+            Action<T, T> assertIdentical)
+        {
             IHazelcastClient client = null;
-            IHMap<string, Thing> map = null;
+            IHMap<string, T> map = null;
 
             await using var dispose = new AsyncDisposable(async () =>
             {
@@ -66,86 +201,47 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             client = await HazelcastClientFactory.StartNewClientAsync(options);
 
-            // we are sending a "thing" object to the server, and the server does not know about the schema
-            // because the schema was registered in the configuration, it *is* in the schemas already, but
-            // unpublished - we need to publish it first - we have no mechanism to send them on-demand.
-            var schemas = ((HazelcastClient)client).SerializationService.CompactSerializer.Schemas;
-            Assert.That(schemas.TryGet(thingSchema.Id, out _), Is.True); // make sure it's here (local)
-            await schemas.PublishAsync(); // publish
+            map = await client.GetMapAsync<string, T>("map_" + Guid.NewGuid().ToString("N"));
 
-            // validate that the schema is on the server now
-            var schemaControl = await ((Schemas)schemas).FetchAsync(thingSchema.Id);
-            Assert.That(schemaControl, Is.Not.Null);
-            Console.WriteLine($"FOUND SCHEMA ID: {schemaControl.Id} ON CLUSTER.");
+            foreach (var x in things) await map.SetAsync(getKey(x), x);
 
-            var thing1 = new Thing { Name = "thing1", Value = 1 };
-            var thing2 = new Thing { Name = "thing2", Value = 2 };
-            var thing3 = new Thing { Name = "thing3", Value = 3 };
-            var thing4 = new Thing { Name = "thing4", Value = 4 };
-
-            map = await client.GetMapAsync<string, Thing>("map_" + Guid.NewGuid().ToString("N"));
-
-            await map.SetAsync(thing1.Name, thing1);
-            await map.SetAsync(thing2.Name, thing2);
-            await map.SetAsync(thing3.Name, thing3);
-            await map.SetAsync(thing4.Name, thing4);
-
-            var thing = await map.GetAsync("thing1");
+            var thing = await map.GetAsync(getKey(things[0]));
             Assert.That(thing, Is.Not.Null);
-            Assert.That(thing.Name, Is.EqualTo(thing1.Name));
-            Assert.That(thing.Value, Is.EqualTo(thing1.Value));
+            assertIdentical(thing, things[0]);
 
-            // just to be sure that the server actually & properly handles serialization
-            // let's run a SQL query on our map with a WHERE condition on the actual columns
-
-            // SQL requires a mapping
-            // unfortunately, SqlServiceExtensions.CreateMapping only support IPortable and
-            // primitive types, so the following does not work
-            //await client.Sql.CreateMapping(map, x => x.Name, x => x.Value);
-            // TODO: extend with compact somehow? how do you know a type is 'compact'?
-
-            // FIXME
-            // at that point,
-            // 'value' is a reserved word and cannot be a schema field name
-            // 'value' is a reserved word and cannot be a SQL mapping column
-            const string columnNameOfName = "name";
-            const string columnNameOfValue = "vvalue";
+            const string valueColumnName = "vvalue"; // 'value' is a keyword?!
 
             // creating our mapping manually
-            var mappingCommand = 
+            var mappingCommand =
                 $"CREATE MAPPING {map.Name} " +
                 "(" + // a column list is required for compact
                 $"  __key VARCHAR," +
-                $"  {columnNameOfName} VARCHAR," +
-                $"  {columnNameOfValue} INT EXTERNAL NAME \"{Thing.FieldNameOf.Value}\"" + // 'value' is a keyword?!
+                $"  name VARCHAR," +
+                $"  {valueColumnName} INT EXTERNAL NAME \"{valueFieldName}\"" +
                 ") " +
-                "TYPE IMAP " + 
+                "TYPE IMAP " +
                 "OPTIONS (" +
                 "  'keyFormat'='varchar', " +
-                "  'valueFormat'='compact', 'valueCompactTypeName'='thing'" +
+                $"  'valueFormat'='compact', 'valueCompactTypeName'='{typeName}'" +
                 ")";
             Console.WriteLine(mappingCommand);
             await client.Sql.ExecuteCommandAsync(mappingCommand);
 
-            // and then, run the query
-            // which returns all columns from the mapping
-            // and, the WHERE clause requires that the compact object be correctly de-serialized
-            var rows = await client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE {columnNameOfValue} > 2");
-
+            var rows = await client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE {valueColumnName} > 1");
             var rowCount = 0;
             var result = new List<(string, int)>();
 
             await foreach (var row in rows)
             {
                 rowCount++;
-                
+
                 Console.WriteLine($"ROW {rowCount}");
                 foreach (var column in row.Metadata.Columns)
                     Console.WriteLine($"  {column.Name} {column.Type}");
 
                 var key = row.GetKey<string>();
-                var name = row.GetColumn<string>(columnNameOfName);
-                var value = row.GetColumn<int>(columnNameOfValue);
+                var name = row.GetColumn<string>("name");
+                var value = row.GetColumn<int>(valueColumnName);
 
                 Console.WriteLine($"= {key} {name} {value}");
 
@@ -155,39 +251,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(rowCount, Is.EqualTo(2));
             var min = result.Min(x => x.Item2);
             var max = result.Max(x => x.Item2);
-            Assert.That(min, Is.EqualTo(3));
-            Assert.That(max, Is.EqualTo(4));
-        }
-
-        private class Thing
-        {
-            public static class FieldNameOf
-            {
-                public const string Name = "name";
-                public const string Value = "mehalue";
-            }
-
-            public string Name { get; set; }
-
-            public int Value { get; set; }
-        }
-
-        private class ThingCompactSerializer : ICompactSerializer<Thing>
-        {
-            public Thing Read(ICompactReader reader)
-            {
-                return new Thing
-                {
-                    Name = reader.ReadStringRef(Thing.FieldNameOf.Name),
-                    Value = reader.ReadInt(Thing.FieldNameOf.Value)
-                };
-            }
-
-            public void Write(ICompactWriter writer, Thing obj)
-            {
-                writer.WriteStringRef(Thing.FieldNameOf.Name, obj.Name);
-                writer.WriteInt(Thing.FieldNameOf.Value, obj.Value);
-            }
+            Assert.That(min, Is.EqualTo(2));
+            Assert.That(max, Is.EqualTo(3));
         }
     }
 }

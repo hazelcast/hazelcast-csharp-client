@@ -15,16 +15,18 @@
 #nullable enable
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Hazelcast.Serialization.Compact
 {
     internal sealed class CompactSerializer : IStreamSerializer<object>
     {
-        private readonly Dictionary<Type, CompactSerializableRegistration> _registrationsByType = new Dictionary<Type, CompactSerializableRegistration>();
-        private readonly Dictionary<long, CompactSerializableRegistration> _registrationsById = new Dictionary<long, CompactSerializableRegistration>();
-        private readonly Dictionary<Type, Schema> _schemasMap = new Dictionary<Type, Schema>();
+        private readonly ConcurrentDictionary<Type, CompactSerializableRegistration> _registrationsByType = new ConcurrentDictionary<Type, CompactSerializableRegistration>();
+        private readonly ConcurrentDictionary<long, CompactSerializableRegistration> _registrationsById = new ConcurrentDictionary<long, CompactSerializableRegistration>();
+        private readonly ConcurrentDictionary<Type, Schema> _schemasMap = new ConcurrentDictionary<Type, Schema>();
         private readonly ISchemas _schemas;
+        private readonly CompactSerializerWrapper _reflectionSerializer = new ReflectionSerializer();
 
         public CompactSerializer(CompactOptions options, ISchemas schemas, Func<byte[], IObjectDataInput> createInput, Func<IObjectDataOutput> createOutput)
         {
@@ -32,19 +34,26 @@ namespace Hazelcast.Serialization.Compact
 
             _schemas = schemas;
 
-            // FIXME - schema registration
-            // we currently do *not* support creating schemas on the fly, plus they are registered as "published"
-            // with ISchemas and we do not push schemas to the cluster not fetch schemas from the cluster, at all.
-            //
-            // this is a *big* MPV limitation as we don't have to deal with sync/async and missing schemas.
-
             foreach (var option in options.Registrations)
             {
-                var registration = new CompactSerializableRegistration(option.Schema.TypeName, option.Type, option.Serializer);
-                _registrationsById[option.Schema.Id] = registration;
-                _registrationsByType[option.Type] = registration;
-                _schemas.Add(option.Schema, false);
-                _schemasMap[option.Type] = option.Schema;
+                switch (option)
+                {
+                    case CompactOptions.RegistrationWithSchema withSchema:
+                    {
+                        var registration = new CompactSerializableRegistration(withSchema.Schema.TypeName, option.Type, option.Serializer);
+                        _registrationsById[withSchema.Schema.Id] = registration;
+                        _registrationsByType[withSchema.Type] = registration;
+                        _schemas.Add(withSchema.Schema, false); // FIXME should published be an option?
+                        _schemasMap[withSchema.Type] = withSchema.Schema;
+                        break;
+                    }
+                    case CompactOptions.RegistrationWithTypeName withTypeName:
+                    {
+                        var registration = new CompactSerializableRegistration(withTypeName.TypeName, option.Type, option.Serializer);
+                        _registrationsByType[withTypeName.Type] = registration;
+                        break;
+                    }
+                }
             }
         }
 
@@ -57,7 +66,7 @@ namespace Hazelcast.Serialization.Compact
 
         public void Dispose()
         {
-            // FIXME - who's in charge of disposing _schemas which may have background tasks etc?
+            // note: ISchemas is not IDisposable because we don't have background tasks
         }
 
         public object Read(IObjectDataInput input)
@@ -85,23 +94,48 @@ namespace Hazelcast.Serialization.Compact
             WriteObject(outputInstance, obj, withSchema);
         }
 
-        private CompactSerializableRegistration GetOrCreateRegistration(Type type)
+        // invoked when writing out an object and we need its registration, ie its serializer
+        // either a serializer has been registered already for the type, or the type is ICompactable
+        // and can provide its own serializer, or we need to fall back to reflection-based serialization.
+        // note: if we were to implement code generation, the generated serializers would be registered.
+        private CompactSerializableRegistration GetOrCreateRegistration(object obj)
         {
-            if (_registrationsByType.TryGetValue(type, out var registration)) return registration;
+            var typeOfObj = obj.GetType();
+            return _registrationsByType.GetOrAdd(typeOfObj, type =>
+            {
+                // TODO: alternatively with .NET could we annotate the type with the serializer type?
 
-            // so... an object may have ways to indicate its serializer
-            // implement ICompactable ICompactSerializable.GetCompactSerializer() : ICompactSerializer
-            // be marked with [CompactSerializable(typeof(MySerializer))] attribute
-            // declare the serializer in some sort of config and THEN we won't come here
-            // and, finally, there is this "reflective serializer" BUT wouldn't we prefer code generation?
+                var serializer = obj is ICompactable compactable
+                    ? CompactSerializerWrapper.Create(compactable)
+                    : _reflectionSerializer;
 
-            // TODO: create registrations on the fly (e.g. reflective etc).
-            throw new SerializationException($"Could not find a compact serializer for type {type}.");
+                var typeName = obj is ICompactableWithTypeName withTypeName
+                    ? withTypeName.TypeName
+                    : typeOfObj.Name;
+
+                return new CompactSerializableRegistration(typeName, typeOfObj, serializer);
+            });
         }
 
+        // invoked when reading an object and we need its registration, ie its serializer, and all
+        // we have is the schema - FIXME JAVA?
+        // Java does getOrCreateRegistration(schema.getTypeName()) which means it can only handle
+        // one single schema per type name and how is this supposed to work at all?!
         private CompactSerializableRegistration GetOrCreateRegistration(Schema schema)
         {
             if (_registrationsById.TryGetValue(schema.Id, out var registration)) return registration;
+
+            // JAVA
+            //
+            // tries to load a class by the name of schema.TypeName
+            // if it fails, returns null
+            // otherwise, instantiate an object of that class, and go GetOrCreateRegistration(object obj)
+            //
+            // and then,
+            // if the registration is null, goes the gener... UH FIXME? returns a READER?
+            // at that point I honestly want to cry
+            // OK, the generic record extends the reader - or, the reader extends the record and WTF?
+            // also, can we be leaking ObjectDataInput here?! somebody kill me please.
 
             // TODO: create registrations on the fly (e.g. generic record etc).
             throw new SerializationException($"Could not find a compact serializer for schema {schema.Id}.");
@@ -110,48 +144,36 @@ namespace Hazelcast.Serialization.Compact
         public void WriteObject(ObjectDataOutput output, object obj, bool withSchema)
         {
             var typeOfObj = obj.GetType();
-            var registration = GetOrCreateRegistration(typeOfObj);
+            var registration = GetOrCreateRegistration(obj);
             if (!_schemasMap.TryGetValue(typeOfObj, out var schema))
             {
-                // OK - for the scope of this MVP, all schemas have to be registered first.
-                throw new NotSupportedException();
-
                 // no schema was registered for this type, so we are going to serialize
-                // the object, capture the fields, and generate a schema for it
-                // FIXME - implies restriction on the serialization
-                // because, what-if the serializer for optimization reasons does not
-                // write out all the fields?
+                // the object, capture the fields, and generate a schema for it - this
+                // assumes that the serializer is not "clever" and does not omit fields
+                // for optimization reasons.
                 schema = BuildSchema(registration, obj);
                 _schemasMap[typeOfObj] = schema;
 
-                // and now, we need to publish this new schema - which we have to assume
-                // is not published yet, but if withSchema is true, the schema is
-                // about to be sent, and can we assume this means it is published?
-                // FIXME - what-if sending the message eventually fails?
-                // we end-up with a 'published' schema that will never be published ever
-                // again and yet, it does not exist on the cluster maybe?
-                var published = withSchema;
-                _schemas.Add(schema, published);
+                // and now, since we know the schema identifier, we can update our
+                // registrations map
+                _registrationsById.TryAdd(schema.Id, registration);
 
-                if (!published)
-                {
-                    // FIXME - Java does blocking async
-                    //
-                    // in order to publish the schema on the cluster but we *cannot* do
-                    // this in C# and then what shall we do? if we just let the schemas
-                    // service publish in the background, then we may end up sending data
-                    // before the schema has been published entirely. so we want to wait.
-                    //
-                    // but how? we would need to return an awaitable something (Task) that
-                    // would bubble up to SerializationService.ToData and then whoever is
-                    // invoking ToData would need to check whether to await it before
-                    // proceeding with sending the message?
-                    //
-                    // and then what about reading (ToObject)? it's sync by default but
-                    // if the schema is n/a then we return a non-completed ValueTask that
-                    // the caller would need to await? that just cannot work with lazy
-                    // deserialization - have we made a decision?!
-                }
+                // and now, we need to publish this new schema - which we have to assume
+                // is not published yet, but if withSchema is true, the schema is about
+                // to be sent, and can we assume this means it is published.
+                //
+                // OTOH if it is not published... it will just be added, not even sent
+                // immediately to the cluster, so ToData and WriteObject remains fully
+                // synchronous - but, before sending any message to the cluster, callers
+                // should validate that the serialization service is ready.
+                //
+                // FIXME - what-if sending the withSchema message eventually fails?
+                // we would end up with a local 'published' schema, which is actually not
+                // known by the cluster, and will never published. should we send some
+                // data with withSchema==false, what happens?
+                // and, can that ever happen? what determines the withSchema value in Java?
+
+                _schemas.Add(schema, published: withSchema);
             }
 
             WriteSchema(output, schema, withSchema);
@@ -195,6 +217,9 @@ namespace Hazelcast.Serialization.Compact
         {
             var schema = ReadSchema(input, withSchema);
             var registration = GetOrCreateRegistration(schema);
+
+            // see note in GetOrCreateRegistration - no idea what is going on here
+
             var reader = new CompactReader(this, input, schema, withSchema);
             var obj = registration.Serializer.Read(reader);
             if (obj == null) throw new SerializationException("Read illegal null object.");
@@ -209,6 +234,13 @@ namespace Hazelcast.Serialization.Compact
             {
                 // FIXME - throw or return null?
                 // and then properly bubble the error up so we can try to fetch from cluster etc?
+                //
+                // so *this* is where we either
+                // - throw a CompactSchemaMissingException(schemaId) for caller to catch, fetch from
+                //   server, and then retry to de-serializer => no change for ToObject at all?
+                // - return a flag, a boolean, a ValueTask, anything representing that we are in need
+                //   of a schema.
+                //
                 throw new SerializationException("Failed.");
             }
 
@@ -224,7 +256,7 @@ namespace Hazelcast.Serialization.Compact
             }
 
             schema = new Schema(typeName, fields);
-            _schemas.Add(schema, true);
+            _schemas.Add(schema, true); // comes from cluster so, is published
             return schema;
         }
     }

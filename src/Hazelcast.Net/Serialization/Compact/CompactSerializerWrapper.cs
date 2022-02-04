@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Reflection;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -23,7 +24,7 @@ namespace Hazelcast.Serialization.Compact
         private readonly Func<ICompactReader, object?> _read;
         private readonly Action<ICompactWriter, object?> _write;
 
-        private CompactSerializerWrapper(Func<ICompactReader, object?> read, Action<ICompactWriter, object?> write)
+        protected CompactSerializerWrapper(Func<ICompactReader, object?> read, Action<ICompactWriter, object?> write)
         {
             _read = read;
             _write = write;
@@ -34,6 +35,37 @@ namespace Hazelcast.Serialization.Compact
                 reader => serializer.Read(reader),
                 (writer, obj) => serializer.Write(writer, (T)obj)
             );
+
+        public static CompactSerializerWrapper Create(ICompactable compactable)
+        {
+            var typeOfCompactable = compactable.GetType();
+            var interfaces = typeOfCompactable.GetInterfaces();
+
+            foreach (var i in interfaces)
+            {
+                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof (ICompactable<>))
+                {
+                    // FIXME cache this, etc.
+                    var t = i.GetGenericArguments()[0];
+                    var m = typeof (CompactSerializerWrapper).GetMethod("Create", BindingFlags.NonPublic | BindingFlags.Static);
+                    if (m == null) throw new InvalidOperationException();
+                    var mm = m.MakeGenericMethod(t);
+                    return (CompactSerializerWrapper) mm.Invoke(null, new [] { compactable });
+                }
+            }
+
+            throw new ArgumentException();
+        } 
+
+        private static CompactSerializerWrapper Create<T>(ICompactable<T> compactable)
+        {
+            var serializer = compactable.GetSerializer();
+
+            return new CompactSerializerWrapper(
+                reader => serializer.Read(reader),
+                (writer, obj) => serializer.Write(writer, (T)obj)
+            );
+        }
 
         public object? Read(ICompactReader reader) => _read(reader);
 
