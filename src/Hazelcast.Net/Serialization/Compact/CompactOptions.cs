@@ -42,6 +42,9 @@ namespace Hazelcast.Serialization.Compact
         private CompactOptions(CompactOptions other)
         {
             Enabled = other.Enabled;
+            _names = new HashSet<string>(other._names);
+            _types = new HashSet<Type>(other._types);
+            _registrations = new List<Registration>(other._registrations);
         }
 
         /// <summary>

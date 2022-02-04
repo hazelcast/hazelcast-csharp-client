@@ -43,11 +43,15 @@ namespace Hazelcast.Serialization.Compact
                 var registration = new CompactSerializableRegistration(option.Schema.TypeName, option.Type, option.Serializer);
                 _registrationsById[option.Schema.Id] = registration;
                 _registrationsByType[option.Type] = registration;
-                _schemas.Add(option.Schema, true);
+                _schemas.Add(option.Schema, false);
+                _schemasMap[option.Type] = option.Schema;
             }
         }
 
         public int TypeId => SerializationConstants.ConstantTypeCompact;
+
+        // for tests
+        public ISchemas Schemas => _schemas;
 
         public bool HasRegistrationForType(Type type) => _registrationsByType.ContainsKey(type);
 
@@ -109,6 +113,9 @@ namespace Hazelcast.Serialization.Compact
             var registration = GetOrCreateRegistration(typeOfObj);
             if (!_schemasMap.TryGetValue(typeOfObj, out var schema))
             {
+                // OK - for the scope of this MVP, all schemas have to be registered first.
+                throw new NotSupportedException();
+
                 // no schema was registered for this type, so we are going to serialize
                 // the object, capture the fields, and generate a schema for it
                 // FIXME - implies restriction on the serialization

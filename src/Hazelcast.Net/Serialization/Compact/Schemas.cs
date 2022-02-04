@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
@@ -82,7 +83,8 @@ namespace Hazelcast.Serialization.Compact
                 : FetchAsync(id);
         }
 
-        private async ValueTask<Schema> FetchAsync(long id)
+        // internal for tests
+        internal async ValueTask<Schema> FetchAsync(long id)
         {
             var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
             var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();

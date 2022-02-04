@@ -175,6 +175,9 @@ namespace Hazelcast.Serialization
         public byte GetVersion() => SerializerVersion;
 #pragma warning restore CA1822 // Mark members as static
 
+        // for tests
+        public CompactSerializer CompactSerializer => _compactSerializer;
+
         public Endianness Endianness { get; }
 
         // ISerializer vs ISerializerAdapter
