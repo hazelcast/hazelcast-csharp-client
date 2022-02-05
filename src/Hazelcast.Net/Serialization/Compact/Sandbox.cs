@@ -19,7 +19,11 @@ using System;
 namespace Hazelcast.Serialization.Compact
 {
     internal interface ICompactable
-    { }
+    {
+        string? TypeName { get; }
+
+        bool? PublishedSchema { get; }
+    }
 
     internal interface ICompactable<T> : ICompactable
     {
@@ -37,8 +41,8 @@ namespace Hazelcast.Serialization.Compact
         private static void ReflectionWrite(ICompactWriter writer, object? obj) => throw new NotImplementedException();
     }
 
-    public interface ICompactableWithTypeName
-    {
-        string TypeName { get; }
-    }
+    //public interface ICompactableWithTypeName
+    //{
+    //    string TypeName { get; }
+    //}
 }

@@ -18,11 +18,12 @@ namespace Hazelcast.Serialization.Compact
 {
     internal sealed class CompactSerializableRegistration
     {
-        public CompactSerializableRegistration(string typeName, Type type, CompactSerializerWrapper serializer)
+        public CompactSerializableRegistration(string typeName, Type type, CompactSerializerWrapper serializer, bool published)
         {
             TypeName = typeName;
             Type = type;
             Serializer = serializer;
+            PublishedSchema = published;
         }
 
         public string TypeName { get; }
@@ -30,5 +31,7 @@ namespace Hazelcast.Serialization.Compact
         public Type Type { get; }
 
         public CompactSerializerWrapper Serializer { get; }
+
+        public bool PublishedSchema { get; }
     }
 }

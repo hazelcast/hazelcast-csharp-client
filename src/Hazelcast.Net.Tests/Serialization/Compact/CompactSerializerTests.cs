@@ -52,7 +52,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register a schema and a serializer for the Thing class - at that point, serializers
             // and schemas must be registered explicitly via code, we don't support anything else.
-            options.Compact.Register(thingSchema, new ThingCompactSerializer());
+            options.Compact.Register(thingSchema, new ThingCompactSerializer(), false);
 
             // create the entire serialization service
             var messaging = Mock.Of<IClusterMessaging>();
@@ -124,8 +124,8 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Compact = { Enabled = true }
             };
 
-            options.Compact.Register(thingSchema, new ThingCompactSerializer());
-            options.Compact.Register(thingNestSchema, new ThingNestCompactSerializer());
+            options.Compact.Register(thingSchema, new ThingCompactSerializer(), false);
+            options.Compact.Register(thingNestSchema, new ThingNestCompactSerializer(), false);
 
             var messaging = Mock.Of<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());

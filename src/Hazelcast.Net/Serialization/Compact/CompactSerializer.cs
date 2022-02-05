@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -40,16 +41,16 @@ namespace Hazelcast.Serialization.Compact
                 {
                     case CompactOptions.RegistrationWithSchema withSchema:
                     {
-                        var registration = new CompactSerializableRegistration(withSchema.Schema.TypeName, option.Type, option.Serializer);
+                        var registration = new CompactSerializableRegistration(withSchema.Schema.TypeName, option.Type, option.Serializer, option.Published);
                         _registrationsById[withSchema.Schema.Id] = registration;
                         _registrationsByType[withSchema.Type] = registration;
-                        _schemas.Add(withSchema.Schema, false); // FIXME should published be an option?
+                        _schemas.Add(withSchema.Schema, withSchema.Published);
                         _schemasMap[withSchema.Type] = withSchema.Schema;
                         break;
                     }
                     case CompactOptions.RegistrationWithTypeName withTypeName:
                     {
-                        var registration = new CompactSerializableRegistration(withTypeName.TypeName, option.Type, option.Serializer);
+                        var registration = new CompactSerializableRegistration(withTypeName.TypeName, option.Type, option.Serializer, option.Published);
                         _registrationsByType[withTypeName.Type] = registration;
                         break;
                     }
@@ -105,15 +106,36 @@ namespace Hazelcast.Serialization.Compact
             {
                 // TODO: alternatively with .NET could we annotate the type with the serializer type?
 
-                var serializer = obj is ICompactable compactable
-                    ? CompactSerializerWrapper.Create(compactable)
-                    : _reflectionSerializer;
+                CompactSerializerWrapper? serializerWrapper = null;
+                string? typeName = null;
+                bool published;
 
-                var typeName = obj is ICompactableWithTypeName withTypeName
-                    ? withTypeName.TypeName
-                    : typeOfObj.Name;
+                var attr = obj.GetType().GetCustomAttribute<CompactableAttribute>();
 
-                return new CompactSerializableRegistration(typeName, typeOfObj, serializer);
+                if (obj is ICompactable compactable)
+                {
+                    if (attr != null) throw new SerializationException(""); // FIXME message cannot be both
+                    serializerWrapper = CompactSerializerWrapper.Create(compactable);
+                    typeName = compactable.TypeName ?? typeOfObj.Name;
+                    published = compactable.PublishedSchema ?? false;
+                }
+                else
+                {
+                    if (attr != null)
+                    {
+                        serializerWrapper = CompactSerializerWrapper.Create(attr.SerializerType);
+                        typeName = attr.TypeName ?? typeOfObj.Name;
+                        published = attr.PublishedSchema;
+                    }
+                    else
+                    {
+                        serializerWrapper = _reflectionSerializer;
+                        typeName = typeOfObj.Name;
+                        published = false;
+                    }
+                }
+
+                return new CompactSerializableRegistration(typeName, typeOfObj, serializerWrapper, published);
             });
         }
 
@@ -173,7 +195,7 @@ namespace Hazelcast.Serialization.Compact
                 // data with withSchema==false, what happens?
                 // and, can that ever happen? what determines the withSchema value in Java?
 
-                _schemas.Add(schema, published: withSchema);
+                _schemas.Add(schema, published: withSchema || registration.PublishedSchema);
             }
 
             WriteSchema(output, schema, withSchema);

@@ -49,9 +49,6 @@ namespace Hazelcast.Tests.Serialization.Compact
             }
         }
 
-        // FIXME - figure out a way to register published schemas
-        // ie schemas that we *know* the cluster already knows about and should not be published
-
         // register a type + type name + serializer, but not the schema
         // so the type can be a plain POCO, we write the serializer independently, and the
         // schema will be derived from the serializer (which must plainly write all fields
@@ -66,7 +63,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Networking.Addresses.Add("127.0.0.1:5701");
 
             options.Serialization.Compact.Enabled = true;
-            options.Serialization.Compact.Register(Thing.TypeName, new ThingCompactSerializer());
+            options.Serialization.Compact.Register(Thing.TypeName, new ThingCompactSerializer<Thing>(), false);
 
             var things = new Thing[4];
             for (var i = 0; i < 4; i++) things[i] = new Thing { Name = $"thing{i}", Value = i };
@@ -99,7 +96,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.Networking.Addresses.Add("127.0.0.1:5701");
 
             options.Serialization.Compact.Enabled = true;
-            options.Serialization.Compact.Register(schema, new ThingCompactSerializer());
+            options.Serialization.Compact.Register(schema, new ThingCompactSerializer<Thing>(), false);
 
             var things = new Thing[4];
             for (var i = 0; i < 4; i++) things[i] = new Thing { Name = $"thing{i}", Value = i };
@@ -144,9 +141,9 @@ namespace Hazelcast.Tests.Serialization.Compact
         // and the schema will be derived from the serializer (which must plainly write
         // all fields without any clever optimization that would skip fields) and pushed
         // to the cluster.
-        // type name is provided by the compactable (from ICompactableWithTypeName).
+        // type name is provided by the compactable.
         [Test]
-        public async Task CompactableWithTypeNameFromInterface()
+        public async Task CompactableFromInterfaceWithTypeName()
         {
             var options = new HazelcastOptionsBuilder().Build();
 
@@ -167,12 +164,50 @@ namespace Hazelcast.Tests.Serialization.Compact
             await AssertCompact(options, things, t => t.Name, ThingCompactableInterfaceWithTypeName.TypeName, Thing.FieldNames.Value, AssertIdentical);
         }
 
+        // same but with attribute instead of interface
         [Test]
-        [Ignore("not implemented")]
         public async Task CompactableFromAttribute()
         {
-            // TODO: consider Local/RemoteWithAttribute
-            // ie [Compactable("compactable", typeof(CompactableSerializer))]
+            var options = new HazelcastOptionsBuilder().Build();
+
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            options.Serialization.Compact.Enabled = true;
+
+            var things = new ThingCompactableAttribute[4];
+            for (var i = 0; i < 4; i++) things[i] = new ThingCompactableAttribute { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(ThingCompactableAttribute t1, ThingCompactableAttribute t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, ThingCompactableAttribute.TypeName, Thing.FieldNames.Value, AssertIdentical);
+        }
+
+        // same but with attribute instead of interface
+        [Test]
+        public async Task CompactableFromAttributeWithTypeName()
+        {
+            var options = new HazelcastOptionsBuilder().Build();
+
+            options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+            options.Networking.Addresses.Add("127.0.0.1:5701");
+
+            options.Serialization.Compact.Enabled = true;
+
+            var things = new ThingCompactableAttributeWithTypeName[4];
+            for (var i = 0; i < 4; i++) things[i] = new ThingCompactableAttributeWithTypeName { Name = $"thing{i}", Value = i };
+
+            static void AssertIdentical(ThingCompactableAttributeWithTypeName t1, ThingCompactableAttributeWithTypeName t2)
+            {
+                Assert.That(t1.Name, Is.EqualTo(t2.Name));
+                Assert.That(t1.Value, Is.EqualTo(t2.Value));
+            }
+
+            await AssertCompact(options, things, t => t.Name, ThingCompactableAttributeWithTypeName.TypeName, Thing.FieldNames.Value, AssertIdentical);
         }
 
         private static async Task AssertCompact<T>(

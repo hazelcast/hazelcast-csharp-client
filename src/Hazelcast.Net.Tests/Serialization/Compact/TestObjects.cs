@@ -16,7 +16,14 @@ using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
-    internal class Thing
+    internal interface IThing
+    {
+        string Name { get; set; }
+
+        int Value { get; set; }
+    }
+
+    internal class Thing : IThing
     {
         public const string TypeName = "thing";
 
@@ -31,7 +38,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public int Value { get; set; }
     }
 
-    internal class ThingCompactableInterface : ICompactable<ThingCompactableInterface>
+    internal class ThingCompactableInterface : IThing, ICompactable<ThingCompactableInterface>
     {
         public const string TypeName = "cthing1";
 
@@ -39,12 +46,15 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         public int Value { get; set; }
 
-        private static readonly ICompactSerializer<ThingCompactableInterface> Serializer = new ThingCompactableCompactSerializer();
+        ICompactSerializer<ThingCompactableInterface> ICompactable<ThingCompactableInterface>.GetSerializer() 
+            => new ThingCompactSerializer<ThingCompactableInterface>();
 
-        ICompactSerializer<ThingCompactableInterface> ICompactable<ThingCompactableInterface>.GetSerializer() => Serializer;
+        string ICompactable.TypeName => default;
+
+        bool? ICompactable.PublishedSchema => default;
     }
 
-    internal class ThingCompactableInterfaceWithTypeName : ICompactable<ThingCompactableInterfaceWithTypeName>, ICompactableWithTypeName
+    internal class ThingCompactableInterfaceWithTypeName : IThing, ICompactable<ThingCompactableInterfaceWithTypeName>
     {
         public const string TypeName = "cthing2";
 
@@ -52,13 +62,54 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         public int Value { get; set; }
 
-        private static readonly ICompactSerializer<ThingCompactableInterfaceWithTypeName> Serializer = new ThingCompactableWithTypeNameCompactSerializer();
+        ICompactSerializer<ThingCompactableInterfaceWithTypeName> ICompactable<ThingCompactableInterfaceWithTypeName>.GetSerializer() 
+            => new ThingCompactSerializer<ThingCompactableInterfaceWithTypeName>();
 
-        ICompactSerializer<ThingCompactableInterfaceWithTypeName> ICompactable<ThingCompactableInterfaceWithTypeName>.GetSerializer() => Serializer;
+        string ICompactable.TypeName => TypeName;
 
-        string ICompactableWithTypeName.TypeName => TypeName;
+        bool? ICompactable.PublishedSchema => default;
     }
 
+    [Compactable(typeof(ThingCompactSerializer<ThingCompactableAttribute>))]
+    internal class ThingCompactableAttribute : IThing
+    {
+        public const string TypeName = "cthing1";
+
+        public string Name { get; set; }
+
+        public int Value { get; set; }
+    }
+
+    [Compactable(typeof(ThingCompactSerializer<ThingCompactableAttributeWithTypeName>), TypeName = TypeName)]
+    internal class ThingCompactableAttributeWithTypeName : IThing
+    {
+        public const string TypeName = "cthing1";
+
+        public string Name { get; set; }
+
+        public int Value { get; set; }
+    }
+
+    internal class ThingCompactSerializer<T> : ICompactSerializer<T>
+        where T : IThing, new()
+    {
+        public T Read(ICompactReader reader)
+        {
+            return new T
+            {
+                Name = reader.ReadStringRef(Thing.FieldNames.Name),
+                Value = reader.ReadInt(Thing.FieldNames.Value)
+            };
+        }
+
+        public void Write(ICompactWriter writer, T obj)
+        {
+            writer.WriteStringRef(Thing.FieldNames.Name, obj.Name);
+            writer.WriteInt(Thing.FieldNames.Value, obj.Value);
+        }
+    }
+
+    /*
     internal class ThingCompactSerializer : ICompactSerializer<Thing>
     {
         public Thing Read(ICompactReader reader)
@@ -76,7 +127,9 @@ namespace Hazelcast.Tests.Serialization.Compact
             writer.WriteInt(Thing.FieldNames.Value, obj.Value);
         }
     }
+    */
 
+    /*
     internal class ThingCompactableCompactSerializer : ICompactSerializer<ThingCompactableInterface>
     {
         public ThingCompactableInterface Read(ICompactReader reader)
@@ -112,4 +165,5 @@ namespace Hazelcast.Tests.Serialization.Compact
             writer.WriteInt(Thing.FieldNames.Value, obj.Value);
         }
     }
+    */
 }
