@@ -71,14 +71,6 @@ namespace Hazelcast.Security
             _domain = domain;
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="KerberosCredentialsFactory"/>.
-        /// </summary>
-        /// <param name="args">Arguments.</param>
-        public KerberosCredentialsFactory(IReadOnlyDictionary<string, string> args)
-            : this(args.GetStringValue("spn"))
-        { }
-
         private static IKerberosTokenProvider TokenProvider
         {
             get

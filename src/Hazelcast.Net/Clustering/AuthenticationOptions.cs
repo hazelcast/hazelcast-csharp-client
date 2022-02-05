@@ -97,33 +97,55 @@ namespace Hazelcast.Clustering
         [BinderIgnore(false)]
 #pragma warning disable IDE0051 // Remove unused private members
         // ReSharper disable once UnusedMember.Local
-        private InjectionOptions UsernamePasswordCredentialsFactoryBinder
+        private UsernamePasswordCredentialsFactoryOptions UsernamePasswordCredentialsFactoryBinder
 #pragma warning restore IDE0051 // Remove unused private members
         {
             get => default;
-            set => CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory(value.Args);
+            set => CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory(value.Username, value.Password);
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class UsernamePasswordCredentialsFactoryOptions
+        {
+            public string Username { get; set; }
+
+            public string Password { get; set; }
         }
 
         [BinderName("token")] // + "encoding", "data"
         [BinderIgnore(false)]
 #pragma warning disable IDE0051 // Remove unused private members
         // ReSharper disable once UnusedMember.Local
-        private InjectionOptions TokenCredentialsFactoryBinder
+        private TokenCredentialsFactoryOptions TokenCredentialsFactoryBinder
 #pragma warning restore IDE0051 // Remove unused private members
         {
             get => default;
-            set => CredentialsFactory.Creator = () => new TokenCredentialsFactory(value.Args);
+            set => CredentialsFactory.Creator = () => new TokenCredentialsFactory(value.Data, value.Encoding);
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class TokenCredentialsFactoryOptions
+        {
+            public string Data { get; set; }
+
+            public string Encoding { get; set; }
         }
 
         [BinderName("kerberos")] // + "spn"
         [BinderIgnore(false)]
 #pragma warning disable IDE0051 // Remove unused private members
         // ReSharper disable once UnusedMember.Local
-        private InjectionOptions KerberosCredentialsFactoryBinder
+        private KerberosCredentialsFactoryOptions KerberosCredentialsFactoryBinder
 #pragma warning restore IDE0051 // Remove unused private members
         {
             get => default;
-            set => CredentialsFactory.Creator = () => new KerberosCredentialsFactory(value.Args);
+            set => CredentialsFactory.Creator = () => new KerberosCredentialsFactory(value.Spn);
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class KerberosCredentialsFactoryOptions
+        {
+            public string Spn { get; set; }
         }
 
         /// <summary>

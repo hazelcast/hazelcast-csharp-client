@@ -235,6 +235,105 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
+        public void AuthenticationUsernamePassword()
+        {
+            const string json = @"{ ""hazelcast"": {
+""authentication"" : {
+    ""username-password"": { ""username"": ""bob"", ""password"": ""secret"" }
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+
+            var iCredsFactory = options.Authentication.CredentialsFactory.Service;
+
+            Assert.That(iCredsFactory, Is.InstanceOf<UsernamePasswordCredentialsFactory>());
+            var credsFactory = iCredsFactory as UsernamePasswordCredentialsFactory;
+            Assert.That(credsFactory, Is.Not.Null);
+
+            var iCreds = credsFactory.NewCredentials();
+
+            Assert.That(iCreds, Is.InstanceOf<UsernamePasswordCredentials>());
+            var creds = iCreds as UsernamePasswordCredentials;
+            Assert.That(creds, Is.Not.Null);
+
+            Assert.That(creds.Name, Is.EqualTo("bob"));
+            Assert.That(creds.Password, Is.EqualTo("secret"));
+        }
+
+        [Test]
+        public void AuthenticationToken()
+        {
+            const string json = @"{ ""hazelcast"": {
+""authentication"" : {
+    ""token"": { ""data"": ""some-secret-password"" }
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+
+            var iCredsFactory = options.Authentication.CredentialsFactory.Service;
+
+            Assert.That(iCredsFactory, Is.InstanceOf<TokenCredentialsFactory>());
+            var credsFactory = iCredsFactory as TokenCredentialsFactory;
+            Assert.That(credsFactory, Is.Not.Null);
+
+            var iCreds = credsFactory.NewCredentials();
+
+            Assert.That(iCreds, Is.InstanceOf<TokenCredentials>());
+            var creds = iCreds as TokenCredentials;
+            Assert.That(creds, Is.Not.Null);
+
+            Assert.That(creds.Name, Is.EqualTo("<token>"));
+            Assert.That(Encoding.UTF8.GetString(creds.GetToken()), Is.EqualTo("some-secret-password"));
+        }
+
+        [Test]
+        public void AuthenticationKerberos()
+        {
+            const string json = @"{ ""hazelcast"": {
+""authentication"" : {
+    ""kerberos"": { ""spn"": ""service-provider-name"" }
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+
+            var iCredsFactory = options.Authentication.CredentialsFactory.Service;
+
+            Assert.That(iCredsFactory, Is.InstanceOf<KerberosCredentialsFactory>());
+            var credsFactory = iCredsFactory as KerberosCredentialsFactory;
+            Assert.That(credsFactory, Is.Not.Null);
+
+            // do not test creating a token as that requires Kerberos
+            // really, we just want to be sure that the factory has the SPN
+
+            var spnField = credsFactory.GetType().GetField("_spn", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(spnField, Is.Not.Null);
+            var spn = spnField.GetValue(credsFactory);
+
+            Assert.That(spn, Is.EqualTo("service-provider-name"));
+        }
+
+        [Test]
         public void LoadBalancingOptions1()
         {
             const string json = @"{ ""hazelcast"": {
