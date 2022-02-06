@@ -130,6 +130,71 @@ namespace Hazelcast.DistributedObjects.Impl
             return result;
         }
 
+        public async Task<TValue> PutAsync3(TKey key, TValue value)
+        {
+            var (keyData, valueData) = ToSafeData(key, value);
+
+            var timeToLiveMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var maxIdleMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+            var withMaxIdle = maxIdleMs != -1;
+
+            var requestMessage = withMaxIdle
+                ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+                : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+            // but, here, ToData might have queued some schemas to send, and we first need
+            // to ensure that the serialization service is OK with us sending stuff.
+            await SerializationService.WaitIsReadyAsync().CfAwait();
+
+            var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+
+            var response = withMaxIdle
+                ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
+                : MapPutCodec.DecodeResponse(responseMessage).Response;
+
+            var (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            while (resultSchemaId > 0) // may happen several times
+            {
+                await SerializationService.PublishSchema(resultSchemaId).CfAwait();
+                (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+            }
+
+            return result;
+        }
+
+        public async Task<TValue> PutAsync4(TKey key, TValue value)
+        {
+          var (keyData, valueData) = ToSafeData(key, value);
+
+          var timeToLiveMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+          var maxIdleMs = TimeSpanExtensions.MinusOneMillisecond.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server
+          var withMaxIdle = maxIdleMs != -1;
+
+          var requestMessage = withMaxIdle
+            ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
+            : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
+
+          // but, here, ToData might have queued some schemas to send, and we first need
+          // to ensure that the serialization service is OK with us sending stuff.
+          var waitIsReady = SerializationService.WaitIsReadyAsync();
+          if (!waitIsReady.IsCompleted) await waitIsReady.CfAwait();
+
+          var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
+
+          var response = withMaxIdle
+            ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
+            : MapPutCodec.DecodeResponse(responseMessage).Response;
+
+          var (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+          while (resultSchemaId > 0) // may happen several times
+          {
+            await SerializationService.PublishSchema(resultSchemaId).CfAwait();
+            (result, resultSchemaId) = SerializationService.ToObject2<TValue>(response);
+          }
+
+          return result;
+        }
+
         protected virtual async Task<TValue> GetAndSetAsync(IData keyData, IData valueData, TimeSpan timeToLive, TimeSpan maxIdle)
         {
             var timeToLiveMs = timeToLive.RoundedMilliseconds(false); // codec: 0 is infinite, -1 is server

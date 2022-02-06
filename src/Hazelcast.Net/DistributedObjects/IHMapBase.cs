@@ -113,6 +113,8 @@ namespace Hazelcast.DistributedObjects
         // TODO: document MapStore behavior
         Task<TValue> PutAsync(TKey key, TValue value);
         Task<TValue> PutAsync2(TKey key, TValue value);
+        Task<TValue> PutAsync3(TKey key, TValue value);
+        Task<TValue> PutAsync4(TKey key, TValue value);
 
         /// <summary>
         /// Sets (adds or updates) an entry with a time-to-live, and returns the previous value, if any.

@@ -55,5 +55,23 @@ namespace Hazelcast.Benchmarks.AsyncSerialization
                 var previous = await _map.PutAsync2(i % 10, i % 10).CfAwait();
             }
         }
+
+        [Benchmark]
+        public async Task Put3()
+        {
+            for (var i = 0; i < 100; i++)
+            {
+                var previous = await _map.PutAsync3(i % 10, i % 10).CfAwait();
+            }
+        }
+
+        [Benchmark]
+        public async Task Put4()
+        {
+            for (var i = 0; i < 100; i++)
+            {
+                var previous = await _map.PutAsync4(i % 10, i % 10).CfAwait();
+            }
+        }
     }
 }

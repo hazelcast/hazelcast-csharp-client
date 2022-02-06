@@ -99,6 +99,8 @@ namespace Hazelcast.Serialization
             RegisterClassDefinitions(classDefinitions, checkClassDefErrors);
         }
 
+        public ValueTask WaitIsReadyAsync() => default;
+
 #pragma warning disable CA1822 // Mark members as static - might not remain constant forever
         public byte GetVersion() => SerializerVersion;
 #pragma warning restore CA1822

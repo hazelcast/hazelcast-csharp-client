@@ -44,6 +44,12 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> PutAsync2(TKey key, TValue value)
             => throw new NotImplementedException();
 
+        public Task<TValue> PutAsync3(TKey key, TValue value)
+          => throw new NotImplementedException();
+
+        public Task<TValue> PutAsync4(TKey key, TValue value)
+          => throw new NotImplementedException();
+        
         public async Task<TValue> PutAsync(TKey key, TValue value, TimeSpan timeToLive)
         {
             var (keyData, valueData) = ToSafeData(key, value);
