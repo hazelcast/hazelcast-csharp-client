@@ -71,6 +71,8 @@ namespace Hazelcast
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
 
+            Failover = other.Failover.Clone();
+
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
 

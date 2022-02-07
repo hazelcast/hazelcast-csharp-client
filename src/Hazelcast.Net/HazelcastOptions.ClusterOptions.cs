@@ -99,5 +99,10 @@ namespace Hazelcast
         /// Gets the <see cref="EventsOptions"/>.
         /// </summary>
         public EventsOptions Events { get; } = new EventsOptions();
+
+        /// <summary>
+        /// Gets the <see cref="FailoverOptions"/>
+        /// </summary>
+        public FailoverOptions Failover { get; } = new FailoverOptions();
     }
 }

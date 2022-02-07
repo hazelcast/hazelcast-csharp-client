@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Hazelcast.Clustering
 {
@@ -22,6 +23,20 @@ namespace Hazelcast.Clustering
     public class FailoverOptions
     {
         /// <summary>
+        /// Initializes a new instance of the <see cref="FailoverOptions"/>
+        /// </summary>
+        public FailoverOptions()
+        {
+            Clusters = new List<ClusterOptions>();
+        }
+
+        private FailoverOptions(FailoverOptions options)
+        {
+            TryCount = options.TryCount;
+            Clusters = options.Clusters.Select(p => p.Clone()).ToList();
+        }
+
+        /// <summary>
         /// Number of tries for given each cluster.
         /// </summary>
         public int TryCount { get; set; }
@@ -29,6 +44,12 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Failover cluster options
         /// </summary>
-        public IEnumerable<ClusterOptions> Clusters { get; set; }
+        public IList<ClusterOptions> Clusters { get; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public FailoverOptions Clone() => new FailoverOptions(this);
     }
 }

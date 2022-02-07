@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>)null));
             Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, "key"));
         }
 
@@ -123,7 +123,7 @@ namespace Hazelcast.Tests.Configuration
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
 
-            var clusterOptions = (IHazelcastOptions) options;
+            var clusterOptions = (IHazelcastOptions)options;
             Assert.AreEqual(1000, clusterOptions.WaitForConnectionMilliseconds);
         }
 
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Configuration
             var credentialsFactory = options.CredentialsFactory.Service;
             Assert.IsInstanceOf<TestCredentialsFactory>(credentialsFactory);
 
-            var testCredentialsFactory = (TestCredentialsFactory) credentialsFactory;
+            var testCredentialsFactory = (TestCredentialsFactory)credentialsFactory;
             Assert.AreEqual("arg", testCredentialsFactory.Arg1);
             Assert.AreEqual(1000, testCredentialsFactory.Arg2);
         }
@@ -324,15 +324,15 @@ namespace Hazelcast.Tests.Configuration
 
             options.AddSubscriber(new TestSubscriber());
             options.AddSubscriber("TestSubscriber");
-            options.AddSubscriber(typeof (TestSubscriber));
+            options.AddSubscriber(typeof(TestSubscriber));
             options.AddSubscriber<TestSubscriber>();
             options.AddSubscriber(x => x.StateChanged((sender, args) => { }));
 
             Assert.That(options.Subscribers.Count, Is.EqualTo(5));
 
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type) null));
-            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string) null));
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber) null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type)null));
+            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string)null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber)null));
         }
 
         public class TestSubscriber : IHazelcastClientEventSubscriber
@@ -418,6 +418,46 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsFalse(otherNearCache.InvalidateOnChange);
 
             // TODO: whatever keys?
+        }
+        [Test]
+        public void TestFailOverOptions()
+        {
+            int tryCount = 3;
+            string clusterName = "failOverCluster";
+            int waitForConnectionMiliseonds = 135;
+            string address = "196.1.2.5";
+            string loadBalancer = "ROUNDROBIN";
+            string authToken = "SUNSHINYDAY";
+
+            int hearthBeat = 995;
+
+
+            string jsonConfig = $"{{\"hazelcast\":{{\"failover\":{{\"tryCount\":{tryCount},\"clusters\":[{{\"clusterName\":\"{clusterName}\",\"waitForConnectionMilliseconds\":{waitForConnectionMiliseonds},\"networking\":{{\"addresses\":[\"{address}\"]}},\"loadBalancer\":{{\"typeName\":\"{loadBalancer}\"}},\"authentication\":{{\"token\":{{\"data\":\"{authToken}\",\"encoding\":\"encoding\"}}}},\"heartBeat\":{{\"timeoutMilliseconds\":{hearthBeat}}}}}]}}}}}}";
+
+
+            var options = ReadResource(jsonConfig);
+
+            Assert.AreEqual(tryCount, options.Failover.TryCount);
+            Assert.That(options.Failover.Clusters, Is.Not.Null.Or.Empty);
+            Assert.That(options.Failover.Clusters.Count, Is.EqualTo(1));
+            var cluster = options.Failover.Clusters.First();
+            Assert.AreEqual(cluster.ClusterName, clusterName);
+            Assert.AreEqual(cluster.WaitForConnectionMilliseconds, waitForConnectionMiliseonds);
+
+            Assert.That(cluster.Networking, Is.Not.Null);
+            Assert.That(cluster.Networking.Addresses, Is.Not.Null.Or.Empty);
+            Assert.That(cluster.Networking.Addresses.Count, Is.EqualTo(1));
+            Assert.AreEqual(address, cluster.Networking.Addresses.First());
+
+            Assert.That(cluster.LoadBalancer.Service, Is.Not.Null);
+            Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
+
+            Assert.That(cluster.Authentication.CredentialsFactory.Service, Is.Not.Null);
+            Assert.IsInstanceOf<TokenCredentials>(cluster.Authentication.CredentialsFactory.Service);
+            Assert.AreEqual(Encoding.UTF8.GetBytes(authToken), ((ITokenCredentials)cluster.Authentication.CredentialsFactory.Service).GetToken());
+
+            Assert.That(cluster.Heartbeat, Is.Not.Null);
+            Assert.AreEqual(hearthBeat, cluster.Heartbeat.TimeoutMilliseconds);
         }
 
         public class TestPortableFactory : IPortableFactory

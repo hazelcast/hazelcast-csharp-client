@@ -23,6 +23,22 @@ namespace Hazelcast.Clustering
     public class ClusterOptions : LoadBalancerOptions, IClusterOptions
     {
         /// <summary>
+        /// Initializes <see cref="ClusterOptions"/>
+        /// </summary>
+        public ClusterOptions()
+        {
+        }
+
+        private ClusterOptions(ClusterOptions options)
+        {
+            ClusterName = options.ClusterName;
+            WaitForConnectionMilliseconds = options.WaitForConnectionMilliseconds;
+            Authentication = options.Authentication.Clone();
+            Heartbeat = options.Heartbeat.Clone();
+            Networking = options.Networking.Clone();            
+        }
+
+        /// <summary>
         /// Gets or sets the cluster name.
         /// </summary>
         public string ClusterName { get; set; }
@@ -42,16 +58,22 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the authentication options.
         /// </summary>
-        public AuthenticationOptions Authentication { get; }
+        public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
 
         /// <summary>
         /// Gets the heartbeat options.
         /// </summary>
-        public HeartbeatOptions Heartbeat { get; }
+        public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
 
         /// <summary>
         /// Gets the networking options.
         /// </summary>
-        public NetworkingOptions Networking { get; }
+        public NetworkingOptions Networking { get; }= new NetworkingOptions();
+
+        /// <summary>
+        /// Clones the options.
+        /// </summary>
+        /// <returns>A deep clone of the options.</returns>
+        public ClusterOptions Clone() => new ClusterOptions(this);
     }
 }
