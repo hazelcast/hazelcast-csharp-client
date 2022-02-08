@@ -42,12 +42,17 @@ namespace Hazelcast.Clustering
         public int TryCount { get; set; }
 
         /// <summary>
+        /// Gets or Sets whether <see cref="FailoverOptions"/> enabled. Default is false.
+        /// </summary>
+        public bool Enabled { get; set; }
+
+        /// <summary>
         /// Failover cluster options
         /// </summary>
         public IList<ClusterOptions> Clusters { get; }
 
         /// <summary>
-        /// 
+        /// Clones the options deeply.
         /// </summary>
         /// <returns></returns>
         public FailoverOptions Clone() => new FailoverOptions(this);

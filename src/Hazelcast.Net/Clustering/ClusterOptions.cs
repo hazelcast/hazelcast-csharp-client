@@ -58,17 +58,17 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the authentication options.
         /// </summary>
-        public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
+        public AuthenticationOptions Authentication { get; internal set; } = new AuthenticationOptions();
 
         /// <summary>
         /// Gets the heartbeat options.
         /// </summary>
-        public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
+        public HeartbeatOptions Heartbeat { get; internal set; } = new HeartbeatOptions();
 
         /// <summary>
         /// Gets the networking options.
         /// </summary>
-        public NetworkingOptions Networking { get; }= new NetworkingOptions();
+        public NetworkingOptions Networking { get; internal set; } = new NetworkingOptions();
 
         /// <summary>
         /// Clones the options.

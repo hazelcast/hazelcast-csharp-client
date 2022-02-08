@@ -428,7 +428,6 @@ namespace Hazelcast.Tests.Configuration
             string address = "196.1.2.5";
             string loadBalancer = "ROUNDROBIN";
             string authToken = "SUNSHINYDAY";
-
             int hearthBeat = 995;
 
 

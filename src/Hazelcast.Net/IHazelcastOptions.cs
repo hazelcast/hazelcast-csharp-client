@@ -25,7 +25,7 @@ namespace Hazelcast
     /// <summary>
     /// Represents arragment of client options.
     /// </summary>
-    internal interface IHazelcastOptions : IClusterOptions, IClientOptions, IMessagingOptions, IEventsOptions
+    internal interface IHazelcastOptions : IClusterOptions, IClientOptions, IMessagingOptions, IEventsOptions, IFailoverOptions
     {
 
     }

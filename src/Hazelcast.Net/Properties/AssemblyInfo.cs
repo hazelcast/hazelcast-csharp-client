@@ -33,7 +33,7 @@ using Hazelcast;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("hb")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
-
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 #endif
 
 // We propose to accept that the code is not CLS Compliant anymore (remove
