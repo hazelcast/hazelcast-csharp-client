@@ -1,6 +1,3 @@
 [submodule "protocol"]
 	path = protocol
 	url = https://github.com/hazelcast/hazelcast-client-protocol.git
-[submodule "src/ExpectedObjects/ExpectedObjects"]
-	path = src/ExpectedObjects/ExpectedObjects
-	url = https://github.com/derekgreer/expectedObjects.git
