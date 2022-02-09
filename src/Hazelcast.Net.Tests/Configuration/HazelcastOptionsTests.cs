@@ -242,15 +242,8 @@ namespace Hazelcast.Tests.Configuration
     ""username-password"": { ""username"": ""bob"", ""password"": ""secret"" }
 }
 }}";
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonStream(stream);
-            var configuration = builder.Build();
-
-            var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
-
+            var options = ReadResource(json);
             var iCredsFactory = options.Authentication.CredentialsFactory.Service;
 
             Assert.That(iCredsFactory, Is.InstanceOf<UsernamePasswordCredentialsFactory>());
@@ -275,15 +268,8 @@ namespace Hazelcast.Tests.Configuration
     ""token"": { ""data"": ""some-secret-password"" }
 }
 }}";
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonStream(stream);
-            var configuration = builder.Build();
-
-            var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
-
+            var options = ReadResource(json);
             var iCredsFactory = options.Authentication.CredentialsFactory.Service;
 
             Assert.That(iCredsFactory, Is.InstanceOf<TokenCredentialsFactory>());
@@ -308,15 +294,8 @@ namespace Hazelcast.Tests.Configuration
     ""kerberos"": { ""spn"": ""service-provider-name"" }
 }
 }}";
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
 
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonStream(stream);
-            var configuration = builder.Build();
-
-            var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
-
+            var options = ReadResource(json);
             var iCredsFactory = options.Authentication.CredentialsFactory.Service;
 
             Assert.That(iCredsFactory, Is.InstanceOf<KerberosCredentialsFactory>());
