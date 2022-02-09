@@ -33,6 +33,7 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
+        // FIXME - remove un-needed async state machine
         private async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
             => await GetAsync(ToSafeData(key), cancellationToken).CfAwait();
 
@@ -42,11 +43,58 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="keyData">The key data.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The value for the specified key.</returns>
-        protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
+        protected virtual Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
+            return Meh(GetDataAsync(keyData, cancellationToken));
+
+            // ---
+
+            // code above, using 'Meh', tries to deal with the multiple state machines situation
+            // raised below - this is totally experimental and needs to be cleaned up. idea is,
+            // this method is not an async state machine, only Meh is = only 1 machine - generally
+            // we should review all the map code for async optimization
+
+            /*
             // TODO: avoid boxing when ToObject-ing the value
+            // FIXME - since we ToData we should await for the serializationservice GetReadyToData()
+            // in case the key was compact-serialized - so basically, before sending any message?
             var valueData = await GetDataAsync(keyData, cancellationToken).CfAwait();
-            return ToObject<TValue>(valueData);
+
+            // FIXME - see discussion in CompactSerializer.ReadSchema about using exceptions here
+            // and then... if we move this loop into a ToObject method overload, then we end up
+            // with one more nested async state machine, so... are we going to duplicate it
+            // everywhere?
+
+            while (true)
+            {
+                try
+                {
+                    return ToObject<TValue>(valueData);
+                }
+                catch (UnknownCompactSchemaException e)
+                {
+                    await e.Fetching.CfAwait(); // throws if not successful
+                }
+            }
+            */
+        }
+
+        // FIXME - experimenting here, do not keep this code
+        private async Task<TValue> Meh(Task<IData> getData)
+        {
+            var valueData = await getData.CfAwait();
+
+            while (true)
+            {
+                try
+                {
+                    return ToObject<TValue>(valueData);
+                }
+                catch (UnknownCompactSchemaException e)
+                {
+                    await e.Fetching.CfAwait(); // throws if not successful
+                }
+            }
         }
 
         /// <summary>

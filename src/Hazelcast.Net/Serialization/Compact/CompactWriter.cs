@@ -32,8 +32,8 @@ namespace Hazelcast.Serialization.Compact
         private int _dataPosition;
         private bool _completed;
 
-        public CompactWriter(CompactSerializer serializer, ObjectDataOutput output, Schema schema, bool withSchema)
-            : base(serializer, schema, output.Position, withSchema)
+        public CompactWriter(CompactSerializer serializer, ObjectDataOutput output, Schema schema)
+            : base(serializer, schema, output.Position)
         {
             _output = output ?? throw new ArgumentNullException(nameof(output));
 
@@ -443,9 +443,9 @@ namespace Hazelcast.Serialization.Compact
         // - WriteObject which will do different things depending on what the object is (generic record...)
 
         public void WriteObjectRef(string name, object? value)
-            => WriteReference(name, FieldKind.ObjectRef, value, (output, v) => Serializer.WriteObject(output, v, WithSchema));
+            => WriteReference(name, FieldKind.ObjectRef, value, (output, v) => Serializer.WriteObject(output, v));
 
         public void WriteObjectRefs(string name, object?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfObjectRef, value, (output, v) => Serializer.WriteObject(output, v, WithSchema));
+            => WriteArrayOfReference(name, FieldKind.ArrayOfObjectRef, value, (output, v) => Serializer.WriteObject(output, v));
     }
 }

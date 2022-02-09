@@ -38,49 +38,16 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
         public IData ToData(object obj, IPartitioningStrategy strategy)
         {
-            return obj switch
-            {
-                null => null,
-                IData data => data,
-                _ => ToData(obj, strategy, false)
-            };
-        }
+            if (obj == null) return null;
+            if (obj is IData data) return data;
 
-        /// <summary>
-        /// Serializes an object to an <see cref="IData"/> blob with Compact Serialization schemas.
-        /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The <see cref="IData"/> blob.</returns>
-        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
-        /// <remarks>
-        /// <para>If the object is serialized with Compact Serialization then schemas are included.</para>
-        /// </remarks>
-        public IData ToDataWithSchema(object obj)
-        {
-            if (obj is null) return null;
-            if (obj is IData data)
-            {
-                // either it's already compact with schema, or not compact at all - all good
-                if (data.TypeId != SerializationConstants.ConstantTypeCompact)
-                    return data;
-
-                // it's compact but without schema, we need to deserialize so we can add the schema,
-                // there is not other way round due to nested level, but this is massively inefficient
-                obj = ToObject(data);
-            }
-
-            return ToData(obj, _globalPartitioningStrategy, true);
-        }
-
-        private IData ToData(object obj, IPartitioningStrategy strategy, bool withSchema)
-        {
             var output = GetDataOutput();
 
             try
             {
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
-                WriteObject(output, obj, true, withSchema);
+                WriteObject(output, obj, true);
                 return new HeapData(output.ToByteArray());
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
@@ -134,6 +101,8 @@ namespace Hazelcast.Serialization
             }
         }
 
+        // FIXME - dead code
+        /*
         /// <summary>
         /// Writes an object to an <see cref="ObjectDataOutput"/>.
         /// </summary>
@@ -146,16 +115,31 @@ namespace Hazelcast.Serialization
             if (output == null) throw new ArgumentNullException(nameof(output));
             if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
 
-            WriteObject(output, obj, false, false);
+            WriteObject(output, obj, false);
         }
+        */
 
-        private void WriteObject(ObjectDataOutput output, object obj, bool isRootObject, bool withSchema)
+        /// <summary>
+        /// Writes an object to an <see cref="ObjectDataOutput"/>.
+        /// </summary>
+        /// <param name="output">The output.</param>
+        /// <param name="obj">The object.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="output"/> is <c>null</c>.</exception>
+        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
+        /// <param name="isRootObject">Whether the object is the root object or an inner object.</param>
+        /// <remarks>
+        /// <para>The <paramref name="isRootObject"/> determines how the type-id of the object is written.
+        /// Root object type-id is always written out as big-endian, whereas inner object type-ids are
+        /// written out using the configured endianness.</para>
+        /// </remarks>
+        public void WriteObject(ObjectDataOutput output, object obj, bool isRootObject)
         {
-            // args checks performed by callers
+            if (output == null) throw new ArgumentNullException(nameof(output));
+            if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
 
             try
             {
-                var serializer = LookupSerializer(obj, withSchema);
+                var serializer = LookupSerializer(obj);
 
                 // root object (from ToData) type-id is always big-endian, whereas
                 // nested objects type-id uses whatever is the default endianness

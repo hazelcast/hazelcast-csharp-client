@@ -12,37 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 namespace Hazelcast.Serialization.Compact
 {
     internal class CompactSerializerAdapter : ISerializerAdapter
     {
         private readonly CompactSerializer _serializer;
-        private readonly bool _withSchema;
 
-        public CompactSerializerAdapter(CompactSerializer serializer, bool withSchema)
+        public CompactSerializerAdapter(CompactSerializer serializer)
         {
             _serializer = serializer;
-            _withSchema = withSchema;
         }
 
         public void Write(IObjectDataOutput output, object obj)
-            => _serializer.Write(output, obj, _withSchema);
+            => _serializer.Write(output, obj);
 
         public object Read(IObjectDataInput input)
-            => _serializer.Read(input, _withSchema);
+            => _serializer.Read(input);
 
-        public int TypeId => _withSchema 
-            ? SerializationConstants.ConstantTypeCompactWithSchema 
-            : SerializationConstants.ConstantTypeCompact;
+        public int TypeId => SerializationConstants.ConstantTypeCompact;
 
         public void Dispose()
             => _serializer.Dispose();
 
         public ISerializer Serializer => _serializer;
-
-        public override string ToString()
-        {
-            return $"CompactSerializerAdapter(WithSchema={_withSchema})";
-        }
     }
 }

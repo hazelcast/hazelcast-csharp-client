@@ -17,6 +17,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Compact;
@@ -61,7 +63,6 @@ namespace Hazelcast.Serialization
         private readonly ISerializerAdapter _dataSerializerAdapter; // identified data serialization
         private readonly ISerializerAdapter _portableSerializerAdapter; // portable serialization
         private readonly ISerializerAdapter _compactSerializerAdapter; // compact serialization
-        private readonly ISerializerAdapter _compactWithSchemaSerializerAdapter; // compact serialization with schema
         private readonly ISerializerAdapter _serializableSerializerAdapter; // CLR serialization
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
@@ -117,15 +118,9 @@ namespace Hazelcast.Serialization
 
             // Registers the constant 'compact serializer', which implements compact serialization.
             // The two adapters are *not* registered, but handled as special cases by the Lookup methods.
-            _compactSerializer = new CompactSerializer(
-                options.Compact,
-                schemas,
-                bytes => CreateObjectDataInput(bytes, Endianness.LittleEndian),
-                () => CreateObjectDataOutput(Endianness.LittleEndian));
-            _compactSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer, false));
-            _compactWithSchemaSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer, true));
+            _compactSerializer = new CompactSerializer(options.Compact, schemas);
+            _compactSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer));
             RegisterConstantSerializer(_compactSerializerAdapter);
-            RegisterConstantSerializer(_compactWithSchemaSerializerAdapter);
 
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
             // serialization of objects marked with the [Serializable] attributes.
@@ -180,25 +175,15 @@ namespace Hazelcast.Serialization
 
         public Endianness Endianness { get; }
 
-        // ISerializer vs ISerializerAdapter
-        //
-        // ISerializer just provides a type-id = the identifier of the serialized type
-        //   it is extended by:
-        //     IByteArraySerializer<T> which reads/writes objects from/to byte[]
-        //     IStreamSerializer<T> which reads/writes objects from/to IObjectDataInput/Output
-        //     
-        // ISerializerAdapter wraps an ISerializer and provides read/write of objects from IObjectDataInput/Output
-        //   if ISerializer casts T/object and is:
-        //     IStreamSerializer<T> -> implement with StreamSerializerAdapter<T> which just passes things around
-        //     IByteArraySerializer<T> -> implement with ByteArraySerializerAdapter<T> which adapts byte[] to/from IObjectDataInput/Output
-        //   note that the ISerializerAdapter is not generic
-        //
-        // ISerializer is non-generic, but actual serializers *are* generic so that we can constrain the type that they can (de)serialize
-        // ISerializerAdapter is non-generic, so the actual adapter has to deal with casting -> has to be generic
-        //
-        // so... ultimately we need "something" that can read/write objects from data input/output
-        //   if the serializer is IStreamSerializer<T> all we need is to manage the T/object cast
-        //   if the serializer is IByteArraySerializer<T> we *also* need to manage the byte[] to/from IObjectDataInput/Output thing
+        /// <summary>
+        /// Gets the serialization service ready after <c>ToData</c> has been used.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask GetReadyToDataAsync()
+        {
+            // the only serializer that needs attention for now is compact
+            return _compactSerializer.Schemas.PublishAsync();
+        }
 
         /// <summary>
         /// Creates an <see cref="ISerializerAdapter"/> for an <see cref="ISerializer"/>.

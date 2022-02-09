@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 
 namespace Hazelcast.Serialization.Compact
@@ -20,7 +22,7 @@ namespace Hazelcast.Serialization.Compact
     {
         public static class Constants
         {
-            // TODO: Java supports changing this via a system property and ?!
+            // FIXME - Java supports changing this via a system property?
             public const int FactoryId = -42;
 
             public static class ClassIds

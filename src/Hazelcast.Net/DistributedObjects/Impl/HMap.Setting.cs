@@ -19,7 +19,6 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
-using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.DistributedObjects.Impl
 {
@@ -57,11 +56,10 @@ namespace Hazelcast.DistributedObjects.Impl
                 ? MapSetWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapSetCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            // FIXME - 
-            var schemas = (Schemas)Cluster.SerializationService.CompactSerializer.Schemas;
-            var ready = schemas.IsReadyAsync();
-            if (!ready.IsCompleted) await ready.CfAwait(); // FIXME benchmark is this faster?
-
+            // FIXME - move
+            // this should be in messaging? or else we might forget about it?
+            // see <where> about performance, 
+            await SerializationService.GetReadyToDataAsync().CfAwait();
             await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
         }
 
@@ -89,14 +87,8 @@ namespace Hazelcast.DistributedObjects.Impl
                 ? MapPutWithMaxIdleCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs, maxIdleMs)
                 : MapPutCodec.EncodeRequest(Name, keyData, valueData, ContextId, timeToLiveMs);
 
-            // FIXME - impact?
-            // instead of having each ToData call return a value task or something, let's leave them unchanged
-            // but, behind the scene, they may add schemas and trigger a background publishing task which we
-            // want to be completed before we proceed with sending data - in the least obtrusive way possible?
-            var schemas = (Schemas)Cluster.SerializationService.CompactSerializer.Schemas;
-            var ready = schemas.IsReadyAsync();
-            if (!ready.IsCompleted) await ready.CfAwait(); // FIXME benchmark is this faster?
-
+            // FIXME - move
+            await SerializationService.GetReadyToDataAsync().CfAwait();
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
 
             var response = withMaxIdle

@@ -65,7 +65,7 @@ namespace Hazelcast.Serialization.Compact
         /// </summary>
         public IReadOnlyList<SchemaField> Fields { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
-        internal Dictionary<string, SchemaField> FieldMap { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
+        internal IReadOnlyDictionary<string, SchemaField> FieldsMap { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
         internal int ValueFieldLength { get; private set; }
 
@@ -73,16 +73,19 @@ namespace Hazelcast.Serialization.Compact
 
         internal bool HasReferenceFields => ReferenceFieldCount > 0;
 
+        private static int _count;
+
         private void Initialize(string typeName, IEnumerable<SchemaField> typeFields)
         {
             TypeName = typeName;
 
-            // the ordered list of fields, which will be used for fingerprinting
-            // order is:
-            // - value fields, ordered by size DESC then by name ASC
-            // - boolean fields, ordered by name ASC
-            // - reference fields, ordered by name ASC
-            var fieldsList = new List<SchemaField>();
+            _count++;
+
+            // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
+            // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
+            // order", and good luck finding a definition for this, so we're going with whatever is
+            // default in C# and hope it works.
+            var fieldsMap = new SortedDictionary<string, SchemaField>();
 
             // ensure no duplicate field name
             var fieldNames = new HashSet<string>();
@@ -92,7 +95,10 @@ namespace Hazelcast.Serialization.Compact
             List<SchemaField>? valueFields = null;
             List<SchemaField>? referenceFields = null;
 
-            foreach (var field in typeFields.OrderBy(x => x.FieldName))
+            // build the fields map, which is sorted (see above)
+            foreach (var field in typeFields) fieldsMap[field.FieldName] = field;
+
+            foreach (var field in fieldsMap.Values)
             {
                 if (fieldNames.Contains(field.FieldName))
                     throw new ArgumentException($"Fields contain duplicate field name {field.FieldName}.", nameof(typeFields));
@@ -116,7 +122,6 @@ namespace Hazelcast.Serialization.Compact
                     .ThenBy(x => x.Item1.FieldName);
                 foreach (var (field, size) in fields)
                 {
-                    fieldsList.Add(field);
                     field.Offset = offset;
                     offset += size;
                 }
@@ -129,7 +134,6 @@ namespace Hazelcast.Serialization.Compact
                 var fields = booleanFields.OrderBy(x => x.FieldName);
                 foreach (var field in fields)
                 {
-                    fieldsList.Add(field);
                     field.Offset = offset;
                     field.BitOffset = bitOffset;
                     bitOffset += 1;
@@ -150,7 +154,6 @@ namespace Hazelcast.Serialization.Compact
                 var fields = referenceFields.OrderBy(x => x.FieldName);
                 foreach (var field in fields)
                 {
-                    fieldsList.Add(field);
                     field.Index = index++;
                 }
             }
@@ -158,8 +161,8 @@ namespace Hazelcast.Serialization.Compact
             ValueFieldLength = offset;
             ReferenceFieldCount = referenceFields?.Count ?? 0;
 
-            Fields = fieldsList.ToArray();
-            FieldMap = fieldsList.ToDictionary(x => x.FieldName, x => x);
+            Fields = fieldsMap.Values.ToArray();
+            FieldsMap = fieldsMap;
 
             Id = ComputeId();
         }

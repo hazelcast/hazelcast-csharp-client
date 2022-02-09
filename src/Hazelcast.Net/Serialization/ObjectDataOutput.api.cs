@@ -265,7 +265,7 @@ namespace Hazelcast.Serialization
 
         public void WriteObject(object value)
         {
-            _serializationService.WriteObject(this, value);
+            _serializationService.WriteObject(this, value, false);
         }
 
         public void Write(byte[] bytes)

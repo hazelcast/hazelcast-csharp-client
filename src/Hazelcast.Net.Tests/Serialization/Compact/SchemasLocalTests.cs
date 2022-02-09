@@ -20,7 +20,6 @@ using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
-using Hazelcast.Testing;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -55,7 +54,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema = GetSchema();
 
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
-            schemas.Add(schema);
+            schemas.Add(schema, false);
             Assert.That(schemas.TryGet(schema.Id, out var returned), Is.True);
             Assert.That(returned.Id, Is.EqualTo(schema.Id));
         }
@@ -124,7 +123,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema = GetSchema();
 
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
-            schemas.Add(schema);
+            schemas.Add(schema, false);
 
             Assert.That(count, Is.EqualTo(0)); // no message has been responded yet
 
@@ -149,11 +148,11 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema0 = GetSchema("typename", "fieldname0");
             Assert.That(schemas.TryGet(schema0.Id, out _), Is.False);
-            schemas.Add(schema0);
+            schemas.Add(schema0, false);
 
             var schema1 = GetSchema("typename", "fieldname1");
             Assert.That(schemas.TryGet(schema1.Id, out _), Is.False);
-            schemas.Add(schema1);
+            schemas.Add(schema1, false);
 
             Assert.That(count, Is.EqualTo(0)); // no message has been responded yet
 
@@ -165,31 +164,25 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
 
         [Test]
-        public async Task AddedSingleSchemaIsAutoPublished()
+        public async Task CanAddSchemaAsClusterSchema()
         {
             var count = 0;
 
             var schemas = new Schemas(new ClusterMessagingStub(requestMessage =>
             {
-                Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
+                Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendAllSchemasCodec.RequestMessageType));
                 Interlocked.Increment(ref count);
-                return ClientSendSchemaServerCodec.EncodeResponse();
+                return ClientSendAllSchemasServerCodec.EncodeResponse();
             }));
 
-            var schema = GetSchema();
-
+            var schema = GetSchema("typename", "fieldname0");
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
-            schemas.Add(schema);
+            schemas.Add(schema, true);
 
             Assert.That(count, Is.EqualTo(0)); // no message has been responded yet
 
-            // FIXME - do better
-            await schemas.IsReadyAsync().CfAwait();
-            Assert.That(schemas.IsReadyAsync().IsCompletedSuccessfully, Is.True);
-            Assert.That(count, Is.EqualTo(1)); // a ClientSendAllSchemasCodec message was responded
-
             await schemas.PublishAsync().CfAwait();
-            Assert.That(count, Is.EqualTo(1)); // no additional message was responded
+            Assert.That(count, Is.EqualTo(0)); // still, no message
         }
     }
 }

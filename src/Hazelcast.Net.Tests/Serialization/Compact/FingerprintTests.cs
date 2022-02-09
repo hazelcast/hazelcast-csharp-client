@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.IO;
 using System.Text;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -63,23 +62,51 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
 
         [Test]
-        public void CanFingerprintSchemaSameAsJava()
+        public void CanFingerprintSchema1SameAsJava()
         {
             var schema = new Schema("typename", new[]
             {
                 new SchemaField("fieldname", FieldKind.StringRef)
             });
+
+            CanFingerprintSchemaSameAsJava(schema, 1);
+        }
+
+        [Test]
+        public void CanFingerprintSchema2SameAsJava()
+        {
+            var schema = new Schema("foo", new[]
+            {
+                new SchemaField("value", FieldKind.SignedInteger32)
+            });
+
+            CanFingerprintSchemaSameAsJava(schema, 2);
+        }
+
+        [Test]
+        public void CanFingerprintSchema3SameAsJava()
+        {
+            var schema = SchemaBuilder
+                .For("thing")
+                .WithField("name", FieldKind.StringRef)
+                .WithField("value", FieldKind.SignedInteger32)
+                .Build();
+
+            CanFingerprintSchemaSameAsJava(schema, 3);
+        }
+
+        private void CanFingerprintSchemaSameAsJava(Schema schema, int n)
+        {
             var fingerprint = schema.Id;
 
-            var assemblyLocation = GetType().Assembly.Location;
-            var solutionPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assemblyLocation), "../../../../.."));
+            //foreach (var field in schema.Fields) Console.WriteLine(field.FieldName);
 
             using var run = new JavaRun()
-                .WithSource("Java/SerializationTests/Compact/FingerprintSchema.java")
+                .WithSource($"Java/SerializationTests/Compact/FingerprintSchema{n}.java")
                 .WithSource("Java/SerializationTests/Compact/RabinFingerprint.java")
                 .WithLib($"hazelcast-{ServerVersion.DefaultVersion}.jar");
             run.Compile();
-            var output = run.Execute("FingerprintSchema");
+            var output = run.Execute($"FingerprintSchema{n}");
 
             Assert.That(output, Is.Not.Null);
             var javaFingerprintString = output.Trim();

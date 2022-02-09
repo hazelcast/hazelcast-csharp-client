@@ -36,6 +36,8 @@ namespace Hazelcast.Serialization.Compact
                 (writer, obj) => serializer.Write(writer, (T)obj)
             );
 
+        // FIXME - dead code
+        /*
         public static CompactSerializerWrapper Create(ICompactable compactable)
         {
             var typeOfCompactable = compactable.GetType();
@@ -45,9 +47,7 @@ namespace Hazelcast.Serialization.Compact
             {
                 if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof (ICompactable<>))
                 {
-                    // FIXME cache this, etc.
                     var t = i.GetGenericArguments()[0];
-                    // FIXME method detection horror
                     var m = typeof (CompactSerializerWrapper).GetMethod("CreateFromCompactable", BindingFlags.NonPublic | BindingFlags.Static);
                     if (m == null) throw new InvalidOperationException();
                     var mm = m.MakeGenericMethod(t);
@@ -57,8 +57,9 @@ namespace Hazelcast.Serialization.Compact
 
             throw new ArgumentException();
         }
+        */
 
-        public static CompactSerializerWrapper Create(Type type)
+        public static CompactSerializerWrapper Create(Type type, Type? serializedType = null)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
@@ -72,6 +73,8 @@ namespace Hazelcast.Serialization.Compact
                 {
                     // FIXME cache this, etc.
                     var t = i.GetGenericArguments()[0];
+                    if (t != serializedType)
+                        throw new InvalidOperationException(""); // FIXME - isAssignable + exception
                     // FIXME method detection horror
                     var m = typeof(CompactSerializerWrapper).GetMethod("CreateFromSerializer", BindingFlags.NonPublic | BindingFlags.Static);
                     if (m == null) throw new InvalidOperationException();
@@ -83,6 +86,8 @@ namespace Hazelcast.Serialization.Compact
             throw new ArgumentException();
         }
 
+        // FIXME - dead code
+        /*
         private static CompactSerializerWrapper CreateFromCompactable<T>(ICompactable<T> compactable)
         {
             var serializer = compactable.GetSerializer();
@@ -92,8 +97,9 @@ namespace Hazelcast.Serialization.Compact
                 (writer, obj) => serializer.Write(writer, (T)obj)
             );
         }
+        */
 
-        // FIXME not needed if we stop being stupind getting methods
+        // FIXME not needed if we stop being stupid getting methods
         private static CompactSerializerWrapper CreateFromSerializer<T>(ICompactSerializer<T> serializer)
             => Create(serializer);
 

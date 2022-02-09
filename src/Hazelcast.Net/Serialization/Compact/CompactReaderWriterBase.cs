@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Compact
@@ -22,27 +23,47 @@ namespace Hazelcast.Serialization.Compact
     internal abstract class CompactReaderWriterBase
     {
         protected readonly CompactSerializer Serializer;
-        protected readonly bool WithSchema;
         protected readonly Schema Schema;
         protected readonly int StartPosition;
         protected readonly int DataStartPosition;
 
-        protected CompactReaderWriterBase(CompactSerializer serializer, Schema schema, int startPosition, bool withSchema)
+        protected CompactReaderWriterBase(CompactSerializer serializer, Schema schema, int startPosition)
         {
             Serializer = serializer ?? throw new ArgumentNullException(nameof(serializer));
             Schema = schema ?? throw new ArgumentNullException(nameof(schema));
 
             StartPosition = startPosition;
-            WithSchema = withSchema;
 
             DataStartPosition = schema.HasReferenceFields
                 ? StartPosition + BytesExtensions.SizeOfInt
                 : StartPosition;
         }
 
+        public bool GetValidFieldName(string name, [NotNullWhen(true)] out string? fieldName)
+        {
+            if (Schema.FieldsMap.TryGetValue(name, out _))
+            {
+                fieldName = name;
+                return true;
+            }
+
+            foreach (var field in Schema.Fields)
+            {
+                // FIXME - move all this to schema & cache?
+                if (field.FieldName.Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    fieldName = field.FieldName;
+                    return true;
+                }
+            }
+
+            fieldName = null;
+            return false;
+        }
+
         protected virtual SchemaField GetValidField(string name, FieldKind kind)
         {
-            if (!Schema.FieldMap.TryGetValue(name, out var field))
+            if (!Schema.FieldsMap.TryGetValue(name, out var field))
                 throw new SerializationException($"Invalid field name \"{name}\" for schema {Schema}.");
             if (field.Kind != kind)
                 throw new SerializationException($"Invalid kind \"{kind}\" for field \"{name}\" of schema {Schema}, which is of kind \"{field.Kind}\".");

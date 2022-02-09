@@ -22,11 +22,11 @@ namespace Hazelcast.Serialization.Compact
     internal interface ISchemas
     {
         /// <summary>
-        /// Adds a local schema.
+        /// Adds a schema.
         /// </summary>
         /// <param name="schema">The schema.</param>
-        /// <param name="published">Whether the schema is supposed to be already known by the cluster.</param>
-        void Add(Schema schema, bool published = false);
+        /// <param name="isClusterSchema">Whether the schema is considered to be already known by the cluster.</param>
+        void Add(Schema schema, bool isClusterSchema);
 
         /// <summary>
         /// Tries to get a local schema.
@@ -44,9 +44,9 @@ namespace Hazelcast.Serialization.Compact
         ValueTask<Schema> GetOrFetchAsync(long id);
 
         /// <summary>
-        /// Publishes all known schemas.
+        /// Publishes all known non-published schemas.
         /// </summary>
-        /// <returns>A <see cref="ValueTask"/>that will complete when all known schemas have been published.</returns>
-        ValueTask PublishAsync(); // publishes all non-published schema?
+        /// <returns>A <see cref="ValueTask"/>that will complete when all known non-published schemas have been published.</returns>
+        ValueTask PublishAsync();
     }
 }

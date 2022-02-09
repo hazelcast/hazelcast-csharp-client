@@ -22,6 +22,8 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
+    // FIXME - dead code
+    /*
     [TestFixture]
     internal class CompactableTests
     {
@@ -63,4 +65,5 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(obj2.Value, Is.EqualTo(obj.Value));
         }
     }
+    */
 }

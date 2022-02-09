@@ -12,13 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
+using System.Threading;
 using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
     internal interface IThing
     {
-        string Name { get; set; }
+        string? Name { get; set; }
 
         int Value { get; set; }
     }
@@ -30,14 +33,16 @@ namespace Hazelcast.Tests.Serialization.Compact
         public static class FieldNames
         {
             public const string Name = "name";
-            public const string Value = "mehalue"; // 'value' is a keyword?!
+            public const string Value = "value";
         }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         public int Value { get; set; }
     }
 
+    // FIXME - dead code
+    /*
     internal class ThingCompactableInterface : IThing, ICompactable<ThingCompactableInterface>
     {
         public const string TypeName = "cthing1";
@@ -69,8 +74,11 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         bool? ICompactable.PublishedSchema => default;
     }
+    */
 
-    [Compactable(typeof(ThingCompactSerializer<ThingCompactableAttribute>))]
+    // FIXME - dead code
+    /*
+    [CompactSerializable(typeof(ThingCompactSerializer<ThingCompactableAttribute>))]
     internal class ThingCompactableAttribute : IThing
     {
         public const string TypeName = "cthing1";
@@ -80,7 +88,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public int Value { get; set; }
     }
 
-    [Compactable(typeof(ThingCompactSerializer<ThingCompactableAttributeWithTypeName>), TypeName = TypeName)]
+    [CompactSerializable(typeof(ThingCompactSerializer<ThingCompactableAttributeWithTypeName>), TypeName = TypeName)]
     internal class ThingCompactableAttributeWithTypeName : IThing
     {
         public const string TypeName = "cthing1";
@@ -89,12 +97,33 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         public int Value { get; set; }
     }
+    */
+
+    internal static class ThingCompactSerializer
+    {
+        private static int _readCount;
+        private static int _writeCount;
+
+        public static void Reset()
+        {
+            _readCount = _writeCount = 0;
+        }
+
+        public static void CountRead() => Interlocked.Increment(ref _readCount);
+
+        public static void CountWrite() => Interlocked.Increment(ref _writeCount);
+
+        public static int ReadCount => _readCount;
+
+        public static int WriteCount => _writeCount;
+    }
 
     internal class ThingCompactSerializer<T> : ICompactSerializer<T>
         where T : IThing, new()
     {
         public T Read(ICompactReader reader)
         {
+            ThingCompactSerializer.CountRead();
             return new T
             {
                 Name = reader.ReadStringRef(Thing.FieldNames.Name),
@@ -104,6 +133,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         public void Write(ICompactWriter writer, T obj)
         {
+            ThingCompactSerializer.CountWrite();
             writer.WriteStringRef(Thing.FieldNames.Name, obj.Name);
             writer.WriteInt(Thing.FieldNames.Value, obj.Value);
         }
@@ -166,4 +196,35 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
     }
     */
+
+    internal class CountingReflectionSerializer : ReflectionSerializer
+    {
+        private static int _readCount;
+        private static int _writeCount;
+
+        public static void Reset()
+        {
+            _readCount = _writeCount = 0;
+        }
+
+        public static void CountRead() => Interlocked.Increment(ref _readCount);
+
+        public static void CountWrite() => Interlocked.Increment(ref _writeCount);
+
+        public static int ReadCount => _readCount;
+
+        public static int WriteCount => _writeCount;
+
+        public override object Read(ICompactReader reader)
+        {
+            CountRead();
+            return base.Read(reader);
+        }
+
+        public override void Write(ICompactWriter writer, object obj)
+        {
+            CountWrite();
+            base.Write(writer, obj);
+        }
+    }
 }

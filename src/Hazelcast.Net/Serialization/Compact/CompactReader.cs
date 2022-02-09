@@ -27,10 +27,11 @@ namespace Hazelcast.Serialization.Compact
         private readonly int _offsetPosition;
         private readonly Func<ObjectDataInput, int, int, int> _offsetReader;
 
-        public CompactReader(CompactSerializer serializer, ObjectDataInput input, Schema schema, bool withSchema)
-            : base(serializer, schema, input.Position, withSchema)
+        public CompactReader(CompactSerializer serializer, ObjectDataInput input, Schema schema, Type objectType)
+            : base(serializer, schema, input.Position)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
+            ObjectType = objectType ?? throw new ArgumentNullException(nameof(objectType));
 
             if (schema.HasReferenceFields)
             {
@@ -40,6 +41,8 @@ namespace Hazelcast.Serialization.Compact
 
             _offsetReader = GetOffsetReader(_dataLength);
         }
+
+        public Type ObjectType { get; }
 
         private static Func<ObjectDataInput, int, int, int> GetOffsetReader(int dataLength)
         {
@@ -359,10 +362,10 @@ namespace Hazelcast.Serialization.Compact
 
         public T? ReadObjectRef<T>(string name)
             where T: class
-            => ReadReference(name, FieldKind.ObjectRef, input => Serializer.Read<T>(input, WithSchema));
+            => ReadReference(name, FieldKind.ObjectRef, input => Serializer.Read<T>(input));
 
         public T?[]? ReadObjectRefs<T>(string name)
             where T : class
-            => ReadArrayOfReference(name, FieldKind.ArrayOfObjectRef, input => Serializer.Read<T>(input, WithSchema));
+            => ReadArrayOfReference(name, FieldKind.ArrayOfObjectRef, input => Serializer.Read<T>(input));
     }
 }

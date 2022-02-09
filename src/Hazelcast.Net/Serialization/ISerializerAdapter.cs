@@ -12,18 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Serialization
 {
-    internal interface ISerializerAdapter : IDisposable
+    /// <summary>
+    /// Wraps an <see cref="ISerializer"/> and exposes it as a non-generic <see cref="IStreamSerializer"/>.
+    /// </summary>
+    internal interface ISerializerAdapter : IStreamSerializer
     {
+        /// <summary>
+        /// Gets the wrapped serializer.
+        /// </summary>
         ISerializer Serializer { get; }
-
-        int TypeId { get; }
-
-        object Read(IObjectDataInput input);
-
-        void Write(IObjectDataOutput output, object obj);
     }
 }

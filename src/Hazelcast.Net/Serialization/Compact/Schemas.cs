@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
+#nullable enable
+
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,15 +30,15 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal class Schemas : ISchemas
     {
-        private class PublishedSchema
+        private class ManagedSchema
         {
             public Schema Schema { get; set; }
 
-            public bool Published { get; set; }
+            public bool IsClusterSchema { get; set; }
 
-            public PublishedSchema SetPublished()
+            public ManagedSchema SetIsClusterSchema()
             {
-                Published = true;
+                IsClusterSchema = true;
                 return this;
             }
         }
@@ -54,29 +55,21 @@ namespace Hazelcast.Serialization.Compact
         //
         // we use the schema id as a key, i.e. we assume that if two schemas have the same id, they are the same
         // see notes on Compact Serialization design documents about collision risks with ids
-        private readonly ConcurrentDictionary<long, PublishedSchema> _schemas = new ConcurrentDictionary<long, PublishedSchema>();
+        private readonly ConcurrentDictionary<long, ManagedSchema> _schemas = new ConcurrentDictionary<long, ManagedSchema>();
 
-        private readonly HashSet<long> _unpublished = new HashSet<long>(); // protected by _mutex
         private readonly object _mutex = new object();
+        private readonly HashSet<long> _unpublished = new HashSet<long>(); // protected by _mutex
         private volatile bool _hasUnpublished; // protected by _mutex
-        private volatile int _disposed;
 
         public Schemas(IClusterMessaging messaging)
         {
             _messaging = messaging;
         }
 
-        private void ThrowIfDisposed()
-        {
-            if (_disposed != 0) throw new ObjectDisposedException("Schemas");
-        }
-
         /// <inheritdoc />
-        public void Add(Schema schema, bool published = false)
+        public void Add(Schema schema, bool isClusterSchema)
         {
-            ThrowIfDisposed();
-
-            if (_schemas.TryAdd(schema.Id, new PublishedSchema { Schema = schema, Published = published }) && !published)
+            if (_schemas.TryAdd(schema.Id, new ManagedSchema { Schema = schema, IsClusterSchema = isClusterSchema }) && !isClusterSchema)
             {
                 lock (_mutex)
                 {
@@ -84,13 +77,41 @@ namespace Hazelcast.Serialization.Compact
                     _hasUnpublished = true;
                 }
             }
+            
+            // FIXME - dead code
+            //
+            // idea was to return a boolean that we could propagate up to ToData so that we would
+            // wait for the serialization service to be 'ready' only if really needed - but that
+            // boolean would then need to also pop in IObjectDataOutput.WriteObject and that changes
+            // the public APIs? so, not going to do it in this MPV. - to be discussed in TDD.
+            //
+            /*
+            var publishedSchema = new PublishedSchema { Schema = schema, Published = published };
+            var result = _schemas.GetOrAdd(schema.Id, publishedSchema);
+
+            // if the schema was already known,
+            // depends on the schema published state
+            if (!ReferenceEquals(result, publishedSchema)) return result.Published;
+
+            // if the schema is new but known to be published already,
+            // nothing to do
+            if (published) return true;
+
+            // if the schema is new and known to be unpublished yet,
+            // it must be published, we are not ok
+            lock (_mutex)
+            {
+                _unpublished.Add(schema.Id);
+                _hasUnpublished = true;
+            }
+
+            return false;
+            */
         }
 
         /// <inheritdoc />
         public bool TryGet(long id, out Schema schema)
         {
-            ThrowIfDisposed();
-
             if (_schemas.TryGetValue(id, out var publishedSchema))
             {
                 schema = publishedSchema.Schema;
@@ -104,8 +125,6 @@ namespace Hazelcast.Serialization.Compact
         /// <inheritdoc />
         public ValueTask<Schema> GetOrFetchAsync(long id)
         {
-            ThrowIfDisposed();
-
             return _schemas.TryGetValue(id, out var publishedSchema)
                 ? new ValueTask<Schema>(publishedSchema.Schema)
                 : FetchAsync(id);
@@ -114,8 +133,6 @@ namespace Hazelcast.Serialization.Compact
         // internal for tests
         internal async ValueTask<Schema> FetchAsync(long id)
         {
-            ThrowIfDisposed();
-
             var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
             var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
             var schema = ClientFetchSchemaCodec.DecodeResponse(response).Schema;
@@ -123,53 +140,30 @@ namespace Hazelcast.Serialization.Compact
 
             // if found, add or at least update the published state
             _schemas.AddOrUpdate(schema.Id,
-                addValueFactory: key => new PublishedSchema { Schema = schema, Published = true },
-                updateValueFactory: (key, value) => value.SetPublished());
+                addValueFactory: key => new ManagedSchema { Schema = schema, IsClusterSchema = true },
+                updateValueFactory: (key, value) => value.SetIsClusterSchema());
 
-            lock (_mutex) _unpublished.Remove(schema.Id);
+            lock (_mutex)
+            {
+                _unpublished.Remove(schema.Id);
+                _hasUnpublished = _unpublished.Count > 0;
+            }
 
             return schema;
         }
 
-        // FIXME - document
-        public ValueTask IsReadyAsync()
-        {
-            // don't bother about being disposed, go fast
-            // we are adding 1 lock + 1 boolean test to *every* message we send
-            lock (_mutex) return _hasUnpublished ? PublishWhileNeedsToBePublishedAsync() : default;
-        }
-
-        public async ValueTask PublishWhileNeedsToBePublishedAsync()
-        {
-            while (_disposed == 0)
-            {
-                // ConcurrentDictionary.Values is creating a snapshot which is safe to enumerate
-                var schemas = _schemas.Values.Where(x => !x.Published).ToList();
-                await PublishAsync(schemas).CfAwait();
-
-                lock (_mutex)
-                {
-                    foreach (var schema in schemas) _unpublished.Remove(schema.Schema.Id);
-                    if (_unpublished.Count == 0)
-                    {
-                        _hasUnpublished = false;
-                        return;
-                    }
-                }
-            }
-        }
+        
 
         /// <inheritdoc />
         public ValueTask PublishAsync()
         {
-            ThrowIfDisposed();
+            IList<ManagedSchema> GetSchemasToPublish() => _schemas.Values.Where(x => !x.IsClusterSchema).ToList();
 
-            // ConcurrentDictionary.Values is creating a snapshot which is safe to enumerate
-            var schemas = _schemas.Values.Where(x => !x.Published).ToList();
-            return schemas.Count == 0 ? default : PublishAsync(schemas);
+            // fast path is 1 lock + 1 boolean comparison
+            lock (_mutex) return _hasUnpublished ? PublishAsync(GetSchemasToPublish()) : default;
         }
 
-        private async ValueTask PublishAsync(List<PublishedSchema> schemas)
+        private async ValueTask PublishAsync(IList<ManagedSchema> schemas)
         {
             switch (schemas.Count)
             {
@@ -179,7 +173,7 @@ namespace Hazelcast.Serialization.Compact
                     var requestMessage = ClientSendSchemaCodec.EncodeRequest(schema.Schema);
                     var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
                     _ = ClientSendSchemaCodec.DecodeResponse(response);
-                    schema.Published = true;
+                    schema.IsClusterSchema = true;
                     break;
                 }
 
@@ -189,9 +183,15 @@ namespace Hazelcast.Serialization.Compact
                     var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
                     _ = ClientSendAllSchemasCodec.DecodeResponse(response);
 
-                    foreach (var schema in schemas) schema.Published = true;
+                    foreach (var schema in schemas) schema.IsClusterSchema = true;
                     break;
                 }
+            }
+
+            lock (_mutex)
+            {
+                foreach (var schema in schemas) _unpublished.Remove(schema.Schema.Id);
+                _hasUnpublished = _unpublished.Count > 0;
             }
         }
     }

@@ -72,33 +72,32 @@ namespace Hazelcast.Serialization
         /// Looks up a serializer for an object.
         /// </summary>
         /// <param name="obj">The object.</param>
-        /// <param name="withSchema">Whether to include compact schemas when serializing.</param>
         /// <returns>The serializer for the object.</returns>
         /// <exception cref="SerializationException">Cannot find a custom serializer for the <paramref name="obj"/>.</exception>
-        private ISerializerAdapter LookupSerializer(object obj, bool withSchema)
+        private ISerializerAdapter LookupSerializer(object obj)
         {
             if (obj == null) return _nullSerializerAdapter;
 
             var typeOfObj = obj.GetType();
 
-            var serializer = LookupKnownSerializer(typeOfObj, withSchema) ??
+            var serializer = LookupKnownSerializer(typeOfObj) ??
                              LookupConstantSerializer(typeOfObj) ??
                              LookupCustomSerializer(typeOfObj) ??
                              LookupSerializableSerializer(typeOfObj) ??
                              LookupGlobalSerializer(typeOfObj) ??
-                             LookupCompactSerializer(withSchema);
+                             LookupCompactSerializer(typeOfObj);
 
             if (serializer != null) return serializer;
 
             throw new SerializationException($"Could not find a serializer for type {typeOfObj}.");
         }
 
-        private ISerializerAdapter LookupKnownSerializer(Type type, bool withSchema)
+        private ISerializerAdapter LookupKnownSerializer(Type type)
         {
             // fast path for some known serializers
 
             if (_options.Compact.Enabled && _compactSerializer.HasRegistrationForType(type))
-                return withSchema ? _compactWithSchemaSerializerAdapter : _compactSerializerAdapter;
+                return _compactSerializerAdapter;
 
             if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
                 return _dataSerializerAdapter;
@@ -106,6 +105,7 @@ namespace Hazelcast.Serialization
             if (typeof(IPortable).IsAssignableFrom(type))
                 return _portableSerializerAdapter;
 
+            // FIXME - what about this?
             // TODO: support ICompactable?
 
             return null;
@@ -171,13 +171,16 @@ namespace Hazelcast.Serialization
             return serializer;
         }
 
-        private ISerializerAdapter LookupCompactSerializer(bool withSchema)
+        private ISerializerAdapter LookupCompactSerializer(Type type)
         {
-            // return the compact serializer if compact is enabled
-            // and, due to the withSchema thing, we cannot register it for the specified type
-
             if (!_options.Compact.Enabled) return null;
-            return withSchema ? _compactWithSchemaSerializerAdapter : _compactSerializerAdapter;
+
+            var serializer = _compactSerializerAdapter;
+
+            // register so we find it faster next time
+            if (serializer != null) _ = TryRegisterConstantSerializer(serializer, type);
+
+            return serializer;
         }
     }
 }

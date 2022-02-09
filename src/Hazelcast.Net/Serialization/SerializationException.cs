@@ -14,7 +14,9 @@
 
 using System;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using Hazelcast.Exceptions;
+using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
@@ -22,9 +24,8 @@ namespace Hazelcast.Serialization
     /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
     [Serializable]
-    public sealed class SerializationException : HazelcastException
+    public class SerializationException : HazelcastException
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SerializationException"/> class.
         /// </summary>
@@ -68,8 +69,37 @@ namespace Hazelcast.Serialization
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        private SerializationException(SerializationInfo info, StreamingContext context)
+        protected SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
+    }
+
+    [Serializable]
+    public sealed class UnknownCompactSchemaException : SerializationException
+    {
+        // FIXME - complete the class
+
+        public UnknownCompactSchemaException(long schemaId)
+            : base($"Unknown compact serialization schema with id {schemaId}.")
+        {
+            SchemaId = schemaId;
+        }
+
+        public UnknownCompactSchemaException(long schemaId, Task fetching)
+            : base($"Unknown compact serialization schema with id {schemaId}.")
+        {
+            SchemaId = schemaId;
+            Fetching = fetching;
+        }
+
+        /// <summary>
+        /// Gets the identifier of the unknown schema.
+        /// </summary>
+        public long SchemaId { get; set; }
+
+        /// <summary>
+        /// Gets the fetching task.
+        /// </summary>
+        public Task Fetching { get; }
     }
 }

@@ -25,9 +25,9 @@ namespace Hazelcast.Serialization
 
         public int TypeId => _serializer.TypeId;
 
-        public virtual ISerializer Serializer => _serializer;
+        public ISerializer Serializer => _serializer;
 
-        public virtual void Write(IObjectDataOutput output, object obj)
+        public void Write(IObjectDataOutput output, object obj)
         {
             var bytes = _serializer.Write((T) obj);
             output.WriteByteArray(bytes);

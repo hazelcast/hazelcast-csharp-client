@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(messaging.SentMessageCount, Is.EqualTo(1)); // tried
             Assert.That(fetched, Is.Null);
 
-            schemas.Add(schema);
+            schemas.Add(schema, false);
             await schemas.PublishAsync().ConfigureAwait(false);
             Assert.That(messaging.SentMessageCount, Is.EqualTo(2)); // published
 
@@ -109,7 +109,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(messaging.SentMessageCount, Is.Zero);
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False);
             Assert.That(messaging.SentMessageCount, Is.Zero); // TryGet is local-only
-            schemas.Add(schema);
+            schemas.Add(schema, false);
             Assert.That(schemas.TryGet(schema.Id, out var returned), Is.True);
             Assert.That(messaging.SentMessageCount, Is.Zero); // TryGet is local-only
             Assert.That(returned.Id, Is.EqualTo(schema.Id));
@@ -139,7 +139,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Null);
             Assert.That(await schemas.FetchAsync(schema.Id), Is.Null);
 
-            schemas.Add(schema);
+            schemas.Add(schema, false);
 
             Assert.That(schemas.TryGet(schema.Id, out _), Is.True);
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Not.Null);
@@ -156,8 +156,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         [TestCase("meh", true)]
         [TestCase("malue", true)]
         [TestCase("mvalue", true)]
-        [TestCase("valuem", false)] // FIXME - should succeed!
-        [TestCase("value", false)] // FIXME - should succeed!
+        [TestCase("valuem", true)]
+        [TestCase("value", true)]
         public async Task ReservedKeywordCanBreakSchemas(string fieldName, bool succeeds)
         {
             var schemas = (Schemas)((HazelcastClient)Client).SerializationService.CompactSerializer.Schemas;

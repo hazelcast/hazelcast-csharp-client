@@ -14,22 +14,34 @@
 
 namespace Hazelcast.Serialization
 {
-    /// <summary>A base class for custom serialization.</summary>
-    /// <remarks>
-    /// A base class for custom serialization. User can register custom serializer.
-    /// </remarks>
+    /// <summary>
+    /// Defines a custom serializer that operates over <see cref="IObjectDataInput"/> and <see cref="IObjectDataOutput"/>.
+    /// </summary>
+    /// <typeparam name="T">The type of the serialized objects.</typeparam>
     public interface IStreamSerializer<T> : ISerializer
     {
-        /// <summary>Reads object from objectDataInputStream</summary>
-        /// <param name="input">ObjectDataInput stream that object will read from</param>
-        /// <returns>read object</returns>
-        /// <exception cref="System.IO.IOException">in case of failure to read</exception>
+        /// <summary>
+        /// Reads an object.
+        /// </summary>
+        /// <param name="input">Input data.</param>
+        /// <returns>The object.</returns>
         T Read(IObjectDataInput input);
 
-        /// <summary>This method writes object to ObjectDataOutput</summary>
-        /// <param name="output">ObjectDataOutput stream that object will be written to</param>
-        /// <param name="obj">that will be written to out</param>
-        /// <exception cref="System.IO.IOException">in case of failure to write</exception>
+        /// <summary>
+        /// Writes an object.
+        /// </summary>
+        /// <param name="output">Output data.</param>
+        /// <param name="obj">The object.</param>
+        /// <returns><c>true</c> if, after the object has been serialized, the serialization service
+        /// is ready and serialized data can be immediately sent to the cluster; <c>false</c> if the
+        /// serialization service requires to complete some work before data can be sent to the
+        /// cluster (i.e. <see cref="SerializationService.Meh"/> FIXME must be invoked).</returns>
         void Write(IObjectDataOutput output, T obj);
     }
+
+    /// <summary>
+    /// Defines a non-generic custom serializer that operates over <see cref="IObjectDataInput"/> and <see cref="IObjectDataOutput"/>.
+    /// </summary>
+    internal interface IStreamSerializer : IStreamSerializer<object>
+    { }
 }

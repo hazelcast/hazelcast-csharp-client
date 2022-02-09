@@ -12,26 +12,26 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 
 namespace Hazelcast.Serialization.Compact
 {
-    internal sealed class CompactSerializableRegistration
+    /// <summary>
+    /// Specifies that a compact serializer should be generated at compile time for the marked type.
+    /// </summary>
+    /// <remarks>
+    /// <para>This is identical to using the assembly-level <see cref="CompactSerializableTypeAttribute"/>
+    /// for the marked type.</para>
+    /// </remarks>
+    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    public sealed class CompactSerializableAttribute : Attribute
     {
-        public CompactSerializableRegistration(string typeName, Type type, CompactSerializerWrapper serializer, bool published)
-        {
-            TypeName = typeName;
-            Type = type;
-            Serializer = serializer;
-            PublishedSchema = published;
-        }
-
-        public string TypeName { get; }
-
-        public Type Type { get; }
-
-        public CompactSerializerWrapper Serializer { get; }
-
-        public bool PublishedSchema { get; }
+        /// <summary>
+        /// Specifies that a compact serializer should be generated at compile time for the marked type.
+        /// </summary>
+        public CompactSerializableAttribute()
+        { }
     }
 }

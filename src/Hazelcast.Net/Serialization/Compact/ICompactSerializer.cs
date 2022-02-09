@@ -12,12 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 namespace Hazelcast.Serialization.Compact
 {
+    /// <summary>
+    /// Defines a compact serializer.
+    /// </summary>
+    /// <typeparam name="T">The serialized type.</typeparam>
     public interface ICompactSerializer<T>
     {
+        /// <summary>
+        /// Reads a value.
+        /// </summary>
+        /// <param name="reader">The reader.</param>
+        /// <returns>The value.</returns>
         T Read(ICompactReader reader);
 
-        void Write(ICompactWriter writer, T obj);
+        /// <summary>
+        /// Writes a value.
+        /// </summary>
+        /// <param name="writer">The writer.</param>
+        /// <param name="value">The value.</param>
+        void Write(ICompactWriter writer, T value);
     }
 }
