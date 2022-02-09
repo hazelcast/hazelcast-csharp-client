@@ -85,7 +85,11 @@ jobs:
         shell: pwsh
         run: |
           $a = @( "test", "-noRestore", "-localRestore", "-cover" )
-          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
+          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
+            ./hz.ps1 -noRestore -localRestore generate-certs
+            ./hz.ps1 -noRestore -localRestore install-root-ca
+            $a += "-enterprise"
+          }
           ./hz.ps1 @a
 
       # test results & coverage: we cannot report here as this workflow doesn't have
