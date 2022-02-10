@@ -48,6 +48,8 @@ namespace Hazelcast.Examples.Sql
                 var jsonValue = row.GetValue<HazelcastJsonValue>();
                 var student = JsonSerializer.Deserialize<Student>(jsonValue.ToString());
                 logger.LogInformation($"Id:{ student.Id},   Name:{student.Name}");
+                // Output:
+                // Id:2,   Name:Bobay Womack
             }
         }
 
