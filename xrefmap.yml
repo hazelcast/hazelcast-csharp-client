@@ -7275,6 +7275,15 @@ references:
   commentId: Overload:Hazelcast.HazelcastOptionsBuilder.WithAltKey
   fullName: Hazelcast.HazelcastOptionsBuilder.WithAltKey
   nameWithType: HazelcastOptionsBuilder.WithAltKey
+- uid: Hazelcast.HazelcastOptionsBuilder.WithDefault(System.Action{Hazelcast.HazelcastOptions})
+  name: WithDefault(Action<HazelcastOptions>)
+  href: 5.0.0/api/Hazelcast.HazelcastOptionsBuilder.WithDefault.html#Hazelcast_HazelcastOptionsBuilder_WithDefault_System_Action_Hazelcast_HazelcastOptions__
+  commentId: M:Hazelcast.HazelcastOptionsBuilder.WithDefault(System.Action{Hazelcast.HazelcastOptions})
+  name.vb: WithDefault(Action(Of HazelcastOptions))
+  fullName: Hazelcast.HazelcastOptionsBuilder.WithDefault(System.Action<Hazelcast.HazelcastOptions>)
+  fullName.vb: Hazelcast.HazelcastOptionsBuilder.WithDefault(System.Action(Of Hazelcast.HazelcastOptions))
+  nameWithType: HazelcastOptionsBuilder.WithDefault(Action<HazelcastOptions>)
+  nameWithType.vb: HazelcastOptionsBuilder.WithDefault(Action(Of HazelcastOptions))
 - uid: Hazelcast.HazelcastOptionsBuilder.WithDefault(System.String,System.String)
   name: WithDefault(String, String)
   href: 5.0.0/api/Hazelcast.HazelcastOptionsBuilder.WithDefault.html#Hazelcast_HazelcastOptionsBuilder_WithDefault_System_String_System_String_
@@ -9586,6 +9595,18 @@ references:
   commentId: Overload:Hazelcast.Models.MemberInfo.GetHashCode
   fullName: Hazelcast.Models.MemberInfo.GetHashCode
   nameWithType: MemberInfo.GetHashCode
+- uid: Hazelcast.Models.MemberInfo.HasPublicAddress
+  name: HasPublicAddress
+  href: 5.0.0/api/Hazelcast.Models.MemberInfo.HasPublicAddress.html#Hazelcast_Models_MemberInfo_HasPublicAddress
+  commentId: P:Hazelcast.Models.MemberInfo.HasPublicAddress
+  fullName: Hazelcast.Models.MemberInfo.HasPublicAddress
+  nameWithType: MemberInfo.HasPublicAddress
+- uid: Hazelcast.Models.MemberInfo.HasPublicAddress*
+  name: HasPublicAddress
+  href: 5.0.0/api/Hazelcast.Models.MemberInfo.HasPublicAddress.html
+  commentId: Overload:Hazelcast.Models.MemberInfo.HasPublicAddress
+  fullName: Hazelcast.Models.MemberInfo.HasPublicAddress
+  nameWithType: MemberInfo.HasPublicAddress
 - uid: Hazelcast.Models.MemberInfo.Id
   name: Id
   href: 5.0.0/api/Hazelcast.Models.MemberInfo.Id.html#Hazelcast_Models_MemberInfo_Id
@@ -15299,6 +15320,18 @@ references:
   commentId: Overload:Hazelcast.Sql.HazelcastSqlException.MemberId
   fullName: Hazelcast.Sql.HazelcastSqlException.MemberId
   nameWithType: HazelcastSqlException.MemberId
+- uid: Hazelcast.Sql.HazelcastSqlException.Suggestion
+  name: Suggestion
+  href: 5.0.0/api/Hazelcast.Sql.HazelcastSqlException.Suggestion.html#Hazelcast_Sql_HazelcastSqlException_Suggestion
+  commentId: P:Hazelcast.Sql.HazelcastSqlException.Suggestion
+  fullName: Hazelcast.Sql.HazelcastSqlException.Suggestion
+  nameWithType: HazelcastSqlException.Suggestion
+- uid: Hazelcast.Sql.HazelcastSqlException.Suggestion*
+  name: Suggestion
+  href: 5.0.0/api/Hazelcast.Sql.HazelcastSqlException.Suggestion.html
+  commentId: Overload:Hazelcast.Sql.HazelcastSqlException.Suggestion
+  fullName: Hazelcast.Sql.HazelcastSqlException.Suggestion
+  nameWithType: HazelcastSqlException.Suggestion
 - uid: Hazelcast.Sql.ISqlQueryResult
   name: ISqlQueryResult
   href: 5.0.0/api/Hazelcast.Sql.ISqlQueryResult.html

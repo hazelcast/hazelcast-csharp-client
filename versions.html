@@ -76,23 +76,78 @@
 <h1 id="versions">Versions</h1>
 
 <p>Hazelcast .NET brings the full power of the <a href="https://hazelcast.com">Hazelcast</a> high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The <a href="https://hazelcast.com/clients/dotnet/">Hazelcast .NET Client</a> allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.</p>
-<p>This page indexes documentation for all versions.</p>
-<h2 id="current-version">Current version</h2>
+<h2 id="net-support">.NET support</h2>
+<p>The following table defines the supported .NET versions for the various Hazelcast .NET Client versions.<br>Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET 5.0+ run on Windows, Linux and MacOS.</p>
+<table>
+<thead>
+<tr>
+<th>Version</th>
+<th style="text-align:center">.NET Framework 4.5-4.6.1</th>
+<th style="text-align:center">.NET Framework 4.6.2-4.8</th>
+<th style="text-align:center">.NET Core 2.1</th>
+<th style="text-align:center">.NET Core 3.1 (LTS)</th>
+<th style="text-align:center">.NET 5.0</th>
+<th style="text-align:center">.NET 6.0 (LTS)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>5.1</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center"><strong>Yes</strong></td>
+</tr>
+<tr>
+<td>5.0</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center"><strong>No</strong> (note)</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center"><strong>Yes</strong></td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>4.x</td>
+<td style="text-align:center"><strong>No</strong> (note)</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">No</td>
+</tr>
+<tr>
+<td>3.x</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">Yes</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">No</td>
+<td style="text-align:center">No</td>
+</tr>
+</tbody>
+</table>
+<div class="NOTE"><h5>Note</h5><p>As per Microsoft&#39;s <strong>.NET Framework</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework">Support Policy</a>, versions 4.5.2, 4.6, and 4.6.1 will reach end of support on April 26, 2022. We do <em>not</em> support these versions starting with Hazelcast 4. We recommend that all Hazelcast 3 users migrate to at least .NET Framework 4.6.2, and ideally to .NET Framework 4.8.<br>As per Microsoft&#39;s <strong>.NET and .NET Core</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-and-net-core">Support Policy</a> and <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">LifeCycle</a>, versions 2.1 and 2.2 are not supported anymore. Version 3.1 is supported until Dec 3, 2022 and version 5.0 until May 8, 2022. We recommend that all users use versions of .NET supported by Microsoft.</p>
+</div>
+<h2 id="hazelcast-net-client-versions">Hazelcast .NET Client versions</h2>
+<h3 id="current">Current</h3>
 <ul>
-<li>5.0.0 <a href="xref:doc-index-5-0-0">general documentation</a> and <a href="xref:api-index-5-0-0">API reference</a></li>
+<li>5.0.0 <a class="xref" href="5.0.0/doc/index.html">general documentation</a> and <a class="xref" href="5.0.0/api/index.html">API reference</a></li>
 </ul>
-<h2 id="preview-version">Preview version</h2>
+<h3 id="preview">Preview</h3>
 <ul>
 <li>n/a</li>
 </ul>
-<h2 id="previous-versions">Previous versions</h2>
+<h3 id="previous">Previous</h3>
 <ul>
 <li>4.1.0 <a class="xref" href="4.1.0/doc/index.html">general documentation</a> and <a class="xref" href="4.1.0/api/index.html">API reference</a></li>
 <li>4.0.2 <a class="xref" href="4.0.2/doc/index.html">general documentation</a> and <a class="xref" href="4.0.2/api/index.html">API reference</a></li>
 <li>4.0.1 <a class="xref" href="4.0.1/doc/index.html">general documentation</a> and <a class="xref" href="4.0.1/api/index.html">API reference</a></li>
 <li>4.0.0 <a class="xref" href="4.0.0/doc/index.html">general documentation</a> and <a class="xref" href="4.0.0/api/index.html">API reference</a></li>
-<li>3.12.3 <a class="xref" href="3.12.3/index.html">API reference</a></li>
-<li>3.12.2 <a class="xref" href="3.12.2/index.html">API reference</a></li>
+<li>3.12.3 <a class="xref" href="https://github.com/hazelcast/hazelcast-csharp-client/tree/v3.12.3#readme">README</a> and <a class="xref" href="3.12.3/index.html">API reference</a></li>
+<li>3.12.2 <a class="xref" href="https://github.com/hazelcast/hazelcast-csharp-client/tree/v3.12.2#readme">README</a> and <a class="xref" href="3.12.2/index.html">API reference</a></li>
 </ul>
 </article>
           </div>
@@ -115,7 +170,7 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2021 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
             
           </div>
         </div>
