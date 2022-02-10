@@ -2004,8 +2004,15 @@ function hz-test {
             $skipped = $run.skipped
             $inconclusive = $run.inconclusive
 
+            $prefix = $fwk.PadRight(16)
             Write-Output `
-                "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+                "  $prefix :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
+            $prefix = "".PadRight(16)
+            get-content $testResult | foreach-object {
+                if ($_ -match '\[\[\[DetectedServerVersion:(?<version>[^\]]*)\]\]\]') {
+                    Write-Output "  $prefix    server version = $($Matches.version)"
+                }
+            }
 
             if ($failed -gt 0) {
 

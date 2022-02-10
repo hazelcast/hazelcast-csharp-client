@@ -15,6 +15,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using NuGet.Versioning;
 using NUnit.Framework;
@@ -24,24 +25,52 @@ namespace Hazelcast.Tests.Testing
     [TestFixture]
     public class ServerVersionTests
     {
+        // in ServerVersion order is:
+        // 1. use the environment variable, if set - it overrides everything
+        // 2. use the detector, which will return non-null if it *can* detect the version
+        // 3. use the supplied default version
+        // 4. fallback to the hard-coded default version (but, really?)
+
         [Test]
-        public void VersionSources()
+        public void DetectVersion()
         {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
-            Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
-            Assert.AreEqual(TestAssemblyServerVersion, ServerVersion.GetVersion(TestAssemblyServerVersion));
+            var version = ServerVersionDetector.DetectedServerVersion;
+            var versionString = "NULL";
+            if (version != null) versionString = version.ToString();
 
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "0.6");
-            Assert.AreEqual(NuGetVersion.Parse("0.6"), ServerVersion.GetVersion());
-            Assert.AreEqual(NuGetVersion.Parse("0.6"), ServerVersion.GetVersion(TestAssemblyServerVersion));
-
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
-            Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
-            Assert.AreEqual(TestAssemblyServerVersion, ServerVersion.GetVersion(TestAssemblyServerVersion));
+            // this should be easy to grep in the test output
+            Console.WriteLine($"[[[DetectedServerVersion:{versionString}]]]");
         }
 
-        // gets the version indicated by the [assembly:ServerVersion()] in AssemblyInfo.cs
-        private NuGetVersion TestAssemblyServerVersion
-            => GetType().Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
+        [Test]
+        public void EnvironmentVariable()
+        {
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "6.6-TESTING");
+            Assert.AreEqual(NuGetVersion.Parse("6.6-TESTING"), ServerVersion.GetVersion());
+        }
+
+        [Test]
+        public void Detector()
+        {
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
+            using var forced = ServerVersionDetector.ForceVersion("7.7-TESTING");
+            Assert.AreEqual(NuGetVersion.Parse("7.7-TESTING"), ServerVersion.GetVersion());
+        }
+
+        [Test]
+        public void SuppliedDefault()
+        {
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
+            using var forced = ServerVersionDetector.ForceNoVersion();
+            Assert.AreEqual(NuGetVersion.Parse("8.8-TESTING"), ServerVersion.GetVersion("8.8-TESTING"));
+        }
+
+        [Test]
+        public void HardCodedDefault()
+        {
+            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
+            using var forced = ServerVersionDetector.ForceNoVersion();
+            Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
+        }
     }
 }

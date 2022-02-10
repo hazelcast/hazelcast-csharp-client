@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -23,15 +24,35 @@ namespace Hazelcast.Testing
     internal sealed class ServerVersionDetector : RemoteTestBase
     {
         private static NuGetVersion _version;
+        private static bool _forced;
 
         public static NuGetVersion DetectedServerVersion
         {
             get
             {
-                if (_version != null) return _version;
+                if (_version != null || _forced) return _version;
                 new ServerVersionDetector().DetectVersion();
                 return _version;
             }
+        }
+
+        public static IDisposable ForceNoVersion()
+            => ForceVersion((NuGetVersion)null);
+
+        public static IDisposable ForceVersion(string version)
+            => ForceVersion(version == null ? null : NuGetVersion.Parse(version));
+
+        public static IDisposable ForceVersion(NuGetVersion version)
+        {
+            var preserve = _version;
+            _version = version;
+            _forced = true;
+
+            return new DisposeAction(() =>
+            {
+                _version = preserve;
+                _forced = false;
+            });
         }
 
         // yes, that is truly ugly, async-wise, but we don't have a choice
@@ -44,7 +65,7 @@ namespace Hazelcast.Testing
 
         public static async Task<NuGetVersion> DetectServerVersion(IRemoteControllerClient client)
         {
-            if (_version != null) return _version;
+            if (_version != null || _forced) return _version;
 
             const string script = "result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;";
             var response = await client.ExecuteOnControllerAsync(null, script, Lang.JAVASCRIPT).CfAwait();
