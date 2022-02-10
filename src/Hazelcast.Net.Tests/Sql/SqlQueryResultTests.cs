@@ -33,6 +33,7 @@ using Hazelcast.Testing.TestData;
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
+    [ServerCondition("[4.1,)")] // only on server 4.1 and above
     public class SqlQueryResultTests : SqlTestBase
     {
         // Needed to create long-running query
@@ -179,7 +180,7 @@ namespace Hazelcast.Tests.Sql
         }
 
         [Test]
-        [ServerConditionAttribute("5.0")]
+        [ServerConditionAttribute("[5.0,)")] // only on 5.0 and above
         public async Task SqlErrorHasSuggestion()
         {
             var dummyMapName = "testingMap";

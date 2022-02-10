@@ -39,6 +39,8 @@ namespace Hazelcast.Testing
             // and there is no point trying again and again - faster to stop here
             Assume.That(_canConnectToRemoveController, Is.True, () => "Cannot connect to the Remote Controller (is it running?).");
 
+            // note: it is because we use ASSUME and not ASSERT that the not-attempted tests show as inconclusive
+
             try
             {
                 var rcHostAddress = NetworkAddress.GetIPAddressByName("localhost");
@@ -50,7 +52,9 @@ namespace Hazelcast.Testing
                     await transport.OpenAsync(CancellationToken.None).CfAwait();
                 }
                 var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
-                return RemoteControllerClient.Create(protocol);
+                var client = RemoteControllerClient.Create(protocol);
+                await ServerVersionDetector.DetectServerVersion(client).CfAwait(); // static, will detect only once
+                return client;
             }
             catch (Exception e)
             {

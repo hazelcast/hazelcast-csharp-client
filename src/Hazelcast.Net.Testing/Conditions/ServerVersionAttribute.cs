@@ -20,19 +20,19 @@ using NUnit.Framework.Internal;
 namespace Hazelcast.Testing.Conditions
 {
     /// <summary>
-    /// Marks a class or a method as overriding the server version.
+    /// Specifies that a class or a method overrides the server version.
     /// </summary>
     /// <remarks>
-    /// <para>The specified value overrides the default value, which would come
-    /// from the environment, or be the default value.</para>
+    /// <para>This attributes takes precedence over all other methods of defining the
+    /// server version.</para>
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
     public sealed class ServerVersionAttribute :  Attribute, IApplyToTest
     {
         public const string PropertyName = ServerVersion.EnvironmentVariableName;
 
         /// <summary>
-        /// Marks a class or a method as overriding the server version.
+        /// Specifies that a class or a method overrides the server version.
         /// </summary>
         /// <param name="version">The server version.</param>
         public ServerVersionAttribute(string version)

@@ -70,19 +70,20 @@ namespace Hazelcast.Testing.Conditions
 
             NuGetVersion serverVersion = null;
 
+            // check if server version is forced by an attribute on the test or the fixture
             if (methodInfo != null)
                 serverVersion = methodInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
-            if (serverVersion == null && fixtureInfo != null)
+            else if (fixtureInfo != null)
                 serverVersion = fixtureInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
-            if (serverVersion == null)
-            {
-                var assemblyServerVersion = fixtureInfo?.Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
-                serverVersion = ServerVersion.GetVersion(assemblyServerVersion);
-            }
 
+            // otherwise, use the default mechanism
+            serverVersion ??= ServerVersion.GetVersion();
+
+            // test the range
             if (_range.Satisfies(serverVersion))
                 return;
 
+            // ignore the test if out-of-range
             test.RunState = RunState.Ignored;
             var reason = $"Server version {serverVersion} outside range {_range}.";
             test.Properties.Set(PropertyNames.SkipReason, reason);

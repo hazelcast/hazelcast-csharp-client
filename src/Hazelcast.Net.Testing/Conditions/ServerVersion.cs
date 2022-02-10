@@ -22,6 +22,13 @@ namespace Hazelcast.Testing.Conditions
     /// </summary>
     public static class ServerVersion
     {
+        // defines the default server version used by tests.
+        // - this is overriden by the HAZELCAST_SERVER_VERSION environment variable
+        // - this can be overriden on each test fixture and each test method,
+        //   with a [ServerVersion(...)] attribute.
+        // so, this is always ignored when running tests with hz.ps1 which sets the
+        // environment variable - it only applies to, for instance, VS or Rider
+
         // ReSharper disable once InconsistentNaming
         private const string DefaultVersionString = "5.1";
 
@@ -43,9 +50,12 @@ namespace Hazelcast.Testing.Conditions
         public static NuGetVersion GetVersion()
         {
             var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
-            return NuGetVersion.TryParse(env, out var serverVersion)
-                ? serverVersion
-                : DefaultVersion;
+            if (NuGetVersion.TryParse(env, out var envVersion)) return envVersion;
+
+            var detectedVersion = ServerVersionDetector.DetectedServerVersion;
+            if (detectedVersion != null) return detectedVersion;
+
+            return DefaultVersion;
         }
 
         /// <summary>
@@ -56,9 +66,12 @@ namespace Hazelcast.Testing.Conditions
         public static NuGetVersion GetVersion(NuGetVersion defaultVersion)
         {
             var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
-            return NuGetVersion.TryParse(env, out var serverVersion)
-                ? serverVersion
-                : defaultVersion ?? DefaultVersion;
+            if (NuGetVersion.TryParse(env, out var envVersion)) return envVersion;
+
+            var detectedVersion = ServerVersionDetector.DetectedServerVersion;
+            if (detectedVersion != null) return detectedVersion;
+
+            return defaultVersion ?? DefaultVersion;
         }
 
         /// <summary>
@@ -69,11 +82,14 @@ namespace Hazelcast.Testing.Conditions
         public static NuGetVersion GetVersion(string defaultVersion)
         {
             var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
-            return NuGetVersion.TryParse(env, out var serverVersion)
-                ? serverVersion
-                : defaultVersion != null
-                    ? NuGetVersion.Parse(defaultVersion)
-                    : DefaultVersion;
+            if (NuGetVersion.TryParse(env, out var envVersion)) return envVersion;
+
+            var detectedVersion = ServerVersionDetector.DetectedServerVersion;
+            if (detectedVersion != null) return detectedVersion;
+
+            return defaultVersion != null
+                ? NuGetVersion.Parse(defaultVersion)
+                : DefaultVersion;
         }
     }
 }
