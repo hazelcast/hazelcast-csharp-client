@@ -205,9 +205,9 @@ namespace Hazelcast.Tests.Sql
 
             var map = await CreateEmployeeTestObjectMapAsync(expectedObjects, useSql);
 
-            char randomTypeFromData = expectedObjects.First().Value.Type;
+            char employeeTypeToQuery = expectedObjects.First().Value.Type;
 
-            var queryResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE JSON_VALUE(this,'$.Type')=?", randomTypeFromData);
+            var queryResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE JSON_VALUE(this,'$.Type')=?", employeeTypeToQuery);
 
             bool queryReturnedResult = false;
             int actualRowCount = 0;
@@ -229,7 +229,7 @@ namespace Hazelcast.Tests.Sql
                 queryReturnedResult = true;
             }
 
-            int expectedRowCount = expectedObjects.Where(p => p.Value.Type.Equals(randomTypeFromData)).Count();
+            int expectedRowCount = expectedObjects.Where(p => p.Value.Type.Equals(employeeTypeToQuery)).Count();
 
             Assert.AreEqual(expectedRowCount, actualRowCount);
             // query result is async, getting count could be pricey. So, be sure there was result.
