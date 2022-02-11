@@ -422,6 +422,7 @@ function determine-target-frameworks {
 # we always need to build *all* frameworks because e.g. some projects need to be built
 # for netstandard in order to run on .NET Core - so one single framework cannot do it
 $frameworks = determine-target-frameworks
+$testFrameworks = $frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
     $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
     foreach ($fwk in $fwks) {
@@ -429,7 +430,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
             Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
         }
     }
-    $frameworks = $fwks
+    $testFrameworks = $fwks
 }
 
 # ensure we have the enterprise key for testing
@@ -879,8 +880,8 @@ function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framewo
         }
         else {
             # have nothing usable, is an issue only if required
-            $ok = $frameworks.Contains($framework)
-            if (-not $ok) { 
+            $missing = $frameworks.Contains($framework)
+            if ($missing) { 
                 Write-Output "  ERR: this script requires the Microsoft .NET $name SDK." 
                 $result.validSdks = $false
                 $result.validSdk = $false
@@ -1873,7 +1874,7 @@ function hz-test {
 
         Write-Output ""
         Write-Output "Run tests..."
-        foreach ($framework in $frameworks) {
+        foreach ($framework in $testFrameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
             run-tests $framework
