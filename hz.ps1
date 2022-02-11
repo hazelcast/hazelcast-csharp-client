@@ -1989,6 +1989,19 @@ function hz-test {
     Write-Output ""
     Write-Output "Summary:"
 
+    $v = ""
+    foreach ($testResult in $script:testResults) {
+        if ($v -eq "" -and (test-path $testResult)) {
+            get-content $testResult | foreach-object {
+                if ($_ -match '\[\[\[DetectedServerVersion:(?<version>[^\]]*)\]\]\]') {
+                    $v = $Matches.version
+                }
+            }
+        }
+    }
+
+    Write-Output "  $("server version".PadRight(16)) :  $v"
+
     foreach ($testResult in $script:testResults) {
 
         $fwk = [System.IO.Path]::GetFileNameWithoutExtension($testResult).TrimStart("result-")
@@ -2004,15 +2017,8 @@ function hz-test {
             $skipped = $run.skipped
             $inconclusive = $run.inconclusive
 
-            $prefix = $fwk.PadRight(16)
             Write-Output `
-                "  $prefix :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
-            $prefix = "".PadRight(16)
-            get-content $testResult | foreach-object {
-                if ($_ -match '\[\[\[DetectedServerVersion:(?<version>[^\]]*)\]\]\]') {
-                    Write-Output "  $prefix    server version = $($Matches.version)"
-                }
-            }
+                "  $($fwk.PadRight(16)) :  total $total = $passed passed, $failed failed, $skipped skipped, $inconclusive inconclusive."
 
             if ($failed -gt 0) {
 
