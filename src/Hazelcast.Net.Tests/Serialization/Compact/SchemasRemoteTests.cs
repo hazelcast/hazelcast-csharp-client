@@ -165,7 +165,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema = SchemaBuilder
                 .For($"thing{_ids.GetNext()}")
                 .WithField("name", FieldKind.StringRef)
-                .WithField(fieldName, FieldKind.SignedInteger32)
+                .WithField(fieldName, FieldKind.Int32)
                 .Build();
 
             await AssertCanPublishAndFetchSchema(schemas, schema, succeeds);

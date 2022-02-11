@@ -23,12 +23,13 @@ namespace Hazelcast.Serialization
     /// <para>In order to stay close to C# nullable names, arrays and everything named "Ref"
     /// is nullable, whereas everything else is non-nullable. Therefore, for instance,
     /// <see cref="StringRef"/> indicates a reference (which may be null) to a string.</para>
+    /// <para>This enumeration describe types that can be used by portable and/and compact
+    /// serialization. Note that one serialization solution may not support all types.</para>
     /// </remarks>
     public enum FieldKind
     {
 #pragma warning disable CA1720 // Identifier contains type name
 
-        // BEWARE! be sure to add any new value to the FieldKindEnum.Parse method!
 
         // ---- non-nullable types ----
 
@@ -36,28 +37,32 @@ namespace Hazelcast.Serialization
         Boolean = 0,
 
         /// <summary>The i8 primitive type.</summary>
-        SignedInteger8 = 2,
+        Int8 = 2,
+
+        /// <summary>The char primitive type.</summary>
+        /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
+        Char = 4,
 
         /// <summary>The i16 primitive type.</summary>
-        SignedInteger16 = 6,
+        Int16 = 6,
 
         /// <summary>The i32 primitive type.</summary>
-        SignedInteger32 = 8,
+        Int32 = 8,
 
         /// <summary>The i64 primitive type.</summary>
-        SignedInteger64 = 10,
+        Int64 = 10,
 
-        /// <summary>The float primitive type.</summary>
+        /// <summary>The f32 primitive type.</summary>
         /// <remarks>
-        /// <para>The float primitive type is a 32-bits IEEE 754 floating-point number.</para>
+        /// <para>The f32 primitive type is a 32-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        Float = 12,
+        Float32 = 12,
 
-        /// <summary>The double primitive type.</summary>
+        /// <summary>The f64 primitive type.</summary>
         /// <remarks>
-        /// <para>The double primitive type is a 64-bits IEEE 754 floating-point number.</para>
+        /// <para>The f64 primitive type is a 64-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        Double = 14,
+        Float64 = 14,
 
 
         // ---- arrays of non-nullable types ----
@@ -66,22 +71,26 @@ namespace Hazelcast.Serialization
         ArrayOfBoolean = 1,
 
         /// <summary>The array-of-i8 primitive type.</summary>
-        ArrayOfSignedInteger8 = 3,
+        ArrayOfInt8 = 3,
+
+        /// <summary>The array-of-char primitive type.</summary>
+        /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
+        ArrayOfChar = 5,
 
         /// <summary>The array-of-i16 primitive type.</summary>
-        ArrayOfSignedInteger16 = 7,
+        ArrayOfInt16 = 7,
 
         /// <summary>The array-of-i32 primitive type.</summary>
-        ArrayOfSignedInteger32 = 9,
+        ArrayOfInt32 = 9,
 
         /// <summary>The array-of-i64 primitive type.</summary>
-        ArrayOfSignedInteger64 = 11,
+        ArrayOfInt64 = 11,
 
-        /// <summary>The array-of-float primitive type.</summary>
-        ArrayOfFloat = 13,
+        /// <summary>The array-of-f32 primitive type.</summary>
+        ArrayOfFloat32 = 13,
 
-        /// <summary>The array-of-double primitive type.</summary>
-        ArrayOfDouble = 15,
+        /// <summary>The array-of-f64 primitive type.</summary>
+        ArrayOfFloat64 = 15,
 
 
         // ---- nullable types ----
@@ -90,28 +99,28 @@ namespace Hazelcast.Serialization
         BooleanRef = 32,
 
         /// <summary>The nullable-i8 primitive type.</summary>
-        SignedInteger8Ref = 34,
+        Int8Ref = 34,
 
         /// <summary>The nullable-i16 primitive type.</summary>
-        SignedInteger16Ref = 36,
+        Int16Ref = 36,
 
         /// <summary>The nullable-i32 primitive type.</summary>
-        SignedInteger32Ref = 38,
+        Int32Ref = 38,
 
         /// <summary>The nullable-i64 primitive type.</summary>
-        SignedInteger64Ref = 40,
+        Int64Ref = 40,
 
-        /// <summary>The nullable-float primitive type.</summary>
+        /// <summary>The nullable-f32 primitive type.</summary>
         /// <remarks>
-        /// <para>The float primitive type is a 32-bits IEEE 754 floating-point number.</para>
+        /// <para>The f32 primitive type is a 32-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        FloatRef = 42,
+        Float32Ref = 42,
 
-        /// <summary>The nullable-double primitive type.</summary>
+        /// <summary>The nullable-f64 primitive type.</summary>
         /// <remarks>
-        /// <para>The double primitive type is a 64-bits IEEE 754 floating-point number.</para>
+        /// <para>The f64 primitive type is a 64-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        DoubleRef = 44,
+        Float64Ref = 44,
 
         /// <summary>The nullable-decimal primitive type.</summary>
         /// <remarks>
@@ -154,12 +163,21 @@ namespace Hazelcast.Serialization
         /// </remarks>
         TimeStampWithTimeZoneRef = 26,
 
-        /// <summary>The nullable-object primitive type.</summary>
+        /// <summary>The nullable compact object primitive type.</summary>
         /// <remarks>
-        /// <para>The object primitive type represents any object which is, in turn, composed of fields
+        /// <para>The compact object primitive type represents any object which is, in turn, composed of fields
         /// with primitive type values.</para>
+        /// <para>This type is not supported by portable serialization.</para>
         /// </remarks>
-        ObjectRef = 28,
+        CompactRef = 28,
+
+        /// <summary>The nullable portable object primitive type.</summary>
+        /// <remarks>
+        /// <para>The portable object primitive type represents any object which is, in turn, composed of fields
+        /// with primitive type values.</para>
+        /// <para>This type is not supported by compact serialization.</para>
+        /// </remarks>
+        PortableRef = 30,
 
 
         // ---- arrays of nullable types ----
@@ -168,22 +186,22 @@ namespace Hazelcast.Serialization
         ArrayOfBooleanRef = 33,
 
         /// <summary>The array-of-nullable-i8 primitive type.</summary>
-        ArrayOfSignedInteger8Ref = 35,
+        ArrayOfInt8Ref = 35,
 
         /// <summary>The array-of-nullable-i16 primitive type.</summary>
-        ArrayOfSignedInteger16Ref = 37,
+        ArrayOfInt16Ref = 37,
 
         /// <summary>The array-of-nullable-i32 primitive type.</summary>
-        ArrayOfSignedInteger32Ref = 39,
+        ArrayOfInt32Ref = 39,
 
         /// <summary>The array-of-nullable-i64 primitive type.</summary>
-        ArrayOfSignedInteger64Ref = 41,
+        ArrayOfInt64Ref = 41,
 
-        /// <summary>The array-of-nullable-float primitive type.</summary>
-        ArrayOfFloatRef = 43,
+        /// <summary>The array-of-nullable-f32 primitive type.</summary>
+        ArrayOfFloat32Ref = 43,
 
-        /// <summary>The array-of-nullable-double primitive type.</summary>
-        ArrayOfDoubleRef = 45,
+        /// <summary>The array-of-nullable-f24 primitive type.</summary>
+        ArrayOfFloat64Ref = 45,
 
         /// <summary>The array-of-nullable-decimal primitive type.</summary>
         ArrayOfDecimalRef = 19,
@@ -203,8 +221,13 @@ namespace Hazelcast.Serialization
         /// <summary>The array-of-string primitive type.</summary>
         ArrayOfStringRef = 17,
 
-        /// <summary>The array-of-object primitive type.</summary>
-        ArrayOfObjectRef = 29
+        /// <summary>The array-of-compact-object primitive type.</summary>
+        /// <para>This type is not supported by portable serialization.</para>
+        ArrayOfCompactRef = 29,
+
+        /// <summary>The array-of-portable-object primitive type.</summary>
+        /// <para>This type is not supported by compact serialization.</para>
+        ArrayOfPortableRef = 31
 
 #pragma warning restore CA1720 // Identifier contains type name
     }

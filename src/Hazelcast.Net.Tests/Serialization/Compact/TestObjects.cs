@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             return new T
             {
                 Name = reader.ReadStringRef(Thing.FieldNames.Name),
-                Value = reader.ReadInt(Thing.FieldNames.Value)
+                Value = reader.ReadInt32(Thing.FieldNames.Value)
             };
         }
 
@@ -135,7 +135,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             ThingCompactSerializer.CountWrite();
             writer.WriteStringRef(Thing.FieldNames.Name, obj.Name);
-            writer.WriteInt(Thing.FieldNames.Value, obj.Value);
+            writer.WriteInt32(Thing.FieldNames.Value, obj.Value);
         }
     }
 

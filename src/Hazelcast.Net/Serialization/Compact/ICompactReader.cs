@@ -47,132 +47,132 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        bool[]? ReadBooleans(string name);
+        bool[]? ReadArrayOfBoolean(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfBooleanRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        bool?[]? ReadBooleanRefs(string name);
+        bool?[]? ReadArrayOfBooleanRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger8"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte ReadSByte(string name);
+        sbyte ReadInt8(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger8Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte? ReadSByteRef(string name);
+        sbyte? ReadInt8Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger8"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte[]? ReadSBytes(string name);
+        sbyte[]? ReadArrayOfInt8(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger8Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte?[]? ReadSByteRefs(string name);
+        sbyte?[]? ReadArrayOfInt8Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger16"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short ReadShort(string name);
+        short ReadInt16(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger16Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int16Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short? ReadShortRef(string name);
+        short? ReadInt16Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger16"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short[]? ReadShorts(string name);
+        short[]? ReadArrayOfInt16(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger16Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt16Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short?[]? ReadShortRefs(string name);
+        short?[]? ReadArrayOfInt16Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger32"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int ReadInt(string name);
+        int ReadInt32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int? ReadIntRef(string name);
+        int? ReadInt32Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger32"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int[]? ReadInts(string name);
+        int[]? ReadArrayOfInt32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int?[]? ReadIntRefs(string name);
+        int?[]? ReadArrayOfInt32Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger64"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long ReadLong(string name);
+        long ReadInt64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.SignedInteger64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Int64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long? ReadLongRef(string name);
+        long? ReadInt64Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger64"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long[]? ReadLongs(string name);
+        long[]? ReadArrayOfInt64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfSignedInteger64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long?[]? ReadLongRefs(string name);
+        long?[]? ReadArrayOfInt64Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Float"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Float32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float ReadFloat(string name);
+        float ReadFloat32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.FloatRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Float32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float? ReadFloatRef(string name);
+        float? ReadFloat32Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float[]? ReadFloats(string name);
+        float[]? ReadArrayOfFloat32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloatRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float?[]? ReadFloatRefs(string name);
+        float?[]? ReadArrayOfFloat32Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Double"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Float64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double ReadDouble(string name);
+        double ReadFloat64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.DoubleRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.Float64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double? ReadDoubleRef(string name);
+        double? ReadFloat64Ref(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDouble"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double[]? ReadDoubles(string name);
+        double[]? ReadArrayOfFloat64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDoubleRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double?[]? ReadDoubleRefs(string name);
+        double?[]? ReadArrayOfFloat64Ref(string name);
 
         /// <summary>Reads a <see cref="FieldKind.StringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -182,7 +182,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        string?[]? ReadStringRefs(string name);
+        string?[]? ReadArrayOfStringRef(string name);
 
         /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="decimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
@@ -194,7 +194,7 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         /// <exception cref="SerializationException">A specified value is outside the range of the
         /// <see cref="decimal"/> type.</exception>
-        decimal? ReadDecimalRef(string name);
+        decimal? ReadDecimalRef(string name); // FIXME make these ReadDecimalAsDecimalRef extension methods?!
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="decimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
@@ -206,7 +206,7 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         /// <exception cref="SerializationException">A specified value is outside the range of the
         /// <see cref="decimal"/> type.</exception>
-        decimal?[]? ReadDecimalRefs(string name);
+        decimal?[]? ReadArrayOfDecimalRef(string name);
 
         /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="HBigDecimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
@@ -216,7 +216,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="HBigDecimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        HBigDecimal?[]? ReadBigDecimalRefs(string name);
+        HBigDecimal?[]? ReadArrayOfBigDecimalRef(string name);
 
         /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeSpan"/>.</summary>
         /// <param name="name">The name of the field.</param>
@@ -226,8 +226,10 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeSpan"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeSpan?[]? ReadTimeRefs(string name);
+        TimeSpan?[]? ReadArrayOfTimeRef(string name);
 
+        // FIXME - discuss supporting this - of course we should, but then, method name?
+        // ReadTimeAsTimeOnlyRef ?
 #if NET6_0_OR_GREATER
         /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
@@ -237,7 +239,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeOnly?[]? ReadTimeOnlyRefs(string name);
+        TimeOnly?[]? ReadArrayOfTimeOnlyRef(string name);
 #endif
 
         /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateTime"/>.</summary>
@@ -248,8 +250,9 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateTime"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime?[]? ReadDateRefs(string name);
+        DateTime?[]? ReadArrayOfDateRef(string name);
 
+        // FIXME - discuss
 #if NET6_0_OR_GREATER
         /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
@@ -259,10 +262,11 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateOnly?[]? ReadDateOnlyRefs(string name);
+        DateOnly?[]? ReadArrayOfDateOnlyRef(string name);
 #endif
 
         // FIXME - document date & time ranges when reading
+        // and if we want the exact range as Java are we going to implement our OWN types ?!?!?!
 
         /// <summary>Reads a <see cref="FieldKind.TimeStampRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -272,7 +276,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime?[]? ReadTimeStampRefs(string name);
+        DateTime?[]? ReadArrayOfTimeStampRef(string name);
 
         /// <summary>Reads a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -282,18 +286,18 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTimeOffset?[]? ReadTimeStampWithTimeZoneRefs(string name);
+        DateTimeOffset?[]? ReadArrayOfTimeStampWithTimeZoneRef(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ObjectRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.CompactRef"/> field.</summary>
         /// <typeparam name="T">The expected type of the object.</typeparam>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        T? ReadObjectRef<T>(string name) where T: class;
+        T? ReadCompactRef<T>(string name) where T: class;
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfObjectRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfCompactRef"/> field.</summary>
         /// <typeparam name="T">The expected type of the objects.</typeparam>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        T?[]? ReadObjectRefs<T>(string name) where T : class;
+        T?[]? ReadArrayOfCompactObjectRef<T>(string name) where T : class;
     }
 }

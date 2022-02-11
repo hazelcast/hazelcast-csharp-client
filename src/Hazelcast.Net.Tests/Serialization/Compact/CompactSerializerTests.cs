@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var thingSchema = SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.StringRef)
-                .WithField("value", FieldKind.SignedInteger32)
+                .WithField("value", FieldKind.Int32)
                 .Build();
 
             Console.WriteLine("Schema:");
@@ -109,13 +109,13 @@ namespace Hazelcast.Tests.Serialization.Compact
             var thingSchema = SchemaBuilder
                 .For("thing")
                 .WithField("name", FieldKind.StringRef)
-                .WithField("value", FieldKind.SignedInteger32)
+                .WithField("value", FieldKind.Int32)
                 .Build();
 
             var thingNestSchema = SchemaBuilder
                 .For("thingNest")
                 .WithField("name", FieldKind.StringRef)
-                .WithField("thing", FieldKind.ObjectRef)
+                .WithField("thing", FieldKind.CompactRef)
                 .Build();
 
             var options = new SerializationOptions
@@ -173,14 +173,14 @@ namespace Hazelcast.Tests.Serialization.Compact
                 return new Thing
                 {
                     Name = reader.ReadStringRef("name"),
-                    Value = reader.ReadInt("value")
+                    Value = reader.ReadInt32("value")
                 };
             }
 
             public void Write(ICompactWriter writer, Thing obj)
             {
                 writer.WriteStringRef("name", obj.Name);
-                writer.WriteInt("value", obj.Value);
+                writer.WriteInt32("value", obj.Value);
             }
         }
 
@@ -198,14 +198,14 @@ namespace Hazelcast.Tests.Serialization.Compact
                 return new ThingNest
                 {
                     Name = reader.ReadStringRef("name"),
-                    Thing = reader.ReadObjectRef<Thing>("thing")
+                    Thing = reader.ReadCompactRef<Thing>("thing")
                 };
             }
 
             public void Write(ICompactWriter writer, ThingNest obj)
             {
                 writer.WriteStringRef("name", obj.Name);
-                writer.WriteObjectRef("thing", obj.Thing);
+                writer.WriteCompactRef("thing", obj.Thing);
             }
         }
     }

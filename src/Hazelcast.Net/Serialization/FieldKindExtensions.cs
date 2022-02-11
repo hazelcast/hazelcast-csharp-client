@@ -24,15 +24,15 @@ namespace Hazelcast.Serialization
         {
             switch (kind)
             {
-                case FieldKind.SignedInteger8:
+                case FieldKind.Int8:
                     return 1;
-                case FieldKind.SignedInteger16:
+                case FieldKind.Int16:
                     return 2;
-                case FieldKind.SignedInteger32:
-                case FieldKind.Float:
+                case FieldKind.Int32:
+                case FieldKind.Float32:
                     return 4;
-                case FieldKind.SignedInteger64:
-                case FieldKind.Double:
+                case FieldKind.Int64:
+                case FieldKind.Float64:
                     return 8;
                 default:
                     throw new NotSupportedException($"Cannot get the size of {kind} kind.");
@@ -47,12 +47,12 @@ namespace Hazelcast.Serialization
             switch (kind)
             {
                 case FieldKind.Boolean:
-                case FieldKind.SignedInteger8:
-                case FieldKind.SignedInteger16:
-                case FieldKind.SignedInteger32:
-                case FieldKind.SignedInteger64:
-                case FieldKind.Float:
-                case FieldKind.Double:
+                case FieldKind.Int8:
+                case FieldKind.Int16:
+                case FieldKind.Int32:
+                case FieldKind.Int64:
+                case FieldKind.Float32:
+                case FieldKind.Float64:
                     return false;
                 default:
                     return true;

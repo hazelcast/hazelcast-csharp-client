@@ -44,132 +44,132 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Writes a <see cref="FieldKind.ArrayOfBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteBooleans(string name, bool[]? value);
+        void WriteArrayOfBoolean(string name, bool[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfBooleanRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteBooleanRefs(string name, bool?[]? value);
+        void WriteArrayOfBooleanRef(string name, bool?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger8"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSByte(string name, sbyte value);
+        void WriteInt8(string name, sbyte value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger8Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSByteRef(string name, sbyte? value);
+        void WriteInt8Ref(string name, sbyte? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger8"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSBytes(string name, sbyte[]? value);
+        void WriteArrayOfInt8(string name, sbyte[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger8Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt8Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteSByteRefs(string name, sbyte?[]? value);
+        void WriteArrayOfInt8Ref(string name, sbyte?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger16"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteShort(string name, short value);
+        void WriteInt16(string name, short value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger16"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteShortRef(string name, short? value);
+        void WriteInt16Ref(string name, short? value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger16Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int16Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteShorts(string name, short[]? value);
+        void WriteArrayOfInt16(string name, short[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger16Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt16Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteShortRefs(string name, short?[]? value);
+        void WriteArrayOfInt16Ref(string name, short?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger32"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInt(string name, int value);
+        void WriteInt32(string name, int value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteIntRef(string name, int? value);
+        void WriteInt32Ref(string name, int? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger32"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInts(string name, int[]? value);
+        void WriteArrayOfInt32(string name, int[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteIntRefs(string name, int?[]? value);
+        void WriteArrayOfInt32Ref(string name, int?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger64"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteLong(string name, long value);
+        void WriteInt64(string name, long value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteLongRef(string name, long? value);
+        void WriteInt64Ref(string name, long? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger64"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteLongs(string name, long[]? value);
+        void WriteArrayOfInt64(string name, long[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteLongRefs(string name, long?[]? value);
+        void WriteArrayOfInt64Ref(string name, long?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.Float"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Float32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloat(string name, float value);
+        void WriteFloat32(string name, float value);
 
-        /// <summary>Writes a <see cref="FieldKind.FloatRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Float32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloatRef(string name, float? value);
+        void WriteFloat32Ref(string name, float? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloats(string name, float[]? value);
+        void WriteArrayOfFloat32(string name, float[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloatRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat32Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloatRefs(string name, float?[]? value);
+        void WriteArrayOfFloat32Ref(string name, float?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.Double"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Float64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDouble(string name, double value);
+        void WriteFloat64(string name, double value);
 
-        /// <summary>Writes a <see cref="FieldKind.DoubleRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Float64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDoubleRef(string name, double? value);
+        void WriteFloat64Ref(string name, double? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfDouble"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDoubles(string name, double[]? value);
+        void WriteArrayOfFloat64(string name, double[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfDoubleRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat64Ref"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDoubleRefs(string name, double?[]? value);
+        void WriteArrayOfFloat64Ref(string name, double?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.StringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -179,7 +179,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Writes a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteStringRefs(string name, string?[]? value);
+        void WriteArrayOfStringRef(string name, string?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -199,17 +199,17 @@ namespace Hazelcast.Serialization.Compact
         /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
         /// primitive type documentation for details.</para>
         /// </remarks>
-        void WriteDecimalRefs(string name, decimal?[]? value);
+        void WriteArrayOfDecimalRef(string name, decimal?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDecimalRef(string name, HBigDecimal? value);
+        void WriteDecimalRef(string name, HBigDecimal? value); // FIXME and WTF are we supposed to do if we don't support overrides ?!
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfDecimalRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDecimalRefs(string name, HBigDecimal?[]? value);
+        void WriteArrayOfDecimalRef(string name, HBigDecimal?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.TimeRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -233,8 +233,9 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">A specified value is outside the range of the
         /// <see cref="FieldKind.TimeRef"/> primitive type.</exception>
-        void WriteTimeRefs(string name, TimeSpan?[]? value);
+        void WriteArrayOfTimeRef(string name, TimeSpan?[]? value);
 
+        // FIXME - discuss, we may not want it, rename it, whatever, I don't know anymore
 #if NET6_0_OR_GREATER
         /// <summary>Writes a <see cref="FieldKind.TimeRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -256,7 +257,7 @@ namespace Hazelcast.Serialization.Compact
         /// type documentation for details.</para>
         /// </remarks>
         /// FIXME - document range of TimeOnly
-        void WriteTimeRefs(string name, TimeOnly?[]? value);
+        void WriteArrayOfTimeRef(string name, TimeOnly?[]? value);
 #endif
 
         /// <summary>Writes a <see cref="FieldKind.DateRef"/> field.</summary>
@@ -277,8 +278,9 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDateRefs(string name, DateTime?[]? value);
+        void WriteArrayOfDateRef(string name, DateTime?[]? value);
 
+        // FIXME - see above
 #if NET6_0_OR_GREATER
         /// <summary>Writes a <see cref="FieldKind.DateRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -321,7 +323,7 @@ namespace Hazelcast.Serialization.Compact
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteTimeStampRefs(string name, DateTime?[]? value);
+        void WriteArrayOfTimeStampRef(string name, DateTime?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -341,16 +343,16 @@ namespace Hazelcast.Serialization.Compact
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
-        void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value);
+        void WriteArrayOfTimeStampWithTimeZoneRef(string name, DateTimeOffset?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ObjectRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.CompactRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteObjectRef(string name, object? value);
+        void WriteCompactRef(string name, object? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfObjectRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfCompactRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteObjectRefs(string name, object?[]? value);
+        void WriteArrayOfCompactRef(string name, object?[]? value);
     }
 }

@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema = SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
-                .WithField(Thing.FieldNames.Value, FieldKind.SignedInteger32)
+                .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 
             // register a type + schema + serializer
@@ -216,7 +216,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             var schema = SchemaBuilder
                 .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
-                .WithField(Thing.FieldNames.Value, FieldKind.SignedInteger32)
+                .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 
             // register a type + schema, but not the serializer which will therefore be the runtime

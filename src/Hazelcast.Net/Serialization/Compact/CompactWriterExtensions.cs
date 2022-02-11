@@ -49,7 +49,7 @@ namespace Hazelcast.Serialization.Compact
         public static void WriteDateTimeRef(this ICompactWriter writer, string name, DateTime? value)
             => SafeWriter(writer).WriteTimeStampRef(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampRef"/> field (alias for <see cref="ICompactWriter.WriteTimeStampRefs"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampRef"/> field (alias for <see cref="ICompactWriter.WriteArrayOfTimeStampRef"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
@@ -60,7 +60,7 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteDateTimeRefs(this ICompactWriter writer, string name, DateTime?[]? value)
-            => SafeWriter(writer).WriteTimeStampRefs(name, value);
+            => SafeWriter(writer).WriteArrayOfTimeStampRef(name, value);
 
         /// <summary>Writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field (alias for <see cref="ICompactWriter.WriteTimeStampWithTimeZoneRef"/>).</summary>
         /// <param name="writer">The compact writer.</param>
@@ -75,7 +75,7 @@ namespace Hazelcast.Serialization.Compact
         public static void WriteDateTimeOffsetRef(this ICompactWriter writer, string name, DateTimeOffset? value)
             => SafeWriter(writer).WriteTimeStampWithTimeZoneRef(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field (alias for <see cref="ICompactWriter.WriteTimeStampWithTimeZoneRefs"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field (alias for <see cref="ICompactWriter.WriteArrayOfTimeStampWithTimeZoneRef"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
@@ -85,34 +85,34 @@ namespace Hazelcast.Serialization.Compact
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
         public static void WriteDateTimeOffsetRefs(this ICompactWriter writer, string name, DateTimeOffset?[]? value)
-            => SafeWriter(writer).WriteTimeStampWithTimeZoneRefs(name, value);
+            => SafeWriter(writer).WriteArrayOfTimeStampWithTimeZoneRef(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger8"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         public static void WriteByte(this ICompactWriter writer, string name, byte value)
-            => SafeWriter(writer).WriteSByte(name, (sbyte)value);
+            => SafeWriter(writer).WriteInt8(name, (sbyte)value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger8"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt8"/> field.</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         public static void WriteBytes(this ICompactWriter writer, string name, byte[] value)
-            => SafeWriter(writer).WriteSBytes(name, Array.ConvertAll(value, x => (sbyte)x));
+            => SafeWriter(writer).WriteArrayOfInt8(name, Array.ConvertAll(value, x => (sbyte)x));
 
-        /// <summary>Writes a <see cref="FieldKind.SignedInteger16"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.Int16"/> field.</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         public static void WriteChar(this ICompactWriter writer, string name, char value)
-            => SafeWriter(writer).WriteShort(name, (short)value);
+            => SafeWriter(writer).WriteInt16(name, (short)value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfSignedInteger16"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt16"/> field.</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         public static void WriteChars(this ICompactWriter writer, string name, char[] value)
-            => SafeWriter(writer).WriteShorts(name, Array.ConvertAll(value, x => (short)x));
+            => SafeWriter(writer).WriteArrayOfInt16(name, Array.ConvertAll(value, x => (short)x));
     }
 }

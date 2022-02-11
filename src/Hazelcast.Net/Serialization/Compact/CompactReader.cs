@@ -165,116 +165,116 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadBooleanRef
         }
 
-        public bool[]? ReadBooleans(string name)
+        public bool[]? ReadArrayOfBoolean(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadBooleans
         }
 
-        public bool?[]? ReadBooleanRefs(string name)
+        public bool?[]? ReadArrayOfBooleanRef(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadBooleanRefs
         }
 
-        public sbyte ReadSByte(string name)
+        public sbyte ReadInt8(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger8);
+            var position = GetValueFieldPosition(name, FieldKind.Int8);
             _input.MoveTo(position);
             return _input.ReadSByte();
         }
 
-        public sbyte? ReadSByteRef(string name)
-            => ReadNullable(name, FieldKind.SignedInteger8, input => input.ReadSByte());
+        public sbyte? ReadInt8Ref(string name)
+            => ReadNullable(name, FieldKind.Int8, input => input.ReadSByte());
 
-        public sbyte[]? ReadSBytes(string name)
-            => ReadReference(name, FieldKind.ArrayOfSignedInteger8, input => input.ReadSByteArray());
+        public sbyte[]? ReadArrayOfInt8(string name)
+            => ReadReference(name, FieldKind.ArrayOfInt8, input => input.ReadSByteArray());
 
-        public sbyte?[]? ReadSByteRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfSignedInteger8Ref, input => input.ReadSByte());
+        public sbyte?[]? ReadArrayOfInt8Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt8Ref, input => input.ReadSByte());
 
-        public short ReadShort(string name)
+        public short ReadInt16(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger16);
+            var position = GetValueFieldPosition(name, FieldKind.Int16);
             _input.MoveTo(position);
             return _input.ReadShort();
         }
 
-        public short? ReadShortRef(string name)
-            => ReadNullable(name, FieldKind.SignedInteger16, input => input.ReadShort());
+        public short? ReadInt16Ref(string name)
+            => ReadNullable(name, FieldKind.Int16, input => input.ReadShort());
 
-        public short[]? ReadShorts(string name)
-            => ReadReference(name, FieldKind.ArrayOfSignedInteger16, input => input.ReadShortArray());
+        public short[]? ReadArrayOfInt16(string name)
+            => ReadReference(name, FieldKind.ArrayOfInt16, input => input.ReadShortArray());
 
-        public short?[]? ReadShortRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfSignedInteger16Ref, input => input.ReadShort());
+        public short?[]? ReadArrayOfInt16Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt16Ref, input => input.ReadShort());
         
-        public int ReadInt(string name)
+        public int ReadInt32(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger32);
+            var position = GetValueFieldPosition(name, FieldKind.Int32);
             _input.MoveTo(position);
             return _input.ReadInt();
         }
 
-        public int? ReadIntRef(string name)
-            => ReadNullable(name, FieldKind.SignedInteger32, input => input.ReadInt());
+        public int? ReadInt32Ref(string name)
+            => ReadNullable(name, FieldKind.Int32, input => input.ReadInt());
 
-        public int[]? ReadInts(string name)
-            => ReadReference(name, FieldKind.ArrayOfSignedInteger32, input => input.ReadIntArray());
+        public int[]? ReadArrayOfInt32(string name)
+            => ReadReference(name, FieldKind.ArrayOfInt32, input => input.ReadIntArray());
 
-        public int?[]? ReadIntRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfSignedInteger32Ref, input => input.ReadInt());
+        public int?[]? ReadArrayOfInt32Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt32Ref, input => input.ReadInt());
 
-        public long ReadLong(string name)
+        public long ReadInt64(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger64);
+            var position = GetValueFieldPosition(name, FieldKind.Int64);
             _input.MoveTo(position);
             return _input.ReadLong();
         }
 
-        public long? ReadLongRef(string name)
-            => ReadNullable(name, FieldKind.SignedInteger64, input => input.ReadLong());
+        public long? ReadInt64Ref(string name)
+            => ReadNullable(name, FieldKind.Int64, input => input.ReadLong());
 
-        public long[]? ReadLongs(string name)
-            => ReadReference(name, FieldKind.ArrayOfSignedInteger64, input => input.ReadLongArray());
+        public long[]? ReadArrayOfInt64(string name)
+            => ReadReference(name, FieldKind.ArrayOfInt64, input => input.ReadLongArray());
 
-        public long?[]? ReadLongRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfSignedInteger64Ref, input => input.ReadLong());
+        public long?[]? ReadArrayOfInt64Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt64Ref, input => input.ReadLong());
 
-        public float ReadFloat(string name)
+        public float ReadFloat32(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.Float);
+            var position = GetValueFieldPosition(name, FieldKind.Float32);
             _input.MoveTo(position);
             return _input.ReadFloat();
         }
 
-        public float? ReadFloatRef(string name)
-            => ReadNullable(name, FieldKind.Float, input => input.ReadFloat());
+        public float? ReadFloat32Ref(string name)
+            => ReadNullable(name, FieldKind.Float32, input => input.ReadFloat());
 
-        public float[]? ReadFloats(string name)
-            => ReadReference(name, FieldKind.Float, input => input.ReadFloatArray());
+        public float[]? ReadArrayOfFloat32(string name)
+            => ReadReference(name, FieldKind.Float32, input => input.ReadFloatArray());
 
-        public float?[]? ReadFloatRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfFloatRef, input => input.ReadFloat());
+        public float?[]? ReadArrayOfFloat32Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfFloat32Ref, input => input.ReadFloat());
 
-        public double ReadDouble(string name)
+        public double ReadFloat64(string name)
         {
-            var position = GetValueFieldPosition(name, FieldKind.Double);
+            var position = GetValueFieldPosition(name, FieldKind.Float64);
             _input.MoveTo(position);
             return _input.ReadDouble();
         }
 
-        public double? ReadDoubleRef(string name)
-            => ReadNullable(name, FieldKind.Double, input => input.ReadDouble());
+        public double? ReadFloat64Ref(string name)
+            => ReadNullable(name, FieldKind.Float64, input => input.ReadDouble());
 
-        public double[]? ReadDoubles(string name)
-            => ReadReference(name, FieldKind.ArrayOfDouble, input => input.ReadDoubleArray());
+        public double[]? ReadArrayOfFloat64(string name)
+            => ReadReference(name, FieldKind.ArrayOfFloat64, input => input.ReadDoubleArray());
 
-        public double?[]? ReadDoubleRefs(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfDoubleRef, input => input.ReadDouble());
+        public double?[]? ReadArrayOfFloat64Ref(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfFloat64Ref, input => input.ReadDouble());
 
         public string? ReadStringRef(string name)
             => ReadReference(name, FieldKind.StringRef, input => input.ReadString());
 
-        public string?[]? ReadStringRefs(string name)
+        public string?[]? ReadArrayOfStringRef(string name)
             => ReadArrayOfReference(name, FieldKind.ArrayOfStringRef, input => input.ReadString());
 
         private static decimal ReadBigDecimalIntoDecimal(ObjectDataInput input)
@@ -287,13 +287,13 @@ namespace Hazelcast.Serialization.Compact
         public decimal? ReadDecimalRef(string name)
             => ReadNullable(name, FieldKind.DecimalRef, ReadBigDecimalIntoDecimal);
 
-        public decimal?[]? ReadDecimalRefs(string name)
+        public decimal?[]? ReadArrayOfDecimalRef(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, ReadBigDecimalIntoDecimal);
 
         public HBigDecimal? ReadBigDecimalRef(string name)
             => ReadNullable(name, FieldKind.DecimalRef, input => input.ReadBigDecimal());
 
-        public HBigDecimal?[]? ReadBigDecimalRefs(string name)
+        public HBigDecimal?[]? ReadArrayOfBigDecimalRef(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, input => input.ReadBigDecimal());
 
         public TimeSpan? ReadTimeRef(string name)
@@ -301,7 +301,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadTimeRef
         }
 
-        public TimeSpan?[]? ReadTimeRefs(string name)
+        public TimeSpan?[]? ReadArrayOfTimeRef(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeRefs
         }
@@ -323,7 +323,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-        public DateTime?[]? ReadDateRefs(string name)
+        public DateTime?[]? ReadArrayOfDateRef(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
@@ -345,7 +345,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRef
         }
 
-        public DateTime?[]? ReadTimeStampRefs(string name)
+        public DateTime?[]? ReadArrayOfTimeStampRef(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRefs
         }
@@ -355,17 +355,17 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRef
         }
 
-        public DateTimeOffset?[]? ReadTimeStampWithTimeZoneRefs(string name)
+        public DateTimeOffset?[]? ReadArrayOfTimeStampWithTimeZoneRef(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRefs
         }
 
-        public T? ReadObjectRef<T>(string name)
+        public T? ReadCompactRef<T>(string name)
             where T: class
-            => ReadReference(name, FieldKind.ObjectRef, input => Serializer.Read<T>(input));
+            => ReadReference(name, FieldKind.CompactRef, input => Serializer.Read<T>(input));
 
-        public T?[]? ReadObjectRefs<T>(string name)
+        public T?[]? ReadArrayOfCompactObjectRef<T>(string name)
             where T : class
-            => ReadArrayOfReference(name, FieldKind.ArrayOfObjectRef, input => Serializer.Read<T>(input));
+            => ReadArrayOfReference(name, FieldKind.ArrayOfCompactRef, input => Serializer.Read<T>(input));
     }
 }

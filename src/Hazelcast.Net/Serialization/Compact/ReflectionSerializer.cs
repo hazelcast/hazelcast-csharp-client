@@ -35,8 +35,8 @@ namespace Hazelcast.Serialization.Compact
         private static readonly Dictionary<Type, Action<ICompactWriter, string, object?>> Writers 
             = new Dictionary<Type, Action<ICompactWriter, string, object?>>
             {
-                { typeof (int), (w, n, o) => w.WriteInt(n, UnboxNonNull<int>(o)) },
-                { typeof (int?), (w, n, o) => w.WriteIntRef(n, (int?)o) },
+                { typeof (int), (w, n, o) => w.WriteInt32(n, UnboxNonNull<int>(o)) },
+                { typeof (int?), (w, n, o) => w.WriteInt32Ref(n, (int?)o) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register writers here against the actual types
@@ -50,8 +50,8 @@ namespace Hazelcast.Serialization.Compact
         private static readonly Dictionary<Type, Func<ICompactReader, string, object?>> Readers 
             = new Dictionary<Type, Func<ICompactReader, string, object?>>
             {
-                { typeof (int), (r, n) => r.ReadInt(n) },
-                { typeof (int?), (r, n) => r.ReadIntRef(n) },
+                { typeof (int), (r, n) => r.ReadInt32(n) },
+                { typeof (int?), (r, n) => r.ReadInt32Ref(n) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register readers here against the actual types
@@ -66,7 +66,7 @@ namespace Hazelcast.Serialization.Compact
         {
             return Writers.TryGetValue(type, out var write)
                 ? write
-                : (writer, name, obj) => writer.WriteObjectRef(name, obj);
+                : (writer, name, obj) => writer.WriteCompactRef(name, obj);
         }
 
         private static Func<ICompactReader, string, object?> GetReader(Type type)

@@ -24,47 +24,51 @@ namespace Hazelcast.Serialization
             switch (kind)
             {
                 case FieldKind.Boolean:
-                case FieldKind.SignedInteger8:
-                case FieldKind.SignedInteger16:
-                case FieldKind.SignedInteger32:
-                case FieldKind.SignedInteger64:
-                case FieldKind.Float:
-                case FieldKind.Double:
+                case FieldKind.Int8:
+                case FieldKind.Char:
+                case FieldKind.Int16:
+                case FieldKind.Int32:
+                case FieldKind.Int64:
+                case FieldKind.Float32:
+                case FieldKind.Float64:
                 case FieldKind.ArrayOfBoolean:
-                case FieldKind.ArrayOfSignedInteger8:
-                case FieldKind.ArrayOfSignedInteger16:
-                case FieldKind.ArrayOfSignedInteger32:
-                case FieldKind.ArrayOfSignedInteger64:
-                case FieldKind.ArrayOfFloat:
-                case FieldKind.ArrayOfDouble:
+                case FieldKind.ArrayOfInt8:
+                case FieldKind.ArrayOfChar:
+                case FieldKind.ArrayOfInt16:
+                case FieldKind.ArrayOfInt32:
+                case FieldKind.ArrayOfInt64:
+                case FieldKind.ArrayOfFloat32:
+                case FieldKind.ArrayOfFloat64:
                 case FieldKind.BooleanRef:
-                case FieldKind.SignedInteger8Ref:
-                case FieldKind.SignedInteger16Ref:
-                case FieldKind.SignedInteger32Ref:
-                case FieldKind.SignedInteger64Ref:
-                case FieldKind.FloatRef:
-                case FieldKind.DoubleRef:
+                case FieldKind.Int8Ref:
+                case FieldKind.Int16Ref:
+                case FieldKind.Int32Ref:
+                case FieldKind.Int64Ref:
+                case FieldKind.Float32Ref:
+                case FieldKind.Float64Ref:
                 case FieldKind.DecimalRef:
                 case FieldKind.StringRef:
                 case FieldKind.TimeRef:
                 case FieldKind.DateRef:
                 case FieldKind.TimeStampRef:
                 case FieldKind.TimeStampWithTimeZoneRef:
-                case FieldKind.ObjectRef:
+                case FieldKind.CompactRef:
+                case FieldKind.PortableRef:
                 case FieldKind.ArrayOfBooleanRef:
-                case FieldKind.ArrayOfSignedInteger8Ref:
-                case FieldKind.ArrayOfSignedInteger16Ref:
-                case FieldKind.ArrayOfSignedInteger32Ref:
-                case FieldKind.ArrayOfSignedInteger64Ref:
-                case FieldKind.ArrayOfFloatRef:
-                case FieldKind.ArrayOfDoubleRef:
+                case FieldKind.ArrayOfInt8Ref:
+                case FieldKind.ArrayOfInt16Ref:
+                case FieldKind.ArrayOfInt32Ref:
+                case FieldKind.ArrayOfInt64Ref:
+                case FieldKind.ArrayOfFloat32Ref:
+                case FieldKind.ArrayOfFloat64Ref:
                 case FieldKind.ArrayOfDecimalRef:
                 case FieldKind.ArrayOfTimeRef:
                 case FieldKind.ArrayOfDateRef:
                 case FieldKind.ArrayOfTimeStampRef:
                 case FieldKind.ArrayOfTimeStampWithTimeZoneRef:
                 case FieldKind.ArrayOfStringRef:
-                case FieldKind.ArrayOfObjectRef:
+                case FieldKind.ArrayOfCompactRef:
+                case FieldKind.ArrayOfPortableRef:
                     return kind;
                 default:
                     throw new ArgumentException($"Value {value} is not a valid FieldKind value.", nameof(value));

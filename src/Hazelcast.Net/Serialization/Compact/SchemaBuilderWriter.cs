@@ -42,130 +42,130 @@ namespace Hazelcast.Serialization.Compact
         public void WriteBooleanRef(string name, bool? value)
             => AddField(name, FieldKind.BooleanRef);
 
-        public void WriteBooleans(string name, bool[]? value)
+        public void WriteArrayOfBoolean(string name, bool[]? value)
             => AddField(name, FieldKind.ArrayOfBoolean);
 
-        public void WriteBooleanRefs(string name, bool?[]? value)
+        public void WriteArrayOfBooleanRef(string name, bool?[]? value)
             => AddField(name, FieldKind.ArrayOfBooleanRef);
 
-        public void WriteSByte(string name, sbyte value)
-            => AddField(name, FieldKind.SignedInteger8);
+        public void WriteInt8(string name, sbyte value)
+            => AddField(name, FieldKind.Int8);
 
-        public void WriteSByteRef(string name, sbyte? value)
-            => AddField(name, FieldKind.SignedInteger8Ref);
+        public void WriteInt8Ref(string name, sbyte? value)
+            => AddField(name, FieldKind.Int8Ref);
 
-        public void WriteSBytes(string name, sbyte[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger8);
+        public void WriteArrayOfInt8(string name, sbyte[]? value)
+            => AddField(name, FieldKind.ArrayOfInt8);
 
-        public void WriteSByteRefs(string name, sbyte?[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger8Ref);
+        public void WriteArrayOfInt8Ref(string name, sbyte?[]? value)
+            => AddField(name, FieldKind.ArrayOfInt8Ref);
 
-        public void WriteShort(string name, short value)
-            => AddField(name, FieldKind.SignedInteger16);
+        public void WriteInt16(string name, short value)
+            => AddField(name, FieldKind.Int16);
 
-        public void WriteShortRef(string name, short? value)
-            => AddField(name, FieldKind.SignedInteger16Ref);
+        public void WriteInt16Ref(string name, short? value)
+            => AddField(name, FieldKind.Int16Ref);
 
-        public void WriteShorts(string name, short[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger16);
+        public void WriteArrayOfInt16(string name, short[]? value)
+            => AddField(name, FieldKind.ArrayOfInt16);
 
-        public void WriteShortRefs(string name, short?[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger16Ref);
+        public void WriteArrayOfInt16Ref(string name, short?[]? value)
+            => AddField(name, FieldKind.ArrayOfInt16Ref);
 
-        public void WriteInt(string name, int value)
-            => AddField(name, FieldKind.SignedInteger32);
+        public void WriteInt32(string name, int value)
+            => AddField(name, FieldKind.Int32);
 
-        public void WriteIntRef(string name, int? value)
-            => AddField(name, FieldKind.SignedInteger32Ref);
+        public void WriteInt32Ref(string name, int? value)
+            => AddField(name, FieldKind.Int32Ref);
 
-        public void WriteInts(string name, int[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger32);
+        public void WriteArrayOfInt32(string name, int[]? value)
+            => AddField(name, FieldKind.ArrayOfInt32);
 
-        public void WriteIntRefs(string name, int?[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger32Ref);
+        public void WriteArrayOfInt32Ref(string name, int?[]? value)
+            => AddField(name, FieldKind.ArrayOfInt32Ref);
 
-        public void WriteLong(string name, long value)
-            => AddField(name, FieldKind.SignedInteger64);
+        public void WriteInt64(string name, long value)
+            => AddField(name, FieldKind.Int64);
 
-        public void WriteLongRef(string name, long? value)
-            => AddField(name, FieldKind.SignedInteger64Ref);
+        public void WriteInt64Ref(string name, long? value)
+            => AddField(name, FieldKind.Int64Ref);
 
-        public void WriteLongs(string name, long[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger64);
+        public void WriteArrayOfInt64(string name, long[]? value)
+            => AddField(name, FieldKind.ArrayOfInt64);
 
-        public void WriteLongRefs(string name, long?[]? value)
-            => AddField(name, FieldKind.ArrayOfSignedInteger64Ref);
+        public void WriteArrayOfInt64Ref(string name, long?[]? value)
+            => AddField(name, FieldKind.ArrayOfInt64Ref);
 
-        public void WriteFloat(string name, float value)
-            => AddField(name, FieldKind.Float);
+        public void WriteFloat32(string name, float value)
+            => AddField(name, FieldKind.Float32);
 
-        public void WriteFloatRef(string name, float? value)
-            => AddField(name, FieldKind.FloatRef);
+        public void WriteFloat32Ref(string name, float? value)
+            => AddField(name, FieldKind.Float32Ref);
 
-        public void WriteFloats(string name, float[]? value)
-            => AddField(name, FieldKind.ArrayOfFloat);
+        public void WriteArrayOfFloat32(string name, float[]? value)
+            => AddField(name, FieldKind.ArrayOfFloat32);
 
-        public void WriteFloatRefs(string name, float?[]? value)
-            => AddField(name, FieldKind.ArrayOfFloatRef);
+        public void WriteArrayOfFloat32Ref(string name, float?[]? value)
+            => AddField(name, FieldKind.ArrayOfFloat32Ref);
 
-        public void WriteDouble(string name, double value)
-            => AddField(name, FieldKind.Double);
+        public void WriteFloat64(string name, double value)
+            => AddField(name, FieldKind.Float64);
 
-        public void WriteDoubleRef(string name, double? value)
-            => AddField(name, FieldKind.DoubleRef);
+        public void WriteFloat64Ref(string name, double? value)
+            => AddField(name, FieldKind.Float64Ref);
 
-        public void WriteDoubles(string name, double[]? value)
-            => AddField(name, FieldKind.ArrayOfDouble);
+        public void WriteArrayOfFloat64(string name, double[]? value)
+            => AddField(name, FieldKind.ArrayOfFloat64);
 
-        public void WriteDoubleRefs(string name, double?[]? value)
-            => AddField(name, FieldKind.ArrayOfDoubleRef);
+        public void WriteArrayOfFloat64Ref(string name, double?[]? value)
+            => AddField(name, FieldKind.ArrayOfFloat64Ref);
 
         public void WriteStringRef(string name, string? value)
             => AddField(name, FieldKind.StringRef);
 
-        public void WriteStringRefs(string name, string?[]? value)
+        public void WriteArrayOfStringRef(string name, string?[]? value)
             => AddField(name, FieldKind.ArrayOfStringRef);
 
         public void WriteDecimalRef(string name, decimal? value)
             => AddField(name, FieldKind.DecimalRef);
 
-        public void WriteDecimalRefs(string name, decimal?[]? value)
+        public void WriteArrayOfDecimalRef(string name, decimal?[]? value)
             => AddField(name, FieldKind.ArrayOfDecimalRef);
 
         public void WriteDecimalRef(string name, HBigDecimal? value)
             => AddField(name, FieldKind.DecimalRef);
 
-        public void WriteDecimalRefs(string name, HBigDecimal?[]? value)
+        public void WriteArrayOfDecimalRef(string name, HBigDecimal?[]? value)
             => AddField(name, FieldKind.ArrayOfDecimalRef);
 
         public void WriteTimeRef(string name, TimeSpan? value)
             => AddField(name, FieldKind.TimeRef);
 
-        public void WriteTimeRefs(string name, TimeSpan?[]? value)
+        public void WriteArrayOfTimeRef(string name, TimeSpan?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeRef);
 
         public void WriteDateRef(string name, DateTime? value)
             => AddField(name, FieldKind.DateRef);
 
-        public void WriteDateRefs(string name, DateTime?[]? value)
+        public void WriteArrayOfDateRef(string name, DateTime?[]? value)
             => AddField(name, FieldKind.ArrayOfDateRef);
 
         public void WriteTimeStampRef(string name, DateTime? value)
             => AddField(name, FieldKind.TimeStampRef);
 
-        public void WriteTimeStampRefs(string name, DateTime?[]? value)
+        public void WriteArrayOfTimeStampRef(string name, DateTime?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeStampRef);
 
         public void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value)
             => AddField(name, FieldKind.TimeStampWithTimeZoneRef);
 
-        public void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value)
+        public void WriteArrayOfTimeStampWithTimeZoneRef(string name, DateTimeOffset?[]? value)
             => AddField(name, FieldKind.ArrayOfTimeStampWithTimeZoneRef);
 
-        public void WriteObjectRef(string name, object? value)
-            => AddField(name, FieldKind.ObjectRef);
+        public void WriteCompactRef(string name, object? value)
+            => AddField(name, FieldKind.CompactRef);
 
-        public void WriteObjectRefs(string name, object?[]? value)
-            => AddField(name, FieldKind.ArrayOfObjectRef);
+        public void WriteArrayOfCompactRef(string name, object?[]? value)
+            => AddField(name, FieldKind.ArrayOfCompactRef);
     }
 }

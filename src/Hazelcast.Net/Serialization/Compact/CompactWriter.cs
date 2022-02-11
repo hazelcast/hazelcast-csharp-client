@@ -248,7 +248,7 @@ namespace Hazelcast.Serialization.Compact
         public void WriteBooleanRef(string name, bool? value)
             => WriteNullable(name, FieldKind.BooleanRef, value, (output, v) => output.WriteBoolean(v));
 
-        public void WriteBooleans(string name, bool[]? value)
+        public void WriteArrayOfBoolean(string name, bool[]? value)
         {
             var field = GetValidField(name, FieldKind.ArrayOfBoolean);
 
@@ -276,121 +276,121 @@ namespace Hazelcast.Serialization.Compact
             }
         }
 
-        public void WriteBooleanRefs(string name, bool?[]? value)
+        public void WriteArrayOfBooleanRef(string name, bool?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfBooleanRef, value, (output, v) => output.WriteBoolean(v));
 
-        public void WriteSByte(string name, sbyte value)
+        public void WriteInt8(string name, sbyte value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger8);
+            var position = GetValueFieldPosition(name, FieldKind.Int8);
             _output.MoveTo(position, BytesExtensions.SizeOfByte);
             _output.WriteSByte(value);
         }
 
-        public void WriteSByteRef(string name, sbyte? value)
-            => WriteNullable(name, FieldKind.SignedInteger8, value, (output, v) => output.WriteSByte(v));
+        public void WriteInt8Ref(string name, sbyte? value)
+            => WriteNullable(name, FieldKind.Int8, value, (output, v) => output.WriteSByte(v));
 
-        public void WriteSBytes(string name, sbyte[]? value)
-            => WriteReference(name, FieldKind.ArrayOfSignedInteger8, value, (output, v) => output.WriteSByteArray(v));
+        public void WriteArrayOfInt8(string name, sbyte[]? value)
+            => WriteReference(name, FieldKind.ArrayOfInt8, value, (output, v) => output.WriteSByteArray(v));
 
-        public void WriteSByteRefs(string name, sbyte?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfSignedInteger8Ref, value, (output, v) => output.WriteSByte(v));
+        public void WriteArrayOfInt8Ref(string name, sbyte?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfInt8Ref, value, (output, v) => output.WriteSByte(v));
 
-        public void WriteShort(string name, short value)
+        public void WriteInt16(string name, short value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger16);
+            var position = GetValueFieldPosition(name, FieldKind.Int16);
             _output.MoveTo(position, BytesExtensions.SizeOfShort);
             _output.WriteShort(value);
         }
 
-        public void WriteShortRef(string name, short? value)
-            => WriteNullable(name, FieldKind.SignedInteger16, value, (output, v) => output.WriteShort(v));
+        public void WriteInt16Ref(string name, short? value)
+            => WriteNullable(name, FieldKind.Int16, value, (output, v) => output.WriteShort(v));
 
-        public void WriteShorts(string name, short[]? value)
-            => WriteReference(name, FieldKind.ArrayOfSignedInteger16, value, (output, v) => output.WriteShortArray(v));
+        public void WriteArrayOfInt16(string name, short[]? value)
+            => WriteReference(name, FieldKind.ArrayOfInt16, value, (output, v) => output.WriteShortArray(v));
 
-        public void WriteShortRefs(string name, short?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfSignedInteger16Ref, value, (output, v) => output.WriteShort(v));
+        public void WriteArrayOfInt16Ref(string name, short?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfInt16Ref, value, (output, v) => output.WriteShort(v));
 
-        public void WriteInt(string name, int value)
+        public void WriteInt32(string name, int value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger32);
+            var position = GetValueFieldPosition(name, FieldKind.Int32);
             _output.MoveTo(position, BytesExtensions.SizeOfInt);
             _output.WriteInt(value);
         }
 
-        public void WriteIntRef(string name, int? value)
-            => WriteNullable(name, FieldKind.SignedInteger32, value, (output, v) => output.WriteInt(v));
+        public void WriteInt32Ref(string name, int? value)
+            => WriteNullable(name, FieldKind.Int32, value, (output, v) => output.WriteInt(v));
 
-        public void WriteInts(string name, int[]? value)
-            => WriteReference(name, FieldKind.ArrayOfSignedInteger32, value, (output, v) => output.WriteIntArray(v));
+        public void WriteArrayOfInt32(string name, int[]? value)
+            => WriteReference(name, FieldKind.ArrayOfInt32, value, (output, v) => output.WriteIntArray(v));
 
-        public void WriteIntRefs(string name, int?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfSignedInteger32Ref, value, (output, v) => output.WriteInt(v));
+        public void WriteArrayOfInt32Ref(string name, int?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfInt32Ref, value, (output, v) => output.WriteInt(v));
 
-        public void WriteLong(string name, long value)
+        public void WriteInt64(string name, long value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.SignedInteger64);
+            var position = GetValueFieldPosition(name, FieldKind.Int64);
             _output.MoveTo(position, BytesExtensions.SizeOfLong);
             _output.WriteLong(value);
         }
 
-        public void WriteLongRef(string name, long? value)
-            => WriteNullable(name, FieldKind.SignedInteger64, value, (output, v) => output.WriteLong(v));
+        public void WriteInt64Ref(string name, long? value)
+            => WriteNullable(name, FieldKind.Int64, value, (output, v) => output.WriteLong(v));
 
-        public void WriteLongs(string name, long[]? value)
-            => WriteReference(name, FieldKind.ArrayOfSignedInteger64, value, (output, v) => output.WriteLongArray(v));
+        public void WriteArrayOfInt64(string name, long[]? value)
+            => WriteReference(name, FieldKind.ArrayOfInt64, value, (output, v) => output.WriteLongArray(v));
 
-        public void WriteLongRefs(string name, long?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfSignedInteger64Ref, value, (output, v) => output.WriteLong(v));
+        public void WriteArrayOfInt64Ref(string name, long?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfInt64Ref, value, (output, v) => output.WriteLong(v));
 
-        public void WriteFloat(string name, float value)
+        public void WriteFloat32(string name, float value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.Float);
+            var position = GetValueFieldPosition(name, FieldKind.Float32);
             _output.MoveTo(position, BytesExtensions.SizeOfFloat);
             _output.WriteFloat(value);
         }
 
-        public void WriteFloatRef(string name, float? value)
-            => WriteNullable(name, FieldKind.Float, value, (output, v) => output.WriteFloat(v));
+        public void WriteFloat32Ref(string name, float? value)
+            => WriteNullable(name, FieldKind.Float32, value, (output, v) => output.WriteFloat(v));
 
-        public void WriteFloats(string name, float[]? value)
-            => WriteReference(name, FieldKind.ArrayOfFloat, value, (output, v) => output.WriteFloatArray(v));
+        public void WriteArrayOfFloat32(string name, float[]? value)
+            => WriteReference(name, FieldKind.ArrayOfFloat32, value, (output, v) => output.WriteFloatArray(v));
 
-        public void WriteFloatRefs(string name, float?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfFloatRef, value, (output, v) => output.WriteFloat(v));
+        public void WriteArrayOfFloat32Ref(string name, float?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfFloat32Ref, value, (output, v) => output.WriteFloat(v));
 
-        public void WriteDouble(string name, double value)
+        public void WriteFloat64(string name, double value)
         {
-            var position = GetValueFieldPosition(name, FieldKind.Double);
+            var position = GetValueFieldPosition(name, FieldKind.Float64);
             _output.MoveTo(position, BytesExtensions.SizeOfDouble);
             _output.WriteDouble(value);
         }
 
-        public void WriteDoubleRef(string name, double? value)
-            => WriteNullable(name, FieldKind.DoubleRef, value, (output, v) => output.WriteDouble(v));
+        public void WriteFloat64Ref(string name, double? value)
+            => WriteNullable(name, FieldKind.Float64Ref, value, (output, v) => output.WriteDouble(v));
 
-        public void WriteDoubles(string name, double[]? value)
-            => WriteReference(name, FieldKind.ArrayOfDouble, value, (output, v) => output.WriteDoubleArray(v));
+        public void WriteArrayOfFloat64(string name, double[]? value)
+            => WriteReference(name, FieldKind.ArrayOfFloat64, value, (output, v) => output.WriteDoubleArray(v));
 
-        public void WriteDoubleRefs(string name, double?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfDoubleRef, value, (output, v) => output.WriteDouble(v));
+        public void WriteArrayOfFloat64Ref(string name, double?[]? value)
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfFloat64Ref, value, (output, v) => output.WriteDouble(v));
 
         public void WriteStringRef(string name, string? value)
             => WriteReference(name, FieldKind.StringRef, value, (output, v) => output.WriteString(v));
 
-        public void WriteStringRefs(string name, string?[]? value)
+        public void WriteArrayOfStringRef(string name, string?[]? value)
             => WriteArrayOfReference(name, FieldKind.ArrayOfStringRef, value, (output, v) => output.WriteString(v));
 
         public void WriteDecimalRef(string name, decimal? value)
             => WriteNullable(name, FieldKind.DecimalRef, value, (output, v) => output.WriteBigDecimal(v));
 
-        public void WriteDecimalRefs(string name, decimal?[]? value)
+        public void WriteArrayOfDecimalRef(string name, decimal?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, value, (output, v) => output.WriteBigDecimal(v));
 
         public void WriteDecimalRef(string name, HBigDecimal? value)
             => WriteNullable(name, FieldKind.DecimalRef, value, (output, v) => output.WriteBigDecimal(v));
 
-        public void WriteDecimalRefs(string name, HBigDecimal?[]? value)
+        public void WriteArrayOfDecimalRef(string name, HBigDecimal?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, value, (output, v) => output.WriteBigDecimal(v));
 
         public void WriteTimeRef(string name, TimeSpan? value)
@@ -399,7 +399,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement WriteTimeRef
         }
 
-        public void WriteTimeRefs(string name, TimeSpan?[]? value)
+        public void WriteArrayOfTimeRef(string name, TimeSpan?[]? value)
         {
             // beware of range-check
             throw new NotImplementedException(); // FIXME - implement WriteTimeRefs
@@ -410,7 +410,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement WriteDateRef
         }
 
-        public void WriteDateRefs(string name, DateTime?[]? value)
+        public void WriteArrayOfDateRef(string name, DateTime?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteDateRefs
         }
@@ -420,7 +420,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampRef
         }
 
-        public void WriteTimeStampRefs(string name, DateTime?[]? value)
+        public void WriteArrayOfTimeStampRef(string name, DateTime?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampRefs
         }
@@ -430,7 +430,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRef
         }
 
-        public void WriteTimeStampWithTimeZoneRefs(string name, DateTimeOffset?[]? value)
+        public void WriteArrayOfTimeStampWithTimeZoneRef(string name, DateTimeOffset?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRefs
         }
@@ -442,10 +442,10 @@ namespace Hazelcast.Serialization.Compact
         // We want
         // - WriteObject which will do different things depending on what the object is (generic record...)
 
-        public void WriteObjectRef(string name, object? value)
-            => WriteReference(name, FieldKind.ObjectRef, value, (output, v) => Serializer.WriteObject(output, v));
+        public void WriteCompactRef(string name, object? value)
+            => WriteReference(name, FieldKind.CompactRef, value, (output, v) => Serializer.WriteObject(output, v));
 
-        public void WriteObjectRefs(string name, object?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfObjectRef, value, (output, v) => Serializer.WriteObject(output, v));
+        public void WriteArrayOfCompactRef(string name, object?[]? value)
+            => WriteArrayOfReference(name, FieldKind.ArrayOfCompactRef, value, (output, v) => Serializer.WriteObject(output, v));
     }
 }
