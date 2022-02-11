@@ -32,11 +32,6 @@ namespace Hazelcast.Testing.Conditions
         public static readonly NuGetVersion DefaultVersion = NuGetVersion.Parse(DefaultVersionString);
 
         /// <summary>
-        /// Gets the name of the environment variable that can be used to override the default version.
-        /// </summary>
-        public const string EnvironmentVariableName = "HAZELCAST_SERVER_VERSION";
-
-        /// <summary>
         /// Gets the server version indicated by the environment variable, or the default server version.
         /// </summary>
         /// <param name="defaultVersion">The optional default version.</param>
@@ -52,13 +47,9 @@ namespace Hazelcast.Testing.Conditions
         public static NuGetVersion GetVersion(NuGetVersion defaultVersion = null)
         {
             // order is:
-            // 1. use the environment variable, if set - it overrides everything
-            // 2. use the detector, which will return non-null if it *can* detect the version
-            // 3. use the supplied default version
-            // 4. fallback to the hard-coded default version (but, really?)
-
-            var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
-            if (NuGetVersion.TryParse(env, out var envVersion)) return envVersion;
+            // 1. use the detector, which will return non-null if it *can* detect the version
+            // 2. use the supplied default version
+            // 3. fallback to the hard-coded default version (but, really?)
 
             var detectedVersion = ServerVersionDetector.DetectedServerVersion;
             if (detectedVersion != null) return detectedVersion;

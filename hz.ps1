@@ -325,7 +325,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-$serverVersion = $options.server # use specified value by default FIXME KILL THIS?
+$serverVersion = $options.server # use specified value by default
 $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
@@ -530,10 +530,6 @@ function determine-server-version {
     # this will be updated below if required
     $script:serverVersion = $version
 
-    # set server version (to filter tests)
-    # this will be updated below if required
-    $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
-
     if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
         return
@@ -545,7 +541,6 @@ function determine-server-version {
         get-master-server-version $r
         $version = $r.version
         Write-Output "Server: determined version $version from GitHub"
-        $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
         $script:serverVersion = $version
     }
 
@@ -589,7 +584,6 @@ function determine-server-version {
         if ($response.StatusCode -eq 200) {
             Write-Output "Server: found version $nodeVersion on Maven, using this version"
             $script:serverVersion = $nodeVersion
-            $env:HAZELCAST_SERVER_VERSION=$nodeVersion.TrimEnd("-SNAPSHOT")
             return;
         }
         else {
@@ -1721,7 +1715,8 @@ function start-remote-controller() {
 	}
     else {
         set-content "$tmpDir/rc/pid" $script:remoteController.Id
-        Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
+        set-content "$tmpDir/rc/version" $serverVersion
+        Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
     }
 }
 
@@ -1790,6 +1785,7 @@ function stop-remote-controller() {
         Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
         $script:remoteController.Kill($true) # entire tree
         rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
 	}
     else {
         Write-Output "Remote controller is not running."
@@ -1813,6 +1809,7 @@ function kill-remote-controller() {
         $rcpid = get-content "$tmpDir/rc/pid"
         kill-tree $rcpid
         rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
         Write-Output "Remote controller process $pid has been killed"
     }
 }
@@ -1969,6 +1966,10 @@ function hz-test {
         if (!(test-remote-controller)) {
             start-remote-controller
             $ownsrc = $true # we own it and need to stop it
+        }
+        $v = get-content "$tmpDir/rc/version"
+        if ($v -ne $serverVersion) {
+            Die "Remote controller runs server version $v not $serverVersion."
         }
 
         Write-Output ""

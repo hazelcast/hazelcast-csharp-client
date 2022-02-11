@@ -33,7 +33,7 @@ namespace Hazelcast.Tests.Sql
     /// Tests serialization of parameters and result deserialization of SQL queries for all <see cref="SqlColumnType"/>s.
     /// </summary>
     [TestFixture]
-    [ServerCondition("[4.1,)")] // only on server 4.1 and above
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlSerializationDeserializationTests : SqlTestBase
     {
         protected override bool EnableJet => true;

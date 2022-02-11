@@ -13,8 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
-using System.Reflection;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using NuGet.Versioning;
@@ -26,10 +24,9 @@ namespace Hazelcast.Tests.Testing
     public class ServerVersionTests
     {
         // in ServerVersion order is:
-        // 1. use the environment variable, if set - it overrides everything
-        // 2. use the detector, which will return non-null if it *can* detect the version
-        // 3. use the supplied default version
-        // 4. fallback to the hard-coded default version (but, really?)
+        // 1. use the detector, which will return non-null if it *can* detect the version
+        // 2. use the supplied default version
+        // 3. fallback to the hard-coded default version (but, really?)
 
         [Test]
         public void DetectVersion()
@@ -43,16 +40,8 @@ namespace Hazelcast.Tests.Testing
         }
 
         [Test]
-        public void EnvironmentVariable()
-        {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "6.6-TESTING");
-            Assert.AreEqual(NuGetVersion.Parse("6.6-TESTING"), ServerVersion.GetVersion());
-        }
-
-        [Test]
         public void Detector()
         {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
             using var forced = ServerVersionDetector.ForceVersion("7.7-TESTING");
             Assert.AreEqual(NuGetVersion.Parse("7.7-TESTING"), ServerVersion.GetVersion());
         }
@@ -60,7 +49,6 @@ namespace Hazelcast.Tests.Testing
         [Test]
         public void SuppliedDefault()
         {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
             using var forced = ServerVersionDetector.ForceNoVersion();
             Assert.AreEqual(NuGetVersion.Parse("8.8-TESTING"), ServerVersion.GetVersion("8.8-TESTING"));
         }
@@ -68,7 +56,6 @@ namespace Hazelcast.Tests.Testing
         [Test]
         public void HardCodedDefault()
         {
-            Environment.SetEnvironmentVariable(ServerVersion.EnvironmentVariableName, "");
             using var forced = ServerVersionDetector.ForceNoVersion();
             Assert.AreEqual(ServerVersion.DefaultVersion, ServerVersion.GetVersion());
         }

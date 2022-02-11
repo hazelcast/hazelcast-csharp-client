@@ -33,7 +33,7 @@ using Hazelcast.Testing.TestData;
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
-    [ServerCondition("[4.1,)")] // only on server 4.1 and above
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlQueryResultTests : SqlTestBase
     {
         // Needed to create long-running query
