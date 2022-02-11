@@ -27,10 +27,8 @@ namespace Hazelcast.Testing.Conditions
     /// server version.</para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public sealed class ServerVersionAttribute :  Attribute, IApplyToTest
+    public sealed class ServerVersionAttribute :  Attribute
     {
-        public const string PropertyName = ServerVersion.EnvironmentVariableName;
-
         /// <summary>
         /// Specifies that a class or a method overrides the server version.
         /// </summary>
@@ -47,11 +45,5 @@ namespace Hazelcast.Testing.Conditions
         /// Gets the version.
         /// </summary>
         public NuGetVersion Version { get; }
-
-        /// <inheritdoc />
-        public void ApplyToTest(Test test)
-        {
-            test.Properties[PropertyName] = new[] { Version };
-        }
     }
 }
