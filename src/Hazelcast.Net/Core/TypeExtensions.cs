@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Hazelcast.Core
 {
@@ -23,6 +25,47 @@ namespace Hazelcast.Core
     /// </summary>
     internal static class TypeExtensions
     {
+        private static readonly ConcurrentDictionary<Type, string> Names = new ConcurrentDictionary<Type, string>();
+        private static Regex QualifiedNameFilter;
+
+        /// <summary>
+        /// Gets the type qualified name.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The type qualified name.</returns>
+        /// <remarks>
+        /// <para>The type qualified name is the assembly qualified name, without the Version, Culture
+        /// and PublicKeyToken elements.</para>
+        /// </remarks>
+        public static string GetQualifiedTypeName(this Type type)
+            => Names.GetOrAdd(type, ConstructName);
+
+        // internally, AssemblyQualifiedName is
+        // Assembly.CreateQualifiedName(type.Assembly.FullName, type.FullName);
+        // with
+        // public static string CreateQualifiedName(string? assemblyName, string? typeName) => typeName + ", " + assemblyName;
+
+        // assembly.FullName ends up running an extern method
+        // type.FullName ends up in
+        //  return ConstructName(ref m_fullname, TypeNameFormatFlags.FormatNamespace | TypeNameFormatFlags.FormatFullInst);
+        // whereas
+        //  Name -> ConstructName(ref m_name, TypeNameFormatFlags.FormatBasic);
+        //  ToString -> ConstructName(ref m_toString, TypeNameFormatFlags.FormatNamespace);
+        //
+        // ConstructName = new RuntimeTypeHandle(m_runtimeType).ConstructName(formatFlags);
+        // and... that ends up running an extern method
+
+        // re-implementing it all by ourselves would be cumbersome, better filter out what we don't want
+
+        private static string ConstructName(Type type)
+        {
+            var name = type.AssemblyQualifiedName;
+            if (name == null) return null;
+
+            QualifiedNameFilter ??= new Regex(", Version=[^,]+, Culture=[^,]+, PublicKeyToken=[a-z0-9]+", RegexOptions.Compiled);
+            return QualifiedNameFilter.Replace(name, "");
+        }
+        
         /// <summary>
         /// Determines whether this type is a <see cref="Nullable{T}"/> type.
         /// </summary>

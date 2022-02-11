@@ -125,7 +125,7 @@ namespace Hazelcast.Serialization.Compact
 
         public static string GetTypeName<T>() => GetTypeName(typeof (T));
 
-        public static string GetTypeName(Type type) => type.AssemblyQualifiedName ?? 
+        public static string GetTypeName(Type type) => type.GetQualifiedTypeName() ?? 
                                                        throw new SerializationException($"Failed to obtain {type} assembly qualified name.");
 
         public object Read(IObjectDataInput input)
