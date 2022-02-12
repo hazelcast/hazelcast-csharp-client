@@ -494,6 +494,28 @@ function ensure-command($command) {
     }
 }
 
+function get-master-server-version ( $result ) {
+    Write-Output "Determine master server version from GitHub"
+    $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/pom.xml"
+    Write-Output "GET $url"
+    $response = invoke-web-request $url
+    if ($response.StatusCode -ne 200) {
+        Die "Error: could not download POM file from GitHub ($($response.StatusCode))"
+    }
+    $pom = [xml] $response.Content
+    if ($pom.project -eq $null -or $pom.project.version -eq $null) {
+        Die "Error: got invalid POM file from GitHub (could not find version)"
+    }
+    $version = $pom.project.version
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Die "Error: got invalid POM file from GitHub (could not find version)"
+    }
+    if (-not $version.EndsWith("-SNAPSHOT")) {
+        $version += "-SNAPSHOT"
+    }
+    $result.version = $version
+}
+
 # $options.server contains the specified server version, which can be 5.0, 5.0.1,
 # 5.0-SNAPSHOT, 5.0.1-SNAPSHOT, master, or anything really - and it may match an
 # actual server version, but also be master, or 4.0-SNAPSHOT that would be n/a on
@@ -521,23 +543,9 @@ function determine-server-version {
 
     if ($version -eq "master") {
         Write-Output "Server: version is $version, determine actual version from GitHub"
-        $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/pom.xml"
-        Write-Output "GET $url"
-        $response = invoke-web-request $url
-        if ($response.StatusCode -ne 200) {
-            Die "Error: could not download POM file from GitHub ($($response.StatusCode))"
-        }
-        $pom = [xml] $response.Content
-        if ($pom.project -eq $null -or $pom.project.version -eq $null) {
-            Die "Error: got invalid POM file from GitHub (could not find version)"
-        }
-        $version = $pom.project.version
-        if ([string]::IsNullOrWhiteSpace($version)) {
-            Die "Error: got invalid POM file from GitHub (could not find version)"
-        }
-        if (-not $version.EndsWith("-SNAPSHOT")) {
-            $version += "-SNAPSHOT"
-        }
+        $r = @{}
+        get-master-server-version $r
+        $version = $r.version
         Write-Output "Server: determined version $version from GitHub"
         $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
         $script:serverVersion = $version
@@ -845,6 +853,27 @@ function ensure-server-files {
             else {
                 Write-Output "Found hazelcast-default.xml from branch $v"
                 $found = $true
+            }
+        }
+
+        if (-not $found) {
+            # are we the master branch version?
+            $r = @{}
+            get-master-server-version $r
+            if ($r.version -eq $serverVersion) {
+                Write-Output "Master branch is $($r.version), matches."
+                $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
+                $dest = "$libDir/hazelcast-$serverVersion.xml"
+                $response = invoke-web-request $url $dest
+                if ($response.StatusCode -ne 200) {
+                    if (test-path $dest) { rm $dest }
+                    Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
+                }
+                Write-Output "Found hazelcast-default.xml from branch master"
+                $found = $true
+            }
+            else {
+                Write-Output "Master branch is $($r.version), does not match $serverVersion."
             }
         }
 
