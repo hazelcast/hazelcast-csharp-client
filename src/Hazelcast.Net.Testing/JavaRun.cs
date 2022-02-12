@@ -39,9 +39,9 @@ namespace Hazelcast.Testing
             {
                 foreach (var path in envpath.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (javaPath == null && File.Exists(Path.Combine(path, "java.exe")))
+                    if (javaPath == null && (File.Exists(Path.Combine(path, "java.exe")) || File.Exists(Path.Combine(path, "java"))))
                         javaPath = path;
-                    if (javacPath == null && File.Exists(Path.Combine(path, "javac.exe")))
+                    if (javacPath == null && (File.Exists(Path.Combine(path, "javac.exe")) || File.Exists(Path.Combine(path, "javac"))))
                         javacPath = path;
                 }
             }
