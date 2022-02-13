@@ -30,9 +30,10 @@ namespace Hazelcast
         /// (internal for tests only) Builds Hazelcast options.
         /// </summary>
         /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
+        /// <param name="preConfigure">An <see cref="HazelcastOptions"/> pre-configuration delegate.</param>
         /// <param name="configure">Optional <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure = null)
+        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<HazelcastOptions> preConfigure = null, Action<IConfiguration, HazelcastOptions> configure = null)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -40,14 +41,15 @@ namespace Hazelcast
             setup(builder);
             var configuration = builder.Build();
 
-            return Build(configuration, configure);
+            return Build(configuration, preConfigure, configure);
         }
 
         /// <summary>
         /// (internal for tests only) Builds Hazelcast options, using an alternate key.
         /// </summary>
         /// <param name="setup">An <see cref="IConfigurationBuilder"/> setup delegate.</param>
-        /// <param name="configure">An <see cref="HazelcastOptions"/> configuration delegate.</param>
+        /// <param name="preConfigure">A <see cref="HazelcastOptions"/> pre-configuration delegate.</param>
+        /// <param name="configure">A <see cref="HazelcastOptions"/> configuration delegate.</param>
         /// <param name="altKey">An alternate key.</param>
         /// <returns>Hazelcast options.</returns>
         /// <remarks>
@@ -56,7 +58,7 @@ namespace Hazelcast
         /// override them. This allows one json file to contain several configuration sets, which is
         /// convenient for instance when using the "user secrets" during tests.</para>
         /// </remarks>
-        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<IConfiguration, HazelcastOptions> configure, string altKey)
+        internal static HazelcastOptions Build(Action<IConfigurationBuilder> setup, Action<HazelcastOptions> preConfigure, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -64,21 +66,24 @@ namespace Hazelcast
             setup(builder);
             var configuration = builder.Build();
 
-            return Build(configuration, configure, altKey);
+            return Build(configuration, preConfigure, configure, altKey);
         }
 
         // builds options, no alternate keys
-        private static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure = null)
-            => Build(configuration, configure, null);
+        private static HazelcastOptions Build(IConfiguration configuration, Action<HazelcastOptions> preConfigure, Action<IConfiguration, HazelcastOptions> configure = null)
+            => Build(configuration, preConfigure, configure, null);
 
         // builds options, optionally binding alternate keys
-        private static HazelcastOptions Build(IConfiguration configuration, Action<IConfiguration, HazelcastOptions> configure, string altKey)
+        private static HazelcastOptions Build(IConfiguration configuration, Action<HazelcastOptions> preConfigure, Action<IConfiguration, HazelcastOptions> configure, string altKey)
         {
             // must HzBind here and not simply Bind because we use our custom
             // binder which handles more situations such as ignoring and/or
             // renaming properties
 
             var options = new HazelcastOptions();
+
+            preConfigure?.Invoke(options);
+
             configuration.HzBind(Hazelcast, options);
 
             if (altKey != null && altKey != Hazelcast)

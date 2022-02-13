@@ -15,10 +15,9 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Authentication;
 using System.Text;
-using System.Threading.Tasks;
-using ExpectedObjects;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration;
@@ -41,7 +40,7 @@ namespace Hazelcast.Tests.Configuration
         public void BuildExceptions()
         {
             Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, null, "key"));
         }
 
         [Test]
@@ -311,11 +310,61 @@ namespace Hazelcast.Tests.Configuration
             // clone
             var clone = options.Clone();
 
-            // use the ExpectedObject to perform a complete comparison of the clone
-            options.ToExpectedObject(config => config
-                    // factories. OwnsService is not cloned
-                    .IgnoreRelativePath("OwnsService"))
-                .ShouldEqual(clone);
+            // perform a complete comparison of the clone
+            AssertSameOptions(clone, options);
+        }
+
+        // this is a poor man's objects comparison
+        // we used to depend on the ExpectedObjects library, but let's try to keep things simple
+        // (see https://github.com/derekgreer/expectedObjects)
+        private static void AssertSameOptions(object obj, object expected)
+        {
+            // fast path
+            if (ReferenceEquals(obj, expected)) return;
+
+            // objects must be of the same type
+            Assert.That(obj.GetType() == expected.GetType());
+
+            var type = obj.GetType();
+            var properties = type.GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            // compare public instance properties
+            foreach (var property in properties)
+            {
+                // SingletonServiceFactory<>.OwnsService is not cloned
+                if (property.Name == "OwnsService")
+                {
+                    Console.WriteLine($"Skipping non-cloned property {type.Name}::{property.Name}");
+                    continue;
+                }
+
+                // I don't know how to handle indexed properties yet
+                if (property.GetIndexParameters().Length > 0)
+                    throw new NotSupportedException("Indexed properties are not supported here.");
+
+                var oValue = property.GetValue(obj);
+                var eValue = property.GetValue(expected);
+
+                if (type == typeof (string)) // string is enumerable, must test first
+                {
+                    Assert.That(oValue, Is.EqualTo(eValue), $"{type}::{property.Name}");
+                }
+                else if (property.PropertyType.GetInterfaces().Contains(typeof (System.Collections.IEnumerable)))
+                {
+                    var oValues = ((System.Collections.IEnumerable) oValue).Cast<object>().ToList();
+                    var eValues = ((System.Collections.IEnumerable) eValue).Cast<object>().ToList();
+                    Assert.That(oValues.Count, Is.EqualTo(eValues.Count), $"{type}::{property.Name}");
+                    for (var i = 0; i < oValues.Count; i++) AssertSameOptions(oValues[i], eValues[i]);
+                }
+                else if (property.PropertyType.IsValueType)
+                {
+                    Assert.That(oValue, Is.EqualTo(eValue), $"{type}::{property.Name}");
+                }
+                else
+                {
+                    AssertSameOptions(oValue, eValue);
+                }
+            }
         }
 
         [Test]
@@ -504,7 +553,7 @@ namespace Hazelcast.Tests.Configuration
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
             options = HazelcastOptions.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
-                null, "alt");
+                null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);
             Assert.AreEqual("cluster", options.ClusterName);

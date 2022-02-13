@@ -581,6 +581,7 @@ namespace Hazelcast.Clustering
         /// <param name="state">A state object.</param>
         private async ValueTask HandleCodecMemberViewEvent(int version, ICollection<MemberInfo> members, object state)
         {
+            _logger.LogDebug("Handle MemberView event.");
             var eventArgs = await _clusterMembers.SetMembersAsync(version, members).CfAwait();
 
             // nothing to do if members have been skipped (due to version)

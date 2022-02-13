@@ -12,18 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Metrics
+using System.Collections.Generic;
+
+namespace Hazelcast.Networking
 {
-    internal enum MetricUnit
+    /// <summary>
+    /// Defines a source of internal-to-public addesses map for the <see cref="AddressProvider"/>.
+    /// </summary>
+    internal interface IAddressProviderSource
     {
-        // values must align with Java
-        None = -1,
-        Bytes = 0, // default
-        Milliseconds = 1,
-        Nanoseconds = 2,
-        Percent = 3,
-        Count = 4,
-        Boolean = 5,
-        Enum = 6
+        /// <summary>
+        /// Provides an internal-to-public addresses map.
+        /// </summary>
+        /// <returns>An internal-to-public addresses map.</returns>
+        IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap();
+
+        /// <summary>
+        /// Determines whether this source maps addresses.
+        /// </summary>
+        bool Maps { get; }
     }
 }

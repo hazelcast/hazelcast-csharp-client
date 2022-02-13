@@ -1,4 +1,17 @@
-﻿using System;
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -14,11 +27,6 @@ namespace Hazelcast.Networking
     /// </summary>
     internal class ConnectAddressResolver
     {
-        // TODO: consider making these options
-        private const int NumberOfMembersToCheck = 3;
-        private static readonly TimeSpan InternalAddressTimeout = TimeSpan.FromSeconds(1);
-        private static readonly TimeSpan PublicAddressTimeout = TimeSpan.FromSeconds(3);
-
         private readonly NetworkingOptions _options;
         private readonly ILogger _logger;
 
@@ -42,17 +50,19 @@ namespace Hazelcast.Networking
             if (_options.UsePublicAddresses is {} usePublicAddresses)
             {
                 _logger.IfDebug()?.LogDebug(usePublicAddresses
-                    ? "NetworkingOptions.UsePublicAddresses is true, the client will use public addresses."
-                    : "NetworkingOptions.UsePublicAddresses is false, the client will use internal addresses.");
+                    ? "NetworkingOptions.UsePublicAddresses is true, use public addresses."
+                    : "NetworkingOptions.UsePublicAddresses is false, use internal addresses.");
+
                 return usePublicAddresses;
             }
 
             _logger.IfDebug()?.LogDebug("NetworkingOptions.UsePublicAddresses is not set, decide by ourselves.");
 
-            // if ssl is enabled, the the client uses internal addresses
+            // if ssl is enabled, then the client uses internal addresses
             if (_options.Ssl.Enabled)
             {
-                _logger.IfDebug()?.LogDebug("Ssl is enabled, the client will use internal addresses.");
+                _logger.IfDebug()?.LogDebug("Ssl is enabled, use internal addresses.");
+
                 return false;
             }
 
@@ -91,7 +101,8 @@ namespace Hazelcast.Networking
             // if one member does not have a public address, then the client has to use internal addresses
             if (members.Any(x => x.PublicAddress is null))
             {
-                _logger.IfDebug()?.LogDebug("At least one member does not have a public address, the client has to use internal addresses.");
+                _logger.IfDebug()?.LogDebug("At least one member does not have a public address, use internal addresses.");
+
                 return false;
             }
 
@@ -119,7 +130,7 @@ namespace Hazelcast.Networking
         // determines whether using public addresses is required
         // by testing a subset of all members
         private Task<bool> DeterminePublicAddressesAreRequired(IReadOnlyCollection<MemberInfo> members)
-            => DeterminePublicAddressesAreRequired(members.Shuffle(), NumberOfMembersToCheck);
+            => DeterminePublicAddressesAreRequired(members.Shuffle(), _options.AddressResolver_SampleSize);
 
         // determines whether using public addresses is required
         private async Task<bool> DeterminePublicAddressesAreRequired(IReadOnlyCollection<MemberInfo> members, int sampleCount)
@@ -133,26 +144,22 @@ namespace Hazelcast.Networking
                 // be reached at their public addresses, so assume public addresses are required for all
                 if (count++ == sampleCount && requirePublic)
                 {
-                    _logger.IfDebug()?.LogDebug("At least {Count} members can only be reached at their public address, the client has to use public addresses.", sampleCount);
+                    _logger.IfDebug()?.LogDebug("At least {Count} members only respond on their public address, the client has to use public addresses.", sampleCount);
+
                     return true;
                 }
 
-                // TODO: we could try both in parallel and would it be a good idea?
-                //var (canReachInternal, canReachPublic) = await Task.WhenAll(
-                //        member.Address.TryReachAsync(_internalAddressTimeout),
-                //        member.PublicAddress.TryReachAsync(_publicAddressTimeout)
-                //    ).CfAwait();
-
-                var canReachInternal = await member.Address.TryReachAsync(InternalAddressTimeout).CfAwait();
+                var canReachInternal = await member.Address.TryReachAsync(_options.AddressResolver_InternalAddressTryReachTimeout).CfAwait();
 
                 // if one member can be reached at its internal address then assume internal addresses are ok for all
                 if (canReachInternal)
                 {
-                    _logger.IfDebug()?.LogDebug("Member at {Address} can be reached at this internal address, assume that the client can use internal addresses.", member.Address);
+                    _logger.IfDebug()?.LogDebug("Member {Member} responds on its internal address, assume that the client can use internal addresses.", member.Address);
+
                     return false;
                 }
 
-                var canReachPublic = await member.PublicAddress.TryReachAsync(PublicAddressTimeout).CfAwait();
+                var canReachPublic = await member.PublicAddress.TryReachAsync(_options.AddressResolver_PublicAddressTryReachTimeout).CfAwait();
 
                 // if the member cannot be reached at its internal address but can be reached at its public address,
                 // this would indicate that the client has to use public addresses, but we are going to try a few
@@ -160,7 +167,8 @@ namespace Hazelcast.Networking
                 // another member will make it
                 if (canReachPublic)
                 {
-                    _logger.IfDebug()?.LogDebug("Member at {Address} cannot be reached at this internal address, but can be reached at its {PublicAddress} public address.", member.Address, member.PublicAddress);
+                    _logger.IfDebug()?.LogDebug("Member {Member} does not respond on its internal address, responds on its public address.", member.Address, member.PublicAddress);
+
                     requirePublic = true;
                 }
 

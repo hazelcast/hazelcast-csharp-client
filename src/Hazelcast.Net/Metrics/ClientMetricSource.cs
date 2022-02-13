@@ -35,41 +35,41 @@ namespace Hazelcast.Metrics
 
         public static class MetricDescriptors
         {
-            public static readonly MetricDescriptor<long> LastStatisticsCollectionTime = new MetricDescriptor<long>("lastStatisticsCollectionTime");
-            public static readonly MetricDescriptor<bool> Enterprise = new MetricDescriptor<bool>("enterprise");
-            public static readonly MetricDescriptor<string> ClientType = new MetricDescriptor<string>("clientType");
-            public static readonly MetricDescriptor<string> ClientVersion = new MetricDescriptor<string>("clientVersion");
-            public static readonly MetricDescriptor<string> ClientName = new MetricDescriptor<string>("clientName");
-            public static readonly MetricDescriptor<long> ClusterConnectionTimestamp = new MetricDescriptor<long>("clusterConnectionTimestamp");
-            public static readonly MetricDescriptor<string> ClientAddress = new MetricDescriptor<string>("clientAddress");
+            public static readonly MetricDescriptor<long> LastStatisticsCollectionTime = MetricDescriptor.Create<long>("lastStatisticsCollectionTime");
+            public static readonly MetricDescriptor<bool> Enterprise = MetricDescriptor.Create<bool>("enterprise");
+            public static readonly MetricDescriptor<string> ClientType = MetricDescriptor.Create<string>("clientType");
+            public static readonly MetricDescriptor<string> ClientVersion = MetricDescriptor.Create<string>("clientVersion");
+            public static readonly MetricDescriptor<string> ClientName = MetricDescriptor.Create<string>("clientName");
+            public static readonly MetricDescriptor<long> ClusterConnectionTimestamp = MetricDescriptor.Create<long>("clusterConnectionTimestamp");
+            public static readonly MetricDescriptor<string> ClientAddress = MetricDescriptor.Create<string>("clientAddress");
 
             public static class Credentials
             {
-                public static readonly MetricDescriptor<string> Principal = new MetricDescriptor<string>("credentials", "principal");
+                public static readonly MetricDescriptor<string> Principal = MetricDescriptor.Create<string>("credentials", "principal");
             }
 
             // ReSharper disable once InconsistentNaming
             public static class OS
             {
-                public static readonly MetricDescriptor<long> CommittedVirtualMemorySize = new MetricDescriptor<long>("os", "committedVirtualMemorySize");
-                public static readonly MetricDescriptor<long> FreePhysicalMemorySize = new MetricDescriptor<long>("os", "freePhysicalMemorySize");
-                public static readonly MetricDescriptor<long> FreeSwapSpaceSize = new MetricDescriptor<long>("os", "freeSwapSpaceSize");
-                public static readonly MetricDescriptor<long> MaxFileDescriptorCount = new MetricDescriptor<long>("os", "maxFileDescriptorCount");
-                public static readonly MetricDescriptor<long> OpenFileDescriptorCount = new MetricDescriptor<long>("os", "openFileDescriptorCount");
-                public static readonly MetricDescriptor<long> ProcessCpuTime = new MetricDescriptor<long>("os", "processCpuTime");
-                public static readonly MetricDescriptor<double> SystemLoadAverage = new MetricDescriptor<double>("os", "systemLoadAverage");
-                public static readonly MetricDescriptor<long> TotalPhysicalMemorySize = new MetricDescriptor<long>("os", "totalPhysicalMemorySize");
-                public static readonly MetricDescriptor<long> TotalSwapSpaceSize = new MetricDescriptor<long>("os", "totalSwapSpaceSize");
+                public static readonly MetricDescriptor<long> CommittedVirtualMemorySize = MetricDescriptor.Create<long>("os", "committedVirtualMemorySize");
+                public static readonly MetricDescriptor<long> FreePhysicalMemorySize = MetricDescriptor.Create<long>("os", "freePhysicalMemorySize");
+                public static readonly MetricDescriptor<long> FreeSwapSpaceSize = MetricDescriptor.Create<long>("os", "freeSwapSpaceSize");
+                public static readonly MetricDescriptor<long> MaxFileDescriptorCount = MetricDescriptor.Create<long>("os", "maxFileDescriptorCount");
+                public static readonly MetricDescriptor<long> OpenFileDescriptorCount = MetricDescriptor.Create<long>("os", "openFileDescriptorCount");
+                public static readonly MetricDescriptor<long> ProcessCpuTime = MetricDescriptor.Create<long>("os", "processCpuTime");
+                public static readonly MetricDescriptor<double> SystemLoadAverage = MetricDescriptor.Create<double>("os", "systemLoadAverage");
+                public static readonly MetricDescriptor<long> TotalPhysicalMemorySize = MetricDescriptor.Create<long>("os", "totalPhysicalMemorySize");
+                public static readonly MetricDescriptor<long> TotalSwapSpaceSize = MetricDescriptor.Create<long>("os", "totalSwapSpaceSize");
             }
 
             public static class Runtime
             {
-                public static readonly MetricDescriptor<int> AvailableProcessors = new MetricDescriptor<int>("runtime", "availableProcessors");
-                public static readonly MetricDescriptor<long> FreeMemory = new MetricDescriptor<long>("runtime", "freeMemory");
-                public static readonly MetricDescriptor<long> MaxMemory = new MetricDescriptor<long>("runtime", "maxMemory");
-                public static readonly MetricDescriptor<long> TotalMemory = new MetricDescriptor<long>("runtimes", "totalMemory");
-                public static readonly MetricDescriptor<long> Uptime = new MetricDescriptor<long>("runtime", "uptime");
-                public static readonly MetricDescriptor<long> UsedMemory = new MetricDescriptor<long>("runtime", "usedMemory");
+                public static readonly MetricDescriptor<int> AvailableProcessors = MetricDescriptor.Create<int>("runtime", "availableProcessors", MetricUnit.Count);
+                public static readonly MetricDescriptor<long> FreeMemory = MetricDescriptor.Create<long>("runtime", "freeMemory", MetricUnit.Bytes);
+                public static readonly MetricDescriptor<long> MaxMemory = MetricDescriptor.Create<long>("runtime", "maxMemory", MetricUnit.Bytes);
+                public static readonly MetricDescriptor<long> TotalMemory = MetricDescriptor.Create<long>("runtime", "totalMemory", MetricUnit.Bytes);
+                public static readonly MetricDescriptor<long> Uptime = MetricDescriptor.Create<long>("runtime", "uptime");
+                public static readonly MetricDescriptor<long> UsedMemory = MetricDescriptor.Create<long>("runtime", "usedMemory", MetricUnit.Bytes);
             }
         }
 
@@ -84,9 +84,12 @@ namespace Hazelcast.Metrics
                 yield break;
             }
 
+            // MUST align with https://github.com/hazelcast/hazelcast/blob/master/hazelcast/src/main/java/com/hazelcast/internal/nio/ConnectionType.java
+            const string clientType = "CSP";
+
             yield return MetricDescriptors.Enterprise.WithValue(false);
-            yield return MetricDescriptors.ClientType.WithValue("CSHARP");
-            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.Version);
+            yield return MetricDescriptors.ClientType.WithValue(clientType);
+            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.MajorMinorVersion);
             yield return MetricDescriptors.ClientName.WithValue(_cluster.ClientName);
             yield return MetricDescriptors.ClusterConnectionTimestamp.WithValue(Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
             yield return MetricDescriptors.ClientAddress.WithValue(connection.LocalEndPoint.Address.ToString());

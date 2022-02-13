@@ -152,15 +152,20 @@ namespace Hazelcast.Tests.Messaging
                 Assert.That(!e.NextIsNotTheEnd());
 
                 e.MoveNext();
+                Assert.That(e.Current, Is.Not.Null);
                 while (!e.Current.IsBeginStruct) e.MoveNext();
-                // at 2
-                Assert.That(e.NextIsNotTheEnd());
+                // at 2, is BeginStruct
+                Assert.That(!e.AtStructEnd()); // whether e.Current is EndStruct
+                Assert.That(e.NextIsNotTheEnd()); // whether e.Current is !EndStruct
                 e.MoveNext(); // to 3
+                Assert.That(!e.AtStructEnd());
                 Assert.That(e.NextIsNotTheEnd());
                 e.MoveNext(); // to 4
-                Assert.That(!e.NextIsNotTheEnd()); // next is 5 which is EndStruct
-                e.MoveNext(); // to 5
-                Assert.That(!e.NextIsNotTheEnd()); // current is 5 which is EndStruct
+                Assert.That(!e.AtStructEnd());
+                Assert.That(e.NextIsNotTheEnd());
+                e.MoveNext(); // to 5, is EndStruct
+                Assert.That(e.AtStructEnd());
+                Assert.That(!e.NextIsNotTheEnd()); // cannot e.Take() more
                 e.MoveNext(); // to 6
                 Assert.That(e.Current, Is.SameAs(frames[6]));
             }
