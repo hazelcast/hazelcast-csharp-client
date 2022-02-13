@@ -69,11 +69,11 @@ namespace Hazelcast.Testing
             if (JdkPath == null)
                 throw new InvalidOperationException($"Could not locate a JDK in PATH ({Environment.GetEnvironmentVariable("PATH")}).");
 
-            if (!File.Exists(Path.Combine(JdkPath, "javac.exe")))
-                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, "javac.exe")}.");
+            if (!File.Exists(Path.Combine(JdkPath, JavaExe)))
+                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, JavaExe)}.");
 
-            if (!File.Exists(Path.Combine(JdkPath, "java.exe")))
-                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, "java.exe")}.");
+            if (!File.Exists(Path.Combine(JdkPath, JavacExe)))
+                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, JavacExe)}.");
 
             Console.WriteLine($"JavaRun with JDK: {JdkPath}");
 
@@ -202,7 +202,7 @@ namespace Hazelcast.Testing
                 throw new InvalidOperationException("No source files.");
 
             Console.WriteLine("Compile...");
-            var exe = PathCombineFull(JdkPath, "javac.exe");
+            var exe = PathCombineFull(JdkPath, JavacExe);
             var args = $"{GetClassPath()} {PathCombineFull(_path, "*.java")}";
             Console.WriteLine($"> javac {args}");
 
@@ -217,7 +217,7 @@ namespace Hazelcast.Testing
             pipeBytes ??= Array.Empty<byte>();
 
             Console.WriteLine($"Execute (piping {pipeBytes.Length} bytes)...");
-            var exe = PathCombineFull(JdkPath, "java.exe");
+            var exe = PathCombineFull(JdkPath, JavaExe);
             var args = $"{GetClassPath(_path)} {classname}";
             Console.WriteLine($"> java {args}");
 
