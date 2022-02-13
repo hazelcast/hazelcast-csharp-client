@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Text;
 using Hazelcast.Core;
 using NUnit.Framework;
 
@@ -25,87 +26,113 @@ namespace Hazelcast.Tests.DotNet
         // runtime does this to avoid warning on NotImplementedException and that's nice
         // public virtual string? FullName => throw NotImplemented.ByDesign;
 
-        [Test]
-        public void GetTypeNames()
+        private static readonly string OurVersion = typeof(TypeTests).Assembly.GetName().Version.ToString();
+        private static readonly string OurCulture = "neutral";
+        private static readonly byte[] OurPublicKeyBytes = typeof (TypeTests).Assembly.GetName().GetPublicKeyToken();
+        private static readonly string OurPublicKeyToken = OurPublicKeyBytes.Length == 0 ? "null" : OurPublicKeyBytes.Dump(formatted: false);
+        private static readonly string OurDetails = $"Version={OurVersion}, Culture={OurCulture}, PublicKeyToken={OurPublicKeyToken}";
+
+        private static readonly string IntVersion = typeof(int).Assembly.GetName().Version.ToString();
+        private static readonly string IntCulture = "neutral";
+        private static readonly byte[] IntPublicKeyBytes = typeof(int).Assembly.GetName().GetPublicKeyToken();
+        private static readonly string IntPublicKeyToken = IntPublicKeyBytes.Length == 0 ? "null" : IntPublicKeyBytes.Dump(formatted: false);
+        private static readonly string IntDetails = $"Version={IntVersion}, Culture={IntCulture}, PublicKeyToken={IntPublicKeyToken}";
+
+        private static readonly string IntAssembly = typeof (int).Assembly.GetName().Name;
+
+#if NET462 || NET48
+        private static readonly bool IsFramework = true;
+#else
+        private static readonly bool IsFramework = false;
+#endif
+
+        private static readonly (string, string)[] GetTypeNameSource =
         {
-            Console.WriteLine(typeof(Thing).AssemblyQualifiedName);
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null
 
-            Console.WriteLine(typeof(Thing<int>).AssemblyQualifiedName);
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null
+            (typeof (Thing).AssemblyQualifiedName, $"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, {OurDetails}"),
+            (typeof (Thing<int>).AssemblyQualifiedName, $"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}, {IntDetails}]], Hazelcast.Net.Tests, {OurDetails}"),
 
-            Console.WriteLine(typeof(Thing).FullName);
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing
+            (typeof (Thing).FullName, "Hazelcast.Tests.DotNet.TypeTests+Thing"),
+            (typeof (Thing<int>).FullName, $"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}, {IntDetails}]]"),
 
-            Console.WriteLine(typeof(Thing<int>).FullName);
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+            (typeof (Thing).Name, "Thing"),
+            (typeof (Thing<int>).Name, "Thing`1"),
 
-            Console.WriteLine(typeof(Thing).Name);
-            // -> Thing
+            (typeof (Thing).ToString(), "Hazelcast.Tests.DotNet.TypeTests+Thing"),
+            (typeof (Thing<int>).ToString(), "Hazelcast.Tests.DotNet.TypeTests+Thing`1[System.Int32]"),
 
-            Console.WriteLine(typeof(Thing<int>).Name);
-            // -> Thing`1
+            (typeof (Thing).GetQualifiedTypeName(), "Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests"),
+            (typeof (Thing<int>).GetQualifiedTypeName(), $"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}]], Hazelcast.Net.Tests"),
 
-            Console.WriteLine(typeof(Thing).ToString());
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing
+        };
 
-            Console.WriteLine(typeof(Thing<int>).ToString());
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing`1[System.Int32]
-
-            Console.WriteLine(typeof(Thing).GetQualifiedTypeName());
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests
-
-            Console.WriteLine(typeof(Thing<int>).GetQualifiedTypeName());
-            // -> Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib]], Hazelcast.Net.Tests
+        [TestCaseSource(nameof(GetTypeNameSource))]
+        public void GetTypeName((string name, string expected) test)
+        {
+            Assert.That(test.name, Is.EqualTo(test.expected), $"Expected '{test.expected}' but got '{test.name}'.");
         }
 
         // type name is "The assembly-qualified name of the type to get. See AssemblyQualifiedName. If the type
         // is in the currently executing assembly or in mscorlib.dll/System.Private.CoreLib.dll, it is sufficient
         // to supply the type name qualified by its namespace."
 
-        // works with type.AssemblyQualifiedName
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]], Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null", typeof(Thing<int>), true)]
-
-        // missing namespace = cannot work
-        [TestCase("Thing", typeof(Thing), false)]
-        [TestCase("TypeTests+Thing", typeof(Thing), false)]
-
-        // namespace only = ok if same assembly else fails
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing", typeof(Thing), true)]
-        [TestCase("Hazelcast.HazelcastOptions", typeof(HazelcastOptions), false)]
-
-        // not same assembly = also requires assembly
-        [TestCase("Hazelcast.HazelcastOptions, Hazelcast.Net", typeof(HazelcastOptions), true)]
-
-        // works with assembly, and more
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=null", typeof(Thing), true)]
-
-        // different version... random public key... does not matter
-        // regardless of whether the assemblies are signed or not - Type.GetType does not care
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=2.0.0.0", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=99.0.0.0", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=5.0.0.0, Culture=neutral, PublicKeyToken=7caaaaaabea7798e", typeof(Thing), true)]
-
-        // also works for generics
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib]], Hazelcast.Net.Tests", typeof(Thing<int>), true)]
-
-        // qualified names is probably best for us
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests", typeof(Thing), true)]
-        [TestCase("Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, System.Private.CoreLib]], Hazelcast.Net.Tests", typeof(Thing<int>), true)]
-
-        public void TestCreateType(string name, Type type, bool succeeds)
+        private static readonly (string, Type, bool)[] CreateTypeSource =
         {
-            if (succeeds) AssertCanCreate(name, type);
-            else AssertCannotCreate(name);
+            // works with type.AssemblyQualifiedName
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=null", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}, {IntDetails}]], Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=null", typeof(Thing<int>), true),
+
+            // missing namespace = cannot work
+            ("Thing", typeof(Thing), false),
+            ("TypeTests+Thing", typeof(Thing), false),
+
+            // namespace only = ok if same assembly else fails
+            ("Hazelcast.Tests.DotNet.TypeTests+Thing", typeof(Thing), true),
+            ("Hazelcast.HazelcastOptions", typeof(HazelcastOptions), false),
+
+            // not same assembly = also requires assembly
+            ("Hazelcast.HazelcastOptions, Hazelcast.Net", typeof(HazelcastOptions), true),
+
+            // works with assembly, and more
+            ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=null", typeof(Thing), true),
+
+            // different version... random public key... does not matter
+            // regardless of whether the assemblies are signed or not - Type.GetType does not care
+            ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=2.0.0.0", typeof(Thing), true),
+            ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=99.0.0.0", typeof(Thing), true),
+
+            // except, .NET Framework wants the public key token to make sense & match
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=7caaaaaabea7798e", typeof(Thing), !IsFramework),
+
+            // also works for generics
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}]], Hazelcast.Net.Tests", typeof(Thing<int>), true),
+
+            // qualified names is probably best for us
+            ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}]], Hazelcast.Net.Tests", typeof(Thing<int>), true),
+        };
+
+        [TestCaseSource(nameof(CreateTypeSource))]
+        public void TestCreateType((string name, Type type, bool succeeds) test)
+        {
+            if (test.succeeds) AssertCanCreate(test.name, test.type);
+            else AssertCannotCreate(test.name);
         }
 
         private static void AssertCannotCreate(string name)
         {
-            var type = Type.GetType(name);
+            Type type;
+            try
+            {
+                type = Type.GetType(name);
+            }
+            catch
+            {
+                type = null;
+            }
             Assert.That(type, Is.Null);
         }
 

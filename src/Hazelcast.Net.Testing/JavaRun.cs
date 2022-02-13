@@ -47,18 +47,24 @@ namespace Hazelcast.Testing
             }
 
             if (javaPath == null || javacPath == null || javaPath != javacPath)
-                throw new InvalidOperationException("Could not locate a JDK.");
+                throw new InvalidOperationException($"Could not locate a JDK in PATH ({envpath}) " +
+                                                    $"(java: {javaPath ?? "n/a"}, javac: {javacPath ?? "n/a"}).");
 
             JdkPath = javaPath;
         }
 
         public JavaRun()
         {
+            if (JdkPath == null)
+                throw new InvalidOperationException($"Could not locate a JDK in PATH ({Environment.GetEnvironmentVariable("PATH")}).");
+
             if (!File.Exists(Path.Combine(JdkPath, "javac.exe")))
-                throw new InvalidOperationException("Could not locate javac.exe.");
+                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, "javac.exe")}.");
 
             if (!File.Exists(Path.Combine(JdkPath, "java.exe")))
-                throw new InvalidOperationException("Could not locate java.exe.");
+                throw new InvalidOperationException($"Not found: {Path.Combine(JdkPath, "java.exe")}.");
+
+            Console.WriteLine($"JavaRun with JDK: {JdkPath}");
 
             var assemblyLocation = GetType().Assembly.Location;
             var assemblyDirectory = Path.GetDirectoryName(assemblyLocation);
