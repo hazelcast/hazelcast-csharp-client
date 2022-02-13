@@ -25,11 +25,22 @@ namespace Hazelcast.Testing
     public class JavaRun : IDisposable
     {
         private static readonly string JdkPath;
+        private static readonly string JavaExe;
+        private static readonly string JavacExe;
 
         private readonly string _path = Path.Combine(Path.GetTempPath(), $"hz-tests-{Guid.NewGuid():N}");
         private readonly List<string> _sources = new List<string>();
         private readonly List<string> _libs = new List<string>();
         private readonly string _libpath;
+
+        private static void IfExists(string path, string exe, ref string javaPath, ref string javaExe)
+        {
+            if (javaPath == null && File.Exists(Path.Combine(path, exe)))
+            {
+                javaPath = path;
+                javaExe = exe;
+            }
+        }
 
         static JavaRun()
         {
@@ -39,10 +50,10 @@ namespace Hazelcast.Testing
             {
                 foreach (var path in envpath.Split(new[] { Path.PathSeparator }, StringSplitOptions.RemoveEmptyEntries))
                 {
-                    if (javaPath == null && (File.Exists(Path.Combine(path, "java.exe")) || File.Exists(Path.Combine(path, "java"))))
-                        javaPath = path;
-                    if (javacPath == null && (File.Exists(Path.Combine(path, "javac.exe")) || File.Exists(Path.Combine(path, "javac"))))
-                        javacPath = path;
+                    IfExists(path, "java.exe", ref javaPath, ref JavaExe);
+                    IfExists(path, "java", ref javaPath, ref JavaExe);
+                    IfExists(path, "javac.exe", ref javacPath, ref JavacExe);
+                    IfExists(path, "javac", ref javacPath, ref JavacExe);
                 }
             }
 
