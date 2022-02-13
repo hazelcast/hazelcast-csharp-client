@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -22,7 +23,7 @@ namespace Hazelcast.Clustering
 {
     /// <summary>
     /// Failover class holds given alternative failover cluster options. 
-    /// It switches the cluster options by listening <see cref="OnClusterDisconnected"/> event handler. On each call of the event, 
+    /// It switches the cluster options by listening <see cref="OnClusterStateChanged"/> event handler. On each call of the event, 
     /// tracks the number of trials and switches the current cluster <see cref="CurrentClusterOptions"/> to next one.
     /// </summary>
     internal class Failover
@@ -44,6 +45,7 @@ namespace Hazelcast.Clustering
 
             _logger = loggerFactory.CreateLogger<Failover>();
             _state = state;
+            _isEnabled = options.Failover.Enabled;
 
             if (!options.Failover.Clusters.Any() && options.Failover.Enabled)
             {
@@ -69,6 +71,7 @@ namespace Hazelcast.Clustering
 
             _isEnabled = options.Failover.Enabled;
             _maxTryCount = options.Failover.TryCount;
+
         }
 
         /// <summary>
@@ -85,17 +88,27 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Handles the event. If <see cref="CanSwitchClusterOptions"/> is true, it switches the <see cref="CurrentClusterOptions"/> to next one.
+        /// Handles the event. If <see cref="CanSwitchClusterOptions"/> is true, and state is disconnected, it switches the <see cref="CurrentClusterOptions"/> to next one.
         /// </summary>
-        public void OnClusterDisconnected()
+        public ValueTask OnClusterStateChanged(ClientState clientState)
         {
-            if (CanSwitchClusterOptions)
+            //We have connected, reset the counter.
+            if (clientState == ClientState.Connected)
             {
-                SwitchClusterOptions();
-                return;
+                _currentTryCount = 0;
+            }
+            //we only count disconnected states
+            else if (clientState == ClientState.Disconnected)
+            {
+                if (CanSwitchClusterOptions)
+                {
+                    _state.ChangeState(ClientState.Switching);
+                    SwitchClusterOptions();
+                    _currentTryCount++;
+                }
             }
 
-            _currentTryCount++;
+            return default;
         }
 
         /// <summary>
@@ -104,8 +117,6 @@ namespace Hazelcast.Clustering
         /// </summary>
         private void SwitchClusterOptions()
         {
-            _currentTryCount = 0;
-
             if (!_clusterEnumerator.MoveNext())
             {
                 ResetToFirstCluster();
@@ -123,7 +134,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets wheather current conditions are suitable to change cluster options to next one.
         /// </summary>
-        public bool CanSwitchClusterOptions => _currentTryCount >= _maxTryCount && _isEnabled && _clusters.Any();
+        public bool CanSwitchClusterOptions => _currentTryCount < _maxTryCount && _isEnabled && _clusters.Any();
 
         /// <summary>
         /// Gets current <see cref="ClusterOptions" />

@@ -32,7 +32,7 @@ namespace Hazelcast.Clustering
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
         private readonly object _mutex = new object();
         private readonly StateChangeQueue _stateChangeQueue;
-
+        private readonly Failover _failover;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
 
@@ -42,7 +42,7 @@ namespace Hazelcast.Clustering
         public ClusterState(IHazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
-            ClusterName = clusterName;
+            ClusterName = clusterName;//TODO:should remove? given name can be overrided ex: dev
             ClientName = clientName;
             Partitioner = partitioner;
             LoggerFactory = loggerFactory;
@@ -51,8 +51,22 @@ namespace Hazelcast.Clustering
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
-            HConsole.Configure(x=> x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
+            _failover = new Failover(this, options, loggerFactory);
+
+            StateChanged += _failover.OnClusterStateChanged;
+
+            ClusterOptionsChanged += cluster =>
+            {
+                AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
+                ClusterName = cluster.ClusterName;
+                HConsole.WriteLine(this, "CLUSTER SWITCHED");
+                //Emits options are changed.
+                ChangeState(ClientState.Switched);
+            };
+
+            HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
         }
+
 
         #region Events
 
@@ -79,6 +93,20 @@ namespace Hazelcast.Clustering
             {
                 ThrowIfPropertiesAreReadOnly();
                 _shutdownRequested = value;
+            }
+        }
+
+        /// <summary>
+        /// Triggers when cluster options changed after a failover
+        /// If you don't need to new cluster options, you can subscribe to <see cref="StateChanged"/>
+        /// </summary>
+        public Action<ClusterOptions> ClusterOptionsChanged
+        {
+            get => _failover.ClusterOptionsChanged;
+            set
+            {
+                ThrowClientOfflineException();
+                _failover.ClusterOptionsChanged = value;
             }
         }
 
@@ -119,7 +147,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the name of the cluster server.
         /// </summary>
-        public string ClusterName { get; }
+        public string ClusterName { get; private set; }
 
         #endregion
 
@@ -309,7 +337,7 @@ namespace Hazelcast.Clustering
             }
 
             ClientState state;
-            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
+            try { state = await wait.Task.CfAwait(); } catch { state = 0; }
 
             reg.Dispose();
 
@@ -357,7 +385,7 @@ namespace Hazelcast.Clustering
         /// Requests that the client shuts down.
         /// </summary>
         public void RequestShutdown()
-        {
+        { 
             _shutdownRequested?.Invoke();
         }
 
@@ -375,6 +403,11 @@ namespace Hazelcast.Clustering
         /// Gets the address provider.
         /// </summary>
         public AddressProvider AddressProvider { get; }
+
+        /// <summary>
+        /// Gets <see cref="ClusterOptions"/> of current cluster
+        /// </summary>
+        public ClusterOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
 
         /// <summary>
         /// Gets the partitioner.

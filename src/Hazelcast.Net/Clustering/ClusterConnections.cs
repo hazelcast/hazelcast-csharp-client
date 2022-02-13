@@ -228,11 +228,12 @@ namespace Hazelcast.Clustering
         {
             _logger.LogDebug($"State changed: {state}");
 
-            // only if disconnected
-            if (state != ClientState.Disconnected) return default;
+            // only if disconnected or switched
+            if (state != ClientState.Disconnected || state != ClientState.Switched) return default;
 
             // and still disconnected - if the cluster is down or shutting down, give up
-            if (_clusterState.ClientState != ClientState.Disconnected)
+            if (_clusterState.ClientState != ClientState.Disconnected ||
+                _clusterState.ClientState != ClientState.Switched)
             {
                 _logger.LogInformation("Disconnected (shutting down)");
                 return default;
