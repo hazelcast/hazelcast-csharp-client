@@ -303,7 +303,9 @@ namespace Hazelcast.Clustering
                 if (ClientState == ClientState.Connected) return new ValueTask<bool>(true);
 
                 // never going to be connected
-                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
+                if (ClientState != ClientState.Started &&
+                    ClientState != ClientState.Disconnected &&
+                    ClientState != ClientState.Switched) return new ValueTask<bool>(false);
             }
 
             return WaitForConnectedAsync2(cancellationToken);
@@ -320,7 +322,9 @@ namespace Hazelcast.Clustering
                 if (ClientState == ClientState.Connected) return true;
 
                 // never going to be connected
-                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return false;
+                if (ClientState != ClientState.Started &&
+                    ClientState != ClientState.Disconnected &&
+                    ClientState != ClientState.Switched) return false;
 
                 // must wait
                 wait = new TaskCompletionSource<ClientState>();
@@ -328,7 +332,9 @@ namespace Hazelcast.Clustering
                 _stateChangeQueue.StateChanged += x =>
                 {
                     // either connected, or never going to be connected
-                    if (x != ClientState.Started && x != ClientState.Disconnected)
+                    if (x != ClientState.Started &&
+                        x != ClientState.Disconnected &&
+                        x != ClientState.Switched)
                         wait.TrySetResult(x);
 
                     // keep waiting
@@ -385,7 +391,7 @@ namespace Hazelcast.Clustering
         /// Requests that the client shuts down.
         /// </summary>
         public void RequestShutdown()
-        { 
+        {
             _shutdownRequested?.Invoke();
         }
 
@@ -398,6 +404,11 @@ namespace Hazelcast.Clustering
         /// Whether smart routing is enabled.
         /// </summary>
         public bool IsSmartRouting => Options.Networking.SmartRouting;
+
+        /// <summary>
+        /// Whether failover is enabled.
+        /// </summary>
+        public bool IsFailoverEnabled => _failover.Enabled;
 
         /// <summary>
         /// Gets the address provider.

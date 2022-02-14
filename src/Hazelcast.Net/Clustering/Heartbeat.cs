@@ -27,8 +27,8 @@ namespace Hazelcast.Clustering
 {
     internal class Heartbeat : IAsyncDisposable
     {
-        private readonly TimeSpan _period;
-        private readonly TimeSpan _timeout;
+        private TimeSpan _period;
+        private TimeSpan _timeout;
 
         private readonly TerminateConnections _terminateConnections;
         private readonly ClusterState _clusterState;
@@ -51,8 +51,13 @@ namespace Hazelcast.Clustering
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
-            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
-            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
+
+            _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
+            {
+                if (options.Heartbeat == null) return;
+
+                InitializeDuration(options.Heartbeat);
+            };
 
             if (options.PeriodMilliseconds < 0)
             {
@@ -60,7 +65,27 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            // sanity checks
+            InitializeDuration(options);
+
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
+
+            _cancel = new CancellationTokenSource();
+            _heartbeating = BeatAsync(_cancel.Token);
+            _active = 1;
+        }
+
+        private void InitializeDuration(HeartbeatOptions options)
+        {
+            if (options.PeriodMilliseconds < 0)
+            {
+                _logger.LogInformation("Heartbeat is disabled (period < 0)");
+                _active = 0;
+                return;
+            }
+
+            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
+            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
+
             if (_timeout <= _period)
             {
                 var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
@@ -70,12 +95,6 @@ namespace Hazelcast.Clustering
             }
 
             _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", (int)_period.TotalMilliseconds, (int)_timeout.TotalMilliseconds);
-
-            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
-
-            _cancel = new CancellationTokenSource();
-            _heartbeating = BeatAsync(_cancel.Token);
-            _active = 1;
         }
 
         /// <summary>

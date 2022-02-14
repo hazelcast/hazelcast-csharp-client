@@ -36,9 +36,9 @@ namespace Hazelcast.Clustering
 
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
-        private readonly Authenticator _authenticator;
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
+        private readonly SerializationService _serializationService;
 
         // member id -> connection
         // TODO: consider we are duplicating this with members?
@@ -47,6 +47,7 @@ namespace Hazelcast.Clustering
         // connection -> completion
         private readonly ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>> _completions = new ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>>();
 
+        private Authenticator _authenticator;
         private Action<MemberConnection> _connectionCreated;
         private Func<MemberConnection, bool, bool, bool, ValueTask> _connectionOpened;
         private Func<MemberConnection, ValueTask> _connectionClosed;
@@ -64,15 +65,24 @@ namespace Hazelcast.Clustering
         {
             _clusterState = clusterState;
             _clusterMembers = clusterMembers;
+            _serializationService = serializationService;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
-            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
+            _authenticator = new Authenticator(_clusterState.Options.Authentication, _serializationService, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
             if (_clusterState.IsSmartRouting)
                 _connectMembers = ConnectMembers(_cancel.Token);
 
             _clusterState.StateChanged += OnStateChanged;
+
+            //Cluster changed, renew authenticator if neccessary.
+            _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
+            {
+                if (options.Authentication == null) return;
+
+                _authenticator = new Authenticator(options.Authentication, _serializationService, _clusterState.LoggerFactory);
+            };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
         }
@@ -229,10 +239,10 @@ namespace Hazelcast.Clustering
             _logger.LogDebug($"State changed: {state}");
 
             // only if disconnected or switched
-            if (state != ClientState.Disconnected || state != ClientState.Switched) return default;
+            if (state != ClientState.Disconnected && state != ClientState.Switched) return default;
 
             // and still disconnected - if the cluster is down or shutting down, give up
-            if (_clusterState.ClientState != ClientState.Disconnected ||
+            if (_clusterState.ClientState != ClientState.Disconnected &&
                 _clusterState.ClientState != ClientState.Switched)
             {
                 _logger.LogInformation("Disconnected (shutting down)");
@@ -272,6 +282,10 @@ namespace Hazelcast.Clustering
             {
                 // reconnect via a background task
                 // operations will either retry until timeout, or fail
+
+                // if failover is enabled, be patient and wait for switched state.
+                if (state == ClientState.Disconnected && _clusterState.IsFailoverEnabled) return default;
+
                 _reconnect = BackgroundTask.Run(ReconnectAsync);
             }
             else

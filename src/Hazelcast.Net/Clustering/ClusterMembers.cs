@@ -71,6 +71,14 @@ namespace Hazelcast.Clustering
 
             _members = new MemberTable();
 
+            _clusterState.StateChanged += (state) =>
+            {
+                if (state == ClientState.Switching)
+                    Clear();
+
+                return default;
+            };
+
             // members to connect
             if (clusterState.IsSmartRouting)
             {
@@ -221,7 +229,7 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected?"":"dis")}connected.");
+                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
 
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
@@ -459,7 +467,7 @@ namespace Hazelcast.Clustering
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
                         _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.");
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected,ClientState.Switched);
                         _connected = true;
                     }
                     else
@@ -752,6 +760,24 @@ namespace Hazelcast.Clustering
             return _members.TryGetMember(memberId, out var memberInfo)
                 ? memberInfo
                 : null;
+        }
+
+        /// <summary>
+        /// Clear all members and their connections.
+        /// </summary>
+        private void Clear()
+        {
+            HConsole.WriteLine(this, "Clearing members");
+            //no one should interrupt the cleaning
+            lock (_mutex)
+            {
+                foreach (var member in _members.Members)
+                {
+                    _memberConnectionQueue.Remove(member.Id);
+                }
+
+                _members = new MemberTable();
+            }
         }
 
         /// <inheritdoc />
