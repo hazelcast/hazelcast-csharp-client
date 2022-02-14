@@ -108,12 +108,14 @@ namespace Hazelcast.Testing
         {
             const string prefix = "-cp ";
 
+            var separator = Path.PathSeparator;
+
             var classpath = new StringBuilder();
             classpath.Append(prefix);
 
             foreach (var lib in _libs)
             {
-                if (classpath.Length > prefix.Length) classpath.Append(';');
+                if (classpath.Length > prefix.Length) classpath.Append(separator);
                 var libpath = PathCombineFull(_libpath, lib);
                 Assert.That(File.Exists(libpath), Is.True, $"Lib {lib} not found.");
                 classpath.Append(libpath);
@@ -121,7 +123,7 @@ namespace Hazelcast.Testing
 
             if (path != null)
             {
-                if (classpath.Length > prefix.Length) classpath.Append(';');
+                if (classpath.Length > prefix.Length) classpath.Append(separator);
                 classpath.Append(path);
             }
 
@@ -195,18 +197,25 @@ namespace Hazelcast.Testing
             Console.WriteLine("Create temp directory...");
             Directory.CreateDirectory(_path);
 
+            var args = new StringBuilder();
+            args.Append(GetClassPath());
+
             Console.WriteLine("Copy source files...");
             foreach (var source in _sources)
-                File.WriteAllText(PathCombineFull(_path, Path.GetFileName(source)), TestFiles.ReadAllText(this, source));
+            {
+                var path = PathCombineFull(_path, Path.GetFileName(source));
+                args.Append(" ");
+                args.Append(path);
+                File.WriteAllText(path, TestFiles.ReadAllText(this, source));
+            }
             if (!Directory.GetFiles(_path, "*.java").Any())
                 throw new InvalidOperationException("No source files.");
 
             Console.WriteLine("Compile...");
             var exe = PathCombineFull(JdkPath, JavacExe);
-            var args = $"{GetClassPath()} {PathCombineFull(_path, "*.java")}";
             Console.WriteLine($"> javac {args}");
 
-            var (exitCode, _, outputAndError) = Run(exe, args);
+            var (exitCode, _, outputAndError) = Run(exe, args.ToString());
             Console.WriteLine(outputAndError);
 
             if (exitCode != 0) throw new InvalidOperationException($"Compilation failed (rc={exitCode}).");
