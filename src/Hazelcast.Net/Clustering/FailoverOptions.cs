@@ -34,6 +34,7 @@ namespace Hazelcast.Clustering
         {
             TryCount = options.TryCount;
             Clusters = options.Clusters.Select(p => p.Clone()).ToList();
+            Enabled = options.Enabled;
         }
 
         /// <summary>
