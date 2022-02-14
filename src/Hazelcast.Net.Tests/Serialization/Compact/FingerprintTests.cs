@@ -43,7 +43,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 // limitations under the License.";
 
             var bytes = Encoding.UTF8.GetBytes(text);
-            var fingerprint = RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, bytes);
+            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, bytes);
 
             // then, push to Java and compare
             using var run = new JavaRun()
