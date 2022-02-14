@@ -188,10 +188,6 @@ namespace Hazelcast.Tests.Clustering
 
             var _ = HConsoleForTest();
 
-            HConsole.WriteLine(this, "Creating Members");
-            var memberA = await RcClient.StartMemberAsync(RcClusterPrimary);
-            var memberB = await RcClient.StartMemberAsync(RcClusterAlternative);
-
             var options = new HazelcastOptionsBuilder()
                 .With((config, opt) =>
                 {
@@ -212,44 +208,77 @@ namespace Hazelcast.Tests.Clustering
                     clusterAlternative.Networking.Addresses.Add("127.0.0.1:5702");
                     opt.Failover.Clusters.Add(clusterAlternative);
 
-                    opt.AddSubscriber(events => events
-                        .StateChanged((sender, args) =>
-                        {
-                            HConsole.WriteLine(this, $"client state changed: {args.State}");
-                            opt.LoggerFactory.Service.CreateLogger<FailoverTests>().LogDebug("Client state changed: {State}", args.State);
-                        }));
+                    //opt.AddSubscriber(events => events
+                    //    .StateChanged((sender, args) =>
+                    //    {
+                    //        HConsole.WriteLine(this, $"client state changed: {args.State}");
+                    //        opt.LoggerFactory.Service.CreateLogger<FailoverTests>().LogDebug("Client state changed: {State}", args.State);
+                    //    }));
                 })
                 .WithHConsoleLogger()
                 .WithUserSecrets(GetType().Assembly)
                 .Build();
 
-            HConsole.WriteLine(this, "Creating Client");
+            async Task assertClusterA(IHMap<string, string> map, string currentClusterId)
+            {
+                HConsole.WriteLine(this, $"Asserting Cluster A - {RcClusterPrimary.Id}");
+
+                Assert.AreEqual(RcClusterPrimary.Id, currentClusterId);
+
+                await map.PutAsync(clusterAKey, clusterAData);
+                var readData = await map.GetAsync(clusterAKey);
+                Assert.AreEqual(clusterAData, readData);
+
+                readData = await map.GetAsync(clusterBData);
+                Assert.AreNotEqual(clusterBData, readData);
+            }
+
+            async Task assertClusterB(IHMap<string, string> map, string currentClusterId)
+            {
+                HConsole.WriteLine(this, $"Asserting Cluster B - {RcClusterAlternative.Id}");
+
+                Assert.AreEqual(RcClusterAlternative.Id, currentClusterId);
+
+                await map.PutAsync(clusterBKey, clusterBData);
+                var readData = await map.GetAsync(clusterBKey);
+                Assert.AreEqual(clusterBData, readData);
+
+                readData = await map.GetAsync(clusterAKey);
+                Assert.AreNotEqual(clusterAData, readData);
+            }
+
+            //Actual testing
+
+            HConsole.WriteLine(this, "Creating Members");
+            var memberA = await RcClient.StartMemberAsync(RcClusterPrimary);
+            var memberB = await RcClient.StartMemberAsync(RcClusterAlternative);
 
             var client = await HazelcastClientFactory.StartNewClientAsync(options);
-
             string mapName = nameof(FailoverTests);
             var map = await client.GetMapAsync<string, string>(mapName);
             Assert.IsNotNull(map);
 
-            HConsole.WriteLine(this, $"PUT:{clusterAData}");
-            await map.PutAsync(clusterAKey, clusterAData);
-            string clusterARemoteData = await map.GetAsync(clusterAKey);
-            Assert.AreEqual(clusterAData, clusterARemoteData);
+            await assertClusterA(map, client.ClusterName);
 
-            HConsole.WriteLine(this, $"SHUTDOWN:{RcClusterPrimary.Id}");
+            HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
             await RcClient.ShutdownMemberAsync(RcClusterPrimary.Id, memberA.Uuid);
 
-            Assert.ThrowsAsync<ClientOfflineException>(async () =>
-            {
-                var _ = await map.GetAsync(clusterAKey);
-            });
+            await Task.Delay(3_000);
 
-            await Task.Delay(5_000);
+            await assertClusterB(map, client.ClusterName);
+            Assert.AreEqual(ClientState.Connected, client.State);
 
-            clusterARemoteData = await map.GetAsync(clusterAKey);
-            Assert.AreNotEqual(clusterAData, clusterARemoteData);
+            HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
+            memberA = await RcClient.StartMemberAsync(RcClusterPrimary.Id);
 
-            Assert.AreEqual(RcClusterPrimary.Id, client.ClusterName);
+            HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster B :{RcClusterAlternative.Id}");
+            await RcClient.ShutdownMemberAsync(RcClusterAlternative.Id, memberB.Uuid);
+
+            await Task.Delay(3_000);
+
+            await assertClusterA(map, client.ClusterName);
+            Assert.AreEqual(ClientState.Connected, client.State);
+
         }
     }
 }

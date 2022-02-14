@@ -65,6 +65,11 @@ namespace Hazelcast.Testing
         protected virtual string RcClusterConfiguration => Remote.Resources.hazelcast;
 
         /// <summary>
+        /// Gets the alternative remote cluster configuration.
+        /// </summary>
+        protected virtual string RcAlternativeClusterConfiguration => Remote.Resources.alternative;
+
+        /// <summary>
         /// Gets the remote controller client.
         /// </summary>
         protected Remote.IRemoteControllerClient RcClient { get; private set; }
@@ -72,8 +77,8 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote controller cluster.
         /// </summary>
-        protected Remote.Cluster RcClusterPrimary { get; private set; }
+        protected Remote.Cluster RcClusterPrimary { get; set; }
 
-        protected Remote.Cluster RcClusterAlternative { get; private set; }
+        protected Remote.Cluster RcClusterAlternative { get; set; }
     }
 }
