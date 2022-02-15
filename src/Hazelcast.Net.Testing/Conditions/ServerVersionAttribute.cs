@@ -14,8 +14,8 @@
 
 using System;
 using NuGet.Versioning;
+using NUnit.Framework;
 using NUnit.Framework.Interfaces;
-using NUnit.Framework.Internal;
 
 namespace Hazelcast.Testing.Conditions
 {
@@ -26,9 +26,11 @@ namespace Hazelcast.Testing.Conditions
     /// <para>This attributes takes precedence over all other methods of defining the
     /// server version.</para>
     /// </remarks>
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-    public sealed class ServerVersionAttribute :  Attribute
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method, Inherited = false)]
+    public sealed class ServerVersionAttribute :  Attribute, ITestAction
     {
+        public const string PropertyName = "ServerVersionAttribute.Version";
+
         /// <summary>
         /// Specifies that a class or a method overrides the server version.
         /// </summary>
@@ -45,5 +47,35 @@ namespace Hazelcast.Testing.Conditions
         /// Gets the version.
         /// </summary>
         public NuGetVersion Version { get; }
+
+        // this attribute used to implement IApplyToTest but then, NUnit creates one test context for
+        // OneTimeSetUp phase and another one for the actual test method, and does not copy properties
+        // over from one to the other - and don't mention test suites (created by [TestCase(...)]) that
+        // don't even seem to have their own setup method, so [ServerVersion] on them would fail.
+
+        /*
+        /// <inheritdoc />
+        public void ApplyToTest(Test test)
+        {
+            test.Properties[PropertyName] = new[] { Version };
+        }
+        */
+
+        // instead, we make this attribute implement ITestAction and trigger on tests and on suites,
+        // which seem to include fixtures too, *and* seem to run on the same bag of properties, so in
+        // the end - it works.
+
+        /// <inheritdoc />
+        public void BeforeTest(ITest test)
+        {
+            test.Properties[PropertyName] = new[] { Version };
+        }
+
+        /// <inheritdoc />
+        public void AfterTest(ITest test)
+        { }
+
+        /// <inheritdoc />
+        public ActionTargets Targets => ActionTargets.Test | ActionTargets.Suite;
     }
 }

@@ -26,7 +26,7 @@ namespace Hazelcast.Testing.Conditions
         /// <summary>
         /// Gets the server version.
         /// </summary>
-        protected NuGetVersion ServerVersion => Conditions.ServerVersion.GetVersion();
+        protected NuGetVersion ServerVersion => Conditions.ServerVersion.GetVersion(TestContext.CurrentContext);
 
         /// <summary>
         /// Executes some test code if the server version is within a specific range.

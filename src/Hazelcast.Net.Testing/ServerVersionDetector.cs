@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -58,9 +60,18 @@ namespace Hazelcast.Testing
         // yes, that is truly ugly, async-wise, but we don't have a choice
         private void DetectVersion()
         {
-            var  client = ConnectToRemoteControllerAsync().Result;
-            _version = DetectServerVersion(client).Result;
-            client.ExitAsync().Wait();
+            try
+            {
+                var client = ConnectToRemoteControllerAsync().Result;
+                _version = DetectServerVersion(client).Result;
+                client.ExitAsync().Wait();
+            }
+            catch (AggregateException ae)
+            {
+                // this weird thing here is to avoid breaking the NUnit test runner
+                if (ae.InnerExceptions.Count != 1) throw;
+                ExceptionDispatchInfo.Capture(ae.InnerExceptions[0]).Throw();
+            }
         }
 
         public static async Task<NuGetVersion> DetectServerVersion(IRemoteControllerClient client)
