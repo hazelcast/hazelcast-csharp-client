@@ -35,8 +35,8 @@ namespace Hazelcast.Clustering
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
-        private readonly CancellationTokenSource _cancel;
-        private readonly Task _heartbeating;
+        private CancellationTokenSource _cancel;
+        private Task _heartbeating;
 
         private readonly HashSet<MemberConnection> _connections = new HashSet<MemberConnection>();
         private readonly object _mutex = new object();
@@ -65,17 +65,22 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            InitializeDuration(options);
-
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
 
-            _cancel = new CancellationTokenSource();
-            _heartbeating = BeatAsync(_cancel.Token);
-            _active = 1;
+            InitializeDuration(options);
         }
 
         private void InitializeDuration(HeartbeatOptions options)
         {
+            HConsole.WriteLine(this, "Initialize durations...");
+
+            // stop heartbeat during exchanging.
+            if (_active == 1 && _heartbeating != null)
+            {
+                _cancel.Cancel();
+                _cancel.Dispose();
+            }
+
             if (options.PeriodMilliseconds < 0)
             {
                 _logger.LogInformation("Heartbeat is disabled (period < 0)");
@@ -95,6 +100,10 @@ namespace Hazelcast.Clustering
             }
 
             _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", (int)_period.TotalMilliseconds, (int)_timeout.TotalMilliseconds);
+
+            _cancel = new CancellationTokenSource();
+            _heartbeating = BeatAsync(_cancel.Token);
+            _active = 1;
         }
 
         /// <summary>
