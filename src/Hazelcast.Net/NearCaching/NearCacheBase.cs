@@ -73,6 +73,13 @@ namespace Hazelcast.NearCaching
             _evictionComparer = GetEvictionComparer(_evictionPolicy);
             _evictionPercentage = nearCacheOptions.EvictionPercentage;
             _cleanupInterval = nearCacheOptions.CleanupPeriodSeconds * 1000;
+
+            cluster.State.StateChanged += (ClientState state) =>
+            {
+                if (state == ClientState.Switched) Clear();
+
+                return default;
+            };
         }
 
         /// <summary>
