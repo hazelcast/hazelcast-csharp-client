@@ -30,6 +30,12 @@ namespace Hazelcast.Core
         ValueTask<bool> WaitAsync(CancellationToken cancellationToken);
 
         /// <summary>
+        /// Changes options of strategy.
+        /// </summary>
+        /// <param name="options"></param>
+        void ChangeStrategy(ConnectionRetryOptions options);
+
+        /// <summary>
         /// Restarts the strategy.
         /// </summary>
         void Restart();

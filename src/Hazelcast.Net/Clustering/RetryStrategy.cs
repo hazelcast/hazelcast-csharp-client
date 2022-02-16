@@ -26,11 +26,12 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class RetryStrategy : IRetryStrategy
     {
-        private readonly int _initialBackOffMilliseconds;
-        private readonly int _maxBackOffMilliseconds;
-        private readonly double _multiplier;
-        private readonly long _timeoutMilliseconds;
-        private readonly double _jitter;
+        private int _initialBackOffMilliseconds;
+        private int _maxBackOffMilliseconds;
+        private double _multiplier;
+        private long _timeoutMilliseconds;
+        private double _jitter;
+
         private readonly string _action;
         private readonly ILogger _logger;
 
@@ -89,7 +90,7 @@ namespace Hazelcast.Clustering
 
             _attempts++;
 
-            var elapsed = (int) (DateTime.UtcNow - _begin).TotalMilliseconds;
+            var elapsed = (int)(DateTime.UtcNow - _begin).TotalMilliseconds;
 
             _logger.IfDebug()?.LogDebug($"Elapsed {elapsed}ms, timeout={_timeoutMilliseconds}ms, back-off={_currentBackOffMilliseconds}ms ({_initialBackOffMilliseconds}-{_maxBackOffMilliseconds}, m={_multiplier}, j={_jitter})");
 
@@ -99,8 +100,8 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
-            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
+            var delay = (int)(_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
+            delay = Math.Min(delay, Math.Max(0, (int)(_timeoutMilliseconds - elapsed)));
 
             _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms");
 
@@ -119,7 +120,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            _currentBackOffMilliseconds = (int) Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            _currentBackOffMilliseconds = (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
             return true;
         }
 
@@ -129,6 +130,16 @@ namespace Hazelcast.Clustering
             _attempts = 0;
             _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
             _begin = DateTime.UtcNow;
+        }
+
+        /// <inheritdoc />
+        public void ChangeStrategy(ConnectionRetryOptions options)
+        {
+            Interlocked.CompareExchange(ref _initialBackOffMilliseconds, options.InitialBackoffMilliseconds, options.InitialBackoffMilliseconds);
+            Interlocked.CompareExchange(ref _maxBackOffMilliseconds, options.MaxBackoffMilliseconds, options.MaxBackoffMilliseconds);
+            Interlocked.CompareExchange(ref _multiplier, options.Multiplier, options.Multiplier);
+            Interlocked.CompareExchange(ref _timeoutMilliseconds, options.ClusterConnectionTimeoutMilliseconds, options.ClusterConnectionTimeoutMilliseconds);
+            Interlocked.CompareExchange(ref _jitter, options.Jitter, options.Jitter);
         }
     }
 }
