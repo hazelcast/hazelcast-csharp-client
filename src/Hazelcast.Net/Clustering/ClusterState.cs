@@ -58,10 +58,7 @@ namespace Hazelcast.Clustering
             ClusterOptionsChanged += cluster =>
             {
                 AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
-                ClusterName = cluster.ClusterName;
-                HConsole.WriteLine(this, "CLUSTER SWITCHED");
-                //Emits options are changed.
-                ChangeState(ClientState.Switched);
+                ClusterName = cluster.ClusterName;                              
             };
 
             HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));

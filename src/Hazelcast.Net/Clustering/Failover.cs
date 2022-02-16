@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
+using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
@@ -72,6 +73,7 @@ namespace Hazelcast.Clustering
             _isEnabled = options.Failover.Enabled;
             _maxTryCount = options.Failover.TryCount;
 
+            HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.FAILOVER"));
         }
 
         /// <summary>
@@ -104,7 +106,9 @@ namespace Hazelcast.Clustering
                 {
                     _state.ChangeState(ClientState.Switching);
                     SwitchClusterOptions();
-                    _currentTryCount++;
+                    _currentTryCount++;                    
+                    _state.ChangeState(ClientState.Switched);
+                    HConsole.WriteLine(this, "CLUSTER SWITCHED");
                 }
             }
 
@@ -122,7 +126,7 @@ namespace Hazelcast.Clustering
                 ResetToFirstCluster();
             }
 
-            _clusterOptionsChanged?.Invoke(CurrentClusterOptions);
+            _clusterOptionsChanged?.Invoke(CurrentClusterOptions);            
         }
 
         private void ResetToFirstCluster()
