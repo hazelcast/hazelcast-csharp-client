@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Partitioning
 {
@@ -127,13 +128,13 @@ namespace Hazelcast.Partitioning
         {
             lock (_partitionsLock)
             {
-                if (_partitions == null)
+                if (_partitions == null && Count == 0)
                 {
                     Count = count;
                 }
                 else if (Count != count)
                 {
-                    throw new InvalidOperationException($"Received count value {count} but expected {Count}.");
+                    throw new ClientNotAllowedInClusterException($"Received partition count value {count} but expected {Count}.");
                 }
             }
         }
