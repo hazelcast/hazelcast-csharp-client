@@ -34,199 +34,208 @@ namespace Hazelcast.Serialization.Compact
         // FIXME - implement support for default value?
         // see Java DefaultCompactReader - default value for ?!
 
+        /// <summary>
+        /// Determines whether the schema has a specified field.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="kind">The <see cref="FieldKind"/> of the field.</param>
+        /// <returns><c>true</c> if the schema has a field with the specified <paramref name="name"/> and
+        /// of the specified <paramref name="kind"/>; otherwise <c>false</c>.</returns>
+        bool HasField(string name, FieldKind kind);
+
         /// <summary>Reads a <see cref="FieldKind.Boolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         bool ReadBoolean(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.BooleanRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// /// <returns>The value of the field.</returns>
-        bool? ReadBooleanRef(string name);
+        bool? ReadNullableBoolean(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         bool[]? ReadArrayOfBoolean(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfBooleanRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        bool?[]? ReadArrayOfBooleanRef(string name);
+        bool?[]? ReadArrayOfNullableBoolean(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         sbyte ReadInt8(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Int8Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte? ReadInt8Ref(string name);
+        sbyte? ReadNullableInt8(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         sbyte[]? ReadArrayOfInt8(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt8Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        sbyte?[]? ReadArrayOfInt8Ref(string name);
+        sbyte?[]? ReadArrayOfNullableInt8(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Int16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         short ReadInt16(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Int16Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short? ReadInt16Ref(string name);
+        short? ReadNullableInt16(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         short[]? ReadArrayOfInt16(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt16Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        short?[]? ReadArrayOfInt16Ref(string name);
+        short?[]? ReadArrayOfNullableInt16(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Int32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         int ReadInt32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Int32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int? ReadInt32Ref(string name);
+        int? ReadNullableInt32(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         int[]? ReadArrayOfInt32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        int?[]? ReadArrayOfInt32Ref(string name);
+        int?[]? ReadArrayOfNullableInt32(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Int64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         long ReadInt64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Int64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long? ReadInt64Ref(string name);
+        long? ReadNullableInt64(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         long[]? ReadArrayOfInt64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfInt64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        long?[]? ReadArrayOfInt64Ref(string name);
+        long?[]? ReadArrayOfNullableInt64(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Float32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         float ReadFloat32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Float32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float? ReadFloat32Ref(string name);
+        float? ReadNullableFloat32(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         float[]? ReadArrayOfFloat32(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat32Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        float?[]? ReadArrayOfFloat32Ref(string name);
+        float?[]? ReadArrayOfNullableFloat32(string name);
 
         /// <summary>Reads a <see cref="FieldKind.Float64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         double ReadFloat64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.Float64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double? ReadFloat64Ref(string name);
+        double? ReadNullableFloat64(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         double[]? ReadArrayOfFloat64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfFloat64Ref"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        double?[]? ReadArrayOfFloat64Ref(string name);
+        double?[]? ReadArrayOfNullableFloat64(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.StringRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableString"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        string? ReadStringRef(string name);
+        string? ReadNullableString(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableString"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        string?[]? ReadArrayOfStringRef(string name);
+        string?[]? ReadArrayOfNullableString(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="decimal"/>.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableDecimal"/> field as a <see cref="decimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         /// <remarks>
-        /// <para>This methods reads a <see cref="FieldKind.DecimalRef"/> primitive type. The range
+        /// <para>This methods reads a <see cref="FieldKind.NullableDecimal"/> primitive type. The range
         /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
         /// primitive type documentation for details.</para>
         /// </remarks>
         /// <exception cref="SerializationException">A specified value is outside the range of the
         /// <see cref="decimal"/> type.</exception>
-        decimal? ReadDecimalRef(string name); // FIXME make these ReadDecimalAsDecimalRef extension methods?!
+        decimal? ReadNullableDecimal(string name); // FIXME make these ReadDecimalAsDecimalRef extension methods?!
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="decimal"/> values.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableDecimal"/> field as <see cref="decimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
         /// <remarks>
-        /// <para>This methods reads a <see cref="FieldKind.DecimalRef"/> primitive type. The range
+        /// <para>This methods reads a <see cref="FieldKind.NullableDecimal"/> primitive type. The range
         /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
         /// primitive type documentation for details.</para>
         /// </remarks>
         /// <exception cref="SerializationException">A specified value is outside the range of the
         /// <see cref="decimal"/> type.</exception>
-        decimal?[]? ReadArrayOfDecimalRef(string name);
+        decimal?[]? ReadArrayOfNullableDecimal(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.DecimalRef"/> field as a <see cref="HBigDecimal"/>.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableDecimal"/> field as a <see cref="HBigDecimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        HBigDecimal? ReadBigDecimalRef(string name);
+        HBigDecimal? ReadNullableBigDecimal(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDecimalRef"/> field as <see cref="HBigDecimal"/> values.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableDecimal"/> field as <see cref="HBigDecimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        HBigDecimal?[]? ReadArrayOfBigDecimalRef(string name);
+        HBigDecimal?[]? ReadArrayOfNullableBigDecimal(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeSpan"/>.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableTime"/> field as a <see cref="TimeSpan"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeSpan? ReadTimeRef(string name);
+        TimeSpan? ReadNullableTime(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeSpan"/> values.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableTime"/> field as <see cref="TimeSpan"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeSpan?[]? ReadArrayOfTimeRef(string name);
+        TimeSpan?[]? ReadArrayOfNullableTime(string name);
 
         // FIXME - discuss supporting this - of course we should, but then, method name?
         // ReadTimeAsTimeOnlyRef ?
@@ -234,70 +243,70 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Reads a <see cref="FieldKind.TimeRef"/> field as a <see cref="TimeOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeOnly? ReadTimeOnlyRef(string name);
+        TimeOnly? ReadNullableTimeOnly(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeRef"/> field as <see cref="TimeOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        TimeOnly?[]? ReadArrayOfTimeOnlyRef(string name);
+        TimeOnly?[]? ReadArrayOfNullableTimeOnly(string name);
 #endif
 
-        /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateTime"/>.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableDate"/> field as a <see cref="DateTime"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime? ReadDateRef(string name);
+        DateTime? ReadNullableDate(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateTime"/> values.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableDate"/> field as <see cref="DateTime"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime?[]? ReadArrayOfDateRef(string name);
+        DateTime?[]? ReadArrayOfNullableDate(string name);
 
         // FIXME - discuss
 #if NET6_0_OR_GREATER
         /// <summary>Reads a <see cref="FieldKind.DateRef"/> field as a <see cref="DateOnly"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateOnly? ReadDateOnlyRef(string name);
+        DateOnly? ReadNullableDateOnly(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfDateRef"/> field as <see cref="DateOnly"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateOnly?[]? ReadArrayOfDateOnlyRef(string name);
+        DateOnly?[]? ReadNullableArrayOfDateOnly(string name);
 #endif
 
         // FIXME - document date & time ranges when reading
         // and if we want the exact range as Java are we going to implement our OWN types ?!?!?!
 
-        /// <summary>Reads a <see cref="FieldKind.TimeStampRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableTimeStamp"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime? ReadTimeStampRef(string name);
+        DateTime? ReadNullableTimeStamp(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableTimeStamp"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTime?[]? ReadArrayOfTimeStampRef(string name);
+        DateTime?[]? ReadArrayOfNullableTimeStamp(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableTimeStampWithTimeZone"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTimeOffset? ReadTimeStampWithTimeZoneRef(string name);
+        DateTimeOffset? ReadNullableTimeStampWithTimeZone(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableTimeStampWithTimeZone"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        DateTimeOffset?[]? ReadArrayOfTimeStampWithTimeZoneRef(string name);
+        DateTimeOffset?[]? ReadArrayOfNullableTimeStampWithTimeZone(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.CompactRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.NullableCompact"/> field.</summary>
         /// <typeparam name="T">The expected type of the object.</typeparam>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        T? ReadCompactRef<T>(string name) where T: class;
+        T? ReadNullableCompact<T>(string name) where T: class;
 
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfCompactRef"/> field.</summary>
+        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableCompact"/> field.</summary>
         /// <typeparam name="T">The expected type of the objects.</typeparam>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        T?[]? ReadArrayOfCompactObjectRef<T>(string name) where T : class;
+        T?[]? ReadArrayOfCompactNullableObject<T>(string name) where T : class;
     }
 }

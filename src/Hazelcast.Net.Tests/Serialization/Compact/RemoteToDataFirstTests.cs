@@ -163,7 +163,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 
@@ -215,7 +215,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 

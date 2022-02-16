@@ -68,7 +68,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = new Schema($"sometype{_ids.GetNext()}", new[]
             {
-                new SchemaField("somefield", FieldKind.StringRef)
+                new SchemaField("somefield", FieldKind.NullableString)
             });
 
             Assert.That(messaging.SentMessageCount, Is.Zero);
@@ -103,7 +103,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = new Schema($"sometype{_ids.GetNext()}", new[]
             {
-                new SchemaField("somefield", FieldKind.StringRef)
+                new SchemaField("somefield", FieldKind.NullableString)
             });
 
             Assert.That(messaging.SentMessageCount, Is.Zero);
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = new Schema($"sometype{_ids.GetNext()}", new[]
             {
-                new SchemaField("somefield", FieldKind.StringRef)
+                new SchemaField("somefield", FieldKind.NullableString)
             });
 
             await AssertCanPublishAndFetchSchema(schemas, schema);
@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var schema = SchemaBuilder
                 .For($"thing{_ids.GetNext()}")
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField(fieldName, FieldKind.Int32)
                 .Build();
 

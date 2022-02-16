@@ -36,56 +36,56 @@ namespace Hazelcast.Serialization.Compact
         private static ICompactWriter SafeWriter(ICompactWriter writer)
             => writer ?? throw new ArgumentNullException(nameof(writer));
 
-        /// <summary>Writes a <see cref="FieldKind.TimeStampRef"/> field (alias for <see cref="ICompactWriter.WriteTimeStampRef"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableTimeStamp"/> field (alias for <see cref="ICompactWriter.WriteNullableTimeStamp"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStamp"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteDateTimeRef(this ICompactWriter writer, string name, DateTime? value)
-            => SafeWriter(writer).WriteTimeStampRef(name, value);
+            => SafeWriter(writer).WriteNullableTimeStamp(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampRef"/> field (alias for <see cref="ICompactWriter.WriteArrayOfTimeStampRef"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableTimeStamp"/> field (alias for <see cref="ICompactWriter.WriteArrayOfNullableTimeStamp"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStamp"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteDateTimeRefs(this ICompactWriter writer, string name, DateTime?[]? value)
-            => SafeWriter(writer).WriteArrayOfTimeStampRef(name, value);
+            => SafeWriter(writer).WriteArrayOfNullableTimeStamp(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field (alias for <see cref="ICompactWriter.WriteTimeStampWithTimeZoneRef"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableTimeStampWithTimeZone"/> field (alias for <see cref="ICompactWriter.WriteNullableTimeStampWithTimeZone"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> primitive type.
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStampWithTimeZone"/> primitive type.
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void WriteDateTimeOffsetRef(this ICompactWriter writer, string name, DateTimeOffset? value)
-            => SafeWriter(writer).WriteTimeStampWithTimeZoneRef(name, value);
+            => SafeWriter(writer).WriteNullableTimeStampWithTimeZone(name, value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field (alias for <see cref="ICompactWriter.WriteArrayOfTimeStampWithTimeZoneRef"/>).</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableTimeStampWithTimeZone"/> field (alias for <see cref="ICompactWriter.WriteArrayOfNullableTimeStampWithTimeZone"/>).</summary>
         /// <param name="writer">The compact writer.</param>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> primitive type.
+        /// <para>This method writes a <see cref="FieldKind.ArrayOfNullableTimeStampWithTimeZone"/> primitive type.
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
         public static void WriteDateTimeOffsetRefs(this ICompactWriter writer, string name, DateTimeOffset?[]? value)
-            => SafeWriter(writer).WriteArrayOfTimeStampWithTimeZoneRef(name, value);
+            => SafeWriter(writer).WriteArrayOfNullableTimeStampWithTimeZone(name, value);
 
         /// <summary>Writes a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="writer">The compact writer.</param>

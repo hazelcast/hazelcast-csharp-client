@@ -30,6 +30,9 @@ namespace Hazelcast.Serialization.Compact
             _typeName = typeName;
         }
 
+        public bool HasField(string name, FieldKind kind)
+            => throw new NotImplementedException();
+
         private void AddField(string name, FieldKind kind)
             => _fields.Add(new SchemaField(name, kind));
 
@@ -39,133 +42,133 @@ namespace Hazelcast.Serialization.Compact
         public void WriteBoolean(string name, bool value)
             => AddField(name, FieldKind.Boolean);
 
-        public void WriteBooleanRef(string name, bool? value)
-            => AddField(name, FieldKind.BooleanRef);
+        public void WriteNullableBoolean(string name, bool? value)
+            => AddField(name, FieldKind.NullableBoolean);
 
         public void WriteArrayOfBoolean(string name, bool[]? value)
             => AddField(name, FieldKind.ArrayOfBoolean);
 
-        public void WriteArrayOfBooleanRef(string name, bool?[]? value)
-            => AddField(name, FieldKind.ArrayOfBooleanRef);
+        public void WriteArrayOfNullableBoolean(string name, bool?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableBoolean);
 
         public void WriteInt8(string name, sbyte value)
             => AddField(name, FieldKind.Int8);
 
-        public void WriteInt8Ref(string name, sbyte? value)
-            => AddField(name, FieldKind.Int8Ref);
+        public void WriteNullableInt8(string name, sbyte? value)
+            => AddField(name, FieldKind.NullableInt8);
 
         public void WriteArrayOfInt8(string name, sbyte[]? value)
             => AddField(name, FieldKind.ArrayOfInt8);
 
-        public void WriteArrayOfInt8Ref(string name, sbyte?[]? value)
-            => AddField(name, FieldKind.ArrayOfInt8Ref);
+        public void WriteArrayOfNullableInt8(string name, sbyte?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableInt8);
 
         public void WriteInt16(string name, short value)
             => AddField(name, FieldKind.Int16);
 
-        public void WriteInt16Ref(string name, short? value)
-            => AddField(name, FieldKind.Int16Ref);
+        public void WriteNullableInt16(string name, short? value)
+            => AddField(name, FieldKind.NullableInt16);
 
         public void WriteArrayOfInt16(string name, short[]? value)
             => AddField(name, FieldKind.ArrayOfInt16);
 
-        public void WriteArrayOfInt16Ref(string name, short?[]? value)
-            => AddField(name, FieldKind.ArrayOfInt16Ref);
+        public void WriteArrayOfNullableInt16(string name, short?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableInt16);
 
         public void WriteInt32(string name, int value)
             => AddField(name, FieldKind.Int32);
 
-        public void WriteInt32Ref(string name, int? value)
-            => AddField(name, FieldKind.Int32Ref);
+        public void WriteNullableInt32(string name, int? value)
+            => AddField(name, FieldKind.NullableInt32);
 
         public void WriteArrayOfInt32(string name, int[]? value)
             => AddField(name, FieldKind.ArrayOfInt32);
 
-        public void WriteArrayOfInt32Ref(string name, int?[]? value)
-            => AddField(name, FieldKind.ArrayOfInt32Ref);
+        public void WriteArrayOfNullableInt32(string name, int?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableInt32);
 
         public void WriteInt64(string name, long value)
             => AddField(name, FieldKind.Int64);
 
-        public void WriteInt64Ref(string name, long? value)
-            => AddField(name, FieldKind.Int64Ref);
+        public void WriteNullableInt64(string name, long? value)
+            => AddField(name, FieldKind.NullableInt64);
 
         public void WriteArrayOfInt64(string name, long[]? value)
             => AddField(name, FieldKind.ArrayOfInt64);
 
-        public void WriteArrayOfInt64Ref(string name, long?[]? value)
-            => AddField(name, FieldKind.ArrayOfInt64Ref);
+        public void WriteArrayOfNullableInt64(string name, long?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableInt64);
 
         public void WriteFloat32(string name, float value)
             => AddField(name, FieldKind.Float32);
 
-        public void WriteFloat32Ref(string name, float? value)
-            => AddField(name, FieldKind.Float32Ref);
+        public void WriteNullableFloat32(string name, float? value)
+            => AddField(name, FieldKind.NullableFloat32);
 
         public void WriteArrayOfFloat32(string name, float[]? value)
             => AddField(name, FieldKind.ArrayOfFloat32);
 
-        public void WriteArrayOfFloat32Ref(string name, float?[]? value)
-            => AddField(name, FieldKind.ArrayOfFloat32Ref);
+        public void WriteArrayOfNullableFloat32(string name, float?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableFloat32);
 
         public void WriteFloat64(string name, double value)
             => AddField(name, FieldKind.Float64);
 
-        public void WriteFloat64Ref(string name, double? value)
-            => AddField(name, FieldKind.Float64Ref);
+        public void WriteNullableFloat64(string name, double? value)
+            => AddField(name, FieldKind.NullableFloat64);
 
         public void WriteArrayOfFloat64(string name, double[]? value)
             => AddField(name, FieldKind.ArrayOfFloat64);
 
-        public void WriteArrayOfFloat64Ref(string name, double?[]? value)
-            => AddField(name, FieldKind.ArrayOfFloat64Ref);
+        public void WriteArrayOfNullableFloat64(string name, double?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableFloat64);
 
-        public void WriteStringRef(string name, string? value)
-            => AddField(name, FieldKind.StringRef);
+        public void WriteNullableString(string name, string? value)
+            => AddField(name, FieldKind.NullableString);
 
-        public void WriteArrayOfStringRef(string name, string?[]? value)
-            => AddField(name, FieldKind.ArrayOfStringRef);
+        public void WriteArrayOfNullableString(string name, string?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableString);
 
-        public void WriteDecimalRef(string name, decimal? value)
-            => AddField(name, FieldKind.DecimalRef);
+        public void WriteNullableDecimal(string name, decimal? value)
+            => AddField(name, FieldKind.NullableDecimal);
 
-        public void WriteArrayOfDecimalRef(string name, decimal?[]? value)
-            => AddField(name, FieldKind.ArrayOfDecimalRef);
+        public void WriteArrayOfNullableDecimal(string name, decimal?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableDecimal);
 
-        public void WriteDecimalRef(string name, HBigDecimal? value)
-            => AddField(name, FieldKind.DecimalRef);
+        public void WriteNullableDecimal(string name, HBigDecimal? value)
+            => AddField(name, FieldKind.NullableDecimal);
 
-        public void WriteArrayOfDecimalRef(string name, HBigDecimal?[]? value)
-            => AddField(name, FieldKind.ArrayOfDecimalRef);
+        public void WriteArrayOfNullableDecimal(string name, HBigDecimal?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableDecimal);
 
-        public void WriteTimeRef(string name, TimeSpan? value)
-            => AddField(name, FieldKind.TimeRef);
+        public void WriteNullableTime(string name, TimeSpan? value)
+            => AddField(name, FieldKind.NullableTime);
 
-        public void WriteArrayOfTimeRef(string name, TimeSpan?[]? value)
-            => AddField(name, FieldKind.ArrayOfTimeRef);
+        public void WriteArrayOfNullableTime(string name, TimeSpan?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableTime);
 
-        public void WriteDateRef(string name, DateTime? value)
-            => AddField(name, FieldKind.DateRef);
+        public void WriteNullableDate(string name, DateTime? value)
+            => AddField(name, FieldKind.NullableDate);
 
-        public void WriteArrayOfDateRef(string name, DateTime?[]? value)
-            => AddField(name, FieldKind.ArrayOfDateRef);
+        public void WriteArrayOfNullableDate(string name, DateTime?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableDate);
 
-        public void WriteTimeStampRef(string name, DateTime? value)
-            => AddField(name, FieldKind.TimeStampRef);
+        public void WriteNullableTimeStamp(string name, DateTime? value)
+            => AddField(name, FieldKind.NullableTimeStamp);
 
-        public void WriteArrayOfTimeStampRef(string name, DateTime?[]? value)
-            => AddField(name, FieldKind.ArrayOfTimeStampRef);
+        public void WriteArrayOfNullableTimeStamp(string name, DateTime?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableTimeStamp);
 
-        public void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value)
-            => AddField(name, FieldKind.TimeStampWithTimeZoneRef);
+        public void WriteNullableTimeStampWithTimeZone(string name, DateTimeOffset? value)
+            => AddField(name, FieldKind.NullableTimeStampWithTimeZone);
 
-        public void WriteArrayOfTimeStampWithTimeZoneRef(string name, DateTimeOffset?[]? value)
-            => AddField(name, FieldKind.ArrayOfTimeStampWithTimeZoneRef);
+        public void WriteArrayOfNullableTimeStampWithTimeZone(string name, DateTimeOffset?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableTimeStampWithTimeZone);
 
-        public void WriteCompactRef(string name, object? value)
-            => AddField(name, FieldKind.CompactRef);
+        public void WriteNullableCompact(string name, object? value)
+            => AddField(name, FieldKind.NullableCompact);
 
-        public void WriteArrayOfCompactRef(string name, object?[]? value)
-            => AddField(name, FieldKind.ArrayOfCompactRef);
+        public void WriteArrayOfNullableCompact(string name, object?[]? value)
+            => AddField(name, FieldKind.ArrayOfNullableCompact);
     }
 }

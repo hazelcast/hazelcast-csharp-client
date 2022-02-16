@@ -160,7 +160,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadBoolean
         }
 
-        public bool? ReadBooleanRef(string name)
+        public bool? ReadNullableBoolean(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadBooleanRef
         }
@@ -170,7 +170,7 @@ namespace Hazelcast.Serialization.Compact
             throw new NotImplementedException(); // FIXME - implement ReadBooleans
         }
 
-        public bool?[]? ReadArrayOfBooleanRef(string name)
+        public bool?[]? ReadArrayOfNullableBoolean(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadBooleanRefs
         }
@@ -182,14 +182,14 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadSByte();
         }
 
-        public sbyte? ReadInt8Ref(string name)
+        public sbyte? ReadNullableInt8(string name)
             => ReadNullable(name, FieldKind.Int8, input => input.ReadSByte());
 
         public sbyte[]? ReadArrayOfInt8(string name)
             => ReadReference(name, FieldKind.ArrayOfInt8, input => input.ReadSByteArray());
 
-        public sbyte?[]? ReadArrayOfInt8Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt8Ref, input => input.ReadSByte());
+        public sbyte?[]? ReadArrayOfNullableInt8(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableInt8, input => input.ReadSByte());
 
         public short ReadInt16(string name)
         {
@@ -198,14 +198,14 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadShort();
         }
 
-        public short? ReadInt16Ref(string name)
+        public short? ReadNullableInt16(string name)
             => ReadNullable(name, FieldKind.Int16, input => input.ReadShort());
 
         public short[]? ReadArrayOfInt16(string name)
             => ReadReference(name, FieldKind.ArrayOfInt16, input => input.ReadShortArray());
 
-        public short?[]? ReadArrayOfInt16Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt16Ref, input => input.ReadShort());
+        public short?[]? ReadArrayOfNullableInt16(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableInt16, input => input.ReadShort());
         
         public int ReadInt32(string name)
         {
@@ -214,14 +214,14 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadInt();
         }
 
-        public int? ReadInt32Ref(string name)
+        public int? ReadNullableInt32(string name)
             => ReadNullable(name, FieldKind.Int32, input => input.ReadInt());
 
         public int[]? ReadArrayOfInt32(string name)
             => ReadReference(name, FieldKind.ArrayOfInt32, input => input.ReadIntArray());
 
-        public int?[]? ReadArrayOfInt32Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt32Ref, input => input.ReadInt());
+        public int?[]? ReadArrayOfNullableInt32(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableInt32, input => input.ReadInt());
 
         public long ReadInt64(string name)
         {
@@ -230,14 +230,14 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadLong();
         }
 
-        public long? ReadInt64Ref(string name)
+        public long? ReadNullableInt64(string name)
             => ReadNullable(name, FieldKind.Int64, input => input.ReadLong());
 
         public long[]? ReadArrayOfInt64(string name)
             => ReadReference(name, FieldKind.ArrayOfInt64, input => input.ReadLongArray());
 
-        public long?[]? ReadArrayOfInt64Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfInt64Ref, input => input.ReadLong());
+        public long?[]? ReadArrayOfNullableInt64(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableInt64, input => input.ReadLong());
 
         public float ReadFloat32(string name)
         {
@@ -246,14 +246,14 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadFloat();
         }
 
-        public float? ReadFloat32Ref(string name)
+        public float? ReadNullableFloat32(string name)
             => ReadNullable(name, FieldKind.Float32, input => input.ReadFloat());
 
         public float[]? ReadArrayOfFloat32(string name)
             => ReadReference(name, FieldKind.Float32, input => input.ReadFloatArray());
 
-        public float?[]? ReadArrayOfFloat32Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfFloat32Ref, input => input.ReadFloat());
+        public float?[]? ReadArrayOfNullableFloat32(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableFloat32, input => input.ReadFloat());
 
         public double ReadFloat64(string name)
         {
@@ -262,20 +262,20 @@ namespace Hazelcast.Serialization.Compact
             return _input.ReadDouble();
         }
 
-        public double? ReadFloat64Ref(string name)
+        public double? ReadNullableFloat64(string name)
             => ReadNullable(name, FieldKind.Float64, input => input.ReadDouble());
 
         public double[]? ReadArrayOfFloat64(string name)
             => ReadReference(name, FieldKind.ArrayOfFloat64, input => input.ReadDoubleArray());
 
-        public double?[]? ReadArrayOfFloat64Ref(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfFloat64Ref, input => input.ReadDouble());
+        public double?[]? ReadArrayOfNullableFloat64(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableFloat64, input => input.ReadDouble());
 
-        public string? ReadStringRef(string name)
-            => ReadReference(name, FieldKind.StringRef, input => input.ReadString());
+        public string? ReadNullableString(string name)
+            => ReadReference(name, FieldKind.NullableString, input => input.ReadString());
 
-        public string?[]? ReadArrayOfStringRef(string name)
-            => ReadArrayOfReference(name, FieldKind.ArrayOfStringRef, input => input.ReadString());
+        public string?[]? ReadArrayOfNullableString(string name)
+            => ReadArrayOfReference(name, FieldKind.ArrayOfNullableString, input => input.ReadString());
 
         private static decimal ReadBigDecimalIntoDecimal(ObjectDataInput input)
         {
@@ -284,24 +284,24 @@ namespace Hazelcast.Serialization.Compact
             throw new OverflowException("Cannot read BigDecimal value into decimal.");
         }
 
-        public decimal? ReadDecimalRef(string name)
-            => ReadNullable(name, FieldKind.DecimalRef, ReadBigDecimalIntoDecimal);
+        public decimal? ReadNullableDecimal(string name)
+            => ReadNullable(name, FieldKind.NullableDecimal, ReadBigDecimalIntoDecimal);
 
-        public decimal?[]? ReadArrayOfDecimalRef(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, ReadBigDecimalIntoDecimal);
+        public decimal?[]? ReadArrayOfNullableDecimal(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, ReadBigDecimalIntoDecimal);
 
-        public HBigDecimal? ReadBigDecimalRef(string name)
-            => ReadNullable(name, FieldKind.DecimalRef, input => input.ReadBigDecimal());
+        public HBigDecimal? ReadNullableBigDecimal(string name)
+            => ReadNullable(name, FieldKind.NullableDecimal, input => input.ReadBigDecimal());
 
-        public HBigDecimal?[]? ReadArrayOfBigDecimalRef(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfDecimalRef, input => input.ReadBigDecimal());
+        public HBigDecimal?[]? ReadArrayOfNullableBigDecimal(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, input => input.ReadBigDecimal());
 
-        public TimeSpan? ReadTimeRef(string name)
+        public TimeSpan? ReadNullableTime(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeRef
         }
 
-        public TimeSpan?[]? ReadArrayOfTimeRef(string name)
+        public TimeSpan?[]? ReadArrayOfNullableTime(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeRefs
         }
@@ -318,12 +318,12 @@ namespace Hazelcast.Serialization.Compact
         }
 #endif
 
-        public DateTime? ReadDateRef(string name)
+        public DateTime? ReadNullableDate(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-        public DateTime?[]? ReadArrayOfDateRef(string name)
+        public DateTime?[]? ReadArrayOfNullableDate(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
@@ -340,32 +340,32 @@ namespace Hazelcast.Serialization.Compact
         }
 #endif
 
-        public DateTime? ReadTimeStampRef(string name)
+        public DateTime? ReadNullableTimeStamp(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRef
         }
 
-        public DateTime?[]? ReadArrayOfTimeStampRef(string name)
+        public DateTime?[]? ReadArrayOfNullableTimeStamp(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRefs
         }
 
-        public DateTimeOffset? ReadTimeStampWithTimeZoneRef(string name)
+        public DateTimeOffset? ReadNullableTimeStampWithTimeZone(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRef
         }
 
-        public DateTimeOffset?[]? ReadArrayOfTimeStampWithTimeZoneRef(string name)
+        public DateTimeOffset?[]? ReadArrayOfNullableTimeStampWithTimeZone(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRefs
         }
 
-        public T? ReadCompactRef<T>(string name)
+        public T? ReadNullableCompact<T>(string name)
             where T: class
-            => ReadReference(name, FieldKind.CompactRef, input => Serializer.Read<T>(input));
+            => ReadReference(name, FieldKind.NullableCompact, input => Serializer.Read<T>(input));
 
-        public T?[]? ReadArrayOfCompactObjectRef<T>(string name)
+        public T?[]? ReadArrayOfCompactNullableObject<T>(string name)
             where T : class
-            => ReadArrayOfReference(name, FieldKind.ArrayOfCompactRef, input => Serializer.Read<T>(input));
+            => ReadArrayOfReference(name, FieldKind.ArrayOfNullableCompact, input => Serializer.Read<T>(input));
     }
 }

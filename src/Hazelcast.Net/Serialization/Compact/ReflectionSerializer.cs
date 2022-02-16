@@ -36,13 +36,13 @@ namespace Hazelcast.Serialization.Compact
             = new Dictionary<Type, Action<ICompactWriter, string, object?>>
             {
                 { typeof (int), (w, n, o) => w.WriteInt32(n, UnboxNonNull<int>(o)) },
-                { typeof (int?), (w, n, o) => w.WriteInt32Ref(n, (int?)o) },
+                { typeof (int?), (w, n, o) => w.WriteNullableInt32(n, (int?)o) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register writers here against the actual types
                 // (e.g. string) even though the value we write may be null.
 
-                { typeof (string), (w, n, o) => w.WriteStringRef(n, (string?)o) }
+                { typeof (string), (w, n, o) => w.WriteNullableString(n, (string?)o) }
 
                 // FIXME - missing reflection serializer writers
             };
@@ -51,13 +51,13 @@ namespace Hazelcast.Serialization.Compact
             = new Dictionary<Type, Func<ICompactReader, string, object?>>
             {
                 { typeof (int), (r, n) => r.ReadInt32(n) },
-                { typeof (int?), (r, n) => r.ReadInt32Ref(n) },
+                { typeof (int?), (r, n) => r.ReadNullableInt32(n) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register readers here against the actual types
                 // (e.g. string) even though the value we read may be null.
 
-                { typeof (string), (r, n) => r.ReadStringRef(n) }
+                { typeof (string), (r, n) => r.ReadNullableString(n) }
 
                 // FIXME - missing reflection serializer readers
             };
@@ -66,7 +66,7 @@ namespace Hazelcast.Serialization.Compact
         {
             return Writers.TryGetValue(type, out var write)
                 ? write
-                : (writer, name, obj) => writer.WriteCompactRef(name, obj);
+                : (writer, name, obj) => writer.WriteNullableCompact(name, obj);
         }
 
         private static Func<ICompactReader, string, object?> GetReader(Type type)

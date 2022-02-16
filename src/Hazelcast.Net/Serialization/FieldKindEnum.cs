@@ -39,36 +39,36 @@ namespace Hazelcast.Serialization
                 case FieldKind.ArrayOfInt64:
                 case FieldKind.ArrayOfFloat32:
                 case FieldKind.ArrayOfFloat64:
-                case FieldKind.BooleanRef:
-                case FieldKind.Int8Ref:
-                case FieldKind.Int16Ref:
-                case FieldKind.Int32Ref:
-                case FieldKind.Int64Ref:
-                case FieldKind.Float32Ref:
-                case FieldKind.Float64Ref:
-                case FieldKind.DecimalRef:
-                case FieldKind.StringRef:
-                case FieldKind.TimeRef:
-                case FieldKind.DateRef:
-                case FieldKind.TimeStampRef:
-                case FieldKind.TimeStampWithTimeZoneRef:
-                case FieldKind.CompactRef:
-                case FieldKind.PortableRef:
-                case FieldKind.ArrayOfBooleanRef:
-                case FieldKind.ArrayOfInt8Ref:
-                case FieldKind.ArrayOfInt16Ref:
-                case FieldKind.ArrayOfInt32Ref:
-                case FieldKind.ArrayOfInt64Ref:
-                case FieldKind.ArrayOfFloat32Ref:
-                case FieldKind.ArrayOfFloat64Ref:
-                case FieldKind.ArrayOfDecimalRef:
-                case FieldKind.ArrayOfTimeRef:
-                case FieldKind.ArrayOfDateRef:
-                case FieldKind.ArrayOfTimeStampRef:
-                case FieldKind.ArrayOfTimeStampWithTimeZoneRef:
-                case FieldKind.ArrayOfStringRef:
-                case FieldKind.ArrayOfCompactRef:
-                case FieldKind.ArrayOfPortableRef:
+                case FieldKind.NullableBoolean:
+                case FieldKind.NullableInt8:
+                case FieldKind.NullableInt16:
+                case FieldKind.NullableInt32:
+                case FieldKind.NullableInt64:
+                case FieldKind.NullableFloat32:
+                case FieldKind.NullableFloat64:
+                case FieldKind.NullableDecimal:
+                case FieldKind.NullableString:
+                case FieldKind.NullableTime:
+                case FieldKind.NullableDate:
+                case FieldKind.NullableTimeStamp:
+                case FieldKind.NullableTimeStampWithTimeZone:
+                case FieldKind.NullableCompact:
+                case FieldKind.NullablePortable:
+                case FieldKind.ArrayOfNullableBoolean:
+                case FieldKind.ArrayOfNullableInt8:
+                case FieldKind.ArrayOfNullableInt16:
+                case FieldKind.ArrayOfNullableInt32:
+                case FieldKind.ArrayOfNullableInt64:
+                case FieldKind.ArrayOfNullableFloat32:
+                case FieldKind.ArrayOfNullableFloat64:
+                case FieldKind.ArrayOfNullableDecimal:
+                case FieldKind.ArrayOfNullableTime:
+                case FieldKind.ArrayOfNullableDate:
+                case FieldKind.ArrayOfNullableTimeStamp:
+                case FieldKind.ArrayOfNullableTimeStampWithTimeZone:
+                case FieldKind.ArrayOfNullableString:
+                case FieldKind.ArrayOfNullableCompact:
+                case FieldKind.ArrayOfNullablePortable:
                     return kind;
                 default:
                     throw new ArgumentException($"Value {value} is not a valid FieldKind value.", nameof(value));

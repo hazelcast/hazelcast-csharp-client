@@ -61,6 +61,9 @@ namespace Hazelcast.Serialization.Compact
             return false;
         }
 
+        public bool HasField(string name, FieldKind kind)
+            => Schema.FieldsMap.TryGetValue(name, out var field) && field.Kind == kind;
+
         protected virtual SchemaField GetValidField(string name, FieldKind kind)
         {
             if (!Schema.FieldsMap.TryGetValue(name, out var field))

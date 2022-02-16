@@ -31,45 +31,54 @@ namespace Hazelcast.Serialization.Compact
         // the two methods, thus avoiding allocating an extra nullable struct and/or
         // boxing when it is not necessary.
 
+        /// <summary>
+        /// Determines whether the schema has a specified field.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="kind">The <see cref="FieldKind"/> of the field.</param>
+        /// <returns><c>true</c> if the schema has a field with the specified <paramref name="name"/> and
+        /// of the specified <paramref name="kind"/>; otherwise <c>false</c>.</returns>
+        bool HasField(string name, FieldKind kind);
+
         /// <summary>Writes a <see cref="FieldKind.Boolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteBoolean(string name, bool value);
 
-        /// <summary>Writes a <see cref="FieldKind.BooleanRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteBooleanRef(string name, bool? value);
+        void WriteNullableBoolean(string name, bool? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfBoolean(string name, bool[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfBooleanRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableBoolean"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfBooleanRef(string name, bool?[]? value);
+        void WriteArrayOfNullableBoolean(string name, bool?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Int8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteInt8(string name, sbyte value);
 
-        /// <summary>Writes a <see cref="FieldKind.Int8Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInt8Ref(string name, sbyte? value);
+        void WriteNullableInt8(string name, sbyte? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfInt8(string name, sbyte[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt8Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableInt8"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfInt8Ref(string name, sbyte?[]? value);
+        void WriteArrayOfNullableInt8(string name, sbyte?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Int16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -79,161 +88,161 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Writes a <see cref="FieldKind.ArrayOfInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInt16Ref(string name, short? value);
+        void WriteNullableInt16(string name, short? value);
 
-        /// <summary>Writes a <see cref="FieldKind.Int16Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfInt16(string name, short[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt16Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableInt16"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfInt16Ref(string name, short?[]? value);
+        void WriteArrayOfNullableInt16(string name, short?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Int32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteInt32(string name, int value);
 
-        /// <summary>Writes a <see cref="FieldKind.Int32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInt32Ref(string name, int? value);
+        void WriteNullableInt32(string name, int? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfInt32(string name, int[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableInt32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfInt32Ref(string name, int?[]? value);
+        void WriteArrayOfNullableInt32(string name, int?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Int64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteInt64(string name, long value);
 
-        /// <summary>Writes a <see cref="FieldKind.Int64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteInt64Ref(string name, long? value);
+        void WriteNullableInt64(string name, long? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfInt64(string name, long[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfInt64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableInt64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfInt64Ref(string name, long?[]? value);
+        void WriteArrayOfNullableInt64(string name, long?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Float32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteFloat32(string name, float value);
 
-        /// <summary>Writes a <see cref="FieldKind.Float32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloat32Ref(string name, float? value);
+        void WriteNullableFloat32(string name, float? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfFloat32(string name, float[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat32Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableFloat32"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfFloat32Ref(string name, float?[]? value);
+        void WriteArrayOfNullableFloat32(string name, float?[]? value);
 
         /// <summary>Writes a <see cref="FieldKind.Float64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteFloat64(string name, double value);
 
-        /// <summary>Writes a <see cref="FieldKind.Float64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteFloat64Ref(string name, double? value);
+        void WriteNullableFloat64(string name, double? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         void WriteArrayOfFloat64(string name, double[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfFloat64Ref"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableFloat64"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfFloat64Ref(string name, double?[]? value);
+        void WriteArrayOfNullableFloat64(string name, double?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.StringRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableString"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteStringRef(string name, string? value);
+        void WriteNullableString(string name, string? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfStringRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableString"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfStringRef(string name, string?[]? value);
+        void WriteArrayOfNullableString(string name, string?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.DecimalRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableDecimal"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="decimal"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDecimalRef(string name, decimal? value);
+        void WriteNullableDecimal(string name, decimal? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfDecimalRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.ArrayOfDecimalRef"/> primitive type. The range
+        /// <para>This method writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> primitive type. The range
         /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
         /// primitive type documentation for details.</para>
         /// </remarks>
-        void WriteArrayOfDecimalRef(string name, decimal?[]? value);
+        void WriteArrayOfNullableDecimal(string name, decimal?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.DecimalRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteDecimalRef(string name, HBigDecimal? value); // FIXME and WTF are we supposed to do if we don't support overrides ?!
+        void WriteNullableDecimal(string name, HBigDecimal? value); // FIXME and WTF are we supposed to do if we don't support overrides ?!
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfDecimalRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfDecimalRef(string name, HBigDecimal?[]? value);
+        void WriteArrayOfNullableDecimal(string name, HBigDecimal?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.TimeRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableTime"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTime"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="TimeSpan"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">A specified value is outside the range of the
-        /// <see cref="FieldKind.TimeRef"/> primitive type.</exception>
-        void WriteTimeRef(string name, TimeSpan? value);
+        /// <see cref="FieldKind.NullableTime"/> primitive type.</exception>
+        void WriteNullableTime(string name, TimeSpan? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableTime"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTime"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="TimeSpan"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
         /// <exception cref="ArgumentOutOfRangeException">A specified value is outside the range of the
-        /// <see cref="FieldKind.TimeRef"/> primitive type.</exception>
-        void WriteArrayOfTimeRef(string name, TimeSpan?[]? value);
+        /// <see cref="FieldKind.NullableTime"/> primitive type.</exception>
+        void WriteArrayOfNullableTime(string name, TimeSpan?[]? value);
 
         // FIXME - discuss, we may not want it, rename it, whatever, I don't know anymore
 #if NET6_0_OR_GREATER
@@ -246,7 +255,7 @@ namespace Hazelcast.Serialization.Compact
         /// type documentation for details.</para>
         /// </remarks>
         /// FIXME - document range of TimeOnly
-        void WriteTimeRef(string name, TimeOnly? value);
+        void WriteNullableTime(string name, TimeOnly? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeRef"/> field.</summary>
         /// <param name="name">The name of the field.</param>
@@ -257,28 +266,28 @@ namespace Hazelcast.Serialization.Compact
         /// type documentation for details.</para>
         /// </remarks>
         /// FIXME - document range of TimeOnly
-        void WriteArrayOfTimeRef(string name, TimeOnly?[]? value);
+        void WriteArrayOfNullableTime(string name, TimeOnly?[]? value);
 #endif
 
-        /// <summary>Writes a <see cref="FieldKind.DateRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableDate"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.DateRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableDate"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteDateRef(string name, DateTime? value);
+        void WriteNullableDate(string name, DateTime? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfDateRef"/> field</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableDate"/> field</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.ArrayOfDateRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.ArrayOfNullableDate"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteArrayOfDateRef(string name, DateTime?[]? value);
+        void WriteArrayOfNullableDate(string name, DateTime?[]? value);
 
         // FIXME - see above
 #if NET6_0_OR_GREATER
@@ -291,7 +300,7 @@ namespace Hazelcast.Serialization.Compact
         /// type documentation for details.</para>
         /// </remarks>
         /// FIXME - document range of DateOnly
-        void WriteDateRef(string name, DateOnly? value);
+        void WriteNullableDate(string name, DateOnly? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfDateRef"/> field</summary>
         /// <param name="name">The name of the field.</param>
@@ -302,57 +311,57 @@ namespace Hazelcast.Serialization.Compact
         /// type documentation for details.</para>
         /// </remarks>
         /// FIXME - document range of DateOnly
-        void WriteDateRefs(string name, DateOnly?[]? value);
+        void WriteArrayOfNullableDate(string name, DateOnly?[]? value);
 #endif
 
-        /// <summary>Writes a <see cref="FieldKind.TimeStampRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableTimeStamp"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStamp"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteTimeStampRef(string name, DateTime? value);
+        void WriteNullableTimeStamp(string name, DateTime? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableTimeStamp"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampRef"/> primitive type. The range of this
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStamp"/> primitive type. The range of this
         /// primitive type is different from the range of <see cref="DateTime"/>. Refer to the primitive
         /// type documentation for details.</para>
         /// </remarks>
-        void WriteArrayOfTimeStampRef(string name, DateTime?[]? value);
+        void WriteArrayOfNullableTimeStamp(string name, DateTime?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableTimeStampWithTimeZone"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.TimeStampWithTimeZoneRef"/> primitive type.
+        /// <para>This method writes a <see cref="FieldKind.NullableTimeStampWithTimeZone"/> primitive type.
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
-        void WriteTimeStampWithTimeZoneRef(string name, DateTimeOffset? value);
+        void WriteNullableTimeStampWithTimeZone(string name, DateTimeOffset? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableTimeStampWithTimeZone"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
         /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.ArrayOfTimeStampWithTimeZoneRef"/> primitive type.
+        /// <para>This method writes a <see cref="FieldKind.ArrayOfNullableTimeStampWithTimeZone"/> primitive type.
         /// The range of this primitive type is different from the range of <see cref="DateTimeOffset"/>.
         /// Refer to the primitive type documentation for details.</para>
         /// </remarks>
-        void WriteArrayOfTimeStampWithTimeZoneRef(string name, DateTimeOffset?[]? value);
+        void WriteArrayOfNullableTimeStampWithTimeZone(string name, DateTimeOffset?[]? value);
 
-        /// <summary>Writes a <see cref="FieldKind.CompactRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.NullableCompact"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteCompactRef(string name, object? value);
+        void WriteNullableCompact(string name, object? value);
 
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfCompactRef"/> field.</summary>
+        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableCompact"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        void WriteArrayOfCompactRef(string name, object?[]? value);
+        void WriteArrayOfNullableCompact(string name, object?[]? value);
     }
 }

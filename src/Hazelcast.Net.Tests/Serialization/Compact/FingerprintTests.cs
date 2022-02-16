@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var schema = new Schema("typename", new[]
             {
-                new SchemaField("fieldname", FieldKind.StringRef)
+                new SchemaField("fieldname", FieldKind.NullableString)
             });
 
             CanFingerprintSchemaSameAsJava(schema, 1);
@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var schema = SchemaBuilder
                 .For("thing")
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build();
 

@@ -84,7 +84,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactSerializer.GetTypeName<Thing>())
-                .WithField(nameof(Thing.Name), FieldKind.StringRef)
+                .WithField(nameof(Thing.Name), FieldKind.NullableString)
                 .WithField(nameof(Thing.Value), FieldKind.Int32)
                 .Build());
 
@@ -101,7 +101,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build());
 
@@ -128,7 +128,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactSerializer.GetTypeName<Thing>())
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build());
 
@@ -146,7 +146,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build());
 
@@ -164,7 +164,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var schema = SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 
@@ -184,7 +184,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build());
 
@@ -220,7 +220,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactSerializer.GetTypeName<Thing>())
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build());
 
@@ -238,7 +238,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build());
 
@@ -256,7 +256,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var schema = SchemaBuilder
                 .For("thing")
-                .WithField(Thing.FieldNames.Name, FieldKind.StringRef)
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 

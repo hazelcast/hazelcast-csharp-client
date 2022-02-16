@@ -34,7 +34,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             // explicitly via code, we don't support any other mean of configuring schemas
             var thingSchema = SchemaBuilder
                 .For("thing")
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build();
 
@@ -108,14 +108,14 @@ namespace Hazelcast.Tests.Serialization.Compact
             // define schemas
             var thingSchema = SchemaBuilder
                 .For("thing")
-                .WithField("name", FieldKind.StringRef)
+                .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build();
 
             var thingNestSchema = SchemaBuilder
                 .For("thingNest")
-                .WithField("name", FieldKind.StringRef)
-                .WithField("thing", FieldKind.CompactRef)
+                .WithField("name", FieldKind.NullableString)
+                .WithField("thing", FieldKind.NullableCompact)
                 .Build();
 
             var options = new SerializationOptions
@@ -172,14 +172,14 @@ namespace Hazelcast.Tests.Serialization.Compact
             {
                 return new Thing
                 {
-                    Name = reader.ReadStringRef("name"),
+                    Name = reader.ReadNullableString("name"),
                     Value = reader.ReadInt32("value")
                 };
             }
 
             public void Write(ICompactWriter writer, Thing obj)
             {
-                writer.WriteStringRef("name", obj.Name);
+                writer.WriteNullableString("name", obj.Name);
                 writer.WriteInt32("value", obj.Value);
             }
         }
@@ -197,15 +197,15 @@ namespace Hazelcast.Tests.Serialization.Compact
             {
                 return new ThingNest
                 {
-                    Name = reader.ReadStringRef("name"),
-                    Thing = reader.ReadCompactRef<Thing>("thing")
+                    Name = reader.ReadNullableString("name"),
+                    Thing = reader.ReadNullableCompact<Thing>("thing")
                 };
             }
 
             public void Write(ICompactWriter writer, ThingNest obj)
             {
-                writer.WriteStringRef("name", obj.Name);
-                writer.WriteCompactRef("thing", obj.Thing);
+                writer.WriteNullableString("name", obj.Name);
+                writer.WriteNullableCompact("thing", obj.Thing);
             }
         }
     }
