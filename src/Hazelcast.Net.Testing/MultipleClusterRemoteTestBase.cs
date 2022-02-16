@@ -19,6 +19,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
@@ -32,6 +33,7 @@ namespace Hazelcast.Testing
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
             RcClusterPrimary = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
             RcClusterAlternative = await RcClient.CreateClusterAsync(Remote.Resources.alternative).CfAwait();
+            RcClusterPartition = await RcClient.CreateClusterAsync(Remote.Resources.partition).CfAwait();
         }
 
         [OneTimeTearDown]
@@ -70,6 +72,11 @@ namespace Hazelcast.Testing
         protected virtual string RcAlternativeClusterConfiguration => Remote.Resources.alternative;
 
         /// <summary>
+        /// Cluster has 277 partion
+        /// </summary>
+        protected virtual string RcPartitionClusterConfiguration => Remote.Resources.partition;
+
+        /// <summary>
         /// Gets the remote controller client.
         /// </summary>
         protected Remote.IRemoteControllerClient RcClient { get; private set; }
@@ -77,8 +84,44 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote controller cluster.
         /// </summary>
-        protected Remote.Cluster RcClusterPrimary { get; set; }
+        protected Remote.Cluster RcClusterPrimary { get; private set; }
 
-        protected Remote.Cluster RcClusterAlternative { get; set; }
+        /// <summary>
+        /// Uses username password authentication
+        /// </summary>
+        protected Remote.Cluster RcClusterAlternative { get; private set; }
+
+        protected Remote.Cluster RcClusterPartition { get; private set; }
+
+        /// <summary>
+        /// Kills given member list on given cluster
+        /// </summary>
+        /// <param name="clusterID"></param>
+        /// <param name="members"></param>
+        /// <returns></returns>
+        protected async Task KillMembersOnAsync(string clusterID, Member[] members)
+        {
+            foreach (var member in members)
+            {
+                await RcClient.ShutdownMemberAsync(clusterID, member.Uuid);
+            }
+        }
+
+        /// <summary>
+        /// Starts number of members on given cluster
+        /// </summary>
+        /// <param name="clusterId"></param>
+        /// <param name="numberOfMembers"></param>
+        /// <returns></returns>
+        protected async Task<Member[]> StartMembersOn(string clusterId, int numberOfMembers)
+        {
+            Member[] members = new Member[numberOfMembers];
+            for (int i = 0; i < numberOfMembers; i++)
+            {
+                members[i] = await RcClient.StartMemberAsync(clusterId);
+            }
+
+            return members;
+        }
     }
 }
