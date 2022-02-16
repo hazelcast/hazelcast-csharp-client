@@ -37,7 +37,7 @@ namespace Hazelcast.Clustering
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
-        private readonly ILoadBalancer _loadBalancer;
+        private ILoadBalancer _loadBalancer;
 
         private readonly TerminateConnections _terminateConnections;
         private readonly MemberConnectionQueue _memberConnectionQueue;
@@ -65,7 +65,7 @@ namespace Hazelcast.Clustering
 
             _clusterState = clusterState;
             _terminateConnections = terminateConnections;
-            _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
+            _loadBalancer = clusterState.CurrentClusterOptions.LoadBalancer.Service ?? new RandomLoadBalancer();
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 
@@ -77,6 +77,11 @@ namespace Hazelcast.Clustering
                     Clear();
 
                 return default;
+            };
+
+            _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
+            {
+                _loadBalancer = options.LoadBalancer?.Service ?? _loadBalancer;
             };
 
             // members to connect
@@ -467,7 +472,7 @@ namespace Hazelcast.Clustering
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
                         _logger.LogDebug($"Set members: {removed.Count} removed, {added.Count} added, {members.Count} total and at least one is connected, now connected.");
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected,ClientState.Switched);
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected, ClientState.Switched);
                         _connected = true;
                     }
                     else
@@ -771,10 +776,9 @@ namespace Hazelcast.Clustering
             //no one should interrupt the cleaning
             lock (_mutex)
             {
-                foreach (var member in _members.Members)
-                {
-                    _memberConnectionQueue.Remove(member.Id);
-                }
+                if (_clusterState.IsSmartRouting)
+                    foreach (var member in _members.Members)
+                        _memberConnectionQueue.Remove(member.Id);
 
                 _members = new MemberTable();
             }
