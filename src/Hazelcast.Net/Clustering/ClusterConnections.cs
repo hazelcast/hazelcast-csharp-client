@@ -76,12 +76,12 @@ namespace Hazelcast.Clustering
 
             _clusterState.StateChanged += OnStateChanged;
 
-            //Cluster changed, renew authenticator if neccessary.
+            //Cluster changed, renew options if neccessary.
             _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
             {
-                if (options.Authentication == null) return;
-
                 _authenticator = new Authenticator(options.Authentication, _serializationService, _clusterState.LoggerFactory);
+
+                _connectRetryStrategy.ChangeStrategy(options.Networking.ConnectionRetry);
             };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
@@ -139,6 +139,11 @@ namespace Hazelcast.Clustering
                     {
                         exception = null;
                         details = "failed (member is not active)";
+                    }
+                    else if (exception is ClientNotAllowedInClusterException)
+                    {
+                        connectionRequest.Complete(success: false);
+                        break;
                     }
                     else if (exception is TimeoutException)
                     {
@@ -385,11 +390,18 @@ namespace Hazelcast.Clustering
                 // we have been connected (rejoice) - of course, nothing guarantees that it
                 // will last, but then OnConnectionClosed will deal with it
             }
-            catch
+            catch (Exception e)
             {
-                // we *have* retried and failed, shutdown & throw
-                _clusterState.RequestShutdown();
-                throw;
+                if (e is ClientNotAllowedInClusterException && _clusterState.IsFailoverEnabled)
+                {
+                    throw;//if failover enabled, client can try other clusters
+                }
+                else
+                {
+                    // we *have* retried and failed, shutdown & throw
+                    _clusterState.RequestShutdown();
+                    throw;
+                }
             }
         }
 
@@ -423,6 +435,11 @@ namespace Hazelcast.Clustering
 
                 // we have been reconnected (rejoice) - of course, nothing guarantees that it
                 // will last, but then OnConnectionClosed will deal with it
+            }
+            catch (ClientNotAllowedInClusterException e)
+            {
+                await _clusterState.ChangeStateAndWait(ClientState.Disconnected).CfAwait();
+                _logger.LogError(e, "Failed to reconnect.");
             }
             catch (Exception e)
             {
@@ -524,6 +541,11 @@ namespace Hazelcast.Clustering
                             {
                                 _logger.LogWarning($"Failed to connect to address {address} (socket timeout).");
                             }
+                            else if (attempt.Exception is ClientNotAllowedInClusterException)
+                            {
+                                _logger.LogWarning("Failed to connect to cluster since client is not allowed.");
+                                throw attempt.Exception;
+                            }
                             else
                             {
                                 isExceptionThrown = true;
@@ -535,6 +557,11 @@ namespace Hazelcast.Clustering
                             _logger.LogDebug($"Failed to connect to address {address}.");
                         }
                     }
+                }
+                catch (ClientNotAllowedInClusterException ex)
+                {
+                    // no need to furher try
+                    throw;
                 }
                 catch (Exception e)
                 {
@@ -745,8 +772,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 await connection.DisposeAsync().CfAwait(); // does not throw
-                throw new ConnectionException("Failed to open a connection because " +
-                                              "the partitions count announced by the member is invalid.", e);
+                throw;
             }
 
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
