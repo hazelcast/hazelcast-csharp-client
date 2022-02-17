@@ -38,7 +38,9 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Number of tries for given each cluster.
+        /// Gets or sets Number of tries
+        /// <para>It is the number of maximum tries consecutively to connect a cluster. 
+        /// Client will fail if number of tries is exhausted. It is reset when connected.</para>
         /// </summary>
         public int TryCount { get; set; }
 
