@@ -56,3 +56,8 @@ Hazelcast Cloud Discovery enables clients to discover the cluster IP addresses t
 
 To be able to connect to the provided IP addresses, you will need to use secure TLS/SSL connection between the client and members.
 Therefore, you should set an SSL configuration as described in the the [TLS/SSL](security/tlsssl.md) section.
+
+## Failover (Blue/Green Deployment)
+
+.NET Client allows you to set failover cluster(s). In order to use the backup cluster, it should be configured under `options.Failover` and enabled. Also, [Reconnect](network.md#reconnect-mode) mode should be set. The client will first connect to default configured cluster `options.Networking`. In case of connection failure or client is blacklisted from cluster, client will go to `Disconnected` state. In that state, if there are any configured backup cluster to be connected, client will switch the cluster to next one. During `Switching`, client can throw `ClientOfflineException` for requests. Client will try alternative clusters until `option.Failover.TryCount` is exhausted. When one of the cluster is connected, `TryCount` will be reset. After `Switched`, client will re-connect to the new cluster. Please visit [Failover](configuration/options.md#a-namefailover) option to see details of the option.
+> Note: `SmartRouting` option cannot be different between given clusters. Client will use the `options.Networking.SmartRouting` option for all clusters, and it cannot be overwritten by alternative clusters.
