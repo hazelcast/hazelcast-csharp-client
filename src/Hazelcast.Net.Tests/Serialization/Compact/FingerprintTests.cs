@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -61,52 +62,60 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(javaFingerprint, Is.EqualTo(fingerprint));
         }
 
-        [Test]
-        public void CanFingerprintSchema1SameAsJava()
+        private static IEnumerable<object[]> CanFingerprintSchemaSameAsJavaSource()
         {
-            var schema = new Schema("typename", new[]
+            yield return new object[]
             {
-                new SchemaField("fieldname", FieldKind.NullableString)
-            });
+                new Schema("typename", new[]
+                {
+                    new SchemaField("fieldname", FieldKind.NullableString)
+                }),
+                @"
+                    fields.put(""fieldname"", new FieldDescriptor(""fieldname"", FieldKind.STRING));
+"
+            };
 
-            CanFingerprintSchemaSameAsJava(schema, 1);
-        }
-
-        [Test]
-        public void CanFingerprintSchema2SameAsJava()
-        {
-            var schema = new Schema("foo", new[]
+            yield return new object[]
             {
-                new SchemaField("value", FieldKind.Int32)
-            });
+                new Schema("foo", new[]
+                {
+                    new SchemaField("value", FieldKind.Int32)
+                }),
+                @"
+                    fields.put(""value"", new FieldDescriptor(""value"", FieldKind.INT32));
+"
+            };
 
-            CanFingerprintSchemaSameAsJava(schema, 2);
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("thing")
+                    .WithField("name", FieldKind.NullableString)
+                    .WithField("value", FieldKind.Int32)
+                    .Build(),
+                @"
+                    fields.put(""name"", new FieldDescriptor(""name"", FieldKind.STRING));
+                    fields.put(""value"", new FieldDescriptor(""value"", FieldKind.INT32));
+"
+            };
         }
 
-        [Test]
-        public void CanFingerprintSchema3SameAsJava()
-        {
-            var schema = SchemaBuilder
-                .For("thing")
-                .WithField("name", FieldKind.NullableString)
-                .WithField("value", FieldKind.Int32)
-                .Build();
-
-            CanFingerprintSchemaSameAsJava(schema, 3);
-        }
-
-        private void CanFingerprintSchemaSameAsJava(Schema schema, int n)
+        [TestCaseSource(nameof(CanFingerprintSchemaSameAsJavaSource))]
+        public void CanFingerprintSchemaSameAsJava(Schema schema, string javaFields)
         {
             var fingerprint = schema.Id;
 
-            //foreach (var field in schema.Fields) Console.WriteLine(field.FieldName);
+            var text = TestFiles.ReadAllText(this, "Java/SerializationTests/Compact/FingerprintSchema.java");
+            text = text.Replace("$$TYPENAME$$", schema.TypeName);
+            text = text.Replace("$$CLASSNAME$$", "FingerprintSchema");
+            text = text.Replace("$$FIELDS$$", javaFields);
 
             using var run = new JavaRun()
-                .WithSource($"Java/SerializationTests/Compact/FingerprintSchema{n}.java")
+                .WithSourceText("FingerprintSchema", text)
                 .WithSource("Java/SerializationTests/Compact/RabinFingerprint.java")
                 .WithLib($"hazelcast-{ServerVersion.DefaultVersion}.jar");
             run.Compile();
-            var output = run.Execute($"FingerprintSchema{n}");
+            var output = run.Execute("FingerprintSchema");
 
             Assert.That(output, Is.Not.Null);
             var javaFingerprintString = output.Trim();

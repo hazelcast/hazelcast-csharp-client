@@ -30,6 +30,7 @@ namespace Hazelcast.Testing
 
         private readonly string _path = Path.Combine(Path.GetTempPath(), $"hz-tests-{Guid.NewGuid():N}");
         private readonly List<string> _sources = new List<string>();
+        private readonly Dictionary<string, string> _sourceTexts = new Dictionary<string, string>();
         private readonly List<string> _libs = new List<string>();
         private readonly string _libpath;
 
@@ -95,6 +96,12 @@ namespace Hazelcast.Testing
         public JavaRun WithSource(string source)
         {
             _sources.Add(source);
+            return this;
+        }
+
+        public JavaRun WithSourceText(string name, string text)
+        {
+            _sourceTexts.Add(name, text);
             return this;
         }
 
@@ -207,6 +214,14 @@ namespace Hazelcast.Testing
                 args.Append(" ");
                 args.Append(path);
                 File.WriteAllText(path, TestFiles.ReadAllText(this, source));
+            }
+            Console.WriteLine("Write source texts...");
+            foreach (var (name, text) in _sourceTexts)
+            {
+                var path = PathCombineFull(_path, $"{name}.java");
+                args.Append(" ");
+                args.Append(path);
+                File.WriteAllText(path, text);
             }
             if (!Directory.GetFiles(_path, "*.java").Any())
                 throw new InvalidOperationException("No source files.");
