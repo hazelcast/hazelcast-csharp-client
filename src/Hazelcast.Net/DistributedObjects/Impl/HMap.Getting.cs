@@ -90,9 +90,9 @@ namespace Hazelcast.DistributedObjects.Impl
                 {
                     return ToObject<TValue>(valueData);
                 }
-                catch (UnknownCompactSchemaException e)
+                catch (MissingCompactSchemaException e)
                 {
-                    await e.Fetching.CfAwait(); // throws if not successful
+                    await e.FetchSchemaAsync().CfAwait(); // throws if not successful
                 }
             }
         }

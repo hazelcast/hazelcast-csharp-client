@@ -14,6 +14,10 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.NearCaching;
 
 namespace Hazelcast.Serialization.Collections
 {
@@ -27,7 +31,7 @@ namespace Hazelcast.Serialization.Collections
     /// <para>This class is thread-safe for reading, however for performance purposes, some values may
     /// be deserialized multiple times in multi-threaded situations.</para>
     /// </remarks>
-    internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
+    internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>, IAsyncEnumerable<TValue>
     {
         private readonly List<ReadOnlyLazyEntry<TValue>> _content = new List<ReadOnlyLazyEntry<TValue>>();
         private readonly SerializationService _serializationService;
@@ -102,6 +106,48 @@ namespace Hazelcast.Serialization.Collections
                 var cacheEntry = _content[index];
                 EnsureValue(cacheEntry);
                 return cacheEntry.Value;
+            }
+        }
+
+        // FIXME - document
+        public async IAsyncEnumerator<TValue> GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            using var enumerator = _content.GetEnumerator();
+            while (!cancellationToken.IsCancellationRequested && enumerator.MoveNext())
+            {
+                var cacheEntry = enumerator.Current!;
+
+                // accepted race-condition here
+                if (!cacheEntry.HasValue) await DeserializeAsync(cacheEntry).CfAwait();
+                yield return cacheEntry.Value;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        // FIXME - document
+        public ValueTask<TValue> GetItemAsync(int index)
+        {
+            var cacheEntry = _content[index];
+
+            // accepted race-condition here
+            return cacheEntry.HasValue
+                ? new ValueTask<TValue>(cacheEntry.Value)
+                : DeserializeAsync(cacheEntry);
+        }
+
+        private async ValueTask<TValue> DeserializeAsync(ReadOnlyLazyEntry<TValue> entry)
+        {
+            while (true)
+            {
+                try
+                {
+                    return entry.Value = _serializationService.ToObject<TValue>(entry.ValueData);
+                }
+                catch (MissingCompactSchemaException e)
+                {
+                    await e.FetchSchemaAsync().CfAwait(); // throws if not successful
+                }
             }
         }
     }

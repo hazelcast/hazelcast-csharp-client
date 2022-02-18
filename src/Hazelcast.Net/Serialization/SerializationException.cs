@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Runtime.Serialization;
-using System.Threading.Tasks;
 using Hazelcast.Exceptions;
-using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
-    [Serializable]
+    [Serializable] // FIXME - what about serializable + CA1032? bonkers!
     public class SerializationException : HazelcastException
     {
         /// <summary>
@@ -72,34 +72,5 @@ namespace Hazelcast.Serialization
         protected SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
-    }
-
-    [Serializable]
-    public sealed class UnknownCompactSchemaException : SerializationException
-    {
-        // FIXME - complete the class
-
-        public UnknownCompactSchemaException(long schemaId)
-            : base($"Unknown compact serialization schema with id {schemaId}.")
-        {
-            SchemaId = schemaId;
-        }
-
-        public UnknownCompactSchemaException(long schemaId, Task fetching)
-            : base($"Unknown compact serialization schema with id {schemaId}.")
-        {
-            SchemaId = schemaId;
-            Fetching = fetching;
-        }
-
-        /// <summary>
-        /// Gets the identifier of the unknown schema.
-        /// </summary>
-        public long SchemaId { get; set; }
-
-        /// <summary>
-        /// Gets the fetching task.
-        /// </summary>
-        public Task Fetching { get; }
     }
 }

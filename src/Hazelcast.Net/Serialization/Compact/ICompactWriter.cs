@@ -193,27 +193,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>Writes a <see cref="FieldKind.NullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>
         /// <param name="value">The value of the field.</param>
-        /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.NullableDecimal"/> primitive type. The range of this
-        /// primitive type is different from the range of <see cref="decimal"/>. Refer to the primitive
-        /// type documentation for details.</para>
-        /// </remarks>
-        void WriteNullableDecimal(string name, decimal? value);
-
-        /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> field.</summary>
-        /// <param name="name">The name of the field.</param>
-        /// <param name="value">The value of the field.</param>
-        /// <remarks>
-        /// <para>This method writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> primitive type. The range
-        /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
-        /// primitive type documentation for details.</para>
-        /// </remarks>
-        void WriteArrayOfNullableDecimal(string name, decimal?[]? value);
-
-        /// <summary>Writes a <see cref="FieldKind.NullableDecimal"/> field.</summary>
-        /// <param name="name">The name of the field.</param>
-        /// <param name="value">The value of the field.</param>
-        void WriteNullableDecimal(string name, HBigDecimal? value); // FIXME and WTF are we supposed to do if we don't support overrides ?!
+        void WriteNullableDecimal(string name, HBigDecimal? value);
 
         /// <summary>Writes a <see cref="FieldKind.ArrayOfNullableDecimal"/> field.</summary>
         /// <param name="name">The name of the field.</param>

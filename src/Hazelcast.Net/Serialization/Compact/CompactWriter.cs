@@ -381,12 +381,6 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfNullableString(string name, string?[]? value)
             => WriteArrayOfReference(name, FieldKind.ArrayOfNullableString, value, (output, v) => output.WriteString(v));
 
-        public void WriteNullableDecimal(string name, decimal? value)
-            => WriteNullable(name, FieldKind.NullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
-
-        public void WriteArrayOfNullableDecimal(string name, decimal?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
-
         public void WriteNullableDecimal(string name, HBigDecimal? value)
             => WriteNullable(name, FieldKind.NullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
 

@@ -381,13 +381,7 @@ namespace Hazelcast.Serialization.Compact
             // a schema. but, this would require that that return value be bubbled up along the
             // whole API including the very public IObjectDataInput.ReadObject and ?!
 
-            async Task Fetch(long fetchId)
-            {
-                var result = await _schemas.GetOrFetchAsync(fetchId).CfAwait();
-                if (result == null) throw new SerializationException($"Failed to retrieve schema {fetchId} from cluster.");
-            }
-
-            throw new UnknownCompactSchemaException(schemaId, Fetch(schemaId));
+            throw new MissingCompactSchemaException(schemaId, id => _schemas.GetOrFetchAsync(id));
 
             // note: this is the code we would use if we were to receive the schema alongside
             // the data, and we keep it here for reference only, just in case one day...

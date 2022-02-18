@@ -277,23 +277,10 @@ namespace Hazelcast.Serialization.Compact
         public string?[]? ReadArrayOfNullableString(string name)
             => ReadArrayOfReference(name, FieldKind.ArrayOfNullableString, input => input.ReadString());
 
-        private static decimal ReadBigDecimalIntoDecimal(ObjectDataInput input)
-        {
-            var bigValue = input.ReadBigDecimal();
-            if (bigValue.TryToDecimal(out var value)) return value;
-            throw new OverflowException("Cannot read BigDecimal value into decimal.");
-        }
-
-        public decimal? ReadNullableDecimal(string name)
-            => ReadNullable(name, FieldKind.NullableDecimal, ReadBigDecimalIntoDecimal);
-
-        public decimal?[]? ReadArrayOfNullableDecimal(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, ReadBigDecimalIntoDecimal);
-
-        public HBigDecimal? ReadNullableBigDecimal(string name)
+        public HBigDecimal? ReadNullableDecimal(string name)
             => ReadNullable(name, FieldKind.NullableDecimal, input => input.ReadBigDecimal());
 
-        public HBigDecimal?[]? ReadArrayOfNullableBigDecimal(string name)
+        public HBigDecimal?[]? ReadArrayOfNullableDecimal(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, input => input.ReadBigDecimal());
 
         public TimeSpan? ReadNullableTime(string name)

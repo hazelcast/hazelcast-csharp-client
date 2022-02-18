@@ -18,6 +18,8 @@ using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
+    // FIXME - this type needs to be cleaned up (see HBigDecimal)
+
     /// <summary>
     /// Represents Hazelcast SQL <c>TIMESTAMP_WITH_TIME_ZONE</c> type corresponding to <c>java.time.OffsetDateTime</c> in Java.
     /// </summary>

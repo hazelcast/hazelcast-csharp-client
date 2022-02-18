@@ -14,6 +14,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
@@ -69,6 +70,8 @@ namespace Hazelcast.Serialization.Compact
         /// <inheritdoc />
         public void Add(Schema schema, bool isClusterSchema)
         {
+            Console.WriteLine($"Adding {schema.Id} {schema.TypeName} at:"); // FIXME - remove this line
+            Console.WriteLine(Environment.StackTrace);
             if (_schemas.TryAdd(schema.Id, new ManagedSchema { Schema = schema, IsClusterSchema = isClusterSchema }) && !isClusterSchema)
             {
                 lock (_mutex)
@@ -133,6 +136,7 @@ namespace Hazelcast.Serialization.Compact
         // internal for tests
         internal async ValueTask<Schema> FetchAsync(long id)
         {
+            Console.WriteLine($"Fetching {id}"); // FIXME - remove this line
             var requestMessage = ClientFetchSchemaCodec.EncodeRequest(id);
             var response = await _messaging.SendAsync(requestMessage, CancellationToken.None).CfAwait();
             var schema = ClientFetchSchemaCodec.DecodeResponse(response).Schema;

@@ -39,6 +39,8 @@ namespace Hazelcast.Tests.Serialization.Compact
         public string? Name { get; set; }
 
         public int Value { get; set; }
+
+        public override string ToString() => $"Thing (Name=\"{Name}\", Value={Value})";
     }
 
     // FIXME - dead code

@@ -16,6 +16,8 @@ using System;
 
 namespace Hazelcast.Models
 {
+    // FIXME - this type needs to be cleaned up (see HBigDecimal)
+
     /// <summary>
     /// Represents Hazelcast SQL <c>TIMESTAMP</c> type corresponding to <c>java.time.LocalDateTime</c> in Java.
     /// </summary>

@@ -13,6 +13,8 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
@@ -323,6 +325,66 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Assert.That(ThingCompactSerializer.WriteCount, Is.GreaterThan(0));
                 Assert.That(ThingCompactSerializer.ReadCount, Is.GreaterThan(0));
             }
+        }
+
+        [Test]
+        public async Task AsyncLazyDeserialization()
+        {
+            var schema = SchemaBuilder
+                .For(Thing.TypeName)
+                .WithField("name", FieldKind.NullableString)
+                .WithField("value", FieldKind.Int32)
+                .Build();
+
+            // get options for the client
+            // can provide the ThingCompactSerializer<Thing>, names matches the schema above
+            var options = GetHazelcastOptions();
+            options.Serialization.Compact.Register<Thing>(new ThingCompactSerializer<Thing>(), schema, false);
+
+            // ensure that the cluster knows the 'thing' schema which will be pushed to it
+            // ensure that the cluster has a map with 1 value of type 'thing'
+
+            var client = await HazelcastClientFactory.StartNewClientAsync(options);
+            var map = await client.GetMapAsync<string, Thing>("map_" + Guid.NewGuid().ToString("N"));
+            var mapName = map.Name;
+
+            for (var i = 1; i < 10; i++)
+            {
+                await map.PutAsync($"thing{i}", new Thing { Name = $"thing{i}", Value = i });
+            }
+
+            await map.DisposeAsync();
+            await client.DisposeAsync();
+
+            // get options for the client
+            // register without a schema, the schema will have to be fetched from the cluster
+            options = GetHazelcastOptions();
+            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), Thing.TypeName, true);
+
+            // we need a new, fresh client, which does not know about the schema already
+            client = await HazelcastClientFactory.StartNewClientAsync(options);
+            map = await client.GetMapAsync<string, Thing>(mapName);
+
+            await using var disposer = new AsyncDisposable(async () =>
+            {
+                await map.DisposeAsync();
+                await client.DisposeAsync();
+            });
+
+            var values = await map.GetValuesAsync();
+
+            // this is entirely synchronous and throws, because it cannot retrieve the schema
+            Assert.Throws<MissingCompactSchemaException>(() => _ = values.First());
+
+            // this is asynchronous and will successfully fetch the schema
+            _ = await values.AsAsyncEnumerable().FirstAsync();
+
+            // and then of course this succeeds
+            _ = values.First();
+
+            // and this too, synchronously
+            foreach (var value in values)
+                Console.WriteLine(value);
         }
 
 

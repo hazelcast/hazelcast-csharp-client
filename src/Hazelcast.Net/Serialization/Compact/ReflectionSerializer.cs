@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using Hazelcast.Models;
 
 #nullable enable
 
@@ -32,11 +33,24 @@ namespace Hazelcast.Serialization.Compact
             throw new InvalidOperationException($"Cannot unbox null value as {typeof (T)}.");
         }
 
+        private static T ValueNonNull<T>(T? value)
+            where T : struct
+        {
+            if (value.HasValue) return value.Value;
+            throw new InvalidOperationException($"Cannot return null value as {typeof(T)}.");
+        }
+
+        // FIXME - missing reflection serializer writers and readers
+        // FIXME - must handle the non-primitive types correctly
+
         private static readonly Dictionary<Type, Action<ICompactWriter, string, object?>> Writers 
             = new Dictionary<Type, Action<ICompactWriter, string, object?>>
             {
                 { typeof (int), (w, n, o) => w.WriteInt32(n, UnboxNonNull<int>(o)) },
                 { typeof (int?), (w, n, o) => w.WriteNullableInt32(n, (int?)o) },
+
+                { typeof (decimal), (w, n, o) => w.WriteNullableDecimal(n, (HBigDecimal) UnboxNonNull<decimal>(o)) },
+                { typeof (decimal?), (w, n, o) => w.WriteNullableDecimal(n, (HBigDecimal?) (decimal?) o) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register writers here against the actual types
@@ -50,16 +64,29 @@ namespace Hazelcast.Serialization.Compact
         private static readonly Dictionary<Type, Func<ICompactReader, string, object?>> Readers 
             = new Dictionary<Type, Func<ICompactReader, string, object?>>
             {
-                { typeof (int), (r, n) => r.ReadInt32(n) },
-                { typeof (int?), (r, n) => r.ReadNullableInt32(n) },
+// ReSharper disable RedundantCast
+#pragma warning disable IDE0004
+
+                // some casts are redundant, but let's force ourselves to cast everywhere,
+                // so that we are 100% we detect potential type mismatch errors
+
+                { typeof (int), (r, n) => (int) r.ReadInt32(n) },
+                { typeof (int?), (r, n) => (int?) r.ReadNullableInt32(n) },
+
+                { typeof (decimal), (r, n) => (decimal) ValueNonNull(r.ReadNullableDecimal(n)) },
+                { typeof (decimal?), (r, n) => (decimal?) r.ReadNullableDecimal(n) },
 
                 // there is no typeof nullable reference type (e.g. string?) since they are not
                 // actual CLR types, so we have to register readers here against the actual types
                 // (e.g. string) even though the value we read may be null.
 
-                { typeof (string), (r, n) => r.ReadNullableString(n) }
+                { typeof (string), (r, n) => (string?) r.ReadNullableString(n) }
 
                 // FIXME - missing reflection serializer readers
+
+// ReSharper restore RedundantCast
+#pragma warning restore IDE0004
+
             };
 
         private static Action<ICompactWriter, string, object?> GetWriter(Type type)

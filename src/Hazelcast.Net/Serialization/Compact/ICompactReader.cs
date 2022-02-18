@@ -193,39 +193,15 @@ namespace Hazelcast.Serialization.Compact
         /// <returns>The value of the field.</returns>
         string?[]? ReadArrayOfNullableString(string name);
 
-        /// <summary>Reads a <see cref="FieldKind.NullableDecimal"/> field as a <see cref="decimal"/>.</summary>
-        /// <param name="name">The name of the field.</param>
-        /// <returns>The value of the field.</returns>
-        /// <remarks>
-        /// <para>This methods reads a <see cref="FieldKind.NullableDecimal"/> primitive type. The range
-        /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
-        /// primitive type documentation for details.</para>
-        /// </remarks>
-        /// <exception cref="SerializationException">A specified value is outside the range of the
-        /// <see cref="decimal"/> type.</exception>
-        decimal? ReadNullableDecimal(string name); // FIXME make these ReadDecimalAsDecimalRef extension methods?!
-
-        /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableDecimal"/> field as <see cref="decimal"/> values.</summary>
-        /// <param name="name">The name of the field.</param>
-        /// <returns>The value of the field.</returns>
-        /// <remarks>
-        /// <para>This methods reads a <see cref="FieldKind.NullableDecimal"/> primitive type. The range
-        /// of this primitive type is different from the range of <see cref="decimal"/>. Refer to the
-        /// primitive type documentation for details.</para>
-        /// </remarks>
-        /// <exception cref="SerializationException">A specified value is outside the range of the
-        /// <see cref="decimal"/> type.</exception>
-        decimal?[]? ReadArrayOfNullableDecimal(string name);
-
         /// <summary>Reads a <see cref="FieldKind.NullableDecimal"/> field as a <see cref="HBigDecimal"/>.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        HBigDecimal? ReadNullableBigDecimal(string name);
+        HBigDecimal? ReadNullableDecimal(string name);
 
         /// <summary>Reads a <see cref="FieldKind.ArrayOfNullableDecimal"/> field as <see cref="HBigDecimal"/> values.</summary>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        HBigDecimal?[]? ReadArrayOfNullableBigDecimal(string name);
+        HBigDecimal?[]? ReadArrayOfNullableDecimal(string name);
 
         /// <summary>Reads a <see cref="FieldKind.NullableTime"/> field as a <see cref="TimeSpan"/>.</summary>
         /// <param name="name">The name of the field.</param>

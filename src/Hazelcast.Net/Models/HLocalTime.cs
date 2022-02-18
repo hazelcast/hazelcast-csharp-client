@@ -17,6 +17,8 @@ using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
+    // FIXME - this type needs to be cleaned up (see HBigDecimal)
+
     /// <summary>
     /// Represents Hazelcast SQL <c>TIME</c> type corresponding to <c>java.time.LocalTime</c> in Java.
     /// </summary>
@@ -87,6 +89,8 @@ namespace Hazelcast.Models
 
         public TimeSpan ToTimeSpan() => new TimeSpan(0, Hour, Minute, Second, Nanosecond / 1000);
 
+        // FIXME - add conversion for TimeOnly in .NET 6
+        // FIXME - why have the DateTime conversion?
         public static explicit operator TimeSpan(HLocalTime localTime) => localTime.ToTimeSpan();
         public static explicit operator HLocalTime(TimeSpan timeSpan) => new HLocalTime(timeSpan);
         public static explicit operator HLocalTime(DateTime dateTime) => new HLocalTime(dateTime);

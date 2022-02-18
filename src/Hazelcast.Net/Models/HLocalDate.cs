@@ -17,6 +17,8 @@ using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
+    // FIXME - this type needs to be cleaned up (see HBigDecimal)
+
     /// <summary>
     /// Represents Hazelcast SQL <c>DATE</c> type corresponding to <c>java.time.LocalDate</c> in Java.
     /// </summary>
@@ -82,6 +84,7 @@ namespace Hazelcast.Models
             return true;
         }
 
+        // FIXME - add conversion for DateOnly in .NET 6
         public static explicit operator DateTime(HLocalDate localDate) => localDate.ToDateTime();
         public static explicit operator HLocalDate(DateTime dateTime) => new HLocalDate(dateTime);
 
