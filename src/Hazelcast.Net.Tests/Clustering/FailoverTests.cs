@@ -37,6 +37,8 @@ using Hazelcast.Testing.Remote;
 
 namespace Hazelcast.Tests.Clustering
 {
+    [Category("enterprise")]
+    [Timeout(30_000)]
     internal class FailoverTests : MultipleClusterRemoteTestBase
     {
         private IDisposable HConsoleForTest()
@@ -335,6 +337,7 @@ namespace Hazelcast.Tests.Clustering
 
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
 
+            Task.Delay(3_000);
             Assert.ThrowsAsync<ClientOfflineException>(async () => await client.GetMapAsync<string, string>(clusterAKey));
         }
 
