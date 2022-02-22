@@ -14,39 +14,33 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using System.Text;
 
 namespace Hazelcast.Exceptions
 {
-    [Serializable]
-    public class HazelcastInstanceNotActiveException : HazelcastException
+    internal class LockAcquireLimitReachedException : HazelcastException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
-        /// </summary>
-        public HazelcastInstanceNotActiveException()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
+        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class with specific message.
         /// </summary>
         /// <param name="message"></param>
-        public HazelcastInstanceNotActiveException(string message) : base(message)
+        public LockAcquireLimitReachedException(string message) : base(message)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
+        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class with specific message and inner exception.
         /// </summary>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public HazelcastInstanceNotActiveException(string message, Exception innerException) : base(message, innerException)
+        public LockAcquireLimitReachedException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected HazelcastInstanceNotActiveException(SerializationInfo info, StreamingContext context) : base(info, context)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class.
+        /// </summary>
+        public LockAcquireLimitReachedException()
         {
         }
     }

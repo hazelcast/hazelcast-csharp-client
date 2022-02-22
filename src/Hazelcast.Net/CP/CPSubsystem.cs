@@ -29,6 +29,7 @@ namespace Hazelcast.CP
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
+        private readonly CpSubsystemSession _cpSubsystemSession;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
@@ -39,6 +40,7 @@ namespace Hazelcast.CP
         {
             _cluster = cluster;
             _serializationService = serializationService;
+            _cpSubsystemSession = new CpSubsystemSession(cluster);
         }
 
         // NOTES
@@ -74,6 +76,14 @@ namespace Hazelcast.CP
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
+        }
+
+        public async Task<IFencedLock> GetFencedLockAsync(string name)
+        {
+            var (groupName, objectName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            return new FencedLock(_cpSubsystemSession, objectName, groupId, _cluster);
         }
 
         // see: ClientRaftProxyFactory.java

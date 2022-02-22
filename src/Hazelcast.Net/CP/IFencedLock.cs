@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 namespace Hazelcast.CP
 {
+    //TODO: documentation
     public interface IFencedLock : ICPDistributedObject
     {
         long InvalidFence { get; }
@@ -29,9 +30,9 @@ namespace Hazelcast.CP
 
         Task<long> LockAndGetFenceAsync();
 
-        Task<bool> TryLockAsync(TimeSpan time);
+        Task<bool> TryLockAsync(TimeSpan timeout);
 
-        Task<long> TryLockAndGetFenceAsync(TimeSpan time);
+        Task<long> TryLockAndGetFenceAsync(TimeSpan timeout);
 
         Task UnlockAsync();
 
@@ -39,7 +40,7 @@ namespace Hazelcast.CP
 
         Task<long> GetFenceAsync();
 
-        Task<int> GetLockCountAasync();
+        Task<int> GetLockCountAsync();
 
         Task<bool> IsLockedByCurrentThreadAsync();// todo: check naming the thread
     }

@@ -31,7 +31,6 @@ namespace Hazelcast.CP
     {
         private readonly CancellationTokenSource _cancel;
         private Task _heartbeating;
-        private readonly TimeSpan _heartbeatPeriod;
         private int _heartbeatState;
 
         /// <summary>

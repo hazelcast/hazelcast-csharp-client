@@ -14,39 +14,33 @@
 
 using System;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 using System.Text;
 
 namespace Hazelcast.Exceptions
 {
-    [Serializable]
-    public class HazelcastInstanceNotActiveException : HazelcastException
+    internal class LockOwnershipLostException : HazelcastException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
-        /// </summary>
-        public HazelcastInstanceNotActiveException()
-        {
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
+        /// Initializes a new instance of the <see cref="LockOwnershipLostException"/> class.
         /// </summary>
         /// <param name="message"></param>
-        public HazelcastInstanceNotActiveException(string message) : base(message)
+        public LockOwnershipLostException(string message) : base(message)
         {
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastInstanceNotActiveException"/> class.
+        /// Initializes a new instance of the <see cref="LockOwnershipLostException"/> class.
         /// </summary>
         /// <param name="message"></param>
         /// <param name="innerException"></param>
-        public HazelcastInstanceNotActiveException(string message, Exception innerException) : base(message, innerException)
+        public LockOwnershipLostException(string message, Exception innerException) : base(message, innerException)
         {
         }
 
-        protected HazelcastInstanceNotActiveException(SerializationInfo info, StreamingContext context) : base(info, context)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LockOwnershipLostException"/> class.
+        /// </summary>
+        public LockOwnershipLostException()
         {
         }
     }

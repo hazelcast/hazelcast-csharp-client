@@ -46,10 +46,10 @@ namespace Hazelcast.CP
         #endregion
 
         #region SessionManagement
-        public CpSubsystemSession(Cluster cluster, ClusterState clusterState)
+        public CpSubsystemSession(Cluster cluster)
         {
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            State = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
+            State = cluster.State ?? throw new ArgumentNullException(nameof(cluster.State));
 
             _logger = State.LoggerFactory.CreateLogger<CpSubsystemSession>();
 
