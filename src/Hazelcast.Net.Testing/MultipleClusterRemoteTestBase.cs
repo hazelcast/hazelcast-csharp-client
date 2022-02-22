@@ -26,7 +26,7 @@ namespace Hazelcast.Testing
 {
     internal class MultipleClusterRemoteTestBase : RemoteTestBase
     {
-        [OneTimeSetUp]
+        [SetUp]
         public async Task ClusterOneTimeSetUp()
         {
             // create remote client and cluster
@@ -36,7 +36,7 @@ namespace Hazelcast.Testing
             RcClusterPartition = await RcClient.CreateClusterAsync(Remote.Resources.partition).CfAwait();
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public async Task ClusterOneTimeTearDown()
         {
             // terminate & remove client and cluster
@@ -47,6 +47,9 @@ namespace Hazelcast.Testing
 
                 if (RcClusterAlternative != null)
                     await RcClient.ShutdownClusterAsync(RcClusterAlternative).CfAwait();
+
+                if (RcClusterPartition != null)
+                    await RcClient.ShutdownClusterAsync(RcClusterPartition).CfAwait();
 
                 await RcClient.ExitAsync().CfAwait();
             }

@@ -337,7 +337,7 @@ namespace Hazelcast.Tests.Clustering
 
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
 
-            Task.Delay(3_000);
+            await Task.Delay(3_000);
             Assert.ThrowsAsync<ClientOfflineException>(async () => await client.GetMapAsync<string, string>(clusterAKey));
         }
 
