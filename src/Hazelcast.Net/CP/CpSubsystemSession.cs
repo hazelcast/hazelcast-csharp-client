@@ -26,7 +26,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Cp Subsystem Session manages server side session requests and heartbeat
     /// </summary>
-    internal partial class CpSubsystemSession : IAsyncDisposable
+    internal partial class CPSubsystemSession : IAsyncDisposable
     {
         #region Properties
         private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();
@@ -46,12 +46,12 @@ namespace Hazelcast.CP
         #endregion
 
         #region SessionManagement
-        public CpSubsystemSession(Cluster cluster)
+        public CPSubsystemSession(Cluster cluster)
         {
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             State = cluster.State ?? throw new ArgumentNullException(nameof(cluster.State));
 
-            _logger = State.LoggerFactory.CreateLogger<CpSubsystemSession>();
+            _logger = State.LoggerFactory.CreateLogger<CPSubsystemSession>();
             _cancel = new CancellationTokenSource();
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.HEARTBEAT"));
         }
@@ -110,6 +110,12 @@ namespace Hazelcast.CP
                 return NoSessionId;
         }
 
+        public async Task CloseSessionAsync(CPGroupId groupId, long sessionId)
+        {
+            InvalidateSession(groupId, sessionId);
+            await RequestCloseSessionAsync(groupId, sessionId).CfAwait();
+        }
+
         /// <summary>
         /// Shuts down sessions on server and disposes
         /// </summary>
@@ -125,7 +131,7 @@ namespace Hazelcast.CP
                         {
                             try
                             {
-                                await RequestCloseSessionAsync(key, _sessions[key].Id).CfAwait();
+                                await CloseSessionAsync(key, _sessions[key].Id).CfAwait();
                             }
                             catch (Exception e)
                             {
@@ -211,6 +217,7 @@ namespace Hazelcast.CP
             Interlocked.Exchange(ref _heartbeatState, 0);
 
             Reset();
+            await ShutdownAsync().CfAwait();
 
             _cancel.Cancel();
 
@@ -225,6 +232,23 @@ namespace Hazelcast.CP
 
             _cancel.Dispose();
             _semaphoreReadWrite.Dispose();
+        }
+
+
+        /// <summary>
+        /// Returns acquired session count. For testing purpose.
+        /// </summary>
+        /// <param name="groupId"></param>
+        /// <param name="sessionId"></param>
+        /// <returns></returns>
+        internal int GetAcquiredSessionCount(CPGroupId groupId, long sessionId)
+        {
+            if(_sessions.TryGetValue(groupId, out var sessionState) && sessionState.Id == sessionId)
+            {
+                return sessionState.AcquireCount;
+            }
+
+            return 0;
         }
 
         /// <summary>

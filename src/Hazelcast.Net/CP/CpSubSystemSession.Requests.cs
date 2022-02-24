@@ -24,7 +24,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Implements server side requests for CP Session
     /// </summary>
-    internal partial class CpSubsystemSession
+    internal partial class CPSubsystemSession
     {
         /// <summary>
         /// Generates a cluster-wide unique thread id for the caller
@@ -65,6 +65,7 @@ namespace Hazelcast.CP
             var response = CPSessionCloseSessionCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
+
 
         /// <summary>
         /// Sends hearbeat for a given session

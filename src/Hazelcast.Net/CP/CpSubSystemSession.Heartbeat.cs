@@ -27,7 +27,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Implements Heartbeat side of CP Session
     /// </summary>
-    internal partial class CpSubsystemSession
+    internal partial class CPSubsystemSession
     {
         private readonly CancellationTokenSource _cancel;
         private Task _heartbeating;

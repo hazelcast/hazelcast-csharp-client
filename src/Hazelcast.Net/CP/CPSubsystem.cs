@@ -31,7 +31,7 @@ namespace Hazelcast.CP
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         //internal for testing
-        internal readonly CpSubsystemSession _cpSubsystemSession;
+        internal readonly CPSubsystemSession _cpSubsystemSession;
         private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Hazelcast.CP
         {
             _cluster = cluster;
             _serializationService = serializationService;
-            _cpSubsystemSession = new CpSubsystemSession(cluster);
+            _cpSubsystemSession = new CPSubsystemSession(cluster);
         }
 
         // NOTES

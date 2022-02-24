@@ -44,14 +44,15 @@ namespace Hazelcast.CP
         /// </remarks>
         private static long ContextId => AsyncContext.Current.Id;
         private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
-        private readonly CpSubsystemSession _subsystemSession;
+        private readonly CPSubsystemSession _subsystemSession;
         private readonly CPGroupId _groupId;
+        private int _destroyed = 0;
 
         public const long InvalidFence = 0;
         ICPGroupId IFencedLock.CPGroupId => _groupId;
         long IFencedLock.InvalidFence => InvalidFence;
 
-        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CpSubsystemSession subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
+        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CPSubsystemSession subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
         {
             _subsystemSession = subsystemSession;
             _groupId = groupId;
@@ -67,7 +68,7 @@ namespace Hazelcast.CP
             HConsole.WriteLine(this, $"Session:{sessionId} ThreadId:{threadId} -> GetFence");
             VerifyNoLockOnThread(threadId, sessionId, false);
 
-            if (sessionId == CpSubsystemSession.NoSessionId)
+            if (sessionId == CPSubsystemSession.NoSessionId)
             {
                 _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
@@ -175,6 +176,10 @@ namespace Hazelcast.CP
                         _subsystemSession.InvalidateSession(CPGroupId, sessionId);
                         VerifyNoLockedSessionExist(threadId);
                     }
+                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
+                    {
+                        throw new DistributedObjectDestroyedException(e);
+                    }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _subsystemSession.ReleaseSession(CPGroupId, sessionId);
@@ -240,6 +245,10 @@ namespace Hazelcast.CP
                             return InvalidFence;
 
                     }
+                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
+                    {
+                        throw new DistributedObjectDestroyedException(e);
+                    }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _subsystemSession.ReleaseSession(CPGroupId, sessionId);
@@ -276,7 +285,7 @@ namespace Hazelcast.CP
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
-            if (sessionId == CpSubsystemSession.NoSessionId)
+            if (sessionId == CPSubsystemSession.NoSessionId)
             {
                 _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
@@ -300,15 +309,15 @@ namespace Hazelcast.CP
                 {
                     _subsystemSession.InvalidateSession(CPGroupId, sessionId);
                     _lockedThreadToSession.TryRemove(threadId, out var _);
+                    throw new SessionExpiredException(e);
                 }
                 else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
                 {
                     _lockedThreadToSession.TryRemove(threadId, out var _);
+                    throw new SynchronizationLockException("IllegalMonitorState exception is thrown by server. Are you trying to unlock without holding?", e);
                 }
-
-                throw;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 throw;
             }
@@ -342,21 +351,28 @@ namespace Hazelcast.CP
         /// <exception cref="LockOwnershipLostException"></exception>
         private void VerifyNoLockedSessionExist(long threadId)
         {
-            if (_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId))
+            if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId) && lockedSessionId != default)
             {
-                _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new LockOwnershipLostException(lockedSessionId.ToString("D"));
             }
         }
 
         public async override ValueTask DestroyAsync()
         {
-            //var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
-            //var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            //var _ = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
-            await UnlockAsync().CfAwait();
+            if (Interlocked.CompareExchange(ref _destroyed, 1, 0) == 1) return;
 
-            _lockedThreadToSession.Clear();
+            try
+            {
+                await RequestDestroyAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+
+            }
+            finally
+            {
+                _lockedThreadToSession.Clear();
+            }
         }
 
         internal class LockOwnershipState

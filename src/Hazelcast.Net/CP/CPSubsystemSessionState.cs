@@ -96,6 +96,11 @@ namespace Hazelcast.CP
             return _id;
         }
 
+        /// <summary>
+        /// Gets acquire count
+        /// </summary>
+        public int AcquireCount => _acquireCount;
+
         /// <inheritdoc/>     
         public override bool Equals(object obj)
         {
