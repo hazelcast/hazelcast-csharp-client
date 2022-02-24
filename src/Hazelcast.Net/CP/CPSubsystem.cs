@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -25,11 +26,13 @@ namespace Hazelcast.CP
     /// <summary>
     /// Provides the <see cref="ICPSubsystem"/> implementation.
     /// </summary>
-    internal class CPSubsystem : ICPSubsystem
+    internal class CPSubsystem : ICPSubsystem, IAsyncDisposable
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
-        private readonly CpSubsystemSession _cpSubsystemSession;
+        //internal for testing
+        internal readonly CpSubsystemSession _cpSubsystemSession;
+        private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
@@ -83,7 +86,18 @@ namespace Hazelcast.CP
             var (groupName, objectName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            return new FencedLock(_cpSubsystemSession, objectName, groupId, _cluster);
+            if (_cpObjectsByName.TryGetValue(objectName, out var fencedLock) && fencedLock is IFencedLock @lock)
+            {
+                if (@lock.CPGroupId.Equals(groupId))
+                    return @lock;
+                else
+                    _cpObjectsByName.TryRemove(objectName, out _);
+            }
+
+            var newFencedLock = new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession);
+            _cpObjectsByName.AddOrUpdate(objectName, newFencedLock, (key, val) => val);
+
+            return newFencedLock;
         }
 
         // see: ClientRaftProxyFactory.java
@@ -135,6 +149,14 @@ namespace Hazelcast.CP
                 throw new ArgumentException("Object name cannot be empty string.", nameof(name));
 
             return (groupName, objectName);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            foreach (var item in _cpObjectsByName.Values)            
+                await item.DestroyAsync().CfAwait();            
+
+            await _cpSubsystemSession.DisposeAsync().CfAwait();
         }
     }
 }

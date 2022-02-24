@@ -36,7 +36,7 @@ namespace Hazelcast.CP
         private int _disposed;
         public const int NoSessionId = -1;
         private object _mutex = new object();
-        private ReaderWriterLockSlim readerWriterLock = new ReaderWriterLockSlim();
+        private SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
 
         private readonly ILogger _logger;
 
@@ -52,7 +52,7 @@ namespace Hazelcast.CP
             State = cluster.State ?? throw new ArgumentNullException(nameof(cluster.State));
 
             _logger = State.LoggerFactory.CreateLogger<CpSubsystemSession>();
-
+            _cancel = new CancellationTokenSource();
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.HEARTBEAT"));
         }
 
@@ -116,7 +116,7 @@ namespace Hazelcast.CP
         /// <returns></returns>
         public async Task ShutdownAsync()
         {
-            readerWriterLock.EnterWriteLock();
+            await _semaphoreReadWrite.WaitAsync().CfAwait();
 
             try
             {
@@ -137,7 +137,7 @@ namespace Hazelcast.CP
 
                 await DisposeAsync().CfAwait();
             }
-            finally { readerWriterLock.ExitWriteLock(); }
+            finally { _semaphoreReadWrite.Release(); }
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Hazelcast.CP
         /// <exception cref="HazelcastInstanceNotActiveException"></exception>
         private async Task<CPSubsystemSessionState> GetOrCreateSessionAsync(CPGroupId groupId)
         {
-            readerWriterLock.EnterUpgradeableReadLock();
+            await _semaphoreReadWrite.WaitAsync().CfAwait();
 
             try
             {
@@ -160,8 +160,6 @@ namespace Hazelcast.CP
                 }
                 else
                 {
-                    readerWriterLock.EnterWriteLock();
-
                     // Wait and lock only for the groupId
                     var semaphore = GetSemaphoreBy(groupId);
                     await semaphore.WaitAsync().CfAwait();
@@ -173,15 +171,18 @@ namespace Hazelcast.CP
                         _sessions[groupId] = session.Item1;
                         return session.Item1;
                     }
+                    catch (Exception e)
+                    {
+                        throw;
+                    }
                     finally
                     {
                         semaphore.Release();
-                        readerWriterLock.ExitWriteLock();
                     }
                 }
 
             }
-            finally { readerWriterLock.ExitUpgradeableReadLock(); }
+            finally { _semaphoreReadWrite.Release(); }
         }
 
         /// <summary>
@@ -209,21 +210,21 @@ namespace Hazelcast.CP
             //Dispose heartbeat
             Interlocked.Exchange(ref _heartbeatState, 0);
 
+            Reset();
+
             _cancel.Cancel();
 
             try
             {
                 await _heartbeating.CfAwaitCanceled();
-
             }
             catch (Exception e)
             {
                 _logger.LogWarning(e, "Caught an exception while disposing CP Session Heartbeat.");
             }
 
-            Reset();
             _cancel.Dispose();
-            readerWriterLock.Dispose();
+            _semaphoreReadWrite.Dispose();
         }
 
         /// <summary>
@@ -234,7 +235,7 @@ namespace Hazelcast.CP
             lock (_mutex)
             {
                 foreach (var semaphore in _groupIdSemaphores.Values)
-                    semaphore.Release();
+                    semaphore.Dispose();
 
                 _groupIdSemaphores.Clear();
 
