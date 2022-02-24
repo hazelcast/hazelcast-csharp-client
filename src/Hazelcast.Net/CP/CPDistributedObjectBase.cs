@@ -14,6 +14,8 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.CP
 {
@@ -46,7 +48,7 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public ICPGroupId GroupId => CPGroupId;
 
-        protected CPGroupId CPGroupId { get;}
+        protected CPGroupId CPGroupId { get; }
 
         /// <inheritdoc />
         public string PartitionKey => null;

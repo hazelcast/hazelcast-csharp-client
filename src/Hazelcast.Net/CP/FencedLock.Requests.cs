@@ -38,7 +38,7 @@ namespace Hazelcast.CP
         {
             var requestMessage = FencedLockTryLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId, timeoutMillisecond);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = FencedLockTryLockCodec.DecodeResponse(requestMessage);
+            var response = FencedLockTryLockCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
 

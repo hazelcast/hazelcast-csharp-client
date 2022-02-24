@@ -48,7 +48,7 @@ namespace Hazelcast.CP
         {
             var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, Cluster.ClientId.ToString());
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = CPSessionCreateSessionCodec.DecodeResponse(requestMessage);
+            var response = CPSessionCreateSessionCodec.DecodeResponse(responseMessage);
             return (new CPSubsystemSessionState(response.SessionId, response.TtlMillis), response.HeartbeatMillis);
         }
 
@@ -62,7 +62,7 @@ namespace Hazelcast.CP
         {
             var requestMessage = CPSessionCloseSessionCodec.EncodeRequest(groupId, sessionId);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
-            var response = CPSessionCloseSessionCodec.DecodeResponse(requestMessage);
+            var response = CPSessionCloseSessionCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
 

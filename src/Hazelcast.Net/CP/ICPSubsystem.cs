@@ -42,5 +42,14 @@ namespace Hazelcast.CP
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
         Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name);
+
+        /// <summary>
+        /// Gets an <see cref="IFencedLock"/> distributed object.
+        /// </summary>
+        /// <param name="name">The unique name of the fenced lock.</param>
+        /// <para>If an object with the specified <paramref name="name"/> does not
+        /// exist already in the cluster, a new object is created.</para>
+        /// <returns></returns>
+        Task<IFencedLock> GetFencedLockAsync(string name);
     }
 }
