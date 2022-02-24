@@ -25,14 +25,16 @@ namespace Hazelcast.CP
         ICPGroupId CPGroupId { get; }
 
         Task LockAsync();
-
-        Task LockInterruptiblyAsync();
-
+        
         Task<long> LockAndGetFenceAsync();
 
         Task<bool> TryLockAsync(TimeSpan timeout);
 
+        Task<bool> TryLockAsync();
+
         Task<long> TryLockAndGetFenceAsync(TimeSpan timeout);
+
+        Task<long> TryLockAndGetFenceAsync();
 
         Task UnlockAsync();
 

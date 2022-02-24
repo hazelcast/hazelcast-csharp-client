@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading;
@@ -22,6 +23,7 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 
 namespace Hazelcast.CP
@@ -41,7 +43,7 @@ namespace Hazelcast.CP
         /// async operations.
         /// </remarks>
         private static long ContextId => AsyncContext.Current.Id;
-        private readonly Dictionary<long, long> _lockedThreadToSession = new Dictionary<long, long>();
+        private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
         private readonly CpSubsystemSession _subsystemSession;
         private readonly CPGroupId _groupId;
 
@@ -49,10 +51,11 @@ namespace Hazelcast.CP
         ICPGroupId IFencedLock.CPGroupId => _groupId;
         long IFencedLock.InvalidFence => InvalidFence;
 
-        public FencedLock(CpSubsystemSession subsystemSession, string name, CPGroupId groupId, Cluster cluster) : base(ServiceNames.FencedLock, name, groupId, cluster)
+        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CpSubsystemSession subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
         {
             _subsystemSession = subsystemSession;
             _groupId = groupId;
+            HConsole.Configure(x => x.Configure<FencedLock>().SetIndent(2).SetPrefix("FENCEDLOCK"));
         }
 
         #region IFencedLock Methods
@@ -61,12 +64,12 @@ namespace Hazelcast.CP
         {
             long threadId = ContextId;
             long sessionId = _subsystemSession.GetSessionId(CPGroupId);
-
+            HConsole.WriteLine(this, $"Session:{sessionId} ThreadId:{threadId} -> GetFence");
             VerifyNoLockOnThread(threadId, sessionId, false);
 
             if (sessionId == CpSubsystemSession.NoSessionId)
             {
-                _lockedThreadToSession.Remove(threadId);
+                _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
             }
 
@@ -93,7 +96,7 @@ namespace Hazelcast.CP
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
 
             if (ownership.LockedBy(threadId, sessionId))
-                _lockedThreadToSession.Add(threadId, sessionId);
+                _lockedThreadToSession[threadId] = sessionId;
             else
                 VerifyNoLockedSessionExist(threadId);
 
@@ -133,7 +136,7 @@ namespace Hazelcast.CP
             bool lockedByCurrent = ownership.LockedBy(threadId, sessionId);
 
             if (lockedByCurrent)
-                _lockedThreadToSession.Add(threadId, sessionId);
+                _lockedThreadToSession[threadId] = sessionId;
             else
                 VerifyNoLockedSessionExist(threadId);
 
@@ -158,7 +161,7 @@ namespace Hazelcast.CP
 
                     if (fence != InvalidFence)
                     {
-                        _lockedThreadToSession.Add(threadId, sessionId);
+                        _lockedThreadToSession[threadId] = sessionId;
                         return fence;
                     }
 
@@ -194,52 +197,9 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/> 
-        public async Task LockInterruptiblyAsync()
+        public Task<long> TryLockAndGetFenceAsync()
         {
-            long threadId = ContextId;
-            Guid invocationId = Guid.NewGuid();
-
-            while (true)
-            {
-                long sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
-                VerifyNoLockOnThread(threadId, sessionId, true);
-
-                try
-                {
-                    long fence = await RequestLockAsync(sessionId, threadId, invocationId).CfAwait();
-
-                    if (fence != InvalidFence)
-                    {
-                        _lockedThreadToSession.Add(threadId, sessionId);
-                        return;
-                    }
-
-                    throw new LockAcquireLimitReachedException($"Lock[{Name}] reentrant lock limit is already reached!");
-                }
-                catch (RemoteException e)
-                {
-                    if (e is RemoteException { Error: RemoteError.SessionExpiredException })
-                    {
-                        _subsystemSession.InvalidateSession(CPGroupId, sessionId);
-                        VerifyNoLockedSessionExist(threadId);
-                    }
-                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
-                    {
-                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
-                        throw new SynchronizationLockException($"Lock[{Name}] not acquired because the lock call "
-                            + "on the CP group is cancelled, possibly because of another indeterminate call from the same context.");
-                    }
-                    else if (e is RemoteException { Error: RemoteError.Interrupted })
-                    {
-                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
-                        throw new ThreadInterruptedException("Lock request on server interrupted.", e);
-                    }
-                }
-                catch (Exception)
-                {
-                    throw;
-                }
-            }
+            return TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0));
         }
 
         /// <inheritdoc/> 
@@ -247,57 +207,64 @@ namespace Hazelcast.CP
         {
             long threadId = ContextId;
             Guid invocationId = Guid.NewGuid();
-
             long timeoutMilliseconds = (long)Math.Round(Math.Max(0, timeout.TotalMilliseconds));
 
-            long start = Clock.Milliseconds;
-            long sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
-
-            VerifyNoLockOnThread(threadId, sessionId);
-
-            try
+            while (true)
             {
-                long fence = await RequestTryLockAsync(sessionId, threadId, invocationId, timeoutMilliseconds).CfAwait();
+                long start = Clock.Milliseconds;
+                long sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
+                HConsole.WriteLine(this, $"SessionId: {sessionId} ThreadId:{threadId} InvocationId:{invocationId} -> TryLockAndGetFenceAsync");
+                VerifyNoLockOnThread(threadId, sessionId);
 
-                if (fence != InvalidFence)
-                    _lockedThreadToSession[threadId] = sessionId;
-                else
-                    _subsystemSession.ReleaseSession(CPGroupId, sessionId);
-
-                return fence;
-            }
-            catch (RemoteException e)
-            {
-                if (e is RemoteException { Error: RemoteError.SessionExpiredException })
+                try
                 {
-                    _subsystemSession.InvalidateSession(CPGroupId, sessionId);
-                    VerifyNoLockedSessionExist(threadId);
+                    long fence = await RequestTryLockAsync(sessionId, threadId, invocationId, timeoutMilliseconds).CfAwait();
 
-                    long duration = Clock.Milliseconds - start;
+                    if (fence != InvalidFence)
+                        _lockedThreadToSession[threadId] = sessionId;
+                    else
+                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
 
-                    if (duration <= 0)
+                    return fence;
+                }
+                catch (RemoteException e)
+                {
+                    if (e is RemoteException { Error: RemoteError.SessionExpiredException })
+                    {
+                        _subsystemSession.InvalidateSession(CPGroupId, sessionId);
+                        VerifyNoLockedSessionExist(threadId);
+
+                        long duration = Clock.Milliseconds - start;
+
+                        if (duration <= 0)
+                            return InvalidFence;
+
+                    }
+                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
+                    {
+                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
                         return InvalidFence;
-
+                    }
                 }
-                else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
+                catch
                 {
                     _subsystemSession.ReleaseSession(CPGroupId, sessionId);
-                    return InvalidFence;
+                    throw;
                 }
             }
-            catch
-            {
-                _subsystemSession.ReleaseSession(CPGroupId, sessionId);
-                throw;
-            }
-
-            return InvalidFence;
         }
 
         /// <inheritdoc/> 
         public async Task<bool> TryLockAsync(TimeSpan timeout)
         {
             long fence = await TryLockAndGetFenceAsync(timeout).CfAwait();
+            return fence != InvalidFence;
+        }
+
+        /// <inheritdoc/> 
+        public async Task<bool> TryLockAsync()
+        {
+            long fence = await TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0)).CfAwait();
             return fence != InvalidFence;
         }
 
@@ -311,7 +278,7 @@ namespace Hazelcast.CP
 
             if (sessionId == CpSubsystemSession.NoSessionId)
             {
-                _lockedThreadToSession.Remove(threadId);
+                _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
             }
 
@@ -321,9 +288,9 @@ namespace Hazelcast.CP
                 bool stillLockedByCurrentThread = await RequestUnlockAsync(sessionId, threadId, invocationId).CfAwait();
 
                 if (stillLockedByCurrentThread)
-                    _lockedThreadToSession.Add(threadId, sessionId);
+                    _lockedThreadToSession[threadId] = sessionId;
                 else
-                    _lockedThreadToSession.Remove(threadId);
+                    _lockedThreadToSession.TryRemove(threadId, out var _);
 
                 _subsystemSession.ReleaseSession(CPGroupId, sessionId);
             }
@@ -332,16 +299,16 @@ namespace Hazelcast.CP
                 if (e is RemoteException { Error: RemoteError.SessionExpiredException })
                 {
                     _subsystemSession.InvalidateSession(CPGroupId, sessionId);
-                    _lockedThreadToSession.Remove(threadId);
+                    _lockedThreadToSession.TryRemove(threadId, out var _);
                 }
                 else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
                 {
-                    _lockedThreadToSession.Remove(threadId);
+                    _lockedThreadToSession.TryRemove(threadId, out var _);
                 }
 
                 throw;
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 throw;
             }
@@ -359,7 +326,7 @@ namespace Hazelcast.CP
         {
             if (_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId) && lockedSessionId != sessionId)
             {
-                _lockedThreadToSession.Remove(threadId);
+                _lockedThreadToSession.TryRemove(threadId, out var _);
 
                 if (releaseSession)
                     _subsystemSession.ReleaseSession(CPGroupId, sessionId);
@@ -377,15 +344,19 @@ namespace Hazelcast.CP
         {
             if (_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId))
             {
-                _lockedThreadToSession.Remove(threadId);
+                _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new LockOwnershipLostException(lockedSessionId.ToString("D"));
             }
         }
 
-        public override ValueTask DestroyAsync()
+        public async override ValueTask DestroyAsync()
         {
+            //var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
+            //var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            //var _ = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
+            await UnlockAsync().CfAwait();
+
             _lockedThreadToSession.Clear();
-            return default;
         }
 
         internal class LockOwnershipState
