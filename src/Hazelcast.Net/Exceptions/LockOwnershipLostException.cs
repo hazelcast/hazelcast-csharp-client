@@ -18,6 +18,9 @@ using System.Text;
 
 namespace Hazelcast.Exceptions
 {
+    /// <summary>
+    /// Represents exception that the ownership of the lock which is held has lost. 
+    /// </summary>
     internal class LockOwnershipLostException : HazelcastException
     {
         /// <summary>
@@ -41,6 +44,16 @@ namespace Hazelcast.Exceptions
         /// Initializes a new instance of the <see cref="LockOwnershipLostException"/> class.
         /// </summary>
         public LockOwnershipLostException()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LockOwnershipLostException"/> class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.</param>
+        public LockOwnershipLostException(Exception innerException) : base(innerException)
         {
         }
     }

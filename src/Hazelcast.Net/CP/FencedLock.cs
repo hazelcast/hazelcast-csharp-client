@@ -46,10 +46,10 @@ namespace Hazelcast.CP
         private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
         private readonly CPSubsystemSession _subsystemSession;
         private readonly CPGroupId _groupId;
-        private int _destroyed = 0;
+        private int _destroyed;
 
         public const long InvalidFence = 0;
-        ICPGroupId IFencedLock.CPGroupId => _groupId;
+        ICPGroupId ICPDistributedObject.GroupId => _groupId;
         long IFencedLock.InvalidFence => InvalidFence;
 
         public FencedLock(string name, CPGroupId groupId, Cluster cluster, CPSubsystemSession subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
@@ -63,8 +63,8 @@ namespace Hazelcast.CP
         /// <inheritdoc/>  
         public async Task<long> GetFenceAsync()
         {
-            long threadId = ContextId;
-            long sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var threadId = ContextId;
+            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
             HConsole.WriteLine(this, $"Session:{sessionId} ThreadId:{threadId} -> GetFence");
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -89,8 +89,8 @@ namespace Hazelcast.CP
         /// <inheritdoc/>  
         public async Task<int> GetLockCountAsync()
         {
-            long threadId = ContextId;
-            long sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var threadId = ContextId;
+            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -107,8 +107,8 @@ namespace Hazelcast.CP
         /// <inheritdoc/>  
         public async Task<bool> IsLockedAsync()
         {
-            long threadId = ContextId;
-            long sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var threadId = ContextId;
+            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -125,16 +125,16 @@ namespace Hazelcast.CP
             return ownership.Locked;
         }
 
-        public async Task<bool> IsLockedByCurrentThreadAsync()
+        public async Task<bool> IsLockedByCurrentContext()
         {
-            long threadId = ContextId;
-            long sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var threadId = ContextId;
+            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
 
-            bool lockedByCurrent = ownership.LockedBy(threadId, sessionId);
+            var lockedByCurrent = ownership.LockedBy(threadId, sessionId);
 
             if (lockedByCurrent)
                 _lockedThreadToSession[threadId] = sessionId;
@@ -147,7 +147,7 @@ namespace Hazelcast.CP
         /// <inheritdoc/>        
         public async Task<long> LockAndGetFenceAsync()
         {
-            long threadId = ContextId;
+            var threadId = ContextId;
             var invocationId = Guid.NewGuid();// required by server, to make the call idempotetent?
 
             while (true)
@@ -210,14 +210,14 @@ namespace Hazelcast.CP
         /// <inheritdoc/> 
         public async Task<long> TryLockAndGetFenceAsync(TimeSpan timeout)
         {
-            long threadId = ContextId;
+            var threadId = ContextId;
             Guid invocationId = Guid.NewGuid();
-            long timeoutMilliseconds = (long)Math.Round(Math.Max(0, timeout.TotalMilliseconds));
+            var timeoutMilliseconds = (long)Math.Round(Math.Max(0, timeout.TotalMilliseconds));
 
             while (true)
             {
-                long start = Clock.Milliseconds;
-                long sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
+                var start = Clock.Milliseconds;
+                var sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
                 HConsole.WriteLine(this, $"SessionId: {sessionId} ThreadId:{threadId} InvocationId:{invocationId} -> TryLockAndGetFenceAsync");
                 VerifyNoLockOnThread(threadId, sessionId);
 
@@ -266,22 +266,22 @@ namespace Hazelcast.CP
         /// <inheritdoc/> 
         public async Task<bool> TryLockAsync(TimeSpan timeout)
         {
-            long fence = await TryLockAndGetFenceAsync(timeout).CfAwait();
+            var fence = await TryLockAndGetFenceAsync(timeout).CfAwait();
             return fence != InvalidFence;
         }
 
         /// <inheritdoc/> 
         public async Task<bool> TryLockAsync()
         {
-            long fence = await TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0)).CfAwait();
+            var fence = await TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0)).CfAwait();
             return fence != InvalidFence;
         }
 
         /// <inheritdoc/> 
         public async Task UnlockAsync()
         {
-            long threadId = ContextId;
-            long sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var threadId = ContextId;
+            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -340,7 +340,7 @@ namespace Hazelcast.CP
                 if (releaseSession)
                     _subsystemSession.ReleaseSession(CPGroupId, sessionId);
 
-                throw new LockOwnershipLostException(lockedSessionId.ToString("D"));
+                throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }
         }
 
@@ -353,7 +353,7 @@ namespace Hazelcast.CP
         {
             if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId) && lockedSessionId != default)
             {
-                throw new LockOwnershipLostException(lockedSessionId.ToString("D"));
+                throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }
         }
 
@@ -365,10 +365,6 @@ namespace Hazelcast.CP
             {
                 await RequestDestroyAsync().CfAwait();
             }
-            catch (Exception e)
-            {
-
-            }
             finally
             {
                 _lockedThreadToSession.Clear();
@@ -377,10 +373,10 @@ namespace Hazelcast.CP
 
         internal class LockOwnershipState
         {
-            public long Fence { get; private set; }
-            public long SessionId { get; private set; }
-            public long ThreadId { get; private set; }
-            public int LockCount { get; private set; }
+            public long Fence { get; }
+            public long SessionId { get; }
+            public long ThreadId { get; }
+            public int LockCount { get; }
 
             public LockOwnershipState(long fence, long sessionId, long threadId, int lockCount)
             {

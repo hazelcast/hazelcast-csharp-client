@@ -26,8 +26,7 @@ namespace Hazelcast.CP
     internal class CPSubsystemSessionState
     {
         private readonly long _id;
-        private int _acquireCount = 0;
-
+        private int _acquireCount;
         private readonly long _creationTime;
         private readonly long _ttlMiliseconds;
 
@@ -59,6 +58,11 @@ namespace Hazelcast.CP
         public long Id => _id;
 
         /// <summary>
+        /// Gets acquire count
+        /// </summary>
+        public int AcquireCount => _acquireCount;
+
+        /// <summary>
         /// Checks session is expired to given milliseconds
         /// </summary>
         /// <param name="timestamp">milliseonds</param>
@@ -88,18 +92,10 @@ namespace Hazelcast.CP
         /// Decreases the acquire count
         /// </summary>
         /// <param name="count">Acquire count to decrease</param>
-        /// <returns>Session Id</returns>
-        public long Release(int count)
+        public void Release(int count)
         {
-            int minusCount = -count;
-            Interlocked.Add(ref _acquireCount, minusCount);
-            return _id;
+            Interlocked.Add(ref _acquireCount, -count);            
         }
-
-        /// <summary>
-        /// Gets acquire count
-        /// </summary>
-        public int AcquireCount => _acquireCount;
 
         /// <inheritdoc/>     
         public override bool Equals(object obj)

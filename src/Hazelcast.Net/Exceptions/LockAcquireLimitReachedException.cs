@@ -18,12 +18,15 @@ using System.Text;
 
 namespace Hazelcast.Exceptions
 {
+    /// <summary>
+    /// Represents exception that defined acquire limit on the lock is exceeded.
+    /// </summary>
     internal class LockAcquireLimitReachedException : HazelcastException
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class with specific message.
+        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class with a specified error message.
         /// </summary>
-        /// <param name="message"></param>
+        /// <param name="message">The message that describes the error.</param>
         public LockAcquireLimitReachedException(string message) : base(message)
         {
         }
@@ -37,10 +40,22 @@ namespace Hazelcast.Exceptions
         {
         }
 
+
+
         /// <summary>
         /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class.
         /// </summary>
         public LockAcquireLimitReachedException()
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="LockAcquireLimitReachedException"/> class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// </summary>
+        /// <param name="innerException">The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.</param>
+        public LockAcquireLimitReachedException(Exception innerException) : base(innerException)
         {
         }
     }

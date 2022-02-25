@@ -81,14 +81,14 @@ namespace Hazelcast.CP
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
         }
 
-        public async Task<IFencedLock> GetFencedLockAsync(string name)
+        public async Task<IFencedLock> GetLockAsync(string name)
         {
             var (groupName, objectName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             if (_cpObjectsByName.TryGetValue(objectName, out var fencedLock) && fencedLock is IFencedLock @lock)
             {
-                if (@lock.CPGroupId.Equals(groupId))
+                if (@lock.GroupId.Equals(groupId))
                     return @lock;
                 else
                     _cpObjectsByName.TryRemove(objectName, out _);

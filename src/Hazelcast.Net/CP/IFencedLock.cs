@@ -21,9 +21,7 @@ namespace Hazelcast.CP
     public interface IFencedLock : ICPDistributedObject
     {
         long InvalidFence { get; }
-
-        ICPGroupId CPGroupId { get; }
-
+        
         Task LockAsync();
         
         Task<long> LockAndGetFenceAsync();
@@ -44,6 +42,6 @@ namespace Hazelcast.CP
 
         Task<int> GetLockCountAsync();
 
-        Task<bool> IsLockedByCurrentThreadAsync();// todo: check naming the thread
+        Task<bool> IsLockedByCurrentContext();
     }
 }

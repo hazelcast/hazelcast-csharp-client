@@ -29,15 +29,15 @@ namespace Hazelcast.CP
     /// </summary>
     internal partial class CPSubsystemSession
     {
-        private readonly CancellationTokenSource _cancel;
+        private readonly CancellationTokenSource _cancel; // initialized in ctor
         private Task _heartbeating;
         private int _heartbeatState;
 
         /// <summary>
-        /// Schedules the session heatbet requests. It does not require to check state of the heartbeat
+        /// Schedules the session heartbeat requests. It does not require to check state of the heartbeat
         /// <para>Use only the method to run heartbeat.</para>
         /// </summary>
-        protected void ScheduleHeartbeat(TimeSpan period)
+        internal void ScheduleHeartbeat(TimeSpan period)
         {
             if (_disposed == 0 && Interlocked.CompareExchange(ref _heartbeatState, 1, 0) == 0)
             {
@@ -83,10 +83,9 @@ namespace Hazelcast.CP
         /// <summary>
         /// Runs for a given session
         /// </summary>
-        /// <param name="cancellationToken"></param>
-        /// <param name="sessionId"></param>
         /// <param name="groupId"></param>
-        /// <returns></returns>
+        /// <param name="sessionState"></param>
+        /// <param name="cancellationToken"></param>        
         private async Task RunAsync(CPGroupId groupId, CPSubsystemSessionState sessionState, CancellationToken cancellationToken)
         {
             try

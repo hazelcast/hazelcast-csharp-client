@@ -31,29 +31,22 @@ namespace Hazelcast.CP
         #region Properties
         private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();
         private readonly ConcurrentDictionary<CPGroupId, CPSubsystemSessionState> _sessions = new ConcurrentDictionary<CPGroupId, CPSubsystemSessionState>();
-        //Note: threadId is bounded to context of task(AsyncLocal) not to thread(ThreadLocal) that runs it.
-        private readonly ConcurrentDictionary<(CPGroupId, long), long> _threadIds = new ConcurrentDictionary<(CPGroupId, long), long>();
         private int _disposed;
-        public const int NoSessionId = -1;
-        private object _mutex = new object();
-        private SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
-
+        private readonly object _mutex = new object();
+        private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
         private readonly ILogger _logger;
-
-        //Cluster Fields
         private readonly Cluster Cluster;
-        private readonly ClusterState State;
+
+        public const int NoSessionId = -1;
         #endregion
 
         #region SessionManagement
         public CPSubsystemSession(Cluster cluster)
         {
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            State = cluster.State ?? throw new ArgumentNullException(nameof(cluster.State));
-
-            _logger = State.LoggerFactory.CreateLogger<CPSubsystemSession>();
+            _logger = Cluster.State.LoggerFactory.CreateLogger<CPSubsystemSession>();
             _cancel = new CancellationTokenSource();
-            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.HEARTBEAT"));
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.SESSION"));
         }
 
         /// <summary>
@@ -93,7 +86,7 @@ namespace Hazelcast.CP
         {
             if (_sessions.TryGetValue(groupId, out var sessionState) && sessionState.Id == sessionId)
             {
-                _sessions.TryRemove(groupId, out var _);
+                _sessions.TryRemove(groupId, sessionState);
             }
         }
 
@@ -158,7 +151,7 @@ namespace Hazelcast.CP
 
             try
             {
-                if (_disposed == 1) throw new HazelcastInstanceNotActiveException("CP Subsystem Session is already disposed!");
+                if (_disposed == 1) throw new ObjectDisposedException("CP Subsystem Session is already disposed!");
 
                 if (_sessions.TryGetValue(groupId, out var sessionState) && sessionState.IsValid)
                 {
@@ -243,7 +236,7 @@ namespace Hazelcast.CP
         /// <returns></returns>
         internal int GetAcquiredSessionCount(CPGroupId groupId, long sessionId)
         {
-            if(_sessions.TryGetValue(groupId, out var sessionState) && sessionState.Id == sessionId)
+            if (_sessions.TryGetValue(groupId, out var sessionState) && sessionState.Id == sessionId)
             {
                 return sessionState.AcquireCount;
             }

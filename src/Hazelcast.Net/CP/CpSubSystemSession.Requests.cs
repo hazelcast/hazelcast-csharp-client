@@ -31,7 +31,7 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        protected async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
+        internal async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionGenerateThreadIdCodec.EncodeRequest(groupId);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -43,8 +43,8 @@ namespace Hazelcast.CP
         /// Creates a new session on the server
         /// </summary>
         /// <param name="groupId"></param>
-        /// <returns>CPSubsystemSessionState and hearbeat milliseconds</returns>
-        protected async Task<(CPSubsystemSessionState, long)> RequestNewSessionAsync(CPGroupId groupId)
+        /// <returns>CPSubsystemSessionState and heartbeat milliseconds</returns>
+        internal async Task<(CPSubsystemSessionState, long)> RequestNewSessionAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, Cluster.ClientId.ToString());
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -58,7 +58,7 @@ namespace Hazelcast.CP
         /// <param name="groupId"></param>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        protected async Task<bool> RequestCloseSessionAsync(CPGroupId groupId, long sessionId)
+        internal async Task<bool> RequestCloseSessionAsync(CPGroupId groupId, long sessionId)
         {
             var requestMessage = CPSessionCloseSessionCodec.EncodeRequest(groupId, sessionId);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -68,12 +68,12 @@ namespace Hazelcast.CP
 
 
         /// <summary>
-        /// Sends hearbeat for a given session
+        /// Sends heartbeat for a given session
         /// </summary>
         /// <param name="groupId"></param>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        protected async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
+        internal async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
         {
             var requestMessage = CPSessionHeartbeatSessionCodec.EncodeRequest(groupId, sessionId);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
