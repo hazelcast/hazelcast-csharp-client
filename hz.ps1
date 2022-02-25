@@ -1085,7 +1085,7 @@ function ensure-java {
         }
         else {
 
-            Die "Fail to parse Java version."
+            Die "Fail to parse Java version '$javaVersionString'."
         }
     }
     else {
