@@ -86,7 +86,7 @@ namespace Hazelcast.CP
             var (groupName, objectName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            if (_cpObjectsByName.TryGetValue(objectName, out var fencedLock) && fencedLock is IFencedLock @lock)
+            if (_cpObjectsByName.TryGetValue(objectName, out var cpObject) && cpObject is IFencedLock fencedLock)
             {
                 if (@lock.GroupId.Equals(groupId))
                     return @lock;
