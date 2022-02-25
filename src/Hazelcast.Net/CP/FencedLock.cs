@@ -44,7 +44,7 @@ namespace Hazelcast.CP
         /// </remarks>
         private static long ContextId => AsyncContext.Current.Id;
         private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
-        private readonly CPSubsystemSession _subsystemSession;
+        private readonly CPSessionManager _cpSessionManager;
         private readonly CPGroupId _groupId;
         private int _destroyed;
 
@@ -52,9 +52,9 @@ namespace Hazelcast.CP
         ICPGroupId ICPDistributedObject.GroupId => _groupId;
         long IFencedLock.InvalidFence => InvalidFence;
 
-        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CPSubsystemSession subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
+        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
         {
-            _subsystemSession = subsystemSession;
+            _cpSessionManager = subsystemSession;
             _groupId = groupId;
             HConsole.Configure(x => x.Configure<FencedLock>().SetIndent(2).SetPrefix("FENCEDLOCK"));
         }
@@ -64,11 +64,11 @@ namespace Hazelcast.CP
         public async Task<long> GetFenceAsync()
         {
             var threadId = ContextId;
-            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
             HConsole.WriteLine(this, $"Session:{sessionId} ThreadId:{threadId} -> GetFence");
             VerifyNoLockOnThread(threadId, sessionId, false);
 
-            if (sessionId == CPSubsystemSession.NoSessionId)
+            if (sessionId == CPSessionManager.NoSessionId)
             {
                 _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
@@ -90,7 +90,7 @@ namespace Hazelcast.CP
         public async Task<int> GetLockCountAsync()
         {
             var threadId = ContextId;
-            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -108,7 +108,7 @@ namespace Hazelcast.CP
         public async Task<bool> IsLockedAsync()
         {
             var threadId = ContextId;
-            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -128,7 +128,7 @@ namespace Hazelcast.CP
         public async Task<bool> IsLockedByCurrentContext()
         {
             var threadId = ContextId;
-            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
@@ -152,7 +152,7 @@ namespace Hazelcast.CP
 
             while (true)
             {
-                var sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
+                var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
 
                 VerifyNoLockOnThread(threadId, sessionId, true);
 
@@ -173,23 +173,24 @@ namespace Hazelcast.CP
                 {
                     if (e is RemoteException { Error: RemoteError.SessionExpiredException })
                     {
-                        _subsystemSession.InvalidateSession(CPGroupId, sessionId);
+                        _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                         VerifyNoLockedSessionExist(threadId);
                     }
                     else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
                     {
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                         throw new DistributedObjectDestroyedException(e);
                     }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
-                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                         throw new SynchronizationLockException($"Lock[{Name}] not acquired because the lock call "
                             + "on the CP group is cancelled, possibly because of another indeterminate call from the same context.");
                     }
                 }
                 catch
                 {
-                    _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                     throw;
                 }
             }
@@ -217,7 +218,7 @@ namespace Hazelcast.CP
             while (true)
             {
                 var start = Clock.Milliseconds;
-                var sessionId = await _subsystemSession.AcquireSessionAsync(CPGroupId).CfAwait();
+                var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
                 HConsole.WriteLine(this, $"SessionId: {sessionId} ThreadId:{threadId} InvocationId:{invocationId} -> TryLockAndGetFenceAsync");
                 VerifyNoLockOnThread(threadId, sessionId);
 
@@ -228,7 +229,7 @@ namespace Hazelcast.CP
                     if (fence != InvalidFence)
                         _lockedThreadToSession[threadId] = sessionId;
                     else
-                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
 
                     return fence;
                 }
@@ -236,7 +237,7 @@ namespace Hazelcast.CP
                 {
                     if (e is RemoteException { Error: RemoteError.SessionExpiredException })
                     {
-                        _subsystemSession.InvalidateSession(CPGroupId, sessionId);
+                        _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                         VerifyNoLockedSessionExist(threadId);
 
                         long duration = Clock.Milliseconds - start;
@@ -251,13 +252,13 @@ namespace Hazelcast.CP
                     }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
-                        _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                         return InvalidFence;
                     }
                 }
                 catch
                 {
-                    _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                     throw;
                 }
             }
@@ -281,11 +282,11 @@ namespace Hazelcast.CP
         public async Task UnlockAsync()
         {
             var threadId = ContextId;
-            var sessionId = _subsystemSession.GetSessionId(CPGroupId);
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOnThread(threadId, sessionId, false);
 
-            if (sessionId == CPSubsystemSession.NoSessionId)
+            if (sessionId == CPSessionManager.NoSessionId)
             {
                 _lockedThreadToSession.TryRemove(threadId, out var _);
                 throw new SynchronizationLockException();
@@ -301,13 +302,13 @@ namespace Hazelcast.CP
                 else
                     _lockedThreadToSession.TryRemove(threadId, out var _);
 
-                _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
             }
             catch (RemoteException e)
             {
                 if (e is RemoteException { Error: RemoteError.SessionExpiredException })
                 {
-                    _subsystemSession.InvalidateSession(CPGroupId, sessionId);
+                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                     _lockedThreadToSession.TryRemove(threadId, out var _);
                     throw new SessionExpiredException(e);
                 }
@@ -338,7 +339,7 @@ namespace Hazelcast.CP
                 _lockedThreadToSession.TryRemove(threadId, out var _);
 
                 if (releaseSession)
-                    _subsystemSession.ReleaseSession(CPGroupId, sessionId);
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
 
                 throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }
@@ -351,7 +352,7 @@ namespace Hazelcast.CP
         /// <exception cref="LockOwnershipLostException"></exception>
         private void VerifyNoLockedSessionExist(long threadId)
         {
-            if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId) && lockedSessionId != default)
+            if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId))
             {
                 throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }

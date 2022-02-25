@@ -19,7 +19,7 @@ using System.Text;
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// Represents exception that defined acquire limit on the lock is exceeded.
+    /// Represents the exception that is thrown when the aquisition count limit on the lock is exceeded.
     /// </summary>
     internal class LockAcquireLimitReachedException : HazelcastException
     {

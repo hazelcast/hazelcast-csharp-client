@@ -78,9 +78,9 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Increases the acquire count
+        /// Increases number of aquisitions
         /// </summary>
-        /// <param name="count">Acquire count to increase</param>
+        /// <param name="count">The number of aquisitions to increase.</param>
         /// <returns>Session Id</returns>
         public long Acquire(int count)
         {
@@ -89,9 +89,9 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Decreases the acquire count
+        /// Releases lock aquisitions.
         /// </summary>
-        /// <param name="count">Acquire count to decrease</param>
+        /// <param name="count">The number of aquisitions to release.</param>
         public void Release(int count)
         {
             Interlocked.Add(ref _acquireCount, -count);            

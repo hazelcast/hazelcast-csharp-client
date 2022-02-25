@@ -27,7 +27,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Implements Heartbeat side of CP Session
     /// </summary>
-    internal partial class CPSubsystemSession
+    internal partial class CPSessionManager
     {
         private readonly CancellationTokenSource _cancel; // initialized in ctor
         private Task _heartbeating;
@@ -66,7 +66,7 @@ namespace Hazelcast.CP
         {
             _logger.LogDebug("Run CP Session Heartbeat");
 
-            lock (_mutex) if (_sessions.IsEmpty) return;
+            if (_sessions.IsEmpty) return;
 
             IEnumerable<(CPGroupId, CPSubsystemSessionState)> sessions;
             lock (_mutex) sessions = _sessions.Select(p => (p.Key, p.Value));

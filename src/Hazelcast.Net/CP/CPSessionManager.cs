@@ -24,9 +24,9 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.CP
 {
     /// <summary>
-    /// Cp Subsystem Session manages server side session requests and heartbeat
+    /// Manages server side cp session requests and heartbeat
     /// </summary>
-    internal partial class CPSubsystemSession : IAsyncDisposable
+    internal partial class CPSessionManager : IAsyncDisposable
     {
         #region Properties
         private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();
@@ -35,16 +35,16 @@ namespace Hazelcast.CP
         private readonly object _mutex = new object();
         private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
         private readonly ILogger _logger;
-        private readonly Cluster Cluster;
+        private readonly Cluster _cluster;
 
-        public const int NoSessionId = -1;
+        public const long NoSessionId = -1;
         #endregion
 
         #region SessionManagement
-        public CPSubsystemSession(Cluster cluster)
+        public CPSessionManager(Cluster cluster)
         {
-            Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            _logger = Cluster.State.LoggerFactory.CreateLogger<CPSubsystemSession>();
+            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            _logger = _cluster.State.LoggerFactory.CreateLogger<CPSessionManager>();
             _cancel = new CancellationTokenSource();
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.SESSION"));
         }
@@ -151,7 +151,7 @@ namespace Hazelcast.CP
 
             try
             {
-                if (_disposed == 1) throw new ObjectDisposedException("CP Subsystem Session is already disposed!");
+                if (_disposed == 1) throw new ObjectDisposedException("CP Subsystem Session is already disposed.");
 
                 if (_sessions.TryGetValue(groupId, out var sessionState) && sessionState.IsValid)
                 {
@@ -169,10 +169,6 @@ namespace Hazelcast.CP
                         ScheduleHeartbeat(TimeSpan.FromMilliseconds(session.Item2));
                         _sessions[groupId] = session.Item1;
                         return session.Item1;
-                    }
-                    catch (Exception e)
-                    {
-                        throw;
                     }
                     finally
                     {

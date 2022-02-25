@@ -24,7 +24,7 @@ namespace Hazelcast.CP
     /// <summary>
     /// Implements server side requests for CP Session
     /// </summary>
-    internal partial class CPSubsystemSession
+    internal partial class CPSessionManager
     {
         /// <summary>
         /// Generates a cluster-wide unique thread id for the caller
@@ -34,7 +34,7 @@ namespace Hazelcast.CP
         internal async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionGenerateThreadIdCodec.EncodeRequest(groupId);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionGenerateThreadIdCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
@@ -46,8 +46,8 @@ namespace Hazelcast.CP
         /// <returns>CPSubsystemSessionState and heartbeat milliseconds</returns>
         internal async Task<(CPSubsystemSessionState, long)> RequestNewSessionAsync(CPGroupId groupId)
         {
-            var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, Cluster.ClientId.ToString());
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionCreateSessionCodec.DecodeResponse(responseMessage);
             return (new CPSubsystemSessionState(response.SessionId, response.TtlMillis), response.HeartbeatMillis);
         }
@@ -61,7 +61,7 @@ namespace Hazelcast.CP
         internal async Task<bool> RequestCloseSessionAsync(CPGroupId groupId, long sessionId)
         {
             var requestMessage = CPSessionCloseSessionCodec.EncodeRequest(groupId, sessionId);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionCloseSessionCodec.DecodeResponse(responseMessage);
             return response.Response;
         }
@@ -76,7 +76,7 @@ namespace Hazelcast.CP
         internal async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
         {
             var requestMessage = CPSessionHeartbeatSessionCodec.EncodeRequest(groupId, sessionId);
-            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var _ = CPSessionHeartbeatSessionCodec.DecodeResponse(responseMessage);
         }
     }

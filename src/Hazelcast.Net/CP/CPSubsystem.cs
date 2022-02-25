@@ -31,7 +31,7 @@ namespace Hazelcast.CP
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         //internal for testing
-        internal readonly CPSubsystemSession _cpSubsystemSession;
+        internal readonly CPSessionManager _cpSubsystemSession;
         private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
 
         /// <summary>
@@ -43,7 +43,7 @@ namespace Hazelcast.CP
         {
             _cluster = cluster;
             _serializationService = serializationService;
-            _cpSubsystemSession = new CPSubsystemSession(cluster);
+            _cpSubsystemSession = new CPSessionManager(cluster);
         }
 
         // NOTES
@@ -88,8 +88,8 @@ namespace Hazelcast.CP
 
             if (_cpObjectsByName.TryGetValue(objectName, out var cpObject) && cpObject is IFencedLock fencedLock)
             {
-                if (@lock.GroupId.Equals(groupId))
-                    return @lock;
+                if (cpObject.GroupId.Equals(groupId))
+                    return (IFencedLock)cpObject;
                 else
                     _cpObjectsByName.TryRemove(objectName, out _);
             }
@@ -153,10 +153,10 @@ namespace Hazelcast.CP
 
         public async ValueTask DisposeAsync()
         {
-            foreach (var item in _cpObjectsByName.Values)            
-                await item.DestroyAsync().CfAwait();            
+            foreach (var item in _cpObjectsByName.Values)
+                await item.DestroyAsync().CfAwaitNoThrow();
 
-            await _cpSubsystemSession.DisposeAsync().CfAwait();
+            await _cpSubsystemSession.DisposeAsync().CfAwaitNoThrow();
         }
     }
 }
