@@ -493,7 +493,7 @@ namespace Hazelcast.Tests.CP
 
             await DoLockOnAnotherContextAsync(lockName);
 
-            Assert.ThrowsAsync<SynchronizationLockException>(async () => await _lock.UnlockAsync());
+            Assert.ThrowsAsync<RemoteException>(async () => await _lock.UnlockAsync());
             Assert.True(await _lock.IsLockedAsync());
             Assert.False(await _lock.IsLockedByCurrentContext());
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
@@ -705,7 +705,7 @@ namespace Hazelcast.Tests.CP
 
             await _lock.DestroyAsync();
 
-            Assert.ThrowsAsync<DistributedObjectDestroyedException>(async () => await _lock.LockAsync());
+            Assert.ThrowsAsync<RemoteException>(async () => await _lock.LockAsync());
         }
     }
 }

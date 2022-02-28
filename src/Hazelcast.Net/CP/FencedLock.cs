@@ -176,16 +176,11 @@ namespace Hazelcast.CP
                         _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                         VerifyNoLockedSessionExist(threadId);
                     }
-                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
+                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed } ||
+                             e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        throw new DistributedObjectDestroyedException(e);
-                    }
-                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
-                    {
-                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        throw new SynchronizationLockException($"Lock[{Name}] not acquired because the lock call "
-                            + "on the CP group is cancelled, possibly because of another indeterminate call from the same context.");
+                        throw;
                     }
                 }
                 catch
@@ -248,7 +243,7 @@ namespace Hazelcast.CP
                     }
                     else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
                     {
-                        throw new DistributedObjectDestroyedException(e);
+                        throw;
                     }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
@@ -310,15 +305,15 @@ namespace Hazelcast.CP
                 {
                     _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                     _lockedThreadToSession.TryRemove(threadId, out var _);
-                    throw new SessionExpiredException(e);
+                    throw;
                 }
                 else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
                 {
                     _lockedThreadToSession.TryRemove(threadId, out var _);
-                    throw new SynchronizationLockException("IllegalMonitorState exception is thrown by server. Are you trying to unlock without holding?", e);
+                    throw;
                 }
             }
-            catch (Exception)
+            catch
             {
                 throw;
             }
