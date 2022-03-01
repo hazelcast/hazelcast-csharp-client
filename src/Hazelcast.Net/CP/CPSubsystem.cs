@@ -95,9 +95,10 @@ namespace Hazelcast.CP
             }
 
             var newFencedLock = new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession);
-            _cpObjectsByName.TryAdd(objectName, newFencedLock);
+            
+            var mostRecentLock = (FencedLock) _cpObjectsByName.GetOrAdd(objectName, newFencedLock);
 
-            return newFencedLock;
+            return mostRecentLock;
         }
 
         // see: ClientRaftProxyFactory.java

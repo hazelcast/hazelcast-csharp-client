@@ -218,8 +218,9 @@ namespace Hazelcast.CP
                 return mutex;
 
             var newMutex = new SemaphoreSlim(1, 1);
-            _groupIdSemaphores.TryAdd(groupId, newMutex);
-            return newMutex;
+            var mostRecent = _groupIdSemaphores.GetOrAdd(groupId, newMutex);
+
+            return mostRecent;
         }
         #endregion
 

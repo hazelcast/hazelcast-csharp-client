@@ -97,7 +97,7 @@ namespace Hazelcast.CP
             catch (Exception e)
             {
                 if (e is RemoteException { Error: RemoteError.SessionExpiredException } ||
-                    e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
+                    e is RemoteException { Error: RemoteError.CpGroupDestroyedException })
                 {
                     InvalidateSession(groupId, sessionState.Id);
                 }

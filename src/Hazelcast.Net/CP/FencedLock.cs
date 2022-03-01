@@ -250,7 +250,8 @@ namespace Hazelcast.CP
                     }
                     else
                     {
-                        throw;//release will be done in the catch below
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        throw;
                     }
                 }
                 catch
