@@ -1079,13 +1079,13 @@ function ensure-java {
 
     if ($javaVersionString.StartsWith("openjdk ")) {
 
-        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)([_-][0-9-_]+)?`"") {
+        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)(\.[0-9]+)?([_-][0-9-_]+)?`"") {
 
             $javaVersion = $matches[1]
         }
         else {
 
-            Die "Fail to parse Java version."
+            Die "Fail to parse Java version '$javaVersionString'."
         }
     }
     else {
@@ -1749,7 +1749,7 @@ function run-tests ( $f ) {
     if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=`"$($options.testFilter.Replace("<FRAMEWORK>", $f))`"" }
 
     if ($options.cover) {
-        $coveragePath = "$tmpDir/tests/cover/cover-$f.html"
+        $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
             mkdir $coveragePath > $null
         }
@@ -1757,12 +1757,12 @@ function run-tests ( $f ) {
         $dotCoverArgs = @(
             "--dotCoverFilters=$($options.coverageFilter)",
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
-            "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log", # log
+            "--dotCoverLogFile=$coveragePath/cover-$f.log", # log
             "--dotCoverSourcesSearchPaths=$srcDir", # reference sources in HTML output
 
             # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
             "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
-            "--dotCoverOutput=$coveragePath/index.html;$tmpDir/tests/cover/cover-$f.json;$tmpDir/tests/cover/cover-$f.xml"
+            "--dotCoverOutput=$coveragePath/index.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
