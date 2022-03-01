@@ -14,12 +14,15 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
+using static Hazelcast.Core.TaskCoreExtensions;
 
 namespace Hazelcast.CP
 {
@@ -29,11 +32,19 @@ namespace Hazelcast.CP
     internal partial class CPSessionManager : IAsyncDisposable
     {
         #region Properties
+        /// <summary>
+        /// SemaphoreSlim is used altough java client uses ReaderWriterLockSlim
+        /// <para>
+        /// Reason: "ReaderWriterLockSlim has managed thread affinity; that is, each Thread object must make its 
+        /// own method calls to enter and exit lock modes. No thread can change the mode of another thread."
+        /// </para>
+        /// <seealso  href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim?view=net-6.0#remarks"/> 
+        /// </summary>
+        private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();
-        private readonly ConcurrentDictionary<CPGroupId, CPSubsystemSessionState> _sessions = new ConcurrentDictionary<CPGroupId, CPSubsystemSessionState>();
+        private readonly ConcurrentDictionary<CPGroupId, CPSession> _sessions = new ConcurrentDictionary<CPGroupId, CPSession>();
         private int _disposed;
         private readonly object _mutex = new object();
-        private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
         private readonly ILogger _logger;
         private readonly Cluster _cluster;
 
@@ -119,22 +130,32 @@ namespace Hazelcast.CP
 
             try
             {
-                await _sessions.Keys
-                    .ParallelForEachAsync(async (key, cancelToken) =>
-                        {
-                            try
-                            {
-                                await CloseSessionAsync(key, _sessions[key].Id).CfAwait();
-                            }
-                            catch (Exception e)
-                            {
-                                _logger.LogWarning("Exception thrown while closing CP sessions", e);
-                            }
-                        },
-                        _cancel.Token)
-                    .CfAwait();
+                IEnumerable<(CPGroupId, CPSession)> sessions;
+                lock (_mutex) sessions = _sessions.Select(p => (p.Key, p.Value));
 
-                await DisposeAsync().CfAwait();
+                var tasks = new List<Task>();
+                int taskCount = 4;
+                var enumerator = sessions.GetEnumerator();
+
+                void StartCurrent()
+                {
+                    var currentTask = CloseSessionAsync(enumerator.Current.Item1, enumerator.Current.Item2.Id);
+                    tasks.Add(currentTask);
+                }
+
+                //Start tasks as much as possible.
+                while (tasks.Count < taskCount && enumerator.MoveNext() && !_cancel.Token.IsCancellationRequested)
+                    StartCurrent();
+
+                // when a tasks completes, try to add next one.
+                while (tasks.Count > 0)
+                {
+                    var completed = await Task.WhenAny(tasks).CfAwait();
+                    tasks.Remove(completed);
+
+                    if (enumerator.MoveNext() && !_cancel.Token.IsCancellationRequested)
+                        StartCurrent();
+                }
             }
             finally { _semaphoreReadWrite.Release(); }
         }
@@ -145,7 +166,7 @@ namespace Hazelcast.CP
         /// <param name="groupId"></param>
         /// <returns><see cref="CPSubsystemSessionState"/></returns>
         /// <exception cref="HazelcastInstanceNotActiveException"></exception>
-        private async Task<CPSubsystemSessionState> GetOrCreateSessionAsync(CPGroupId groupId)
+        private async Task<CPSession> GetOrCreateSessionAsync(CPGroupId groupId)
         {
             await _semaphoreReadWrite.WaitAsync().CfAwait();
 
@@ -163,11 +184,17 @@ namespace Hazelcast.CP
                     var semaphore = GetSemaphoreBy(groupId);
                     await semaphore.WaitAsync().CfAwait();
 
+                    // check once more after groupId semaphore
+                    if (_sessions.TryGetValue(groupId, out sessionState) && sessionState.IsValid)
+                    {
+                        return sessionState;
+                    }
+
                     try
                     {
                         var session = await RequestNewSessionAsync(groupId).CfAwait();
-                        ScheduleHeartbeat(TimeSpan.FromMilliseconds(session.Item2));
                         _sessions[groupId] = session.Item1;
+                        ScheduleHeartbeat(TimeSpan.FromMilliseconds(session.Item2));
                         return session.Item1;
                     }
                     finally
@@ -191,7 +218,7 @@ namespace Hazelcast.CP
                 return mutex;
 
             var newMutex = new SemaphoreSlim(1, 1);
-            _groupIdSemaphores[groupId] = newMutex;
+            _groupIdSemaphores.TryAdd(groupId, newMutex);
             return newMutex;
         }
         #endregion

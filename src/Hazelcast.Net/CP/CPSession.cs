@@ -23,14 +23,14 @@ namespace Hazelcast.CP
     /// <summary>
     /// Represents the Session State on CPSubsystem
     /// </summary>
-    internal class CPSubsystemSessionState
+    internal class CPSession
     {
         private readonly long _id;
         private int _acquireCount;
         private readonly long _creationTime;
         private readonly long _ttlMiliseconds;
 
-        public CPSubsystemSessionState(long id, long ttlMiliseconds)
+        public CPSession(long id, long ttlMiliseconds)
         {
             _id = id;
             _ttlMiliseconds = ttlMiliseconds;
@@ -45,7 +45,7 @@ namespace Hazelcast.CP
         /// <summary>
         /// Gets whether session is active.
         /// </summary>
-        public bool IsInUse => _acquireCount > 0;
+        public bool IsInUse => Interlocked.CompareExchange(ref _acquireCount, 0, 0) > 0;
 
         /// <summary>
         /// Gets whether session is expired.
@@ -94,13 +94,13 @@ namespace Hazelcast.CP
         /// <param name="count">The number of aquisitions to release.</param>
         public void Release(int count)
         {
-            Interlocked.Add(ref _acquireCount, -count);            
+            Interlocked.Add(ref _acquireCount, -count);
         }
 
         /// <inheritdoc/>     
         public override bool Equals(object obj)
         {
-            return obj is CPSubsystemSessionState state &&
+            return obj is CPSession state &&
                    _id == state._id;
         }
 

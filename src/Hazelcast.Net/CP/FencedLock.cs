@@ -176,10 +176,13 @@ namespace Hazelcast.CP
                         _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                         VerifyNoLockedSessionExist(threadId);
                     }
-                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed } ||
-                             e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
+                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        throw;
+                    }
+                    else
+                    {
                         throw;
                     }
                 }
@@ -239,16 +242,15 @@ namespace Hazelcast.CP
 
                         if (duration <= 0)
                             return InvalidFence;
-
-                    }
-                    else if (e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
-                    {
-                        throw;
                     }
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                         return InvalidFence;
+                    }
+                    else
+                    {
+                        throw;//release will be done in the catch below
                     }
                 }
                 catch
@@ -311,12 +313,8 @@ namespace Hazelcast.CP
                 {
                     _lockedThreadToSession.TryRemove(threadId, out var _);
                     throw;
-                }
-            }
-            catch
-            {
-                throw;
-            }
+                }                
+            }            
         }
         #endregion
 

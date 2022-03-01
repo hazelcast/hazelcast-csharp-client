@@ -43,13 +43,13 @@ namespace Hazelcast.CP
         /// Creates a new session on the server
         /// </summary>
         /// <param name="groupId"></param>
-        /// <returns>CPSubsystemSessionState and heartbeat milliseconds</returns>
-        internal async Task<(CPSubsystemSessionState, long)> RequestNewSessionAsync(CPGroupId groupId)
+        /// <returns>CPSession and heartbeat milliseconds</returns>
+        internal async Task<(CPSession, long)> RequestNewSessionAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = CPSessionCreateSessionCodec.DecodeResponse(responseMessage);
-            return (new CPSubsystemSessionState(response.SessionId, response.TtlMillis), response.HeartbeatMillis);
+            return (new CPSession(response.SessionId, response.TtlMillis), response.HeartbeatMillis);
         }
 
         /// <summary>

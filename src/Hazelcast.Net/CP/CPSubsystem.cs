@@ -95,7 +95,7 @@ namespace Hazelcast.CP
             }
 
             var newFencedLock = new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession);
-            _cpObjectsByName.AddOrUpdate(objectName, newFencedLock, (key, val) => val);
+            _cpObjectsByName.TryAdd(objectName, newFencedLock);
 
             return newFencedLock;
         }

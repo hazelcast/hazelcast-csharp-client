@@ -20,6 +20,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.CP
@@ -68,7 +70,7 @@ namespace Hazelcast.CP
 
             if (_sessions.IsEmpty) return;
 
-            IEnumerable<(CPGroupId, CPSubsystemSessionState)> sessions;
+            IEnumerable<(CPGroupId, CPSession)> sessions;
             lock (_mutex) sessions = _sessions.Select(p => (p.Key, p.Value));
 
             await sessions.ParallelForEachAsync((p, cancellationToken) =>
@@ -86,7 +88,7 @@ namespace Hazelcast.CP
         /// <param name="groupId"></param>
         /// <param name="sessionState"></param>
         /// <param name="cancellationToken"></param>        
-        private async Task RunAsync(CPGroupId groupId, CPSubsystemSessionState sessionState, CancellationToken cancellationToken)
+        private async Task RunAsync(CPGroupId groupId, CPSession sessionState, CancellationToken cancellationToken)
         {
             try
             {
@@ -94,6 +96,12 @@ namespace Hazelcast.CP
             }
             catch (Exception e)
             {
+                if (e is RemoteException { Error: RemoteError.SessionExpiredException } ||
+                    e is RemoteException { Error: RemoteError.DistributedObjectDestroyed })
+                {
+                    InvalidateSession(groupId, sessionState.Id);
+                }
+
                 _logger.LogWarning(e, "CP Session Heartbeat has thrown an exception, but will continue.");
             }
         }
