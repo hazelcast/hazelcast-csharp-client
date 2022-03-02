@@ -219,7 +219,7 @@ namespace Hazelcast.CP
 
             var newMutex = new SemaphoreSlim(1, 1);
             var mostRecent = _groupIdSemaphores.GetOrAdd(groupId, newMutex);
-
+            if (mostRecent != newMutex) newMutex.Dispose();
             return mostRecent;
         }
         #endregion
