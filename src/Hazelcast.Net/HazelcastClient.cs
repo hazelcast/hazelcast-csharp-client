@@ -208,6 +208,15 @@ namespace Hazelcast
 
             try
             {
+                await ((CPSubsystem)CPSubsystem).DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Caught exception while disposing the CPSubsystem.");
+            }
+
+            try
+            {
                 await _distributedOjects.DisposeAsync().CfAwait();
             }
             catch (Exception e)
