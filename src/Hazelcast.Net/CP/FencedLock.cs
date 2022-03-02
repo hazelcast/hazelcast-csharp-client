@@ -308,13 +308,13 @@ namespace Hazelcast.CP
                 {
                     _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
                     _lockedThreadToSession.TryRemove(threadId, out var _);
-                    throw;
                 }
                 else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
                 {
-                    _lockedThreadToSession.TryRemove(threadId, out var _);
-                    throw;
-                }                
+                    _lockedThreadToSession.TryRemove(threadId, out var _);                  
+                }
+
+                throw;
             }            
         }
         #endregion
