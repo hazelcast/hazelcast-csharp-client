@@ -197,7 +197,7 @@ namespace Hazelcast.Clustering
             {
                 // connect
                 await _socketConnection.ConnectAsync(cancellationToken).CfAwait();
-                _logger.IfDebug()?.LogDebug($"Established connection {Id.ToShortString()} to {Address}.");
+                _logger.IfDebug()?.LogDebug($"Established {(_sslOptions.Enabled?"SSL ":"")}connection {Id.ToShortString()} to {Address}.");
 
                 // send protocol bytes
                 var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
