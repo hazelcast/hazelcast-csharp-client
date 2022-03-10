@@ -18,6 +18,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Networking;
 using Hazelcast.Partitioning;
 using Microsoft.Extensions.Logging;
 
@@ -45,6 +46,8 @@ namespace Hazelcast.Clustering
             ClientName = clientName;
             Partitioner = partitioner;
             LoggerFactory = loggerFactory;
+
+            AddressProvider = new AddressProvider(AddressProvider.GetSource(options.Networking, loggerFactory), LoggerFactory);
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
@@ -367,6 +370,11 @@ namespace Hazelcast.Clustering
         /// Whether smart routing is enabled.
         /// </summary>
         public bool IsSmartRouting => Options.Networking.SmartRouting;
+
+        /// <summary>
+        /// Gets the address provider.
+        /// </summary>
+        public AddressProvider AddressProvider { get; }
 
         /// <summary>
         /// Gets the partitioner.

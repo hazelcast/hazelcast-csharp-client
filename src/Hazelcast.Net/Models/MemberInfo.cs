@@ -110,7 +110,12 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the public network address of the member.
         /// </summary>
-        public NetworkAddress PublicAddress { get; }
+        public NetworkAddress PublicAddress { get; internal set; }
+
+        /// <summary>
+        /// Whether the member has a public address in addition to its address.
+        /// </summary>
+        public bool HasPublicAddress => PublicAddress != null;
 
         /// <summary>
         /// Gets the address to connect to.
@@ -160,7 +165,7 @@ namespace Hazelcast.Models
             // compare members on what matters: the id and the connect address
 
             return
-                Id == other.Id && 
+                Id == other.Id &&
                 ConnectAddress == other.ConnectAddress;
         }
 
@@ -194,6 +199,6 @@ namespace Hazelcast.Models
         }
 
         public string ToShortString(bool flagConnectAddress)
-            => $"{Id.ToShortString()} - {Address}{(!flagConnectAddress || UsePublicAddress ? "" : "*")} / {(PublicAddress == null ? "null" : PublicAddress.ToString())}{(flagConnectAddress && UsePublicAddress ? "*" : "")}";
+            => $"Id={Id.ToShortString()} Internal={Address}{(!flagConnectAddress || UsePublicAddress ? "" : "*")} Public={(PublicAddress == null ? "<none>" : PublicAddress.ToString())}{(flagConnectAddress && UsePublicAddress ? "*" : "")}";
     }
 }
