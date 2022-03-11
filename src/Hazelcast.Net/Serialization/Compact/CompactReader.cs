@@ -351,7 +351,7 @@ namespace Hazelcast.Serialization.Compact
             where T: class
             => ReadReference(name, FieldKind.NullableCompact, input => Serializer.Read<T>(input));
 
-        public T?[]? ReadArrayOfCompactNullableObject<T>(string name)
+        public T?[]? ReadArrayOfNullableCompact<T>(string name)
             where T : class
             => ReadArrayOfReference(name, FieldKind.ArrayOfNullableCompact, input => Serializer.Read<T>(input));
     }

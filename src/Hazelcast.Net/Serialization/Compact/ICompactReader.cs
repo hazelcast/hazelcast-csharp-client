@@ -283,6 +283,6 @@ namespace Hazelcast.Serialization.Compact
         /// <typeparam name="T">The expected type of the objects.</typeparam>
         /// <param name="name">The name of the field.</param>
         /// <returns>The value of the field.</returns>
-        T?[]? ReadArrayOfCompactNullableObject<T>(string name) where T : class;
+        T?[]? ReadArrayOfNullableCompact<T>(string name) where T : class;
     }
 }
