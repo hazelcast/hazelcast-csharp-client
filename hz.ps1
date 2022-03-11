@@ -1438,21 +1438,24 @@ function hz-cover-to-docs-on-windows {
     $docs = "$tmpDir/docfx.out"
     $versiondocs = "$docs/$docDstDir"
     $coverdocs = "$versiondocs/cover"
-    $coverdir = "$tmpDir/tests/cover/cover-netcoreapp3.1.html"
+    $f = $frameworks[-1]
+    $coveragePath = "$tmpDir/tests/cover"
 
     Write-Output ""
     Write-Output "Copy tests coverage to documentation"
-    Write-Output "  Source         : $coverdir"
+    Write-Output "  Source         : $coveragePath/cover-$f"
     Write-Output "  Documentation  : $coverdocs"
 
     if (-not (test-path $docs)) { Die "Could not find $docs. Maybe you should build the docs first?" }
-    if (-not (test-path $coverdir)) { Die "Could not find $coverdir. Maybe you should run tests with coverage first?" }
+    if (-not (test-path "$coveragePath/cover-$f")) { Die "Could not find $coveragePath/cover-$f. Maybe you should run tests with coverage first?" }
     if (-not (test-path $versiondocs)) { mkdir $versiondocs >$null 2>&1 }
 
     if (test-path $coverdocs) { remove-item -recurse -force $coverdocs }
     mkdir $coverdocs >$null 2>&1
+    mkdir "$coverdocs/index" >$null 2>&1
 
-    copy-item -recurse "$coverdir/*" "$coverdocs/"
+    copy-item "$coveragePath/cover-$f.html" "$coverdocs/index.html"
+    copy-item -recurse "$coveragePath/cover-$f/*" "$coverdocs/index/"
     add-content "$coverdocs/index/css/dotcover.report.css" "`n`npre.source-code { font-family:Menlo,Monaco,Consolas,`"Courier New`",monospace; font-size:12px; }"
     $index1 = get-content "$docDir/templates/hz/cover-index.html"
     $index2 = [string]::Join(' ', (get-content "$coverdocs/index.html"))
@@ -1762,7 +1765,7 @@ function run-tests ( $f ) {
 
             # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
             "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
-            "--dotCoverOutput=$coveragePath/index.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
+            "--dotCoverOutput=$coveragePath/cover-$f.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
