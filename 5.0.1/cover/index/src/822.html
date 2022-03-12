@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Chain\Links\StrategyComparisonLink.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+
+namespace ExpectedObjects.Chain.Links
+{
+    class StrategyComparisonLink: IComparisonLink
+    {
+        public LinkComparisonResult Compare(LinkComparisonContext linkComparisonContext, Func&lt;LinkComparisonContext, LinkComparisonResult&gt; next)
+        {
+            var expected = linkComparisonContext.Expected;
+            var actual = linkComparisonContext.Actual;
+
+            foreach (var strategy in linkComparisonContext.Configuration.ComparisonStrategies)
+                if (strategy.CanCompare(expected, actual))
+                {
+                    var areEqual = strategy.AreEqual(expected, actual, linkComparisonContext.ComparisonContext);
+
+                    return new LinkComparisonResult {Result = areEqual};
+                }
+
+
+            return next(linkComparisonContext);
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[9,13,9,59,1],[10,13,10,55,1],[12,22,12,34,1],[12,35,12,37,1],[12,38,12,94,1],[13,17,13,59,1],[15,21,15,113,1],[17,21,17,73,1],[21,13,21,48,0],[22,9,22,10,1]]);
+    </script>
+  </body>
+</html>

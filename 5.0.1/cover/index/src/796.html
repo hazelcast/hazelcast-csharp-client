@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Strategies\KeyValuePairComparisonStrategy.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.Reflection;
+
+namespace ExpectedObjects.Strategies
+{
+    public class KeyValuePairComparisonStrategy : IComparisonStrategy
+    {
+        public bool CanCompare(object expected, object actual)
+        {
+            var expectedTypeInfo = expected.GetType().GetTypeInfo();
+            var actualTypeInfo = actual.GetType().GetTypeInfo();
+
+            if (expectedTypeInfo.IsGenericType &amp;&amp; actualTypeInfo.IsGenericType)
+                if (expectedTypeInfo.GetGenericTypeDefinition() == typeof(KeyValuePair&lt;,&gt;))
+                    return true;
+
+            return false;
+        }
+
+        public bool AreEqual(object expected, object actual, IComparisonContext comparisonContext)
+        {
+            var genericTypes = expected.GetType().GetGenericArguments();
+
+            var getKey = GetMethodInfo(&quot;GetKey&quot;, genericTypes);
+            var key1 = getKey.Invoke(this, new[] {expected});
+            var key2 = getKey.Invoke(this, new[] {actual});
+
+            var areEqual = comparisonContext.ReportEquality(key1, key2, &quot;Key&quot;);
+
+
+            var getValue = GetMethodInfo(&quot;GetValue&quot;, genericTypes);
+            var value1 = getValue.Invoke(this, new[] {expected});
+            var value2 = getValue.Invoke(this, new[] {actual});
+
+            areEqual = comparisonContext.ReportEquality(value1, value2, &quot;Value&quot;) &amp;&amp; areEqual;
+
+            return areEqual;
+        }
+
+        MethodInfo GetMethodInfo(string methodName, Type[] genericTypes)
+        {
+            var methodInfo = GetType().GetMethod(methodName, BindingFlags.NonPublic | BindingFlags.Instance);
+            return methodInfo.MakeGenericMethod(genericTypes);
+        }
+
+        object GetKey&lt;TKey, TValue&gt;(KeyValuePair&lt;TKey, TValue&gt; keyValuePair)
+        {
+            return keyValuePair.Key;
+        }
+
+        object GetValue&lt;TKey, TValue&gt;(KeyValuePair&lt;TKey, TValue&gt; keyValuePair)
+        {
+            return keyValuePair.Value;
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,13,11,69,1],[12,13,12,65,1],[14,13,14,80,1],[15,17,15,92,1],[16,21,16,33,1],[18,13,18,26,0],[23,13,23,73,1],[25,13,25,64,1],[26,13,26,62,1],[27,13,27,60,1],[29,13,29,80,1],[32,13,32,68,1],[33,13,33,66,1],[34,13,34,64,1],[36,13,36,94,1],[38,13,38,29,1],[43,13,43,110,1],[44,13,44,63,1],[49,13,49,37,1],[54,13,54,39,1]]);
+    </script>
+  </body>
+</html>

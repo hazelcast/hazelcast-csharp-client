@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DefaultSerializers\HLocalTimeSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.Models;
+
+namespace Hazelcast.Serialization.DefaultSerializers
+{
+    internal class HLocalTimeSerializer : SingletonSerializerBase&lt;HLocalTime&gt;
+    {
+        public override int TypeId =&gt; SerializationConstants.JavaDefaultTypeLocalTime;
+
+        public override HLocalTime Read(IObjectDataInput input)
+        {
+            var hour = input.ReadByte();
+            var minute = input.ReadByte();
+            var second = input.ReadByte();
+            var nano = input.ReadInt();
+
+            return new HLocalTime(hour, minute, second, nano);
+        }
+
+        public override void Write(IObjectDataOutput output, HLocalTime obj)
+        {
+            output.WriteByte(obj.Hour);
+            output.WriteByte(obj.Minute);
+            output.WriteByte(obj.Second);
+            output.WriteInt(obj.Nanosecond);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[21,39,21,86,1],[25,13,25,41,0],[26,13,26,43,0],[27,13,27,43,0],[28,13,28,40,0],[30,13,30,63,0],[35,13,35,40,1],[36,13,36,42,1],[37,13,37,42,1],[38,13,38,45,1],[39,9,39,10,1]]);
+    </script>
+  </body>
+</html>

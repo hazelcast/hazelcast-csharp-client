@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\ObjectExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using ExpectedObjects.Strategies;
+
+namespace ExpectedObjects
+{
+    static class ObjectExtensions
+    {
+        internal static string ToUsefulString(this object obj, bool verbose = false)
+        {
+            if (obj is IExpectedDescription)
+                return obj.ToString();
+
+            string str;
+            if (obj == null) return &quot;[null]&quot;;
+
+            var description = obj as Description;
+            if (description != null)
+                if (description.Value != null)
+                    return $&quot;{description.Label} {ToUsefulString(description.Value, verbose)}&quot;;
+                else
+                    return $&quot;{description.Label}&quot;;
+
+            if (obj.GetType() == typeof(string))
+            {
+                str = (string) obj;
+
+                if (string.IsNullOrWhiteSpace(str))
+                    return &quot;String.Empty&quot;;
+
+                return &quot;\&quot;&quot; + str.Replace(&quot;\n&quot;, &quot;\\n&quot;) + &quot;\&quot;&quot;;
+            }
+
+            if (obj.GetType().GetTypeInfo().IsValueType) return obj.ToObjectString();
+
+            if (obj is IEnumerable)
+            {
+                var enumerable = ((IEnumerable) obj).Cast&lt;object&gt;();
+
+                return $&quot;{obj.GetType().ToUsefulTypeName()}:{Environment.NewLine}{enumerable.EachToUsefulString(verbose)}&quot;;
+            }
+
+            str = verbose ? obj.ToObjectString() : obj.ToString();
+
+            if (str == null || str.Trim() == &quot;&quot;)
+                return $&quot;{obj.GetType()}:[]&quot;;
+
+            if (!verbose)
+            {
+                if (str.Contains(Environment.NewLine))
+                    return $@&quot;{obj.GetType().ToUsefulTypeName()}:[{str.Tab()}]&quot;;
+
+                if (obj.GetType().ToString() == str)
+                    return obj.GetType().ToUsefulTypeName();
+
+                str = $&quot;{obj.GetType().ToUsefulTypeName()}:[{str}]&quot;;
+            }
+
+            return str;
+        }
+
+        static string EachToUsefulString&lt;T&gt;(this IEnumerable&lt;T&gt; enumerable, bool verbose = false)
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine(&quot;{&quot;);
+            sb.Append(string.Join($&quot;,{Environment.NewLine}&quot;,
+                enumerable.Select(x =&gt; ToUsefulString(x, verbose).Tab()).Take(10).ToArray()));
+            if (enumerable.Count() &gt; 10)
+                if (enumerable.Count() &gt; 11)
+                    sb.AppendLine($&quot;,{Environment.NewLine}  ...({enumerable.Count() - 10} more elements)&quot;);
+                else
+                    sb.AppendLine($&quot;,{Environment.NewLine}&quot; + enumerable.Last().ToUsefulString(verbose).Tab());
+            else sb.AppendLine();
+            sb.AppendLine(&quot;}&quot;);
+
+            return sb.ToString();
+        }
+
+        static string Tab(this string str)
+        {
+            if (string.IsNullOrEmpty(str)) return &quot;&quot;;
+
+            var split = str.Split(new[] {$&quot;{Environment.NewLine}&quot;}, StringSplitOptions.None);
+            var sb = new StringBuilder();
+
+            sb.Append(&quot;  &quot; + split[0]);
+            foreach (var part in split.Skip(1))
+            {
+                sb.AppendLine();
+                sb.Append(&quot;  &quot; + part);
+            }
+
+            return sb.ToString();
+        }
+    }
+
+    static class ObjectStringExtensions
+    {
+        static int _indentLevel;
+
+        public static string ToObjectString(this object o)
+        {
+            var s = o as string;
+
+            if (s != null)
+                return $&quot;\&quot;{s}\&quot;&quot;;
+
+            return GetCSharpString(o);
+        }
+
+        public static string ToUsefulTypeName(this Type type)
+        {
+            if (type.IsAnonymousType())
+            {
+                return &quot;&lt;Anonymous&gt;&quot;;
+            }
+
+            if (type.GetTypeInfo().IsGenericType)
+            {
+                var arg = type.GetGenericArguments().First().ToUsefulTypeName();
+                return type.Name.Replace(&quot;`1&quot;, string.Format(&quot;&lt;{0}&gt;&quot;, arg));
+            }
+
+            return type.Name;
+        }
+
+        static string Prefix()
+        {
+            return new string(&#39; &#39;, _indentLevel * 2);
+        }
+
+        static StringBuilder CreateObject(this object o, Stack&lt;object&gt; visited = null)
+        {
+            var builder = new StringBuilder();
+
+            if (visited == null)
+                visited = new Stack&lt;object&gt;();
+
+            if (visited.Contains(o))
+            {
+                builder.Append(&quot;... &quot;);
+                return builder;
+            }
+
+            visited.Push(o);
+
+            
+
+            if (_indentLevel &gt; 0) builder.Append(&quot;new &quot;);
+            builder.Append($&quot;{o.ToUsefulClassName()}{Environment.NewLine}{Prefix()}{{ &quot;);
+            _indentLevel++;
+
+            _indentLevel++;
+
+            var l = new List&lt;string&gt;();
+            foreach (var fieldInfo in o.GetType().GetFields(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var value = fieldInfo.GetValue(o);
+                if (value != null)
+                    l.Add($&quot;{Prefix()}{fieldInfo.Name} = {value.GetCSharpString(visited)}&quot;);
+            }
+
+            foreach (var property in o.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance))
+            {
+                var value = property.GetValue(o, null);
+                if (value != null)
+                    l.Add($&quot;{Prefix()}{property.Name} = {value.GetCSharpString(visited)}&quot;);
+            }
+
+            if (l.Any())
+            {
+                builder.Append(Environment.NewLine);
+                builder.Append(string.Join($&quot;,{Environment.NewLine}&quot;, l));
+            }
+            _indentLevel -= 2;
+            builder.Append($&quot;{Environment.NewLine}{Prefix()}}}&quot;);
+
+            visited.Pop();
+            return builder;
+        }
+
+        static string ToUsefulClassName(this object o)
+        {
+            var type = o.GetType();
+            return type.ToUsefulTypeName();
+        }
+
+        static string GetCSharpString(this object o, Stack&lt;object&gt; visited = null)
+        {
+            if (o == null) return &quot;[null]&quot;;
+
+            if (o is string)
+                return $&quot;\&quot;{o}\&quot;&quot;;
+            if (o is decimal)
+                return $&quot;{o}m&quot;;
+            if (IsNumericType(o))
+                return $&quot;{o}&quot;;
+            if (o is Boolean)
+                return $&quot;{o}&quot;;
+            if (o is DateTime)
+                return $&quot;DateTime.Parse(\&quot;{o}\&quot;)&quot;;
+            if (o is DateTimeOffset)
+                return $&quot;DateTimeOffset.Parse(\&quot;{o}\&quot;)&quot;;
+            if (o is IEnumerable)
+                return $&quot;new {o.ToUsefulClassName()} {{ {((IEnumerable) o).GetItems(visited)}}}&quot;;
+
+            return $&quot;{o.CreateObject(visited)}&quot;;
+        }
+
+        static string GetItems(this IEnumerable items, Stack&lt;object&gt; visited = null)
+        {
+            var itemStrings = string.Join(&quot;,&quot;, items.Cast&lt;object&gt;().Select(i =&gt; i.GetCSharpString(visited)));
+            return itemStrings;
+        }
+
+        static bool IsNumericType(this object o)
+        {
+            switch (Convert.GetTypeCode(o))
+            {
+                case TypeCode.Byte:
+                case TypeCode.SByte:
+                case TypeCode.UInt16:
+                case TypeCode.UInt32:
+                case TypeCode.UInt64:
+                case TypeCode.Int16:
+                case TypeCode.Int32:
+                case TypeCode.Int64:
+                case TypeCode.Decimal:
+                case TypeCode.Double:
+                case TypeCode.Single:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[15,13,15,45,0],[16,17,16,39,0],[19,13,19,29,0],[19,30,19,46,0],[21,13,21,50,0],[22,13,22,37,0],[23,17,23,47,0],[24,21,24,96,0],[26,21,26,51,0],[28,13,28,49,0],[30,17,30,36,0],[32,17,32,52,0],[33,21,33,43,0],[35,17,35,63,0],[38,13,38,57,0],[38,58,38,86,0],[40,13,40,36,0],[42,17,42,69,0],[44,17,44,124,0],[47,13,47,67,0],[49,13,49,49,0],[50,17,50,46,0],[52,13,52,26,0],[54,17,54,55,0],[55,21,55,81,0],[57,17,57,53,0],[58,21,58,61,0],[60,17,60,69,0],[63,13,63,24,0],[68,13,68,42,0],[69,13,69,32,0],[70,13,71,40,0],[71,40,71,72,0],[71,72,71,95,0],[72,13,72,41,0],[73,17,73,45,0],[74,21,74,108,0],[76,21,76,112,0],[77,18,77,34,0],[78,13,78,32,0],[80,13,80,34,0],[85,13,85,43,0],[85,44,85,54,0],[87,13,87,94,0],[88,13,88,42,0],[90,13,90,40,0],[91,22,91,30,0],[91,31,91,33,0],[91,34,91,47,0],[93,17,93,33,0],[94,17,94,40,0],[97,13,97,34,0],[107,13,107,33,0],[109,13,109,27,0],[110,17,110,35,0],[112,13,112,39,0],[117,13,117,40,1],[119,17,119,38,0],[122,13,122,50,1],[124,17,124,81,0],[125,17,125,77,0],[128,13,128,30,1],[133,13,133,54,0],[138,13,138,47,0],[140,13,140,33,0],[141,17,141,47,0],[143,13,143,37,0],[145,17,145,40,0],[146,17,146,32,0],[149,13,149,29,0],[153,13,153,34,0],[153,35,153,58,0],[154,13,154,90,0],[155,13,155,28,0],[157,13,157,28,0],[159,13,159,40,0],[160,22,160,35,0],[160,36,160,38,0],[160,39,160,105,0],[162,17,162,51,0],[163,17,163,35,0],[164,21,164,93,0],[167,22,167,34,0],[167,35,167,37,0],[167,38,167,108,0],[169,17,169,56,0],[170,17,170,35,0],[171,21,171,92,0],[174,13,174,25,0],[176,17,176,53,0],[177,17,177,75,0],[179,13,179,31,0],[180,13,180,66,0],[182,13,182,27,0],[183,13,183,28,0],[188,13,188,36,0],[189,13,189,44,0],[194,13,194,27,0],[194,28,194,44,0],[196,13,196,29,0],[197,17,197,35,0],[198,13,198,30,0],[199,17,199,32,0],[200,13,200,34,0],[201,17,201,31,0],[202,13,202,30,0],[203,17,203,31,0],[204,13,204,31,0],[205,17,205,51,0],[206,13,206,37,0],[207,17,207,57,0],[208,13,208,34,0],[209,17,209,98,0],[211,13,211,49,0],[216,13,216,81,0],[216,81,216,107,0],[216,107,216,110,0],[217,13,217,32,0],[222,13,222,44,0],[235,21,235,33,0],[237,21,237,34,0]]);
+    </script>
+  </body>
+</html>

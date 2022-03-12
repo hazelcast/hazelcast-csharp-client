@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\ClientMessage+FrameEnumerator.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections;
+using System.Collections.Generic;
+
+namespace Hazelcast.Messaging
+{
+    internal partial class ClientMessage // FrameEnumerator
+    {
+        /// &lt;summary&gt;
+        /// Represents an enumerator of frames.
+        /// &lt;/summary&gt;
+        private class FrameEnumerator : IEnumerator&lt;Frame&gt;
+        {
+            private readonly ClientMessage _message;
+            private bool _started;
+#if DEBUG
+            private int _index;
+#endif
+
+            /// &lt;summary&gt;
+            /// Initialize a new instance of the &lt;see cref=&quot;FrameEnumerator&quot;/&gt; class.
+            /// &lt;/summary&gt;
+            /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
+            public FrameEnumerator(ClientMessage message)
+            {
+                _message = message;
+#if DEBUG
+                _index = -1;
+#endif
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public bool MoveNext()
+            {
+                if (!_started)
+                {
+                    _started = true;
+                    Current = _message.FirstFrame;
+#if DEBUG
+                    _index = 0;
+#endif
+                }
+                else
+                {
+#if DEBUG
+                    if (Current != null) _index++;
+#endif
+                    Current = Current?.Next;
+                }
+
+                return Current != null;
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public void Reset()
+            {
+                Current = null;
+                _started = false;
+#if DEBUG
+                _index = -1;
+#endif
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public Frame Current { get; private set; }
+
+            /// &lt;inheritdoc /&gt;
+            object IEnumerator.Current =&gt; Current;
+
+            /// &lt;inheritdoc /&gt;
+            public void Dispose()
+            { }
+
+            /// &lt;inheritdoc /&gt;
+            public override string ToString()
+            {
+#if DEBUG
+                return $&quot;Enumerator at frame[{_index}]: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
+#else
+                return $&quot;Enumerator at frame: {(Current == null ? &quot;&lt;null&gt;&quot; : Current.ToString())}&quot;;
+#endif
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,13,37,58,1],[39,17,39,36,1],[43,13,43,14,1],[48,17,48,31,1],[50,21,50,37,1],[51,21,51,51,1],[61,21,61,45,1],[64,17,64,40,1],[70,17,70,32,1],[71,17,71,34,1],[75,13,75,14,1],[78,36,78,40,1],[78,41,78,53,1],[81,43,81,50,1],[85,15,85,16,1],[93,17,93,100,1]]);
+    </script>
+  </body>
+</html>

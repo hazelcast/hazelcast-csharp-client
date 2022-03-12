@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ArrayDataSerializableFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    /// Represents an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for arrays.
+    /// &lt;/summary&gt;
+    internal class ArrayDataSerializableFactory : IDataSerializableFactory
+    {
+        private readonly Func&lt;IIdentifiedDataSerializable&gt;[] _constructors;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ArrayDataSerializableFactory&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;constructors&quot;&gt;&lt;/param&gt;
+        public ArrayDataSerializableFactory(Func&lt;IIdentifiedDataSerializable&gt;[] constructors)
+        {
+            _constructors = constructors;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public IIdentifiedDataSerializable Create(int typeId)
+        {
+            return typeId &gt;= 0 &amp;&amp; typeId &lt; _constructors.Length
+                ? _constructors[typeId]()
+                : null;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,94,1],[32,13,32,42,1],[33,9,33,10,1],[38,13,40,24,1]]);
+    </script>
+  </body>
+</html>

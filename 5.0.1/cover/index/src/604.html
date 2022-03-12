@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMap.Intercepting.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    // ReSharper disable UnusedTypeParameter
+    internal partial class HMap&lt;TKey, TValue&gt; // Intercepting
+    // ReSharper restore NonReadonlyMemberInGetHashCode
+    {
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;string&gt; AddInterceptorAsync(IMapInterceptor interceptor)
+            =&gt; AddInterceptorAsync(interceptor, CancellationToken.None);
+
+        private async Task&lt;string&gt; AddInterceptorAsync(IMapInterceptor interceptor, CancellationToken cancellationToken)
+        {
+            var interceptorData = ToSafeData(interceptor);
+
+            var requestMessage = MapAddInterceptorCodec.EncodeRequest(Name, interceptorData);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapAddInterceptorCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public Task&lt;bool&gt; RemoveInterceptorAsync(string id)
+            =&gt; RemoveInterceptorAsync(id, CancellationToken.None);
+
+        private async Task&lt;bool&gt; RemoveInterceptorAsync(string id, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(id)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(id));
+
+            var requestMessage = MapRemoveInterceptorCodec.EncodeRequest(Name, id);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = MapRemoveInterceptorCodec.DecodeResponse(responseMessage).Response;
+            return response;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,16,30,72,0],[34,13,34,59,0],[36,13,36,94,0],[37,13,37,114,0],[38,13,38,92,0],[39,13,39,29,0],[40,9,40,10,0],[44,16,44,66,1],[48,13,48,47,1],[48,48,48,119,0],[50,13,50,84,1],[51,13,51,114,1],[52,13,52,95,1],[53,13,53,29,1],[54,9,54,10,1]]);
+    </script>
+  </body>
+</html>

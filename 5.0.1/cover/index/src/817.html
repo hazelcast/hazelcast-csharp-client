@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Chain\Links\MemberComparisonLink.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Linq;
+
+namespace ExpectedObjects.Chain.Links
+{
+    class MemberComparisonLink : IComparisonLink
+    {
+        public LinkComparisonResult Compare(LinkComparisonContext linkComparisonContext, Func&lt;LinkComparisonContext, LinkComparisonResult&gt; next)
+        {
+            var actual = linkComparisonContext.Actual;
+
+            var memberComparison = GetMemberComparison(linkComparisonContext.MemberPath, linkComparisonContext.Configuration);
+
+            if (memberComparison != null)
+            {
+                var areEqual = memberComparison.AreEqual(actual);
+
+                return new LinkComparisonResult
+                {
+                    Result = areEqual, ExpectedResult = !areEqual ? memberComparison.GetExpectedResult() : string.Empty
+                };
+            }
+            
+
+            return next(linkComparisonContext);
+        }
+        
+        IComparison GetMemberComparison(string path, IConfiguration configuration)
+        {
+            var strategy = configuration.MemberComparisons.LastOrDefault(s =&gt; s.ShouldApply(path));
+
+            return strategy?.Comparison;
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[10,13,10,55,1],[12,13,12,127,1],[14,13,14,42,1],[16,17,16,66,1],[18,17,21,19,1],[25,13,25,48,1],[30,13,30,79,1],[30,79,30,98,1],[30,98,30,100,1],[32,13,32,41,1]]);
+    </script>
+  </body>
+</html>

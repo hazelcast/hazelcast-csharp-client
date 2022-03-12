@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Expect.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Linq.Expressions;
+using ExpectedObjects.Comparisons;
+using ExpectedObjects.Strategies;
+
+namespace ExpectedObjects
+{
+    /// &lt;summary&gt;
+    ///     Convenience class for configuring provided instances of &lt;see cref=&quot;ExpectedObjects.IComparison&quot; /&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    ///     Types returned must be of the derived type to be recognized properly
+    ///     by the &lt;see cref=&quot;ExpectedObjects.EqualityComparer&quot; /&gt;
+    /// &lt;/remarks&gt;
+    public static class Expect
+    {
+        static readonly NotNullComparison NotNullComparison = new NotNullComparison();
+        static readonly NullComparison NullComparison = new NullComparison();
+        static readonly IgnoredComparison IgnoredComparison = new IgnoredComparison();
+
+        public static Any&lt;T&gt; Any&lt;T&gt;()
+        {
+            return new Any&lt;T&gt;();
+        }
+
+        public static AnyMatchingPredicate&lt;T&gt; Any&lt;T&gt;(Expression&lt;Func&lt;T, bool&gt;&gt; predicateExpression)
+        {
+            return new AnyMatchingPredicate&lt;T&gt;(predicateExpression);
+        }
+
+        public static NotNullComparison NotNull()
+        {
+            return NotNullComparison;
+        }
+
+        public static NullComparison Null()
+        {
+            return NullComparison;
+        }
+
+        public static IComparison Ignored()
+        {
+            return IgnoredComparison;
+        }
+
+        public static IComparison Default&lt;T&gt;()
+        {
+            return new DefaultComparison&lt;T&gt;();
+        }
+
+        public static IComparison NotDefault&lt;T&gt;()
+        {
+            return new NotDefaultComparison&lt;T&gt;();
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[17,9,17,87,1],[18,9,18,78,1],[19,9,19,87,1],[23,13,23,33,0],[28,13,28,69,0],[33,13,33,38,0],[38,13,38,35,0],[43,13,43,38,1],[48,13,48,47,0],[53,13,53,50,0]]);
+    </script>
+  </body>
+</html>

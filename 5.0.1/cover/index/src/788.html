@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\TypeExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+#if NET40
+using System.Collections.Generic;
+
+#endif
+
+namespace ExpectedObjects
+{
+    static class TypeExtensions
+    {
+        public static bool IsAnonymousType(this Type type)
+        {
+            var hasCompilerGeneratedAttribute =
+                type.GetTypeInfo().GetCustomAttributes(typeof(CompilerGeneratedAttribute), false).Any();
+            var nameContainsAnonymousType = type.FullName.Contains(&quot;AnonymousType&quot;);
+            var isAnonymousType = hasCompilerGeneratedAttribute &amp;&amp; nameContainsAnonymousType;
+
+            return isAnonymousType;
+        }
+#if NET40
+        public static Type GetTypeInfo(this Type type)
+        {
+            return type;
+        }
+
+        public static IEnumerable&lt;MethodInfo&gt; GetDeclaredMethods(this Type type, string methodName)
+        {
+            return type.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly).Where(mi =&gt; mi.Name == methodName);
+        }
+#endif
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[16,13,17,105,1],[18,13,18,85,1],[19,13,19,94,1],[21,13,21,36,1]]);
+    </script>
+  </body>
+</html>

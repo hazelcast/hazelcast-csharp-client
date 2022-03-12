@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Strategies\EqualityResults.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ExpectedObjects.Strategies
+{
+    public class EqualityResults
+    {
+        readonly List&lt;EqualityResult&gt; _results = new List&lt;EqualityResult&gt;();
+
+        public bool Status =&gt; AllEqual(_results);
+
+        public IEnumerable&lt;EqualityResult&gt; Results =&gt; _results;
+
+        bool AllEqual(List&lt;EqualityResult&gt; results)
+        {
+            return results.Where(r =&gt; r.Status == false).Count() == 0;
+        }
+
+        public void AddResult(EqualityResult result)
+        {
+            _results.Add(result);
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[8,9,8,77,0],[10,31,10,49,0],[12,55,12,63,0],[16,13,16,39,0],[16,39,16,56,0],[16,56,16,71,0],[21,13,21,34,0],[22,9,22,10,0]]);
+    </script>
+  </body>
+</html>

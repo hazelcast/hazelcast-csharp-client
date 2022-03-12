@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Models\AuthenticationResult.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Networking;
+
+namespace Hazelcast.Models
+{
+    /// &lt;summary&gt;
+    /// Represents the result of the client authentication.
+    /// &lt;/summary&gt;
+    internal sealed class AuthenticationResult
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AuthenticationResult&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;clusterId&quot;&gt;The unique identifier of the cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The unique identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;memberAddress&quot;&gt;The network address of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;serverVersion&quot;&gt;The version of the server running the member.&lt;/param&gt;
+        /// &lt;param name=&quot;failoverSupported&quot;&gt;Whether fail-over is supported.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionCount&quot;&gt;The partition count.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationVersion&quot;&gt;The serialization version.&lt;/param&gt;
+        /// &lt;param name=&quot;principal&quot;&gt;The principal that was used to authenticate.&lt;/param&gt;
+        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion, string principal)
+        {
+            ClusterId = clusterId;
+            MemberId = memberId;
+            MemberAddress = memberAddress;
+            ServerVersion = serverVersion;
+            FailoverSupported = failoverSupported;
+            PartitionCount = partitionCount;
+            SerializationVersion = serializationVersion;
+            Principal = principal;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the cluster.
+        /// &lt;/summary&gt;
+        public Guid ClusterId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the member.
+        /// &lt;/summary&gt;
+        public Guid MemberId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the name of the principal that was used to authenticate.
+        /// &lt;/summary&gt;
+        public string Principal { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the network address of the member.
+        /// &lt;/summary&gt;
+        public NetworkAddress MemberAddress { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the version of the server running the member.
+        /// &lt;/summary&gt;
+        public string ServerVersion { get; }
+
+        /// &lt;summary&gt;
+        /// Determines whether fail-over is supported.
+        /// &lt;/summary&gt;
+        public bool FailoverSupported { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the partition count.
+        /// &lt;/summary&gt;
+        public int PartitionCount { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the serialization version.
+        /// &lt;/summary&gt;
+        public byte SerializationVersion { get; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,9,36,208,1],[38,13,38,35,1],[39,13,39,33,1],[40,13,40,43,1],[41,13,41,43,1],[42,13,42,51,1],[43,13,43,45,1],[44,13,44,57,1],[45,13,45,35,1],[46,9,46,10,1],[51,33,51,37,1],[56,32,56,36,1],[61,35,61,39,1],[66,47,66,51,1],[71,39,71,43,1],[76,41,76,45,1],[81,37,81,41,1],[86,44,86,48,1]]);
+    </script>
+  </body>
+</html>

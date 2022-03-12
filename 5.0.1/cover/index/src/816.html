@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Chain\Links\LeafInstanceOfTypeComparisonLink.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Linq;
+using System.Reflection;
+
+namespace ExpectedObjects.Chain.Links
+{
+    class LeafInstanceOfTypeComparisonLink: IComparisonLink
+    {
+        public LinkComparisonResult Compare(LinkComparisonContext linkComparisonContext, Func&lt;LinkComparisonContext, LinkComparisonResult&gt; next)
+        { 
+            var expected = linkComparisonContext.Expected;
+            var actual = linkComparisonContext.Actual;
+
+            if (linkComparisonContext.IgnoreTypeInformation &amp;&amp; IsLeaf(expected) &amp;&amp; !expected.GetType().IsInstanceOfType(actual))
+            {
+                return LinkComparisonResult.False;
+            }
+
+            return next(linkComparisonContext);
+        }
+
+        bool IsLeaf(object expected)
+        {
+            if (expected == null)
+                return true;
+
+            const BindingFlags propertyFlags = BindingFlags.Public | BindingFlags.Instance;
+            var expectedPropertyInfos = expected.GetType()
+                .GetVisibleProperties(propertyFlags);
+
+            var expectedFieldInfos = expected.GetType().GetFields(propertyFlags);
+
+            return !expectedPropertyInfos.Any() &amp;&amp; !expectedFieldInfos.Any();
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,13,11,59,1],[12,13,12,55,1],[14,13,14,129,1],[16,17,16,51,0],[19,13,19,48,1],[24,13,24,34,0],[25,17,25,29,0],[28,13,29,54,0],[31,13,31,82,0],[33,13,33,78,0]]);
+    </script>
+  </body>
+</html>

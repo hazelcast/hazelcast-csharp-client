@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\AbsolutePathMemberContext.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+
+namespace ExpectedObjects
+{
+    class AbsolutePathMemberContext : IMemberContext
+    {
+        readonly IMemberConfigurationContext _memberConfigurationContext;
+        readonly Type _rootType;
+        readonly string _memberPath;
+
+        public AbsolutePathMemberContext(IMemberConfigurationContext memberConfigurationContext, Type rootType, string memberPath)
+        {
+            _memberConfigurationContext = memberConfigurationContext;
+            _rootType = rootType;
+            _memberPath = memberPath;
+        }
+
+        public void UsesComparison(IComparison comparison)
+        {
+            _memberConfigurationContext.ConfigureMember(new AbsolutePathMemberComparison(comparison, _rootType, _memberPath));
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,9,11,131,0],[13,13,13,70,0],[14,13,14,34,0],[15,13,15,38,0],[16,9,16,10,0],[20,13,20,127,0],[21,9,21,10,0]]);
+    </script>
+  </body>
+</html>

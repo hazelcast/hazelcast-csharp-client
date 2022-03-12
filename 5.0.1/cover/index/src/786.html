@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\ShouldExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Text;
+using ExpectedObjects.Reporting;
+
+namespace ExpectedObjects
+{
+    public static class ShouldExtensions
+    {
+        public static void ShouldEqual&lt;T&gt;(this ExpectedObject expected, T actual)
+        {
+            IWriter writer = new ShouldWriter();
+
+            if (!expected.Equals(actual, writer))
+            {
+                var results = writer.GetFormattedResults();
+
+                if (!string.IsNullOrEmpty(results))
+                    throw new ComparisonException(results);
+            }
+        }
+
+        public static void ShouldNotEqual&lt;T&gt;(this ExpectedObject expected, T actual)
+        {
+            var writer = new ShouldWriter();
+
+            if (expected.Equals(actual, writer))
+            {
+                var sb = new StringBuilder();
+                sb.Append($&quot;The expected object should not equal the actual object.&quot;);
+                sb.Append(Environment.NewLine);
+                sb.Append(Environment.NewLine);
+                sb.Append(writer.GetTrunkFormattedResults());
+                throw new ComparisonException(sb.ToString());
+            }
+        }
+
+        public static void ShouldMatch&lt;T&gt;(this ExpectedObject expected, T actual)
+        {
+            IWriter writer = new ShouldWriter();
+
+            if (!expected.Equals(actual, writer, true))
+            {
+                var results = writer.GetFormattedResults();
+                throw new ComparisonException(results);
+            }
+        }
+
+        public static void ShouldNotMatch&lt;T&gt;(this ExpectedObject expected, T actual)
+        {
+            var writer = new ShouldWriter();
+
+            if (expected.Equals(actual, writer, true))
+            {
+                var sb = new StringBuilder();
+                sb.Append($&quot;The expected object should not match the actual object.&quot;);
+                sb.Append(Environment.NewLine);
+                sb.Append(Environment.NewLine);
+                sb.Append(writer.GetTrunkFormattedResults());
+                throw new ComparisonException(sb.ToString());
+            }
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,13,11,49,1],[13,13,13,50,1],[15,17,15,60,0],[17,17,17,52,0],[18,21,18,60,0],[20,9,20,10,1],[24,13,24,45,0],[26,13,26,49,0],[28,17,28,46,0],[29,17,29,87,0],[30,17,30,48,0],[31,17,31,48,0],[32,17,32,62,0],[33,17,33,62,0],[35,9,35,10,0],[39,13,39,49,0],[41,13,41,56,0],[43,17,43,60,0],[44,17,44,56,0],[46,9,46,10,0],[50,13,50,45,0],[52,13,52,55,0],[54,17,54,46,0],[55,17,55,87,0],[56,17,56,48,0],[57,17,57,48,0],[58,17,58,62,0],[59,17,59,62,0],[61,9,61,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\TypesMap.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Models;
+
+namespace Hazelcast.Sql
+{
+    internal static class TypesMap
+    {
+        // Serialization/ConstantSerializerDefinitions defines the constant serializers, for
+        // instance it registers Serialization/ConstantSerializers/ByteSerializer as the serializer
+        // for C# &#39;byte&#39; type -- and that serializer uses WriteByte/ReadByte -- so a C# &#39;byte&#39; goes
+        // as a Java &#39;byte&#39; even though C# &#39;byte&#39; is unsigned and Java &#39;byte&#39; is signed.
+        //
+        // We *have* to define an equivalent mapping here, i.e. we cannot decide, here, to map
+        // C# &#39;byte&#39; to Java &#39;int&#39; -- that would cause an error when running SQL queries.
+        //
+        // Users have to be aware of the impedance mismatch.
+
+        private static readonly Dictionary&lt;Type, string&gt;  CSharpToJavaMap = new Dictionary&lt;Type, string&gt;
+            {
+                // Java &#39;boolean&#39; and C# &#39;bool&#39; are equivalent.
+                // Java &#39;Boolean&#39; is the corresponding reference type (nullable).
+                { typeof (bool), &quot;boolean&quot; },
+                { typeof (bool?), &quot;java.lang.Boolean&quot; },
+
+                // Java &#39;char&#39; and C# &#39;char&#39; are equivalent (single 16-bit Unicode character).
+                // Java &#39;Char&#39; is the corresponding reference type (nullable).
+                { typeof (char), &quot;char&quot; },
+                { typeof (char?), &quot;java.lang.Char&quot; },
+
+                // Java &#39;byte&#39; is an 8-bit signed integer (from -128 to +127, inclusive) number.
+                // Java &#39;Byte&#39; is the corresponding reference type (nullable) number.
+                // C# &#39;byte&#39; is an 8-bit unsigned integer (from 0 to +255, inclusive) number.
+                // C# &#39;sbyte&#39; is an 8-bit unsigned integer (from 0 to +255, inclusive) number.
+                { typeof (sbyte), &quot;byte&quot; },
+                { typeof (sbyte?), &quot;java.lang.Byte&quot; },
+                { typeof (byte), &quot;byte&quot; },
+                { typeof (byte?), &quot;java.lang.Byte&quot; },
+
+                // Java &#39;short&#39; is a 16-bit signed integer (from -32,768 to 32,767, inclusive) number.
+                // C# &#39;short&#39; is a 16-bit signed integer (from -32,768 to 32,767, inclusive) number.
+                // C# &#39;ushort&#39; is a 16-bit unsigned integer (from 0 to 65,535, inclusive) number.
+                { typeof (short), &quot;short&quot; },
+                { typeof (short?), &quot;java.lang.Short&quot; },
+                { typeof (ushort), &quot;short&quot; },
+                { typeof (ushort?), &quot;java.lang.Short&quot; },
+
+                // Java &#39;int&#39; is a 32-bit signed integer (from -2^31 to 2^31-1, inclusive) number.
+                // Java &#39;Integer&#39; is the corresponding reference type (nullable) number.
+                // C# &#39;int&#39; is a 32-bit signed integer (from -2^31 to 2^31-1, inclusive) number.
+                // C# &#39;uint&#39; is a 32-bit unsigned integer (from 0 to 2^32-1, inclusive) number.
+                { typeof (int), &quot;int&quot; },
+                { typeof (int?), &quot;java.lang.Integer&quot; },
+                { typeof (uint), &quot;int&quot;},
+                { typeof (uint?), &quot;java.lang.Integer&quot; },
+
+                // Java &#39;long&#39; is a 64-bit signed integer (from -2^63 to 2^63-1, inclusive) number.
+                // Java &#39;Long&#39; is the corresponding reference type (nullable) number.
+                // C# &#39;long&#39; is a 64-bit signed integer (from -2^63 to 2^63-1, inclusive) number.
+                // C# &#39;ulong&#39; is a 64-bit unsigned integer (from 0 to 2^64-1, inclusive) number.
+                { typeof (long), &quot;long&quot; },
+                { typeof (long?), &quot;java.lang.Long&quot; },
+                { typeof (ulong), &quot;java.math.long&quot; },
+                { typeof (ulong?), &quot;java.math.Long&quot; },
+
+                // Java &#39;float&#39; is a single-precision 32-bit IEEE 754 floating point number.
+                // Java &#39;double&#39; is a double-precision 64-bit IEEE 754 floating point number.
+                // C# &#39;float&#39; and &#39;double&#39; are the same
+                // Java &#39;java.lang.Float&#39; and &#39;.Double&#39; are the corresponding reference types (nullable).
+                { typeof (float), &quot;float&quot; },
+                { typeof (float?), &quot;java.lang.Float&quot; },
+                { typeof (double), &quot;double&quot; },
+                { typeof (double?), &quot;java.lang.Double&quot; },
+
+                // Java &#39;string&#39; is equivalent to C# &#39;string&#39;
+                { typeof (string), &quot;java.lang.String&quot; },
+
+                // Java &#39;BigDecimal&#39; is an arbitrary-precision signed decimal number.
+                // Java &#39;BigInteger&#39; is an arbitrary-precision signed integer number.
+                // Both are reference types (nullable).
+                // C# &#39;decimal&#39; is a 128-bits decimal value ... this sort-of works.
+                { typeof (decimal), &quot;java.math.BigDecimal&quot; },
+                { typeof (decimal?), &quot;java.math.BigDecimal&quot; },
+
+                // custom
+                // TODO: should we have mappings for DateTime and TimeSpan?
+                { typeof (HLocalDate), &quot;java.time.LocalDate&quot; }, // SQL DATE
+                { typeof (HLocalTime), &quot;java.time.LocalTime&quot; }, // SQL TIME
+                { typeof (HLocalDateTime), &quot;java.time.LocalDateTime&quot; }, // SQL TIMESTAMP
+                { typeof (HOffsetDateTime), &quot;java.time.OffsetDateTime&quot; }, // SQL TIMESTAMP_WITH_TIME_ZONE
+                { typeof (HBigDecimal), &quot;java.math.BigDecimal&quot; }, // SQL DECIMAL
+            };
+
+        private static readonly Dictionary&lt;Type, string&gt; CSharpToSqlMap = new Dictionary&lt;Type, string&gt;
+        {
+            // TODO: many types are missing here
+            //{ typeof (object), &quot;BIGINT&quot; },
+            { typeof (bool), &quot;BOOLEAN&quot; },
+            { typeof (char), &quot;CHAR&quot; },
+            //{ typeof (object), &quot;CHARACTER&quot; },
+            //{ typeof (object), &quot;DATE&quot; },
+            //{ typeof (object), &quot;DEC&quot; },
+            //{ typeof (object), &quot;DECIMAL&quot; },
+            { typeof (double), &quot;DOUBLE&quot; },
+            { typeof (int), &quot;INT&quot; },
+            //{ typeof (object), &quot;INTEGER&quot; },
+            //{ typeof (object), &quot;NUMERIC&quot; },
+            //{ typeof (object), &quot;OBJECT&quot; },
+            //{ typeof (object), &quot;REAL&quot; },
+            //{ typeof (object), &quot;SMALLINT&quot; },
+            //{ typeof (object), &quot;TIME&quot; },
+            //{ typeof (object), &quot;TIMESTAMP&quot; },
+            //{ typeof (object), &quot;TINYINT&quot; },
+            { typeof (string), &quot;VARCHAR&quot; }
+        };
+
+        /// &lt;summary&gt;
+        /// Maps a C# type to Java.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type to map.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The name of the Java type.&lt;/returns&gt;
+        public static string ToJava&lt;T&gt;() =&gt; ToJava(typeof (T));
+
+        /// &lt;summary&gt;
+        /// Maps a C# type to Java.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type to map.&lt;/param&gt;
+        /// &lt;returns&gt;The name of the Java type.&lt;/returns&gt;
+        public static string ToJava(Type type)
+        {
+            if (CSharpToJavaMap.TryGetValue(type, out var javaType))
+                return javaType;
+
+            throw new NotSupportedException($&quot;Failed to map C# type {type.Name} to a Java type.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Maps a C# type to Sql.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type to map.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The name of the Sql type.&lt;/returns&gt;
+        public static string ToSql&lt;T&gt;() =&gt; ToSql(typeof (T));
+
+        /// &lt;summary&gt;
+        /// Maps a C# type to Sql.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type to map.&lt;/param&gt;
+        /// &lt;returns&gt;The name of the Sql type.&lt;/returns&gt;
+        public static string ToSql(Type type)
+        {
+            if (CSharpToSqlMap.TryGetValue(type, out var sqlType))
+                return sqlType;
+
+            throw new NotSupportedException($&quot;Failed to map C# type {type.Name} to a SQL type.&quot;);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,106,15,1],[108,9,129,11,1],[136,45,136,63,1],[145,13,145,69,1],[146,17,146,33,1],[148,13,148,99,0],[156,44,156,61,0],[165,13,165,67,1],[166,17,166,32,1],[168,13,168,98,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Chain\Links\InstanceOfTypeComparisonLink.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Reflection;
+
+namespace ExpectedObjects.Chain.Links
+{
+    class InstanceOfTypeComparisonLink: IComparisonLink
+    {
+        public LinkComparisonResult Compare(LinkComparisonContext linkComparisonContext, Func&lt;LinkComparisonContext, LinkComparisonResult&gt; next)
+        { 
+            var expected = linkComparisonContext.Expected;
+            var actual = linkComparisonContext.Actual;
+
+            if (!linkComparisonContext.IgnoreTypeInformation &amp;&amp; !expected.GetType().IsInstanceOfType(actual))
+            {
+                return LinkComparisonResult.False;
+            }
+
+            return next(linkComparisonContext);
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[10,13,10,59,1],[11,13,11,55,1],[13,13,13,110,1],[15,17,15,51,0],[18,13,18,48,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Text;
+using Hazelcast.Core;
+
+namespace Hazelcast.NearCaching
+{
+    /// &lt;summary&gt;
+    /// Represents the options for one Near Cache.
+    /// &lt;/summary&gt;
+    public class NearCacheOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public NearCacheOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private NearCacheOptions(NearCacheOptions other)
+        {
+            EvictionPolicy = other.EvictionPolicy;
+            EvictionPercentage = other.EvictionPercentage;
+            InMemoryFormat = other.InMemoryFormat;
+            MaxIdleSeconds = other.MaxIdleSeconds;
+            CleanupPeriodSeconds = other.CleanupPeriodSeconds;
+            MaxSize = other.MaxSize;
+            TimeToLiveSeconds = other.TimeToLiveSeconds;
+            InvalidateOnChange = other.InvalidateOnChange;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the eviction policy.
+        /// &lt;/summary&gt;
+        public EvictionPolicy EvictionPolicy { get; set; } = EvictionPolicy.Lru;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the eviction percentage.
+        /// &lt;/summary&gt;
+        internal int EvictionPercentage { get; set; } = 20;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the in-memory format.
+        /// &lt;/summary&gt;
+        public InMemoryFormat InMemoryFormat { get; set; } = InMemoryFormat.Binary;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the maximum number of seconds an entry can stay in the cache untouched before being evicted.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;zero means forever.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int MaxIdleSeconds { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the period of the cleanup.
+        /// &lt;/summary&gt;
+        internal int CleanupPeriodSeconds { get; set; } = 5;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the maximum size of the cache before entries get evicted.
+        /// &lt;/summary&gt;
+        public int MaxSize { get; set; } = int.MaxValue;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the number of seconds entries stay in the cache before being evicted.
+        /// &lt;/summary&gt;
+        public int TimeToLiveSeconds { get; set; }
+
+        /// &lt;summary&gt;
+        /// Whether to invalidate entries when entries in the backing data structure are changed.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When true, the cache listens for cluster-wide changes and invalidate entries accordingly.&lt;/para&gt;
+        /// &lt;para&gt;Changes to the local Hazelcast instance always invalidate the cache immediately.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool InvalidateOnChange { get; set; } = true;
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            var text = new StringBuilder(&quot;NearCacheConfig{&quot;);
+            return text.ToString();
+        }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal NearCacheOptions Clone() =&gt; new NearCacheOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,34,1],[29,11,29,12,1],[34,9,34,57,1],[36,13,36,51,1],[37,13,37,59,1],[38,13,38,51,1],[39,13,39,51,1],[40,13,40,63,1],[41,13,41,37,1],[42,13,42,57,1],[43,13,43,59,1],[44,9,44,10,1],[49,48,49,52,1],[49,53,49,57,1],[49,62,49,80,1],[49,62,49,80,1],[54,43,54,47,1],[54,48,54,52,1],[54,57,54,59,1],[54,57,54,59,1],[59,48,59,52,1],[59,53,59,57,1],[67,37,67,41,1],[67,42,67,46,1],[72,45,72,49,1],[72,50,72,54,1],[72,59,72,60,1],[72,59,72,60,1],[77,30,77,34,1],[77,35,77,39,1],[77,44,77,56,1],[77,44,77,56,1],[82,40,82,44,1],[82,45,82,49,1],[91,42,91,46,1],[91,47,91,51,1],[91,56,91,60,1],[91,56,91,60,1],[96,13,96,62,0],[97,13,97,36,0],[103,46,103,72,1]]);
+    </script>
+  </body>
+</html>

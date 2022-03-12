@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\CloudAddressProviderSource.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Implements &lt;see cref=&quot;IAddressProviderSource&quot;/&gt; using &lt;see cref=&quot;CloudDiscovery&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class CloudAddressProviderSource : IAddressProviderSource
+    {
+        private readonly CloudDiscovery _cloudDiscovery;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CloudAddressProviderSource&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;networkingOptions&quot;&gt;Networking options.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public CloudAddressProviderSource(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
+        {
+            if (networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
+            if (!networkingOptions.Cloud.Enabled) throw new ArgumentException(&quot;Cloud is not enabled.&quot;, nameof(networkingOptions));
+
+            var cloudOptions = networkingOptions.Cloud;
+            var token = cloudOptions.DiscoveryToken;
+            var urlBase = cloudOptions.Url;
+            var connectionTimeoutMilliseconds = networkingOptions.ConnectionTimeoutMilliseconds;
+            connectionTimeoutMilliseconds = connectionTimeoutMilliseconds == 0 ? int.MaxValue : connectionTimeoutMilliseconds;
+            _cloudDiscovery = new CloudDiscovery(token, connectionTimeoutMilliseconds, urlBase, networkingOptions.DefaultPort, loggerFactory);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public IDictionary&lt;NetworkAddress, NetworkAddress&gt; CreateInternalToPublicMap()
+            =&gt; _cloudDiscovery.Scan();
+
+        /// &lt;inheritdoc /&gt;
+        public bool Maps =&gt; true;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,109,1],[35,13,35,43,1],[35,44,35,103,0],[36,13,36,50,1],[36,51,36,131,0],[38,13,38,56,1],[39,13,39,53,1],[40,13,40,44,1],[41,13,41,97,1],[42,13,42,127,1],[43,13,43,143,1],[44,9,44,10,1],[48,16,48,38,1],[51,29,51,33,1]]);
+    </script>
+  </body>
+</html>

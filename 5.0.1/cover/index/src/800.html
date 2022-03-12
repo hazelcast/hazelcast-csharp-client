@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Reporting\EnumerableExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ExpectedObjects.Reporting
+{
+    static class EnumerableExtensions
+    {
+        public static void ForEach&lt;T&gt;(this IEnumerable&lt;T&gt; enumerable, Action&lt;T, int, IEnumerable&lt;T&gt;&gt; action)
+        {
+            var list = enumerable.ToList();
+
+            for (int i = 0; i &lt; list.Count; i++)
+            {
+                action(list[i], i, list);
+            }
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[11,13,11,44,0],[13,18,13,27,0],[13,29,13,43,0],[13,45,13,48,0],[15,17,15,42,0],[17,9,17,10,0]]);
+    </script>
+  </body>
+</html>

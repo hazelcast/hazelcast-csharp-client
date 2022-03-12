@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTxQueue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal class HTxQueue&lt;TItem&gt; : TransactionalDistributedObjectBase, IHTxQueue&lt;TItem&gt;
+    {
+        public HTxQueue(string name, DistributedObjectFactory factory, Cluster cluster, MemberConnection transactionClientConnection, Guid transactionId, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.Queue, name, factory, cluster, transactionClientConnection, transactionId, serializationService, loggerFactory)
+        { }
+
+        public Task&lt;bool&gt; OfferAsync(TItem item)
+            =&gt; OfferAsync(item, TimeSpan.Zero);
+
+        public async Task&lt;bool&gt; OfferAsync(TItem item, TimeSpan timeToWait)
+        {
+            var itemData = ToSafeData(item);
+
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueueOfferCodec.EncodeRequest(Name, TransactionId, ContextId, itemData, timeToWaitMs);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalQueueOfferCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;TItem&gt; PeekAsync(TimeSpan timeToWait = default)
+        {
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TItem&gt;(response);
+        }
+
+        public async Task&lt;TItem&gt; PollAsync(TimeSpan timeToWait = default)
+        {
+            // codec wants -1 for infinite, 0 for zero
+            var timeToWaitMs = timeToWait.RoundedMilliseconds();
+
+            var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TItem&gt;(response);
+        }
+
+        public async Task&lt;int&gt; GetSizeAsync()
+        {
+            var requestMessage = TransactionalQueueSizeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            return TransactionalQueueSizeCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        public async Task&lt;TItem&gt; TakeAsync()
+        {
+            var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
+            var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
+            var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TItem&gt;(response);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,15,28,144,1],[29,11,29,12,1],[32,16,32,47,1],[36,13,36,45,1],[39,13,39,65,1],[41,13,41,133,1],[42,13,42,132,1],[43,13,43,90,1],[44,9,44,10,1],[49,13,49,65,1],[51,13,51,122,1],[52,13,52,132,1],[53,13,53,97,1],[54,13,54,46,1],[55,9,55,10,1],[60,13,60,65,1],[62,13,62,122,1],[63,13,63,132,1],[64,13,64,97,1],[65,13,65,46,1],[66,9,66,10,1],[70,13,70,108,1],[71,13,71,132,1],[72,13,72,89,1],[73,9,73,10,1],[77,13,77,108,1],[78,13,78,132,1],[79,13,79,97,1],[80,13,80,46,1],[81,9,81,10,1]]);
+    </script>
+  </body>
+</html>

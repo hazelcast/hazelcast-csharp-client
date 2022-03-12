@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Strategies\EqualsOverrideComparisionStrategy.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System.Linq;
+using System.Reflection;
+
+namespace ExpectedObjects.Strategies
+{
+    public class EqualsOverrideComparisonStrategy : IComparisonStrategy
+    {
+        public bool CanCompare(object expected, object actual)
+        {
+            var expectedType = expected.GetType();
+            var actualType = actual.GetType();
+
+            if (expectedType.IsAnonymousType() || actualType.IsAnonymousType())
+                return false;
+
+            var expectedOverriddenEquals = expectedType
+                .GetTypeInfo()
+                .GetDeclaredMethods(&quot;Equals&quot;)
+                .FirstOrDefault(m =&gt; m.IsVirtual &amp;&amp; (m.Attributes &amp; MethodAttributes.VtableLayoutMask) == MethodAttributes.ReuseSlot);
+
+            var actualOverriddenEquals = actualType
+                .GetTypeInfo()
+                .GetDeclaredMethods(&quot;Equals&quot;)
+                .FirstOrDefault(m =&gt; m.IsVirtual &amp;&amp; (m.Attributes &amp; MethodAttributes.VtableLayoutMask) == MethodAttributes.ReuseSlot);
+
+            return expectedOverriddenEquals != null || actualOverriddenEquals != null;
+        }
+
+
+        public bool AreEqual(object expected, object actual, IComparisonContext comparisonContext)
+        {
+            return expected.Equals(actual);
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[10,13,10,51,1],[11,13,11,47,1],[13,13,13,80,1],[14,17,14,30,0],[16,13,19,38,1],[19,38,19,133,0],[19,133,19,135,1],[21,13,24,38,1],[24,38,24,133,0],[24,133,24,135,1],[26,13,26,87,1],[32,13,32,44,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\DataSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    ///     This class is the default serializer for all types that are serialized using Hazelcast
+    ///     internal methods.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    ///     This class is the default serializer for all types that are serialized using Hazelcast
+    ///     internal methods.
+    ///     If the way the DataSerializer serializes values is changed the extract method needs to be changed too!
+    /// &lt;/remarks&gt;
+    internal sealed class DataSerializer : IStreamSerializer&lt;IIdentifiedDataSerializable&gt;
+    {
+        private readonly ILogger _logger;
+
+        private readonly IDictionary&lt;int, IDataSerializableFactory&gt; _factories =
+            new Dictionary&lt;int, IDataSerializableFactory&gt;();
+
+        internal DataSerializer(SerializerHooks hooks, IEnumerable&lt;KeyValuePair&lt;int, IDataSerializableFactory&gt;&gt; dataSerializableFactories, ILoggerFactory loggerFactory )
+        {
+            _logger = loggerFactory.CreateLogger&lt;DataSerializer&gt;();
+
+            RegisterHooks(hooks);
+            if (dataSerializableFactories != null)
+            {
+                foreach (var entry in dataSerializableFactories)
+                {
+                    Register(entry.Key, entry.Value);
+                }
+            }
+        }
+
+        private void RegisterHooks(SerializerHooks hooks)
+        {
+            foreach (var hook in hooks.Hooks)
+                RegisterHook(hook);
+        }
+
+        public int TypeId =&gt; SerializationConstants.ConstantTypeDataSerializable;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public IIdentifiedDataSerializable Read(IObjectDataInput input)
+        {
+            var factoryId = 0;
+            var id = 0;
+            try
+            {
+                var identified = input.ReadBoolean();
+                if (!identified)
+                    throw new SerializationException(&quot;Non-identified DataSerializable is not supported by .NET client. &quot; +
+                                                              &quot;Please use IIdentifiedDataSerializable instead.&quot;);
+
+                factoryId = input.ReadInt();
+                if (!_factories.TryGetValue(factoryId, out var factory))
+                    throw new SerializationException($&quot;No DataSerializerFactory registered with id: {factoryId}.&quot;);
+
+                id = input.ReadInt();
+                var serializable = factory.Create(id);
+                if (serializable == null)
+                    throw new SerializationException($&quot;{factory} (factoryId: {factoryId}) failed to create an instance for id: {id}.&quot;);
+
+                serializable.ReadData(input);
+                return serializable;
+            }
+            catch (IOException) { throw; }
+            catch (SerializationException) { throw; }
+            catch (Exception e)
+            {
+                throw new SerializationException($&quot;Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).&quot;, e);
+            }
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public void Write(IObjectDataOutput output, IIdentifiedDataSerializable obj)
+        {
+            output.WriteBoolean(true); // identified flag
+            output.WriteInt(obj.FactoryId);
+            output.WriteInt(obj.ClassId);
+            obj.WriteData(output);
+        }
+
+        public void Dispose()
+        {
+            _factories.Clear();
+        }
+
+        private void RegisterHook(IDataSerializerHook hook)
+        {
+            Register(hook.FactoryId, hook.CreateFactory());
+        }
+
+        private void Register(int factoryId, IDataSerializableFactory factory)
+        {
+            _factories.TryGetValue(factoryId, out var current);
+            if (current != null)
+            {
+                if (current.Equals(factory))
+                {
+                    _logger.LogWarning(&quot;DataSerializableFactory[&quot; + factoryId + &quot;] is already registered! Skipping &quot; +
+                                   factory);
+                }
+                else
+                {
+                    throw new ArgumentException(&quot;DataSerializableFactory[&quot; + factoryId + &quot;] is already registered! &quot; +
+                                                current + &quot; -&gt; &quot; + factory);
+                }
+            }
+            else
+            {
+                _factories.Add(factoryId, factory);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,9,36,61,1],[38,9,38,170,1],[40,13,40,68,1],[42,13,42,34,1],[43,13,43,51,1],[45,26,45,35,1],[45,36,45,38,1],[45,39,45,64,1],[47,21,47,54,1],[50,9,50,10,1],[54,22,54,30,1],[54,31,54,33,1],[54,34,54,45,1],[55,17,55,36,1],[56,9,56,10,1],[58,30,58,81,1],[63,13,63,31,1],[64,13,64,24,1],[67,17,67,54,1],[68,17,68,33,1],[69,21,70,114,0],[72,17,72,45,1],[73,17,73,73,1],[74,21,74,116,0],[76,17,76,38,1],[77,17,77,55,1],[78,17,78,42,1],[79,21,79,136,0],[81,17,81,46,1],[82,17,82,37,1],[84,13,84,32,0],[84,35,84,41,0],[85,13,85,43,0],[85,46,85,52,0],[86,13,86,32,0],[88,17,88,157,0],[90,9,90,10,1],[95,13,95,39,1],[96,13,96,44,1],[97,13,97,42,1],[98,13,98,35,1],[99,9,99,10,1],[103,13,103,32,1],[104,9,104,10,1],[108,13,108,60,1],[109,9,109,10,1],[113,13,113,64,1],[114,13,114,33,1],[116,17,116,45,0],[118,21,119,45,0],[123,21,124,77,0],[129,17,129,52,1],[131,9,131,10,1]]);
+    </script>
+  </body>
+</html>

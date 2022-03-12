@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\ExpectedObjects\ExpectedObjects\src\ExpectedObjects\Strategies\EnumerableComparisonStrategy.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+
+namespace ExpectedObjects.Strategies
+{
+    public class EnumerableComparisonStrategy : IComparisonStrategy
+    {
+        public bool CanCompare(object expected, object actual)
+        {
+            return expected is IEnumerable &amp;&amp; actual is IEnumerable;
+        }
+
+        public bool AreEqual(object expected, object actual, IComparisonContext comparisonContext)
+        {
+            var areEqual = true;
+            var expectedEnumerable = (IEnumerable) expected;
+            var actualEnumerable = (IEnumerable) actual;
+            var expectedList = expectedEnumerable.Cast&lt;object&gt;().ToList();
+            var actualList = actualEnumerable.Cast&lt;object&gt;().ToList();
+            var expectedDictionary = GetDictionary(expectedList);
+            var actualDictionary = GetDictionary(actualList);
+
+            Action emptyDelegate = () =&gt; { };
+            Action removeDelegate;
+
+            foreach (var expectedEntry in expectedDictionary.ToList())
+            {
+                removeDelegate = emptyDelegate;
+                if (!actualDictionary.Any(actualEntry =&gt;
+                {
+                    if (!comparisonContext.AreEqual(expectedEntry.Value, actualEntry.Value, $&quot;[{expectedEntry.Key}]&quot;)) return false;
+                    removeDelegate = () =&gt; actualDictionary.Remove(actualEntry.Key);
+                    return true;
+                }))
+                    areEqual = comparisonContext.ReportEquality(expectedEntry.Value, new MissingElement(), $&quot;[{expectedEntry.Key}]&quot;) &amp;&amp; areEqual;
+
+                removeDelegate();
+            }
+
+
+            var unexpectedValues = new List&lt;object&gt;();
+            for (var actualIndex = 0; actualIndex &lt; actualList.Count; actualIndex++)
+            {
+                removeDelegate = emptyDelegate;
+
+                if (!expectedDictionary.Any(expectedEntry =&gt;
+                {
+                    var equal = comparisonContext.AreEqual(expectedEntry.Value, actualList[actualIndex], $&quot;[{expectedEntry.Key}]&quot;);
+
+                    if (equal)
+                        removeDelegate = () =&gt; expectedDictionary.Remove(expectedEntry.Key);
+
+                    return equal;
+                }))
+                    unexpectedValues.Add(actualList[actualIndex].ToObjectString());
+
+                removeDelegate();
+            }
+
+            if (unexpectedValues.Any())
+            {
+                var unexpectedElements = string.Join($&quot;,{Environment.NewLine}{Environment.NewLine}&quot;, unexpectedValues.Select(s =&gt; $&quot;{s}&quot;));
+                comparisonContext.Report(
+                    false,
+                    $&quot;The following elements were unexpected:{Environment.NewLine}{Environment.NewLine}{unexpectedElements}&quot;,
+                    null,
+                    null);
+                areEqual = false;
+            }
+            return areEqual;
+        }
+
+        static Dictionary&lt;int, object&gt; GetDictionary(List&lt;object&gt; list)
+        {
+            var dictionary = new Dictionary&lt;int, object&gt;();
+            for (var index = 0; index &lt; list.Count; index++)
+                dictionary.Add(index, list[index]);
+
+            return dictionary;
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[12,13,12,69,1],[17,13,17,33,1],[18,13,18,61,1],[19,13,19,57,1],[20,13,20,75,1],[21,13,21,71,1],[22,13,22,66,1],[23,13,23,62,1],[25,13,25,44,1],[25,44,25,45,0],[25,45,25,46,1],[28,22,28,39,1],[28,40,28,42,1],[28,43,28,70,1],[30,17,30,48,1],[31,17,33,21,1],[33,21,33,119,1],[33,119,33,120,1],[33,120,33,133,0],[33,133,34,21,1],[34,21,34,44,1],[34,44,34,84,1],[34,84,34,85,1],[34,85,35,21,1],[35,21,35,33,1],[35,33,36,20,1],[37,21,37,146,0],[39,17,39,34,1],[43,13,43,55,1],[44,18,44,37,1],[44,39,44,69,1],[44,71,44,84,1],[46,17,46,48,1],[48,17,50,21,1],[50,21,50,132,1],[50,132,52,21,1],[52,21,52,31,1],[52,31,53,25,1],[53,25,53,48,1],[53,48,53,92,1],[53,92,53,93,1],[53,93,55,21,1],[55,21,55,34,1],[55,34,56,20,1],[57,21,57,84,0],[59,17,59,34,1],[62,13,62,40,1],[64,17,64,131,0],[64,131,64,137,0],[64,137,64,140,0],[65,17,69,27,0],[70,17,70,34,0],[72,13,72,29,1],[77,13,77,60,1],[78,18,78,31,1],[78,33,78,51,1],[78,53,78,60,1],[79,17,79,52,1],[81,13,81,31,1]]);
+    </script>
+  </body>
+</html>

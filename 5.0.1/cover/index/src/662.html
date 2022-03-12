@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\HazelcastJsonValue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents a JSON formatted string.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;It is preferred to store HazelcastJsonValue instead of String for JSON formatted strings.
+    /// Users can then run predicates and aggregations and use indexes on the attributes of the underlying
+    /// JSON content.&lt;/para&gt;
+    /// &lt;para&gt;Note that the string is not validated and may be invalid JSON.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public sealed class HazelcastJsonValue
+    {
+        private readonly string _json;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastJsonValue&quot;/&gt; with a string containing JSON.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;json&quot;&gt;The string containing JSON.&lt;/param&gt;
+        public HazelcastJsonValue(string json)
+        {
+            _json = json ?? throw new ArgumentNullException(nameof(json));
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString() =&gt; _json;
+
+        /// &lt;inheritdoc /&gt;
+        public override int GetHashCode() =&gt; _json.GetHashCode(StringComparison.Ordinal);
+
+        /// &lt;inheritdoc /&gt;
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is HazelcastJsonValue other &amp;&amp; Equals(this, other);
+        }
+
+        /// &lt;summary&gt;
+        /// Compares two instances of the &lt;see cref=&quot;HazelcastJsonValue&quot;/&gt; for equality.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;x1&quot;&gt;The first instance.&lt;/param&gt;
+        /// &lt;param name=&quot;x2&quot;&gt;The second instance.&lt;/param&gt;
+        /// &lt;returns&gt;true if the two instances are equal; otherwise false.&lt;/returns&gt;
+        private static bool Equals(HazelcastJsonValue x1, HazelcastJsonValue x2)
+            =&gt; x1._json == x2._json;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,9,36,47,1],[38,13,38,75,1],[39,9,39,10,1],[42,46,42,51,1],[45,46,45,89,1],[50,13,50,44,1],[50,45,50,57,1],[51,13,51,29,1],[51,30,51,43,1],[52,13,52,75,1],[62,16,62,36,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\BackgroundTask.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents a background task.
+    /// &lt;/summary&gt;
+    // we do not dispose tasks, generally, and we *do* dispose the cancellation
+#pragma warning disable CA1001 // Types that own disposable fields should be disposable
+    internal class BackgroundTask
+#pragma warning restore CA1001
+    {
+        private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
+        private readonly object _mutex = new object();
+        private bool _completed;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;BackgroundTask&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The work to execute.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
+        /// throws, then the background task ends and does not restart.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private BackgroundTask(Func&lt;CancellationToken, Task&gt; function)
+        {
+            Task = Task.Run(async () =&gt;
+            {
+                try
+                {
+                    await function(_cancellation.Token).CfAwait();
+                }
+                finally
+                {
+                    lock (_mutex)
+                    {
+                        _completed = true;
+                        _cancellation.Dispose();
+                    }
+                }
+            });
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Gets the executing task.
+        /// &lt;/summary&gt;
+        internal Task Task { get; }
+
+        /// &lt;summary&gt;
+        /// Completes the background task.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
+        public async Task CompleteAsync(bool observeException)
+        {
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Cancels the background task if not completed, and waits for completion.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;observeException&quot;&gt;Whether to observe exceptions (or throw).&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the background task has completed.&lt;/returns&gt;
+        public async Task CompletedOrCancelAsync(bool observeException = false)
+        {
+            lock (_mutex)
+            {
+                if (!_completed) _cancellation.Cancel();
+            }
+
+            if (observeException)
+                await Task.CfAwaitNoThrow();
+            else
+                await Task.CfAwaitCanceled();
+        }
+
+        /// &lt;summary&gt;
+        /// Runs the specified work as a background task.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;function&quot;&gt;The work to execute in a background task.&lt;/param&gt;
+        /// &lt;returns&gt;A background task executing the work.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;function&quot;/&gt; to execute should not throw. If it
+        /// throws, then the background task ends and does not restart.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static BackgroundTask Run(Func&lt;CancellationToken, Task&gt; function)
+            =&gt; new BackgroundTask(function);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,96,1],[30,9,30,55,1],[41,9,41,71,1],[43,13,47,21,1],[47,21,47,67,1],[47,67,48,17,1],[48,17,48,18,1],[48,18,51,21,1],[51,21,51,34,1],[51,34,53,25,1],[53,25,53,43,1],[53,43,54,25,1],[54,25,54,49,1],[54,49,55,21,1],[55,21,55,22,1],[55,22,57,13,1],[57,13,57,14,1],[57,14,57,16,1],[58,9,58,10,1],[63,30,63,34,1],[72,13,72,34,0],[73,17,73,45,0],[75,17,75,38,0],[76,9,76,10,0],[85,13,85,26,1],[87,17,87,33,1],[87,34,87,57,1],[88,13,88,14,1],[90,13,90,34,1],[91,17,91,45,1],[93,17,93,46,1],[94,9,94,10,1],[106,16,106,44,1]]);
+    </script>
+  </body>
+</html>

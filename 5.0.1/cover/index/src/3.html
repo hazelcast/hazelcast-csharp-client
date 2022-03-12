@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Polyfills\KeyValuePairExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+// This code file is heavily inspired from the .NET Runtime code, which
+// is licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
+#if !NETSTANDARD2_1
+
+// ReSharper disable once CheckNamespace
+namespace System.Collections.Generic
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt; struct.
+    /// &lt;/summary&gt;
+    internal static class KeyValuePairExtensions
+    {
+        /// &lt;summary&gt;
+        /// Deconstructs a &lt;see cref=&quot;KeyValuePair{TKey,TValue}&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the values.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;keyValuePair&quot;&gt;The key-value pair.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Built-in deconstruction of key-value pairs is introduced in netstandard2.1.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static void Deconstruct&lt;TKey, TValue&gt;(this KeyValuePair&lt;TKey, TValue&gt; keyValuePair, out TKey key, out TValue value)
+        {
+            key = keyValuePair.Key;
+            value = keyValuePair.Value;
+        }
+    }
+}
+
+#endif
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[43,13,43,36,0],[44,13,44,40,0],[45,9,45,10,0]]);
+    </script>
+  </body>
+</html>

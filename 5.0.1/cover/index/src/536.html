@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\ClientOfflineException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
+
+namespace Hazelcast.Exceptions
+{
+    /// &lt;summary&gt;
+    /// Represents the exception that is thrown when the Hazelcast client is invoked but is not connected.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The &lt;see cref=&quot;State&quot;/&gt; property provides the &lt;see cref=&quot;ClientState&quot;/&gt; of the client
+    /// at the time the exception was thrown. The client may be either not connected at all, in which
+    /// case retrying an operation will not succeed. Or, it may be temporarily disconnected and trying
+    /// to reconnect, in which case retrying an operation may eventually succeed.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    [Serializable]
+    public sealed class ClientOfflineException : HazelcastException
+    {
+        // NOTE: as per CA1032 we implement all constructors, but... keep them private.
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        [ExcludeFromCodeCoverage]
+        private ClientOfflineException()
+            : base(ExceptionMessages.ClientNotConnectedException)
+        {
+            State = 0; // unknown
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The client state.&lt;/param&gt;
+        public ClientOfflineException(ClientState state)
+            : base(ExceptionMessages.ClientNotConnectedException)
+        {
+            State = state;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        [ExcludeFromCodeCoverage]
+        public ClientOfflineException(string message)
+            : base(message)
+        {
+            State = 0; // unknown
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The client state.&lt;/param&gt;
+        public ClientOfflineException(string message, ClientState state)
+            : base(message)
+        {
+            State = state;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null reference if no inner exception is specified.&lt;/param&gt;
+        [ExcludeFromCodeCoverage]
+        public ClientOfflineException(Exception innerException)
+            : base(ExceptionMessages.ClientNotConnectedException, innerException)
+        {
+            State = 0; // unknown
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null reference if no inner exception is specified.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The client state.&lt;/param&gt;
+        public ClientOfflineException(Exception innerException, ClientState state)
+            : base(ExceptionMessages.ClientNotConnectedException, innerException)
+        {
+            State = state;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null reference if no inner exception is specified.&lt;/param&gt;
+        [ExcludeFromCodeCoverage]
+        public ClientOfflineException(string message, Exception innerException)
+            : base(message, innerException)
+        {
+            State = 0; // unknown
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null reference if no inner exception is specified.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The client state.&lt;/param&gt;
+        public ClientOfflineException(string message, Exception innerException, ClientState state)
+            : base(message, innerException)
+        {
+            State = state;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientOfflineException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information about the source or destination.&lt;/param&gt;
+        private ClientOfflineException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            State = (ClientState) info.GetInt32(&quot;state&quot;);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
+            info.AddValue(&quot;state&quot;, State);
+            base.GetObjectData(info, context);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the client state.
+        /// &lt;/summary&gt;
+        public ClientState State { get; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[50,15,50,66,1],[52,13,52,27,1],[53,9,53,10,1],[72,15,72,28,1],[74,13,74,27,1],[75,9,75,10,1],[96,15,96,82,1],[98,13,98,27,1],[99,9,99,10,1],[122,15,122,44,1],[124,13,124,27,1],[125,9,125,10,1],[133,15,133,34,1],[135,13,135,58,1],[136,9,136,10,1],[141,13,141,30,1],[141,31,141,77,0],[143,13,143,43,1],[144,13,144,47,1],[145,9,145,10,1],[150,36,150,40,1]]);
+    </script>
+  </body>
+</html>
