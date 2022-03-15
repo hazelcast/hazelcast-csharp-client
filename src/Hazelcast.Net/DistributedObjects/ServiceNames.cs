@@ -73,5 +73,15 @@ namespace Hazelcast.DistributedObjects
         /// The name of the Flake ID Generator service.
         /// </summary>
         public const string FlakeIdGenerator = "hz:impl:flakeIdGeneratorService";
+
+        /// <summary>
+        /// The name of the CP Session Manager service.
+        /// </summary>
+        public const string CPSession = "hz:core:raftSession";
+
+        /// <summary>
+        /// The name of the Fenced Lock service.
+        /// </summary>
+        public const string FencedLock = "hz:raft:lockService";
     }
 }

@@ -21,6 +21,10 @@ using System.Diagnostics.CodeAnalysis;
 // this file also contains assembly-level suppression directives for the
 // compiler (to deal with some warnings) that are always compiled.
 
+// TODO: remove these suppressions (https://github.com/hazelcast/hazelcast-csharp-client/issues/540)
+[assembly:SuppressMessage("Performance", "CA1848:Use the LoggerMessage delegates", Justification = "<Pending>")]
+[assembly:SuppressMessage("Usage", "CA2254:Template should be a static expression", Justification = "<Pending>")]
+
 #if CODE_ANALYSIS
 
 // scope can be: deep module namespace type method field

@@ -30,8 +30,9 @@ namespace Hazelcast.Core
         /// </summary>
         /// <param name="bytes">The array of bytes.</param>
         /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the array.</param>
+        /// <param name="formatted">Whether to format the output.</param>
         /// <returns>A readable string representation of the array of bytes.</returns>
-        public static string Dump(this byte[] bytes, int length = 0)
+        public static string Dump(this byte[] bytes, int length = 0, bool formatted = true)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (length > bytes.Length)
@@ -40,17 +41,26 @@ namespace Hazelcast.Core
             if (length == 0) length = bytes.Length;
 
             var text = new StringBuilder();
-            var i = 0;
-            while (i < length)
-            {
-                for (var j = 0; j < 8 && i < length; j++, i++)
-                {
-                    if (j > 0) text.Append(' ');
-                    text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", bytes[i]);
-                }
 
-                if (i < length)
-                    text.AppendLine();
+            if (formatted)
+            {
+                var i = 0;
+                while (i < length)
+                {
+                    for (var j = 0; j < 8 && i < length; j++, i++)
+                    {
+                        if (j > 0) text.Append(' ');
+                        text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", bytes[i]);
+                    }
+
+                    if (i < length)
+                        text.AppendLine();
+                }
+            }
+            else
+            {
+                for (var i = 0; i < length; i++)
+                    text.AppendFormat(CultureInfo.InvariantCulture, "{0:x2}", bytes[i]);
             }
 
             return text.ToString();

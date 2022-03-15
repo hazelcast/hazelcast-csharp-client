@@ -52,7 +52,8 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestTimeoutMillisFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestCursorBufferSizeFieldOffset = RequestTimeoutMillisFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestExpectedResultTypeFieldOffset = RequestCursorBufferSizeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int RequestInitialFrameSize = RequestExpectedResultTypeFieldOffset + BytesExtensions.SizeOfByte;
+        private const int RequestSkipUpdateStatisticsFieldOffset = RequestExpectedResultTypeFieldOffset + BytesExtensions.SizeOfByte;
+        private const int RequestInitialFrameSize = RequestSkipUpdateStatisticsFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseUpdateCountFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseUpdateCountFieldOffset + BytesExtensions.SizeOfLong;
 
@@ -97,10 +98,21 @@ namespace Hazelcast.Protocol.Codecs
             /// Query ID.
             ///</summary>
             public Hazelcast.Sql.SqlQueryId QueryId { get; set; }
+
+            /// <summary>
+            /// Flag to skip updating phone home statistics.
+            ///</summary>
+            public bool SkipUpdateStatistics { get; set; }
+
+            /// <summary>
+            /// <c>true</c> if the skipUpdateStatistics is received from the client, <c>false</c> otherwise.
+            /// If this is false, skipUpdateStatistics has the default value for its type.
+            /// </summary>
+            public bool IsSkipUpdateStatisticsExists { get; set; }
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string sql, ICollection<IData> parameters, long timeoutMillis, int cursorBufferSize, string schema, byte expectedResultType, Hazelcast.Sql.SqlQueryId queryId)
+        public static ClientMessage EncodeRequest(string sql, ICollection<IData> parameters, long timeoutMillis, int cursorBufferSize, string schema, byte expectedResultType, Hazelcast.Sql.SqlQueryId queryId, bool skipUpdateStatistics)
         {
             var clientMessage = new ClientMessage
             {
@@ -113,6 +125,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteLongL(RequestTimeoutMillisFieldOffset, timeoutMillis);
             initialFrame.Bytes.WriteIntL(RequestCursorBufferSizeFieldOffset, cursorBufferSize);
             initialFrame.Bytes.WriteByteL(RequestExpectedResultTypeFieldOffset, expectedResultType);
+            initialFrame.Bytes.WriteBoolL(RequestSkipUpdateStatisticsFieldOffset, skipUpdateStatistics);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, sql);
             ListMultiFrameCodec.EncodeContainsNullable(clientMessage, parameters, DataCodec.Encode);
@@ -130,6 +143,12 @@ namespace Hazelcast.Protocol.Codecs
             request.TimeoutMillis = initialFrame.Bytes.ReadLongL(RequestTimeoutMillisFieldOffset);
             request.CursorBufferSize = initialFrame.Bytes.ReadIntL(RequestCursorBufferSizeFieldOffset);
             request.ExpectedResultType = initialFrame.Bytes.ReadByteL(RequestExpectedResultTypeFieldOffset);
+            if (initialFrame.Bytes.Length >= RequestSkipUpdateStatisticsFieldOffset + BytesExtensions.SizeOfBool)
+            {
+                request.SkipUpdateStatistics = initialFrame.Bytes.ReadBoolL(RequestSkipUpdateStatisticsFieldOffset);
+                request.IsSkipUpdateStatisticsExists = true;
+            }
+            else request.IsSkipUpdateStatisticsExists = false;
             request.Sql = StringCodec.Decode(iterator);
             request.Parameters = ListMultiFrameCodec.DecodeContainsNullable(iterator, DataCodec.Decode);
             request.Schema = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);

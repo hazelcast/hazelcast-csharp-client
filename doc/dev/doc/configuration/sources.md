@@ -28,6 +28,7 @@ public class Program
 
 This will determine the application environment (`<env>`) from the `DOTNET_ENVIRONMENT` and `ASPNETCORE_ENVIRONMENT` variables (or, if not specified, default to `Production`), and then gather configuration keys from the following ordered sources:
 
+* Optional default in-memory key/values
 * `appsettings.json` file
 * `appsettings.<env>.json` file
 * Environment variables (using double-underscore separator, e.g. `hazelcast__clientName`)
@@ -74,19 +75,22 @@ $ myApp hazelcast.networking.addresses.0=server:port
 All the .NET Core supported formats are supported (i.e. `/arg value`, `/arg=value`, `--arg value`, etc.). See
 the [documentation](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration/#command-line) for details.
 
-Finally, the method supports direct, in-memory key/values, where values can use either the dot or colon separator:
+The @Hazelcast.HazelcastOptionsBuilder supports direct, in-memory key/values (with keys using either the dot or colon separator). There are two types of direct key/values. *Default* key/values are applied *before* everything else, and therefore can be overriden by, for instance, the command line, whereas *normal* key/values are applied *after* everything else, thus overriding other sources.
 
 ```csharp
-var options = HazelcastOptions.Build(args, new[]
-{
-    new KeyValuePair<string, string>("hazelcast.networking.addresses.0", "server:port"),
-});
+var options = new HazelcastOptionsBuilder
+    .WithDefault("hazelcast.networking.something", "true")
+    .With("hazelcast.networking.addresses.0", "server:port")
+    .Build();
 ```
 
-This is where the fluent @HazelcastOptionsBuilder may be more convenient:
+The @Hazelcast.HazelcastOptionsBuilder also supports providing actions that can modify the options via code. These actions will run before, and after, everything that has been described until now:
 
 ```csharp
-var options = new HazelcastOptionsBuilder.With("hazelcast.networking.addresses.0", "server:port").Build();
+var options = new HazelcastOptionsBuilder
+    .WithDefault(o => o.Networking.Addresses.Clear())
+    .With(o => o.Networking.Addresses.Add("127.0.0.1"))
+    .Build();
 ```
 
 ### Container Environment

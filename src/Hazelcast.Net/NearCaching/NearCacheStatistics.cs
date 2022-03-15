@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using Hazelcast.Core;
 using Hazelcast.Metrics;
@@ -146,24 +147,35 @@ namespace Hazelcast.NearCaching
 
         private class MetricDescriptors
         {
-            public MetricDescriptors(string name)
+            private const string NearCacheAttributePrefix = "nc";
+            private const string NearCacheDescriptorPrefix = "nearcache";
+            private const string NearCacheDescriptorDiscriminator = "name";
+            private readonly string _nearCacheName;
+
+            private MetricDescriptor<T> CreateDescriptor<T>(string metricName, MetricUnit unit)
+                => MetricDescriptor.Create<T>(NearCacheDescriptorPrefix, metricName, unit)
+                    .WithAttributePrefixes(NearCacheAttributePrefix, _nearCacheName) // override as 'nc.<name>.metric=value' for attributes
+                    .WithDiscriminator(NearCacheDescriptorDiscriminator, _nearCacheName);
+
+            public MetricDescriptors(string nearCacheName)
             {
-                var prefix = "nc" + EnumerableOfMetricsExtensions.NameSeparator + name.TrimStart('/');
+                _nearCacheName = nearCacheName.TrimStart('/');
 
-                CreationTime = new MetricDescriptor<long>(prefix, "creationTime");
-                Evictions = new MetricDescriptor<long>(prefix, "evictions");
-                Hits = new MetricDescriptor<long>(prefix, "hits");
-                Misses = new MetricDescriptor<long>(prefix, "misses");
-                EntryCount = new MetricDescriptor<long>(prefix, "ownedEntryCount");
-                Expirations = new MetricDescriptor<long>(prefix, "expirations");
-                Invalidations = new MetricDescriptor<long>(prefix, "invalidations");
-                InvalidationRequests = new MetricDescriptor<long>(prefix, "invalidationRequests");
-                OwnedEntryMemoryCost = new MetricDescriptor<long>(prefix, "ownedEntryMemoryCost");
+                CreationTime = CreateDescriptor<long>("creationTime", MetricUnit.Milliseconds);
+                Evictions = CreateDescriptor<long>("evictions", MetricUnit.Count);
+                Hits = CreateDescriptor<long>("hits", MetricUnit.Count);
+                Misses = CreateDescriptor<long>("misses", MetricUnit.Count);
+                EntryCount = CreateDescriptor<long>("ownedEntryCount", MetricUnit.Count);
+                Expirations = CreateDescriptor<long>("expirations", MetricUnit.Count);
+                Invalidations = CreateDescriptor<long>("invalidations", MetricUnit.Count);
+                InvalidationRequests = CreateDescriptor<long>("invalidationRequests", MetricUnit.Count);
+                OwnedEntryMemoryCost = CreateDescriptor<long>("ownedEntryMemoryCost", MetricUnit.Bytes);
 
-                LastPersistenceDuration = new MetricDescriptor<long>(prefix, "lastPersistenceDuration");
-                LastPersistenceKeyCount = new MetricDescriptor<long>(prefix, "lastPersistenceKeyCount");
-                LastPersistenceTime = new MetricDescriptor<long>(prefix, "lastPersistenceTime");
-                LastPersistenceWrittenBytes = new MetricDescriptor<long>(prefix, "lastPersistenceWrittenBytes");
+                // these exist in Java but not in Python?
+                LastPersistenceDuration = CreateDescriptor<long>("lastPersistenceDuration", MetricUnit.Milliseconds);
+                LastPersistenceKeyCount = CreateDescriptor<long>("lastPersistenceKeyCount", MetricUnit.Count);
+                LastPersistenceTime = CreateDescriptor<long>("lastPersistenceTime", MetricUnit.Milliseconds);
+                LastPersistenceWrittenBytes = CreateDescriptor<long>("lastPersistenceWrittenBytes", MetricUnit.Bytes);
             }
 
             public readonly MetricDescriptor<long> CreationTime;
@@ -197,12 +209,13 @@ namespace Hazelcast.NearCaching
             yield return _metricDescriptors.InvalidationRequests.WithoutValue();
             yield return _metricDescriptors.OwnedEntryMemoryCost.WithoutValue();
 
+            // TODO consider enabling these?
+            /*
             yield return _metricDescriptors.LastPersistenceDuration.WithoutValue();
             yield return _metricDescriptors.LastPersistenceKeyCount.WithoutValue();
             yield return _metricDescriptors.LastPersistenceTime.WithoutValue();
             yield return _metricDescriptors.LastPersistenceWrittenBytes.WithoutValue();
-
-            // TODO: "lastPersistenceFailure") if ... ?
+            */
         }
     }
 }
