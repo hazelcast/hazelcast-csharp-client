@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Security
         }
 
         [Test]
-        public void UserNamePassword1()
+        public void UserNamePassword()
         {
             using var factory = new UsernamePasswordCredentialsFactory("username", "password");
 
@@ -47,25 +47,6 @@ namespace Hazelcast.Tests.Security
             Console.WriteLine(credentials);
 
             var typed = (UsernamePasswordCredentials) credentials;
-            Assert.That(typed.Password, Is.EqualTo("password"));
-        }
-
-        [Test]
-        public void UserNamePassword2()
-        {
-            using var factory = new UsernamePasswordCredentialsFactory(new Dictionary<string, string>
-            {
-                { "username", "username" },
-                { "password", "password" },
-                { "foo", "bar" }
-            });
-
-            var credentials = factory.NewCredentials();
-            Assert.That(credentials, Is.InstanceOf<UsernamePasswordCredentials>());
-            Assert.That(credentials.Name, Is.EqualTo("username"));
-            Console.WriteLine(credentials);
-
-            var typed = (UsernamePasswordCredentials)credentials;
             Assert.That(typed.Password, Is.EqualTo("password"));
         }
 
@@ -111,10 +92,7 @@ namespace Hazelcast.Tests.Security
         [Test]
         public void Token3()
         {
-            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
-            {
-                { "data", "token" }
-            });
+            using var factory = new TokenCredentialsFactory("token", null);
 
             var credentials = factory.NewCredentials();
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
@@ -127,11 +105,7 @@ namespace Hazelcast.Tests.Security
         [Test]
         public void Token4()
         {
-            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
-            {
-                { "data", "token" },
-                { "encoding", "none" }
-            });
+            using var factory = new TokenCredentialsFactory("token", "none");
 
             var credentials = factory.NewCredentials();
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
@@ -144,11 +118,7 @@ namespace Hazelcast.Tests.Security
         [Test]
         public void Token5()
         {
-            using var factory = new TokenCredentialsFactory(new Dictionary<string, string>
-            {
-                { "data", Convert.ToBase64String(Encoding.UTF8.GetBytes("token")) },
-                { "encoding", "BASE64" }
-            });
+            using var factory = new TokenCredentialsFactory(Convert.ToBase64String(Encoding.UTF8.GetBytes("token")), "BASE64");
 
             var credentials = factory.NewCredentials();
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
@@ -163,11 +133,7 @@ namespace Hazelcast.Tests.Security
         {
             Assert.Throws<ConfigurationException>(() =>
             {
-                var factory = new TokenCredentialsFactory(new Dictionary<string, string>
-                {
-                    { "data", "token" },
-                    { "encoding", "invalid" }
-                });
+                var factory = new TokenCredentialsFactory("token", "invalid");
             });
         }
 
