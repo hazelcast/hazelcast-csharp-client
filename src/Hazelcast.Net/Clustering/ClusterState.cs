@@ -75,7 +75,6 @@ namespace Hazelcast.Clustering
             get => _stateChangeQueue.StateChanged;
             set
             {
-                ThrowIfPropertiesAreReadOnly();
                 _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
@@ -101,8 +100,7 @@ namespace Hazelcast.Clustering
         {
             get => _failover.ClusterOptionsChanged;
             set
-            {
-                ThrowClientOfflineException();
+            {                
                 _failover.ClusterOptionsChanged = value;
             }
         }

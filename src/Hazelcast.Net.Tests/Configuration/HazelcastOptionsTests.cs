@@ -559,7 +559,7 @@ namespace Hazelcast.Tests.Configuration
             int hearthBeat = 995;
 
 
-            string jsonConfig = $"{{\"hazelcast\":{{\"failover\":{{\"tryCount\":{tryCount},\"clusters\":[{{\"clusterName\":\"{clusterName}\",\"waitForConnectionMilliseconds\":{waitForConnectionMiliseonds},\"networking\":{{\"addresses\":[\"{address}\"]}},\"loadBalancer\":{{\"typeName\":\"{loadBalancer}\"}},\"authentication\":{{\"token\":{{\"data\":\"{authToken}\",\"encoding\":\"encoding\"}}}},\"heartBeat\":{{\"timeoutMilliseconds\":{hearthBeat}}}}}]}}}}}}";
+            string jsonConfig = $"{{\"hazelcast\":{{\"failover\":{{\"tryCount\":{tryCount},\"clusters\":[{{\"clusterName\":\"{clusterName}\",\"waitForConnectionMilliseconds\":{waitForConnectionMiliseonds},\"networking\":{{\"addresses\":[\"{address}\"]}},\"loadBalancer\":{{\"typeName\":\"{loadBalancer}\"}},\"authentication\":{{\"token\":{{\"data\":\"{authToken}\",\"encoding\": \"none\"}}}},\"heartBeat\":{{\"timeoutMilliseconds\":{hearthBeat}}}}}]}}}}}}";
 
 
             var options = ReadResource(jsonConfig);
@@ -580,8 +580,8 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
 
             Assert.That(cluster.Authentication.CredentialsFactory.Service, Is.Not.Null);
-            Assert.IsInstanceOf<TokenCredentials>(cluster.Authentication.CredentialsFactory.Service);
-            Assert.AreEqual(Encoding.UTF8.GetBytes(authToken), ((ITokenCredentials)cluster.Authentication.CredentialsFactory.Service).GetToken());
+            Assert.IsInstanceOf<TokenCredentials>(cluster.Authentication.CredentialsFactory.Service.NewCredentials());
+            Assert.AreEqual(Encoding.UTF8.GetBytes(authToken), ((ITokenCredentials)cluster.Authentication.CredentialsFactory.Service.NewCredentials()).GetToken());
 
             Assert.That(cluster.Heartbeat, Is.Not.Null);
             Assert.AreEqual(hearthBeat, cluster.Heartbeat.TimeoutMilliseconds);
