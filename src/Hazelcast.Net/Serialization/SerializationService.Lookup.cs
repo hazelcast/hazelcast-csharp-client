@@ -105,9 +105,6 @@ namespace Hazelcast.Serialization
             if (typeof(IPortable).IsAssignableFrom(type))
                 return _portableSerializerAdapter;
 
-            // FIXME - what about this?
-            // TODO: support ICompactable?
-
             return null;
         }
 

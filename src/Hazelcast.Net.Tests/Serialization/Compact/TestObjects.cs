@@ -14,6 +14,7 @@
 
 #nullable enable
 
+using System;
 using System.Threading;
 using Hazelcast.Serialization.Compact;
 
@@ -41,6 +42,43 @@ namespace Hazelcast.Tests.Serialization.Compact
         public int Value { get; set; }
 
         public override string ToString() => $"Thing (Name=\"{Name}\", Value={Value})";
+    }
+
+    internal class DifferentThing : IThing
+    {
+        public const string TypeName = "different_thing";
+
+        public static class FieldNames
+        {
+            public const string Name = "name";
+            public const string Value = "value";
+        }
+
+        public string? Name { get; set; }
+
+        public int Value { get; set; }
+
+        public override string ToString() => $"DifferentThing (Name=\"{Name}\", Value={Value})";
+    }
+
+    internal class ThingWrapper
+    {
+        public IThing? Thing { get; set; }
+
+        public class ThingWrapperSerializer : CompactSerializerBase<ThingWrapper>
+        {
+            public override string TypeName => "thing-wrapper";
+
+            public override ThingWrapper Read(ICompactReader reader)
+            {
+                return new ThingWrapper { Thing = reader.ReadNullableCompact<IThing>("thing") };
+            }
+
+            public override void Write(ICompactWriter writer, ThingWrapper value)
+            {
+                writer.WriteNullableCompact("thing", value.Thing);
+            }
+        }
     }
 
     // FIXME - dead code
@@ -120,10 +158,43 @@ namespace Hazelcast.Tests.Serialization.Compact
         public static int WriteCount => _writeCount;
     }
 
-    internal class ThingCompactSerializer<T> : ICompactSerializer<T>
+    internal class ThingInterfaceCompactSerializer : CompactSerializerBase<IThing>
+    {
+        public override string TypeName => "i-thing";
+
+        public override void Write(ICompactWriter writer, IThing value)
+        {
+            writer.WriteNullableString("_type", value.GetType().Name);
+            writer.WriteNullableString("name", value.Name);
+            writer.WriteInt32("value", value.Value);
+        }
+
+        public override IThing Read(ICompactReader reader)
+        {
+            var t = reader.ReadNullableString("_type");
+            if (t == nameof(Thing))
+                return new Thing { Name = reader.ReadNullableString("name"), Value = reader.ReadInt32("value") };
+            if (t == nameof(DifferentThing))
+                return new DifferentThing { Name = reader.ReadNullableString("name"), Value = reader.ReadInt32("value") };
+            throw new NotSupportedException();
+        }
+    }
+
+    internal class ThingCompactSerializer<T> : CompactSerializerBase<T>
         where T : IThing, new()
     {
-        public T Read(ICompactReader reader)
+        public ThingCompactSerializer() // FIXME required for code-generation but then, typename?!
+            : this("thing")
+        { }
+
+        public ThingCompactSerializer(string typeName)
+        {
+            TypeName = typeName;
+        }
+
+        public override string TypeName { get; }
+
+        public override T Read(ICompactReader reader)
         {
             ThingCompactSerializer.CountRead();
             return new T
@@ -133,7 +204,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             };
         }
 
-        public void Write(ICompactWriter writer, T obj)
+        public override void Write(ICompactWriter writer, T obj)
         {
             ThingCompactSerializer.CountWrite();
             writer.WriteNullableString(Thing.FieldNames.Name, obj.Name);

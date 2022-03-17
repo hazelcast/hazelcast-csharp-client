@@ -26,14 +26,28 @@ namespace Hazelcast.Tests.Serialization.Compact
         private const int MaxValue = 1000;
 
         [Test]
-        public void CanParseAllValues()
+        public void TestsAreSafe()
         {
+            // all defined values must fit within out tests range 0-MaxValue
+            // else our tests are not really testing and we need to fix the range
+
             foreach (var obj in Enum.GetValues(typeof (FieldKind)))
             {
-                var intValue = (int)obj;
+                var intValue = (int) obj;
                 Assert.That(intValue, Is.GreaterThanOrEqualTo(0), "Value is negative, must fix tests.");
-                Assert.That(intValue, Is.LessThanOrEqualTo(MaxValue), "Value exceeds MaxValue, must fix tests.");
-                var value = FieldKindEnum.Parse(intValue); // this should not throw
+                Assert.That(intValue, Is.LessThanOrEqualTo(MaxValue), "Value exceeds tests MaxValue, must fix tests.");
+            }
+        }
+
+        [Test]
+        public void CanParseAllValues()
+        {
+            // parsing all defined values should not throw
+
+            foreach (var obj in Enum.GetValues(typeof (FieldKind)))
+            {
+                var intValue = (int) obj;
+                var value = FieldKindEnum.Parse(intValue);
             }
         }
 
@@ -42,9 +56,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var values = new HashSet<int>(Enum.GetValues(typeof (FieldKind)).Cast<int>());
 
-            // not going to test for *every* integer, so let's assume that we are never going
-            // to have neither negative nor greater-than-max values - should that happen, the
-            // other test will fail and we will deal with it
+            // not going to test for *every* integer, let's stick to the test range
 
             for (var i = 0; i < MaxValue; i++)
             {

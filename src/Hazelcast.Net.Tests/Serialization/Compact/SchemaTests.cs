@@ -81,5 +81,31 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.That(schema1.Id, Is.EqualTo(schema0.Id));
         }
+
+        [Test]
+        public void Equality()
+        {
+            var schema1 = SchemaBuilder.For("thing").Build();
+
+#pragma warning disable CS1718 // Comparison made to same variable - on purpose
+            // ReSharper disable once EqualExpressionComparison - on purpose
+            Assert.That(schema1 == schema1);
+#pragma warning restore CS1718 // Comparison made to same variable
+
+            Assert.That(schema1.Equals(schema1));
+            Assert.That(schema1, Is.EqualTo(schema1));
+
+            var schema2 = SchemaBuilder.For("thing").Build();
+
+            Assert.That(schema1 == schema2);
+            Assert.That(schema1.Equals(schema2));
+            Assert.That(schema1, Is.EqualTo(schema2));
+
+            var schema3 = SchemaBuilder.For("different").Build();
+
+            Assert.That(schema1 != schema3);
+            Assert.That(!schema1.Equals(schema3));
+            Assert.That(schema1, Is.Not.EqualTo(schema3));
+        }
     }
 }

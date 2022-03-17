@@ -15,6 +15,8 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 
 namespace Hazelcast.Serialization.Compact
@@ -24,17 +26,41 @@ namespace Hazelcast.Serialization.Compact
         private readonly Func<ICompactReader, object?> _read;
         private readonly Action<ICompactWriter, object?> _write;
 
-        protected CompactSerializerWrapper(Func<ICompactReader, object?> read, Action<ICompactWriter, object?> write)
+        protected CompactSerializerWrapper(ICompactSerializer wrapped, Func<ICompactReader, object?> read, Action<ICompactWriter, object?> write)
         {
+            Wrapped = wrapped;
             _read = read;
             _write = write;
         }
 
         public static CompactSerializerWrapper Create<T>(ICompactSerializer<T> serializer)
             => new CompactSerializerWrapper(
+                serializer,
                 reader => serializer.Read(reader),
                 (writer, obj) => serializer.Write(writer, (T)obj)
             );
+
+        private static CompactSerializerWrapper CreateWithUniqueName<T>(ICompactSerializer<T> serializer)
+            => Create(serializer);
+
+        private static MethodInfo? _create;
+
+        public static CompactSerializerWrapper Create(ICompactSerializer serializer)
+        {
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            var serializerType = serializer.GetType();
+            if (!serializerType.IsICompactSerializerOfTSerialized(out var serializedType))
+                throw new ArgumentException($"Serializer {serializerType} does not implement ICompactSerializer<TSerialized>.", nameof(serializer));
+
+            if (_create == null)
+            {
+                _create = typeof(CompactSerializerWrapper).GetMethod("CreateWithUniqueName", BindingFlags.NonPublic | BindingFlags.Static);
+                if (_create == null) throw new InvalidOperationException("panic");
+            }
+
+            return (CompactSerializerWrapper) _create.MakeGenericMethod(serializedType).Invoke(null, new[] { serializer });
+        }
 
         // FIXME - dead code
         /*
@@ -59,32 +85,26 @@ namespace Hazelcast.Serialization.Compact
         }
         */
 
-        public static CompactSerializerWrapper Create(Type type, Type? serializedType = null)
+        // FIXME - dead code
+        /*
+        public static CompactSerializerWrapper Create(Type serializerType, Type? serializedType = null)
         {
-            if (type == null) throw new ArgumentNullException(nameof(type));
+            if (serializerType == null) throw new ArgumentNullException(nameof(serializerType));
 
-            var serializer = Activator.CreateInstance(type);
-            var typeOfSerializer = serializer.GetType();
-            var interfaces = typeOfSerializer.GetInterfaces();
+            if (!IsICompactSerializerOfTSerialized(serializerType, out var serializerSerializedType))
+                throw new ArgumentException($"Serializer {serializerType} does not implement ICompactSerializer<TSerialized>.", nameof(serializerType));
 
-            foreach (var i in interfaces)
-            {
-                if (i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICompactSerializer<>))
-                {
-                    // FIXME cache this, etc.
-                    var t = i.GetGenericArguments()[0];
-                    if (t != serializedType)
-                        throw new InvalidOperationException(""); // FIXME - isAssignable + exception
-                    // FIXME method detection horror
-                    var m = typeof(CompactSerializerWrapper).GetMethod("CreateFromSerializer", BindingFlags.NonPublic | BindingFlags.Static);
-                    if (m == null) throw new InvalidOperationException();
-                    var mm = m.MakeGenericMethod(t);
-                    return (CompactSerializerWrapper)mm.Invoke(null, new[] { serializer });
-                }
-            }
+            var serializer = (ICompactSerializer) Activator.CreateInstance(serializerType);
+            if (serializedType != null && serializer.SerializedType != serializedType)
+                throw new ArgumentException($"Serializer is ICompactSerializer of {serializerSerializedType} not {serializer.SerializedType}.", nameof(serializedType));
 
-            throw new ArgumentException();
+            // FIXME method detection horror
+            var m = typeof(CompactSerializerWrapper).GetMethod("CreateFromSerializer", BindingFlags.NonPublic | BindingFlags.Static);
+            if (m == null) throw new InvalidOperationException();
+            var mm = m.MakeGenericMethod(serializedType);
+            return (CompactSerializerWrapper)mm.Invoke(null, new[] { serializer });
         }
+        */
 
         // FIXME - dead code
         /*
@@ -102,6 +122,8 @@ namespace Hazelcast.Serialization.Compact
         // FIXME not needed if we stop being stupid getting methods
         private static CompactSerializerWrapper CreateFromSerializer<T>(ICompactSerializer<T> serializer)
             => Create(serializer);
+
+        public ICompactSerializer Wrapped { get; }
 
         public object? Read(ICompactReader reader) => _read(reader);
 

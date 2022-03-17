@@ -25,7 +25,7 @@ using Hazelcast.Testing;
 using Hazelcast.Tests.Serialization.Compact;
 using NUnit.Framework;
 
-[assembly:CompactSerializer(typeof(Thing), typeof(ThingCompactSerializer<Thing>))]
+[assembly:CompactSerializer(typeof(ThingCompactSerializer<Thing>))]
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
@@ -71,76 +71,76 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build();
 
         // the constant values, ie values that the user specifies
-        // either when registering, when providing a schema, or a serializer
         private const string ConstantTypeName = Thing.TypeName;
         private const string ConstantValueFieldName = Thing.FieldNames.Value;
 
         // the computed values, when not specified by the user
-        // here, we'll generate the schema from the type
         // ReSharper disable once InconsistentNaming
         private readonly string ComputedTypeName = CompactSerializer.GetTypeName(typeof (Thing));
         private const string ComputedValueFieldName = nameof(Thing.Value);
 
         [Test]
-        public async Task RegisterNothing()
+        public async Task AddNothing()
         {
             var options = GetHazelcastOptions();
 
             // writing a totally unregistered type works
             // uses the reflection serializer + derives the schema & type name from the serializer
 
-            // type name a,d field names derived from type = computed
+            // type name and field names derived from type = computed
             await AssertCompact(options, ComputedTypeName, ComputedValueFieldName, true);
         }
 
+        // FIXME - dead code
+        // does not make sense anymore now that the serializer *does* provide the type name
+        /*
         [Test]
-        public async Task RegisterAssembly()
+        public async Task RegisterAssemblySerializers()
         {
             var options = GetHazelcastOptions();
 
             // register the assembly, discover the [assembly:CompactSerializer(...)] attribute
             // above and register the corresponding type and serializer - in real-life, the
             // attribute will be part of generated code.
-            options.Serialization.Compact.Register(GetType().Assembly);
+            options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
 
             // type name derived from type = computed
             // field name obtained from the serializer = constant
             await AssertCompact(options, ComputedTypeName, ConstantValueFieldName, false);
         }
+        */
 
         [Test]
-        public async Task RegisterAssemblyAndType()
+        public async Task AddAssemblySerializers()
         {
             var options = GetHazelcastOptions();
 
-            // register the assembly, discover the [assembly:CompactSerializer(...)] attribute
-            // above and register the corresponding type and serializer - in real-life, the
-            // attribute will be part of generated code. in addition, register the type so we
-            // can specify a typeName + isClusterSchema. both will be merged.
-            options.Serialization.Compact.Register(GetType().Assembly);
-            options.Serialization.Compact.Register<Thing>(ConstantTypeName, false);
+            // add the assembly's serializers, discovered via the [assembly:CompactSerializer(...)]
+            // attribute - in real life, the attribute will be generated along with the code for the
+            // serializer - the type name is provided by the serializer - the schema will derive from
+            // the serializer and will be published when first used
+            options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
 
-            // type name and field name obtained from the registration + serializer = constant
+            // type name and field name obtained from the serializer
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
 
         [Test]
-        public async Task RegisterTypeWithSerializer()
+        public async Task AddSerializer()
         {
             var options = GetHazelcastOptions();
 
-            // register a type + serializer, but not the schema so the type can be a plain POCO,
-            // nor the type name which will derive from the CLR name. we write the serializer
-            // independently, and the schema will be derived from the serializer (which must plainly
-            // write all fields without any clever optimization that would skip fields) and pushed
-            // to the cluster.
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), false);
+            // add a serializer - which provides the type name - the schema will derive from the serializer
+            // and will be published when first used
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>(ConstantTypeName));
 
-            // type name derived from type = computed
-            // field name obtained from the serializer = constant
-            await AssertCompact(options, ComputedTypeName, ConstantValueFieldName, false);
+            // type name and field name obtained from the serializer
+            await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
 
+        // FIXME - dead code
+        // the type name is *always* provided by the serializer itself
+        /*
         [Test]
         public async Task RegisterTypeWithSerializerAndTypeName()
         {
@@ -155,9 +155,10 @@ namespace Hazelcast.Tests.Serialization.Compact
             // type name and field name obtained from the registration + serializer = constant
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
+        */
 
         [Test]
-        public async Task RegisterTypeWithSerializerAndSchema()
+        public async Task AddSerializerAndSchema()
         {
             var options = GetHazelcastOptions();
 
@@ -167,15 +168,19 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build();
 
-            // register a type + schema + serializer
-            // so the type can be a plain POCO, we write the serializer independently, and we
-            // also provide the schema, which will be pushed to the cluster.
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), schema, false);
+            // add a serializer. the type name is provided by the serializer. also add the schema,
+            // which will be matched to the serializer via the type-name. the schema will be published
+            // to the cluster when first used.
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>());
+            options.Serialization.Compact.SetSchema<Thing>(schema, false);
 
             // type name and field name obtained from the registration + schema + serializer = constant
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
 
+        // FIXME - dead code
+        // that does not exist anymore
+        /*
         [Test]
         public async Task RegisterType()
         {
@@ -191,16 +196,15 @@ namespace Hazelcast.Tests.Serialization.Compact
             // (uses reflection and has to derive everything)
             await AssertCompact(options, ComputedTypeName, ComputedValueFieldName, true);
         }
+        */
 
         [Test]
-        public async Task RegisterTypeWithTypeName()
+        public async Task SetTypeName()
         {
             var options = GetHazelcastOptions();
 
-            // register a type + type name, but not the schema so the type can be a plain POCO,
-            // nor the serializer which will therefore be the runtime reflection-based serializer,
-            // and the schema will be derived from the serializer and pushed to the cluster.
-            options.Serialization.Compact.Register<Thing>("thing", false);
+            // set the type name - will use the reflection serializer, but with that type name
+            options.Serialization.Compact.SetTypeName<Thing>("thing");
 
             // type name derived from registration = constant
             // field name derived from type = computed
@@ -209,7 +213,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
 
         [Test]
-        public async Task RegisterTypeWithSchema()
+        public async Task SetSchema()
         {
             var options = GetHazelcastOptions();
 
@@ -221,7 +225,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register a type + schema, but not the serializer which will therefore be the runtime
             // reflection-based serializer.
-            options.Serialization.Compact.Register<Thing>(schema, false);
+            options.Serialization.Compact.SetSchema<Thing>(schema, false);
 
             // type name and field name derived from registration + schema = constant
             // (uses reflection but matching property names to schema field names)
@@ -341,6 +345,77 @@ namespace Hazelcast.Tests.Serialization.Compact
             var max = result.Max(x => x.Item2);
             Assert.That(min, Is.EqualTo(2));
             Assert.That(max, Is.EqualTo(3));
+        }
+
+        // FIXME move somewhere else / try with ToObject first
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(2)]
+        public async Task TypeHierarchySupport(int serializersMode)
+        {
+            var options = GetHazelcastOptions();
+
+            // ThingWrapper has a property which is an IThing
+            // the instance is deserialized using a serializer for the actual type
+            // so, we support an interface (or inheritance) here
+
+            options.Serialization.Compact.AddSerializer(new ThingWrapper.ThingWrapperSerializer());
+
+            switch (serializersMode)
+            {
+                case 0:
+                    // no serializers, will work with reflection serializer
+                    break;
+                case 1:
+                    // explicit, distinct serializers
+                    options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>("thing-a"));
+                    options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<DifferentThing>("thing-b"));
+                    break;
+                case 2:
+                    // explicit, but unique serializer
+                    var serializer = new ThingInterfaceCompactSerializer();
+                    options.Serialization.Compact.AddSerializer<IThing, Thing>(serializer);
+                    options.Serialization.Compact.AddSerializer<IThing, DifferentThing>(serializer);
+                    break;
+                default:
+                    throw new NotSupportedException();
+            }
+
+            IHazelcastClient client = null;
+            IHMap<string, ThingWrapper> map = null;
+
+            await using var dispose = new AsyncDisposable(async () =>
+            {
+                // ReSharper disable AccessToModifiedClosure
+                if (client != null)
+                {
+                    if (map != null)
+                    {
+                        await client.DestroyAsync(map);
+                        await map.DisposeAsync();
+                    }
+                    await client.DisposeAsync();
+                }
+                // ReSharper restore AccessToModifiedClosure
+            });
+
+            client = await HazelcastClientFactory.StartNewClientAsync(options);
+
+            map = await client.GetMapAsync<string, ThingWrapper>("map_" + Guid.NewGuid().ToString("N"));
+
+            var w1 = new ThingWrapper { Thing = new Thing { Name = "name", Value = 42 } };
+            await map.PutAsync("key", w1);
+            var w2 = await map.GetAsync("key");
+            Assert.That(w2.Thing, Is.InstanceOf<Thing>());
+            Assert.That(w2.Thing.Name, Is.EqualTo("name"));
+            Assert.That(w2.Thing.Value, Is.EqualTo(42));
+
+            var w3 = new ThingWrapper { Thing = new DifferentThing { Name = "name2", Value = 66 } };
+            await map.PutAsync("key2", w3);
+            var w4 = await map.GetAsync("key2");
+            Assert.That(w4.Thing, Is.InstanceOf<DifferentThing>());
+            Assert.That(w4.Thing.Name, Is.EqualTo("name2"));
+            Assert.That(w4.Thing.Value, Is.EqualTo(66));
         }
     }
 }

@@ -37,8 +37,24 @@ namespace Hazelcast.Serialization.Compact
         }
 
         /// <summary>
+        /// Specifies that a compact serializer should be generated at compile time for a type.
+        /// </summary>
+        /// <param name="serializedType">The serialized type.</param>
+        /// <param name="typeName">The type-name of the serialized type.</param>
+        public CompactSerializableTypeAttribute(Type serializedType, string typeName)
+        {
+            SerializedType = serializedType ?? throw new ArgumentNullException(nameof(serializedType));
+            TypeName = typeName;
+        }
+
+        /// <summary>
         /// Gets the serialized type.
         /// </summary>
         public Type SerializedType { get; }
+
+        /// <summary>
+        /// Gets the type-name of the serialized type.
+        /// </summary>
+        public string? TypeName { get; }
     }
 }

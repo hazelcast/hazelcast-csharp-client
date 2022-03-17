@@ -16,6 +16,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -29,6 +30,213 @@ namespace Hazelcast.Tests.Serialization.Compact
     // must be automatically fetched, during the first operation which involves
     // ToObject (i.e. we ToObject before ToData and have to fetch the schema from
     // the cluster).
+
+    [TestFixture]
+    public class CompactOptionsTests
+    {
+        [Test]
+        public void SetTypeName_CannotThenSetToAnotherValue()
+        {
+            var options = new CompactOptions();
+
+            // can set it once
+            options.SetTypeName<Thing>("thing");
+
+            // can set it again as long as it's the same value
+            options.SetTypeName(typeof(Thing), "thing");
+            options.SetTypeName<Thing>("thing");
+
+            // setting to a different value throws
+            Assert.Throws<ConfigurationException>(() => options.SetTypeName<Thing>("different"));
+            Assert.Throws<ConfigurationException>(() => options.SetTypeName(typeof(Thing), "different"));
+        }
+
+        [Test]
+        public void SetTypeName_CanThenAddSerializerWithSameTypeAndName()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+            options.AddSerializer(new ThingCompactSerializer<Thing>("thing"));
+        }
+
+        [Test]
+        public void SetTypeName_CannotThenAddSerializerWithDifferentName()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+            Assert.Throws<ConfigurationException>(() => options.AddSerializer(new ThingCompactSerializer<Thing>("different")));
+        }
+
+        [Test]
+        public void SetTypeName_CannotThenAddSerializerWithDifferentType()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+
+            // one type Thing has been linked to type name "thing",
+            // it is not possible to add a serializer for "thing" that does not handle type Thing
+
+            Assert.Throws<ConfigurationException>(() => options.AddSerializer(new ThingCompactSerializer<DifferentThing>("thing")));
+            options.AddSerializer(new ThingCompactSerializer<Thing>("thing"));
+        }
+
+        [Test]
+        public void SetTypeName_MultipleTypesRequireCustomSerializer()
+        {
+            var options = new CompactOptions();
+
+            // it is OK to have two types share the same type name
+            options.SetTypeName<Thing>("thing");
+            options.SetTypeName<DifferentThing>("thing");
+
+            // but then an explicit serializer is required
+            var reflectionSerializer = CompactSerializerWrapper.Create(new ReflectionSerializer());
+            Assert.Throws<ConfigurationException>(() => options.GetRegistrations(reflectionSerializer).ToList());
+
+            // indeed,
+            //
+            // serialization might work:
+            //
+            //   serialize Thing1 = uses reflection serializer, creates a schema for Thing1 with "thing" name
+            //   serialize Thing2 = uses reflection serializer, already has schema with "thing" name
+            //     and the reflection serializer is going to try its best using the schema
+            //
+            // but de-serialization cannot work:
+            //
+            //   deserialize "thing" = we have the schema, and use the reflection serializer
+            //     which cannot determine which type to create since "thing" maps to both Thing1 and Thing2
+            //     but... we cannot determine which type to create since "thing" -> type-1 and type-2
+            //
+            // a custom serializer is required, which should have a way to determine which type to create
+
+            // with an explicit serializer, it works
+
+            var serializer = new ThingInterfaceCompactSerializer();
+
+            // ok, this fails because the serializer has a different type name for Thing
+            Assert.Throws<ConfigurationException>(() => options.AddSerializer<IThing, Thing>(serializer));
+
+            // try again with the correct name
+            options = new CompactOptions();
+            options.SetTypeName<Thing>(serializer.TypeName);
+            options.SetTypeName<DifferentThing>(serializer.TypeName);
+            options.AddSerializer<IThing, Thing>(serializer);
+            
+            var registrations = options.GetRegistrations(reflectionSerializer).ToList();
+            Assert.That(registrations.Count, Is.EqualTo(2));
+            Assert.That(registrations.Any(x => x.SerializedType == typeof(Thing)));
+            Assert.That(registrations.Any(x => x.SerializedType == typeof(DifferentThing)));
+            Assert.That(registrations[0].Serializer.Wrapped == serializer);
+            Assert.That(registrations[1].Serializer.Wrapped == serializer);
+        }
+
+        [Test]
+        public void SetTypeName_CanThenSetSchemaWithSameTypeAndName()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+            options.SetSchema<Thing>(SchemaBuilder.For("thing").Build(), false);
+        }
+
+        [Test]
+        public void SetTypeName_CanThenSetSchemaWithSameName()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+            options.SetSchema(SchemaBuilder.For("thing").Build(), false);
+        }
+
+        [Test]
+        public void SetTypeName_SetSchemaWithSameName_RequiresExplicitSerializer()
+        {
+            var options = new CompactOptions();
+
+            // it is OK to have two types share the same type name
+            options.SetTypeName<Thing>("thing");
+            options.SetSchema<DifferentThing>(SchemaBuilder.For("thing").Build(), false);
+
+            // but then an explicit serializer is required
+            var reflectionSerializer = CompactSerializerWrapper.Create(new ReflectionSerializer());
+            Assert.Throws<ConfigurationException>(() => options.GetRegistrations(reflectionSerializer).ToList());
+
+            // with an explicit serializer, it works
+            var serializer = new ThingInterfaceCompactSerializer();
+
+            options = new CompactOptions();
+            options.SetTypeName<Thing>(serializer.TypeName);
+            options.SetTypeName<DifferentThing>(serializer.TypeName);
+            options.AddSerializer<IThing, Thing>(serializer);
+
+            var registrations = options.GetRegistrations(reflectionSerializer).ToList();
+            Assert.That(registrations.Count, Is.EqualTo(2));
+            Assert.That(registrations.Any(x => x.SerializedType == typeof(Thing)));
+            Assert.That(registrations.Any(x => x.SerializedType == typeof(DifferentThing)));
+            Assert.That(registrations[0].Serializer.Wrapped == serializer);
+            Assert.That(registrations[1].Serializer.Wrapped == serializer);
+        }
+
+        [Test]
+        public void SetTypeName_CannotThenSetSchemaWithDifferentName()
+        {
+            var options = new CompactOptions();
+
+            options.SetTypeName<Thing>("thing");
+            Assert.Throws<ConfigurationException>(() => options.SetSchema<Thing>(SchemaBuilder.For("different").Build(), false));
+        }
+
+        [Test]
+        public void SetSchemaOfT_CannotThenSetToAnotherValue()
+        {
+            var options = new CompactOptions();
+
+            // can set it once
+            options.SetSchema<Thing>(SchemaBuilder.For("thing").Build(), false);
+
+            // can set it again as long as it's the same value
+            options.SetSchema(typeof(Thing), SchemaBuilder.For("thing").Build(), false);
+            options.SetSchema<Thing>(SchemaBuilder.For("thing").Build(), false);
+
+            // setting different schema to same type throws
+            Assert.Throws<ConfigurationException>(() => options.SetSchema<Thing>(SchemaBuilder.For("different").Build(), false));
+            Assert.Throws<ConfigurationException>(() => options.SetSchema(typeof(Thing), SchemaBuilder.For("different").Build(), false));
+
+            // setting different schema to same type name throws
+            Assert.Throws<ConfigurationException>(() => options.SetSchema<Thing>(SchemaBuilder.For("thing").WithField("name", FieldKind.Boolean).Build(), false));
+
+            // it is ok to set same schema for a different type
+            // but, we end up with 2 types pointing to same schema, and that is going to require an explicit serializer
+            // the exception is thrown when getting registrations (see relevant tests)
+            options.SetSchema<DifferentThing>(SchemaBuilder.For("thing").Build(), false);
+
+            // also for type-less
+            options.SetSchema(SchemaBuilder.For("thing").Build(), false);
+            Assert.Throws<ConfigurationException>(() => options.SetSchema(SchemaBuilder.For("thing").WithField("name", FieldKind.Boolean).Build(), false));
+        }
+
+        [Test]
+        public void SetSchema_CannotThenSetToAnotherValue()
+        {
+            var options = new CompactOptions();
+
+            // can set it once
+            options.SetSchema(SchemaBuilder.For("thing").Build(), false);
+
+            // can set it again as long as it's the same schema
+            options.SetSchema(SchemaBuilder.For("thing").Build(), false);
+
+            // setting a different schema for the same typename throws
+            Assert.Throws<ConfigurationException>(() => options.SetSchema(SchemaBuilder.For("thing").WithField("name", FieldKind.Boolean).Build(), false));
+
+            // also for typed
+            Assert.Throws<ConfigurationException>(() => options.SetSchema<Thing>(SchemaBuilder.For("thing").WithField("name", FieldKind.Boolean).Build(), false));
+            options.SetSchema<Thing>(SchemaBuilder.For("thing").Build(), false);
+        }
+    }
 
     [TestFixture]
     public class RemoteToObjectFirstTests : SingleMemberRemoteTestBase
@@ -52,6 +260,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             }
         }
 
+        private static string GetRandomName(string prefix) => $"{prefix}-{Guid.NewGuid().ToString("N")[..7]}";
+
         private async Task<string> SetUpCluster(Schema schema)
         {
             var options = GetHazelcastOptions();
@@ -59,13 +269,13 @@ namespace Hazelcast.Tests.Serialization.Compact
             // note: do *not* provide the ThingCompactSerializer<Thing> so that we force-use the
             // reflection serializer and use the correct property names as per the schema (the
             // ThingCompactSerializer<Thing> having its own opinion on property names).
-            options.Serialization.Compact.Register<Thing>(schema, false);
+            options.Serialization.Compact.SetSchema<Thing>(schema, false);
 
-            // ensure that the cluster knows the 'thing' schema which will be pushed to it
-            // ensure that the cluster has a map with 1 value of type 'thing'
+            // ensure that the cluster has a map with 1 value of type Thing
+            // putting to the map ensures that the schema is published to the cluster
 
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
-            await using var map = await client.GetMapAsync<string, Thing>("map_" + Guid.NewGuid().ToString("N"));
+            await using var map = await client.GetMapAsync<string, Thing>(GetRandomName("map"));
             await map.PutAsync("thing1", new Thing { Name = "thing1", Value = 1 });
 
             return map.Name;
@@ -82,24 +292,63 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build();
 
         [Test]
-        public async Task RegisterNothing()
+        public async Task AddNothing_FetchSchema_ValidTypeName()
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For(CompactSerializer.GetTypeName<Thing>())
-                .WithField(nameof(Thing.Name), FieldKind.NullableString)
-                .WithField(nameof(Thing.Value), FieldKind.Int32)
+                .WithField("name", FieldKind.NullableString)
+                .WithField("value", FieldKind.Int32)
                 .Build());
 
             var options = GetHazelcastOptions();
 
-            // reading a totally unregistered type works, if the schema type name
-            // is the full assembly qualified name of the serialized object type
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which matches the CLR type
+            // and so it works
 
             await AssertCompact(options, mapName, true);
         }
 
         [Test]
-        public async Task RegisterTypeForNokTypeName()
+        public async Task AddNothing_FetchSchema_InvalidTypeName()
+        {
+            var mapName = await SetUpCluster(SchemaBuilder
+                .For("thing")
+                .WithField("name", FieldKind.NullableString)
+                .WithField("value", FieldKind.Int32)
+                .Build());
+
+            var options = GetHazelcastOptions();
+
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which does not match a valid CLR type
+            // and so it fails
+
+            var ex = await AssertEx.ThrowsAsync<SerializationException>(async () => await AssertCompact(options, mapName, true));
+            Assert.That(ex.Message, Does.StartWith("Could not find a compact serializer for schema"));
+        }
+
+        [Test]
+        public async Task AddTypeName_FetchSchema_MatchingName()
+        {
+            var mapName = await SetUpCluster(SchemaBuilder
+                .For("thing")
+                .WithField("name", FieldKind.NullableString)
+                .WithField("value", FieldKind.Int32)
+                .Build());
+
+            var options = GetHazelcastOptions();
+            options.Serialization.Compact.SetTypeName<Thing>("thing");
+
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which we have declared
+            // and so it works
+
+            await AssertCompact(options, mapName, true);
+        }
+
+        [Test]
+        public async Task SetSchema_InvalidTypeName()
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
@@ -108,37 +357,39 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build());
 
             var options = GetHazelcastOptions();
+            options.Serialization.Compact.SetSchema<Thing>(SchemaBuilder
+                .For("different")
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
+                .WithField(Thing.FieldNames.Value, FieldKind.Int32)
+                .Build(), true);
 
-            // register without a schema, the schema will be fetched from the cluster,
-            // and the type name will be provided by the schema
-            options.Serialization.Compact.Register<Thing>(true);
-
-            // this is bound to fail. we pushed a schema with type name 'thing' but did not specify
-            // any type name on the client, so on the client the only thing that is available is the
-            // computed type name, i.e. typeof(Thing).AssemblyQualifiedName -> cannot match.
-            //
-            // see RegisterTypeWithSerializerForOkTypeName for how this can work if the schema which
-            // is pushed uses that assembly qualified name instead. see RegisterTypeWithTypeName for
-            // how this can work by providing the client-side correct type name.
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which does not match anything
+            // and so it fails
 
             var ex = await AssertEx.ThrowsAsync<SerializationException>(async () => await AssertCompact(options, mapName, true));
             Assert.That(ex.Message, Does.StartWith("Could not find a compact serializer for schema"));
         }
 
         [Test]
-        public async Task RegisterTypeForOkTypeName()
+        public async Task SetSchema_ValidTypeName()
         {
             var mapName = await SetUpCluster(SchemaBuilder
-                .For(CompactSerializer.GetTypeName<Thing>())
+                .For("thing")
                 .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
                 .WithField(Thing.FieldNames.Value, FieldKind.Int32)
                 .Build());
 
             var options = GetHazelcastOptions();
+            options.Serialization.Compact.SetSchema<Thing>(SchemaBuilder
+                .For("thing")
+                .WithField(Thing.FieldNames.Name, FieldKind.NullableString)
+                .WithField(Thing.FieldNames.Value, FieldKind.Int32)
+                .Build(), true);
 
-            // register without a schema, the schema will be fetched from the cluster,
-            // and the type name will be provided by the schema
-            options.Serialization.Compact.Register<Thing>(true);
+            // no need to fetch schema from cluster
+            // matches existing schema and type
+            // and so it works
 
             await AssertCompact(options, mapName, true);
         }
@@ -156,7 +407,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register without a schema, the schema will be fetched from the cluster
             // see the ...NokTypeName tests to understand what happens when the type name does not match
-            options.Serialization.Compact.Register<Thing>("thing", true);
+            options.Serialization.Compact.SetTypeName<Thing>("thing");
+            options.Serialization.Compact.SetSchema<Thing>(true);
 
             await AssertCompact(options, mapName, true);
         }
@@ -176,13 +428,13 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register without a schema, the schema will be fetched from the cluster
             // FIXME - what-if we provided a wrong schema?
-            options.Serialization.Compact.Register<Thing>(schema, true);
+            options.Serialization.Compact.SetSchema<Thing>(schema, true);
 
             await AssertCompact(options, mapName, true);
         }
 
         [Test]
-        public async Task RegisterTypeWithSerializerForNokTypeName()
+        public async Task AddSerializer_InvalidTypeName()
         {
             var mapName = await SetUpCluster(SchemaBuilder
                 .For("thing")
@@ -191,50 +443,41 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build());
 
             var options = GetHazelcastOptions();
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>("different"));
 
-            // register without a schema, the schema will be fetched from the cluster,
-            // and the type name will be provided by the schema
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), true);
-
-            // FIXME FAILS?? EXPLAIN??
-            //
-            // SerializationException: Could not find a compact serializer for schema 5883859746603219204.
-            // on the first get
-            // initialize schemas:
-            //   new 'thing' schema during setup, which will be pushed to the cluster
-            //   new 'thing' schema from ??? FIXME why two schemas ?!
-            //   new 'thing' schema from CompactSerializer.FetchSchema because the schema id is unknown
-
-            // this is bound to fail. we pushed a schema with type name 'thing' but did not specify
-            // any type name on the client, so on the client the only thing that is available is the
-            // computed type name, i.e. typeof(Thing).AssemblyQualifiedName -> cannot match.
-            //
-            // see RegisterTypeWithSerializerForOkTypeName for how this can work if the schema which
-            // is pushed uses that assembly qualified name instead. see RegisterTypeWithTypeName for
-            // how this can work by providing the client-side correct type name.
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which does not match the serializer
+            // and so it fails
 
             var ex = await AssertEx.ThrowsAsync<SerializationException>(async () => await AssertCompact(options, mapName, false));
             Assert.That(ex.Message, Does.StartWith("Could not find a compact serializer for schema"));
         }
 
         [Test]
-        public async Task RegisterTypeWithSerializerForOkTypeName()
+        public async Task AddSerializer_ValidTypeName()
         {
+            // anything can work here since we are providing both the schema and the serializer
+            var typeName = GetRandomName("type");
+
             var mapName = await SetUpCluster(SchemaBuilder
-                .For(CompactSerializer.GetTypeName<Thing>())
+                .For(typeName)
                 .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build());
 
             var options = GetHazelcastOptions();
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>(typeName));
 
-            // register without a schema, the schema will be fetched from the cluster,
-            // and the type name will be provided by the schema
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), true);
+            // schema is fetched from the cluster
+            // only thing we have is its type name, which matches the serializer
+            // and so it works
 
             await AssertCompact(options, mapName, false);
         }
 
+        // FIXME - dead code
+        // that test does not make sense anymore
+        /*
         [Test]
         public async Task RegisterTypeWithSerializerAndTypeName()
         {
@@ -252,6 +495,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             await AssertCompact(options, mapName, false);
         }
+        */
 
         [Test]
         public async Task RegisterTypeWithSerializerAndSchema()
@@ -268,7 +512,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register without a schema, the schema will be fetched from the cluster
             // FIXME - what-if we provided a wrong schema?
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), schema, true);
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>());
+            options.Serialization.Compact.SetSchema<Thing>(schema, true);
 
             await AssertCompact(options, mapName, false);
         }
@@ -339,7 +584,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             // get options for the client
             // can provide the ThingCompactSerializer<Thing>, names matches the schema above
             var options = GetHazelcastOptions();
-            options.Serialization.Compact.Register<Thing>(new ThingCompactSerializer<Thing>(), schema, false);
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>());
+            options.Serialization.Compact.SetSchema<Thing>(schema, false);
 
             // ensure that the cluster knows the 'thing' schema which will be pushed to it
             // ensure that the cluster has a map with 1 value of type 'thing'
@@ -359,7 +605,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             // get options for the client
             // register without a schema, the schema will have to be fetched from the cluster
             options = GetHazelcastOptions();
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), Thing.TypeName, true);
+            options.Serialization.Compact.AddSerializer(new ThingCompactSerializer<Thing>());
+            options.Serialization.Compact.SetSchema<Thing>(true);
 
             // we need a new, fresh client, which does not know about the schema already
             client = await HazelcastClientFactory.StartNewClientAsync(options);

@@ -26,7 +26,7 @@ namespace Hazelcast.Serialization.Compact
     /// <summary>
     /// Represents a compact serialization schema.
     /// </summary>
-    public class Schema : IIdentifiedDataSerializable
+    public class Schema : IIdentifiedDataSerializable, IEquatable<Schema>
     {
         /// <inheritdoc />
         public int FactoryId => CompactSerializationHook.Constants.FactoryId;
@@ -211,5 +211,28 @@ namespace Hazelcast.Serialization.Compact
 
             Initialize(typeName, typeFields);
         }
+
+        /// <inheritdoc />
+        public bool Equals(Schema? other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Id == other.Id;
+        }
+
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+            => obj is Schema other && Equals(other);
+
+        /// <inheritdoc />
+        // ReSharper disable once NonReadonlyMemberInGetHashCode - it is in fact readonly
+        public override int GetHashCode() => Id.GetHashCode();
+
+        public static bool operator ==(Schema? left, Schema? right)
+            // ReSharper disable once MergeConditionalExpression - no, cleaner that way
+            => left is null ? right is null : left.Equals(right);
+
+        public static bool operator !=(Schema? left, Schema? right)
+            => !(left == right);
     }
 }

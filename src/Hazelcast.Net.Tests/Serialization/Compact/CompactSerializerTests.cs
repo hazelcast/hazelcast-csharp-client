@@ -52,7 +52,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // register a schema and a serializer for the Thing class - at that point, serializers
             // and schemas must be registered explicitly via code, we don't support anything else.
-            options.Compact.Register(new ThingCompactSerializer(), thingSchema, false);
+            options.Compact.AddSerializer(new ThingCompactSerializer());
+            options.Compact.SetSchema<Thing>(thingSchema, false);
 
             // create the entire serialization service
             var messaging = Mock.Of<IClusterMessaging>();
@@ -113,7 +114,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build();
 
             var thingNestSchema = SchemaBuilder
-                .For("thingNest")
+                .For("thing-nest")
                 .WithField("name", FieldKind.NullableString)
                 .WithField("thing", FieldKind.NullableCompact)
                 .Build();
@@ -124,8 +125,10 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Compact = { Enabled = true }
             };
 
-            options.Compact.Register(new ThingCompactSerializer(), thingSchema, false);
-            options.Compact.Register(new ThingNestCompactSerializer(), thingNestSchema, false);
+            options.Compact.AddSerializer(new ThingCompactSerializer());
+            options.Compact.SetSchema<Thing>(thingSchema, false);
+            options.Compact.AddSerializer(new ThingNestCompactSerializer());
+            options.Compact.SetSchema<ThingNest>(thingNestSchema, false);
 
             var messaging = Mock.Of<IClusterMessaging>();
             var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
@@ -166,9 +169,11 @@ namespace Hazelcast.Tests.Serialization.Compact
             public int Value { get; set; }
         }
 
-        private class ThingCompactSerializer : ICompactSerializer<Thing>
+        private class ThingCompactSerializer : CompactSerializerBase<Thing>
         {
-            public Thing Read(ICompactReader reader)
+            public override string TypeName => "thing";
+
+            public override Thing Read(ICompactReader reader)
             {
                 return new Thing
                 {
@@ -177,7 +182,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 };
             }
 
-            public void Write(ICompactWriter writer, Thing obj)
+            public override void Write(ICompactWriter writer, Thing obj)
             {
                 writer.WriteNullableString("name", obj.Name);
                 writer.WriteInt32("value", obj.Value);
@@ -191,9 +196,11 @@ namespace Hazelcast.Tests.Serialization.Compact
             public Thing Thing { get; set; }
         }
 
-        private class ThingNestCompactSerializer : ICompactSerializer<ThingNest>
+        private class ThingNestCompactSerializer : CompactSerializerBase<ThingNest>
         {
-            public ThingNest Read(ICompactReader reader)
+            public override string TypeName => "thing-nest";
+
+            public override ThingNest Read(ICompactReader reader)
             {
                 return new ThingNest
                 {
@@ -202,7 +209,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 };
             }
 
-            public void Write(ICompactWriter writer, ThingNest obj)
+            public override void Write(ICompactWriter writer, ThingNest obj)
             {
                 writer.WriteNullableString("name", obj.Name);
                 writer.WriteNullableCompact("thing", obj.Thing);

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
@@ -31,21 +32,24 @@ namespace Hazelcast.Serialization.Compact
     /// </remarks>
     public sealed class CompactOptions
     {
-        // note: these are very temporary for the compact serialization preview
-        // and compact options are expected to be refactored at some point in time.
-        private readonly HashSet<string> _names;
-        private readonly HashSet<Type> _types;
-
-        private HashSet<Assembly>? _assemblies;
+        // ReSharper disable InconsistentNaming
+        private readonly Dictionary<Type, string> _serializedType_typeName;
+        private readonly Dictionary<string, Schema> _typeName_schema;
+        private readonly Dictionary<string, ICompactSerializer> _typeName_serializer;
+        private readonly Dictionary<Type, bool> _serializedType_isClusterSchema;
+        private readonly Dictionary<string, bool> _typeName_isClusterSchema;
+        // ReSharper restore InconsistentNaming
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompactOptions"/> class.
         /// </summary>
         public CompactOptions()
         {
-            _names = new HashSet<string>();
-            _types = new HashSet<Type>();
-            Registrations = new List<CompactRegistration>();
+            _serializedType_typeName = new Dictionary<Type, string>();
+            _typeName_schema = new Dictionary<string, Schema>();
+            _typeName_serializer = new Dictionary<string, ICompactSerializer>();
+            _serializedType_isClusterSchema = new Dictionary<Type, bool>();
+            _typeName_isClusterSchema = new Dictionary<string, bool>();
         }
 
         /// <summary>
@@ -54,10 +58,11 @@ namespace Hazelcast.Serialization.Compact
         private CompactOptions(CompactOptions other)
         {
             Enabled = other.Enabled;
-            _names = new HashSet<string>(other._names);
-            _types = new HashSet<Type>(other._types);
-            _assemblies = other._assemblies == null ? null : new HashSet<Assembly>(other._assemblies);
-            Registrations = new List<CompactRegistration>(other.Registrations);
+            _serializedType_typeName = new Dictionary<Type, string>(other._serializedType_typeName);
+            _typeName_schema = new Dictionary<string, Schema>(other._typeName_schema);
+            _typeName_serializer = new Dictionary<string, ICompactSerializer>(other._typeName_serializer);
+            _serializedType_isClusterSchema = new Dictionary<Type, bool>(other._serializedType_isClusterSchema);
+            _typeName_isClusterSchema = new Dictionary<string, bool>(other._typeName_isClusterSchema);
             ReflectionSerializer = other.ReflectionSerializer;
         }
 
@@ -69,208 +74,327 @@ namespace Hazelcast.Serialization.Compact
         /// </remarks>
         public bool Enabled { get; set; }
 
-        // FIXME - consider non-generic overloads
+        private void EnsureUniqueTypeNamePerSerializedType(Type serializedType, string typeName)
+        {
+            // if the serialized type already exists, it must be with the same type name
+            if (_serializedType_typeName.TryGetValue(serializedType, out var existing) && existing != typeName)
+                throw new ConfigurationException($"A different type name for serialized type {serializedType} has already been provided.");
+        }
+
+        private void EnsureUniqueSchemaPerTypeName(Schema schema)
+        {
+            // at runtime we may end up with several schemas (received from the cluster) for the same type name
+            // but NOT at configuration time, we need one unique schema to use when serializing
+            if (_typeName_schema.TryGetValue(schema.TypeName, out var existing) && existing != schema)
+                throw new ConfigurationException($"A different schema for type name {schema.TypeName} has already been provided.");
+        }
+
+        private void EnsureUniqueSerializerPerTypeName(ICompactSerializer serializer)
+        {
+            // if a serializer already exists for the type name, it must be the same
+            if (_typeName_serializer.TryGetValue(serializer.TypeName, out var existing) && existing != serializer)
+                throw new ConfigurationException($"A different serializer for type name {serializer.TypeName} has already been provided.");
+        }
+
+        private void EnsureTypeNameSerializerCanSerializeType(string typeName, Type serializedType)
+        {
+            // if a serializer exists for the type name, it must be able to serialize the type
+            if (_typeName_serializer.TryGetValue(typeName, out var serializer) && !serializer.SerializedType.IsAssignableFrom(serializedType))
+                throw new ConfigurationException($"A serializer has been provided for type name {typeName} which serializes {serializer.SerializedType}, and cannot serializer {serializedType}.");
+        }
+
+        private void EnsureSerializerCanSerializeTypes(ICompactSerializer serializer)
+        {
+            // if serialized types have been assigned the serializer type name
+            // then the serializer must be able to serialize them
+            foreach (var (st, tn) in _serializedType_typeName)
+            {
+                if (tn != serializer.TypeName) continue;
+                if (!serializer.SerializedType.IsAssignableFrom(st))
+                    throw new ConfigurationException($"Serialized type {st} has been assigned the serializer type name ({tn}) but the serializer cannot serialize that type.");
+            }
+        }
 
         /// <summary>
-        /// Registers a type for compact serialization.
+        /// Adds a serializer.
         /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
+        /// <typeparam name="TSerialized">The serialized type.</typeparam>
         /// <param name="serializer">The compact serializer.</param>
-        /// <param name="schema">The schema corresponding to the type.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(ICompactSerializer<TSerialized> serializer, Schema schema, bool isClusterSchema)
+        /// <exception cref="ArgumentNullException">The <paramref name="serializer"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">The <paramref name="serializer"/> <see cref="ICompactSerializer.SerializedType"/> property
+        /// value is different from <typeparamref name="TSerialized"/>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void AddSerializer<TSerialized>(ICompactSerializer<TSerialized> serializer)
+        {
+            AddSerializer(typeof(TSerialized), serializer);
+        }
+
+        /// <summary>
+        /// Adds a serializer.
+        /// </summary>
+        /// <param name="serializer">The serialized type.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="serializer"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">The <paramref name="serializer"/> does not implement <see cref="ICompactSerializer{TSerialized}"/>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void AddSerializer(ICompactSerializer serializer)
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-            if (schema == null) throw new ArgumentNullException(nameof(schema));
 
-            // 1 unique registration per type-name
-            if (_names.Contains(schema.TypeName))
-                throw new ConfigurationException($"A type with type name {schema.TypeName} has already been registered.");
-            _names.Add(schema.TypeName);
+            // validate serializer
+            var serializerType = serializer.GetType();
+            if (!serializerType.IsICompactSerializerOfTSerialized(out var serializedType))
+                throw new ArgumentException("Serializer does not implement ICompactSerializer<TSerialized>.");
 
-            // 1 unique registration per type
-            if (_types.Contains(typeof(TSerialized)))
-                throw new ConfigurationException($"A serializer for type {typeof(TSerialized)} has already been registered.");
-            _types.Add(typeof(TSerialized));
+            AddSerializer(serializedType, serializer);
+        }
 
-            Registrations.Add(new CompactRegistration(schema, typeof (TSerialized), CompactSerializerWrapper.Create(serializer), isClusterSchema));
+        private void AddSerializer(Type serializedType, ICompactSerializer serializer)
+        {
+            if (serializedType == null) throw new ArgumentNullException(nameof(serializedType));
+            if (serializer == null) throw new ArgumentNullException(nameof(serializer));
+
+            // validate serializer
+            if (serializer.SerializedType != serializedType)
+                throw new ArgumentException($"Invalid serializer. Serializer is ICompactSerializer of {serializedType} but its SerializedType property is {serializer.SerializedType}.");
+
+            EnsureUniqueTypeNamePerSerializedType(serializedType, serializer.TypeName);
+            EnsureUniqueSerializerPerTypeName(serializer);
+            EnsureSerializerCanSerializeTypes(serializer);
+
+            _serializedType_typeName[serializedType] = serializer.TypeName;
+            _typeName_serializer[serializer.TypeName] = serializer;
         }
 
         /// <summary>
-        /// Registers a type for compact serialization.
+        /// Adds a serializer.
         /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
-        /// <param name="serializer">The compact serializer.</param>
-        /// <param name="typeName">The schema type name.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>The type schema will be generated at runtime from the provided serializer. Note that the serializer plainly write
-        /// all fields without omitting any, i.e. not skip some fields for optimization purposes, as this would result in a
-        /// corrupt schema.</para>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(ICompactSerializer<TSerialized> serializer, string typeName, bool isClusterSchema)
+        /// <typeparam name="TSerializerSerialized">The type serialized by the serializer.</typeparam>
+        /// <typeparam name="TSerialized">The type for which the serializer is added.</typeparam>
+        /// <param name="serializer">The serializer.</param>
+        /// <exception cref="ArgumentNullException">The <paramref name="serializer"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">The <paramref name="serializer"/>  <see cref="ICompactSerializer.SerializedType"/> property
+        /// value is different from <typeparamref name="TSerializerSerialized"/>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void AddSerializer<TSerializerSerialized, TSerialized>(ICompactSerializer<TSerializerSerialized> serializer)
+            where TSerialized : TSerializerSerialized
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
-            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
 
-            // 1 unique registration per type-name
-            if (_names.Contains(typeName))
-                throw new ConfigurationException($"A type with type name {typeName} has already been registered.");
+            var serializerSerializedType = typeof (TSerializerSerialized);
+            var serializedType = typeof (TSerialized);
 
-            // 1 unique registration per type
-            if (_types.Contains(typeof(TSerialized)))
-                throw new ConfigurationException($"A serializer for type {typeof(TSerialized)} has already been registered.");
+            // validate serializer
+            if (serializer.SerializedType != serializerSerializedType)
+                throw new ArgumentException($"Invalid serializer. Serializer is ICompactSerializer of {serializerSerializedType} but its SerializedType property is {serializer.SerializedType}.");
 
-            _names.Add(typeName);
-            _types.Add(typeof(TSerialized));
+            EnsureUniqueTypeNamePerSerializedType(serializedType, serializer.TypeName);
+            EnsureUniqueSerializerPerTypeName(serializer);
+            EnsureSerializerCanSerializeTypes(serializer);
 
-            Registrations.Add(new CompactRegistration(typeName, typeof(TSerialized), CompactSerializerWrapper.Create(serializer), isClusterSchema));
+            _serializedType_typeName[serializedType] = serializer.TypeName;
+            _typeName_serializer[serializer.TypeName] = serializer;
         }
 
         /// <summary>
-        /// Registers a type for compact serialization.
+        /// Adds serializers contained in an assembly.
         /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
-        /// <param name="serializer">The compact serializer.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>The type name will be the fully-qualified name of the .NET type.</para>
-        /// <para>The type schema will be generated at runtime from the provided serializer. Note that the serializer plainly write
-        /// all fields without omitting any, i.e. not skip some fields for optimization purposes, as this would result in a
-        /// corrupt schema.</para>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(ICompactSerializer<TSerialized> serializer, bool isClusterSchema)
-            => Register(serializer, CompactSerializer.GetTypeName<TSerialized>(), isClusterSchema);
-
-        /// <summary>
-        /// Registers a type for compact serialization.
-        /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
-        /// <param name="schema">The schema corresponding to the type.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>When a type is registered for compact serialization without an explicit serializer, a runtime reflection-
-        /// based serializer will be used. It will handle all properties which expose both a public setter and a
-        /// public getter. Unless the type has been specified as compactable with the <see cref="CompactSerializableAttribute"/>
-        /// or the <see cref="CompactSerializableTypeAttribute"/> and a corresponding serializer has been generated at
-        /// compile time.</para>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(Schema schema, bool isClusterSchema)
-        {
-            if (schema == null) throw new ArgumentNullException(nameof(schema));
-
-            // 1 unique registration per type-name
-            if (_names.Contains(schema.TypeName))
-                throw new ConfigurationException($"A type with type name {schema.TypeName} has already been registered.");
-            _names.Add(schema.TypeName);
-
-            // 1 unique registration per type
-            if (_types.Contains(typeof(TSerialized)))
-                throw new ConfigurationException($"A serializer for type {typeof(TSerialized)} has already been registered.");
-            _types.Add(typeof(TSerialized));
-
-            Registrations.Add(new CompactRegistration(schema, typeof(TSerialized), isClusterSchema));
-        }
-
-        /// <summary>
-        /// Registers a type for compact serialization.
-        /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
-        /// <param name="typeName">The schema type name.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>The type schema will be generated at runtime from the provided serializer. Note that the serializer plainly write
-        /// all fields without omitting any, i.e. not skip some fields for optimization purposes, as this would result in a
-        /// corrupt schema.</para>
-        /// <para>When a type is registered for compact serialization without an explicit serializer, a runtime reflection-
-        /// based serializer will be used. It will handle all properties which expose both a public setter and a
-        /// public getter. Unless the type has been specified as compactable with the <see cref="CompactSerializableAttribute"/>
-        /// or the <see cref="CompactSerializableTypeAttribute"/> and a corresponding serializer has been generated at
-        /// compile time.</para>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(string typeName, bool isClusterSchema)
-        {
-            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
-
-            // 1 unique registration per type-name
-            if (_names.Contains(typeName))
-                throw new ConfigurationException($"A type with type name {typeName} has already been registered.");
-
-            // 1 unique registration per type
-            if (_types.Contains(typeof(TSerialized)))
-                throw new ConfigurationException($"A serializer for type {typeof(TSerialized)} has already been registered.");
-
-            _names.Add(typeName);
-            _types.Add(typeof(TSerialized));
-
-            Registrations.Add(new CompactRegistration(typeName, typeof(TSerialized), isClusterSchema));
-        }
-
-        /// <summary>
-        /// Registers a type for compact serialization.
-        /// </summary>
-        /// <typeparam name="TSerialized">The type.</typeparam>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        /// <remarks>
-        /// <para>The type name will be the fully-qualified name of the .NET type.</para>
-        /// <para>The type schema will be generated at runtime from the provided serializer. Note that the serializer plainly write
-        /// all fields without omitting any, i.e. not skip some fields for optimization purposes, as this would result in a
-        /// corrupt schema.</para>
-        /// <para>When a type is registered for compact serialization without an explicit serializer, a runtime reflection-
-        /// based serializer will be used. It will handle all properties which expose both a public setter and a
-        /// public getter. Unless the type has been specified as compactable with the <see cref="CompactSerializableAttribute"/>
-        /// or the <see cref="CompactSerializableTypeAttribute"/> and a corresponding serializer has been generated at
-        /// compile time.</para>
-        /// <para>When <paramref name="isClusterSchema"/> is <c>false</c>, the compact serialization service will make
-        /// sure to send the schema to the cluster before sending any data relying on that schema.</para>
-        /// </remarks>
-        public void Register<TSerialized>(bool isClusterSchema)
-            => Register<TSerialized>(CompactSerializer.GetTypeName<TSerialized>(), isClusterSchema);
-
-        /// <summary>
-        /// Registers an assembly for compact serialization.
-        /// </summary>
-        /// <param name="assembly">The assembly.</param>
+        /// <param name="assembly">The assembly to add.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="assembly"/> is <c>nul</c>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
         /// <remarks>
         /// <para>When an assembly is registered for compact serialization, the client scans the assembly for assembly-
-        /// level <see cref="CompactSerializerAttribute"/> and registers the serialized type and serializer as
-        /// specified by the attribute.</para>
-        /// <para>Note that it remains possible to also register the type explicitly, in order to specify a type name,
-        /// a full schema, or whether the schema is a cluster schema. Only, no serializer should be provided, as the
-        /// serializer is derived from the assembly-level attribute.</para>
+        /// level <see cref="CompactSerializerAttribute"/> and registers the serializer as specified by the attribute.</para>
         /// </remarks>
-        public void Register(Assembly assembly)
+        public void AddAssemblySerializers(Assembly assembly)
         {
-            (_assemblies ??= new HashSet<Assembly>()).Add(assembly);
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+
+            var attrs = assembly.GetCustomAttributes<CompactSerializerAttribute>();
+            foreach (var attr in attrs)
+            {
+                var serializerType = attr.SerializerType;
+                var serializer = (ICompactSerializer)Activator.CreateInstance(serializerType);
+                AddSerializer(serializer);
+            }
         }
 
         /// <summary>
-        /// Gets the registrations.
+        /// Sets the type-name for a serialized type.
         /// </summary>
-        internal List<CompactRegistration> Registrations { get; }
+        /// <typeparam name="TSerialized">The serialized type.</typeparam>
+        /// <param name="typeName">The type-name.</param>
+        /// <exception cref="ArgumentException"><paramref name="typeName"/> is <c>null</c> or an empty string.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void SetTypeName<TSerialized>(string typeName) => SetTypeName(typeof (TSerialized), typeName);
 
         /// <summary>
-        /// Gets the assemblies.
+        /// Sets the type-name for a serialized type.
         /// </summary>
-        /// <exception cref="InvalidOperationException">No assembly has been registered.</exception>
-        internal ISet<Assembly> Assemblies => _assemblies ?? throw new InvalidOperationException("No assembly has been registered.");
+        /// <param name="serializedType">The serialized type.</param>
+        /// <param name="typeName">The type-name.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedType"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException"><paramref name="typeName"/> is <c>null</c> or an empty string.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void SetTypeName(Type serializedType, string typeName)
+        {
+            if (serializedType == null) throw new ArgumentNullException(nameof(serializedType));
+            if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty);
+
+            EnsureUniqueTypeNamePerSerializedType(serializedType, typeName);
+            EnsureTypeNameSerializerCanSerializeType(typeName, serializedType);
+
+            _serializedType_typeName[serializedType] = typeName;
+        }
 
         /// <summary>
-        /// Whether assemblies have been registered.
+        /// Configures a schema for a serialized type.
         /// </summary>
-        internal bool HasAssemblies => _assemblies != null;
+        /// <typeparam name="TSerialized">The serialized type.</typeparam>
+        /// <param name="schema">The schema.</param>
+        /// <param name="isClusterSchema">Whether the schema is known by the cluster already.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="schema"/> is <c>null</c>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void SetSchema<TSerialized>(Schema schema, bool isClusterSchema) => SetSchema(typeof (TSerialized), schema, isClusterSchema);
+
+        /// <summary>
+        /// Configures a schema for a serialized type.
+        /// </summary>
+        /// <typeparam name="TSerialized">The serialized type.</typeparam>
+        /// <param name="isClusterSchema">Whether the schema is known by the cluster already.</param>
+        public void SetSchema<TSerialized>(bool isClusterSchema) => SetSchema(typeof(TSerialized), isClusterSchema);
+
+        /// <summary>
+        /// Configures a schema for a serialized type.
+        /// </summary>
+        /// <param name="serializedType">The serialized type.</param>
+        /// <param name="schema">The schema.</param>
+        /// <param name="isClusterSchema">Whether the schema is known by the cluster already.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedType"/> or <paramref name="schema"/> is <c>null</c>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void SetSchema(Type serializedType, Schema schema, bool isClusterSchema)
+        {
+            if (serializedType == null) throw new ArgumentNullException(nameof(serializedType));
+            if (schema == null) throw new ArgumentNullException(nameof(schema));
+
+            var typeName = schema.TypeName;
+
+            EnsureUniqueTypeNamePerSerializedType(serializedType, typeName);
+            EnsureUniqueSchemaPerTypeName(schema);
+            EnsureTypeNameSerializerCanSerializeType(typeName, serializedType);
+
+            _serializedType_typeName[serializedType] = typeName;
+            _typeName_schema[schema.TypeName] = schema;
+
+            _typeName_isClusterSchema[schema.TypeName] = isClusterSchema;
+            _serializedType_isClusterSchema[serializedType] = isClusterSchema;
+        }
+
+        /// <summary>
+        /// Configures a schema for a serialized type.
+        /// </summary>
+        /// <param name="serializedType">The serialized type.</param>
+        /// <param name="isClusterSchema">Whether the schema is known by the cluster already.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="serializedType"/> is <c>null</c>.</exception>
+        public void SetSchema(Type serializedType, bool isClusterSchema)
+        {
+            if (serializedType == null) throw new ArgumentNullException(nameof(serializedType));
+
+            _serializedType_isClusterSchema[serializedType] = isClusterSchema;
+        }
+
+        /// <summary>
+        /// Configures a schema.
+        /// </summary>
+        /// <param name="schema">The schema.</param>
+        /// <param name="isClusterSchema">Whether the schema is known by the cluster already.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="schema"/> is <c>null</c>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        public void SetSchema(Schema schema, bool isClusterSchema)
+        {
+            if (schema == null) throw new ArgumentNullException(nameof(schema));
+
+            EnsureUniqueSchemaPerTypeName(schema);
+
+            _typeName_schema[schema.TypeName] = schema;
+            _typeName_isClusterSchema[schema.TypeName] = isClusterSchema;
+        }
+
+        private bool GetIsClusterSchema(Type serializedType, string typeName)
+        {
+            var isClusterSchema = false;
+            if (_serializedType_isClusterSchema.TryGetValue(serializedType, out var ics1))
+                isClusterSchema |= ics1;
+            if (_typeName_isClusterSchema.TryGetValue(typeName, out var ics2))
+                isClusterSchema |= ics2;
+            return isClusterSchema;
+        }
+
+        /// <summary>
+        /// Creates and returns the serializer registrations corresponding to options.
+        /// </summary>
+        /// <param name="reflectionSerializer">The reflection serializer implementation.</param>
+        /// <returns>The serializer registrations corresponding to options.</returns>
+        /// <exception cref="ConfigurationException">The options contain conflicts that prevent the registrations from being created.</exception>
+        internal IEnumerable<CompactRegistration> GetRegistrations(CompactSerializerWrapper reflectionSerializer)
+        {
+            // ReSharper disable once InconsistentNaming
+            var typeName_serializedTypes = _serializedType_typeName
+                .GroupBy(x => x.Value)
+                .ToDictionary(
+                    x => x.Key, 
+                    x => x.Select(y => y.Key).ToList());
+
+            // validate
+            foreach (var (typeName, serializedTypes) in typeName_serializedTypes)
+            {
+                // if more than 1 type share the same type name, then a custom serializer is required
+                if (serializedTypes.Count > 1 && !_typeName_serializer.ContainsKey(typeName))
+                    throw new ConfigurationException($"More that one type have been assigned the type name {typeName}, " +
+                                                     "but no serializer for that type name has been provided, " +
+                                                     "and the built-in reflection-based serializer cannot handle that situation.");
+            }
+
+            // process the serializers (all other registrations below will use the reflection serializer)
+            foreach (var serializer in _typeName_serializer.Values)
+            {
+                var isClusterSchema = GetIsClusterSchema(serializer.SerializedType, serializer.TypeName);
+                var withSchema = _typeName_schema.TryGetValue(serializer.TypeName, out var schema);
+
+                // since the serializer has been declared, there *has* to be at least one serialized type for the type name
+                // but there may be more than one, and we need a registration for each type - registrations work at actual type level
+                foreach (var serializedType in typeName_serializedTypes[serializer.TypeName])
+                {
+                    yield return withSchema
+                        ? new CompactRegistration(serializedType, CompactSerializerWrapper.Create(serializer), schema!, isClusterSchema)
+                        : new CompactRegistration(serializedType, CompactSerializerWrapper.Create(serializer), serializer.TypeName, isClusterSchema);
+                }
+            }
+
+            // process the type names that don't have an associated serializer but have a serialized type, and may have a schema
+            foreach (var (serializedType, typeName) in _serializedType_typeName)
+            {
+                if (_typeName_serializer.ContainsKey(typeName)) continue; // already yielded above
+
+                var isClusterSchema = GetIsClusterSchema(serializedType, typeName);
+
+                yield return _typeName_schema.TryGetValue(typeName, out var schema)
+                    ? new CompactRegistration(serializedType, reflectionSerializer, schema, isClusterSchema)
+                    : new CompactRegistration(serializedType, reflectionSerializer, typeName, isClusterSchema);
+            }
+
+            // process the schemas that don't have an associated serialized type
+            foreach (var schema in _typeName_schema.Values)
+            {
+                if (_serializedType_typeName.ContainsValue(schema.TypeName)) continue; // already yielded above
+
+                var serializedType = Type.GetType(schema.TypeName);
+                if (serializedType == null)
+                    throw new ConfigurationException($"A schema was provided for type name {schema.TypeName}, but that type name does not match any CLR type.");
+
+                var isClusterSchema = GetIsClusterSchema(serializedType, schema.TypeName);
+                yield return new CompactRegistration(serializedType, reflectionSerializer, schema, isClusterSchema);
+            }
+        }
 
         /// <summary>
         /// Gets or sets the reflection serializer.

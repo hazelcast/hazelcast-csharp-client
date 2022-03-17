@@ -46,67 +46,18 @@ namespace Hazelcast.Serialization.Compact
             _schemas = schemas;
             _reflectionSerializer = CompactSerializerWrapper.Create(options.ReflectionSerializer ?? new ReflectionSerializer());
 
-            foreach (var registration in options.Registrations)
+            foreach (var registration in options.GetRegistrations(_reflectionSerializer))
             {
-                // note: CompactOptions ensure that there is
-                // - only 1 registration per type
-                // - only 1 registration per type name
+                // note: options ensure that registrations are safe / that there are no collisions
 
-                _registrationsByType[registration.Type] = registration;
+                _registrationsByType[registration.SerializedType] = registration;
 
                 if (registration.HasSchema)
                 {
                     var schema = registration.Schema!;
                     _registrationsById[schema.Id] = registration;
                     _schemas.Add(schema, registration.IsClusterSchema);
-                    _schemasMap[registration.Type] = schema;
-                }
-            }
-
-            if (options.HasAssemblies)
-            {
-                // we must guarantee that we maintain the 'only 1 registration per type name' constraint
-                var names = new HashSet<string>(_registrationsByType.Values.Select(x => x.TypeName));
-
-                foreach (var assembly in options.Assemblies)
-                {
-                    var attrs = assembly.GetCustomAttributes<CompactSerializerAttribute>();
-                    foreach (var attr in attrs)
-                    {
-                        var serializedType = attr.SerializedType;
-                        var serializerType = attr.SerializerType;
-
-                        var serializer = CompactSerializerWrapper.Create(serializerType, serializedType);
-
-                        if (_registrationsByType.TryGetValue(serializedType, out var registration))
-                        {
-                            // found a registration - can specify the type name, isClusterSchema, or even
-                            // the entire schema, but must *not* specify the serializer as we are about to
-                            // provide it - verify and update the registration
-                            if (registration.HasSerializer) throw new ConfigurationException($"A serializer for type {serializedType} has already been registered.");
-                            registration.Serializer = serializer;
-                        }
-                        else
-                        {
-                            var typeName = GetTypeName(serializedType);
-
-                            if (names.Contains(typeName))
-                                throw new ConfigurationException($"A type with type name {typeName} has already been registered.");
-                            names.Add(typeName);
-
-                            const bool isClusterSchema = false;
-                            registration = new CompactRegistration(typeName, serializedType, serializer, isClusterSchema);
-                            _registrationsByType[registration.Type] = registration;
-                        }
-                    }
-                }
-            }
-
-            foreach (var registration in _registrationsByType.Values)
-            {
-                if (!registration.HasSerializer)
-                {
-                    registration.Serializer = _reflectionSerializer;
+                    _schemasMap[registration.SerializedType] = schema;
                 }
             }
         }
@@ -158,7 +109,7 @@ namespace Hazelcast.Serialization.Compact
             // last-chance, really - go for reflection serializer
             // have to assume that the schema is unknown from the cluster
             return _registrationsByType.GetOrAdd(typeOfObj, type 
-                => new CompactRegistration(GetTypeName(typeOfObj), typeOfObj, _reflectionSerializer, false));
+                => new CompactRegistration(typeOfObj, _reflectionSerializer, GetTypeName(typeOfObj), false));
         }
 
         // invoked when reading an object and we need its registration, ie its serializer, and all
@@ -360,7 +311,7 @@ namespace Hazelcast.Serialization.Compact
             var schema = ReadSchema(input);
             var registration = GetOrCreateRegistration(schema);
 
-            var reader = new CompactReader(this, input, schema, registration.Type);
+            var reader = new CompactReader(this, input, schema, registration.SerializedType);
             var obj = registration.Serializer.Read(reader);
             if (obj == null) throw new SerializationException("Read illegal null object.");
             return obj;

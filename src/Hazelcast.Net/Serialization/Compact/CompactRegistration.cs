@@ -26,62 +26,43 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Initializes a new instance of the <see cref="CompactRegistration"/> class.
         /// </summary>
-        /// <param name="typeName">The schema type name of the serialized type.</param>
-        /// <param name="type">The serialized type.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        public CompactRegistration(string typeName, Type type, bool isClusterSchema)
-        {
-            Schema = null;
-            TypeName = typeName;
-            Type = type;
-            IsClusterSchema = isClusterSchema;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CompactRegistration"/> class.
-        /// </summary>
-        /// <param name="schema">The schema for the serialized type.</param>
-        /// <param name="type">The serialized type.</param>
-        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        public CompactRegistration(Schema schema, Type type, bool isClusterSchema)
-        {
-            Schema = schema;
-            TypeName = schema.TypeName;
-            Type = type;
-            IsClusterSchema = isClusterSchema;
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="CompactRegistration"/> class.
-        /// </summary>
-        /// <param name="typeName">The schema type name of the serialized type.</param>
-        /// <param name="type">The serialized type.</param>
+        /// <param name="serializedType">The serialized type.</param>
         /// <param name="serializer">The serializer for the serialized type.</param>
+        /// <param name="schema">The optional schema for the serialized type.</param>
+        /// <param name="typeName">The schema type name of the serialized type.</param>
         /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        public CompactRegistration(string typeName, Type type, CompactSerializerWrapper serializer, bool isClusterSchema)
+        private CompactRegistration(Type serializedType, CompactSerializerWrapper serializer, Schema? schema, string typeName, bool isClusterSchema)
         {
-            Schema = null;
-            TypeName = typeName;
-            Type = type;
+            // assume args are valid, *we* create the registrations
+
+            SerializedType = serializedType;
             Serializer = serializer;
+            Schema = schema;
+            TypeName = typeName;
             IsClusterSchema = isClusterSchema;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CompactRegistration"/> class.
         /// </summary>
-        /// <param name="schema">The schema for the serialized type.</param>
-        /// <param name="type">The serialized type.</param>
+        /// <param name="serializedType">The serialized type.</param>
         /// <param name="serializer">The serializer for the serialized type.</param>
+        /// <param name="typeName">The schema type name of the serialized type.</param>
         /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
-        public CompactRegistration(Schema schema, Type type, CompactSerializerWrapper serializer, bool isClusterSchema)
-        {
-            Schema = schema;
-            TypeName = schema.TypeName;
-            Type = type;
-            Serializer = serializer;
-            IsClusterSchema = isClusterSchema;
-        }
+        public CompactRegistration(Type serializedType, CompactSerializerWrapper serializer, string typeName, bool isClusterSchema)
+            : this(serializedType, serializer, null, typeName, isClusterSchema)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="CompactRegistration"/> class.
+        /// </summary>
+        /// <param name="serializedType">The serialized type.</param>
+        /// <param name="serializer">The serializer for the serialized type.</param>
+        /// <param name="schema">The schema for the serialized type.</param>
+        /// <param name="isClusterSchema">Whether the schema is considered to be, at configuration time, already known by the cluster.</param>
+        public CompactRegistration(Type serializedType, CompactSerializerWrapper serializer, Schema schema, bool isClusterSchema)
+            : this(serializedType, serializer, schema, schema.TypeName, isClusterSchema)
+        { }
 
         /// <summary>
         /// Gets the schema type name of the serialized type.
@@ -91,7 +72,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Gets the serialized type.
         /// </summary>
-        public Type Type { get; }
+        public Type SerializedType { get; }
 
         /// <summary>
         /// Gets the schema, if any.
@@ -106,12 +87,7 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Gets the serializer for the serialized type, if any.
         /// </summary>
-        public CompactSerializerWrapper? Serializer { get; set; }
-
-        /// <summary>
-        /// Whether the registration provides a serializer.
-        /// </summary>
-        public bool HasSerializer => Serializer != null;
+        public CompactSerializerWrapper Serializer { get; }
 
         /// <summary>
         /// Whether the schema is considered to be, at configuration time, already known by the cluster.

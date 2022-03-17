@@ -19,7 +19,7 @@ using System;
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
-    /// Specifies a compact serializer type for a type.
+    /// Declares a compact serializer type.
     /// </summary>
     /// <remarks>
     /// <para>This attribute is used when a compact serializer is generated at compile time
@@ -30,20 +30,18 @@ namespace Hazelcast.Serialization.Compact
     public sealed class CompactSerializerAttribute : Attribute
     {
         /// <summary>
-        /// Specifies a compact serializer type for a type.
+        /// Declares a compact serializer type.
         /// </summary>
-        /// <param name="serializedType">The serialized type.</param>
-        /// <param name="serializerType">The compact serializer type for the <paramref name="serializedType"/>.</param>
-        public CompactSerializerAttribute(Type serializedType, Type serializerType)
+        /// <param name="serializerType">The compact serializer type.</param>
+        public CompactSerializerAttribute(Type serializerType)
         {
-            SerializedType = serializedType ?? throw new ArgumentNullException(nameof(serializedType));
-            SerializerType = serializerType ?? throw new ArgumentNullException(nameof(serializerType));
-        }
+            if (serializerType == null) throw new ArgumentNullException(nameof(serializerType));
 
-        /// <summary>
-        /// Gets the serialized type.
-        /// </summary>
-        public Type SerializedType { get; }
+            if (!serializerType.IsICompactSerializerOfTSerialized(out _))
+                throw new ArgumentException("Type does not implement ICompactSerializer<TSerialized>.", nameof(serializerType));
+
+            SerializerType = serializerType;
+        }
 
         /// <summary>
         /// Gets the compact serializer type.

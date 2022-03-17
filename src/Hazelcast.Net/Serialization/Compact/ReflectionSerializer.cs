@@ -27,6 +27,12 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal class ReflectionSerializer : ICompactSerializer<object>
     {
+        /// <inheritdoc />
+        public Type SerializedType => throw new InvalidOperationException();
+
+        /// <inheritdoc />
+        public string TypeName => throw new InvalidOperationException();
+
         private static T UnboxNonNull<T>(object? value)
         {
             if (value != null) return (T)value;

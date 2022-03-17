@@ -20,7 +20,7 @@ namespace Hazelcast.Serialization
     {
         public static FieldKind Parse(int value)
         {
-            var kind = (FieldKind)value; // this is the only place where this is acceptable
+            var kind = (FieldKind) value; // this is the only place where this is acceptable
             switch (kind)
             {
                 case FieldKind.Boolean:
