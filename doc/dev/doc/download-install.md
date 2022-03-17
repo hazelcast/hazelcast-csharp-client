@@ -31,7 +31,7 @@ Or via the .NET CLI:
 Or manually added to the project as a package reference:
 
 ```
-<PackageReference Include="Hazelcast.NET" Version="4.0.0" />
+<PackageReference Include="Hazelcast.NET" Version="5.0.1" />
 ```
 
 ### Binding Redirects
