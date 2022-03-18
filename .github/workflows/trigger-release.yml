@@ -1,0 +1,65 @@
+name: Trigger Release
+on: workflow_dispatch
+
+# a manual workflow that runs only on release/<version> branches, and
+# - finalizes the release (updating doc files...)
+# - tags that branch with v<version>, thus triggering the release
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/') # 19 leading chars
+    steps:
+
+    # validate that there is a GitHub Release for the version
+    - name: Validate the release
+      uses: actions/github-script@v4
+      with:
+        script: |
+          const tag = "v" + github.ref.substring(19)
+          const rel = github.repos.getReleaseByTag({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag: tag
+          })
+          if (rel === null) {
+            core.setFailed("Could not find a release for tag " + tag)
+          }
+
+    # check the repository out
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
+    # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
+    # repository that is private you will need to provide your own PAT."
+    - name: Checkout devops
+      uses: actions/checkout@v2
+      with:
+        repository: hazelcast/DevOps
+        ref: master
+        token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
+        path: ./build/devops
+
+    # configure Git so we can push back
+    - name: Configure Git
+      run: |
+        git config user.email "github-actions@hazelcast.com"
+        git config user.name "GitHub Actions (Trigger Release)"
+
+    # finalize the release
+    - name: Finalize Release
+      shell: pwsh
+      run: ./hz.ps1 -noRestore -localRestore finalize-release
+
+    # trigger the release
+    - name: Trigger Release
+      shell: pwsh
+      run: ./hz.ps1 -noRestore -localRestore trigger-release -yolo
+
+    # TODO - automate more things on GitHub
+    # publish the release page
+    # close the milestone
+    # merge the newly created tag into the maintenance branch
