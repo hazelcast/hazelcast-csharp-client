@@ -1825,7 +1825,7 @@ function hz-test {
 
      # do not cover tests themselves, nor the testing plumbing
     if (-not [System.String]::IsNullOrWhiteSpace($options.coverageFilter)) { $options.coverageFilter += ";" }
-    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing"
+    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing;-:ExpectedObjects"
 
     Write-Output "Tests"
     Write-Output "  Server version : $($options.server)"
