@@ -90,7 +90,7 @@
       "output": {
         ".html": {
           "relative_path": "5.0.1/doc/configuration/options.html",
-          "hash": "0uG21UV2Dfm+K1zyjHO5WTZUj+6iHn81O6af1lylV9E="
+          "hash": "ta4DavX8p5dXFCkPJ3t8S1pmXyGH9s1HZReu48zacUE="
         }
       },
       "is_incremental": false,
@@ -847,18 +847,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
       "output": {
         ".html": {
-          "relative_path": "5.0.1/api/Hazelcast.CP.IAtomicLong.AddAndGetAsync.html",
-          "hash": "7pgyQWii6xcO8pPAOvoL46ofRKYl1eUm3JgxLqXAEt0="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.0.1/api/Hazelcast.CP.IAtomicLong.CompareAndSetAsync.html",
           "hash": "nVfmemTr6n6JepcNcPWjN7Po9l19uL1b8QKY7Xp52p4="
         }
@@ -969,6 +957,18 @@
         ".html": {
           "relative_path": "5.0.1/api/Hazelcast.CP.IAtomicLong.html",
           "hash": "l+0pma1EIlDKsuupBJNnsS0cC5gx3xRzRi6A7SH+zfY="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.0.1/api/Hazelcast.CP.IAtomicLong.AddAndGetAsync.html",
+          "hash": "7pgyQWii6xcO8pPAOvoL46ofRKYl1eUm3JgxLqXAEt0="
         }
       },
       "is_incremental": false,
