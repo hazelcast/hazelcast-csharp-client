@@ -257,6 +257,10 @@ $actions = @(
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
+    },
+    @{ name = "update-doc-version";
+       desc = "updates versions in doc version.md";
+       note = "The resulting commit still needs to be pushed."
     }
 )
 
@@ -1126,6 +1130,49 @@ function ensure-java {
 	}
 }
 
+# update latest version in docs files - when actually releasing
+# so this can be for a pre-release but it's got to be for actual release
+function hz-update-doc-version {
+
+    if ([string]::IsNullOrWhiteSpace($versionSuffix)) {
+
+        write-output "Update Doc Version"
+        $v = $versionPrefix
+
+        # non-preview versions go into xrefmap because we'll link to them as <curdoc>
+        $vd = $versionPrefix -replace "\.", "-"
+        $filename = "$docDir/xrefmap.yml"
+        $text = read-file $filename
+        if (-not $text.Contains("- uid: doc-index-$v")) {
+            $text += "`n- uid: doc-index-$v"
+            $text += "`n  name: $v"
+            $text += "`n  href: $v/doc/index.html"
+            $text += "`n- uid: api-index-$v"
+            $text += "`n  href: $v/api/index.html"
+            $text += "`n"
+        }
+        write-file $filename $text
+
+        # non-preview versions become <curdoc>, and <curdoc> is pushed to <prevdoc>
+        # for preview versions, they'll show as <devdoc>
+        # FIXME: where is <devdoc> handled? how are these placeholders handled?
+        $filename = "$docDir/versions.md"
+        $text = read-file $filename
+        if (-not ($text -match "<curdoc>(.*)</curdoc>")) {
+            Die "Could not find <curdoc> section in versions.md."
+        }
+        $curdoc = $matches[1]
+        if (-not $curdoc.StartsWith("$v ")) {
+            $text = $text -replace "<prevdoc/>", "<prevdoc/>`n* $curdoc"
+            $text = $text -replace "<curdoc>.*</curdoc>", "<curdoc>$v [general documentation](xref:doc-index-$vd) and [API reference](xref:api-index-$vd)</curdoc>"
+        }
+        write-file $filename $text
+    }
+    else {
+        write-output "skip Update Doc Version (suffix='$versionSuffix')"
+    }
+}
+
 # sets the version
 function hz-set-version {
 
@@ -1414,6 +1461,8 @@ function hz-build-docs-on-windows {
         $repl = "$($options.version)`${1}"
     }
     $text = $text -replace '(?s-m)\<devdoc\>\$version(.*)\</devdoc\>', $repl # s-m enables single-line, disables multi-lines
+    $text = $text -replace '\<p\>\<prevdoc\>\</prevdoc\>\</p\>', '' # remove the <prevdoc> placeholder
+    $text = $text -replace '\</?curdoc\>', '' # remove the <curdoc> placeholder
     set-content -path $path -value $text
 
     $text = get-content "$tmpDir/docfx.out/404.html"
