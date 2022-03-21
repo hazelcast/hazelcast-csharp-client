@@ -1759,8 +1759,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Core.ClientStateExtensions.yml",
       "output": {
         ".html": {
-          "relative_path": "5.0.1/api/Hazelcast.Core.ClientStateExtensions.html",
-          "hash": "buwYsM0aJJyzhr+4ULRDDMHZRAt1o6X8h2KQ4J1KoxM="
+          "relative_path": "5.0.1/api/Hazelcast.Core.ClientStateExtensions.IsActiveState.html",
+          "hash": "qaH9Dj5yNDNcMT11pH+P7J+k0oHAV00T4FP2dxaPDyM="
         }
       },
       "is_incremental": false,
@@ -1771,8 +1771,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Core.ClientStateExtensions.yml",
       "output": {
         ".html": {
-          "relative_path": "5.0.1/api/Hazelcast.Core.ClientStateExtensions.IsActiveState.html",
-          "hash": "qaH9Dj5yNDNcMT11pH+P7J+k0oHAV00T4FP2dxaPDyM="
+          "relative_path": "5.0.1/api/Hazelcast.Core.ClientStateExtensions.html",
+          "hash": "buwYsM0aJJyzhr+4ULRDDMHZRAt1o6X8h2KQ4J1KoxM="
         }
       },
       "is_incremental": false,
@@ -14147,7 +14147,7 @@
       "output": {
         ".html": {
           "relative_path": "versions.html",
-          "hash": "3VYVhRmyJgMQCjDXemmUBnfh1h6S/pGx+SmlLdIa6cY="
+          "hash": "Jj397XfnWZDuRDLzUs/zqX7JGYELdD8/JfDCVzBmYL8="
         }
       },
       "is_incremental": false,
