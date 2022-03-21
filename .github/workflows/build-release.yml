@@ -95,8 +95,8 @@ jobs:
                     echo "::error::Branch release/$HZVERSION does not exist"
                     exit 1
                 else
-                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION >/dev/null 2>&1)
-                    HZPARENTSHA=$(git rev-parse $HZTAG^1 >/dev/null 2>&1)
+                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
+                    HZPARENTSHA=$(git rev-parse $HZTAG^1 2>&1)
                     if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
                       echo "::error::Tag parent is not HEAD of release/$HZVERSION but $HZPARENTSHA"
                       exit 1
