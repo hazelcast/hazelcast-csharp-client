@@ -48,6 +48,7 @@ namespace Hazelcast.Examples.Sql
             await client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE " +
                 $"MAPPING {mapName}(" +
                     $"__key int, " +
+                    $"id int," +
                     $"firstName varchar, " +
                     $"lastName varchar, " +
                     $"country varchar, " +
@@ -62,6 +63,13 @@ namespace Hazelcast.Examples.Sql
             //creating/getting the map 
             var map = await client.GetMapAsync<int, Employee>(mapName);
 
+            // Creating index via SQL 
+            // Details: https://docs.hazelcast.com/hazelcast/latest/query/indexing-maps
+            //await client.Sql.ExecuteCommandAsync($"CREATE INDEX IF NOT EXISTS employeeAge ON {mapName}(age); ");
+
+            //Creating index programatically
+            await map.AddIndexAsync(Hazelcast.Models.IndexType.Sorted, "age");
+
             //Seeding some sample data
             for (int i = 0; i < 1000; i++)
             {
@@ -74,10 +82,14 @@ namespace Hazelcast.Examples.Sql
                     Id = i
                 };
 
-                await map.PutAsync(i, employee);
+                _ = await map.PutAsync(i, employee);
+
+                // Alternatively, insert via SQL
+                //await client.Sql.ExecuteCommandAsync($"insert into {mapName} (__key, id, firstName, lastName, country, age) values (?,?,?,?,?,?)",
+                //  new object[] { i, i, "Boby" + (i % 100), "Womack" + i, countries[i % 3], i % 75 });
             }
 
-            //Queriying the oldest employees
+            // Queriying the oldest employees
             // "__key" is the key of the value. "this" is the whole value object which is Employee.
             // We need "this" to deserialize to Employee
             //https://docs.hazelcast.com/hazelcast/latest/sql/querying-maps-sql
