@@ -96,12 +96,12 @@ jobs:
                     exit 1
                 else
                     HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
-                    HZPARENTSHA=$(git rev-parse $HZTAG^1 2>&1)
-                    if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
-                      echo "::error::Tag parent is not HEAD of release/$HZVERSION but $HZPARENTSHA"
+                    HZTAGSHA=${{ github.sha }}
+                    if [ "$HZBRANCHSHA" != "$HZTAGSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGSHA"
                       exit 1
                     else
-                        echo "Tag parent is HEAD of release/$HZVERSION, proceed with release"
+                        echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
                         # set step/job output
                         echo "::set-output name=todo::release"
                         echo "::set-output name=version::$HZVERSION"
