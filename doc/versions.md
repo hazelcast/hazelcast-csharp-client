@@ -22,7 +22,7 @@ Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET
 
 ### Current
 
-* <curdoc>5.0.0 [general documentation](xref:doc-index-5-0-0) and [API reference](xref:api-index-5-0-0)</curdoc>
+* <curdoc>5.0.1 [general documentation](xref:doc-index-5-0-1) and [API reference](xref:api-index-5-0-1)</curdoc>
 
 ### Preview
 
@@ -31,10 +31,10 @@ Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET
 ### Previous
 
 <prevdoc/>
+* 5.0.0 [general documentation](xref:doc-index-5-0-0) and [API reference](xref:api-index-5-0-0)
 * 4.1.0 [general documentation](xref:doc-index-4-1-0) and [API reference](xref:api-index-4-1-0)
 * 4.0.2 [general documentation](xref:doc-index-4-0-2) and [API reference](xref:api-index-4-0-2)
 * 4.0.1 [general documentation](xref:doc-index-4-0-1) and [API reference](xref:api-index-4-0-1)
 * 4.0.0 [general documentation](xref:doc-index-4-0-0) and [API reference](xref:api-index-4-0-0)
 * 3.12.3 [README](xref:doc-index-3-12-3) and [API reference](xref:api-index-3-12-3)
 * 3.12.2 [README](xref:doc-index-3-12-2) and [API reference](xref:api-index-3-12-2)
-
