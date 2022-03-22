@@ -1175,6 +1175,7 @@ function hz-update-doc-version {
         write-file $filename $text
         git add $filename
 
+        # it is important that latest-version does NOT end with a newline
         write-file "$docDir/latest-version" $options.version
         git add "$docDir/latest-version"
 
@@ -1599,8 +1600,10 @@ function hz-git-docs-on-windows {
 
     # create the symlink for latest docs
     # note: one can show the symlink with 'git show gh-pages:latest'
-    $lv = read-file "$docDir/latest-version"
-    &git -C "$pages" update-index --add --cacheinfo 120000 "$(echo -n "$lv" | git hash-object -w --stdin)" "latest"
+    # note: it is important that latest-version does NOT end with a newline
+    # note: bash would read the file then do $(echo -n "$lv" | git hash-object -w --stdin) BUT pwsh CANNOT echo -n
+    $lh = &git hash-object -w "$docDir/latest-version"
+    &git -C "$pages" update-index --add --cacheinfo 120000 $lh "latest"
 
     &git -C "$pages" commit -m "$docMessage"
 
