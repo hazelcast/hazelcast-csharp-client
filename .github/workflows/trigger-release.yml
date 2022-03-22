@@ -48,7 +48,7 @@ jobs:
       uses: actions/github-script@v5
       with:
         script: |
-          const scriptf = require('./.github/workflows/trigger-release.js')
+          const scriptf = require('./.github/workflows/release-scripts.js')
           const script = scriptf({github, context, core})
           const version = context.ref.substring(19)
           await script.validateRelease(version)
@@ -61,15 +61,3 @@ jobs:
         ./hz.ps1 -noRestore -localRestore update-doc-version
         ./hz.ps1 -noRestore -localRestore trigger-release -yolo
         git push
-
-    # publish the release page, close the milestone
-    - name: Publish Release Page
-      if: ${{ github.event.inputs.dryrun == 'false' }}
-      uses: actions/github-script@v5
-      with:
-        script: |
-          const scriptf = require('./.github/workflows/trigger-release.js')
-          const script = scriptf({github, context, core})
-          const version = context.ref.substring(19)
-          await script.publishRelease(version)
-          await script.closeMilestone(version)

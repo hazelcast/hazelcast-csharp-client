@@ -1025,6 +1025,11 @@ function clean-dir ( $dir ) {
     }
 }
 
+# noop
+function hz-noop {
+    # nothing
+}
+
 # cleans the solution
 function hz-clean {
 
@@ -1143,15 +1148,16 @@ function hz-update-doc-version {
         $vd = $versionPrefix -replace "\.", "-"
         $filename = "$docDir/xrefmap.yml"
         $text = read-file $filename
-        if (-not $text.Contains("- uid: doc-index-$v")) {
-            $text += "`n- uid: doc-index-$v"
+        if (-not $text.Contains("- uid: doc-index-$vd")) {
+            $text += "`n- uid: doc-index-$vd"
             $text += "`n  name: $v"
             $text += "`n  href: $v/doc/index.html"
-            $text += "`n- uid: api-index-$v"
+            $text += "`n- uid: api-index-$vd"
             $text += "`n  href: $v/api/index.html"
             $text += "`n"
         }
         write-file $filename $text
+        git add $filename
 
         # non-preview versions become <curdoc>, and <curdoc> is pushed to <prevdoc>
         # for preview versions, they'll show as <devdoc>
@@ -1167,6 +1173,12 @@ function hz-update-doc-version {
             $text = $text -replace "<curdoc>.*</curdoc>", "<curdoc>$v [general documentation](xref:doc-index-$vd) and [API reference](xref:api-index-$vd)</curdoc>"
         }
         write-file $filename $text
+        git add $filename
+
+        write-file "$docDir/latest-version" $options.version
+        git add "$docDir/latest-version"
+
+        git commit -m "Documentation latest version $($options.version)" >$null 2>&1
     }
     else {
         write-output "skip Update Doc Version (suffix='$versionSuffix')"
@@ -1227,7 +1239,7 @@ function hz-tag-release {
         }
         # create an empty commit to isolate the tag (helps with GitHub Actions)
         git commit --allow-empty --message "Tag v$($options.version)" >$null 2>&1
-        git tag "v$($options.version)" >$null 2>&1
+        git tag "v$($options.version)" "release/$($options.version)" >$null 2>&1
     }
 }
 
@@ -1585,7 +1597,10 @@ function hz-git-docs-on-windows {
 
     &git -C "$pages" add -A
 
-    # create a symlink for latest docs -- NO! this is a release process task, see build-release.yml
+    # create the symlink for latest docs
+    # note: one can show the symlink with 'git show gh-pages:latest'
+    $lv = read-file "$docDir/latest-version"
+    &git -C "$pages" update-index --add --cacheinfo 120000 "$(echo -n "$lv" | git hash-object -w --stdin)" "latest"
 
     &git -C "$pages" commit -m "$docMessage"
 
