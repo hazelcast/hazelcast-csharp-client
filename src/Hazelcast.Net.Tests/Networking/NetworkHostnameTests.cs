@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Networking
 
         public Cluster RcCluster { get; set; }
 
-        [OneTimeSetUp]
+        [SetUp]
         public async Task ClusterOneTimeSetUp()
         {
             // create remote client and cluster
@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Networking
             RcCluster = await RcClient.CreateClusterAsync(Hazelcast.Testing.Remote.Resources.hazelcast_hostname).CfAwait();
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public async Task ClusterOneTimeTearDown()
         {
             // terminate & remove client and cluster
@@ -79,13 +79,13 @@ namespace Hazelcast.Tests.Networking
                     if (client.Members.Count == 2)
                         await RcClient.ShutdownMemberAsync(RcCluster.Id, memberB.Uuid);
 
-                }, 10_000, 500);
+                }, 20_000, 500);
 
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.AreEqual(1, client.Members.Count);
 
-            }, 10_000, 500);
+            }, 20_000, 500);
 
             Assert.IsTrue(eventTriggered);
         }
@@ -118,7 +118,7 @@ namespace Hazelcast.Tests.Networking
             await AssertEx.SucceedsEventually(async () =>
             {
                 Assert.AreEqual(2, client.Members.Count);
-            }, 10_000, 500);
+            }, 20_000, 500);
 
             await RcClient.ShutdownMemberAsync(RcCluster.Id, memberB.Uuid);
             await Task.Delay(hearbeatPeriod * 2);
@@ -127,7 +127,7 @@ namespace Hazelcast.Tests.Networking
             {
                 await map.PutAsync("testKey", "testValue");
                 Assert.AreEqual(1, Interlocked.CompareExchange(ref countOfAddedEntries, 1, 1));
-            }, 10_000, 500);
+            }, 20_000, 500);
         }
 
     }
