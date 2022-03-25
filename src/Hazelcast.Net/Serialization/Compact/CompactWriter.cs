@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -387,44 +387,44 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfNullableDecimal(string name, HBigDecimal?[]? value)
             => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
 
-        public void WriteNullableTime(string name, TimeSpan? value)
+        public void WriteNullableTime(string name, HLocalTime? value)
         {
             // beware of range-check
             throw new NotImplementedException(); // FIXME - implement WriteTimeRef
         }
 
-        public void WriteArrayOfNullableTime(string name, TimeSpan?[]? value)
+        public void WriteArrayOfNullableTime(string name, HLocalTime?[]? value)
         {
             // beware of range-check
             throw new NotImplementedException(); // FIXME - implement WriteTimeRefs
         }
 
-        public void WriteNullableDate(string name, DateTime? value)
+        public void WriteNullableDate(string name, HLocalDate? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteDateRef
         }
 
-        public void WriteArrayOfNullableDate(string name, DateTime?[]? value)
+        public void WriteArrayOfNullableDate(string name, HLocalDate?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteDateRefs
         }
 
-        public void WriteNullableTimeStamp(string name, DateTime? value)
+        public void WriteNullableTimeStamp(string name, HLocalDateTime? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampRef
         }
 
-        public void WriteArrayOfNullableTimeStamp(string name, DateTime?[]? value)
+        public void WriteArrayOfNullableTimeStamp(string name, HLocalDateTime?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampRefs
         }
 
-        public void WriteNullableTimeStampWithTimeZone(string name, DateTimeOffset? value)
+        public void WriteNullableTimeStampWithTimeZone(string name, HOffsetDateTime? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRef
         }
 
-        public void WriteArrayOfNullableTimeStampWithTimeZone(string name, DateTimeOffset?[]? value)
+        public void WriteArrayOfNullableTimeStampWithTimeZone(string name, HOffsetDateTime?[]? value)
         {
             throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRefs
         }

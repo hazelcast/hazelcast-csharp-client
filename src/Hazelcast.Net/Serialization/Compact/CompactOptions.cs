@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,7 +32,23 @@ namespace Hazelcast.Serialization.Compact
     /// </remarks>
     public sealed class CompactOptions
     {
+        // we have, by design:
+        //   serializer -(unique)-> type_name
+        //   schema -(unique)-> type_name
+        //
+        // we enforce:
+        //   serialized_type -(unique)-> type_name -(unique)-> serializer
+        //                                         -(unique)-> schema
+        //
+        // it is still possible to have:
+        //   type_name -(multiple)-> serialized_type
+        // however, the reflection-based serialized cannot handle it, since it has no way
+        // of determining which type to produce during deserialization. we validate that
+        // we have an explicit serializer, and that all serialized_types can be handled
+        // by that serializer, when producing the registrations
+
         // ReSharper disable InconsistentNaming
+        private readonly HashSet<Type> _serializedType;
         private readonly Dictionary<Type, string> _serializedType_typeName;
         private readonly Dictionary<string, Schema> _typeName_schema;
         private readonly Dictionary<string, ICompactSerializer> _typeName_serializer;
@@ -45,6 +61,7 @@ namespace Hazelcast.Serialization.Compact
         /// </summary>
         public CompactOptions()
         {
+            _serializedType = new HashSet<Type>();
             _serializedType_typeName = new Dictionary<Type, string>();
             _typeName_schema = new Dictionary<string, Schema>();
             _typeName_serializer = new Dictionary<string, ICompactSerializer>();
@@ -58,6 +75,7 @@ namespace Hazelcast.Serialization.Compact
         private CompactOptions(CompactOptions other)
         {
             Enabled = other.Enabled;
+            _serializedType = new HashSet<Type>(other._serializedType);
             _serializedType_typeName = new Dictionary<Type, string>(other._serializedType_typeName);
             _typeName_schema = new Dictionary<string, Schema>(other._typeName_schema);
             _typeName_serializer = new Dictionary<string, ICompactSerializer>(other._typeName_serializer);
@@ -116,6 +134,35 @@ namespace Hazelcast.Serialization.Compact
         }
 
         /// <summary>
+        /// Adds a type.
+        /// </summary>
+        /// <typeparam name="T">The type to add.</typeparam>
+        /// <remarks>
+        /// <para>Use this method to declare that a type, which is not implicitly declared to compact
+        /// serialization via any of the other available methods (such as registering a serializer for that
+        /// type), should nevertheless be compact-serialized, even though another serialization method may
+        /// also apply.</para>
+        /// <para>All object types are implicitly compact-serialized, but only if not other serialization
+        /// method applies. An <see cref="IPortable"/> object would be portable-serialized by default.
+        /// Use this method to bypass serialization methods detection and force compact serialization.</para>
+        /// </remarks>
+        public void AddType<T>() => AddType(typeof(T));
+
+        /// <remarks>
+        /// <para>Use this method to declare that a type, which is not implicitly declared to compact
+        /// serialization via any of the other available methods (such as registering a serializer for that
+        /// type), should nevertheless be compact-serialized, even though another serialization method may
+        /// also apply.</para>
+        /// <para>All object types are implicitly compact-serialized, but only if not other serialization
+        /// method applies. An <see cref="IPortable"/> object would be portable-serialized by default.
+        /// Use this method to bypass serialization methods detection and force compact serialization.</para>
+        /// </remarks>
+        public void AddType(Type type)
+        {
+            _serializedType.Add(type);
+        }
+
+        /// <summary>
         /// Adds a serializer.
         /// </summary>
         /// <typeparam name="TSerialized">The serialized type.</typeparam>
@@ -161,6 +208,7 @@ namespace Hazelcast.Serialization.Compact
             EnsureUniqueSerializerPerTypeName(serializer);
             EnsureSerializerCanSerializeTypes(serializer);
 
+            _serializedType.Add(serializedType);
             _serializedType_typeName[serializedType] = serializer.TypeName;
             _typeName_serializer[serializer.TypeName] = serializer;
         }
@@ -191,6 +239,7 @@ namespace Hazelcast.Serialization.Compact
             EnsureUniqueSerializerPerTypeName(serializer);
             EnsureSerializerCanSerializeTypes(serializer);
 
+            _serializedType.Add(serializedType);
             _serializedType_typeName[serializedType] = serializer.TypeName;
             _typeName_serializer[serializer.TypeName] = serializer;
         }
@@ -243,6 +292,7 @@ namespace Hazelcast.Serialization.Compact
             EnsureUniqueTypeNamePerSerializedType(serializedType, typeName);
             EnsureTypeNameSerializerCanSerializeType(typeName, serializedType);
 
+            _serializedType.Add(serializedType);
             _serializedType_typeName[serializedType] = typeName;
         }
 
@@ -282,6 +332,7 @@ namespace Hazelcast.Serialization.Compact
             EnsureUniqueSchemaPerTypeName(schema);
             EnsureTypeNameSerializerCanSerializeType(typeName, serializedType);
 
+            _serializedType.Add(serializedType);
             _serializedType_typeName[serializedType] = typeName;
             _typeName_schema[schema.TypeName] = schema;
 
@@ -299,6 +350,7 @@ namespace Hazelcast.Serialization.Compact
         {
             if (serializedType == null) throw new ArgumentNullException(nameof(serializedType));
 
+            _serializedType.Add(serializedType);
             _serializedType_isClusterSchema[serializedType] = isClusterSchema;
         }
 
@@ -341,7 +393,7 @@ namespace Hazelcast.Serialization.Compact
             var typeName_serializedTypes = _serializedType_typeName
                 .GroupBy(x => x.Value)
                 .ToDictionary(
-                    x => x.Key, 
+                    x => x.Key,
                     x => x.Select(y => y.Key).ToList());
 
             // validate
@@ -393,6 +445,15 @@ namespace Hazelcast.Serialization.Compact
 
                 var isClusterSchema = GetIsClusterSchema(serializedType, schema.TypeName);
                 yield return new CompactRegistration(serializedType, reflectionSerializer, schema, isClusterSchema);
+            }
+
+            foreach (var serializedType in _serializedType)
+            {
+                if (_serializedType_typeName.ContainsKey(serializedType)) continue; // already yielded above
+
+                var typeName = CompactSerializer.GetTypeName(serializedType);
+                var isClusterSchema = GetIsClusterSchema(serializedType, typeName);
+                yield return new CompactRegistration(serializedType, reflectionSerializer, CompactSerializer.GetTypeName(serializedType), isClusterSchema);
             }
         }
 

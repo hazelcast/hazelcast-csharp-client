@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -206,7 +206,7 @@ namespace Hazelcast.Serialization.Compact
 
         public short?[]? ReadArrayOfNullableInt16(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableInt16, input => input.ReadShort());
-        
+
         public int ReadInt32(string name)
         {
             var position = GetValueFieldPosition(name, FieldKind.Int32);
@@ -283,66 +283,42 @@ namespace Hazelcast.Serialization.Compact
         public HBigDecimal?[]? ReadArrayOfNullableDecimal(string name)
             => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, input => input.ReadBigDecimal());
 
-        public TimeSpan? ReadNullableTime(string name)
+        public HLocalTime? ReadNullableTime(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeRef
         }
 
-        public TimeSpan?[]? ReadArrayOfNullableTime(string name)
+        public HLocalTime?[]? ReadArrayOfNullableTime(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeRefs
         }
 
-#if NET6_0_OR_GREATER
-        public TimeOnly? ReadTimeOnlyRef(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeOnlyRef
-        }
-
-        public TimeTimeOnlySpan?[]? ReadTimeOnlyRefs(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeOnlyRefs
-        }
-#endif
-
-        public DateTime? ReadNullableDate(string name)
+        public HLocalDate? ReadNullableDate(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-        public DateTime?[]? ReadArrayOfNullableDate(string name)
+        public HLocalDate?[]? ReadArrayOfNullableDate(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadDateRef
         }
 
-#if NET6_0_OR_GREATER
-        public DateOnly? ReadDateOnlyRef(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadDateOnlyRef
-        }
-
-        public DateOnly?[]? ReadDateOnlyRefs(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadDateOnlyRef
-        }
-#endif
-
-        public DateTime? ReadNullableTimeStamp(string name)
+        public HLocalDateTime? ReadNullableTimeStamp(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRef
         }
 
-        public DateTime?[]? ReadArrayOfNullableTimeStamp(string name)
+        public HLocalDateTime?[]? ReadArrayOfNullableTimeStamp(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampRefs
         }
 
-        public DateTimeOffset? ReadNullableTimeStampWithTimeZone(string name)
+        public HOffsetDateTime? ReadNullableTimeStampWithTimeZone(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRef
         }
 
-        public DateTimeOffset?[]? ReadArrayOfNullableTimeStampWithTimeZone(string name)
+        public HOffsetDateTime?[]? ReadArrayOfNullableTimeStampWithTimeZone(string name)
         {
             throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRefs
         }
