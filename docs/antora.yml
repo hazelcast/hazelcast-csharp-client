@@ -1,0 +1,12 @@
+name: csharp
+title: .NET
+version: 5.1
+display_version: '5.2-SNAPSHOT'
+asciidoc:
+  attributes:
+    examples: ../src/Hazelcast.Net.Examples
+    page-toclevels: 1
+    tabsize: 4
+    apidocBaseUrl: http://hazelcast.github.io/hazelcast-csharp-client/latest/api/
+nav:
+- modules/ROOT/nav.adoc
