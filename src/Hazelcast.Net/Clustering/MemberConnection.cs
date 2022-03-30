@@ -64,6 +64,8 @@ namespace Hazelcast.Clustering
         private volatile bool _disposed;
         private volatile bool _active;
 
+        private readonly NetworkAddress _address;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
         /// </summary>
@@ -76,7 +78,7 @@ namespace Hazelcast.Clustering
         /// <param name="loggerFactory">A logger factory.</param>
         public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence<long> correlationIdSequence, ILoggerFactory loggerFactory)
         {
-            Address = address ?? throw new ArgumentNullException(nameof(address));
+            _address = address ?? throw new ArgumentNullException(nameof(address));
             _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
             _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
             _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
@@ -85,6 +87,7 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
+            RemoteAddress = address;//It can be changed after connection is established.
             HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
         }
 
@@ -142,8 +145,14 @@ namespace Hazelcast.Clustering
 
         /// <summary>
         /// Gets the network address the client is connected to.
+        /// <para>In case of unisocket mode, gets the <see cref="RemoteAddress"/></para>
         /// </summary>
-        public NetworkAddress Address { get; }
+        public NetworkAddress Address { get { return _networkingOptions.SmartRouting || _networkingOptions.Cloud.Enabled ? _address : RemoteAddress; } }
+
+        /// <summary>
+        /// Gets network address responed by the member
+        /// </summary>
+        public NetworkAddress RemoteAddress { get; private set; }
 
         /// <summary>
         /// Gets the local endpoint of the socket connection.
@@ -185,10 +194,10 @@ namespace Hazelcast.Clustering
             // the SocketConnection must be open *after* everything has been wired
 
             _socketConnection = new ClientSocketConnection(Id, Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
-                { OnShutdown = OnSocketShutdown };
+            { OnShutdown = OnSocketShutdown };
 
             _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
-                { OnReceiveMessage = ReceiveMessage };
+            { OnReceiveMessage = ReceiveMessage };
 
             HConsole.Configure(x => x.Configure(_messageConnection).SetIndent(8).SetPrefix($"CLT.MSG [{Id.ToShortString()}]"));
 
@@ -219,6 +228,7 @@ namespace Hazelcast.Clustering
             ClusterId = result.ClusterId;
             ConnectTime = DateTimeOffset.Now;
             Principal = result.Principal;
+            RemoteAddress = result.MemberAddress;
 
             bool disposed;
             lock (_mutex)

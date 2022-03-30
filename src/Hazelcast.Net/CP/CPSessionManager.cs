@@ -240,7 +240,8 @@ namespace Hazelcast.CP
 
             try
             {
-                await _heartbeating.CfAwaitCanceled();
+                if (_heartbeating != null)
+                    await _heartbeating.CfAwaitCanceled();
             }
             catch (Exception e)
             {

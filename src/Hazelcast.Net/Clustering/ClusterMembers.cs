@@ -221,7 +221,7 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected?"":"dis")}connected.");
+                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
 
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
@@ -757,7 +757,8 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _memberConnectionQueue.DisposeAsync().CfAwait();
+            if (_memberConnectionQueue != null)
+                await _memberConnectionQueue.DisposeAsync().CfAwait();
         }
     }
 }
