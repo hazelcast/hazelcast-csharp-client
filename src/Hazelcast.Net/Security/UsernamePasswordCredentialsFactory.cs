@@ -30,13 +30,5 @@ namespace Hazelcast.Security
         public UsernamePasswordCredentialsFactory(string username, string password)
             : base(new UsernamePasswordCredentials { Name = username, Password = password })
         { }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="UsernamePasswordCredentialsFactory"/> class.
-        /// </summary>
-        /// <param name="args">Arguments.</param>
-        public UsernamePasswordCredentialsFactory(IReadOnlyDictionary<string, string> args)
-            : this(args.GetStringValue("username"), args.GetStringValue("password"))
-        { }
     }
 }
