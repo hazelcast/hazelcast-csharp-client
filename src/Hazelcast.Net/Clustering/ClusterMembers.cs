@@ -757,6 +757,7 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
+            // no connection queue is assigned in unisocket mode
             if (_memberConnectionQueue != null)
                 await _memberConnectionQueue.DisposeAsync().CfAwait();
         }

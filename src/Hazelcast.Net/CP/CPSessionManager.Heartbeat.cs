@@ -32,7 +32,7 @@ namespace Hazelcast.CP
     internal partial class CPSessionManager
     {
         private readonly CancellationTokenSource _cancel; // initialized in ctor
-        private Task _heartbeating;
+        private Task _heartbeating; // initialized in ctor
         private int _heartbeatState;
 
         /// <summary>
