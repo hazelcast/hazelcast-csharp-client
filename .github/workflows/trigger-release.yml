@@ -1,0 +1,75 @@
+name: Trigger Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dryrun:
+        description: 'DryRun'
+        required: true
+        type: boolean
+        default: true
+
+# a manual workflow that runs  for a specified <version> branches, and
+# - validates the version (release page, tag, milestone...)
+# - tags that branch with v<version>, thus triggering the release
+# - finalizes the version (release page, milestone...)
+
+jobs:
+  job:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/heads/release/') # 19 leading chars
+    steps:
+
+    # check the repository out
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    # configure Git so we can push back
+    - name: Configure Git
+      run: |
+        git config user.email "github-actions@hazelcast.com"
+        git config user.name "GitHub Actions (Trigger Release)"
+
+    # checkout the devops repository for additional hz.ps1 commands (push-nuget...)
+    # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
+    # repository that is private you will need to provide your own PAT."
+    - name: Checkout devops
+      uses: actions/checkout@v2
+      with:
+        repository: hazelcast/DevOps
+        ref: master
+        token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
+        path: ./build/devops
+
+    # validate that there is a GitHub Release for the version
+    - name: Validate the release
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const scriptf = require('./.github/workflows/publish-release.js')
+          const script = scriptf({github, context, core})
+          const version = github.ref.substring(19)
+          await script.validateRelease(version)
+
+    # finalize + trigger the release
+    - name: Trigger Release
+      if: ${{ github.event.inputs.dryrun == 'false' }}
+      shell: pwsh
+      run: |
+        ./hz.ps1 -noRestore -localRestore update-doc-version
+        ./hz.ps1 -noRestore -localRestore trigger-release -yolo
+        git push
+
+    # publish the release page, close the milestone
+    - name: Publish Release Page
+      if: ${{ github.event.inputs.dryrun == 'false' }}
+      uses: actions/github-script@v5
+      with:
+        script: |
+          const scriptf = require('./.github/workflows/publish-release.js')
+          const script = scriptf({github, context, core})
+          const version = github.ref.substring(19)
+          await script.publishRelease(version)
+          await script.closeMilestone(version)
