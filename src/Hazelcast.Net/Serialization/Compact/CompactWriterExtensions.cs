@@ -14,18 +14,11 @@
 
 #nullable enable
 
-// FIXME - eventually remove ReSharper disable when all methods are tested
-// ReSharper disable UnusedMember.Global
-
-using System;
-using System.Runtime.CompilerServices;
-
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
     /// Provides extension methods for the <see cref="ICompactWriter"/> interface.
     /// </summary>
     public static class CompactWriterExtensions
-    {
-    }
+    { }
 }

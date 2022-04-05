@@ -20,6 +20,11 @@ namespace Hazelcast.Exceptions
     internal static class ExceptionMessages
     {
         /// <summary>
+        /// Internal error.
+        /// </summary>
+        public const string InternalError = "Internal error.";
+        
+        /// <summary>
         /// Not enough bytes.
         /// </summary>
         public const string NotEnoughBytes = "Not enough bytes.";

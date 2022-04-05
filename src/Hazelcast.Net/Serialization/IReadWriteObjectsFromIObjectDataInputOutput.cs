@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,23 +15,24 @@
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a generic custom serializer that operates over byte arrays.
+    /// Defines a service that can read objects from an <see cref="IObjectDataInput"/>,
+    /// and write objects to an <see cref="IObjectDataOutput"/>.
     /// </summary>
-    /// <typeparam name="T">The type of the serialized object.</typeparam>
-    public interface IByteArraySerializer<T> : ISerializer
+    /// <remarks>
+    /// <para>This interface exists so that we don't have to pass the full serializers
+    /// in places where reading and writing objects is all we need, in order to reduce
+    /// the dependency surface and simplify implementation of tests.</para>
+    /// </remarks>
+    internal interface IReadWriteObjectsFromIObjectDataInputOutput
     {
         /// <summary>
-        /// Reads an object.
+        /// Write an object.
         /// </summary>
-        /// <param name="buffer">Input data.</param>
-        /// <returns>The object.</returns>
-        T Read(byte[] buffer);
+        void Write(IObjectDataOutput output, object obj);
 
         /// <summary>
-        /// Writes an object.
+        /// Read an object.
         /// </summary>
-        /// <param name="obj">The object.</param>
-        /// <returns>The serialized object.</returns>
-        byte[] Write(T obj);
+        T Read<T>(IObjectDataInput input);
     }
 }

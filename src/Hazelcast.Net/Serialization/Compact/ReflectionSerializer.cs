@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Reflection;
 using Hazelcast.Models;
 
@@ -27,8 +29,8 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal class ReflectionSerializer : ICompactSerializer<object>
     {
-        /// <inheritdoc />
-        public Type SerializedType => throw new InvalidOperationException();
+        private static readonly ConcurrentDictionary<Type, PropertyInfo[]> Properties =
+            new ConcurrentDictionary<Type, PropertyInfo[]>();
 
         /// <inheritdoc />
         public string TypeName => throw new InvalidOperationException();
@@ -193,33 +195,14 @@ namespace Hazelcast.Serialization.Compact
                 };
         }
 
-        // FIXME - dead code
-        /*
-        private static bool TryGetWriter(Type type, out Action<ICompactWriter, string, object?> write)
-        {
-            if (Writers.TryGetValue(type, out write)) return true;
-
-            // assume everything that is not a known type, is an object to compact-serializer
-            write = (w, n, o) => w.WriteObjectRef(n, o);
-            return true;
-        }
-
-        private static bool TryGetReader(Type type, out Func<ICompactReader, string, object?> read)
-        {
-            if (Readers.TryGetValue(type, out read)) return true;
-
-            read = (r, n) =>
-            {
-                if (!(r is CompactReader reader)) throw new ArgumentException();
-                var ro = typeof (CompactReader).GetMethod("ReadObjectRef");
-                var rog = ro.MakeGenericMethod(type);
-                return rog.Invoke(reader, new object[] { n });
-            };
-
-            return true;
-        }
-        */
-
+        private static PropertyInfo[] GetProperties(Type objectType)
+            => Properties.GetOrAdd(objectType, 
+                type => type
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                    .Where(x => x.CanRead && x.CanWrite)
+                    .ToArray()
+            );
+        
         /// <inheritdoc />
         public virtual object Read(ICompactReader reader)
         {
@@ -227,11 +210,6 @@ namespace Hazelcast.Serialization.Compact
                 throw new ArgumentException($"Reader is not of type {nameof(CompactReader)}.", nameof(reader));
 
             var typeOfObj = r.ObjectType;
-
-            // FIXME - cache
-            // cache the set of properties that need to be read, per type
-            // consider emitting property setter calls
-            // cache (emit?) the ctor to avoid using the (slow) Activator
 
             object? obj;
             try
@@ -242,15 +220,13 @@ namespace Hazelcast.Serialization.Compact
             {
                 throw new SerializationException($"Failed to create an instance of type {typeOfObj}.", e);
             }
+            
+            // TODO: consider emitting the property setters
 
-            var properties = typeOfObj.GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var property in properties)
+            foreach (var property in GetProperties(typeOfObj))
             {
-                if (property.CanRead && property.CanWrite &&
-                    r.GetValidFieldName(property.Name, out var fieldName))
-                {
+                if (r.ValidateFieldNameInvariant(property.Name, out var fieldName))
                     property.SetValue(obj, GetReader(property.PropertyType)(reader, fieldName));
-                }
             }
 
             return obj;
@@ -264,26 +240,20 @@ namespace Hazelcast.Serialization.Compact
             // have to accept the property names as field names.
 
             fieldName = propertyName;
-            return !(writer is CompactWriter w) || w.GetValidFieldName(propertyName, out fieldName);
+            return !(writer is CompactWriter w) || w.ValidateFieldNameInvariant(propertyName, out fieldName);
         }
-
+        
         /// <inheritdoc />
         public virtual void Write(ICompactWriter writer, object obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
 
-            // FIXME - cache
-            // cache the set of properties that need to be written, per type
-            // consider emitting property getter calls
+            // TODO: consider emitting the property getters
 
-            var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
-            foreach (var property in properties)
+            foreach (var property in GetProperties(obj.GetType()))
             {
-                if (property.CanRead &&  property.CanWrite &&
-                    GetValidFieldName(writer, property.Name, out var fieldName))
-                {
+                if (GetValidFieldName(writer, property.Name, out var fieldName))
                     GetWriter(property.PropertyType)(writer, fieldName, property.GetValue(obj));
-                }
             }
         }
     }

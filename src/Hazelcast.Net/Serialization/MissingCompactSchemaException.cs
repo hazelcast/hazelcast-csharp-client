@@ -19,13 +19,19 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization.Compact;
 
+// CA1032: default constructors make no sense here
+// CA2237: [Serializable] attribute makes no sense here
+// CA2229: no need to disable it if no [Serializable] attribute
+#pragma warning disable CA1032
+#pragma warning disable CA2237
+
 namespace Hazelcast.Serialization
 {
+
     /// <summary>
     /// The exception that is thrown when a compact serialization schema could not be found
     /// for a specified schema identifier, 
     /// </summary>
-    [Serializable] // FIXME - what about serializable + CA1032? bonkers!
     public sealed class MissingCompactSchemaException : SerializationException
     {
         private readonly Func<long, ValueTask<Schema?>> _fetch;
@@ -45,7 +51,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the identifier of the missing schema.
         /// </summary>
-        public long SchemaId { get; set; }
+        public long SchemaId { get; }
 
         /// <summary>
         /// Asynchronously fetches the missing schema from the cluster.

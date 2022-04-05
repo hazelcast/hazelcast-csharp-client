@@ -20,15 +20,15 @@ namespace Hazelcast.Serialization
     internal partial class ObjectDataOutput : IObjectDataOutput, IDisposable
     {
         private readonly int _initialBufferSize;
-        private readonly SerializationService _serializationService;
+        private readonly IReadWriteObjectsFromIObjectDataInputOutput _objectsReaderWriter;
         private byte[] _buffer;
         private int _position;
 
-        internal ObjectDataOutput(int initialBufferSize, SerializationService serializationService, Endianness endianness)
+        internal ObjectDataOutput(int initialBufferSize, IReadWriteObjectsFromIObjectDataInputOutput objectsReaderWriter, Endianness endianness)
         {
             _initialBufferSize = initialBufferSize;
             _buffer = new byte[_initialBufferSize];
-            _serializationService = serializationService;
+            _objectsReaderWriter = objectsReaderWriter;
             Endianness = endianness;
         }
 

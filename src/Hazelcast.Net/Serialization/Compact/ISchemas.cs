@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Serialization.Compact
@@ -34,14 +37,14 @@ namespace Hazelcast.Serialization.Compact
         /// <param name="id">The unique identifier of the schema.</param>
         /// <param name="schema">The schema.</param>
         /// <returns><c>true</c> if the schema was found locally; otherwise false.</returns>
-        bool TryGet(long id, out Schema schema);
+        bool TryGet(long id, [NotNullWhen(true)] out Schema? schema);
 
         /// <summary>
         /// Gets a local or remote schema.
         /// </summary>
         /// <param name="id">The unique identifier of the schema.</param>
         /// <returns>The schema, or <c>null</c> if the schema could not be found.</returns>
-        ValueTask<Schema> GetOrFetchAsync(long id);
+        ValueTask<Schema?> GetOrFetchAsync(long id);
 
         /// <summary>
         /// Publishes all known non-published schemas.

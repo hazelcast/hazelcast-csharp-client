@@ -101,24 +101,6 @@ namespace Hazelcast.Serialization
             }
         }
 
-        // FIXME - dead code
-        /*
-        /// <summary>
-        /// Writes an object to an <see cref="ObjectDataOutput"/>.
-        /// </summary>
-        /// <param name="output">The output.</param>
-        /// <param name="obj">The object.</param>
-        /// <exception cref="ArgumentNullException">The <paramref name="output"/> is <c>null</c>.</exception>
-        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
-        public void WriteObject(ObjectDataOutput output, object obj)
-        {
-            if (output == null) throw new ArgumentNullException(nameof(output));
-            if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
-
-            WriteObject(output, obj, false);
-        }
-        */
-
         /// <summary>
         /// Writes an object to an <see cref="ObjectDataOutput"/>.
         /// </summary>
@@ -153,7 +135,7 @@ namespace Hazelcast.Serialization
                 throw new SerializationException(e);
             }
         }
-
+        
         /// <summary>
         /// Reads an object from an <see cref="ObjectDataInput"/>.
         /// </summary>
@@ -184,6 +166,14 @@ namespace Hazelcast.Serialization
             }
         }
 
+        /// <inheritdoc />
+        void IReadWriteObjectsFromIObjectDataInputOutput.Write(IObjectDataOutput output, object obj)
+            => WriteObject(output.MustBe<ObjectDataOutput>(), obj, false);
+
+        /// <inheritdoc />
+        T IReadWriteObjectsFromIObjectDataInputOutput.Read<T>(IObjectDataInput input)
+            => ReadObject<T>(input.MustBe<ObjectDataInput>());
+        
         public static T CastObject<T>(object obj, bool enforceNullable)
         {
             // when getting a IHMap<int, int> value for a non-existing key, the cluster will return

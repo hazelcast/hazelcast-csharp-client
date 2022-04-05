@@ -76,7 +76,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         // the computed values, when not specified by the user
         // ReSharper disable once InconsistentNaming
-        private readonly string ComputedTypeName = CompactSerializer.GetTypeName(typeof (Thing));
+        private readonly string ComputedTypeName = CompactSerializationSerializer.GetTypeName(typeof (Thing));
         private const string ComputedValueFieldName = nameof(Thing.Value);
 
         [Test]

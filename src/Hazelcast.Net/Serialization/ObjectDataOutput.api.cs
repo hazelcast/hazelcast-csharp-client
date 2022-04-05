@@ -91,16 +91,6 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfDouble;
         }
 
-        public void WriteBigDecimal(decimal value)
-        {
-            throw new NotImplementedException(); // FIXME - implement WriteBigDecimal
-        }
-
-        public void WriteBigDecimal(HBigDecimal value)
-        {
-            throw new NotImplementedException(); // FIXME - implement WriteBigDecimal
-        }
-
         public void WriteString(string value)
         {
             var byteCount = value != null ? Encoding.UTF8.GetByteCount(value) : BytesExtensions.SizeOfNullArray;
@@ -265,7 +255,7 @@ namespace Hazelcast.Serialization
 
         public void WriteObject(object value)
         {
-            _serializationService.WriteObject(this, value, false);
+            _objectsReaderWriter.Write(this, value);
         }
 
         public void Write(byte[] bytes)

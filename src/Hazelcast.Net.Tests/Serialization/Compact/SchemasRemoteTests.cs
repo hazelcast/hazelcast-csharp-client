@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -35,11 +36,18 @@ namespace Hazelcast.Tests.Serialization.Compact
             {
                 _messaging = messaging;
             }
-
+            
             public int SentMessageCount => _count;
+
+            public Func<ValueTask> SendingMessage
+            {
+                get => _messaging.SendingMessage;
+                set => _messaging.SendingMessage = value;
+            }
 
             public Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)
             {
+                
                 Interlocked.Increment(ref _count);
                 return _messaging.SendAsync(requestMessage, cancellationToken);
             }

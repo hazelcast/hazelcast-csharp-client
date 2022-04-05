@@ -12,7 +12,7 @@ namespace Hazelcast.Models
     // they all ultimately are structs combining a BigInteger unscaled value with an int scale.
 
     /// <summary>
-    /// Represents an Hazelcast <c>DECIMAL</c> primitive type.
+    /// Represents an Hazelcast <c>DECIMAL</c> primitive type value.
     /// </summary>
     /// <remarks>
     /// <para>The <c>DECIMAL</c> primitive type consists of a random precision <see cref="BigInteger"/>
@@ -284,10 +284,7 @@ namespace Hazelcast.Models
         }
 
         /// <inheritdoc />
-        public override bool Equals(object obj)
-        {
-            return obj is HBigDecimal other && Equals(other);
-        }
+        public override bool Equals(object? obj) => obj is HBigDecimal other && Equals(other);
 
         /// <inheritdoc />
         public override int GetHashCode()

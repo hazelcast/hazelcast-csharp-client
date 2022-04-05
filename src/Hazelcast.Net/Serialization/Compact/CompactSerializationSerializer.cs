@@ -16,35 +16,32 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
-    /// Represents the compact serializer.
+    /// Represents the <see cref="ISerializer"/> that supports compact serialization.
     /// </summary>
-    internal sealed class CompactSerializer : IStreamSerializer<object>
+    internal sealed class CompactSerializationSerializer : IStreamSerializer<object>, IReadWriteObjectsFromIObjectDataInputOutput
     {
         private readonly ConcurrentDictionary<Type, CompactRegistration> _registrationsByType = new ConcurrentDictionary<Type, CompactRegistration>();
         private readonly ConcurrentDictionary<long, CompactRegistration> _registrationsById = new ConcurrentDictionary<long, CompactRegistration>();
         private readonly ConcurrentDictionary<Type, Schema> _schemasMap = new ConcurrentDictionary<Type, Schema>();
         private readonly ISchemas _schemas;
-        private readonly CompactSerializerWrapper _reflectionSerializer;
+        private readonly CompactSerializerAdapter _reflectionSerializer;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="CompactSerializer"/> class.
+        /// Initializes a new instance of the <see cref="CompactSerializationSerializer"/> class.
         /// </summary>
         /// <param name="options">Compact serialization options.</param>
         /// <param name="schemas">A schema-management service instance.</param>
-        public CompactSerializer(CompactOptions options, ISchemas schemas)
+        public CompactSerializationSerializer(CompactOptions options, ISchemas schemas)
         {
             _schemas = schemas;
-            _reflectionSerializer = CompactSerializerWrapper.Create(options.ReflectionSerializer ?? new ReflectionSerializer());
+            _reflectionSerializer = CompactSerializerAdapter.Create(options.ReflectionSerializer ?? new ReflectionSerializer());
 
             foreach (var registration in options.GetRegistrations(_reflectionSerializer))
             {
@@ -62,6 +59,7 @@ namespace Hazelcast.Serialization.Compact
             }
         }
 
+        /// <inheritdoc />
         public int TypeId => SerializationConstants.ConstantTypeCompact;
 
         // for tests
@@ -74,8 +72,18 @@ namespace Hazelcast.Serialization.Compact
             // note: ISchemas is not IDisposable because we don't have background tasks
         }
 
+        /// <summary>
+        /// Gets the default type name used by compact serialization for a type.
+        /// </summary>
+        /// <typeparam name="T">The type.</typeparam>
+        /// <returns>The default type name used by compact serialization for the specified type.</returns>
         public static string GetTypeName<T>() => GetTypeName(typeof (T));
 
+        /// <summary>
+        /// Gets the default type name used by compact serialization for a type.
+        /// </summary>
+        /// <param name="type">The type.</param>
+        /// <returns>The default type name used by compact serialization for the specified type.</returns>
         public static string GetTypeName(Type type) => type.GetQualifiedTypeName() ?? 
                                                        throw new SerializationException($"Failed to obtain {type} assembly qualified name.");
 
@@ -183,65 +191,6 @@ namespace Hazelcast.Serialization.Compact
             return registration;
         }
 
-        // FIXME - dead code
-        /*
-        private CompactRegistration? GetOrCreateRegistration_Compactable(Schema schema)
-        {
-            // FIXME - that type of lookup is bad
-            // it's really ugly and resource-intensive and we probably don't want to do it
-            // which means we would require that every compactable be registered via code
-            // and then
-            // what is the point of it being "compactable" in the first place?
-            // it's not purely configuration-free since the class needs to be tweaked
-            // and I feel like
-            // I want to
-            // kill ICompactable and [Compactable] support entirely
-            // or maybe, split it in a different commit
-            //
-            // OTOH it means that anytime a client is created, the type needs to be registered
-            // whereas an interface or attribute means that only if/when needed, we'll handle it,
-            // so OK for *sending* things it's vaguely better but we cannot *receive* things?
-            //
-            // OK we should just KILL all ICompactable and [Compactable] for now.
-            //
-            // on the other hand, .Register<Thing>() // enough, but not needed
-            // .Register<Thing>(typeName) // better
-            // etc
-
-            // FIXME - cache types somehow to avoid repeated expensive lookup
-            // and, filter out everything that is not pure user-land
-            // but really, who would want to do this in a high-perf application?
-            // either don't configure anything it let it work by magic,
-            // or register stuff and get done with it
-
-            // we don't even support that nonsense
-            /~*
-            foreach (var t in AppDomain.CurrentDomain
-                         .GetAssemblies()
-                         .Where(a => !a.GlobalAssemblyCache && !a.IsDynamic)
-                         //.SelectMany(x => x.GetExportedTypes()) // that excludes non-public types
-                         .SelectMany(x => x.GetTypes()) // include non-public types
-                         .Where(t => t.IsClass && !t.IsAbstract))
-            {
-                var attr = t.GetCustomAttribute<CompactSerializableAttribute>();
-                if (attr != null && (attr.TypeName ?? t.Name) == schema.TypeName)
-                {
-                    var registration = new CompactRegistration(schema.TypeName, t, CompactSerializerWrapper.Create(attr.SerializerType), true);
-                    _registrationsById.TryAdd(schema.Id, registration);
-                    _registrationsByType.TryAdd(registration.Type, registration);
-
-                    // do *not* add to _schemasMap - it may be one schema for the type, but not
-                    // the canonical schema that the client should use for serializing.
-
-                    return registration;
-                }
-            }
-            *~/
-
-            return null;
-        }
-        */
-
         public void WriteObject(ObjectDataOutput output, object obj)
         {
             var typeOfObj = obj.GetType();
@@ -312,9 +261,7 @@ namespace Hazelcast.Serialization.Compact
             var registration = GetOrCreateRegistration(schema);
 
             var reader = new CompactReader(this, input, schema, registration.SerializedType);
-            var obj = registration.Serializer.Read(reader);
-            if (obj == null) throw new SerializationException("Read illegal null object.");
-            return obj;
+            return registration.Serializer.Read(reader);
         }
 
         private Schema ReadSchema(ObjectDataInput input)
@@ -325,12 +272,21 @@ namespace Hazelcast.Serialization.Compact
             // trying to de-serialize an unknown schema - not going to do anything about it here,
             // just report the situation via a dedicated exception. the caller is expected to
             // catch it, fetch the schema, and retry.
+            
+            // FIXME generally not happy with handling of metadata 
+            
+            // ToObject: if a schema is missing, a MissingCompactSchemaException is thrown, thus
+            //   indicating that the data cannot be deserialized. the user is expected to await
+            //   exception.FetchSchemaAsync() and retry. this needs to happen *everywhere*
+            //   ToObject is invoked.
             //
-            // FIXME - discuss
-            // yes, using exceptions for that purpose is not pretty. the alternative would be to
-            // return a flag, a state, a ValueTask, anything representing that we are in need of
-            // a schema. but, this would require that that return value be bubbled up along the
-            // whole API including the very public IObjectDataInput.ReadObject and ?!
+            // using exceptions here is not pretty. the alternative would be to return a state
+            // of some sort, anything representing that we are in need of a schema - but then,
+            // that state would need to bubble along the API up to ToObject and? 
+
+            // ToData: if a new schema is created along the way, it is queued for publication
+            //   and before we send *anything* to the server, we publish schemas that need
+            //   to be published. could be published by another request and then...?
 
             throw new MissingCompactSchemaException(schemaId, id => _schemas.GetOrFetchAsync(id));
 

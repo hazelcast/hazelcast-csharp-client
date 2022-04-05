@@ -29,6 +29,7 @@ namespace Hazelcast.Clustering
     {
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
+        private Func<ValueTask> _sendingMessage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMessaging"/> class.
@@ -42,7 +43,20 @@ namespace Hazelcast.Clustering
 
             HConsole.Configure(x => x.Configure<ClusterMessaging>().SetPrefix("MSGING"));
         }
-
+        
+        /// <summary>
+        /// Gets or set an action that will be executed before sending a message. 
+        /// </summary>
+        public Func<ValueTask> SendingMessage
+        {
+            get => _sendingMessage;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _sendingMessage = value;
+            }
+        }
+        
         /// <summary>
         /// Sends a message to a random member.
         /// </summary>
@@ -200,7 +214,12 @@ namespace Hazelcast.Clustering
 
             // fail fast, if the cluster is not active
             _clusterState.ThrowIfNotActive();
+            
+            // NOTE: *every* invocation sent to the cluster goes through the code below
 
+            // trigger event
+            await _sendingMessage.AwaitEach().CfAwait();
+            
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
             message.CorrelationId = correlationId;

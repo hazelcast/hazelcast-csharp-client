@@ -15,7 +15,7 @@
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Defines a custom serializer that operates over <see cref="IObjectDataInput"/> and <see cref="IObjectDataOutput"/>.
+    /// Defines a generic custom <see cref="ISerializer"/> that operates over <see cref="IObjectDataInput"/> and <see cref="IObjectDataOutput"/>.
     /// </summary>
     /// <typeparam name="T">The type of the serialized objects.</typeparam>
     public interface IStreamSerializer<T> : ISerializer
@@ -32,10 +32,6 @@ namespace Hazelcast.Serialization
         /// </summary>
         /// <param name="output">Output data.</param>
         /// <param name="obj">The object.</param>
-        /// <returns><c>true</c> if, after the object has been serialized, the serialization service
-        /// is ready and serialized data can be immediately sent to the cluster; <c>false</c> if the
-        /// serialization service requires to complete some work before data can be sent to the
-        /// cluster (i.e. <see cref="SerializationService.Meh"/> FIXME must be invoked).</returns>
         void Write(IObjectDataOutput output, T obj);
     }
 

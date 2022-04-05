@@ -36,8 +36,13 @@ namespace Hazelcast.Tests.Serialization.Compact
                 _respond = respond;
             }
 
-            public Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)
-                => Task.FromResult(_respond(requestMessage));
+            public Func<ValueTask> SendingMessage { get; set; }
+
+            public async Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)
+            {
+                await SendingMessage.AwaitEach().CfAwait();
+                return _respond(requestMessage);
+            }
         }
 
         private static Schema GetSchema() => GetSchema("typename", "fieldname");

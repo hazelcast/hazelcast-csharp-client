@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Models;
 
@@ -27,7 +28,7 @@ namespace Hazelcast.Serialization.Compact
         private readonly int _offsetPosition;
         private readonly Func<ObjectDataInput, int, int, int> _offsetReader;
 
-        public CompactReader(CompactSerializer serializer, ObjectDataInput input, Schema schema, Type objectType)
+        public CompactReader(IReadWriteObjectsFromIObjectDataInputOutput serializer, ObjectDataInput input, Schema schema, Type objectType)
             : base(serializer, schema, input.Position)
         {
             _input = input ?? throw new ArgumentNullException(nameof(input));
@@ -157,23 +158,49 @@ namespace Hazelcast.Serialization.Compact
 
         public bool ReadBoolean(string name)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadBoolean
+            var (position, offset) = GetBooleanFieldPosition(name);
+
+            // how we write:
+            //_output.MoveTo(position, BytesExtensions.SizeOfByte);
+            //var bits = (byte)(value ? 1 << offset : 0);
+            //var mask = (byte)(1 << offset);
+            //_output.WriteBits(bits, mask);
+            
+            // how we read:
+            _input.MoveTo(position);
+            var bits = _input.ReadByte();
+            var mask = (byte)(1 << offset);
+            return (bits & mask) != 0;
         }
 
         public bool? ReadNullableBoolean(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadBooleanRef
-        }
+            => ReadNullable(name, FieldKind.Boolean, input => input.ReadBoolean());
 
         public bool[]? ReadArrayOfBoolean(string name)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadBooleans
+            var field = GetValidField(name, FieldKind.ArrayOfBoolean);
+            var offset = _offsetReader(_input, _offsetPosition, field.Index);
+            if (offset < 0) return null;
+
+            _input.MoveTo(DataStartPosition + offset);
+
+            var length = _input.ReadInt();
+            var value = new bool[length];
+            for (var i = 0; i < value.Length; )
+            {
+                var bits = _input.ReadByte();
+                var mask = (byte) 0b_1000_0000;
+                for (var n = 7; i < value.Length && n >= 0; n--)
+                {
+                    value[i++] = (bits & mask) > 0;
+                    mask = (byte) (mask >> 1);
+                }
+            }
+            return value;
         }
 
         public bool?[]? ReadArrayOfNullableBoolean(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadBooleanRefs
-        }
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableBoolean, input => input.ReadBoolean());
 
         public sbyte ReadInt8(string name)
         {
@@ -277,58 +304,102 @@ namespace Hazelcast.Serialization.Compact
         public string?[]? ReadArrayOfNullableString(string name)
             => ReadArrayOfReference(name, FieldKind.ArrayOfNullableString, input => input.ReadString());
 
-        public HBigDecimal? ReadNullableDecimal(string name)
-            => ReadNullable(name, FieldKind.NullableDecimal, input => input.ReadBigDecimal());
-
-        public HBigDecimal?[]? ReadArrayOfNullableDecimal(string name)
-            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, input => input.ReadBigDecimal());
-
-        public HLocalTime? ReadNullableTime(string name)
+        private static BigInteger ReadBigInteger(ObjectDataInput input)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeRef
+            // <bigint> := <length:i32> <byte:u8>*
+            // where
+            //   <length> is the number of <byte> items
+            //   <byte>* is the byte array containing the two's complement representation of the integer in BIG_ENDIAN byte-order
+            //      and contains the minimum number of bytes required, including at least one sign bit
+
+            var bytes = input.ReadByteArray();
+#if NETSTANDARD2_0
+            // the extended ctor does not exist in netstandard 2.0 and the existing ctor expects signed little-endian bytes
+            // so we have to reverse the bytes before creating the BigInteger - for CompactWriter we provide a polyfill
+            // extension method but for reading... we cannot provide a polyfill ctor
+            Array.Reverse(bytes);
+            return new BigInteger(bytes); // signed, little-endian
+#else
+            return new BigInteger(bytes, false, true); // signed, big-endian
+#endif
         }
 
-        public HLocalTime?[]? ReadArrayOfNullableTime(string name)
+        private static HBigDecimal ReadBigDecimal(ObjectDataInput input)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeRefs
+            var unscaled = ReadBigInteger(input);
+            var scale = input.ReadInt();
+            return new HBigDecimal(unscaled, scale);
+        }
+        
+        public HBigDecimal? ReadNullableDecimal(string name)
+            => ReadNullable(name, FieldKind.NullableDecimal, ReadBigDecimal);
+
+        public HBigDecimal?[]? ReadArrayOfNullableDecimal(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, ReadBigDecimal);
+
+        private HLocalTime ReadTime(ObjectDataInput input)
+        {
+            // time is hour:i8 minute:i8 second:i8 nanosecond:i32
+            var hour = _input.ReadByte();
+            var minute = _input.ReadByte();
+            var second = _input.ReadByte();
+            var nanosecond = _input.ReadInt();
+            return new HLocalTime(hour, minute, second, nanosecond);
+        }
+        
+        public HLocalTime? ReadNullableTime(string name)
+            => ReadNullable(name, FieldKind.NullableTime, ReadTime);
+
+        public HLocalTime?[]? ReadArrayOfNullableTime(string name)
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableTime, ReadTime);
+
+        private HLocalDate ReadDate(ObjectDataInput input)
+        {
+            // date is year:i32 month:i8 day:i8
+            var year = _input.ReadInt();
+            var month = _input.ReadByte();
+            var day = _input.ReadByte();
+            return new HLocalDate(year, month, day);
         }
 
         public HLocalDate? ReadNullableDate(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadDateRef
-        }
+            => ReadNullable(name, FieldKind.NullableDate, ReadDate);
 
         public HLocalDate?[]? ReadArrayOfNullableDate(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadDateRef
-        }
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableDate, ReadDate);
 
-        public HLocalDateTime? ReadNullableTimeStamp(string name)
+        private HLocalDateTime ReadTimeStamp(ObjectDataInput input)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeStampRef
+            var date = ReadDate(input);
+            var time = ReadTime(input);
+            return new HLocalDateTime(date, time);
         }
+        
+        public HLocalDateTime? ReadNullableTimeStamp(string name)
+            => ReadNullable(name, FieldKind.NullableTimeStamp, ReadTimeStamp);
 
         public HLocalDateTime?[]? ReadArrayOfNullableTimeStamp(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeStampRefs
-        }
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableTimeStamp, ReadTimeStamp);
 
-        public HOffsetDateTime? ReadNullableTimeStampWithTimeZone(string name)
+        private HOffsetDateTime ReadTimeStampWithTimeZone(ObjectDataInput input)
         {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRef
+            var timestamp = ReadTimeStamp(input);
+            var offset = input.ReadInt();
+            return new HOffsetDateTime(timestamp, offset);
         }
+        
+        public HOffsetDateTime? ReadNullableTimeStampWithTimeZone(string name)
+            => ReadNullable(name, FieldKind.NullableTimeStampWithTimeZone, ReadTimeStampWithTimeZone);
 
         public HOffsetDateTime?[]? ReadArrayOfNullableTimeStampWithTimeZone(string name)
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadTimeStampWithTimeZoneRefs
-        }
+            => ReadArrayOfNullable(name, FieldKind.ArrayOfNullableTimeStampWithTimeZone, ReadTimeStampWithTimeZone);
 
         public T? ReadNullableCompact<T>(string name)
             where T: class
-            => ReadReference(name, FieldKind.NullableCompact, input => Serializer.Read<T>(input));
+            => ReadReference(name, FieldKind.NullableCompact, input => ObjectsReaderWriter.Read<T>(input));
 
         public T?[]? ReadArrayOfNullableCompact<T>(string name)
             where T : class
-            => ReadArrayOfReference(name, FieldKind.ArrayOfNullableCompact, input => Serializer.Read<T>(input));
+            => ReadArrayOfReference(name, FieldKind.ArrayOfNullableCompact, input => ObjectsReaderWriter.Read<T>(input));
     }
 }

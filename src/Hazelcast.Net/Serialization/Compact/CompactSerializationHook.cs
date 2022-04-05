@@ -22,7 +22,6 @@ namespace Hazelcast.Serialization.Compact
     {
         public static class Constants
         {
-            // FIXME - Java supports changing this via a system property?
             public const int FactoryId = -42;
 
             public static class ClassIds
@@ -41,21 +40,14 @@ namespace Hazelcast.Serialization.Compact
         private class Factory : IDataSerializableFactory
         {
             public IIdentifiedDataSerializable Create(int typeId)
-            {
-                switch (typeId)
-                {
-                    case Constants.ClassIds.Schema:
-                        return new Schema();
-                    //case Constants.ClassIds./SendSchemaOperation:
-                    //    return new SendSchemaOperation();
-                    //case Constants.ClassIds.FetchSchemaOperation:
-                    //    return new FetchSchemaOperation();
-                    //case Constants.ClassIds.SendAllSchemasOperation:
-                    //    return new SendAllSchemasOperation();
-                    default:
-                        throw new ArgumentOutOfRangeException(nameof(typeId));
-                }
-            }
+                => typeId switch
+                    {
+                        Constants.ClassIds.Schema => new Schema(),
+                        //Constants.ClassIds.SendSchemaOperation => new SendSchemaOperation(),
+                        //Constants.ClassIds.FetchSchemaOperation => new FetchSchemaOperation(),
+                        //Constants.ClassIds.SendAllSchemasOperation => new SendAllSchemasOperation(),
+                        _ => throw new ArgumentOutOfRangeException(nameof(typeId))
+                    };
         }
     }
 }

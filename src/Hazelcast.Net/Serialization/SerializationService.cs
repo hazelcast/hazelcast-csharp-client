@@ -26,7 +26,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed partial class SerializationService : IDisposable
+    internal sealed partial class SerializationService : IDisposable, IReadWriteObjectsFromIObjectDataInputOutput
     {
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersCount = SerializationConstants.ConstantSerializersArraySize;
@@ -70,7 +70,7 @@ namespace Hazelcast.Serialization
 #pragma warning disable CA2213 // Disposable fields should be disposed - they are
         private readonly PortableContext _portableContext;
         private readonly PortableSerializer _portableSerializer;
-        private readonly CompactSerializer _compactSerializer;
+        private readonly CompactSerializationSerializer _compactSerializer;
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
         internal SerializationService(
@@ -118,8 +118,8 @@ namespace Hazelcast.Serialization
 
             // Registers the constant 'compact serializer', which implements compact serialization.
             // The two adapters are *not* registered, but handled as special cases by the Lookup methods.
-            _compactSerializer = new CompactSerializer(options.Compact, schemas);
-            _compactSerializerAdapter = Using(new CompactSerializerAdapter(_compactSerializer));
+            _compactSerializer = new CompactSerializationSerializer(options.Compact, schemas);
+            _compactSerializerAdapter = Using(new CompactSerializationSerializerAdapter(_compactSerializer));
             RegisterConstantSerializer(_compactSerializerAdapter);
 
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
@@ -171,15 +171,15 @@ namespace Hazelcast.Serialization
 #pragma warning restore CA1822 // Mark members as static
 
         // for tests
-        public CompactSerializer CompactSerializer => _compactSerializer;
+        public CompactSerializationSerializer CompactSerializer => _compactSerializer;
 
         public Endianness Endianness { get; }
 
         /// <summary>
-        /// Gets the serialization service ready after <c>ToData</c> has been used.
+        /// Gets the serialization service ready to send a message.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask GetReadyToDataAsync()
+        public ValueTask PrepareForSendingMessage()
         {
             // the only serializer that needs attention for now is compact
             return _compactSerializer.Schemas.PublishAsync();

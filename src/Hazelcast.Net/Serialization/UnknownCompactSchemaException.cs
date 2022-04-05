@@ -15,6 +15,10 @@
 #nullable enable
 
 using System;
+using System.Runtime.Serialization;
+
+// CA1032: default constructors make no sense here
+#pragma warning disable CA1032
 
 namespace Hazelcast.Serialization
 {
@@ -22,7 +26,7 @@ namespace Hazelcast.Serialization
     /// The exception that is thrown when a compact serialization schema could not be found
     /// for a specified schema identifier, even after trying to fetch it from the cluster.
     /// </summary>
-    [Serializable] // FIXME - what about serializable + CA1032? bonkers!
+    [Serializable]
     public sealed class UnknownCompactSchemaException : SerializationException
     {
         /// <summary>
@@ -34,10 +38,30 @@ namespace Hazelcast.Serialization
         {
             SchemaId = schemaId;
         }
+        
+        /// <summary>
+        /// Initializes a new instance of the <see cref="UnknownCompactSchemaException"/> class with serialized data.
+        /// </summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data
+        /// about the exception being thrown.</param>
+        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
+        /// about the source or destination.</param>
+        private UnknownCompactSchemaException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            SchemaId = info.GetInt64(nameof(SchemaId));
+        }
 
         /// <summary>
         /// Gets the identifier of the unknown schema.
         /// </summary>
-        public long SchemaId { get; set; }
+        public long SchemaId { get; }
+
+        /// <inheritdoc />
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            base.GetObjectData(info, context);
+            info.AddValue(nameof(SchemaId), SchemaId);
+        }
     }
 }

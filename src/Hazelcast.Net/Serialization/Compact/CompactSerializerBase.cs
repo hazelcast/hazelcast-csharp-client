@@ -14,21 +14,16 @@
 
 #nullable enable
 
-using System;
-
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
     /// Provides a base class for <see cref="ICompactSerializer{T}"/> implementations.
     /// </summary>
     /// <typeparam name="T">The serialized type.</typeparam>
-    public abstract class CompactSerializerBase<T> : ICompactSerializer<T>
+    public abstract class CompactSerializerBase<T> : ICompactSerializer<T> where T : notnull
     {
         /// <inheritdoc />
-        public Type SerializedType => typeof (T);
-
-        /// <inheritdoc />
-        public virtual string TypeName => CompactSerializer.GetTypeName<T>();
+        public virtual string TypeName => CompactSerializationSerializer.GetTypeName<T>();
 
         /// <inheritdoc />
         public abstract T Read(ICompactReader reader);

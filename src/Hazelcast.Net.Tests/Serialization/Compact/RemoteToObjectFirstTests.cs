@@ -93,7 +93,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.SetTypeName<DifferentThing>("thing");
 
             // but then an explicit serializer is required
-            var reflectionSerializer = CompactSerializerWrapper.Create(new ReflectionSerializer());
+            var reflectionSerializer = CompactSerializerAdapter.Create(new ReflectionSerializer());
             Assert.Throws<ConfigurationException>(() => options.GetRegistrations(reflectionSerializer).ToList());
 
             // indeed,
@@ -129,8 +129,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(registrations.Count, Is.EqualTo(2));
             Assert.That(registrations.Any(x => x.SerializedType == typeof(Thing)));
             Assert.That(registrations.Any(x => x.SerializedType == typeof(DifferentThing)));
-            Assert.That(registrations[0].Serializer.Wrapped == serializer);
-            Assert.That(registrations[1].Serializer.Wrapped == serializer);
+            Assert.That(registrations[0].Serializer.Serializer == serializer);
+            Assert.That(registrations[1].Serializer.Serializer == serializer);
         }
 
         [Test]
@@ -161,7 +161,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             options.SetSchema<DifferentThing>(SchemaBuilder.For("thing").Build(), false);
 
             // but then an explicit serializer is required
-            var reflectionSerializer = CompactSerializerWrapper.Create(new ReflectionSerializer());
+            var reflectionSerializer = CompactSerializerAdapter.Create(new ReflectionSerializer());
             Assert.Throws<ConfigurationException>(() => options.GetRegistrations(reflectionSerializer).ToList());
 
             // with an explicit serializer, it works
@@ -176,8 +176,8 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(registrations.Count, Is.EqualTo(2));
             Assert.That(registrations.Any(x => x.SerializedType == typeof(Thing)));
             Assert.That(registrations.Any(x => x.SerializedType == typeof(DifferentThing)));
-            Assert.That(registrations[0].Serializer.Wrapped == serializer);
-            Assert.That(registrations[1].Serializer.Wrapped == serializer);
+            Assert.That(registrations[0].Serializer.Serializer == serializer);
+            Assert.That(registrations[1].Serializer.Serializer == serializer);
         }
 
         [Test]
@@ -295,7 +295,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public async Task AddNothing_FetchSchema_ValidTypeName()
         {
             var mapName = await SetUpCluster(SchemaBuilder
-                .For(CompactSerializer.GetTypeName<Thing>())
+                .For(CompactSerializationSerializer.GetTypeName<Thing>())
                 .WithField("name", FieldKind.NullableString)
                 .WithField("value", FieldKind.Int32)
                 .Build());

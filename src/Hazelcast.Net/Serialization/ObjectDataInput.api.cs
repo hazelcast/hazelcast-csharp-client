@@ -103,11 +103,6 @@ namespace Hazelcast.Serialization
             return value;
         }
 
-        public HBigDecimal ReadBigDecimal()
-        {
-            throw new NotImplementedException(); // FIXME - implement ReadBigDecimal
-        }
-
         public string ReadString()
         {
             var numberOfBytes = ReadInt();
@@ -283,7 +278,7 @@ namespace Hazelcast.Serialization
             return values;
         }
 
-        public T ReadObject<T>() => _serializationService.ReadObject<T>(this);
+        public T ReadObject<T>() => _objectsReaderWriter.Read<T>(this);
 
         public int Read(byte[] bytes)
         {

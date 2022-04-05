@@ -22,13 +22,13 @@ namespace Hazelcast.Serialization
     internal partial class ObjectDataInput : IObjectDataInput, IDisposable
     {
         private byte[] _buffer;
-        private readonly SerializationService _serializationService;
+        private readonly IReadWriteObjectsFromIObjectDataInputOutput _objectsReaderWriter;
         private int _length;
 
-        public ObjectDataInput(byte[] buffer, SerializationService serializationService, Endianness endianness, int offset = 0)
+        public ObjectDataInput(byte[] buffer, IReadWriteObjectsFromIObjectDataInputOutput objectsReaderWriter, Endianness endianness, int offset = 0)
         {
             _buffer = buffer;
-            _serializationService = serializationService;
+            _objectsReaderWriter = objectsReaderWriter;
             Endianness = endianness;
             _length = buffer?.Length ?? 0;
             Debug.Assert(offset >= 0 && offset <= _length, "Wrong offset value for input");

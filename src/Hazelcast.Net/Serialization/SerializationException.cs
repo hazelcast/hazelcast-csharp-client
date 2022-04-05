@@ -23,7 +23,7 @@ namespace Hazelcast.Serialization
     /// <summary>
     /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
-    [Serializable] // FIXME - what about serializable + CA1032? bonkers!
+    [Serializable]
     public class SerializationException : HazelcastException
     {
         /// <summary>

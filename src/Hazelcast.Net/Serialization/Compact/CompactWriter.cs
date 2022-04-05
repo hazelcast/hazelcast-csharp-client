@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Models;
 
@@ -32,7 +33,7 @@ namespace Hazelcast.Serialization.Compact
         private int _dataPosition;
         private bool _completed;
 
-        public CompactWriter(CompactSerializer serializer, ObjectDataOutput output, Schema schema)
+        public CompactWriter(IReadWriteObjectsFromIObjectDataInputOutput serializer, ObjectDataOutput output, Schema schema)
             : base(serializer, schema, output.Position)
         {
             _output = output ?? throw new ArgumentNullException(nameof(output));
@@ -381,53 +382,82 @@ namespace Hazelcast.Serialization.Compact
         public void WriteArrayOfNullableString(string name, string?[]? value)
             => WriteArrayOfReference(name, FieldKind.ArrayOfNullableString, value, (output, v) => output.WriteString(v));
 
+        private static void WriteBigInteger(ObjectDataOutput output, BigInteger value)
+        {
+            // <bigint> := <length:i32> <byte:u8>*
+            // where
+            //   <length> is the number of <byte> items
+            //   <byte>* is the byte array containing the two's complement representation of the integer in BIG_ENDIAN byte-order
+            //      and contains the minimum number of bytes required, including at least one sign bit
+            
+            var bytes = value.ToByteArray(false, true); // signed, big-endian
+            output.WriteByteArray(bytes);
+        }
+        
+        private static void WriteBigDecimal(ObjectDataOutput output, HBigDecimal value)
+        {
+            WriteBigInteger(output, value.UnscaledValue);
+            output.WriteInt(value.Scale);
+        }
+        
         public void WriteNullableDecimal(string name, HBigDecimal? value)
-            => WriteNullable(name, FieldKind.NullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
+            => WriteNullable(name, FieldKind.NullableDecimal, value, WriteBigDecimal);
 
         public void WriteArrayOfNullableDecimal(string name, HBigDecimal?[]? value)
-            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, value, (output, v) => output.WriteBigDecimal(v));
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableDecimal, value, WriteBigDecimal);
 
-        public void WriteNullableTime(string name, HLocalTime? value)
+        private static void WriteTime(ObjectDataOutput output, HLocalTime value)
         {
-            // beware of range-check
-            throw new NotImplementedException(); // FIXME - implement WriteTimeRef
+            // time is hour:i8 minute:i8 second:i8 nanosecond:i32
+            output.WriteByte(value.Hour);
+            output.WriteByte(value.Minute);
+            output.WriteByte(value.Second);
+            output.WriteInt(value.Nanosecond);
         }
+        
+        public void WriteNullableTime(string name, HLocalTime? value)
+            => WriteNullable(name, FieldKind.NullableTime, value, WriteTime);
 
         public void WriteArrayOfNullableTime(string name, HLocalTime?[]? value)
-        {
-            // beware of range-check
-            throw new NotImplementedException(); // FIXME - implement WriteTimeRefs
-        }
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableTime, value, WriteTime);
 
-        public void WriteNullableDate(string name, HLocalDate? value)
+        private static void WriteDate(ObjectDataOutput output, HLocalDate value)
         {
-            throw new NotImplementedException(); // FIXME - implement WriteDateRef
+            // date is year:i32 month:i8 day:i8
+            output.WriteInt(value.Year);
+            output.WriteByte(value.Month);
+            output.WriteByte(value.Day);
         }
+        
+        public void WriteNullableDate(string name, HLocalDate? value)
+            => WriteNullable(name, FieldKind.NullableDate, value, WriteDate);
 
         public void WriteArrayOfNullableDate(string name, HLocalDate?[]? value)
-        {
-            throw new NotImplementedException(); // FIXME - implement WriteDateRefs
-        }
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableDate, value, WriteDate);
 
-        public void WriteNullableTimeStamp(string name, HLocalDateTime? value)
+        private static void WriteTimeStamp(ObjectDataOutput output, HLocalDateTime value)
         {
-            throw new NotImplementedException(); // FIXME - implement WriteTimeStampRef
+            WriteDate(output, value.Date);
+            WriteTime(output, value.Time);
         }
+        
+        public void WriteNullableTimeStamp(string name, HLocalDateTime? value)
+            => WriteNullable(name, FieldKind.NullableTimeStamp, value, WriteTimeStamp);
 
         public void WriteArrayOfNullableTimeStamp(string name, HLocalDateTime?[]? value)
-        {
-            throw new NotImplementedException(); // FIXME - implement WriteTimeStampRefs
-        }
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableTimeStamp, value, WriteTimeStamp);
 
-        public void WriteNullableTimeStampWithTimeZone(string name, HOffsetDateTime? value)
+        private static void WriteTimeStampWithTimeZone(ObjectDataOutput output, HOffsetDateTime value)
         {
-            throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRef
+            WriteTimeStamp(output, value.LocalDateTime);
+            output.WriteInt((int) value.Offset.TotalSeconds);
         }
+        
+        public void WriteNullableTimeStampWithTimeZone(string name, HOffsetDateTime? value)
+            => WriteNullable(name, FieldKind.NullableTimeStampWithTimeZone, value, WriteTimeStampWithTimeZone);
 
         public void WriteArrayOfNullableTimeStampWithTimeZone(string name, HOffsetDateTime?[]? value)
-        {
-            throw new NotImplementedException(); // FIXME - implement WriteTimeStampWithTimeZoneRefs
-        }
+            => WriteArrayOfNullable(name, FieldKind.ArrayOfNullableTimeStampWithTimeZone, value, WriteTimeStampWithTimeZone);
 
         // NOTE
         // Java has
@@ -437,9 +467,9 @@ namespace Hazelcast.Serialization.Compact
         // - WriteObject which will do different things depending on what the object is (generic record...)
 
         public void WriteNullableCompact(string name, object? value)
-            => WriteReference(name, FieldKind.NullableCompact, value, (output, v) => Serializer.WriteObject(output, v));
+            => WriteReference(name, FieldKind.NullableCompact, value, (output, v) => ObjectsReaderWriter.Write(output, v));
 
         public void WriteArrayOfNullableCompact(string name, object?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfNullableCompact, value, (output, v) => Serializer.WriteObject(output, v));
+            => WriteArrayOfReference(name, FieldKind.ArrayOfNullableCompact, value, (output, v) => ObjectsReaderWriter.Write(output, v));
     }
 }

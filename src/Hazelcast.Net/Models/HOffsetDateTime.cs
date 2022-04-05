@@ -12,17 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable  enable
+
 using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
-    // FIXME - this type needs to be cleaned up (see HBigDecimal)
-
     /// <summary>
-    /// Represents Hazelcast SQL <c>TIMESTAMP_WITH_TIME_ZONE</c> type corresponding to <c>java.time.OffsetDateTime</c> in Java.
+    /// Represents an Hazelcast <c>TIMESTAMP_WITH_TIME_ZONE</c> primitive type value.
     /// </summary>
+    /// <remarks>
+    /// <para>The <c>TIMESTAMP_WITH_TIME_ZONE</c> primitive type consists of a <c>TIMESTAMP</c>
+    /// <see cref="LocalDateTime"/> and a timezone <see cref="Offset"/>.</para>
+    /// <para>The offset ranges between <see cref="MinOffset"/> and <see cref="MaxOffset"/> inclusive.
+    /// with a 1 second precision, smaller values being rounded and lost during serialization.</para>
+    /// </remarks>
     public readonly struct HOffsetDateTime : IEquatable<HOffsetDateTime>
     {
         private static readonly Regex ParseRegex = new Regex(
@@ -30,41 +36,87 @@ namespace Hazelcast.Models
             RegexOptions.Compiled | RegexOptions.ExplicitCapture
         );
 
-        public static readonly TimeSpan MaxOffset = TimeSpan.FromHours(18);
-        public static readonly TimeSpan MinOffset = TimeSpan.FromHours(-18);
-
-        public static readonly HOffsetDateTime Max = new HOffsetDateTime(HLocalDateTime.Max, MinOffset);
-        public static readonly HOffsetDateTime Min = new HOffsetDateTime(HLocalDateTime.Min, MaxOffset);
-
         /// <summary>
-        /// Local part represented as <see cref="HLocalDateTime"/>.
+        /// Initializes a new instance of the <see cref="HOffsetDateTime"/> struct.
         /// </summary>
-        public HLocalDateTime LocalDateTime { get; }
-
-        /// <summary>
-        /// Offset value.
-        /// Ranges between <see cref="MinOffset"/> and <see cref="MaxOffset"/> inclusive.
-        /// Precision is 1 second, smaller values will be rounded and lost during serialization.
-        /// </summary>
-        public TimeSpan Offset { get; }
-
+        /// <param name="localDateTime">The local date and time part.</param>
+        /// <param name="offset">The offset part.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> is outside of the accepted range.</exception>
         public HOffsetDateTime(HLocalDateTime localDateTime, TimeSpan offset = default)
         {
             if (offset < MinOffset || offset > MaxOffset)
-                throw new ArgumentOutOfRangeException(nameof(offset), $@"Offset must be between {MinOffset:hh\:mm} and {MaxOffset:hh\:mm}.");
+                throw new ArgumentOutOfRangeException(nameof(offset), $"Offset must be between {MinOffset:hh\\:mm} and {MaxOffset:hh\\:mm}.");
 
             LocalDateTime = localDateTime;
             Offset = offset;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HOffsetDateTime"/> struct.
+        /// </summary>
+        /// <param name="localDateTime">The local date and time part.</param>
+        /// <param name="offsetSeconds">The offset part.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="offsetSeconds"/> is outside of the accepted range.</exception>
+        public HOffsetDateTime(HLocalDateTime localDateTime, int offsetSeconds = 0)
+            : this (localDateTime, TimeSpan.FromSeconds(offsetSeconds))
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HOffsetDateTime"/> struct.
+        /// </summary>
+        /// <param name="localDateTime">The local date and time part.</param>
+        /// <param name="offset">The offset part.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="offset"/> is outside of the accepted range.</exception>
         public HOffsetDateTime(DateTime localDateTime, TimeSpan offset = default) :
             this(new HLocalDateTime(localDateTime), offset)
         { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HOffsetDateTime"/> struct.
+        /// </summary>
+        /// <param name="dateTimeOffset">The date, time and offset.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="dateTimeOffset"/> offset is outside of the accepted range.</exception>
         public HOffsetDateTime(DateTimeOffset dateTimeOffset) :
             this(new HLocalDateTime(dateTimeOffset.DateTime), dateTimeOffset.Offset)
         { }
+        
+        /// <summary>
+        /// Gets the largest possible value of the offset part.
+        /// </summary>
+        public static readonly TimeSpan MaxOffset = TimeSpan.FromHours(18);
+        
+        /// <summary>
+        /// Gets the smallest possible value of the offset part.
+        /// </summary>
+        public static readonly TimeSpan MinOffset = TimeSpan.FromHours(-18);
 
+        /// <summary>
+        /// Gets the largest possible value of a <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        public static readonly HOffsetDateTime Max = new HOffsetDateTime(HLocalDateTime.Max, MinOffset);
+        
+        /// <summary>
+        /// Gets the smallest possible value of a <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        public static readonly HOffsetDateTime Min = new HOffsetDateTime(HLocalDateTime.Min, MaxOffset);
+
+        /// <summary>
+        /// Gets the local date and time part.
+        /// </summary>
+        public HLocalDateTime LocalDateTime { get; }
+
+        /// <summary>
+        /// Gets the offset part.
+        /// </summary>
+        public TimeSpan Offset { get; }
+
+        /// <summary>
+        /// Converts the value of this instance to its <see cref="DateTimeOffset"/> equivalent.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="dateTimeOffset">When this method returns, contains the <see cref="DateTimeOffset"/> equivalent
+        /// to the value represented by this instance, if the conversion succeeded, or the default value if the conversion failed.</param>
+        /// <returns><c>true</c> if the value represented by this instance was converted successfully; otherwise <c>false</c>.</returns>
         public bool TryToDateTimeOffset(out DateTimeOffset dateTimeOffset)
         {
             dateTimeOffset = default;
@@ -76,11 +128,23 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Converts the value of this instance to its <see cref="DateTimeOffset"/> equivalent.
+        /// </summary>
+        /// <returns>The <see cref="DateTimeOffset"/> representation of this instance.</returns>
         public DateTimeOffset ToDateTimeOffset() => new DateTimeOffset(LocalDateTime.ToDateTime().Ticks, Offset);
 
-        public static explicit operator DateTimeOffset(HOffsetDateTime offsetDateTime) => offsetDateTime.ToDateTimeOffset();
-        public static explicit operator HOffsetDateTime(DateTimeOffset dateTimeOffset) => new HOffsetDateTime(dateTimeOffset);
+        /// <summary>
+        /// Implements the <see cref="HOffsetDateTime"/> to <see cref="DateTimeOffset"/> conversion.
+        /// </summary>
+        public static explicit operator DateTimeOffset(HOffsetDateTime value) => value.ToDateTimeOffset();
+        
+        /// <summary>
+        /// Implements the <see cref="DateTimeOffset"/> to <see cref="HOffsetDateTime"/> conversion.
+        /// </summary>
+        public static explicit operator HOffsetDateTime(DateTimeOffset value) => new HOffsetDateTime(value);
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return Offset switch
@@ -91,6 +155,15 @@ namespace Hazelcast.Models
             };
         }
 
+        /// <summary>
+        /// Converts the string representation of a date and time with timezone to its <see cref="HOffsetDateTime"/> equivalent.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="s">A string containing a date and time with timezone to convert.</param>
+        /// <param name="offsetDateTime">When this method returns, contains the <see cref="HOffsetDateTime"/> equivalent
+        /// to the date and time with timezone contained in <paramref name="s"/>, if the conversion succeeded, or the
+        /// default value if the conversion failed.</param>
+        /// <returns><c>true</c> if <paramref name="s"/> was converted successfully; otherwise, <c>false</c>.</returns>
         public static bool TryParse(string s, out HOffsetDateTime offsetDateTime)
         {
             offsetDateTime = default;
@@ -108,6 +181,12 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Converts the string representation of a date and time with timezone to its <see cref="HOffsetDateTime"/> equivalent.
+        /// </summary>
+        /// <param name="s">A string containing a date and time with timezone to convert.</param>
+        /// <returns>A <see cref="HOffsetDateTime"/> equivalent to the date and time with timezone contained in <paramref name="s"/>.</returns>
+        /// <exception cref="FormatException">The <paramref name="s"/> string cannot be parsed.</exception>
         public static HOffsetDateTime Parse(string s)
         {
             return TryParse(s, out var offsetDateTime)
@@ -117,32 +196,22 @@ namespace Hazelcast.Models
 
         #region Equality members
 
+        /// <inheritdoc />
         public bool Equals(HOffsetDateTime other)
-        {
-            return LocalDateTime.Equals(other.LocalDateTime) && Offset.Equals(other.Offset);
-        }
+            => LocalDateTime.Equals(other.LocalDateTime) && Offset.Equals(other.Offset);
 
-        public override bool Equals(object obj)
-        {
-            return obj is HOffsetDateTime other && Equals(other);
-        }
+        /// <inheritdoc />
+        public override bool Equals(object? obj) => obj is HOffsetDateTime other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(LocalDateTime, Offset);
-        }
+        /// <inheritdoc />
+        public override int GetHashCode() => HashCode.Combine(LocalDateTime, Offset);
 
-        public static bool operator ==(HOffsetDateTime left, HOffsetDateTime right)
-        {
-            return left.Equals(right);
-        }
+        /// <summary>Implements the == operator.</summary>
+        public static bool operator ==(HOffsetDateTime left, HOffsetDateTime right) => left.Equals(right);
 
-        public static bool operator !=(HOffsetDateTime left, HOffsetDateTime right)
-        {
-            return !left.Equals(right);
-        }
+        /// <summary>Implements the != operator.</summary>
+        public static bool operator !=(HOffsetDateTime left, HOffsetDateTime right) => !left.Equals(right);
 
         #endregion
-
     }
 }

@@ -1,0 +1,57 @@
+﻿
+SERIALIZATION NOTES
+
+## ISerializer
+
+    ISerializer defines the root interface of all top-level serializers 
+      it provides:
+        a type-id = the identifier of the serialized type
+      it is extended by:
+        IByteArraySerializer<T> which reads/writes T objects from/to byte[]
+        IStreamSerializer<T> which reads/writes T objects from/to IObjectDataInput/Output
+    
+    An ISerializer is what users need to implement, it is a public interface.
+    The implementations are generic so that they constrain the type that they can serialize.
+    
+    In addition,
+      IStreamSerializer is IStreamSerializer<object>
+
+## ISerializerAdapter
+
+    The SerializationService ultimately works with plain objects, and IObjectDataInput/Output,
+    so it needs every serializer to be exposed as a plain non-generic IStreamSerializer.
+    
+    The ISerializerAdapter interface is just IStreamSerializer with an added property to
+    expose the wrapped ISerializer, as that is convenient when registering serializers. It is
+    implemented by:
+    
+    - ByteArraySerializerAdapter<T> which wraps/adapts a IByteArraySerializer<T>
+    - StreamSerializerAdapter<T> which wraps/adapts a IStreamSerializer<T>
+    
+    And these two classes read and write plain objects.
+    
+    Some serializers (such as CompactSerializationSerializer) provide their own ISerializerAdapter
+    implementation (CompactSerializationSerializerAdapter).
+
+## Serializers
+
+    ISerializer is implemented by:
+    - a range of serializers in Hazelcast.Serialization.ConstantSerializers that can serialize
+      primitive types (boolean, numbers, strings, some arrays...) and collections (list, hash
+      map...).
+    - NullSerializer for null values
+    - DataSerializer, PortableSerializer, SerializableSerializer, CompactSerializationSerializer...
+      which provide specific methods to handle objects that constant serializers don't handle
+      
+    Note that due to constant (primitive) types and null values being handled separately, other
+    serializers such as DataSerializer or CompactSerializationSerializer do *not* handle nulls.
+
+## Compact
+
+    In order to compact-serialize a (notnull) type T a ICompactSerializer<T> is needed. But,
+    since at top-level serialization works with objects, we need to adapt the serializers in
+    the same way we do for ISerializer. Hence, a CompactSerializerAdapter is created for each
+    compact serializer.
+    
+    In order to handle serializers in a non-generic way, ICompactSerializer<T> implements
+    ICompactSerializer which simply provides the serialized type name.

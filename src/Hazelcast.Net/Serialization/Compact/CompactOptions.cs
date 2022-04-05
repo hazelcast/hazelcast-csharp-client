@@ -117,8 +117,8 @@ namespace Hazelcast.Serialization.Compact
         private void EnsureTypeNameSerializerCanSerializeType(string typeName, Type serializedType)
         {
             // if a serializer exists for the type name, it must be able to serialize the type
-            if (_typeName_serializer.TryGetValue(typeName, out var serializer) && !serializer.SerializedType.IsAssignableFrom(serializedType))
-                throw new ConfigurationException($"A serializer has been provided for type name {typeName} which serializes {serializer.SerializedType}, and cannot serializer {serializedType}.");
+            if (_typeName_serializer.TryGetValue(typeName, out var serializer) && !serializer.GetSerializedType().IsAssignableFrom(serializedType))
+                throw new ConfigurationException($"A serializer has been provided for type name {typeName} which serializes {serializer.GetSerializedType()}, and cannot serializer {serializedType}.");
         }
 
         private void EnsureSerializerCanSerializeTypes(ICompactSerializer serializer)
@@ -128,7 +128,7 @@ namespace Hazelcast.Serialization.Compact
             foreach (var (st, tn) in _serializedType_typeName)
             {
                 if (tn != serializer.TypeName) continue;
-                if (!serializer.SerializedType.IsAssignableFrom(st))
+                if (!serializer.GetSerializedType().IsAssignableFrom(st))
                     throw new ConfigurationException($"Serialized type {st} has been assigned the serializer type name ({tn}) but the serializer cannot serialize that type.");
             }
         }
@@ -168,10 +168,8 @@ namespace Hazelcast.Serialization.Compact
         /// <typeparam name="TSerialized">The serialized type.</typeparam>
         /// <param name="serializer">The compact serializer.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="serializer"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">The <paramref name="serializer"/> <see cref="ICompactSerializer.SerializedType"/> property
-        /// value is different from <typeparamref name="TSerialized"/>.</exception>
         /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
-        public void AddSerializer<TSerialized>(ICompactSerializer<TSerialized> serializer)
+        public void AddSerializer<TSerialized>(ICompactSerializer<TSerialized> serializer) where TSerialized : notnull
         {
             AddSerializer(typeof(TSerialized), serializer);
         }
@@ -201,8 +199,8 @@ namespace Hazelcast.Serialization.Compact
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
             // validate serializer
-            if (serializer.SerializedType != serializedType)
-                throw new ArgumentException($"Invalid serializer. Serializer is ICompactSerializer of {serializedType} but its SerializedType property is {serializer.SerializedType}.");
+            if (serializer.GetSerializedType() != serializedType)
+                throw new ArgumentException($"Invalid serializer. Serializer is ICompactSerializer of {serializedType} but its SerializedType property is {serializer.GetSerializedType()}.");
 
             EnsureUniqueTypeNamePerSerializedType(serializedType, serializer.TypeName);
             EnsureUniqueSerializerPerTypeName(serializer);
@@ -220,20 +218,14 @@ namespace Hazelcast.Serialization.Compact
         /// <typeparam name="TSerialized">The type for which the serializer is added.</typeparam>
         /// <param name="serializer">The serializer.</param>
         /// <exception cref="ArgumentNullException">The <paramref name="serializer"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">The <paramref name="serializer"/>  <see cref="ICompactSerializer.SerializedType"/> property
-        /// value is different from <typeparamref name="TSerializerSerialized"/>.</exception>
         /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
         public void AddSerializer<TSerializerSerialized, TSerialized>(ICompactSerializer<TSerializerSerialized> serializer)
             where TSerialized : TSerializerSerialized
+            where TSerializerSerialized : notnull
         {
             if (serializer == null) throw new ArgumentNullException(nameof(serializer));
 
-            var serializerSerializedType = typeof (TSerializerSerialized);
             var serializedType = typeof (TSerialized);
-
-            // validate serializer
-            if (serializer.SerializedType != serializerSerializedType)
-                throw new ArgumentException($"Invalid serializer. Serializer is ICompactSerializer of {serializerSerializedType} but its SerializedType property is {serializer.SerializedType}.");
 
             EnsureUniqueTypeNamePerSerializedType(serializedType, serializer.TypeName);
             EnsureUniqueSerializerPerTypeName(serializer);
@@ -262,7 +254,8 @@ namespace Hazelcast.Serialization.Compact
             foreach (var attr in attrs)
             {
                 var serializerType = attr.SerializerType;
-                var serializer = (ICompactSerializer)Activator.CreateInstance(serializerType);
+                if (!(Activator.CreateInstance(serializerType) is ICompactSerializer serializer))
+                    throw new HazelcastException(ExceptionMessages.InternalError);
                 AddSerializer(serializer);
             }
         }
@@ -387,7 +380,7 @@ namespace Hazelcast.Serialization.Compact
         /// <param name="reflectionSerializer">The reflection serializer implementation.</param>
         /// <returns>The serializer registrations corresponding to options.</returns>
         /// <exception cref="ConfigurationException">The options contain conflicts that prevent the registrations from being created.</exception>
-        internal IEnumerable<CompactRegistration> GetRegistrations(CompactSerializerWrapper reflectionSerializer)
+        internal IEnumerable<CompactRegistration> GetRegistrations(CompactSerializerAdapter reflectionSerializer)
         {
             // ReSharper disable once InconsistentNaming
             var typeName_serializedTypes = _serializedType_typeName
@@ -409,7 +402,7 @@ namespace Hazelcast.Serialization.Compact
             // process the serializers (all other registrations below will use the reflection serializer)
             foreach (var serializer in _typeName_serializer.Values)
             {
-                var isClusterSchema = GetIsClusterSchema(serializer.SerializedType, serializer.TypeName);
+                var isClusterSchema = GetIsClusterSchema(serializer.GetSerializedType(), serializer.TypeName);
                 var withSchema = _typeName_schema.TryGetValue(serializer.TypeName, out var schema);
 
                 // since the serializer has been declared, there *has* to be at least one serialized type for the type name
@@ -417,8 +410,8 @@ namespace Hazelcast.Serialization.Compact
                 foreach (var serializedType in typeName_serializedTypes[serializer.TypeName])
                 {
                     yield return withSchema
-                        ? new CompactRegistration(serializedType, CompactSerializerWrapper.Create(serializer), schema!, isClusterSchema)
-                        : new CompactRegistration(serializedType, CompactSerializerWrapper.Create(serializer), serializer.TypeName, isClusterSchema);
+                        ? new CompactRegistration(serializedType, CompactSerializerAdapter.Create(serializer), schema!, isClusterSchema)
+                        : new CompactRegistration(serializedType, CompactSerializerAdapter.Create(serializer), serializer.TypeName, isClusterSchema);
                 }
             }
 
@@ -451,9 +444,9 @@ namespace Hazelcast.Serialization.Compact
             {
                 if (_serializedType_typeName.ContainsKey(serializedType)) continue; // already yielded above
 
-                var typeName = CompactSerializer.GetTypeName(serializedType);
+                var typeName = CompactSerializationSerializer.GetTypeName(serializedType);
                 var isClusterSchema = GetIsClusterSchema(serializedType, typeName);
-                yield return new CompactRegistration(serializedType, reflectionSerializer, CompactSerializer.GetTypeName(serializedType), isClusterSchema);
+                yield return new CompactRegistration(serializedType, reflectionSerializer, CompactSerializationSerializer.GetTypeName(serializedType), isClusterSchema);
             }
         }
 

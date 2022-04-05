@@ -65,8 +65,8 @@ namespace Hazelcast
             if (list == null) throw new ArgumentNullException(nameof(list));
 
             return list is ReadOnlyLazyList<T> lazy
-                ? lazy
-                : CreateAsyncEnumerableFor(list);
+                ? (IAsyncEnumerable<T>) lazy
+                : new AsyncEnumerableWrapper<T>(list);
         }
 
         /// <summary>
@@ -86,15 +86,13 @@ namespace Hazelcast
             if (collection == null) throw new ArgumentNullException(nameof(collection));
 
             return collection is ReadOnlyLazyList<T> lazy
-                ? lazy
-                : CreateAsyncEnumerableFor(collection);
+                ? (IAsyncEnumerable<T>) lazy
+                : new AsyncEnumerableWrapper<T>(collection);
         }
 
         // FIXME - now do all other lazy thing enumeration + test it all
-
-        private static IAsyncEnumerable<T> CreateAsyncEnumerableFor<T>(IEnumerable<T> source)
-            => new AsyncEnumerableWrapper<T>(source);
-
+        
+        // asynchronously enumerates a synchronous enumerable
         private class AsyncEnumerableWrapper<T> : IAsyncEnumerable<T>
         {
             private readonly IEnumerable<T> _source;
@@ -103,6 +101,9 @@ namespace Hazelcast
             {
                 _source = source;
             }
+
+            public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
+                => new AsyncEnumerator(_source.GetEnumerator());
 
             private class AsyncEnumerator : IAsyncEnumerator<T>
             {
@@ -122,11 +123,6 @@ namespace Hazelcast
                     _source.Dispose();
                     return default;
                 }
-            }
-
-            public IAsyncEnumerator<T> GetAsyncEnumerator(CancellationToken cancellationToken = new CancellationToken())
-            {
-                return new AsyncEnumerator(_source.GetEnumerator());
             }
         }
     }

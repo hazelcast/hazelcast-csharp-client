@@ -16,7 +16,7 @@
 
 namespace Hazelcast.Serialization.Compact
 {
-    // FIXME - currently exposing all the HasXxx methods - should they be internal?
+    // FIXME - decide whether HasBoolean, Has... methods are public
 
     public static partial class CompactReaderExtensions
     {

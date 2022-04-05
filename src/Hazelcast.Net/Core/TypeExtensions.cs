@@ -161,5 +161,11 @@ namespace Hazelcast.Core
             { "System.Double", "double" },
             { "System.Decimal", "decimal" }
         };
+
+        public static T MustBe<T>(this object obj)
+        {
+            if (obj is T t) return t;
+            throw new ArgumentException($"Object is not of type {typeof(T)}.", nameof(obj));
+        }
     }
 }

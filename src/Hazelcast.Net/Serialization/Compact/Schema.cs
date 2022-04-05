@@ -16,10 +16,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Hazelcast.Exceptions;
 
-#pragma warning disable CA1724 // 'Schema' conflicts with System.Xml.Schema - well, yes. 
+// 'Schema' conflicts with System.Xml.Schema - well, yes.
+#pragma warning disable CA1724  
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -28,6 +30,9 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     public class Schema : IIdentifiedDataSerializable, IEquatable<Schema>
     {
+        private SortedDictionary<string, SchemaField> _fieldsMap;
+        private Dictionary<string, SchemaField>? _fieldsMapInvariant;
+
         /// <inheritdoc />
         public int FactoryId => CompactSerializationHook.Constants.FactoryId;
 
@@ -37,13 +42,19 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Initializes a new instance of the <see cref="Schema"/> class.
         /// </summary>
+        // TODO: remove pragma when Initialize has the attribute with C# 9
+#pragma warning disable CS8618
         internal Schema()
+#pragma warning restore CS8618
         { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Schema"/> class.
         /// </summary>
+        // TODO: remove pragma when Initialize has the attribute with C# 9
+#pragma warning disable CS8618
         public Schema(string typeName, IEnumerable<SchemaField> typeFields)
+#pragma warning restore CS8618
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty);
             if (typeFields == null) throw new ArgumentNullException(nameof(typeFields));
@@ -65,21 +76,41 @@ namespace Hazelcast.Serialization.Compact
         /// </summary>
         public IReadOnlyList<SchemaField> Fields { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
 
-        internal IReadOnlyDictionary<string, SchemaField> FieldsMap { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
-
+        /// <summary>
+        /// Tries to get a field.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <param name="field">When this method returns, contains the <see cref="SchemaField"/> identified by the <paramref name="name"/>,
+        /// if any, or <c>null</c> if no field exists with this name.</param>
+        /// <param name="caseSensitive">Whether to perform a case-sensitive lookup.</param>
+        /// <returns><c>true</c> if a field with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
+        internal bool TryGetField(string name, [NotNullWhen(true)] out SchemaField field, bool caseSensitive = true)
+        {
+            if (caseSensitive) return _fieldsMap.TryGetValue(name, out field);
+            _fieldsMapInvariant ??= new Dictionary<string, SchemaField>(_fieldsMap, StringComparer.OrdinalIgnoreCase);
+            return _fieldsMapInvariant.TryGetValue(name, out field);
+        }
+        
+        /// <summary>
+        /// Gets the number of value (non-nullable) fields.
+        /// </summary>
         internal int ValueFieldLength { get; private set; }
 
+        /// <summary>
+        /// Gets the number of reference (nullable) fields.
+        /// </summary>
         internal int ReferenceFieldCount { get; private set; }
 
+        /// <summary>
+        /// Whether the schema has reference (nullable) fields.
+        /// </summary>
         internal bool HasReferenceFields => ReferenceFieldCount > 0;
 
-        private static int _count;
-
+        //TODO: enable the attribute and get rid of the nullable warnings with C# 9
+        //[System.Diagnostics.CodeAnalysis.MemberNotNull(nameof(_fieldsMap))]
         private void Initialize(string typeName, IEnumerable<SchemaField> typeFields)
         {
             TypeName = typeName;
-
-            _count++;
 
             // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
             // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
@@ -162,7 +193,7 @@ namespace Hazelcast.Serialization.Compact
             ReferenceFieldCount = referenceFields?.Count ?? 0;
 
             Fields = fieldsMap.Values.ToArray();
-            FieldsMap = fieldsMap;
+            _fieldsMap = fieldsMap;
 
             Id = ComputeId();
         }
@@ -181,6 +212,7 @@ namespace Hazelcast.Serialization.Compact
             return (long) fingerprint;
         }
 
+        /// <inheritdoc />
         public void WriteData(IObjectDataOutput output)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
@@ -194,6 +226,7 @@ namespace Hazelcast.Serialization.Compact
             }
         }
 
+        /// <inheritdoc />
         public void ReadData(IObjectDataInput input)
         {
             if (input == null) throw new ArgumentNullException(nameof(input));
