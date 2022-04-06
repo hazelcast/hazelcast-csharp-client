@@ -44,9 +44,10 @@ namespace Hazelcast.Security
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenCredentialsFactory"/>.
         /// </summary>
-        /// <param name="args">Arguments.</param>
-        public TokenCredentialsFactory(IReadOnlyDictionary<string, string> args)
-            : this(GetTokenBytes(args.GetStringValue("encoding", "none"), args.GetStringValue("data")))
+        /// <param name="data">Data.</param>
+        /// <param name="encoding">Data encoding ('none' or 'base64').</param>
+        public TokenCredentialsFactory(string data, string encoding)
+          : this(GetTokenBytes(encoding ?? "none", data))
         { }
 
         private static byte[] GetTokenBytes(string encoding, string data)
