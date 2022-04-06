@@ -11,14 +11,6 @@ namespace Hazelcast.Tests.Remote
 {
     public class UnisocketTests : MultiMembersRemoteTestBase
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<UnisocketTests>().SetIndent(8).SetPrefix("UNISOCKET"));
-
         [TearDown]
         public async Task RemoveAllMembers()
         {
@@ -34,7 +26,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task TestEventsWithDummyClient()
         {
-            HConsoleForTest();
+            var memberA = await AddMember();
             int eventCount = 0;
 
             var client = await CreateAndStartClientAsync(opt =>
@@ -53,6 +45,33 @@ namespace Hazelcast.Tests.Remote
             Assert.AreEqual(2, eventCount);
         }
 
+        [Test]
+        public async Task TestDistributedObjectEventsWithDummyClient()
+        {            
+            var memberA = await AddMember();
+            var memberB = await AddMember();
+
+            int eventCount = 0;
+
+            var client = await CreateAndStartClientAsync(opt =>
+            {
+                opt.Networking.SmartRouting = false;                                
+            });
+
+            var map = await client.GetMapAsync<int, int>("myMap");
+            await map.SubscribeAsync(events => events.EntryAdded((sender, args) => { eventCount++; }));
+
+            await ShutdownMember(Guid.Parse(memberA.Uuid));
+            memberA = await AddMember();
+            
+            await AssertEx.SucceedsEventually(async () =>
+            {
+                var script = "instance_0.getMap(\"myMap\").put(1,1)";
+                var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
+                Assert.GreaterOrEqual(1, eventCount);
+            }, 10_000, 500);
+        }
+
         /// <summary>
         /// Port of testMemberConnectionOrder
         /// </summary>
@@ -61,7 +80,7 @@ namespace Hazelcast.Tests.Remote
         public async Task TestClientConnectsToOneMember()
         {
             var memberA = await AddMember();
-            var memberB = await AddMember();            
+            var memberB = await AddMember();
 
             var client = await CreateAndStartClientAsync(opt =>
             {
@@ -74,14 +93,15 @@ namespace Hazelcast.Tests.Remote
             var script = "result = instance_0.getClientService().getConnectedClients().size().toString();";
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
 
-            var countOfClients = int.Parse(Encoding.UTF8.GetString(response.Result));            
-            Assert.AreEqual(1, countOfClients);
+            var countOfClients = int.Parse(Encoding.UTF8.GetString(response.Result));
 
             // instance1 shouldn't have any clients due to unisocket mode
             script = "result = instance_1.getClientService().getConnectedClients().size().toString();";
             response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
-            countOfClients = int.Parse(Encoding.UTF8.GetString(response.Result));
-            Assert.AreEqual(0, countOfClients);
+            countOfClients += int.Parse(Encoding.UTF8.GetString(response.Result));
+
+            //sum should be 1 since don't know which member is connected to
+            Assert.AreEqual(1, countOfClients);
         }
 
     }
