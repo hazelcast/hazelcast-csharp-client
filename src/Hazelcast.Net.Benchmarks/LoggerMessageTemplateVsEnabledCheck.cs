@@ -24,26 +24,21 @@ namespace Hazelcast.Benchmarks
         public LogLevel _level;
 
         [GlobalSetup]
-        public void Setup() { _logger = LoggerFactory.Create(opt => opt.SetMinimumLevel(_level)).CreateLogger("dummy"); } 
+        public void Setup() { _logger = LoggerFactory.Create(opt => opt.SetMinimumLevel(_level)).CreateLogger("dummy"); }
+
+        readonly string msg = "we are sailing to Key Largo, goodluck";
 
         [Benchmark]
         public void LogWithEnabledCheck()
         {
-            string msg = "we are sailing to Key Largo, goodluck";
-
             if (_logger.IsEnabled(LogLevel.Debug))
                 _logger.LogDebug("something went wrong {msg}", msg);
         }
 
-
         [Benchmark]
         public void LogWithMsgTemplateCheck()
         {
-            string msg = "we are sailing to Key Largo, goodluck";
-
             _logger.LogDebug("something went wrong {msg}", msg);
         }
-
-
     }
 }
