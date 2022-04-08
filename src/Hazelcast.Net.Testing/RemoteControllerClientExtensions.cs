@@ -106,9 +106,7 @@ namespace Hazelcast.Testing
             var member = await rc.StartMemberAsync(cluster).CfAwait();
             await added.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
 
-            // trigger the partition table creation
-            var map = await client.GetMapAsync<object, object>("default").CfAwait();
-            _ = map.GetAsync(new object());
+            await client.TriggerPartitionTableAsync().CfAwait();
 
             await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
             await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
