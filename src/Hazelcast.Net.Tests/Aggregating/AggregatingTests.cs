@@ -16,6 +16,8 @@ using System;
 using Hazelcast.Aggregation;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -30,7 +32,9 @@ namespace Hazelcast.Tests.Aggregating
         public void SetUp()
         {
             _serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
-                .AddHook<AggregatorDataSerializerHook>() // not pretty in tests, eh?
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
+                .AddHook<AggregatorDataSerializerHook>()
                 .Build();
         }
 

@@ -73,6 +73,9 @@ namespace Hazelcast.Tests.DotNet
             (typeof (Thing).ToString(), "Hazelcast.Tests.DotNet.TypeTests+Thing"),
             (typeof (Thing<int>).ToString(), "Hazelcast.Tests.DotNet.TypeTests+Thing`1[System.Int32]"),
 
+            (typeof (Thing).GetQualifiedTypeName(), "Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests"),
+            (typeof (Thing<int>).GetQualifiedTypeName(), $"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}]], Hazelcast.Net.Tests"),
+
         };
 
         [TestCaseSource(nameof(GetTypeNameSource))]

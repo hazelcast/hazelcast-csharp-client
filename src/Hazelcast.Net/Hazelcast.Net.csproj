@@ -94,6 +94,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Update="Serialization\SerializationService.*.cs">
+      <DependentUpon>SerializationService.cs</DependentUpon>
+    </Compile>
     <Compile Update="Core\BytesExtensions.*.cs">
         <DependentUpon>BytesExtensions.cs</DependentUpon>
     </Compile>

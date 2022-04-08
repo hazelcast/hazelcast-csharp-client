@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Text;
-
 namespace Hazelcast.Serialization
 {
     internal class ByteArraySerializerAdapter<T> : ISerializerAdapter
@@ -25,39 +23,23 @@ namespace Hazelcast.Serialization
             _serializer = serializer;
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual void Write(IObjectDataOutput output, object obj)
+        public int TypeId => _serializer.TypeId;
+
+        public ISerializer Serializer => _serializer;
+
+        public void Write(IObjectDataOutput output, object obj)
         {
             var bytes = _serializer.Write((T) obj);
             output.WriteByteArray(bytes);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public virtual object Read(IObjectDataInput @in)
+        public virtual object Read(IObjectDataInput input)
         {
-            var bytes = @in.ReadByteArray();
-            if (bytes == null || bytes.Length == 0)
-            {
-                return null;
-            }
+            var bytes = input.ReadByteArray();
+            if (bytes == null || bytes.Length == 0) return null;
             return _serializer.Read(bytes);
         }
 
-        public int TypeId => _serializer.TypeId;
-
-        public virtual void Dispose()
-        {
-            _serializer.Dispose();
-        }
-
-        public virtual ISerializer Serializer => _serializer;
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder("SerializerAdapter{");
-            sb.Append("serializer=").Append(_serializer);
-            sb.Append('}');
-            return sb.ToString();
-        }
+        public virtual void Dispose() => _serializer.Dispose();
     }
 }

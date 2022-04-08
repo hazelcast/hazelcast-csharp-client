@@ -36,9 +36,9 @@ namespace Hazelcast.Serialization
 
         public void WriteSByte(sbyte value)
         {
-            EnsureAvailable(BytesExtensions.SizeOfUnsignedByte);
+            EnsureAvailable(BytesExtensions.SizeOfByte);
             _buffer.WriteSbyte(_position, value);
-            _position += BytesExtensions.SizeOfUnsignedByte;
+            _position += BytesExtensions.SizeOfByte;
         }
 
         public void WriteChar(char value)
@@ -57,9 +57,9 @@ namespace Hazelcast.Serialization
 
         public void WriteUShort(ushort value)
         {
-            EnsureAvailable(BytesExtensions.SizeOfUnsignedShort);
+            EnsureAvailable(BytesExtensions.SizeOfShort);
             _buffer.WriteUShort(_position, value, Endianness);
-            _position += BytesExtensions.SizeOfUnsignedShort;
+            _position += BytesExtensions.SizeOfShort;
         }
 
         public void WriteInt(int value)
@@ -137,6 +137,16 @@ namespace Hazelcast.Serialization
         }
 
         public void WriteByteArray(byte[] bytes)
+        {
+            var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
+            WriteInt(length);
+            if (bytes == null || length <= 0) return;
+
+            EnsureAvailable(length * BytesExtensions.SizeOfByte);
+            Write(bytes);
+        }
+
+        public void WriteSByteArray(sbyte[] bytes)
         {
             var length = bytes?.Length ?? BytesExtensions.SizeOfNullArray;
             WriteInt(length);
@@ -244,7 +254,7 @@ namespace Hazelcast.Serialization
 
         public void WriteObject(object value)
         {
-            _serializationService.WriteObject(this, value);
+            _serializationService.Write(this, value);
         }
 
         public void Write(byte[] bytes)
@@ -253,6 +263,24 @@ namespace Hazelcast.Serialization
         }
 
         public void Write(byte[] bytes, int offset, int count)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset < 0 || offset > bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (count <= 0) return;
+
+            EnsureAvailable(count);
+            System.Buffer.BlockCopy(bytes, offset, _buffer, _position, count);
+            _position += count;
+        }
+
+        public void Write(sbyte[] bytes)
+        {
+            Write(bytes, 0, bytes.Length);
+        }
+
+        public void Write(sbyte[] bytes, int offset, int count)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (offset < 0 || offset > bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));

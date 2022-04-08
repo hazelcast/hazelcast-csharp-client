@@ -43,7 +43,7 @@ namespace Hazelcast.Serialization
             CheckAvailable(Position, BytesExtensions.SizeOfByte);
             var value = _buffer.ReadSByte(Position);
             Position += BytesExtensions.SizeOfByte;
-            return (sbyte)value;
+            return value;
         }
 
         public char ReadChar()
@@ -64,9 +64,9 @@ namespace Hazelcast.Serialization
 
         public ushort ReadUShort()
         {
-            CheckAvailable(Position, BytesExtensions.SizeOfUnsignedShort);
+            CheckAvailable(Position, BytesExtensions.SizeOfShort);
             var value = _buffer.ReadUShort(Position, Endianness);
-            Position += BytesExtensions.SizeOfUnsignedShort;
+            Position += BytesExtensions.SizeOfShort;
             return value;
         }
 
@@ -137,6 +137,17 @@ namespace Hazelcast.Serialization
             if (length <= 0) return Array.Empty<byte>();
 
             var values = new byte[length];
+            Read(values);
+            return values;
+        }
+
+        public sbyte[] ReadSByteArray()
+        {
+            var length = ReadInt();
+            if (length == BytesExtensions.SizeOfNullArray) return null;
+            if (length <= 0) return Array.Empty<sbyte>();
+
+            var values = new sbyte[length];
             Read(values);
             return values;
         }
@@ -272,6 +283,27 @@ namespace Hazelcast.Serialization
         }
 
         public int Read(byte[] bytes, int offset, int count)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (offset < 0 || offset >= bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
+            if (count < 0 || offset + count > bytes.Length) throw new ArgumentOutOfRangeException(nameof(count));
+
+            if (count == 0) return 0;
+            if (Position >= _length) return -1;
+
+            count = Math.Min(count, _length - Position);
+
+            System.Buffer.BlockCopy(_buffer, Position, bytes, offset, count);
+            Position += count;
+            return count;
+        }
+
+        public int Read(sbyte[] bytes)
+        {
+            return Read(bytes, 0, bytes.Length);
+        }
+
+        public int Read(sbyte[] bytes, int offset, int count)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (offset < 0 || offset >= bytes.Length) throw new ArgumentOutOfRangeException(nameof(offset));
