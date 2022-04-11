@@ -13,12 +13,20 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Numerics;
+using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.ConstantSerializers
 {
+    /// <summary>
+    /// Defines serializers for a range of primitive types.
+    /// </summary>
     internal class ConstantSerializerDefinitions : ISerializerDefinitions
     {
+        /// <inheritdoc />
         public void AddSerializers(SerializationService service)
         {
             service.RegisterConstantSerializer<byte>(new ByteSerializer());
@@ -43,6 +51,29 @@ namespace Hazelcast.Serialization.ConstantSerializers
 
             service.RegisterConstantSerializer<Guid>(new GuidSerializer());
             service.RegisterConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
+
+            //TODO: proper support for generic types
+            service.RegisterConstantSerializer<JavaClass>(new JavaClassSerializer());
+            service.RegisterConstantSerializer<DateTime>(new DateSerializer());
+            service.RegisterConstantSerializer<BigInteger>(new BigIntegerSerializer());
+
+            service.RegisterConstantSerializer<object[]>(new ArrayStreamSerializer());
+
+            //TODO map server side collection types.
+            service.RegisterConstantSerializer<List<object>>(new ListSerializer<object>());
+            service.RegisterConstantSerializer<LinkedList<object>>(new LinkedListSerializer<object>());
+            service.RegisterConstantSerializer<Dictionary<object, object>>(new HashMapStreamSerializer());
+            service.RegisterConstantSerializer<ConcurrentDictionary<object, object>>(new ConcurrentHashMapStreamSerializer());
+            service.RegisterConstantSerializer<HashSet<object>>(new HashSetStreamSerializer());
+
+            service.RegisterConstantSerializer<HazelcastJsonValue>(new HazelcastJsonValueSerializer());
+
+            service.RegisterConstantSerializer<HLocalDate>(new HLocalDateSerializer());
+            service.RegisterConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
+            service.RegisterConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
+            service.RegisterConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
+
+            service.RegisterConstantSerializer<HBigDecimal>(new HBigDecimalSerializer());
         }
     }
 }

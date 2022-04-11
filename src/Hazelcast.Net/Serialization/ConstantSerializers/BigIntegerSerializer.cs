@@ -12,24 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using Hazelcast.Core;
+using System;
+using System.Numerics;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase<HazelcastJsonValue>
+    internal class BigIntegerSerializer : SingletonSerializerBase<BigInteger>
     {
-        public override int TypeId => SerializationConstants.JavascriptJsonSerializationType;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeBigInteger;
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override HazelcastJsonValue Read(IObjectDataInput input)
+        public override BigInteger Read(IObjectDataInput input)
         {
-            return new HazelcastJsonValue(input.ReadString());
+            var bytes = input.ReadByteArray();
+            Array.Reverse(bytes);
+            return new BigInteger(bytes);
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
-        public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
+        public override void Write(IObjectDataOutput output, BigInteger obj)
         {
-            output.WriteString(obj.ToString());
+            var bytes = obj.ToByteArray();
+            Array.Reverse(bytes);
+            output.WriteByteArray(bytes);
         }
     }
 }

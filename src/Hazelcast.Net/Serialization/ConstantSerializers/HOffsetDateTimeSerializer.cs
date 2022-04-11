@@ -15,7 +15,7 @@
 using System;
 using Hazelcast.Models;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class HOffsetDateTimeSerializer : SingletonSerializerBase<HOffsetDateTime>
     {
