@@ -14,24 +14,32 @@
 
 using Hazelcast.Models;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal class HLocalTimeSerializer : SingletonSerializerBase<HLocalTime>
+    internal class HLocalDateTimeSerializer : SingletonSerializerBase<HLocalDateTime>
     {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeLocalTime;
+        public override int TypeId => SerializationConstants.JavaDefaultTypeLocalDateTime;
 
-        public override HLocalTime Read(IObjectDataInput input)
+        public override HLocalDateTime Read(IObjectDataInput input)
         {
+            var year = input.ReadInt();
+            var month = input.ReadByte();
+            var day = input.ReadByte();
+
             var hour = input.ReadByte();
             var minute = input.ReadByte();
             var second = input.ReadByte();
             var nano = input.ReadInt();
 
-            return new HLocalTime(hour, minute, second, nano);
+            return new HLocalDateTime(year, month, day, hour, minute, second, nano);
         }
 
-        public override void Write(IObjectDataOutput output, HLocalTime obj)
+        public override void Write(IObjectDataOutput output, HLocalDateTime obj)
         {
+            output.WriteInt(obj.Year);
+            output.WriteByte(obj.Month);
+            output.WriteByte(obj.Day);
+
             output.WriteByte(obj.Hour);
             output.WriteByte(obj.Minute);
             output.WriteByte(obj.Second);

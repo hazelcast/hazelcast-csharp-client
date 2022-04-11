@@ -16,7 +16,6 @@ using System;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
-using Hazelcast.Serialization.DefaultSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -91,7 +90,6 @@ namespace Hazelcast.Tests.Serialization
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                 .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
-                .AddDefinitions(new DefaultSerializerDefinitions()) // same
                 .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
                 {
                     () => new KitchenSinkDataSerializable(),
@@ -140,7 +138,6 @@ namespace Hazelcast.Tests.Serialization
         {
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                 .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
-                .AddDefinitions(new DefaultSerializerDefinitions()) // same
                 .Build();
 
             var output = ss.CreateObjectDataOutput(1024);

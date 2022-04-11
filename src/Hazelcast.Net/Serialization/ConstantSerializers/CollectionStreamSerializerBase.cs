@@ -14,19 +14,19 @@
 
 using System.Collections.Generic;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal abstract class CollectionStreamSerializerBase<CollectionType> : IStreamSerializer<CollectionType>
-        where CollectionType : ISet<object>
+    internal abstract class CollectionStreamSerializerBase<T> : IStreamSerializer<T>
+        where T : ISet<object>
     {
         public virtual void Dispose()
         { }
 
         public abstract int TypeId { get; }
 
-        public abstract CollectionType Read(IObjectDataInput input);
+        public abstract T Read(IObjectDataInput input);
 
-        public void Write(IObjectDataOutput output, CollectionType obj)
+        public void Write(IObjectDataOutput output, T obj)
         {
             var size = obj.Count;
             output.WriteInt(size);
@@ -39,7 +39,7 @@ namespace Hazelcast.Serialization.DefaultSerializers
             }
         }
 
-        protected static CollectionType DeserializeEntries(IObjectDataInput input, int size, CollectionType collection)
+        protected static T DeserializeEntries(IObjectDataInput input, int size, T collection)
         {
             for (var i = 0; i < size; i++)
             {
