@@ -12,20 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization.DefaultSerializers
-{
-    internal class JavaClassSerializer : SingletonSerializerBase<JavaClass>
-    {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeClass;
+using Hazelcast.Core;
 
-        public override JavaClass Read(IObjectDataInput input)
+namespace Hazelcast.Serialization.ConstantSerializers
+{
+    internal sealed class HazelcastJsonValueSerializer : SingletonSerializerBase<HazelcastJsonValue>
+    {
+        public override int TypeId => SerializationConstants.JavascriptJsonSerializationType;
+
+        /// <exception cref="System.IO.IOException"></exception>
+        public override HazelcastJsonValue Read(IObjectDataInput input)
         {
-            return new JavaClass(input.ReadString());
+            return new HazelcastJsonValue(input.ReadString());
         }
 
-        public override void Write(IObjectDataOutput output, JavaClass obj)
+        /// <exception cref="System.IO.IOException"></exception>
+        public override void Write(IObjectDataOutput output, HazelcastJsonValue obj)
         {
-            output.WriteString(obj.Name);
+            output.WriteString(obj.ToString());
         }
     }
 }

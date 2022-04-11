@@ -14,7 +14,7 @@
 
 using System;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
     internal class DateSerializer : SingletonSerializerBase<DateTime>
     {

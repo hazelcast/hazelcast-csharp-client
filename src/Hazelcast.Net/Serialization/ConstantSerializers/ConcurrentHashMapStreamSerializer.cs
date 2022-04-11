@@ -12,18 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Collections.Generic;
+using System;
+using System.Collections.Concurrent;
 
-namespace Hazelcast.Serialization.DefaultSerializers
+namespace Hazelcast.Serialization.ConstantSerializers
 {
-    internal class HashMapStreamSerializer : DictStreamSerializerBase<Dictionary<object, object>>
+    internal class ConcurrentHashMapStreamSerializer : DictStreamSerializerBase<ConcurrentDictionary<object, object>>
     {
-        public override int TypeId => SerializationConstants.JavaDefaultTypeHashMap;
+        private static readonly int DefaultConcurrencyLevel = Environment.ProcessorCount;
 
-        public override Dictionary<object, object> Read(IObjectDataInput input)
+        public override int TypeId => SerializationConstants.JavaDefaultTypeConcurrentHashMap;
+
+        public override ConcurrentDictionary<object, object> Read(IObjectDataInput input)
         {
             var size = input.ReadInt();
-            var dict = new Dictionary<object, object>(size);
+            var dict = new ConcurrentDictionary<object, object>(DefaultConcurrencyLevel, size);
             return DeserializeEntries(input, size, dict);
         }
     }
