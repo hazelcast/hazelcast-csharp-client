@@ -22,6 +22,14 @@ using NUnit.Framework;
 
 namespace Hazelcast.Testing
 {
+    /// <summary>
+    /// Represents a Java run.
+    /// </summary>
+    /// <remarks>
+    /// <para>Provides support for detecting a JDK, compiling Java code, executing the code and
+    /// retrieving its output. We use that feature in some of our tests to verify that, for
+    /// instance, what we serialize in .NET can be de-serialized in Java.</para>
+    /// </remarks>
     public class JavaRun : IDisposable
     {
         private static readonly string JdkPath;
@@ -65,6 +73,10 @@ namespace Hazelcast.Testing
             JdkPath = javaPath;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="JavaRun"/> class.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">No JDK could be detected in PATH.</exception>
         public JavaRun()
         {
             if (JdkPath == null)
@@ -93,18 +105,34 @@ namespace Hazelcast.Testing
 
         }
 
+        /// <summary>
+        /// Adds a source file to the Java run.
+        /// </summary>
+        /// <param name="source">The path to the source file.</param>
+        /// <returns>This Java run.</returns>
         public JavaRun WithSource(string source)
         {
             _sources.Add(source);
             return this;
         }
 
+        /// <summary>
+        /// Adds a source text to the Java run.
+        /// </summary>
+        /// <param name="name">The name of the source.</param>
+        /// <param name="text">The text of the source.</param>
+        /// <returns>This Java run.</returns>
         public JavaRun WithSourceText(string name, string text)
         {
             _sourceTexts.Add(name, text);
             return this;
         }
 
+        /// <summary>
+        /// Adds a JAR reference to the Java run.
+        /// </summary>
+        /// <param name="lib">The path to the JAR.</param>
+        /// <returns>This Java run.</returns>
         public JavaRun WithLib(string lib)
         {
             _libs.Add(lib);
@@ -199,6 +227,10 @@ namespace Hazelcast.Testing
             return (process.ExitCode, output.ToString(), outputAndError.ToString());
         }
 
+        /// <summary>
+        /// Compile the Java run.
+        /// </summary>
+        /// <exception cref="InvalidOperationException">Compilation failed.</exception>
         public void Compile()
         {
             Console.WriteLine("Create temp directory...");
@@ -236,6 +268,13 @@ namespace Hazelcast.Testing
             if (exitCode != 0) throw new InvalidOperationException($"Compilation failed (rc={exitCode}).");
         }
 
+        /// <summary>
+        /// Executes the Java run.
+        /// </summary>
+        /// <param name="classname">The name of the class to execute.</param>
+        /// <param name="pipeBytes">Optional bytes to pass to the Java application.</param>
+        /// <returns>The output of the Java application.</returns>
+        /// <exception cref="InvalidOperationException">Execution failed.</exception>
         public string Execute(string classname, byte[] pipeBytes = null)
         {
             pipeBytes ??= Array.Empty<byte>();

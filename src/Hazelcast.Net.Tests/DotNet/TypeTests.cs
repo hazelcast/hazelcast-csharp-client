@@ -13,12 +13,24 @@
 // limitations under the License.
 
 using System;
-using System.Text;
 using Hazelcast.Core;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
 {
+    /// <summary>
+    /// Tests types and their names.
+    /// </summary>
+    /// <remarks>
+    /// <para>Tests the various ways to obtain the name of a CLR type. Tests which names can be
+    /// used to retrieve the actual CLR type and to instantiate an actual object of that type.
+    /// </para>
+    /// <para>We do not want to use the full name including culture and public key, as that
+    /// end up creating type names that are not portable from e.g. .NET Framework to .NET Core,
+    /// so we have to use an intermediate "qualified" name.</para>
+    /// <para>We want to have this test to ensure that our assumptions remain verified by new
+    /// versions of .NET.</para>
+    /// </remarks>
     [TestFixture]
     public class TypeTests
     {
