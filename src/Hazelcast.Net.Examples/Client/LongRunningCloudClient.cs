@@ -16,8 +16,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
-using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.NearCaching;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Examples.Client
@@ -34,22 +35,6 @@ namespace Hazelcast.Examples.Client
     // hz run-example ~LongRunningCloudClient --- \
     //   --hazelcast.clusterName="***" \
     //   --hazelcast.networking.cloud.discoveryToken="***
-    //
-    // when SSL is enabled, additional parameters would be required:
-    //   --hazelcast.networking.ssl.enabled=true
-    //   --hazelcast.networking.ssl.validateCertificateChain=false
-    //   --hazelcast.networking.ssl.protocol=TLS12
-    //   --hazelcast.networking.ssl.certificatePath=path/to/client.pfx
-    //   --hazelcast.networking.ssl.certificatePassword=***
-    //
-    // then example behavior can be controlled with example options:
-    //   --hazelcast.example.iterationCount=10
-    //   --hazelcast.example.iterationDuration=00:10:00
-    //   --hazelcast.example.iterationPauseMilliseconds=50
-    //
-    // the example will run IterationCount times, for IterationDuration, whichever limit
-    // is reached first. if both are set to infinite, the example will run until interrupted
-    // via Ctrl-C. a pause of IterationPauseMilliseconds is observed between each iteration.
 
     public static class LongRunningCloudClient
     {
@@ -65,20 +50,19 @@ namespace Hazelcast.Examples.Client
             Console.WriteLine("Hazelcast Cloud Client");
 
             Console.WriteLine("Build options...");
-            var optionsBuilder = new HazelcastOptionsBuilder()
-                .With(args)
-                .WithConsoleLogger();
-
             var exampleOptions = new ExampleOptions();
-            optionsBuilder = optionsBuilder.Bind("hazelcast:example", exampleOptions);
-
-            // TODO: do better with pre-options
-            // .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
-            // .WithDefault(o => { o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000; })
-            if (args.All(x => x != "Logging:LogLevel:Hazelcast"))
-                optionsBuilder = optionsBuilder.With("Logging:LogLevel:Hazelcast", "Debug");
-
-            var options = optionsBuilder.Build();
+            var options = new HazelcastOptionsBuilder()
+                .Bind("hazelcast:example", exampleOptions)
+                .With(args)
+                .WithConsoleLogger()
+                .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
+                .WithDefault(o =>
+                {
+                    // make sure we don't try to connect forever
+                    // but - make sure it can be overriden by the command-line options
+                    o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000;
+                })
+                .Build();
 
             // log level must be a valid Microsoft.Extensions.Logging.LogLevel value
             //   Trace | Debug | Information | Warning | Error | Critical | None
@@ -89,10 +73,12 @@ namespace Hazelcast.Examples.Client
             // enable metrics
             options.Metrics.Enabled = true;
 
-            // configure cloud (uncomment or use command-line args)
+            // configure cloud
             //options.ClusterName = "***";
             //options.Networking.Cloud.DiscoveryToken = "***";
-            //options.Networking.Cloud.Url = new Uri("https://...");
+
+            // configure cloud url (if not running on default Cloud)
+            //options.Networking.Cloud.Url = new Uri("...");
 
             // make sure we reconnect
             //
@@ -102,8 +88,6 @@ namespace Hazelcast.Examples.Client
             options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
 
             // enable NearCache for our map so that we send NearCache metrics
-            // TODO: enable one the metrics have been fixed
-            /*
             options.NearCaches[mapName] = new NearCacheOptions
             {
                 TimeToLiveSeconds = 60,
@@ -113,7 +97,6 @@ namespace Hazelcast.Examples.Client
                 MaxIdleSeconds = 3600,
                 InvalidateOnChange = true
             };
-            */
 
             Console.WriteLine("Get and connect client...");
             Console.WriteLine($"Connect to cluster \"{options.ClusterName}\"{(options.Networking.Cloud.Enabled ? " (cloud)" : "")}");
@@ -133,17 +116,16 @@ namespace Hazelcast.Examples.Client
             Console.WriteLine("Validate value...");
             if (!value.Equals("value"))
             {
-                Console.WriteLine($"Error: check your configuration ('{value}' != 'value').");
+                Console.WriteLine("Error: check your configuration.");
                 return;
             }
 
-            Console.WriteLine("Put/Get values in/from map with random values...");
-            if (exampleOptions.IterationCount < 0) Console.WriteLine("(press Ctrl-C to stop)");
+            Console.WriteLine("Put/Get values in/from map with random values (^C to stop)...");
             var random = new Random();
-            const int step = 40;
+            const int step = 100;
             var i = 0;
             var loop = true;
-            const int maxKeys = 20;
+            const int maxKeys = 10;
             var keys = new List<int>();
             var consolePeriod = TimeSpan.FromSeconds(4);
 
@@ -169,19 +151,13 @@ namespace Hazelcast.Examples.Client
                 randomValue = random.Next(100_000);
                 await map.GetAsync("key_" + randomValue).ConfigureAwait(false);
 
-                // get value for a known key
+                // get value for a known key (should cache)
                 randomValue = keys[random.Next(keys.Count)];
-                value = await map.GetAsync("key_" + randomValue).ConfigureAwait(false);
-                if (!value.Equals("value_" + randomValue))
-                {
-                    Console.WriteLine($"Error: check your configuration ('{value}' != '{"value_" + randomValue}').");
-                    loop = false;
-                }
+                await map.GetAsync("key_" + randomValue).ConfigureAwait(false);
 
                 if (i % step == 0 || stopwatch.Elapsed - previousElapsed > consolePeriod)
                 {
-                    Console.WriteLine($"  [{i:D6}] map [{"key_" + randomValue}] = {value}");
-                    Console.WriteLine($"  [{i:D6}] map size: {await map.GetSizeAsync().ConfigureAwait(false)}");
+                    Console.WriteLine($"[{i:D3}] map size: {await map.GetSizeAsync().ConfigureAwait(false)}");
                     previousElapsed = stopwatch.Elapsed;
                 }
 
@@ -191,16 +167,13 @@ namespace Hazelcast.Examples.Client
                 i++;
             }
 
-            Console.WriteLine("Stopping...");
-            Console.WriteLine($"  [{i:D6}] map size: {await map.GetSizeAsync().ConfigureAwait(false)}");
-
             Console.WriteLine("Destroy the map...");
             await map.DestroyAsync().ConfigureAwait(false);
 
-            Console.WriteLine("Dispose the map...");
+            Console.WriteLine("Dispose map...");
             await map.DisposeAsync().ConfigureAwait(false);
 
-            Console.WriteLine("Dispose the client...");
+            Console.WriteLine("Dispose client...");
             await client.DisposeAsync().ConfigureAwait(false);
 
             Console.WriteLine($"Done (elapsed: {stopwatch.Elapsed.ToString("hhmmss\\.fff\\ ", CultureInfo.InvariantCulture)}).");

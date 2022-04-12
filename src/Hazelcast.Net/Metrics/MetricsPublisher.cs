@@ -14,12 +14,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.NearCaching;
 using Hazelcast.Protocol.Codecs;
+using Ionic.Zlib;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Metrics
@@ -105,22 +108,23 @@ namespace Hazelcast.Metrics
 
             try
             {
+                // create the binary representation of metrics
                 byte[] bytes;
                 using (var compressor = new MetricsCompressor())
                 {
-                    foreach (var metric in metrics)
-                        compressor.Append(metric);
+                    foreach (var metric in metrics) compressor.Append(metric);
                     bytes = compressor.GetBytesAndReset(); // TODO: consider re-using the compressor
                 }
 
                 if (cancellationToken.IsCancellationRequested) return;
 
+                // create the text representation of metrics
                 var text = metrics.Serialize();
 
                 if (cancellationToken.IsCancellationRequested) return;
 
                 // non-cancelable
-                _logger.LogDebug("Send stats:\n    " + text.Replace(",", ",\n    ", StringComparison.OrdinalIgnoreCase));
+                _logger.LogDebug("Send stats:\n        " + text.Replace(",", ",\n        ", StringComparison.OrdinalIgnoreCase));
                 await SendMetricsAsync(timestamp, text, bytes).CfAwait();
             }
             catch (Exception e)
@@ -137,7 +141,7 @@ namespace Hazelcast.Metrics
                 return;
             }
 
-            _logger.LogDebug("Send metrics.");
+            _logger.LogDebug($"Send metrics ({metrics.Length} items).");
 
             var requestMessage = ClientStatisticsCodec.EncodeRequest(timestamp, attributes, metrics);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();

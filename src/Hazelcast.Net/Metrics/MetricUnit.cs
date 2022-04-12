@@ -17,7 +17,7 @@ namespace Hazelcast.Metrics
     internal enum MetricUnit
     {
         // values must align with Java
-        Null = -1,
+        None = -1,
         Bytes = 0, // default
         Milliseconds = 1,
         Nanoseconds = 2,
