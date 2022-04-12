@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol.CustomCodecs;
 using Hazelcast.Sql;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
@@ -53,6 +54,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                     SqlColumnType.Timestamp => ListCNLocalDateTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.TimestampWithTimeZone => ListCNOffsetDateTimeCodec.Decode(iterator).AsReadOnlyObjectList(),
                     SqlColumnType.Object => ListMultiFrameCodec.Decode(iterator, DataCodec.DecodeNullable),
+                    SqlColumnType.Json => ListMultiFrameCodec.DecodeContainsNullable(iterator, HazelcastJsonValueCodec.Decode),
                     SqlColumnType.Null => new object[iterator.Take().Bytes.ReadIntL(0)],
                     _ => throw new NotSupportedException($"Column type #{columnTypeId} is not supported.")
                 };

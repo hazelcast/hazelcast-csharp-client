@@ -100,6 +100,11 @@ namespace Hazelcast.Sql
         /// The type of the generic SQL <c>NULL</c> literal. <para/>
         /// The only valid value of <c>NULL</c> type is <c>null</c>.
         /// </summary>
-        Null = 14
+        Null = 14,
+
+        /// <summary>
+        /// Json type, represented by <c>HazelcastJsonValue</c>
+        /// </summary>
+        Json = 15
     }
 }
