@@ -23,11 +23,25 @@ namespace Hazelcast.Messaging
     internal interface IClusterMessaging
     {
         /// <summary>
+        /// Triggers before a message is sent.
+        /// </summary>
+        Func<ValueTask> SendingMessage { get; set; }
+
+        /// <summary>
         /// Sends a message to a random member.
         /// </summary>
         /// <param name="requestMessage">The message to send.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
         Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends a message to a random member.
+        /// </summary>
+        /// <param name="requestMessage">The message to send.</param>
+        /// <param name="raiseEvents">Whether to raise events.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The response message.</returns>
+        Task<ClientMessage> SendAsync(ClientMessage requestMessage, bool raiseEvents, CancellationToken cancellationToken);
     }
 }
