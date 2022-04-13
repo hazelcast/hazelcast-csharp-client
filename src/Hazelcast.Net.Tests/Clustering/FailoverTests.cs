@@ -270,20 +270,18 @@ namespace Hazelcast.Tests.Clustering
             Assert.AreEqual(ClientState.Connected, client.State);
             await assertClusterA(map, client.ClusterName, options);
 
-            Assert.GreaterOrEqual(numberOfStateChanged, 11);
+            Assert.GreaterOrEqual(numberOfStateChanged, 9);
             /*
-                Expected State Flow: Due to test enviorment, client can experience more state changes, it's ok.
+                Expected State Flow: Due to test environment, client can experience more state changes, it's ok.
                 0 Starting
                 1 Started
                 2 Connected
-                3 Disconnected
-                4 Switching
-                5 Switched
-                6 Connected
-                7 Disconnected
-                8 Switching
-                9 Switched
-                10 Connected
+                3 Disconnected                
+                4 Switched
+                5 Connected
+                6 Disconnected                
+                7 Switched
+                8 Connected
              */
 
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
@@ -417,7 +415,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"Asserting Cluster A - {RcClusterPrimary.Id}");
 
             Assert.AreEqual(RcClusterPrimary.Id, currentClusterId);
-
+            
             await map.PutAsync(clusterAKey, clusterAData);
             var readData = await map.GetAsync(clusterAKey);
             Assert.AreEqual(clusterAData, readData);

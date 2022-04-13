@@ -73,13 +73,6 @@ namespace Hazelcast
         ShuttingDown,
 
         /// <summary>
-        /// The client switching current cluster to next configured one <see cref="Failover"/>
-        /// <para>This state is reached when client is disconnected from the cluster number of 
-        /// <see cref="ClusterOptions.TryCount"/> times</para>
-        /// </summary>
-        Switching,
-
-        /// <summary>
         /// The client switched the cluster options, and will reconnect with new options
         /// <para>This state is reached when cluster <see cref="Switching"/> is completed, 
         /// and client will reconnect with new options</para>

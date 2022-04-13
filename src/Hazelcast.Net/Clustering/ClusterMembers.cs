@@ -73,7 +73,7 @@ namespace Hazelcast.Clustering
 
             _clusterState.StateChanged += (state) =>
             {
-                if (state == ClientState.Switching)
+                if (state == ClientState.Switched)
                     Clear();
 
                 return default;

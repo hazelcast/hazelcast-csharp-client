@@ -27,8 +27,7 @@ namespace Hazelcast.Core
         public static bool IsActiveState(this ClientState state) => state == ClientState.Starting ||
                                                                     state == ClientState.Started ||
                                                                     state == ClientState.Connected ||
-                                                                    state == ClientState.Switched ||
-                                                                    state == ClientState.Switching ||
+                                                                    state == ClientState.Switched ||                                                                    
                                                                     state == ClientState.Disconnected;
     }
 }

@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Clustering
             const string clusterName2 = "second";
             const string address1 = "127.0.0.1";
             const string address2 = "127.0.0.2";
-            int countOfStateChanged = 0;
+            var countOfStateChanged = 0;
 
             var clusterState = CreateClusterState(clusterName1, clusterName2, address1, address2);
 
@@ -74,7 +74,6 @@ namespace Hazelcast.Tests.Clustering
             clusterState.StateChanged += x =>
             {
                 countOfStateChanged++;
-                //Console.WriteLine(x.ToString());
                 return default;
             };
 
@@ -86,23 +85,23 @@ namespace Hazelcast.Tests.Clustering
             verifyClusterIs(clusterState, clusterName1, address1);
 
             //failover to next-> cluster 2
-            clusterState.ChangeState(ClientState.Disconnected);//disconnected->switching->switched
+            clusterState.ChangeState(ClientState.Disconnected);//connected->disconnected->switched
             verifyClusterIs(clusterState, clusterName2, address2);
             Assert.AreEqual(ClientState.Switched, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(4));
+            Assert.That(countOfStateChanged, Is.EqualTo(3));
 
             //failover to next-> cluster 1
-            clusterState.ChangeState(ClientState.Disconnected);//disconnected->switching->switched
+            clusterState.ChangeState(ClientState.Disconnected);//disconnected->switched
             verifyClusterIs(clusterState, clusterName1, address1);
             Assert.AreEqual(ClientState.Switched, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(7));
+            Assert.That(countOfStateChanged, Is.EqualTo(5));
 
             //cannot failover anymore, still cluster 1
             clusterState.ChangeState(ClientState.Disconnected);//disconnected.
             verifyClusterIs(clusterState, clusterName1, address1);
 
             Assert.AreEqual(ClientState.Disconnected, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(8));
+            Assert.That(countOfStateChanged, Is.EqualTo(6));
         }
     }
 }

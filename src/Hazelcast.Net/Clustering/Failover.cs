@@ -33,7 +33,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterState _state;
         private readonly IEnumerable<ClusterOptions> _clusters;
         private readonly IEnumerator<ClusterOptions> _clusterEnumerator;
-        private int _currentTryCount = 0;
+        private int _currentTryCount;
         private readonly int _maxTryCount;
         private bool _isEnabled;
         private Action<ClusterOptions> _clusterOptionsChanged;
@@ -50,20 +50,22 @@ namespace Hazelcast.Clustering
 
             if (!options.Failover.Clusters.Any() && options.Failover.Enabled)
             {
-                throw new ConfigurationException("Failover is enabled but there is no cluster(s) provided. Please, chek your configurations.");
+                throw new ConfigurationException("Failover is enabled but there is no cluster(s) provided. Please, check your configurations.");
             }
 
             //main cluster config is also an alternative cluster in a circular list (->blue->green->)
-            var clusterList = new List<ClusterOptions>();
-            clusterList.Add(new ClusterOptions()
+            var clusterList = new List<ClusterOptions>
             {
-                Authentication = options.Authentication,
-                ClusterName = options.ClusterName,
-                Heartbeat = options.Heartbeat,
-                LoadBalancer = options.LoadBalancer,
-                Networking = options.Networking,
-                WaitForConnectionMilliseconds = options.WaitForConnectionMilliseconds
-            });
+                new ClusterOptions()
+                {
+                    Authentication = options.Authentication,
+                    ClusterName = options.ClusterName,
+                    Heartbeat = options.Heartbeat,
+                    LoadBalancer = options.LoadBalancer,
+                    Networking = options.Networking,
+                    WaitForConnectionMilliseconds = options.WaitForConnectionMilliseconds
+                }
+            };
             clusterList.AddRange(options.Failover.Clusters);
             _clusters = clusterList;
 
@@ -100,16 +102,12 @@ namespace Hazelcast.Clustering
                 _currentTryCount = 0;
             }
             //we only count disconnected states
-            else if (clientState == ClientState.Disconnected)
+            else if (clientState == ClientState.Disconnected && CanSwitchClusterOptions)
             {
-                if (CanSwitchClusterOptions)
-                {
-                    _state.ChangeState(ClientState.Switching);
-                    SwitchClusterOptions();
-                    _currentTryCount++;                    
-                    _state.ChangeState(ClientState.Switched);
-                    HConsole.WriteLine(this, "CLUSTER SWITCHED");
-                }
+                SwitchClusterOptions();
+                _currentTryCount++;
+                _state.ChangeState(ClientState.Switched);
+                HConsole.WriteLine(this, "CLUSTER SWITCHED");
             }
 
             return default;
@@ -126,7 +124,7 @@ namespace Hazelcast.Clustering
                 ResetToFirstCluster();
             }
 
-            _clusterOptionsChanged?.Invoke(CurrentClusterOptions);            
+            _clusterOptionsChanged?.Invoke(CurrentClusterOptions);
         }
 
         private void ResetToFirstCluster()
@@ -136,7 +134,7 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
-        /// Gets wheather current conditions are suitable to change cluster options to next one.
+        /// Gets whether current conditions are suitable to change cluster options to next one.
         /// </summary>
         public bool CanSwitchClusterOptions => _currentTryCount < _maxTryCount && _isEnabled && _clusters.Any();
 
