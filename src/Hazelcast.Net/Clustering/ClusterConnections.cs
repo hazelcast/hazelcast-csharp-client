@@ -76,7 +76,7 @@ namespace Hazelcast.Clustering
 
             _clusterState.StateChanged += OnStateChanged;
 
-            //Cluster changed, renew options if neccessary.
+            //Cluster changed, renew options if necessary.
             _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
             {
                 _authenticator = new Authenticator(options.Authentication, _serializationService, _clusterState.LoggerFactory);
