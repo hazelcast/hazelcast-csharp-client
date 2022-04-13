@@ -22,8 +22,13 @@ namespace Hazelcast.Tests.DotNet
     [TestFixture]
     public class ExceptionTests
     {
+        // this test shows that a newly instantiated exception does not have a
+        // stacktrace until it has actually been thrown, meaning that it is not
+        // a good idea to simply add new exceptions to an aggregate and then
+        // throw the aggregate.
+
         [Test]
-        public void MustThrowToGetStackTrace()
+        public void NewExceptionMissingStackTrace()
         {
             var e = new Exception("bang!");
             Assert.That(e.Message, Is.EqualTo("bang!"));
@@ -39,8 +44,12 @@ namespace Hazelcast.Tests.DotNet
             Assert.That(e.StackTrace, Is.Not.Null); // that is better
         }
 
+        // this test shows that capturing the exception via ExceptionDispatchInfo
+        // is not going to add a stacktrace to it, so it is not a solution to the
+        // missing stacktrace problem
+
         [Test]
-        public void NewExceptionStackTrace()
+        public void ExceptionDispatchCaptureDoesNotSetStackTrace()
         {
             var e = new Exception("bang!");
             Assert.That(e.Message, Is.EqualTo("bang!"));
@@ -51,9 +60,43 @@ namespace Hazelcast.Tests.DotNet
             var i = ExceptionDispatchInfo.Capture(e);
             Assert.That(e.StackTrace, Is.Null);
             Assert.That(i.SourceException.StackTrace, Is.Null);
+        }
 
-            e = e.Thrown();
+        // this test shows that starting with .NET 5, ExceptionDispatchInfo
+        // has a way to set the stacktrace of a new exception - alas, it is
+        // not available with .NET Framework, or .NET Core pre-5.
+
+        [Test]
+        public void ExceptionDispatchCanSetStackTrace()
+        {
+            var e = new Exception("bang!");
+            Assert.That(e.Message, Is.EqualTo("bang!"));
+            Assert.That(e.InnerException, Is.Null);
+            Assert.That(e.StackTrace, Is.Null); // that is annoying
+
+#if NET5_0_OR_GREATER
+            e = ExceptionDispatchInfo.SetCurrentStackTrace(e);
             Assert.That(e.StackTrace, Is.Not.Null); // that is better
+#endif
+        }
+
+        // this test shows that our exception method, which uses a combination
+        // of different means, can set the stacktrace for all .NET versions
+
+        [Test]
+        public void ExtensionMethodCanSetStackTrace()
+        {
+            var e = new Exception("bang!");
+            Assert.That(e.Message, Is.EqualTo("bang!"));
+            Assert.That(e.InnerException, Is.Null);
+            Assert.That(e.StackTrace, Is.Null); // that is annoying
+
+            e = e.SetCurrentStackTrace();
+            Assert.That(e.StackTrace, Is.Not.Null); // that is better
+
+            // and, the very first line is this current method
+            var lines = e.StackTrace.Split('\n');
+            Assert.That(lines[0], Does.Contain(nameof(ExtensionMethodCanSetStackTrace)));
         }
     }
 }

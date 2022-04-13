@@ -13,6 +13,9 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
 using System.Runtime.ExceptionServices;
 
 namespace Hazelcast.Core
@@ -20,25 +23,48 @@ namespace Hazelcast.Core
     /// <summary>
     /// Provides extension methods for exceptions.
     /// </summary>
+#if NET6_0_OR_GREATER
+    [StackTraceHidden]
+#endif
     internal static class ExceptionExtensions
     {
-        /// <summary>
-        /// Throws and catches an exception, thus forcing it to have a stack trace.
-        /// </summary>
+        /// <summary>Stores the current stack trace into the specified <typeparamref name="TException"/> exception instance.</summary>
         /// <typeparam name="TException">The type of the exception.</typeparam>
-        /// <param name="exception">The exception.</param>
-        /// <returns>The exception after it has been thrown and caught.</returns>
+        /// <param name="exception">The unthrown <typeparamref name="TException"/> exception.</param>
+        /// <returns>The <paramref name="exception"/> exception instance.</returns>
         /// <remarks>
-        /// <para>This can be useful when creating, but not immediately throwing, an exception, such
-        /// as with <code>taskContinuationSource.TrySetException(new Exception())</code> in order
-        /// to force the new exception to have a stack trace that corresponds to its creation.</para>
+        /// <para>Use this method to store a stack trace into an exception without having to throw it.</para>
         /// </remarks>
-        public static TException Thrown<TException>(this TException exception)
+        public static TException SetCurrentStackTrace<TException>(this TException exception)
             where TException : Exception
         {
-            try { throw exception; } catch { /*nothing*/ }
+            // starting with .NET 5, ExceptionDispatchInfo can do what we want - but the StackTraceHidden
+            // attribute is internal in .NET 5 so we cannot hide this SetCurrentStackTrace extension
+            // method - therefore we use the new ExceptionDispatchInfo for .NET 6 and greater only
+            //
+            // for everything else, we have to force the stack trace through reflection, and to manually
+            // remove the first line -  which will be this SetCurrentStackTrace extension.
+
+#if NET6_0_OR_GREATER
+            exception = (TException) ExceptionDispatchInfo.SetCurrentStackTrace(exception);
+#else
+            var stackTraceString = new StackTrace(fNeedFileInfo: true).ToString();
+            var pos = stackTraceString.IndexOf('\n');
+            if (pos > 0) stackTraceString = stackTraceString.Substring(pos + 1);
+            SetStackTraceField(exception, stackTraceString);
+#endif
             return exception;
         }
+
+        // compiles a dynamic method that sets the Exception._stackTraceString internal field via reflection
+        private static readonly Action<Exception, string> SetStackTraceField = new Func<Action<Exception, string>>(() =>
+        {
+            var target = Expression.Parameter(typeof(Exception));
+            var stackTraceString = Expression.Parameter(typeof (string));
+            var stackTraceStringField = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
+            var assign = Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
+            return Expression.Lambda<Action<Exception, string>>(assign, target, stackTraceString).Compile();
+        })();
 
         /// <summary>
         /// Captures an exception.
