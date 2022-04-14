@@ -13,6 +13,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Testing", "sr
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{FD4710D4-ECC2-452E-A7C6-0320AFAFF124}"
 	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
