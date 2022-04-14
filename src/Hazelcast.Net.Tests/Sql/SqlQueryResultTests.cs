@@ -26,6 +26,9 @@ using Hazelcast.Tests.Networking;
 using Hazelcast.Tests.TestObjects;
 using NUnit.Framework;
 using Hazelcast.Testing.Conditions;
+using System.Text.Json;
+using Hazelcast.DistributedObjects;
+using Hazelcast.Testing.TestData;
 
 namespace Hazelcast.Tests.Sql
 {
@@ -189,5 +192,51 @@ namespace Hazelcast.Tests.Sql
             Assert.IsFalse(string.IsNullOrEmpty(ex.Suggestion));
             Assert.IsFalse(string.IsNullOrEmpty(ex.Message));
         }
+
+        //Put objects via sql.insert
+        [TestCase(true)]
+        //Put objects via map.put
+        [TestCase(false)]
+        [ServerConditionAttribute("5.1")]
+        public async Task CanQueryComplexJsonValue(bool useSql)
+        {
+            var expectedObjects = EmployeeTestObjectTestData.EmployeeTestObjects.ToDictionary(p => p.Id, p => p);
+            Assert.That(expectedObjects, Is.Not.Empty);
+
+            var map = await CreateEmployeeTestObjectMapAsync(expectedObjects, useSql);
+
+            char employeeTypeToQuery = expectedObjects.First().Value.Type;
+
+            var queryResult = await Client.Sql.ExecuteQueryAsync($"SELECT * FROM {map.Name} WHERE JSON_VALUE(this,'$.Type')=?", employeeTypeToQuery);
+
+            bool queryReturnedResult = false;
+            int actualRowCount = 0;
+
+            await foreach (var row in queryResult)
+            {
+                var jsonVal = row.GetValue<HazelcastJsonValue>();
+                var actualObject = JsonSerializer.Deserialize<EmployeeTestObject>(jsonVal.ToString());
+                var expectedObject = expectedObjects[row.GetKey<int>()];
+
+                Assert.AreEqual(expectedObject.Id, actualObject.Id);
+                Assert.AreEqual(expectedObject.Name, actualObject.Name);
+                Assert.AreEqual(expectedObject.Salary, actualObject.Salary);
+                Assert.AreEqual(expectedObject.Type, actualObject.Type);
+                Assert.AreEqual(expectedObject.Started, actualObject.Started);
+                Assert.AreEqual(expectedObject.StartedAtTimeStamp, actualObject.StartedAtTimeStamp);
+
+                actualRowCount++;
+                queryReturnedResult = true;
+            }
+
+            int expectedRowCount = expectedObjects.Where(p => p.Value.Type.Equals(employeeTypeToQuery)).Count();
+
+            Assert.AreEqual(expectedRowCount, actualRowCount);
+            // query result is async, getting count could be pricey. So, be sure there was result.
+            Assert.True(queryReturnedResult, "Query result was empty!");
+
+            await map.DestroyAsync();
+        }
+
     }
 }

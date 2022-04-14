@@ -15,11 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
 using Hazelcast.Sql;
 using Hazelcast.Testing;
+using Hazelcast.Tests.TestObjects;
 
 namespace Hazelcast.Tests.Sql
 {
@@ -49,6 +52,29 @@ namespace Hazelcast.Tests.Sql
         {
             var entries = Enumerable.Range(1, size).ToDictionary(i => i, i => i.ToString());
             return CreateIntMapAsync(entries);
+        }
+
+        internal async Task<IHMap<int, HazelcastJsonValue>> CreateEmployeeTestObjectMapAsync(IDictionary<int, EmployeeTestObject> entries, bool useSql = false)
+        {
+            var map = await Client.GetMapAsync<int, HazelcastJsonValue>(GenerateMapName());
+
+            await Client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='json')");
+
+            foreach (var (key, obj) in entries)
+            {
+                string testJsonObject = JsonSerializer.Serialize(obj); //how about extending return type to HazelcastJsonValue?
+
+                if (useSql)
+                {
+                    await Client.Sql.ExecuteCommandAsync($"INSERT INTO {map.Name} VALUES (?,?)", obj.Id, testJsonObject);
+                }
+                else
+                {
+                    await map.PutAsync(key, new HazelcastJsonValue(testJsonObject));
+                }
+            }
+
+            return map;
         }
 
         // TODO: what are the rules for acceptable SQL map names?
