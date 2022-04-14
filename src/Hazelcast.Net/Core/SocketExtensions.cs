@@ -26,38 +26,29 @@ namespace Hazelcast.Core
     /// </summary>
     internal static class SocketExtensions
     {
-        // our own extension, not provided by any framework
+        // The purpose of this class is to provide Socket.ConnectAsync methods that support a combination
+        // of timeout and/or cancellation token. Prior to .NET 5, none of these options are built-in.
+        // Starting with .NET 5, cancellation token support token is built-in, but not timeout support.
         //
+        // Support for timeout + cancellation token 
+
+        // our own extension, not provided by any framework
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
             => socket.ConnectAsync(endPoint, timeoutMilliseconds, default);
 
 #if !NET5_0_OR_GREATER
 
         // that one is built-in starting with .NET 5
-        //
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
             => socket.ConnectAsync(endPoint, -1, cancellationToken);
 
 #endif
 
         // our own extension, not provided by any framework
-        // there *are* some ConnectAsync methods but none supporting a timeout
-        //
-        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
+        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
         {
             if (socket == null) throw new ArgumentNullException(nameof(socket));
 
-#if !NET5_0_OR_GREATER
-            // use the ConnectAsync4 method that relies on Begin/End since there is no ConnectAsync yet
-            return ConnectAsync4(socket, endPoint, timeoutMilliseconds, cancellationToken);
-#else
-            // use the ConnectAsync5 method that relies on the now-available ConnectAsync
-            return ConnectAsync5(socket, endPoint, timeoutMilliseconds, cancellationToken);
-#endif
-        }
-
-        private static async Task ConnectAsync5(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
-        {
             static void ConnectCallback(object sender, SocketAsyncEventArgs a)
             {
                 var completionSource = (TaskCompletionSource<Socket>) a.UserToken;
@@ -68,7 +59,8 @@ namespace Hazelcast.Core
             }
 
             var connected = new TaskCompletionSource<Socket>();
-            var e = new SocketAsyncEventArgs { UserToken = connected };
+            var e = new SocketAsyncEventArgs();
+            e.UserToken = connected;
             e.RemoteEndPoint = endPoint;
             e.Completed += ConnectCallback;
             var pending = socket.ConnectAsync(e);
@@ -76,15 +68,15 @@ namespace Hazelcast.Core
             Task task;
             if (pending)
             {
-                var cancel = new CancellationTokenSource();
-                var cancelled = Task.Delay(timeoutMilliseconds, cancel.Token);
-                var reg = cancellationToken.Register(() => cancel.Cancel());
+                var timeoutCancel = new CancellationTokenSource();
+                var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
+                var reg = cancellationToken.Register(() => timeoutCancel.Cancel());
 
-                task = await Task.WhenAny(connected.Task, cancelled).CfAwait();
+                task = await Task.WhenAny(connected.Task, timeoutTask).CfAwait();
                 await reg.DisposeAsync().CfAwait();
-                cancel.Cancel();
-                cancel.Dispose();
-                await cancelled.CfAwaitNoThrow();
+                timeoutCancel.Cancel();
+                timeoutCancel.Dispose();
+                await timeoutTask.CfAwaitNoThrow();
             }
             else
             {
@@ -100,6 +92,8 @@ namespace Hazelcast.Core
                 return;
             }
 
+            // else, it was the timeout task
+
             // we *need* to await connected.Task even when it was not the task returned by WhenAny else
             // it may leak unobserved exceptions, as ConnectCallback may be invoked even when the socket
             // is being teared down - however, ConnectCallback may also *not* be invoked, so we try to
@@ -109,66 +103,6 @@ namespace Hazelcast.Core
 
             TryCloseAndDispose(socket);
 
-            if (cancellationToken.IsCancellationRequested)
-                throw new OperationCanceledException("The socket connection operation has been canceled.");
-
-            throw new TimeoutException("The socket connection operation has timed out.");
-        }
-
-        public static async Task ConnectAsync4(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
-        {
-            // note that purely using this code in .NET 6 leaves an unobserved exception behind
-            // read https://github.com/dotnet/runtime/issues/61411
-
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
-
-            var tcs = new TaskCompletionSource<bool>(socket);
-            socket.BeginConnect(endPoint, iar =>
-            {
-                var innerTcs = (TaskCompletionSource<bool>)iar.AsyncState;
-                try
-                {
-                    ((Socket)innerTcs.Task.AsyncState).EndConnect(iar);
-                    innerTcs.TrySetResult(true);
-                }
-                catch (Exception e) { innerTcs.TrySetException(e); }
-            }, tcs);
-
-            // only, we don't return the task, but handle the cancellation
-            //return tcs.Task;
-
-            var cancellation = cancellationToken == default
-                ? new CancellationTokenSource()
-                : CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-
-            try
-            {
-                var t = await Task.WhenAny(tcs.Task, Task.Delay(timeoutMilliseconds, cancellation.Token)).CfAwait();
-
-                // if the connect task has completed successfully...
-                if (t == tcs.Task)
-                {
-                    cancellation.Cancel(); // cancel the delay
-                    await t.CfAwait(); // may throw
-                    return;
-                }
-            }
-            finally
-            {
-                cancellation.Dispose(); // make sure we dispose the cancellation
-            }
-
-            // else the delay has been cancelled due to either timeout, or cancellation
-            // we need to close and dispose the socket,
-            // and this will trigger the callback, thus EndConnect, which will throw,
-            // and this will fault the connection task, so await will throw too,
-            // and then everything will be ok
-
-            TryCloseAndDispose(socket);
-            await tcs.Task.CfAwaitNoThrow();
-
-            // finally, throw the correct exception
-            // favor cancellation over timeout
             if (cancellationToken.IsCancellationRequested)
                 throw new OperationCanceledException("The socket connection operation has been canceled.");
 
