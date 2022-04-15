@@ -92,7 +92,7 @@ namespace Hazelcast.Clustering
             {
                 if (_disposed) return; // nothing to resume - but no need to throw about it
                 if (!_suspended) throw new InvalidOperationException("Not suspended.");
-                _logger.IfDebug()?.LogDebug($"{(drain?"Drain and resume":"Resume")} the members connection queue.");
+                _logger.IfDebug()?.LogDebug("{DrainState} the members connection queue.", (drain ? "Drain and resume" : "Resume"));
                 if (drain) _requests.ForEach(request => request.Cancel());
                 _suspended = false;
                 _resume.Release();
@@ -112,11 +112,11 @@ namespace Hazelcast.Clustering
                 if (!_requests.TryWrite(new MemberConnectionRequest(member)))
                 {
                     // that should not happen, but log to be sure
-                    _logger.LogWarning($"Failed to add member ({member.Id.ToShortString()}).");
+                    _logger.IfWarning()?.LogWarning("Failed to add member ({MemberId}).", member.Id.ToShortString());
                 }
                 else
                 {
-                    _logger.LogDebug($"Added member {member.Id.ToShortString()}");
+                    _logger.IfDebug()?.LogDebug("Added member {MemberId}", member.Id.ToShortString());
                 }
             }
         }

@@ -90,7 +90,7 @@ namespace Hazelcast.DistributedObjects
                 }
 
                 x.OnInitialized();
-                _logger.LogDebug("Initialized ({Object}) distributed object.", info2);
+                _logger.IfDebug()?.LogDebug("Initialized ({Object}) distributed object.", info2);
                 return x;
             }
 
@@ -232,7 +232,7 @@ namespace Hazelcast.DistributedObjects
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, $"Failed to dispose ({o}) distributed object.", o);
+                _logger.IfWarning()?.LogWarning(e, "Failed to dispose ({O}) distributed object.", o);
             }
         }
     }

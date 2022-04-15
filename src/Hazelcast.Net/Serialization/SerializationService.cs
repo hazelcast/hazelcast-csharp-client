@@ -337,7 +337,7 @@ namespace Hazelcast.Serialization
             }
 
             var createSerializerAdapter = _createSerializerAdapter.MakeGenericMethod(type);
-            return (ISerializerAdapter) createSerializerAdapter.Invoke(this, new object[] {serializer});
+            return (ISerializerAdapter)createSerializerAdapter.Invoke(this, new object[] { serializer });
         }
 
         private static ISerializerAdapter CreateSerializerAdapter<T>(ISerializer serializer)
@@ -535,9 +535,7 @@ namespace Hazelcast.Serialization
             // register so we find it faster next time
             if (AddSerializer(type, _serializableSerializerAdapter))
             {
-                _logger.LogWarning("Performance hint: Serialization service will use the CLR serialization " +
-                                   $"for type {type}. Please consider using a faster serialization option such as " +
-                                   "IIdentifiedDataSerializable.");
+                _logger.IfWarning()?.LogWarning("Performance hint: Serialization service will use the CLR serialization for type {Type}. Please consider using a faster serialization option such as IIdentifiedDataSerializable.", type);
             }
 
             return _serializableSerializerAdapter;
