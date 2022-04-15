@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Networking;
@@ -58,6 +59,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
                 Ttl = ttl,
                 MaxIdle = maxIdle
             };
+        }
+
+        internal static HazelcastJsonValue CreateHazelcastJsonValue(string value)
+        {
+            return new HazelcastJsonValue(value);
         }
 
         public static IndexOptions CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions)

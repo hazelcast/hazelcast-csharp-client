@@ -23,7 +23,7 @@ namespace Hazelcast.Testing.Conditions
     public static class ServerVersion
     {
         // ReSharper disable once InconsistentNaming
-        private const string DefaultVersionString = "5.0";
+        private const string DefaultVersionString = "5.1";
 
         /// <summary>
         /// Gets the default server version.
@@ -39,14 +39,41 @@ namespace Hazelcast.Testing.Conditions
         /// <summary>
         /// Gets the server version indicated by the environment variable, or the default server version.
         /// </summary>
+        /// <returns>The server version.</returns>
+        public static NuGetVersion GetVersion()
+        {
+            var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
+            return NuGetVersion.TryParse(env, out var serverVersion)
+                ? serverVersion
+                : DefaultVersion;
+        }
+
+        /// <summary>
+        /// Gets the server version indicated by the environment variable, or the default server version.
+        /// </summary>
         /// <param name="defaultVersion">The optional default version.</param>
         /// <returns>The server version.</returns>
-        public static NuGetVersion GetVersion(NuGetVersion defaultVersion = null)
+        public static NuGetVersion GetVersion(NuGetVersion defaultVersion)
         {
             var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
             return NuGetVersion.TryParse(env, out var serverVersion)
                 ? serverVersion
                 : defaultVersion ?? DefaultVersion;
+        }
+
+        /// <summary>
+        /// Gets the server version indicated by the environment variable, or the default server version.
+        /// </summary>
+        /// <param name="defaultVersion">The optional default version.</param>
+        /// <returns>The server version.</returns>
+        public static NuGetVersion GetVersion(string defaultVersion)
+        {
+            var env = Environment.GetEnvironmentVariable(EnvironmentVariableName);
+            return NuGetVersion.TryParse(env, out var serverVersion)
+                ? serverVersion
+                : defaultVersion != null
+                    ? NuGetVersion.Parse(defaultVersion)
+                    : DefaultVersion;
         }
     }
 }

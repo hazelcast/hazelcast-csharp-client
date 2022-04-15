@@ -1,0 +1,30 @@
+
+# suddenly, R# has decided to apply rules from a Global AnalyzerConfig
+# and yet there are no 'is_global = true' file in the repo except in obj
+# directories. so, we create our own .editorconfig to fight against this.
+#
+# see 
+# https://docs.microsoft.com/en-us/dotnet/fundamentals/code-analysis/configuration-files
+# https://aka.ms/editorconfigdocs
+
+# Make this the topmost editorconfig
+root = true
+
+# All files
+[*]
+
+indent_style = space
+
+# Xml files
+[*.xml]
+
+indent_size = 2
+tab_width = 2
+
+# C# files
+[*.cs]
+
+indent_size = 4
+tab_width = 4
+
+#
