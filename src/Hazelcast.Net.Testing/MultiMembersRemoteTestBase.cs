@@ -60,6 +60,16 @@ namespace Hazelcast.Testing
         }
 
         /// <summary>
+        /// Removes a member from the cluster.
+        /// </summary>
+        /// <param name="memberId">The identifier of the member to remove.</param>
+        /// <returns>A task that will complete when the member has been removed.</returns>
+        protected async Task RemoveMember(string memberId)
+        {
+            await RemoveMember(Guid.Parse(memberId));
+        }
+
+        /// <summary>
         /// Gets the remote members.
         /// </summary>
         protected ConcurrentDictionary<Guid, Member> RcMembers { get; } = new ConcurrentDictionary<Guid, Member>();

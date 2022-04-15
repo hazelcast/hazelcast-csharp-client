@@ -330,6 +330,15 @@ namespace Hazelcast.Clustering
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Gets number of connections to members
+        /// </summary>
+        public int Count => _connections.Count;
+
+        #endregion
+
         /// <summary>
         /// Connects to the cluster.
         /// </summary>
