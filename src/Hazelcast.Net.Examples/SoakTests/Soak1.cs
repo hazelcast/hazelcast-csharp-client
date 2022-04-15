@@ -118,7 +118,7 @@ namespace Hazelcast.Examples.SoakTests
             var memoryPeriod = ParseDurationOrGetDefault(soakOptions.MemoryMonitorPeriod, TimeSpan.FromMinutes(5));
 
             // report
-            logger.LogInformation($"Start {nameof(Soak1)} with {soakOptions.ThreadCount} threads, duration {duration.Hours}h");
+            logger.LogInformation($"Start {nameof(Soak1)} with {soakOptions.ThreadCount} threads, duration {duration.TotalHours,0:f4}h");
             logger.LogInformation("Connecting");
 
             var cancellation = new CancellationTokenSource(duration);
@@ -155,7 +155,7 @@ namespace Hazelcast.Examples.SoakTests
 
             // report
             logger.LogInformation("Connected");
-            logger.LogInformation($"{nameof(Soak1)} is running, will end in duration {duration.TotalHours}h");
+            logger.LogInformation($"{nameof(Soak1)} is running, will end in duration {duration.TotalHours,0:f4}h");
             logger.LogInformation("Or, press Ctrl-C to abort");
 
             // wait for threads
@@ -202,12 +202,17 @@ namespace Hazelcast.Examples.SoakTests
                 parsedDuration = TimeSpan.FromMinutes(int.Parse(duration.TrimEnd('m')));
             else if (duration.EndsWith("s"))
                 parsedDuration = TimeSpan.FromSeconds(int.Parse(duration.TrimEnd('s')));
+            else
+            {
+                if (TimeSpan.TryParse(duration, out var parsedTimeSpan))
+                    parsedDuration = parsedTimeSpan;
+            }
             return parsedDuration;
         }
 
         private static async Task MonitorMemoryUsage(TimeSpan period, ILogger logger, CancellationToken token)
         {
-            await Task.Delay(period);
+            await Task.Delay(period, token);
             logger.LogInformation("Reading Memory Usage.");
             _currentProcess.Refresh();
 
