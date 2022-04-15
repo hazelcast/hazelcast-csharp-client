@@ -143,12 +143,11 @@ namespace Hazelcast.Tests.Clustering
         {
             var options = new HazelcastOptionsBuilder()
                 .With(o => o.Networking.SmartRouting = false)
-                .With(o => o.Networking.UsePublicAddresses = false)                
+                .With(o => o.Networking.UsePublicAddresses = false)
                 .Build();
 
             var loggerFactoryMock = new Mock<ILoggerFactory>();
             var loggerMock = new Mock<ILogger>();
-            loggerMock.Setup(h => h.Log(LogLevel.Information, It.IsAny<EventId>(), It.IsAny<object>(), It.IsAny<Exception>(), It.IsAny<Func<object, Exception, string>>()));
             loggerMock.Setup(h => h.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
             loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
 
@@ -157,10 +156,21 @@ namespace Hazelcast.Tests.Clustering
 
             var memberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true) };
 
-            await clusterMembers.SetMembersAsync(1, memberList);//will print since list new
-            await clusterMembers.SetMembersAsync(1, memberList);//won't print since list steady
+            await clusterMembers.SetMembersAsync(1, memberList);//will print since list new -> 1
+            await clusterMembers.SetMembersAsync(2, memberList);//won't print since list steady
 
-            loggerMock.Verify(m => m.Log(LogLevel.Information, It.IsAny<EventId>(), It.IsAny<object>(), It.IsAny<Exception>(), It.IsAny<Func<object, Exception, string>>()), Times.AtMost(1), "Member list prints too verbose.");
+            memberList.Add(NewMemberInfo(true));
+            await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
+            await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
+            
+            loggerMock.Verify(m => 
+                    m.Log<It.IsAnyType>(LogLevel.Information,
+                        0, 
+                        It.IsAny<It.IsAnyType>(),
+                        null,
+                        It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                    Times.Exactly(2),
+          "Member list prints too verbose.");
         }
 
         [Test]

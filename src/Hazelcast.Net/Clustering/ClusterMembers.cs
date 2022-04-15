@@ -221,7 +221,7 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected?"":"dis")}connected.");
+                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
 
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
@@ -317,7 +317,7 @@ namespace Hazelcast.Clustering
             msg.Append('}');
 
             //Print only if there is a change
-            if (countOfUnchanged != table.Count)
+            if (countOfUnchanged != diff.Count)
                 _logger.LogInformation(msg.ToString());
         }
 
