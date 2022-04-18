@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
@@ -23,6 +24,7 @@ using Hazelcast.Core;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
@@ -30,7 +32,6 @@ namespace Hazelcast.Tests.Networking
     public class RegressionWithRealNetworkTest : MultiMembersRemoteTestBase
     {
         private IDisposable HConsoleForTest()
-
             => HConsole.Capture(options => options
                 .ClearAll()
                 .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
@@ -50,12 +51,18 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false)]
         public async Task TestClientConnectionBeforeServerReady(bool smartRouting)
         {
+            using var _ = HConsoleForTest();
+
             var clientTask = CreateAndStartClientAsync(options =>
             {
                 options.Networking.SmartRouting = smartRouting;
-                options.Networking.ConnectionTimeoutMilliseconds = int.MaxValue;
+                options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
+                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
                 options.ClusterName = RcCluster.Id;
             });
+
+            //Let the client tries to connect before cluster is ready
+            await Task.Delay(500);
 
             var member = await AddMember();
 
@@ -64,11 +71,11 @@ namespace Hazelcast.Tests.Networking
             await AssertEx.SucceedsEventually(() =>
             {
                 Assert.AreEqual(ClientState.Connected, client.State);
-                Assert.DoesNotThrowAsync(async () => await client.GetMapAsync<int, int>("randomMap"));
             }, 10_000, 500);
         }
 
         [Test]
+        [Timeout(20_000)]
         [TestCase(true, "localhost", "127.0.0.1")]
         [TestCase(true, "127.0.0.1", "localhost")]
         [TestCase(true, "localhost", "localhost")]
@@ -79,7 +86,6 @@ namespace Hazelcast.Tests.Networking
         {
             using var _ = HConsoleForTest();
             #region SetUp
-            //await ClusterOneTimeTearDown();
             var memberConfig = GetMemberConfigWithAddress(memberAddress);
             var customCluster = await RcClient.CreateClusterAsync(memberConfig);
             var member = await RcClient.StartMemberAsync(customCluster.Id);
@@ -91,10 +97,6 @@ namespace Hazelcast.Tests.Networking
                options.Networking.Addresses.Clear();
                options.Networking.Addresses.Add(clientAddress + ":" + member.Port);
                options.ClusterName = customCluster.Id;
-               options.LoggerFactory.Creator = () =>
-                   Microsoft.Extensions.Logging.LoggerFactory.Create(builder =>
-                       builder
-                           .AddHConsole());
            });
             #endregion
 
@@ -125,10 +127,113 @@ namespace Hazelcast.Tests.Networking
             #region TearDown
             await client.DisposeAsync();
             await RcClient.ShutdownClusterAsync(customCluster);
-            //await ClusterOneTimeTearDown();
             #endregion
 
         }
+
+
+        [Test]
+        [Timeout(40_000)]
+        [TestCase(true, "localhost", "127.0.0.1")]
+        [TestCase(true, "127.0.0.1", "localhost")]
+        [TestCase(true, "localhost", "localhost")]
+        [TestCase(false, "localhost", "127.0.0.1")]
+        [TestCase(false, "127.0.0.1", "localhost")]
+        [TestCase(false, "localhost", "localhost")]
+        public async Task TestListenersAfterClientDisconnected(bool smartRouting, string memberAddress, string clientAddress)
+        {
+            #region SetUp
+            using var _ = HConsoleForTest();
+            var countOfEvent = 0;
+            var memberConfig = GetMemberConfigWithAddress(memberAddress);
+            var customCluster = await RcClient.CreateClusterAsync(memberConfig);
+            var member = await RcClient.StartMemberAsync(customCluster.Id);
+
+            var client = await CreateAndStartClientAsync(options =>
+            {
+                options.Networking.Addresses.Clear();
+                options.Networking.Addresses.Add(clientAddress);
+                options.Networking.SmartRouting = smartRouting;
+                options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
+                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                options.ClusterName = customCluster.Id;
+            });
+            #endregion
+
+            var map = await client.GetMapAsync<int, int>("myRandomMap");
+            await map.SubscribeAsync(c => c.EntryAdded((sender, args) => Interlocked.Increment(ref countOfEvent)));
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                var clientImpl = (HazelcastClient)client;
+                Assert.AreEqual(1, clientImpl.Cluster.Connections.Count);
+                Assert.AreEqual(1, clientImpl.Members.Count);
+            }, 10_000, 500);
+
+            await RcClient.ShutdownMemberAsync(customCluster.Id, member.Uuid);
+            await Task.Delay(client.Options.Heartbeat.PeriodMilliseconds);
+            member = await RcClient.StartMemberAsync(customCluster.Id);
+
+            await AssertEx.SucceedsEventually(async () =>
+            {
+                await map.RemoveAsync(1);
+                await map.PutAsync(1, 2);
+                Assert.Greater(countOfEvent, 0);
+            }, 20_000, 500);
+
+            #region TearDown
+            await client.DisposeAsync();
+            await RcClient.ShutdownClusterAsync(customCluster);
+            #endregion
+        }
+
+        [Test]
+        [TestCase(true, ReconnectMode.ReconnectAsync)]
+        [TestCase(true, ReconnectMode.ReconnectSync)]
+        [TestCase(false, ReconnectMode.ReconnectAsync)]
+        [TestCase(false, ReconnectMode.ReconnectSync)]        
+        public async Task TestOperationsContinueWhenClientDisconnected(bool smartRouting, ReconnectMode reconnectMode)
+        {
+            #region SetUp
+            using var _ = HConsoleForTest();
+            var customCluster = await RcClient.CreateClusterAsync();
+            var member1 = await RcClient.StartMemberAsync(customCluster.Id);
+
+            var client = await CreateAndStartClientAsync(options =>
+            {
+                options.Networking.SmartRouting = smartRouting;
+                options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
+                options.Networking.ReconnectMode = reconnectMode;
+                options.ClusterName = customCluster.Id;                
+            });
+
+            var mapName = "myTestingMap";
+            var member2 = await RcClient.StartMemberAsync(customCluster.Id);
+            #endregion
+
+            await AssertEx.SucceedsEventually(() => Assert.AreEqual(2, client.Members.Count), 10_000, 500);
+
+            var map = await client.GetMapAsync<int, int>(mapName);
+
+            await RcClient.ShutdownMemberAsync(customCluster.Id, member1.Uuid);
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.AreEqual(1, client.Members.Count);
+                Assert.AreEqual(member2.Host, client.Members.First().Member.Address.Host);
+                Assert.AreEqual(member2.Port, client.Members.First().Member.Address.Port);
+
+            }, 20_000, 500);
+
+            await map.PutAsync(1, 2);
+            Assert.AreEqual(2, await map.GetAsync(1));
+
+            #region TearDown
+            await client.DisposeAsync();
+            await RcClient.ShutdownClusterAsync(customCluster);
+            #endregion
+        }
+
 
         private string GetMemberConfigWithAddress(string memberAddress)
         {
