@@ -27,6 +27,7 @@ using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Configuration;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Testing.Remote;
 using Ionic.Zlib;
 using Microsoft.Extensions.Logging;
 using NuGet.Versioning;
@@ -36,7 +37,7 @@ namespace Hazelcast.Tests.Cloud
 {
     [TestFixture]
     [Explicit("Has special requirements, see comments in code.")]
-    public class CloudTests
+    public class CloudTests : SingleMemberClientRemoteTestBase
     {
         // REQUIREMENTS
         //
@@ -438,7 +439,7 @@ namespace Hazelcast.Tests.Cloud
         [TestCase(2)]
         [TestCase(3)]
         [Timeout(30_000)]
-        public void MetricsDecompressorTests(int blobNo)
+        public async Task MetricsDecompressorTests(int blobNo)
         {
             var blobs = new[]
             {
@@ -468,21 +469,68 @@ namespace Hazelcast.Tests.Cloud
             foreach (var metric in metrics) Console.WriteLine(metric);
 
             // consume in Java - will throw if exit code is not zero
-            JavaConsume(bytes);
+            await JavaConsume(bytes);
         }
 
-        private static void JavaConsume(byte[] bytes)
+        private async Task JavaConsume(byte[] bytes)
         {
-            var serverVersion = ServerVersion.GetVersion("5.0");
-            Console.WriteLine($"Server Version: {serverVersion}");
+            const string scriptTemplate = @"
+// import types
+var ArrayOfBytes = Java.type(""byte[]"")
+var MetricsCompressor = Java.type(""com.hazelcast.internal.metrics.impl.MetricsCompressor"")
+var MetricConsumer = Java.type(""com.hazelcast.internal.metrics.MetricConsumer"")
+var StringBuilder = Java.type(""java.lang.StringBuilder"")
 
-            using var run = new JavaRun()
-                .WithSource("Java/CloudTests/Program.java")
-                .WithSource("Java/Cloudtests/TestConsumer.java")
-                .WithLib($"hazelcast-{serverVersion}.jar");
-            run.Compile();
-            var output = run.Execute("Program", bytes);
-            Console.WriteLine(output);
+// prepare bytes
+var bytes = new ArrayOfBytes($$COUNT$$)
+$$BYTES$$
+
+// consumer will append to the string builder
+var text = new StringBuilder()
+var TestConsumer = Java.extend(MetricConsumer, {
+    consumeLong: function(descriptor, value) {
+        text.append(""prefix   = "")
+        text.append(descriptor.prefix())
+        text.append(""\n"")
+        text.append(""disc.key = "")
+        text.append(descriptor.discriminator())
+        text.append(""\n"")
+        text.append(""disc.val = "")
+        text.append(descriptor.discriminatorValue())
+        text.append(""\n"")
+        text.append(""string   = "")
+        text.append(descriptor.metricString())
+        text.append(""\n"")
+
+        text.append(descriptor.metric())
+        text.append("" = "")
+        text.append(value)
+        text.append(""\n"")
+    },
+    consumeDouble: function(descriptor, value) {
+        text.append(descriptor.metric())
+        text.append("" = "")
+        text.append(value)
+        text.append(""\n"")
+    }
+})
+var consumer = new TestConsumer()
+MetricsCompressor.extractMetrics(bytes, consumer)
+
+result = """" + text
+";
+
+            var script = scriptTemplate
+                .Replace("$$COUNT$$", bytes.Length.ToString())
+                .Replace("$$BYTES$$", string.Join("\n",
+                    bytes.Select((x, i) => $"bytes[{i}] = {bytes[i]}")));
+
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
+            Assert.That(response.Success, $"message: {response.Message}");
+            Assert.That(response.Result, Is.Not.Null);
+            var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length).Trim();
+            Console.WriteLine("JAVA OUTPUT:");
+            Console.WriteLine(resultString);
         }
 
         private IDisposable HConsoleForTest()
