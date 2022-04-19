@@ -222,7 +222,6 @@ namespace Hazelcast.Clustering
                 if (!disconnecting)
                 {
                     _logger.IfDebug()?.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
-
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
                     if (_connected && _members.TryGetMember(connection.MemberId, out var member))
@@ -283,6 +282,7 @@ namespace Hazelcast.Clustering
 
         private void LogDiffs(MemberTable table, Dictionary<MemberInfo, int> diff)
         {
+            var countOfUnchanged = 0;
             var msg = new StringBuilder();
             msg.Append("Members [");
             msg.Append(table.Count);
@@ -291,20 +291,33 @@ namespace Hazelcast.Clustering
             {
                 msg.Append("    ");
                 msg.Append(m.ToShortString(true));
-                var status = d switch
+                string status;
+                switch (d)
                 {
-                    1 => "Removing",
-                    2 => "Adding",
-                    3 => "Unchanged",
-                    _ => ""
-                };
+                    case 1:
+                        status = "Removing";
+                        break;
+                    case 2:
+                        status = "Adding";
+                        break;
+                    case 3:
+                        status = "Unchanged";
+                        countOfUnchanged++;
+                        break;
+                    default:
+                        status = "";
+                        break;
+                }
+
                 msg.Append(' ');
                 msg.Append(status);
                 msg.AppendLine();
             }
             msg.Append('}');
 
-            _logger.LogInformation(msg.ToString());
+            //Print only if there is a change
+            if (countOfUnchanged != diff.Count)
+                _logger.LogInformation(msg.ToString());
         }
 
         /// <summary>
