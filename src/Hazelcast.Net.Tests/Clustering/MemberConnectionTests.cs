@@ -33,6 +33,7 @@ using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Clustering
@@ -136,6 +137,40 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.That(memberConnection.Active, Is.False);
             Assert.That(memberConnectionHasClosed);
+        }
+        [Test]
+        public async Task TestUnchangedMembersListDoesNotLog()
+        {
+            var options = new HazelcastOptionsBuilder()
+                .With(o => o.Networking.SmartRouting = false)
+                .With(o => o.Networking.UsePublicAddresses = false)
+                .Build();
+
+            var loggerFactoryMock = new Mock<ILoggerFactory>();
+            var loggerMock = new Mock<ILogger>();
+            loggerMock.Setup(h => h.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
+            loggerFactoryMock.Setup(f => f.CreateLogger(It.IsAny<string>())).Returns(loggerMock.Object);
+
+            var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactoryMock.Object);
+            var clusterMembers = new ClusterMembers(clusterState, new TerminateConnections(loggerFactoryMock.Object));
+
+            var memberList = new List<MemberInfo> { NewMemberInfo(true), NewMemberInfo(true) };
+
+            await clusterMembers.SetMembersAsync(1, memberList);//will print since list new -> 1
+            await clusterMembers.SetMembersAsync(2, memberList);//won't print since list steady
+
+            memberList.Add(NewMemberInfo(true));
+            await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
+            await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
+            
+            loggerMock.Verify(m => 
+                    m.Log<It.IsAnyType>(LogLevel.Information,
+                        0, 
+                        It.IsAny<It.IsAnyType>(),
+                        null,
+                        It.IsAny<Func<It.IsAnyType, Exception, string>>()),
+                    Times.Exactly(2),
+          "Member list prints too verbose.");
         }
 
         [Test]
@@ -248,7 +283,7 @@ namespace Hazelcast.Tests.Clustering
                 await SendResponseAsync(response).CfAwait();
             }
 
-            var state = (ServerState) s.State;
+            var state = (ServerState)s.State;
             var address = s.Address;
 
             const int partitionsCount = 2;
