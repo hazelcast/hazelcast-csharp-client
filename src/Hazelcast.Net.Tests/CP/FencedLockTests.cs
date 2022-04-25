@@ -571,6 +571,7 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task TestLockCountZeroWhenFree()
         {
+            var _ = HConsoleForTest();
             string lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
@@ -786,6 +787,7 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task TestGetFenceFailsWhenSessionCreated()
         {
+            var _ = HConsoleForTest();
             string lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
