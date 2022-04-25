@@ -49,7 +49,7 @@ namespace Hazelcast.Metrics
             _cancel = new CancellationTokenSource();
             _publishing = PublishAsync(_cancel.Token);
 
-            _logger.LogDebug($"Publishing metrics every {_options.PeriodSeconds}s");
+            _logger.IfDebug()?.LogDebug("Publishing metrics every {PeriodSeconds}s", _options.PeriodSeconds);
         }
 
         public void AddSource(IMetricSource source)
@@ -86,7 +86,7 @@ namespace Hazelcast.Metrics
             var connection = _cluster.Members.GetOldestConnection();
             if (connection == null)
             {
-                _logger.LogDebug("Cannot send metrics, client is not connected.");
+                _logger.IfDebug()?.LogDebug("Cannot send metrics, client is not connected.");
                 return;
             }
 
@@ -124,7 +124,8 @@ namespace Hazelcast.Metrics
                 if (cancellationToken.IsCancellationRequested) return;
 
                 // non-cancelable
-                _logger.LogDebug("Send stats:\n        " + text.Replace(",", ",\n        ", StringComparison.OrdinalIgnoreCase));
+                _logger.IfDebug()?.LogDebug("Send stats:\n        " + text.Replace(",", ",\n        ", StringComparison.OrdinalIgnoreCase));
+
                 await SendMetricsAsync(timestamp, text, bytes).CfAwait();
             }
             catch (Exception e)
@@ -137,11 +138,11 @@ namespace Hazelcast.Metrics
         {
             if (!_cluster.IsConnected) // last chance to avoid an exception
             {
-                _logger.LogDebug("Cannot send metrics, client is not connected.");
+                _logger.IfDebug()?.LogDebug("Cannot send metrics, client is not connected.");
                 return;
             }
 
-            _logger.LogDebug($"Send metrics ({metrics.Length} items).");
+            _logger.IfDebug()?.LogDebug($"Send metrics ({metrics.Length} items).");
 
             var requestMessage = ClientStatisticsCodec.EncodeRequest(timestamp, attributes, metrics);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
