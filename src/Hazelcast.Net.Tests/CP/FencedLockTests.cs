@@ -17,6 +17,14 @@ namespace Hazelcast.Tests.CP
     internal class FencedLockTests : SingleMemberClientRemoteTestBase
     {
         private IFencedLock _lock;
+        private IDisposable HConsoleForTest()
+
+            => HConsole.Capture(options => options
+                .Configure().SetMinLevel()
+                .Configure(this).SetPrefix("TEST")
+                .Configure(this).SetMaxLevel()
+                .Configure<FencedLock>().SetPrefix("TEST")
+                .Configure<FencedLock>().SetMaxLevel());
 
         [TearDown]
         public async Task TearDown()
@@ -138,6 +146,136 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
+        public async Task TestTryLockConcurrentlyOnSameContext()
+        {
+            var currentContext = AsyncContext.Current;
+            var _ = HConsoleForTest();
+            var lockName = CreateUniqueName() + "@group1";
+
+            var tokenS = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+            var token = tokenS.Token;
+            var countOfAqusition1 = 0;
+            var countOfAqusition2 = 0;
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+            async Task RunLocker1(CancellationToken token)
+            {
+                try
+                {
+                    var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+                    while (await myLock.TryLockAsync(TimeSpan.FromSeconds(2)) && !token.IsCancellationRequested)
+                    {
+                        HConsole.WriteLine(this, $"Locker 1 took the lock on Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId} Fence: {await myLock.GetFenceAsync()}");
+                        countOfAqusition1++;
+                        break;
+                    }
+                }
+                catch (LockOwnershipLostException ex)
+                {
+                    HConsole.WriteLine(this, $"Locker 1 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                }
+            }
+
+            async Task RunLocker2(CancellationToken token)
+            {
+                try
+                {
+                    var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+                    while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
+                    {
+                        HConsole.WriteLine(this, $"Locker 2 took the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId} Fence: {await myLock.GetFenceAsync()}");
+                        countOfAqusition2++;
+                        Thread.Sleep(10);
+                        await myLock.UnlockAsync();
+                    }
+                }
+                catch (LockOwnershipLostException ex)
+                {
+                    HConsole.WriteLine(this, $"Locker 2 Thread {Thread.CurrentThread.ManagedThreadId} :{ex.Message}");
+                }
+            }
+
+            var lock1Task = RunLocker1(token);
+            var lock2Task = RunLocker2(token);
+            await Task.WhenAll(lock1Task, lock2Task);
+
+            if (countOfAqusition1 == 0 && countOfAqusition2 == 0)
+                Assert.Fail();
+
+            if (countOfAqusition1 > 0)
+                Assert.AreEqual(countOfAqusition1, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+            else
+                Assert.AreEqual(countOfAqusition2, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+        }
+
+        [Test]
+        public async Task TestTryLockParallel()
+        {
+            AsyncContext.RequireNew();
+            var currentContext = AsyncContext.Current;
+            var _ = HConsoleForTest();
+            var lockName = CreateUniqueName() + "@group1";
+            var tokenS = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var token = tokenS.Token;
+            var countOfAqusition1 = 0;
+            var countOfAqusition2 = 0;
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+            var lock1Task = Task.Run(async () =>
+            {
+                try
+                {
+                    var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+                    while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
+                    {
+                        HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 1 took the lock Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId} Task: {Task.CurrentId}");
+                        countOfAqusition1++;
+                        Thread.Sleep(8);
+                        await myLock.UnlockAsync();
+                    }
+                }
+                catch (LockOwnershipLostException ex)
+                {
+                    HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 1 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                }
+            }, token);
+
+            var lock2Task = Task.Run(async () =>
+            {
+                try
+                {
+                    var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
+
+                    while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
+                    {
+                        HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 2 took the lock Context:{currentContext.Id}, Thread:{Thread.CurrentThread.ManagedThreadId}");
+                        countOfAqusition2++;
+                        Thread.Sleep(10);
+                        await myLock.UnlockAsync();
+                    }
+                }
+                catch (LockOwnershipLostException ex)
+                {
+                    HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 2 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                }
+            }, token);
+
+
+            await Task.WhenAll(lock1Task, lock2Task);
+
+            if (countOfAqusition1 == 0 && countOfAqusition2 == 0)
+                Assert.Fail();
+
+            if (countOfAqusition1 > 0)
+                Assert.AreEqual(countOfAqusition1, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+            else
+                Assert.AreEqual(countOfAqusition2, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+        }
+
+        [Test]
         public async Task TestTryLockTimeoutWhileLockedByAnotherEndpoint()
         {
             string lockName = CreateUniqueName() + "@group1";
@@ -160,8 +298,8 @@ namespace Hazelcast.Tests.CP
                     var __lock = await Client.CPSubsystem.GetLockAsync(lockName);
                     await __lock.LockAsync();
                 }
-                catch (Exception )
-                {                    
+                catch (Exception)
+                {
                 }
 
             }).ConfigureAwait(false);
@@ -190,6 +328,7 @@ namespace Hazelcast.Tests.CP
 
             }).ConfigureAwait(false);
         }
+
 
         [Test]
         public async Task TestReentrantLockFails()

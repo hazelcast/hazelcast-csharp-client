@@ -44,6 +44,7 @@ namespace Hazelcast.CP
         /// </remarks>
         private static long ContextId => AsyncContext.Current.Id;
         private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
+        private readonly ConcurrentDictionary<long, SemaphoreSlim> _contextSemaphore = new ConcurrentDictionary<long, SemaphoreSlim>();
         private readonly CPSessionManager _cpSessionManager;
         private readonly CPGroupId _groupId;
         private int _destroyed;
@@ -66,24 +67,32 @@ namespace Hazelcast.CP
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
             HConsole.WriteLine(this, $"Session:{sessionId} ThreadId:{threadId} -> GetFence");
-            VerifyNoLockOnThread(threadId, sessionId, false);
+            var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, false).CfAwait();
 
-            if (sessionId == CPSessionManager.NoSessionId)
+            try
             {
-                _lockedThreadToSession.TryRemove(threadId, out var _);
+                if (sessionId == CPSessionManager.NoSessionId)
+                {
+                    _lockedThreadToSession.TryRemove(threadId, out var _);
+                    throw new SynchronizationLockException();
+                }
+
+                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+
+                if (ownership.LockedBy(threadId, sessionId))
+                {
+                    AsyncContext.RequireNew();
+                    _lockedThreadToSession[threadId] = sessionId;
+                    return ownership.Fence;
+                }
+
+                VerifyNoLockedSessionExist(threadId);
                 throw new SynchronizationLockException();
             }
-
-            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-            if (ownership.LockedBy(threadId, sessionId))
+            finally
             {
-                _lockedThreadToSession[threadId] = sessionId;
-                return ownership.Fence;
+                semaphore.Release();
             }
-
-            VerifyNoLockedSessionExist(threadId);
-            throw new SynchronizationLockException();
         }
 
         /// <inheritdoc/>  
@@ -91,17 +100,23 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+            var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, false).CfAwait();
 
-            VerifyNoLockOnThread(threadId, sessionId, false);
+            try
+            {
+                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
 
-            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+                if (ownership.LockedBy(threadId, sessionId))
+                    _lockedThreadToSession[threadId] = sessionId;
+                else
+                    VerifyNoLockedSessionExist(threadId);
 
-            if (ownership.LockedBy(threadId, sessionId))
-                _lockedThreadToSession[threadId] = sessionId;
-            else
-                VerifyNoLockedSessionExist(threadId);
-
-            return ownership.LockCount;
+                return ownership.LockCount;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <inheritdoc/>  
@@ -109,39 +124,51 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+            var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, false).CfAwait();
 
-            VerifyNoLockOnThread(threadId, sessionId, false);
-
-            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-            if (ownership.LockedBy(threadId, sessionId))
+            try
             {
-                _lockedThreadToSession[threadId] = sessionId;
-                return true;
+                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+
+                if (ownership.LockedBy(threadId, sessionId))
+                {
+                    _lockedThreadToSession[threadId] = sessionId;
+                    return true;
+                }
+
+                VerifyNoLockedSessionExist(threadId);
+
+                return ownership.Locked;
             }
-
-            VerifyNoLockedSessionExist(threadId);
-
-            return ownership.Locked;
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         public async Task<bool> IsLockedByCurrentContext()
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+            var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, false).CfAwait();
 
-            VerifyNoLockOnThread(threadId, sessionId, false);
+            try
+            {
+                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
 
-            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+                var lockedByCurrent = ownership.LockedBy(threadId, sessionId);
 
-            var lockedByCurrent = ownership.LockedBy(threadId, sessionId);
+                if (lockedByCurrent)
+                    _lockedThreadToSession[threadId] = sessionId;
+                else
+                    VerifyNoLockedSessionExist(threadId);
 
-            if (lockedByCurrent)
-                _lockedThreadToSession[threadId] = sessionId;
-            else
-                VerifyNoLockedSessionExist(threadId);
-
-            return lockedByCurrent;
+                return lockedByCurrent;
+            }
+            finally
+            {
+                semaphore.Release();
+            }
         }
 
         /// <inheritdoc/>        
@@ -153,8 +180,7 @@ namespace Hazelcast.CP
             while (true)
             {
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
-
-                VerifyNoLockOnThread(threadId, sessionId, true);
+                var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, true).CfAwait();
 
                 try
                 {
@@ -191,6 +217,10 @@ namespace Hazelcast.CP
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                     throw;
                 }
+                finally
+                {
+                    semaphore.Release();
+                }
             }
         }
 
@@ -218,7 +248,7 @@ namespace Hazelcast.CP
                 var start = Clock.Milliseconds;
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
                 HConsole.WriteLine(this, $"SessionId: {sessionId} ThreadId:{threadId} InvocationId:{invocationId} -> TryLockAndGetFenceAsync");
-                VerifyNoLockOnThread(threadId, sessionId);
+                var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId).CfAwait();
 
                 try
                 {
@@ -227,7 +257,10 @@ namespace Hazelcast.CP
                     if (fence != InvalidFence)
                         _lockedThreadToSession[threadId] = sessionId;
                     else
+                    {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        RemoveLocks(threadId, sessionId);
+                    }
 
                     return fence;
                 }
@@ -246,18 +279,25 @@ namespace Hazelcast.CP
                     else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        RemoveLocks(threadId, sessionId);
                         return InvalidFence;
                     }
                     else
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        RemoveLocks(threadId, sessionId);
                         throw;
                     }
                 }
                 catch
                 {
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    RemoveLocks(threadId, sessionId);
                     throw;
+                }
+                finally
+                {
+                    semaphore.Release();
                 }
             }
         }
@@ -282,11 +322,11 @@ namespace Hazelcast.CP
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
-            VerifyNoLockOnThread(threadId, sessionId, false);
+            var semaphore = await VerifyNoLockOnThreadAsync(threadId, sessionId, false).CfAwait();
 
             if (sessionId == CPSessionManager.NoSessionId)
             {
-                _lockedThreadToSession.TryRemove(threadId, out var _);
+                RemoveLocks(threadId, sessionId);
                 throw new SynchronizationLockException();
             }
 
@@ -298,7 +338,9 @@ namespace Hazelcast.CP
                 if (stillLockedByCurrentThread)
                     _lockedThreadToSession[threadId] = sessionId;
                 else
-                    _lockedThreadToSession.TryRemove(threadId, out var _);
+                {
+                    RemoveLocks(threadId, sessionId);
+                }
 
                 _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
             }
@@ -307,15 +349,31 @@ namespace Hazelcast.CP
                 if (e is RemoteException { Error: RemoteError.SessionExpiredException })
                 {
                     _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
-                    _lockedThreadToSession.TryRemove(threadId, out var _);
+                    RemoveLocks(threadId, sessionId);
                 }
                 else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
                 {
-                    _lockedThreadToSession.TryRemove(threadId, out var _);                  
+                    RemoveLocks(threadId, sessionId);
                 }
 
                 throw;
-            }            
+            }
+            finally
+            {
+                semaphore.Release();
+            }
+        }
+
+        private void RemoveLocks(long threadId, long sessionId)
+        {
+            _lockedThreadToSession.TryRemove(threadId, out var _);
+            if (_contextSemaphore.TryGetValue(threadId, out var semaphore) && semaphore.CurrentCount > 0)
+            {
+                HConsole.WriteLine(this, $"Remove lock, Thread:{Environment.CurrentManagedThreadId}");
+                _contextSemaphore.TryRemove(threadId, out _);
+                semaphore.Release();
+                semaphore.Dispose();
+            }
         }
         #endregion
 
@@ -326,17 +384,28 @@ namespace Hazelcast.CP
         /// <param name="sessionId"></param>
         /// <param name="releaseSession"></param>
         /// <exception cref="LockOwnershipLostException"></exception>
-        private void VerifyNoLockOnThread(long threadId, long sessionId, bool releaseSession = true)
+        private async Task<SemaphoreSlim> VerifyNoLockOnThreadAsync(long threadId, long sessionId, bool releaseSession = true)
         {
-            if (_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId) && lockedSessionId != sessionId)
+            if (!_contextSemaphore.TryGetValue(threadId, out var semaphore))
             {
-                _lockedThreadToSession.TryRemove(threadId, out var _);
+                semaphore = new SemaphoreSlim(1, 1);
+                _contextSemaphore[threadId] = semaphore;
+                HConsole.WriteLine(this, $"Verified by { Environment.CurrentManagedThreadId } {semaphore.GetHashCode() }, Count: { semaphore.CurrentCount}");
+            }
 
+            var isLocked = !await semaphore.WaitAsync(0).CfAwait();
+            HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id} can take the lock -> {!isLocked}");
+            if ((_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId) && lockedSessionId != sessionId) || isLocked)
+            {
+                RemoveLocks(threadId, sessionId);
+                HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Removed by Thread { Environment.CurrentManagedThreadId }  { semaphore.GetHashCode() }, Count: {semaphore.CurrentCount}");
                 if (releaseSession)
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
 
                 throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }
+
+            return semaphore;
         }
 
         /// <summary>
@@ -348,6 +417,7 @@ namespace Hazelcast.CP
         {
             if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId))
             {
+                RemoveLocks(threadId, lockedSessionId);
                 throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
             }
         }
@@ -363,6 +433,14 @@ namespace Hazelcast.CP
             finally
             {
                 _lockedThreadToSession.Clear();
+
+                foreach (var s in _contextSemaphore.Values)
+                {
+                    s.Release();
+                    s.Dispose();
+                }
+
+                _contextSemaphore.Clear();
             }
         }
 
