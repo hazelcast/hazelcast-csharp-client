@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -25,10 +26,13 @@ namespace Hazelcast.CP
     /// <summary>
     /// Provides the <see cref="ICPSubsystem"/> implementation.
     /// </summary>
-    internal class CPSubsystem : ICPSubsystem
+    internal class CPSubsystem : ICPSubsystem, IAsyncDisposable
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
+        //internal for testing
+        internal readonly CPSessionManager _cpSubsystemSession;
+        private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
@@ -39,6 +43,7 @@ namespace Hazelcast.CP
         {
             _cluster = cluster;
             _serializationService = serializationService;
+            _cpSubsystemSession = new CPSessionManager(cluster);
         }
 
         // NOTES
@@ -74,6 +79,26 @@ namespace Hazelcast.CP
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
+        }
+
+        public async Task<IFencedLock> GetLockAsync(string name)
+        {
+            var (groupName, objectName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            if (_cpObjectsByName.TryGetValue(objectName, out var cpObject) && cpObject is IFencedLock fencedLock)
+            {
+                if (cpObject.GroupId.Equals(groupId))
+                    return (IFencedLock)cpObject;
+                else
+                    _cpObjectsByName.TryRemove(objectName, out _);
+            }
+
+            var newFencedLock = new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession);
+            
+            var mostRecentLock = (FencedLock) _cpObjectsByName.GetOrAdd(objectName, newFencedLock);
+
+            return mostRecentLock;
         }
 
         // see: ClientRaftProxyFactory.java
@@ -125,6 +150,14 @@ namespace Hazelcast.CP
                 throw new ArgumentException("Object name cannot be empty string.", nameof(name));
 
             return (groupName, objectName);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            foreach (var item in _cpObjectsByName.Values)
+                await item.DestroyAsync().CfAwaitNoThrow();
+
+            await _cpSubsystemSession.DisposeAsync().CfAwaitNoThrow();
         }
     }
 }

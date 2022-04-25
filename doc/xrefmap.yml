@@ -1,41 +1,50 @@
 references:
+- uid: doc-configuration
+  href: ../doc/configuration.html
+- uid: doc-index-3-12-2
+  name: 3.12.2
+  href: https://github.com/hazelcast/hazelcast-csharp-client/tree/v3.12.2#readme
 - uid: api-index-3-12-2
   name: 3.12.2
   href: 3.12.2/index.html
-  fullName:
+- uid: doc-index-3-12-3
+  name: 3.12.3
+  href: https://github.com/hazelcast/hazelcast-csharp-client/tree/v3.12.3#readme
 - uid: api-index-3-12-3
   name: 3.12.3
   href: 3.12.3/index.html
-  fullName:
 - uid: doc-index-4-0-0
   name: 4.0.0
   href: 4.0.0/doc/index.html
-  fullName:
 - uid: api-index-4-0-0
   name: 4.0.0
   href: 4.0.0/api/index.html
-  fullName:
 - uid: doc-index-4-0-1
   name: 4.0.1
   href: 4.0.1/doc/index.html
-  fullName:
 - uid: api-index-4-0-1
   name: 4.0.1
   href: 4.0.1/api/index.html
-  fullName:
 - uid: doc-index-4-0-2
   name: 4.0.2
   href: 4.0.2/doc/index.html
-  fullName:
 - uid: api-index-4-0-2
+  name: 4.0.2
   href: 4.0.2/api/index.html
 - uid: doc-index-4-1-0
+  name: 4.1.0
   href: 4.1.0/doc/index.html
 - uid: api-index-4-1-0
+  name: 4.1.0
   href: 4.1.0/api/index.html
-- uid: doc-index-5.0.0
+- uid: doc-index-5-0-0
+  name: 5.0.0
   href: 5.0.0/doc/index.html
-- uid: api-index-5.0.0
+- uid: api-index-5-0-0
+  name: 5.0.0
   href: 5.0.0/api/index.html
-- uid: doc-configuration
-  href: ../doc/configuration.html
+- uid: doc-index-5-0-1
+  name: 5.0.1
+  href: 5.0.1/doc/index.html
+- uid: api-index-5-0-1
+  href: 5.0.1/api/index.html
