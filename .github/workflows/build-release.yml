@@ -95,13 +95,13 @@ jobs:
                     echo "::error::Branch release/$HZVERSION does not exist"
                     exit 1
                 else
-                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION >/dev/null 2>&1)
-                    HZPARENTSHA=$(git rev-parse $HZTAG^1 >/dev/null 2>&1)
-                    if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
-                      echo "::error::Tag parent is not HEAD of release/$HZVERSION but $HZPARENTSHA"
+                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
+                    HZTAGSHA=${{ github.sha }}
+                    if [ "$HZBRANCHSHA" != "$HZTAGSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGSHA"
                       exit 1
                     else
-                        echo "Tag parent is HEAD of release/$HZVERSION, proceed with release"
+                        echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
                         # set step/job output
                         echo "::set-output name=todo::release"
                         echo "::set-output name=version::$HZVERSION"
@@ -547,8 +547,6 @@ jobs:
         run: |
           echo "Apply patch"
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
-          echo "Update 'latest' link"
-          git -C ./temp/gh-pages update-index --add --cacheinfo 120000 "$(echo -n "${{ needs.analyze.outputs.version }}" | git hash-object -w --stdin)" "latest"
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
@@ -557,3 +555,15 @@ jobs:
         shell: bash
         run: |
           git push origin :release/${{ needs.analyze.outputs.version }}
+
+          
+      # publish the release page, close the milestone
+      - name: Publish GitHub Release
+        uses: actions/github-script@v5
+        with:
+          script: |
+            const scriptf = require('./.github/workflows/release-scripts.js')
+            const script = scriptf({github, context, core})
+            const version = context.ref.substring(19)
+            await script.publishRelease(version)
+            await script.closeMilestone(version)

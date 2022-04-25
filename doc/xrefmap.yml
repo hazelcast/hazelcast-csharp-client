@@ -43,3 +43,8 @@ references:
 - uid: api-index-5-0-0
   name: 5.0.0
   href: 5.0.0/api/index.html
+- uid: doc-index-5-0-1
+  name: 5.0.1
+  href: 5.0.1/doc/index.html
+- uid: api-index-5-0-1
+  href: 5.0.1/api/index.html

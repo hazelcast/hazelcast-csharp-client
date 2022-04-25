@@ -257,6 +257,10 @@ $actions = @(
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
+    },
+    @{ name = "update-doc-version";
+       desc = "updates versions in doc version.md";
+       note = "The resulting commit still needs to be pushed."
     }
 )
 
@@ -1087,6 +1091,11 @@ function clean-dir ( $dir ) {
     }
 }
 
+# noop
+function hz-noop {
+    # nothing
+}
+
 # cleans the solution
 function hz-clean {
 
@@ -1192,6 +1201,57 @@ function ensure-java {
 	}
 }
 
+# update latest version in docs files - when actually releasing
+# so this can be for a pre-release but it's got to be for actual release
+function hz-update-doc-version {
+
+    if ([string]::IsNullOrWhiteSpace($versionSuffix)) {
+
+        write-output "Update Doc Version"
+        $v = $versionPrefix
+
+        # non-preview versions go into xrefmap because we'll link to them as <curdoc>
+        $vd = $versionPrefix -replace "\.", "-"
+        $filename = "$docDir/xrefmap.yml"
+        $text = read-file $filename
+        if (-not $text.Contains("- uid: doc-index-$vd")) {
+            $text += "`n- uid: doc-index-$vd"
+            $text += "`n  name: $v"
+            $text += "`n  href: $v/doc/index.html"
+            $text += "`n- uid: api-index-$vd"
+            $text += "`n  href: $v/api/index.html"
+            $text += "`n"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # non-preview versions become <curdoc>, and <curdoc> is pushed to <prevdoc>
+        # for preview versions, they'll show as <devdoc>
+        # FIXME: where is <devdoc> handled? how are these placeholders handled?
+        $filename = "$docDir/versions.md"
+        $text = read-file $filename
+        if (-not ($text -match "<curdoc>(.*)</curdoc>")) {
+            Die "Could not find <curdoc> section in versions.md."
+        }
+        $curdoc = $matches[1]
+        if (-not $curdoc.StartsWith("$v ")) {
+            $text = $text -replace "<prevdoc/>", "<prevdoc/>`n* $curdoc"
+            $text = $text -replace "<curdoc>.*</curdoc>", "<curdoc>$v [general documentation](xref:doc-index-$vd) and [API reference](xref:api-index-$vd)</curdoc>"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # it is important that latest-version does NOT end with a newline
+        write-file "$docDir/latest-version" $options.version
+        git add "$docDir/latest-version"
+
+        git commit -m "Documentation latest version $($options.version)" >$null 2>&1
+    }
+    else {
+        write-output "skip Update Doc Version (suffix='$versionSuffix')"
+    }
+}
+
 # sets the version
 function hz-set-version {
 
@@ -1246,7 +1306,7 @@ function hz-tag-release {
         }
         # create an empty commit to isolate the tag (helps with GitHub Actions)
         git commit --allow-empty --message "Tag v$($options.version)" >$null 2>&1
-        git tag "v$($options.version)" >$null 2>&1
+        git tag "v$($options.version)" "release/$($options.version)" >$null 2>&1
     }
 }
 
@@ -1464,6 +1524,8 @@ function hz-build-docs-on-windows {
         $repl = "$($options.version)`${1}"
     }
     $text = $text -replace '(?s-m)\<devdoc\>\$version(.*)\</devdoc\>', $repl # s-m enables single-line, disables multi-lines
+    $text = $text -replace '\<p\>\<prevdoc\>\</prevdoc\>\</p\>', '' # remove the <prevdoc> placeholder
+    $text = $text -replace '\</?curdoc\>', '' # remove the <curdoc> placeholder
     set-content -path $path -value $text
 
     $text = get-content "$tmpDir/docfx.out/404.html"
@@ -1488,21 +1550,24 @@ function hz-cover-to-docs-on-windows {
     $docs = "$tmpDir/docfx.out"
     $versiondocs = "$docs/$docDstDir"
     $coverdocs = "$versiondocs/cover"
-    $coverdir = "$tmpDir/tests/cover/cover-netcoreapp3.1.html"
+    $f = $frameworks[-1]
+    $coveragePath = "$tmpDir/tests/cover"
 
     Write-Output ""
     Write-Output "Copy tests coverage to documentation"
-    Write-Output "  Source         : $coverdir"
+    Write-Output "  Source         : $coveragePath/cover-$f"
     Write-Output "  Documentation  : $coverdocs"
 
     if (-not (test-path $docs)) { Die "Could not find $docs. Maybe you should build the docs first?" }
-    if (-not (test-path $coverdir)) { Die "Could not find $coverdir. Maybe you should run tests with coverage first?" }
+    if (-not (test-path "$coveragePath/cover-$f")) { Die "Could not find $coveragePath/cover-$f. Maybe you should run tests with coverage first?" }
     if (-not (test-path $versiondocs)) { mkdir $versiondocs >$null 2>&1 }
 
     if (test-path $coverdocs) { remove-item -recurse -force $coverdocs }
     mkdir $coverdocs >$null 2>&1
+    mkdir "$coverdocs/index" >$null 2>&1
 
-    copy-item -recurse "$coverdir/*" "$coverdocs/"
+    copy-item "$coveragePath/cover-$f.html" "$coverdocs/index.html"
+    copy-item -recurse "$coveragePath/cover-$f/*" "$coverdocs/index/"
     add-content "$coverdocs/index/css/dotcover.report.css" "`n`npre.source-code { font-family:Menlo,Monaco,Consolas,`"Courier New`",monospace; font-size:12px; }"
     $index1 = get-content "$docDir/templates/hz/cover-index.html"
     $index2 = [string]::Join(' ', (get-content "$coverdocs/index.html"))
@@ -1583,7 +1648,12 @@ function hz-git-docs-on-windows {
 
     &git -C "$pages" add -A
 
-    # create a symlink for latest docs -- NO! this is a release process task, see build-release.yml
+    # create the symlink for latest docs
+    # note: one can show the symlink with 'git show gh-pages:latest'
+    # note: it is important that latest-version does NOT end with a newline
+    # note: bash would read the file then do $(echo -n "$lv" | git hash-object -w --stdin) BUT pwsh CANNOT echo -n
+    $lh = &git hash-object -w "$docDir/latest-version"
+    &git -C "$pages" update-index --add --cacheinfo 120000 $lh "latest"
 
     &git -C "$pages" commit -m "$docMessage"
 
@@ -1812,7 +1882,7 @@ function run-tests ( $f ) {
 
             # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
             "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
-            "--dotCoverOutput=$coveragePath/index.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
+            "--dotCoverOutput=$coveragePath/cover-$f.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
@@ -1872,7 +1942,7 @@ function hz-test {
 
      # do not cover tests themselves, nor the testing plumbing
     if (-not [System.String]::IsNullOrWhiteSpace($options.coverageFilter)) { $options.coverageFilter += ";" }
-    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing"
+    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing;-:ExpectedObjects"
 
     Write-Output "Tests"
     Write-Output "  Server version : $($options.server)"

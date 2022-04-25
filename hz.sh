@@ -2,10 +2,7 @@
 
 POWERSHELL=pwsh
 if ! type $POWERSHELL >/dev/null 2>&1; then
-  POWERSHELL=""
-fi
-if [ -z $POWERSHELL ]; then
-  echo "Could not find a 'pwsh' command."
+  echo "Could not find the 'pwsh' command."
   echo "Please make sure that Powershell is installed."
   exit 1
 fi
