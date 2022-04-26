@@ -233,6 +233,7 @@ namespace Hazelcast.Tests.Networking
 
             }, 20_000, 500);
             //Java test here also toys with partitions to verify that data migrates between members - irrrelevant to us
+            //details: https://github.com/hazelcast/hazelcast-csharp-client/pull/614
             await map.PutAsync(1, 2);
             Assert.AreEqual(2, await map.GetAsync(1));
 
