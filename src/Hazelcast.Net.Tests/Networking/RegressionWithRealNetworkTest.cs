@@ -76,6 +76,8 @@ namespace Hazelcast.Tests.Networking
             }, 10_000, 500);
         }
 
+        // this test validates that a client can lost its connection to a cluster, and then reconnects,
+        // and ends up with one only connection (no leak of the previous connection).
         [Test]
         [Timeout(20_000)]
         [TestCase(true, "localhost", "127.0.0.1")]
