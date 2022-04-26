@@ -158,15 +158,14 @@ jobs:
           sudo add-apt-repository universe
           sudo apt-get install -y powershell
 
-      # Install .NET (complete)
-      - name: Install .NET 3.1.x
+      # Install .NET
+      - name: Install .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '3.1.x'
-      - name: Install .NET 5.0.x
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: '5.0.x'
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
 
       # Install Java
       - name: Install JDK
@@ -456,11 +455,11 @@ jobs:
           sudo add-apt-repository universe
           sudo apt-get install -y powershell
 
-      # Install .NET (minimal, for pushing to NuGet)
-      - name: Install .NET 5.0.x
+      # Install .NET (minimal, latest, for pushing to NuGet)
+      - name: Install .NET
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: 6.0.x
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
