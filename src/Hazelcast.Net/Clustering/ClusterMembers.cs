@@ -261,12 +261,8 @@ namespace Hazelcast.Clustering
                 // if we are not disconnecting, we can return - we are done
                 if (!disconnecting)
                 {
-<<<<<<< HEAD
-                    _logger.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
-
-=======
                     _logger.IfDebug()?.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
->>>>>>> master
+
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
                     if (_connected && _members.TryGetMember(connection.MemberId, out var member))
