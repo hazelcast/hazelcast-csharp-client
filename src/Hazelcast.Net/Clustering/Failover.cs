@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
             {
                 SwitchClusterOptions();
                 _currentTryCount++;
-                _state.ChangeState(ClientState.Switched);
+                _state.ChangeState(ClientState.ClientChangedCluster);
                 HConsole.WriteLine(this, "CLUSTER SWITCHED");
             }
 

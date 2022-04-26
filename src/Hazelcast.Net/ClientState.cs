@@ -74,10 +74,10 @@ namespace Hazelcast
 
         /// <summary>
         /// The client switched the cluster options, and will reconnect with new options
-        /// <para>This state is reached when cluster <see cref="Switching"/> is completed, 
+        /// <para>This state is reached when cluster switching is completed, 
         /// and client will reconnect with new options</para>
         /// </summary>
-        Switched,
+        ClientChangedCluster,
 
         /// <summary>
         /// The client has shut down.

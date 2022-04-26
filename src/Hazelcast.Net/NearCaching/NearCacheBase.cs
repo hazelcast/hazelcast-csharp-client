@@ -76,7 +76,7 @@ namespace Hazelcast.NearCaching
 
             cluster.State.StateChanged += (ClientState state) =>
             {
-                if (state == ClientState.Switched) Clear();
+                if (state == ClientState.ClientChangedCluster) Clear();
 
                 return default;
             };

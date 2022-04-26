@@ -300,7 +300,7 @@ namespace Hazelcast.Clustering
                 // never going to be connected
                 if (ClientState != ClientState.Started &&
                     ClientState != ClientState.Disconnected &&
-                    ClientState != ClientState.Switched) return new ValueTask<bool>(false);
+                    ClientState != ClientState.ClientChangedCluster) return new ValueTask<bool>(false);
             }
 
             return WaitForConnectedAsync2(cancellationToken);
@@ -319,7 +319,7 @@ namespace Hazelcast.Clustering
                 // never going to be connected
                 if (ClientState != ClientState.Started &&
                     ClientState != ClientState.Disconnected &&
-                    ClientState != ClientState.Switched) return false;
+                    ClientState != ClientState.ClientChangedCluster) return false;
 
                 // must wait
                 wait = new TaskCompletionSource<ClientState>();
@@ -329,7 +329,7 @@ namespace Hazelcast.Clustering
                     // either connected, or never going to be connected
                     if (x != ClientState.Started &&
                         x != ClientState.Disconnected &&
-                        x != ClientState.Switched)
+                        x != ClientState.ClientChangedCluster)
                         wait.TrySetResult(x);
 
                     // keep waiting

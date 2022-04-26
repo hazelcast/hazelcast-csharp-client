@@ -87,13 +87,13 @@ namespace Hazelcast.Tests.Clustering
             //failover to next-> cluster 2
             clusterState.ChangeState(ClientState.Disconnected);//connected->disconnected->switched
             verifyClusterIs(clusterState, clusterName2, address2);
-            Assert.AreEqual(ClientState.Switched, clusterState.ClientState);
+            Assert.AreEqual(ClientState.ClientChangedCluster, clusterState.ClientState);
             Assert.That(countOfStateChanged, Is.EqualTo(3));
 
             //failover to next-> cluster 1
             clusterState.ChangeState(ClientState.Disconnected);//disconnected->switched
             verifyClusterIs(clusterState, clusterName1, address1);
-            Assert.AreEqual(ClientState.Switched, clusterState.ClientState);
+            Assert.AreEqual(ClientState.ClientChangedCluster, clusterState.ClientState);
             Assert.That(countOfStateChanged, Is.EqualTo(5));
 
             //cannot failover anymore, still cluster 1
