@@ -168,7 +168,7 @@ namespace Hazelcast.Tests.CP
                     {
                         HConsole.WriteLine(this, $"Locker 1 took the lock on Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition1++;
-                        Thread.Sleep(8);//try to stay in the same thread, do some arbitrary work
+                        await Task.Delay(7);
                         await myLock.UnlockAsync();
                     }
                 }
@@ -182,14 +182,14 @@ namespace Hazelcast.Tests.CP
             {
                 try
                 {
-                    Thread.Sleep(10);//Let's wait a bit that the lock is taken by Locker 1
+                    await Task.Delay(10);//Let's wait a bit that the lock is taken by Locker 1
                     var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
 
                     while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
                     {
                         HConsole.WriteLine(this, $"Locker 2 took the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition2++;
-                        Thread.Sleep(20);//try to stay in the same thread, do some arbitrary work
+                        await Task.Delay(10);
                         await myLock.UnlockAsync();
                         HConsole.WriteLine(this, $"Locker 2 released the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                     }
@@ -200,7 +200,7 @@ namespace Hazelcast.Tests.CP
                 }
             }
 
-            var lock1Task = RunLocker1(token);            
+            var lock1Task = RunLocker1(token);
             var lock2Task = RunLocker2(token);
             await Task.WhenAll(lock1Task, lock2Task);
 
