@@ -487,7 +487,9 @@ namespace Hazelcast.Clustering
             // nothing
             var invocations = _invocations.Values;
             foreach (var invocation in invocations)
-                invocation.TrySetException(new TargetDisconnectedException()); // does not throw
+            {
+                invocation.TrySetException(new TargetDisconnectedException().SetCurrentStackTrace()); // does not throw
+            }
 
             // ConnectAsync would deal with the situation
             if (!active) return;
