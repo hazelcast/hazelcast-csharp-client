@@ -31,7 +31,7 @@ namespace Hazelcast.Testing
             // terminate & remove members
             foreach (var member in RcMembers.Values)
             {
-                await RcClient.StopMemberAsync(RcCluster, member);
+                await RemoveMember(member.Uuid);
             }
         }
 

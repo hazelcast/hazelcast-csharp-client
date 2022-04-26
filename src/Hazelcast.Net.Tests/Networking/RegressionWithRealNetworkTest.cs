@@ -117,6 +117,8 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(ClientState.Disconnected, client.State);
             }, 10_000, 500);
 
+            Assert.AreEqual(0, clientImp.Cluster.Connections.Count);
+
             //Client will reconnect to cluster eventually.
             member = await RcClient.StartMemberAsync(customCluster.Id);
 
@@ -197,7 +199,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(true, ReconnectMode.ReconnectAsync)]
         [TestCase(true, ReconnectMode.ReconnectSync)]
         [TestCase(false, ReconnectMode.ReconnectAsync)]
-        [TestCase(false, ReconnectMode.ReconnectSync)]        
+        [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestOperationsContinueWhenClientDisconnected(bool smartRouting, ReconnectMode reconnectMode)
         {
             #region SetUp
@@ -210,7 +212,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.SmartRouting = smartRouting;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
                 options.Networking.ReconnectMode = reconnectMode;
-                options.ClusterName = customCluster.Id;                
+                options.ClusterName = customCluster.Id;
             });
 
             var mapName = "myTestingMap";
@@ -230,7 +232,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(member2.Port, client.Members.First().Member.Address.Port);
 
             }, 20_000, 500);
-
+            //Java test here also toys with partitions to verify that data migrates between members - irrrelevant to us
             await map.PutAsync(1, 2);
             Assert.AreEqual(2, await map.GetAsync(1));
 
