@@ -136,6 +136,8 @@ namespace Hazelcast.Tests.Networking
         }
 
 
+        // this test validates that event handlers (listeners) that were installed, are correctly 
+        // installed on a new cluster after the client has disconnected and reconnected.
         [Test]
         [Timeout(40_000)]
         [TestCase(true, "localhost", "127.0.0.1")]
