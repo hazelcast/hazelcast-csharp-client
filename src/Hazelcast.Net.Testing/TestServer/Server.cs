@@ -136,7 +136,6 @@ namespace Hazelcast.Testing.TestServer
             HConsole.WriteLine(this, "Stop server");
 
             // stop accepting new connections
-            await listener.StopAsync().CfAwait();
             await listener.DisposeAsync().CfAwait();
 
             HConsole.WriteLine(this, "Server stopped");

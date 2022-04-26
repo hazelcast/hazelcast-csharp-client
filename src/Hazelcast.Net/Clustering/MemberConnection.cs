@@ -203,7 +203,7 @@ namespace Hazelcast.Clustering
             {
                 // connect
                 await _socketConnection.ConnectAsync(cancellationToken).CfAwait();
-                _logger.IfDebug()?.LogDebug($"Established connection {Id.ToShortString()} to {Address}.");
+                _logger.IfDebug()?.LogDebug("Established connection {Id} to {Address}.", Id.ToShortString(), Address);
 
                 // send protocol bytes
                 var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
@@ -285,7 +285,7 @@ namespace Hazelcast.Clustering
                                          HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
 
                 // backup events are not supported
-                _logger.LogWarning("Ignoring unsupported backup event.");
+                _logger.IfWarning()?.LogWarning("Ignoring unsupported backup event.");
                 return;
             }
 
@@ -298,7 +298,7 @@ namespace Hazelcast.Clustering
             if (!_invocations.TryRemove(message.CorrelationId, out var invocation))
             {
                 // orphan messages are ignored (but logged)
-                _logger.LogWarning($"Received message for unknown invocation {Id.ToShortString()}:{message.CorrelationId}.");
+                _logger.IfWarning()?.LogWarning("Received message for unknown invocation {Id}:{CorrelationId}.", Id.ToShortString(), message.CorrelationId);
                 HConsole.WriteLine(this, $"Unknown invocation {Id.ToShortString()}:{message.CorrelationId}");
                 return;
             }
@@ -323,7 +323,7 @@ namespace Hazelcast.Clustering
                 // _onReceiveEventMessage should just queue the event and not fail - if it fails
                 // then some nasty internal error is happening - log, at least, make some noise
 
-                _logger.LogWarning(e, $"Failed to raise event {Id.ToShortString()}:{message.CorrelationId}.");
+                _logger.IfWarning()?.LogWarning(e, "Failed to raise event {Id}:{CorrelationId}.", Id.ToShortString(), message.CorrelationId);
             }
         }
 
@@ -483,7 +483,7 @@ namespace Hazelcast.Clustering
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, "Caught an exception while raising Closed.");
+                _logger.IfWarning()?.LogWarning(e, "Caught an exception while raising Closed.");
             }
 
             // if if we were not yet active / connected, we might have ONE invocation
@@ -494,7 +494,9 @@ namespace Hazelcast.Clustering
             // nothing
             var invocations = _invocations.Values;
             foreach (var invocation in invocations)
-                invocation.TrySetException(new TargetDisconnectedException()); // does not throw
+            {
+                invocation.TrySetException(new TargetDisconnectedException().SetCurrentStackTrace()); // does not throw
+            }
 
             // ConnectAsync would deal with the situation
             if (!active) return;
@@ -502,7 +504,7 @@ namespace Hazelcast.Clustering
             // then kill our inner connection
             await DisposeInnerConnectionAsync().CfAwait();
 
-            _logger.LogDebug($"Connection {Id.ToShortString()} closed and disposed.");
+            _logger.IfDebug()?.LogDebug("Connection {Id} closed and disposed.", Id.ToShortString());
 
 #pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - DisposeAsync too!
             GC.SuppressFinalize(this);

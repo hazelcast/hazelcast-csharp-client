@@ -104,7 +104,7 @@ namespace Hazelcast.NearCaching
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, $"An exception was thrown while processing invalidation meta data from address {member.Address}.");
+                    _logger.IfWarning()?.LogWarning(e, "An exception was thrown while processing invalidation meta data from address {Address}.", member.Address);
                 }
             }
         }
@@ -136,7 +136,7 @@ namespace Hazelcast.NearCaching
 
         private int GetReconciliationIntervalSeconds()
         {
-            var reconciliationIntervalSeconds =_options.ReconciliationIntervalSeconds;
+            var reconciliationIntervalSeconds = _options.ReconciliationIntervalSeconds;
             if (reconciliationIntervalSeconds < 0)
                 throw new ConfigurationException("Option 'ReconciliationIntervalSeconds' cannot be < 0.");
 
@@ -171,7 +171,7 @@ namespace Hazelcast.NearCaching
                 }
                 catch (Exception e)
                 {
-                    _logger.LogWarning(e, $"An exception was thrown while processing invalidation meta data from address {member.Address}.");
+                    _logger.IfWarning()?.LogWarning(e, "An exception was thrown while processing invalidation meta data from address {Address}.", member.Address);
                 }
             }
 

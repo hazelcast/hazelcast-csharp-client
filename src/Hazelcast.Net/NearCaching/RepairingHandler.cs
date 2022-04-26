@@ -84,8 +84,7 @@ namespace Hazelcast.NearCaching
 
                 // reset and report
                 metadata.ResetSequences();
-                _logger.LogDebug($"Invalid UUID, lost remote partition data unexpectedly " +
-                                 $"(map={_nearCache.Name}, partition={partitionId}, current={currentUuid}, new={newUuid})");
+                _logger.IfDebug()?.LogDebug("Invalid UUID, lost remote partition data unexpectedly (map={NearCacheName}, partition={PartitionId}, current={CurrentUuid}, new={NewUuid})", _nearCache.Name, partitionId, currentUuid, newUuid);
 
                 // we're done
                 break;
@@ -129,8 +128,7 @@ namespace Hazelcast.NearCaching
                     var totalMissCount = metadata.AddMissedSequences(missCount);
 
                     // report
-                    _logger.LogDebug($"Invalid sequence (map={_nearCache.Name}, partition={partitionId}, " +
-                                     $"current={currentSequence}, new={newSequence}, totalMiss={totalMissCount})");
+                    _logger.IfDebug()?.LogDebug("Invalid sequence (map={NearCacheName}, partition={PartitionId}, current={CurrentSequence}, new={NewSequence}, totalMiss={TotalMissCount})", _nearCache.Name, partitionId, currentSequence, newSequence, totalMissCount);
                 }
 
                 // we're done
@@ -269,7 +267,7 @@ namespace Hazelcast.NearCaching
 
                 if (missCount > _maxToleratedMissCount)
                 {
-                    _logger.LogDebug($"Exceeded tolerated miss count (map={_nearCache.Name}, miss={missCount}, max={_maxToleratedMissCount}).");
+                    _logger.IfDebug()?.LogDebug("Exceeded tolerated miss count (map={NearCacheName}, miss={MissCount}, max={MaxToleratedMissCount}).", _nearCache.Name, missCount, _maxToleratedMissCount);
                     return true;
                 }
             } while (++partition < _partitionCount);

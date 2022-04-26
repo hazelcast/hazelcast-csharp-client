@@ -41,6 +41,11 @@ namespace Hazelcast.Core
         /// <inheritdoc />
         public override string ToString() => _json;
 
+        /// <summary>
+        /// Gets string representation of JSON value.
+        /// </summary>
+        public string Value => _json;
+
         /// <inheritdoc />
         public override int GetHashCode() => _json.GetHashCode(StringComparison.Ordinal);
 

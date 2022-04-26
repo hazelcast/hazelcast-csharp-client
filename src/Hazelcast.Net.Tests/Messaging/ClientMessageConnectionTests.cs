@@ -140,6 +140,7 @@ namespace Hazelcast.Tests.Messaging
         }
 
         [Test]
+        [Timeout(20_000)]
         public async Task Cancel()
         {
             static async ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
