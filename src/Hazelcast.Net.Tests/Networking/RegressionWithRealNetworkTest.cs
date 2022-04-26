@@ -46,6 +46,8 @@ namespace Hazelcast.Tests.Networking
             await MembersOneTimeTearDown();
         }
 
+        // this test validates that a client that starts connecting to a cluster that is not yet ready,
+        // will eventually succeeds and connect once the cluster becomes ready.
         [Test]
         [TestCase(true)]
         [TestCase(false)]
