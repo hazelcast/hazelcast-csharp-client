@@ -333,7 +333,7 @@ namespace Hazelcast.Clustering
         #region Properties
 
         /// <summary>
-        /// Gets number of connections to members
+        /// Gets the number of open connections to members.
         /// </summary>
         public int Count => _connections.Count;
 
