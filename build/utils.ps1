@@ -465,3 +465,14 @@ function get-project-name ( $path ) {
     $n = $n.SubString(0, $n.Length - '.csproj'.Length)
     return $n;
 }
+
+function read-file ( $filename ) {
+    $text = get-content -raw -path $filename
+    $text = $text.Replace("`r", "").TrimEnd("`n")
+    return $text
+}
+
+function write-file ( $filename, $text ) {
+    $text = $text.Replace("`n", [Environment]::Newline)
+    set-content -noNewLine -encoding utf8 $filename $text
+}

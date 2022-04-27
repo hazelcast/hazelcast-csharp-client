@@ -39,5 +39,30 @@ namespace Hazelcast.Tests.DotNet
         {
             Assert.That(objects, isnull ? Is.Null : Is.Not.Null);
         }
+
+        [Test]
+        public void GetInterfacesIsRecursive()
+        {
+            var interfaces = typeof (C2).GetInterfaces();
+            Assert.That(interfaces.Length, Is.EqualTo(3));
+            Assert.That(interfaces, Does.Contain(typeof(I1))); // through I1
+            Assert.That(interfaces, Does.Contain(typeof(I2))); // through base class
+            Assert.That(interfaces, Does.Contain(typeof(I3))); // direct
+        }
+
+        private interface I1
+        { }
+
+        private interface I2
+        { }
+
+        private interface I3 : I1
+        { }
+
+        private class C1 : I2
+        { }
+
+        private class C2 : C1, I3
+        { }
     }
 }

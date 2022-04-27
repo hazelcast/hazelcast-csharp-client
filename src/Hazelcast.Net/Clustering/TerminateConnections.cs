@@ -63,7 +63,7 @@ namespace Hazelcast.Clustering
             if (_connections.TryWrite(connection)) return;
 
             // that should not happen, but log to be sure
-            _logger.LogWarning($"Failed to add a connection ({connection}).");
+            _logger.IfWarning()?.LogWarning("Failed to add a connection ({Connection}).", connection);
         }
 
         // (background task loop) terminate connections
