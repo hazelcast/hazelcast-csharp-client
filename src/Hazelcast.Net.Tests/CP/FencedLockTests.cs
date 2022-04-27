@@ -145,9 +145,26 @@ namespace Hazelcast.Tests.CP
             Assert.False(locked);
         }
 
+
         [Test]
+        [Timeout(5_000)]
         public async Task TestTryLockConcurrentlyOnSameContext()
         {
+            //We know that fenced lock chekcs the threadId to prevent race condition.
+            //It is done with threadId in Java by nature. OTOH, it's not the case in
+            //.net due to task based flow.So, whenever two flows from same context try
+            //to do operation on the lock, only one of them should be able to take the
+            //resource at the same time. Syncronization is done via SemaphoreSlim.
+            //Each context has own semaphore, and each flow holds the information
+            //whether got the semaphore or not(SemaphoreSlim doesn't know the its master).
+            //Hence, when a flow-master- takes the lock and so semaphore too, it holds
+            //that information in its local context too, so that it can release it later.
+
+            //The test tries to create a race condition to catch the exception. If Locker1
+            //is doing an operation, at the same time, Locker2 is trying to do similar,
+            //and one of them should get the exception. Unfourtunatly, we don't know which one
+            //will get the exception because we don't control the task scheduler.
+
             var currentContext = AsyncContext.Current;
             var _ = HConsoleForTest();
             var lockName = CreateUniqueName() + "@group1";
@@ -156,6 +173,7 @@ namespace Hazelcast.Tests.CP
             var token = tokenS.Token;
             var countOfAqusition1 = 0;
             var countOfAqusition2 = 0;
+            var exceptionThrown = false;
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
             async Task RunLocker1(CancellationToken token)
@@ -168,13 +186,15 @@ namespace Hazelcast.Tests.CP
                     {
                         HConsole.WriteLine(this, $"Locker 1 took the lock on Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition1++;
-                        await Task.Delay(70);
+                        await Task.Delay(7);//do some work
                         await myLock.UnlockAsync();
+                        HConsole.WriteLine(this, $"Locker 1 released the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                     }
                 }
                 catch (LockOwnershipLostException ex)
                 {
-                    HConsole.WriteLine(this, $"Locker 1 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                    HConsole.WriteLine(this, $"Locker 1 Thread {Thread.CurrentThread.ManagedThreadId} :{ex.Message}");
+                    exceptionThrown = true;
                 }
             }
 
@@ -182,14 +202,13 @@ namespace Hazelcast.Tests.CP
             {
                 try
                 {
-                    await Task.Delay(10);//Let's wait a bit that the lock is taken by Locker 1
                     var myLock = await Client.CPSubsystem.GetLockAsync(lockName);
 
                     while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
                     {
                         HConsole.WriteLine(this, $"Locker 2 took the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition2++;
-                        await Task.Delay(10);
+                        await Task.Delay(10);//do some work
                         await myLock.UnlockAsync();
                         HConsole.WriteLine(this, $"Locker 2 released the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                     }
@@ -197,6 +216,7 @@ namespace Hazelcast.Tests.CP
                 catch (LockOwnershipLostException ex)
                 {
                     HConsole.WriteLine(this, $"Locker 2 Thread {Thread.CurrentThread.ManagedThreadId} :{ex.Message}");
+                    exceptionThrown = true;
                 }
             }
 
@@ -205,25 +225,27 @@ namespace Hazelcast.Tests.CP
             await Task.WhenAll(lock1Task, lock2Task);
 
             if (countOfAqusition1 == 0 && countOfAqusition2 == 0)
-                Assert.Fail();
+                Assert.Fail();//at least, one of them should got the lock
 
-            if (countOfAqusition1 > 0)
-                Assert.AreEqual(countOfAqusition1, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
-            else
-                Assert.AreEqual(countOfAqusition2, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+            Assert.IsTrue(exceptionThrown, "Lockers owned the lock at the same time which shouldn't be occured.");
         }
 
         [Test]
-        public async Task TestTryLockParallel()
+        public async Task TestTryLockParallelOnSameContext()
         {
+            //Visit TestTryLockConcurrentlyOnSameContext for explanation.
+
+            //Similar to test below but asigns task to thread pool.
+
             AsyncContext.RequireNew();
             var currentContext = AsyncContext.Current;
             var _ = HConsoleForTest();
             var lockName = CreateUniqueName() + "@group1";
-            var tokenS = new CancellationTokenSource(TimeSpan.FromSeconds(1));
+            var tokenS = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
             var token = tokenS.Token;
             var countOfAqusition1 = 0;
             var countOfAqusition2 = 0;
+            var exceptionThrown = false;
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
             var lock1Task = Task.Run(async () =>
@@ -234,15 +256,17 @@ namespace Hazelcast.Tests.CP
 
                     while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
                     {
-                        HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 1 took the lock Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId} Task: {Task.CurrentId}");
-                        countOfAqusition1++;
-                        Thread.Sleep(8);
+                        HConsole.WriteLine(this, $"Locker 2 took the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
+                        countOfAqusition2++;
+                        await Task.Delay(10);//do some work
                         await myLock.UnlockAsync();
+                        HConsole.WriteLine(this, $"Locker 2 released the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                     }
                 }
                 catch (LockOwnershipLostException ex)
                 {
                     HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 1 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                    exceptionThrown = true;
                 }
             }, token);
 
@@ -254,15 +278,17 @@ namespace Hazelcast.Tests.CP
 
                     while (await myLock.TryLockAsync() && !token.IsCancellationRequested)
                     {
-                        HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 2 took the lock Context:{currentContext.Id}, Thread:{Thread.CurrentThread.ManagedThreadId}");
+                        HConsole.WriteLine(this, $"Locker 2 took the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition2++;
-                        Thread.Sleep(10);
+                        await Task.Delay(10);//do some work
                         await myLock.UnlockAsync();
+                        HConsole.WriteLine(this, $"Locker 2 released the lock on Context: {currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                     }
                 }
                 catch (LockOwnershipLostException ex)
                 {
                     HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id}, Locker 2 Thread {Thread.CurrentThread.ManagedThreadId}  :{ex.Message}");
+                    exceptionThrown = true;
                 }
             }, token);
 
@@ -270,12 +296,9 @@ namespace Hazelcast.Tests.CP
             await Task.WhenAll(lock1Task, lock2Task);
 
             if (countOfAqusition1 == 0 && countOfAqusition2 == 0)
-                Assert.Fail();
+                Assert.Fail();//at least, one of them should got the lock
 
-            if (countOfAqusition1 > 0)
-                Assert.AreEqual(countOfAqusition1, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
-            else
-                Assert.AreEqual(countOfAqusition2, countOfAqusition2 + countOfAqusition1, "Lock cannot be acquired concurrently");
+            Assert.IsTrue(exceptionThrown, "Lockers owned the lock at the same time which shouldn't be occured.");
         }
 
         [Test]
