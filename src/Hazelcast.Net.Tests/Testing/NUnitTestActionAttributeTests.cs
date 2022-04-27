@@ -43,6 +43,7 @@ namespace Hazelcast.Tests.Testing
             Assert.That(TestContext.CurrentContext.Test.Properties["TEST"]?.FirstOrDefault(), Is.EqualTo("test"));
         }
 
+        // use a dummy ignored parameter to create a test "suite" ie 1 method running multiple tests
         [TestCase(0)]
         [TestCase(1)]
         [Some("TEST", "test")]
