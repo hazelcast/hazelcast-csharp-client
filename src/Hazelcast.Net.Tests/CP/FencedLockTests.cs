@@ -168,7 +168,7 @@ namespace Hazelcast.Tests.CP
                     {
                         HConsole.WriteLine(this, $"Locker 1 took the lock on Context:{currentContext.Id} Thread: {Thread.CurrentThread.ManagedThreadId}");
                         countOfAqusition1++;
-                        await Task.Delay(7);
+                        await Task.Delay(70);
                         await myLock.UnlockAsync();
                     }
                 }
