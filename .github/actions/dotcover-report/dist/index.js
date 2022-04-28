@@ -8877,7 +8877,7 @@ async function run() {
         }
     });
 
-    core.info('Completed.');
+    core.info(`Completed (run ${created.data.id} ref ${ref})`);
   }
   catch (error) {
     core.setFailed(error.message);
