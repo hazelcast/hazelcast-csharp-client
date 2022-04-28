@@ -396,7 +396,7 @@ function gen-test-certs ( $cert_dir, $src_dir, $config_dir ) {
 
     keytool -importkeystore `
         -srckeystore "$cert_dir/keystore/keystore.p12" -srcstoretype PKCS12 -srcstorepass $password `
-        -destkeystore "$cert_dir/keystore/keystore.jks" -srcstoretype JKS -deststorepass $password
+        -destkeystore "$cert_dir/keystore/keystore.jks" -deststoretype JKS -deststorepass $password
     if (failed) { return }
 
     keytool -importcert -trustcacerts -noprompt `
