@@ -13,9 +13,7 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using System.Runtime.ExceptionServices;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Testing.Remote;
@@ -23,29 +21,67 @@ using NuGet.Versioning;
 
 namespace Hazelcast.Testing
 {
-    internal sealed class ServerVersionDetector : RemoteTestBase
+    /// <summary>
+    /// Detects the version of the server on the cluster.
+    /// </summary>
+    internal static class ServerVersionDetector
     {
         private static NuGetVersion _version;
         private static bool _forced;
 
+        /// <summary>
+        /// Gets the detected version of the server on the cluster.
+        /// </summary>
         public static NuGetVersion DetectedServerVersion
         {
             get
             {
                 if (_version != null || _forced) return _version;
-                new ServerVersionDetector().DetectVersion();
+                
+                // in the rare occasion where we haven't connected to the remote controller
+                // even once, and yet someone want the version, we have to detect it here.
+                // bearing in mind that that "someone" may be an attribute that CANNOT do
+                // an async call - hence this property HAS to remain a synchronous thing.
+                // and this is why we end up with the ugly .Result thing below :(
+                
+                try
+                {
+                    _version = DetectServerVersionAsync().Result; // yes - see above
+                }
+                catch (AggregateException ae)
+                {
+                    // this weird thing here is to avoid breaking the NUnit test runner
+                    if (ae.InnerExceptions.Count != 1) throw;
+                    ExceptionDispatchInfo.Capture(ae.InnerExceptions[0]).Throw();
+                }
+                
                 return _version;
             }
         }
 
+        /// <summary>
+        /// (for tests only, non thread-safe) Overrides the detected version with a <c>null</c> value..
+        /// </summary>
+        /// <returns>An <see cref="IDisposable"/> object that must be disposed to restore the original detected version.</returns>
         public static IDisposable ForceNoVersion()
             => ForceVersion((NuGetVersion)null);
 
+        /// <summary>
+        /// (for tests only, non thread-safe) Overrides the detected version.
+        /// </summary>
+        /// <param name="version">The version.</param>
+        /// <returns>An <see cref="IDisposable"/> object that must be disposed to restore the original detected version.</returns>
         public static IDisposable ForceVersion(string version)
             => ForceVersion(version == null ? null : NuGetVersion.Parse(version));
 
-        public static IDisposable ForceVersion(NuGetVersion version)
+        /// <summary>
+        /// (for tests only, non thread-safe) Overrides the detected version.
+        /// </summary>
+        /// <param name="version">The version.</param>
+        /// <returns>An <see cref="IDisposable"/> object that must be disposed to restore the original detected version.</returns>
+        private static IDisposable ForceVersion(NuGetVersion version)
         {
+            if (_forced) throw new InvalidOperationException("Already forcing.");
             var preserve = _version;
             _version = version;
             _forced = true;
@@ -57,31 +93,36 @@ namespace Hazelcast.Testing
             });
         }
 
-        // yes, that is truly ugly, async-wise, but we don't have a choice
-        private void DetectVersion()
+        // this method is invoked synchronously (!) by the DetectedServerVersion property above
+        private static async Task<NuGetVersion> DetectServerVersionAsync()
         {
+            IRemoteControllerClient client = null;
             try
             {
-                var client = ConnectToRemoteControllerAsync().Result;
-                _version = DetectServerVersion(client).Result;
-                client.ExitAsync().Wait();
+                client = await RemoteControllerClient.CreateAsync().CfAwait();
+                return await client.DetectServerVersionAsync().CfAwait();
             }
-            catch (AggregateException ae)
+            finally
             {
-                // this weird thing here is to avoid breaking the NUnit test runner
-                if (ae.InnerExceptions.Count != 1) throw;
-                ExceptionDispatchInfo.Capture(ae.InnerExceptions[0]).Throw();
+                try
+                {
+                    if (client != null) await client.ExitAsync().CfAwait();
+                }
+                catch { /* running out of options */ }
             }
         }
 
-        public static async Task<NuGetVersion> DetectServerVersion(IRemoteControllerClient client)
+        // this method is invoked asynchronously by RemoteTestBase.ConnectToRemoteControllerAsync
+        public static ValueTask InitializeServerVersionAsync(IRemoteControllerClient client)
         {
-            if (_version != null || _forced) return _version;
+            static async ValueTask SetVersionAsync(IRemoteControllerClient client)
+            {
+                _version = await client.DetectServerVersionAsync().CfAwait();
+            }
 
-            const string script = "result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;";
-            var response = await client.ExecuteOnControllerAsync(null, script, Lang.JAVASCRIPT).CfAwait();
-            var result = response.Result;
-            return result == null ? default : NuGetVersion.Parse(Encoding.UTF8.GetString(result));
+            return _version != null || _forced
+                ? default
+                : SetVersionAsync(client);
         }
     }
 }

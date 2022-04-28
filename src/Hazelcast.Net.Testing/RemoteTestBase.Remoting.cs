@@ -43,17 +43,8 @@ namespace Hazelcast.Testing
 
             try
             {
-                var rcHostAddress = NetworkAddress.GetIPAddressByName("localhost");
-                var configuration = new TConfiguration();
-                var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, 9701, configuration);
-                var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
-                if (!transport.IsOpen)
-                {
-                    await transport.OpenAsync(CancellationToken.None).CfAwait();
-                }
-                var protocol = new Thrift.Protocol.TBinaryProtocol(transport);
-                var client = RemoteControllerClient.Create(protocol);
-                await ServerVersionDetector.DetectServerVersion(client).CfAwait(); // static, will detect only once
+                var client = await RemoteControllerClient.CreateAsync(NetworkAddress.GetIPAddressByName("localhost")).CfAwait();
+                await ServerVersionDetector.InitializeServerVersionAsync(client).CfAwait(); // static, will detect only once
                 return client;
             }
             catch (Exception e)
