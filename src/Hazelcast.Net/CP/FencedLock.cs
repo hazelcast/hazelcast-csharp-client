@@ -43,8 +43,7 @@ namespace Hazelcast.CP
         /// async operations.
         /// </remarks>
         private static long ContextId => AsyncContext.Current.Id;
-        private readonly ConcurrentDictionary<long, long> _lockedThreadToSession = new ConcurrentDictionary<long, long>();
-        private readonly ConcurrentDictionary<long, SemaphoreSlim> _contextSemaphore = new ConcurrentDictionary<long, SemaphoreSlim>();
+        private readonly ConcurrentDictionary<long, ContextOwnership> _lockedThreadToSession = new ConcurrentDictionary<long, ContextOwnership>();
         private readonly CPSessionManager _cpSessionManager;
         private readonly CPGroupId _groupId;
         private int _destroyed;
@@ -67,8 +66,8 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var semaphore = VerifyNoLockOnThread(threadId, sessionId, false);
-            HConsole.WriteLine(this, $"GetFenceAsync->Thread{threadId}, Session:{sessionId}, Semaphore:{semaphore.GetHashCode()}");
+            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
+            HConsole.WriteLine(this, $"GetFenceAsync->Thread{threadId}, Session:{sessionId}, Semaphore:{contextOwnership.GetHashCode()}");
 
             try
             {
@@ -83,7 +82,8 @@ namespace Hazelcast.CP
                 if (ownership.LockedBy(threadId, sessionId))
                 {
                     AsyncContext.RequireNew();
-                    _lockedThreadToSession[threadId] = sessionId;
+                    contextOwnership.SessionId = sessionId;
+                    _lockedThreadToSession[threadId] = contextOwnership;
                     return ownership.Fence;
                 }
 
@@ -92,8 +92,8 @@ namespace Hazelcast.CP
             }
             finally
             {
-                if(LocalSemaphoreContext.Value)
-                    semaphore.Release();
+                if (LocalSemaphoreContext.Value)
+                    contextOwnership.Semaphore.Release();
             }
         }
 
@@ -102,14 +102,17 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var semaphore = VerifyNoLockOnThread(threadId, sessionId, false);
+            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
 
             try
             {
                 var ownership = await RequestLockOwnershipStateAsync().CfAwait();
 
                 if (ownership.LockedBy(threadId, sessionId))
-                    _lockedThreadToSession[threadId] = sessionId;
+                {
+                    contextOwnership.SessionId = sessionId;
+                    _lockedThreadToSession[threadId] = contextOwnership;
+                }
                 else
                     VerifyNoLockedSessionExist(threadId);
 
@@ -118,7 +121,7 @@ namespace Hazelcast.CP
             finally
             {
                 if (LocalSemaphoreContext.Value)
-                    semaphore.Release();
+                    contextOwnership.Semaphore.Release();
             }
         }
 
@@ -127,7 +130,7 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var semaphore = VerifyNoLockOnThread(threadId, sessionId, false);
+            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
             HConsole.WriteLine(this, $"IsLockedAsync->Thread{threadId}, Session:{sessionId}, Semaphore:semaphore.GetHashCode()");
             try
             {
@@ -135,7 +138,8 @@ namespace Hazelcast.CP
 
                 if (ownership.LockedBy(threadId, sessionId))
                 {
-                    _lockedThreadToSession[threadId] = sessionId;
+                    contextOwnership.SessionId = sessionId;
+                    _lockedThreadToSession[threadId] = contextOwnership;
                     return true;
                 }
 
@@ -146,7 +150,7 @@ namespace Hazelcast.CP
             finally
             {
                 if (LocalSemaphoreContext.Value)
-                    semaphore.Release();
+                    contextOwnership.Semaphore.Release();
             }
         }
 
@@ -154,8 +158,8 @@ namespace Hazelcast.CP
         {
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var semaphore = VerifyNoLockOnThread(threadId, sessionId, false);
-            HConsole.WriteLine(this, $"IsLockedByCurrentContext->Thread{threadId}, Session:{sessionId}, Semaphore:{semaphore.GetHashCode()}");
+            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
+            HConsole.WriteLine(this, $"IsLockedByCurrentContext->Thread{threadId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
             try
             {
                 var ownership = await RequestLockOwnershipStateAsync().CfAwait();
@@ -163,7 +167,10 @@ namespace Hazelcast.CP
                 var lockedByCurrent = ownership.LockedBy(threadId, sessionId);
 
                 if (lockedByCurrent)
-                    _lockedThreadToSession[threadId] = sessionId;
+                {
+                    contextOwnership.SessionId = sessionId;
+                    _lockedThreadToSession[threadId] = contextOwnership;
+                }
                 else
                     VerifyNoLockedSessionExist(threadId);
 
@@ -172,7 +179,7 @@ namespace Hazelcast.CP
             finally
             {
                 if (LocalSemaphoreContext.Value)
-                    semaphore.Release();
+                    contextOwnership.Semaphore.Release();
             }
         }
 
@@ -185,15 +192,16 @@ namespace Hazelcast.CP
             while (true)
             {
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
-                var semaphore = VerifyNoLockOnThread(threadId, sessionId, true);
-                HConsole.WriteLine(this, $"LockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{semaphore.GetHashCode()}");
+                var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, true);
+                HConsole.WriteLine(this, $"LockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
                 try
                 {
                     long fence = await RequestLockAsync(sessionId, threadId, invocationId).CfAwait();
 
                     if (fence != InvalidFence)
                     {
-                        _lockedThreadToSession[threadId] = sessionId;
+                        contextOwnership.SessionId = sessionId;
+                        _lockedThreadToSession[threadId] = contextOwnership;
                         return fence;
                     }
 
@@ -225,7 +233,7 @@ namespace Hazelcast.CP
                 finally
                 {
                     if (LocalSemaphoreContext.Value)
-                        semaphore.Release();
+                        contextOwnership.Semaphore.Release();
                 }
             }
         }
@@ -253,15 +261,18 @@ namespace Hazelcast.CP
             {
                 var start = Clock.Milliseconds;
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
-                var semaphore = VerifyNoLockOnThread(threadId, sessionId);
-                HConsole.WriteLine(this, $"TryLockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{semaphore.GetHashCode()}");
+                var contextOwnership = VerifyNoLockOnThread(threadId, sessionId);
+                HConsole.WriteLine(this, $"TryLockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
 
                 try
                 {
                     long fence = await RequestTryLockAsync(sessionId, threadId, invocationId, timeoutMilliseconds).CfAwait();
 
                     if (fence != InvalidFence)
-                        _lockedThreadToSession[threadId] = sessionId;
+                    {
+                        contextOwnership.SessionId = sessionId;
+                        _lockedThreadToSession[threadId] = contextOwnership;
+                    }
                     else
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
@@ -304,7 +315,7 @@ namespace Hazelcast.CP
                 finally
                 {
                     if (LocalSemaphoreContext.Value)
-                        semaphore.Release();
+                        contextOwnership.Semaphore.Release();
                 }
             }
         }
@@ -329,7 +340,7 @@ namespace Hazelcast.CP
             var threadId = ContextId;
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
-            var semaphore = VerifyNoLockOnThread(threadId, sessionId, false);
+            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
 
             if (sessionId == CPSessionManager.NoSessionId)
             {
@@ -340,11 +351,14 @@ namespace Hazelcast.CP
             try
             {
                 Guid invocationId = Guid.NewGuid();
-                HConsole.WriteLine(this, $"UnlockAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{semaphore.GetHashCode()}");
+                HConsole.WriteLine(this, $"UnlockAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
                 bool stillLockedByCurrentThread = await RequestUnlockAsync(sessionId, threadId, invocationId).CfAwait();
 
                 if (stillLockedByCurrentThread)
-                    _lockedThreadToSession[threadId] = sessionId;
+                {
+                    contextOwnership.SessionId = sessionId;
+                    _lockedThreadToSession[threadId] = contextOwnership;
+                }
                 else
                 {
                     RemoveLocks(threadId, sessionId);
@@ -369,7 +383,7 @@ namespace Hazelcast.CP
             finally
             {
                 if (LocalSemaphoreContext.Value)
-                    semaphore.Release();
+                    contextOwnership.Semaphore.Release();
             }
         }
 
@@ -377,11 +391,12 @@ namespace Hazelcast.CP
         {
             HConsole.WriteLine(this, $"RemoveLocks->Thread{threadId}, Session:{sessionId}, CanRemove:{LocalSemaphoreContext.Value}");
             //Only holder of the semaphore can release it. 
-            if (_contextSemaphore.TryGetValue(threadId, out var semaphore) && LocalSemaphoreContext.Value)
+            if (_lockedThreadToSession.TryGetValue(threadId, out var contextOwnership) && LocalSemaphoreContext.Value)
             {
-                _lockedThreadToSession.TryRemove(threadId, out var _);
                 HConsole.WriteLine(this, $"Remove lock, Thread:{AsyncContext.Current.Id}");
-                semaphore.Release();                
+                //Dispose it during general disposing process otherwise other waiters may throw.
+                contextOwnership.Semaphore.Release();                
+                //Current flow released the semaphore.
                 LocalSemaphoreContext.Value = false;
             }
         }
@@ -394,32 +409,35 @@ namespace Hazelcast.CP
         /// <param name="sessionId"></param>
         /// <param name="releaseSession"></param>
         /// <exception cref="LockOwnershipLostException"></exception>
-        private SemaphoreSlim VerifyNoLockOnThread(long threadId, long sessionId, bool releaseSession = true, bool force = false)
+        private ContextOwnership VerifyNoLockOnThread(long threadId, long sessionId, bool releaseSession = true, bool force = false)
         {
-            if (!_contextSemaphore.TryGetValue(threadId, out var semaphore))
+            if (!_lockedThreadToSession.TryGetValue(threadId, out var contextOwnership))
             {
-                semaphore = new SemaphoreSlim(1, 1);
-                _contextSemaphore[threadId] = semaphore;
-                HConsole.WriteLine(this, $"Verified by Thread:{ Environment.CurrentManagedThreadId }, Semaphore: {semaphore.GetHashCode() }, Count: { semaphore.CurrentCount}");
+                var tempOwnership = new ContextOwnership(sessionId, threadId);
+                contextOwnership = _lockedThreadToSession.GetOrAdd(threadId, tempOwnership);
+                //don't leak.
+                if (tempOwnership.GetHashCode() != contextOwnership.GetHashCode())
+                    tempOwnership.Dispose();
+                HConsole.WriteLine(this, $"Verified by Thread:{ Environment.CurrentManagedThreadId }, Semaphore: {contextOwnership.Semaphore.GetHashCode() }, Count: { contextOwnership.Semaphore.CurrentCount}");
             }
 
-            var isLocked = semaphore.Wait(0);
+            var isLocked = contextOwnership.Semaphore.Wait(0);
             //Flag it if current flow got the resource.
             LocalSemaphoreContext.Value = isLocked;
 
-            HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id} Semaphore: {semaphore.GetHashCode() } can take the lock -> {isLocked}");
+            HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id} Semaphore: {contextOwnership.Semaphore.GetHashCode() } can take the lock -> {isLocked}");
 
-            if ((_lockedThreadToSession.TryGetValue(threadId, out var lockedSessionId) && lockedSessionId != sessionId) || !isLocked)
+            if (contextOwnership.SessionId != sessionId || !isLocked)
             {
                 RemoveLocks(threadId, sessionId);
-                HConsole.WriteLine(this, $"Release session, Context {AsyncContext.Current.Id}, Thread { Environment.CurrentManagedThreadId }  { semaphore.GetHashCode() }, Count: {semaphore.CurrentCount}");
+                HConsole.WriteLine(this, $"Release session, Context {AsyncContext.Current.Id}, Thread { Environment.CurrentManagedThreadId }  { contextOwnership.GetHashCode() }, Count: {contextOwnership.Semaphore.CurrentCount}");
                 if (releaseSession)
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
 
-                throw new LockOwnershipLostException($"Current thread/context/async flow is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
+                throw new LockOwnershipLostException($"Current thread/context/async flow is not owner of the Lock[{Name}] because its Session[{contextOwnership.SessionId}] is closed by server!");
             }
 
-            return semaphore;
+            return contextOwnership;
         }
 
         /// <summary>
@@ -429,10 +447,10 @@ namespace Hazelcast.CP
         /// <exception cref="LockOwnershipLostException"></exception>
         private void VerifyNoLockedSessionExist(long threadId)
         {
-            if (_lockedThreadToSession.TryRemove(threadId, out var lockedSessionId))
+            if (_lockedThreadToSession.TryRemove(threadId, out var contextOwnership))
             {
-                RemoveLocks(threadId, lockedSessionId);
-                throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{lockedSessionId}] is closed by server!");
+                RemoveLocks(threadId, contextOwnership.SessionId);
+                throw new LockOwnershipLostException($"Current thread/context is not owner of the Lock[{Name}] because its Session[{contextOwnership.SessionId}] is closed by server!");
             }
         }
 
@@ -446,14 +464,11 @@ namespace Hazelcast.CP
             }
             finally
             {
-                _lockedThreadToSession.Clear();
-
-                foreach (var s in _contextSemaphore.Values)
+                foreach (var s in _lockedThreadToSession.Values)
                 {
                     s.Dispose();
                 }
-
-                _contextSemaphore.Clear();
+                _lockedThreadToSession.Clear();
             }
         }
 
@@ -475,6 +490,29 @@ namespace Hazelcast.CP
             public bool Locked => FencedLock.InvalidFence != Fence;
 
             public bool LockedBy(long threadId, long sessionId) => Locked && SessionId == sessionId && ThreadId == threadId;
+        }
+
+        internal class ContextOwnership : IDisposable
+        {
+            public ContextOwnership(long sessionId, long contextId)
+            {
+                SessionId = sessionId;
+                ContextId = contextId;
+                Semaphore = new SemaphoreSlim(1, 1);
+            }
+
+            public long SessionId { get; set; }
+            public SemaphoreSlim Semaphore { get; }
+
+            /// <summary>
+            /// Gets Context Id. In Java context, it can act as thread id too. 
+            /// </summary>
+            public long ContextId { get; }
+
+            public void Dispose()
+            {
+                Semaphore.Dispose();
+            }
         }
     }
 }
