@@ -23,6 +23,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
@@ -32,6 +33,7 @@ namespace Hazelcast.Tests.Sql
     /// Tests serialization of parameters and result deserialization of SQL queries for all <see cref="SqlColumnType"/>s.
     /// </summary>
     [TestFixture]
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlSerializationDeserializationTests : SqlTestBase
     {
         protected override bool EnableJet => true;
