@@ -496,7 +496,7 @@ function findLatestVersion($path) {
 # ensures that a command exists in the path
 function ensure-command($command) {
     $r = get-command $command 2>&1
-    if ($nul -eq $r.Name) {
+    if ($null -eq $r.Name) {
         Die "Command '$command' is missing."
     }
     else {

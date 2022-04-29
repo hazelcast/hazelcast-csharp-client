@@ -316,6 +316,11 @@ function gen-test-certs ( $cert_dir, $src_dir, $config_dir ) {
     Write-Output "CERTS: src_dir    = $src_dir"
     Write-Output "CERTS: config_dir = $config_dir"
 
+    $r = get-command openssl 2>&1
+    Write-Output "CERTS: openssl    = $($r.Version) at $($r.Source)"
+    $r = get-command keytool 2>&1
+    Write-Output "CERTS: keytool    = $($r.Version) at $($r.Source)"
+
     $password = "123456"
 
     $env:CERT_DIR="$cert_dir" # used in the CA configuration files
