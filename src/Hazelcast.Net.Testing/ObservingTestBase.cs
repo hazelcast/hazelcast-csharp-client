@@ -62,6 +62,7 @@ namespace Hazelcast.Testing
             var failed = false;
             while (_unobservedExceptions.TryDequeue(out var args))
             {
+                Console.WriteLine("+ Unobserved Exception:");
                 var innerException = args.Exception.Flatten().InnerException;
                 Console.WriteLine(innerException);
                 // log?

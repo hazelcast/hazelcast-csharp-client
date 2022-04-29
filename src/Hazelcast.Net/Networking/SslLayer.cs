@@ -48,7 +48,7 @@ namespace Hazelcast.Networking
             // https://referencesource.microsoft.com/#System/net/System/Net/SecureProtocols/_SslState.cs,5d0d274f6285d5dd
 
             var p = typeof(ServicePointManager).GetProperty("DisableSystemDefaultTlsVersions", BindingFlags.Static | BindingFlags.NonPublic);
-            return p == null || ! (bool) p.GetValue(null);
+            return p == null || !(bool)p.GetValue(null);
         }
 
         public SslLayer(SslOptions options, ILoggerFactory loggerFactory)
@@ -106,7 +106,7 @@ namespace Hazelcast.Networking
                 throw new ConnectionException("Failed to establish an SSL connection (see inner exception).", e);
             }
 
-            _logger.LogInformation($"Established SSL connection, protocol {sslStream.SslProtocol}, {(sslStream.IsEncrypted?"":"not ")}encrypted, {(sslStream.IsMutuallyAuthenticated?"":"not ")}mutually authenticated");
+            _logger.LogInformation($"Established SSL connection, protocol {sslStream.SslProtocol}, {(sslStream.IsEncrypted ? "" : "not ")}encrypted, {(sslStream.IsMutuallyAuthenticated ? "" : "not ")}mutually authenticated");
 
             return sslStream;
         }
@@ -127,7 +127,7 @@ namespace Hazelcast.Networking
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, $"Failed to load client certificate at \"{_options.CertificatePath}\".");
+                _logger.IfWarning()?.LogWarning(e, "Failed to load client certificate at \"{CertificatePath}\".", _options.CertificatePath);
                 throw;
             }
 
@@ -149,8 +149,7 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateChain)
                 {
-                    _logger.LogWarning($"SSL certificate error: {policyErrors} (chain status: " +
-                                       $" {string.Join(", ", chain.ChainStatus.Select(x => x.StatusInformation))}).");
+                    _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors} (chain status: {StatusInformations}).", policyErrors, string.Join(", ", chain.ChainStatus.Select(x => x.StatusInformation)));
                     validation = false;
                 }
                 else
@@ -163,7 +162,7 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateName)
                 {
-                    _logger.LogWarning($"SSL certificate error: {policyErrors}.");
+                    _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}.", policyErrors);
                     validation = false;
                 }
                 else
@@ -174,7 +173,7 @@ namespace Hazelcast.Networking
 
             if (policyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
             {
-                _logger.LogWarning($"SSL certificate error: {policyErrors}.");
+                _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}.", policyErrors);
                 validation = false;
             }
 

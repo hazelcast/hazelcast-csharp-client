@@ -92,18 +92,18 @@ namespace Hazelcast.Clustering
 
             var elapsed = (int)(DateTime.UtcNow - _begin).TotalMilliseconds;
 
-            _logger.IfDebug()?.LogDebug($"Elapsed {elapsed}ms, timeout={_timeoutMilliseconds}ms, back-off={_currentBackOffMilliseconds}ms ({_initialBackOffMilliseconds}-{_maxBackOffMilliseconds}, m={_multiplier}, j={_jitter})");
+            _logger.IfDebug()?.LogDebug("Elapsed {Elapsed}ms, timeout={TimeoutMilliseconds}ms, back-off={CurrentBackOffMilliseconds}ms ({InitialBackOffMilliseconds}-{MaxBackOffMilliseconds}, m={Multiplier}, j={Jitter})", elapsed, _timeoutMilliseconds, _currentBackOffMilliseconds, _initialBackOffMilliseconds, _maxBackOffMilliseconds, _multiplier, _jitter);
 
             if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, timeout ({_timeoutMilliseconds}ms).");
+                _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, timeout ({TimeoutMilliseconds}ms).", _action, _attempts, elapsed, _timeoutMilliseconds);
                 return false;
             }
 
             var delay = (int)(_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
             delay = Math.Min(delay, Math.Max(0, (int)(_timeoutMilliseconds - elapsed)));
 
-            _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms");
+            _logger.IfDebug()?.LogDebug("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, will retry in {Delay}ms", _action, _attempts, elapsed, delay);
 
             try
             {
@@ -111,12 +111,12 @@ namespace Hazelcast.Clustering
             }
             catch (OperationCanceledException)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, cancelled.");
+                _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, cancelled.", _action, _attempts, elapsed);
                 return false;
             }
             catch (Exception)
             {
-                _logger.LogWarning($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, error.");
+                _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, error.", _action, _attempts, elapsed);
                 return false;
             }
 

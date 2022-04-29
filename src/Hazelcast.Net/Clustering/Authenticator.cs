@@ -69,7 +69,7 @@ namespace Hazelcast.Clustering
             using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
             credentialsFactory ??= temp;
 
-            _logger.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
+            _logger.IfDebug()?.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
 
             var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
             if (result != null) return result;

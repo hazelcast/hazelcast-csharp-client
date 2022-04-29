@@ -94,7 +94,7 @@ namespace Hazelcast.Clustering
             if (_timeout <= _period)
             {
                 var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
-                _logger.LogWarning("Heartbeat timeout {Timeout}ms is <= period {Period}ms, falling back to a {Value}ms timeout.",
+                _logger.IfWarning()?.LogWarning("Heartbeat timeout {Timeout}ms is <= period {Period}ms, falling back to a {Value}ms timeout.",
                     (int)_timeout.TotalMilliseconds, (int)_period.TotalMilliseconds, (int)timeout.TotalMilliseconds);
                 _timeout = timeout;
             }
@@ -142,7 +142,7 @@ namespace Hazelcast.Clustering
             catch (Exception e)
             {
                 // unexpected
-                _logger.LogWarning(e, "Caught an exception while disposing Heartbeat.");
+                _logger.IfWarning()?.LogWarning(e, "Caught an exception while disposing Heartbeat.");
             }
 
             _cancel.Dispose();
@@ -164,7 +164,7 @@ namespace Hazelcast.Clustering
         // runs once on the whole cluster
         private async Task RunAsync(CancellationToken cancellationToken)
         {
-            _logger.LogDebug("Run heartbeat");
+            _logger.IfDebug()?.LogDebug("Run heartbeat");
 
             var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
             const int maxTasks = 4; // max 4 at a time TODO: consider making it an option?
@@ -214,7 +214,7 @@ namespace Hazelcast.Clustering
 
             if (readElapsed > _timeout && writeElapsed < _period)
             {
-                _logger.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
+                _logger.IfWarning()?.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
                 if (connection.Active) _terminateConnections.Add(connection);
                 return;
             }
@@ -223,7 +223,7 @@ namespace Hazelcast.Clustering
             // this should trigger a read when we receive the response
             if (writeElapsed > _period)
             {
-                _logger.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+                _logger.IfDebug()?.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
 
@@ -243,13 +243,13 @@ namespace Hazelcast.Clustering
                 }
                 catch (TaskTimeoutException)
                 {
-                    _logger.LogWarning("Heartbeat ping timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
+                    _logger.IfWarning()?.LogWarning("Heartbeat ping timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
                     if (connection.Active) _terminateConnections.Add(connection);
                 }
                 catch (Exception e)
                 {
                     // unexpected
-                    _logger.LogWarning(e, "Heartbeat has thrown an exception, but will continue.");
+                    _logger.IfWarning()?.LogWarning(e, "Heartbeat has thrown an exception, but will continue.");
                 }
             }
         }
