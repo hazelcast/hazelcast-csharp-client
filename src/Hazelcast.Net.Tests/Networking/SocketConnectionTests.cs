@@ -399,7 +399,10 @@ namespace Hazelcast.Tests.Networking
                 OnReceiveMessageBytes = (sc, r) => false
             };
 
+            // disposing the socket connection should not throw even though disposing the inner stream throws
             await s.ConnectAsync();
+
+            // and because the stream wrapper's been disposed once it won't be disposed again so this is safe
             await s.DisposeAsync();
         }
 
@@ -425,6 +428,8 @@ namespace Hazelcast.Tests.Networking
             public Action<StreamWrapper> OnRead { get; set; }
 
             public Action<StreamWrapper> OnDispose { get; set; }
+
+            public bool Disposed { get; set; }
 
             public static Action<StreamWrapper> Throw { get; } = _ => throw new Exception("bang");
 
@@ -467,6 +472,9 @@ namespace Hazelcast.Tests.Networking
 
             protected override void Dispose(bool disposing)
             {
+                if (Disposed) return;
+                Disposed = true;
+
                 try
                 {
                     OnDispose?.Invoke(this);

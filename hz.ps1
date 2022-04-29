@@ -89,7 +89,7 @@ $params = @(
     },
     @{ name = "framework";       type = [string];  default = $null;       alias = "f"
        parm = "<version>";
-       desc = "the framework to build (default is all)";
+       desc = "the framework to run tests for (default is all)";
        note = "The framework <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
     },
     @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"
@@ -257,6 +257,10 @@ $actions = @(
     @{ name = "cover-to-docs";
        desc = "copy test coverage to documentation";
        note = "Documentation and test coverage must exist."
+    },
+    @{ name = "update-doc-version";
+       desc = "updates versions in doc version.md";
+       note = "The resulting commit still needs to be pushed."
     }
 )
 
@@ -418,25 +422,19 @@ function determine-target-frameworks {
     return $frameworks
 }
 
-# determine framework(s) - for building and running tests
+# determine framework(s) - for running tests
+# we always need to build *all* frameworks because e.g. some projects need to be built
+# for netstandard in order to run on .NET Core - so one single framework cannot do it
 $frameworks = determine-target-frameworks
+$testFrameworks = $frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
-    $framework = $options.framework.ToLower()
-    if ($framework.Contains(',')) {
-        $fwks = $framework.Split(',')
-        foreach ($fwk in $fwks) {
-            if (-not $frameworks.Contains($fwk)) {
-                Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
-            }
+    $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
+    foreach ($fwk in $fwks) {
+        if (-not $frameworks.Contains($fwk)) {
+            Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
         }
-        $frameworks = $fwks
     }
-    else {
-        if (-not $frameworks.Contains($framework)) {
-            Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
-        }
-        $frameworks = @( $framework )
-    }
+    $testFrameworks = $fwks
 }
 
 # ensure we have the enterprise key for testing
@@ -900,13 +898,60 @@ function get-dotnet-sdk ( $sdks, $v, $preview ) {
     else { return $sdk.ToString() }
 }
 
+function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framework, $name, $allowPrerelease ) {
+
+    $release = get-dotnet-sdk $sdks $search $false
+    $preview = get-dotnet-sdk $sdks $search $true
+
+    $result.validSdk = $true
+
+    if ("n/a" -eq $release) {
+        if ($allowPrerelease -and "n/a" -ne $preview) {
+            # only have preview, and preview is allowed = will use preview
+            $result.ok = $true
+            $result.sdkInfo = $preview
+        }
+        else {
+            # have nothing usable, is an issue only if required
+            $missing = $frameworks.Contains($framework)
+            if ($missing) { 
+                Write-Output "  ERR: this script requires the Microsoft .NET $name SDK." 
+                $result.validSdks = $false
+                $result.validSdk = $false
+            }
+            $result.sdkInfo = "${search}:n/a"
+        }
+    } 
+    else {
+        if ("n/a" -eq $preview) {
+            # only have release = will use release
+            $result.sdkInfo = $release
+        }
+        elseif ($allowPrerelease) {
+            # have both, and preview is allowed = will use preview
+            $result.sdkInfo = $preview
+        }
+        else {
+            # have both, and preview is not allowed = will use release
+            $result.sdkInfo = "$release ($preview)"
+        }
+    }
+
+    $result.sdkInfos += " $($result.sdkInfo)"
+}
+
 function require-dotnet ( $full ) {
 
     if ($script:ensuredDotnet) { return }
 
+    # note: beware of x86 vs x64 versions of dotnet
     ensure-command "dotnet"
-
     $dotnetVersion = (&dotnet --version)
+    $validDotnet = $true
+    if ([string]::IsNullOrWhiteSpace($dotnetVersion)) {
+        $dotnetVersion = "<none>"
+        $validDotnet = $false
+    }
     Write-Output "  Version $dotnetVersion"
 
     $allowPrerelease = $true
@@ -918,46 +963,42 @@ function require-dotnet ( $full ) {
     }
 
     if ($allowPrerelease) {
-        Write-Output "  (global.json is missing or allows pre-release versions)"
+        Write-Output "  (global.json is missing, or allows pre-release versions)"
     }
     else {
-        Write-Output "  (global.json does not allow pre-release versions)"
+        Write-Output "  (global.json exists and does not allow pre-release versions)"
     }
 
     $sdks = (&dotnet --list-sdks)
 
-    $v21 = get-dotnet-sdk $sdks "2.1" $false
-    if ($full -and $null -eq $v21) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 2.1.x"
-    }
-    $v31 = get-dotnet-sdk $sdks "3.1" $false
-    if ($full -and $null -eq $v31) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 3.1.x"
-    }
-    $v50 = get-dotnet-sdk $sdks "5.0" $false
-    if ($null -eq $v50) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.x"
-    }
-    if ($v50 -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.200+"
-    }
-    $v60 = get-dotnet-sdk $sdks "6.0" $false # 6.0 is not required
+    # validate that we have the required SDKs based upon the complete list of
+    # frameworks for the test project, as determined by determine-target-frameworks.
 
-    $v50preview = get-dotnet-sdk $sdks "5.0" $true
-    $v60preview = get-dotnet-sdk $sdks "6.0" $true
+    $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
+    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $allowPrerelease
+    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $allowPrerelease
+    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $allowPrerelease
 
-    if ($allowPrerelease) { $v50 = $v50preview } elseif ($v50preview -ne 'n/a') { $v50 = "$v50 ($v50preview)" }
-    if ($allowPrerelease) { $v60 = $v60preview } elseif ($v60preview -ne 'n/a') { $v60 = "$v60 ($v60preview)" }
+    if ($result.validSdk -and $frameworks.Contains("net5.0")) {
+        # we found 5.0 and 5.0 is required and ...
+        $v = $result.sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
+        if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
+            Write-Output "  ERR: this script requires a Microsoft .NET 5.0.200+ SDK."
+            $result.validSdks = $false
+        }
+    }
 
-    Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
+    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $allowPrerelease
+
+    # report
+    Write-Output $result.sdkInfos
+
+    if (-not $validDotnet) {
+        Die "Could not determine dotnet version."
+    }
+    if (-not $result.validSdks) {
+        Die "Could not find all required SDKs (download from: https://dotnet.microsoft.com/download/dotnet-core)."
+    }
 
     $script:ensuredDotnet = $true
 }
@@ -1048,6 +1089,11 @@ function clean-dir ( $dir ) {
         Write-Output "  $dir"
         remove-item $dir -force -recurse
     }
+}
+
+# noop
+function hz-noop {
+    # nothing
 }
 
 # cleans the solution
@@ -1155,6 +1201,57 @@ function ensure-java {
 	}
 }
 
+# update latest version in docs files - when actually releasing
+# so this can be for a pre-release but it's got to be for actual release
+function hz-update-doc-version {
+
+    if ([string]::IsNullOrWhiteSpace($versionSuffix)) {
+
+        write-output "Update Doc Version"
+        $v = $versionPrefix
+
+        # non-preview versions go into xrefmap because we'll link to them as <curdoc>
+        $vd = $versionPrefix -replace "\.", "-"
+        $filename = "$docDir/xrefmap.yml"
+        $text = read-file $filename
+        if (-not $text.Contains("- uid: doc-index-$vd")) {
+            $text += "`n- uid: doc-index-$vd"
+            $text += "`n  name: $v"
+            $text += "`n  href: $v/doc/index.html"
+            $text += "`n- uid: api-index-$vd"
+            $text += "`n  href: $v/api/index.html"
+            $text += "`n"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # non-preview versions become <curdoc>, and <curdoc> is pushed to <prevdoc>
+        # for preview versions, they'll show as <devdoc>
+        # FIXME: where is <devdoc> handled? how are these placeholders handled?
+        $filename = "$docDir/versions.md"
+        $text = read-file $filename
+        if (-not ($text -match "<curdoc>(.*)</curdoc>")) {
+            Die "Could not find <curdoc> section in versions.md."
+        }
+        $curdoc = $matches[1]
+        if (-not $curdoc.StartsWith("$v ")) {
+            $text = $text -replace "<prevdoc/>", "<prevdoc/>`n* $curdoc"
+            $text = $text -replace "<curdoc>.*</curdoc>", "<curdoc>$v [general documentation](xref:doc-index-$vd) and [API reference](xref:api-index-$vd)</curdoc>"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # it is important that latest-version does NOT end with a newline
+        write-file "$docDir/latest-version" $options.version
+        git add "$docDir/latest-version"
+
+        git commit -m "Documentation latest version $($options.version)" >$null 2>&1
+    }
+    else {
+        write-output "skip Update Doc Version (suffix='$versionSuffix')"
+    }
+}
+
 # sets the version
 function hz-set-version {
 
@@ -1209,7 +1306,7 @@ function hz-tag-release {
         }
         # create an empty commit to isolate the tag (helps with GitHub Actions)
         git commit --allow-empty --message "Tag v$($options.version)" >$null 2>&1
-        git tag "v$($options.version)" >$null 2>&1
+        git tag "v$($options.version)" "release/$($options.version)" >$null 2>&1
     }
 }
 
@@ -1243,18 +1340,10 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
-    if ($frameworks.Count -eq 1) {
-        $framework = $frameworks[0]
-    }
-    else {
-        $framework = "(all)"
-    }
-
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
     Write-Output "  Define         : $($options.constants)"
-    Write-Output "  Framework      : $framework"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
@@ -1270,10 +1359,7 @@ function hz-build {
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
 
         # exclude
-        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and (
-            !$isWindows -or            # not on linux
-            $frameworks.Count -eq 1 )  # not for specific framework
-        ) {
+        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows) {
             Write-Output "  $(get-project-name $k) -> (excluded) "
             return  # continue
         }
@@ -1308,11 +1394,6 @@ function hz-build {
         "-c", $options.configuration,
         "--packages", $nugetPackages
     )
-
-    if ($frameworks.Count -eq 1) {
-        $buildArgs += "-f"
-        $buildArgs += $frameworks[0]
-    }
 
     if ($options.reproducible) {
         $buildArgs += "-p:ContinuousIntegrationBuild=true"
@@ -1443,6 +1524,8 @@ function hz-build-docs-on-windows {
         $repl = "$($options.version)`${1}"
     }
     $text = $text -replace '(?s-m)\<devdoc\>\$version(.*)\</devdoc\>', $repl # s-m enables single-line, disables multi-lines
+    $text = $text -replace '\<p\>\<prevdoc\>\</prevdoc\>\</p\>', '' # remove the <prevdoc> placeholder
+    $text = $text -replace '\</?curdoc\>', '' # remove the <curdoc> placeholder
     set-content -path $path -value $text
 
     $text = get-content "$tmpDir/docfx.out/404.html"
@@ -1467,21 +1550,24 @@ function hz-cover-to-docs-on-windows {
     $docs = "$tmpDir/docfx.out"
     $versiondocs = "$docs/$docDstDir"
     $coverdocs = "$versiondocs/cover"
-    $coverdir = "$tmpDir/tests/cover/cover-netcoreapp3.1.html"
+    $f = $frameworks[-1]
+    $coveragePath = "$tmpDir/tests/cover"
 
     Write-Output ""
     Write-Output "Copy tests coverage to documentation"
-    Write-Output "  Source         : $coverdir"
+    Write-Output "  Source         : $coveragePath/cover-$f"
     Write-Output "  Documentation  : $coverdocs"
 
     if (-not (test-path $docs)) { Die "Could not find $docs. Maybe you should build the docs first?" }
-    if (-not (test-path $coverdir)) { Die "Could not find $coverdir. Maybe you should run tests with coverage first?" }
+    if (-not (test-path "$coveragePath/cover-$f")) { Die "Could not find $coveragePath/cover-$f. Maybe you should run tests with coverage first?" }
     if (-not (test-path $versiondocs)) { mkdir $versiondocs >$null 2>&1 }
 
     if (test-path $coverdocs) { remove-item -recurse -force $coverdocs }
     mkdir $coverdocs >$null 2>&1
+    mkdir "$coverdocs/index" >$null 2>&1
 
-    copy-item -recurse "$coverdir/*" "$coverdocs/"
+    copy-item "$coveragePath/cover-$f.html" "$coverdocs/index.html"
+    copy-item -recurse "$coveragePath/cover-$f/*" "$coverdocs/index/"
     add-content "$coverdocs/index/css/dotcover.report.css" "`n`npre.source-code { font-family:Menlo,Monaco,Consolas,`"Courier New`",monospace; font-size:12px; }"
     $index1 = get-content "$docDir/templates/hz/cover-index.html"
     $index2 = [string]::Join(' ', (get-content "$coverdocs/index.html"))
@@ -1562,7 +1648,12 @@ function hz-git-docs-on-windows {
 
     &git -C "$pages" add -A
 
-    # create a symlink for latest docs -- NO! this is a release process task, see build-release.yml
+    # create the symlink for latest docs
+    # note: one can show the symlink with 'git show gh-pages:latest'
+    # note: it is important that latest-version does NOT end with a newline
+    # note: bash would read the file then do $(echo -n "$lv" | git hash-object -w --stdin) BUT pwsh CANNOT echo -n
+    $lh = &git hash-object -w "$docDir/latest-version"
+    &git -C "$pages" update-index --add --cacheinfo 120000 $lh "latest"
 
     &git -C "$pages" commit -m "$docMessage"
 
@@ -1791,7 +1882,7 @@ function run-tests ( $f ) {
 
             # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
             "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
-            "--dotCoverOutput=$coveragePath/index.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
+            "--dotCoverOutput=$coveragePath/cover-$f.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
@@ -1851,7 +1942,7 @@ function hz-test {
 
      # do not cover tests themselves, nor the testing plumbing
     if (-not [System.String]::IsNullOrWhiteSpace($options.coverageFilter)) { $options.coverageFilter += ";" }
-    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing"
+    $options.coverageFilter += "-:Hazelcast.Net.Tests;-:Hazelcast.Net.Testing;-:ExpectedObjects"
 
     Write-Output "Tests"
     Write-Output "  Server version : $($options.server)"
@@ -1882,7 +1973,7 @@ function hz-test {
 
         Write-Output ""
         Write-Output "Run tests..."
-        foreach ($framework in $frameworks) {
+        foreach ($framework in $testFrameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
             run-tests $framework
@@ -2217,6 +2308,10 @@ Write-Output ""
 $s = ""
 if ($isNewVersion) { $s += " (new, was $currentVersion)" }
 Write-Output "Client version $($options.version)$s"
+Write-Output ""
+Write-Output "Target frameworks"
+Write-Output "  $([string]::Join(", ", $frameworks))"
+
 
 # this goes first
 $clean = get-action $actions clean

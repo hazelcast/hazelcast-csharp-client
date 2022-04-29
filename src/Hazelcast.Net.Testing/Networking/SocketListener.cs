@@ -83,7 +83,7 @@ namespace Hazelcast.Testing.Networking
                     // listen, accept first connection, backlog others
                     // so they are not accepted, but not refused
                     _listener.Listen(-1);
-                    _listener.BeginAccept(AcceptCallback, _listener);
+                    _listener.BeginAccept(AcceptCallback, _listener); // beware of unobserved exceptions?
                     break;
             }
         }
