@@ -192,7 +192,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -261,6 +261,18 @@ $actions = @(
     @{ name = "update-doc-version";
        desc = "updates versions in doc version.md";
        note = "The resulting commit still needs to be pushed."
+    },
+    @{ name = "generate-certs";
+       desc = "generates the test certificates";
+       need = @( "certs-tools" )
+    },
+    @{ name = "install-root-ca";
+       desc = "(experimental) installs the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
+    },
+    @{ name = "remove-root-ca";
+       desc = "(experimental) removes the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
     }
 )
 
@@ -484,7 +496,7 @@ function findLatestVersion($path) {
 # ensures that a command exists in the path
 function ensure-command($command) {
     $r = get-command $command 2>&1
-    if ($nul -eq $r.Name) {
+    if ($null -eq $r.Name) {
         Die "Command '$command' is missing."
     }
     else {
@@ -741,9 +753,6 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
         }
-
-        # ensure we have the hazelcast enterprise test jar
-        ensure-jar "hazelcast-enterprise-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}:jar:tests"
     }
     else {
 
@@ -1078,11 +1087,60 @@ function ensure-build-proj {
     }
 }
 
+# ensure we have openssl and keytool for certs
+function ensure-certs-tools {
+    ensure-command "openssl"
+    ensure-command "keytool"
+}
+
 function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
         remove-item $dir -force -recurse
     }
+}
+
+# ensure we have the test certificates, or create them
+function ensure-certs {
+    if ($options.enterprise) {
+        if (test-path "$tmpDir/certs") {
+            Write-Output "Detected $tmpDir/certs directory"
+        }
+        else {
+            Write-Output "Missing $tmpDir/certs directory, generating"
+            hz-generate-certs
+        }
+    }
+}
+
+# generate the test certificates
+function hz-generate-certs {
+    . "$buildDir/certs.ps1"
+    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
+    if ($CERTSEXITCODE) {
+        Die "Failed to generate test certificates."
+    }
+    Write-Output ""
+}
+
+# install the root-ca certificate
+function hz-install-root-ca {
+    . "$buildDir/certs.ps1"
+    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to install the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
+# remove the root-ca certificate
+function hz-remove-root-ca {
+    . "$buildDir/certs.ps1"
+    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to remove the ROOT CA certificate."
+    }
+    Write-Output ""
 }
 
 # noop
@@ -2288,6 +2346,7 @@ register-needs dotnet-complete dotnet-minimal # order is important, if we need b
 register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 register-needs build-proj can-sign docfx
+register-needs certs
 
 # gather needs from actions
 $actions | foreach-object {
