@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
+using Hazelcast.Exceptions;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -21,110 +21,70 @@ namespace Hazelcast.Tests.Networking
 {
     [TestFixture]
     [Category("enterprise")]
-    [KnownIssue(304, "fail erratically")]
     public class ClientSslMutualAuthTests : ClientSslTestBase
     {
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1()
-        {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
-                true,
-                true,
-                null,
-                null,
-                null,
-                Resources.Cert_Client1,
-                Password);
-        }
+        // when mutual auth is required, the client must provide a cert, and the server must know about it
+        [TestCase(true, true, true, true)]
+        [TestCase(true, true, false, false)]
+        [TestCase(true, false, true, false)]
+        [TestCase(true, false, false, false)]
 
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1KnowsClient1_clientDoesNotProvideCerts()
+        // when mutual auth is optional, the client can provide a cert, and then the server must know about it
+        [TestCase(false, true, true, true)]
+        [TestCase(false, true, false, true)]
+        [TestCase(false, false, true, false)]
+        [TestCase(false, false, false, true)]
+
+        public async Task MutualAuth(bool required, bool knowsClient, bool withCert, bool succeeds)
         {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+            async ValueTask TryStartClientAsync()
             {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
-                true,
-                true,
-                null,
-                null,
-                null,
-                null,
-                null,
-                true);
-            });
-        }
+                var clientCertNumber = knowsClient ? 1 : 2;
+                var clientCertPath = withCert 
+                    ? TestFiles.GetFullPath(this, ClientCertificatePath, $"{ClientCertificatePrefix}client{clientCertNumber}.pfx") 
+                    : null;
 
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthRequired_Server1NotKnowsClient2()
-        {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+                await using var client = await StartClientAsync(
+                    serverXml: GetServerXml_Ma(required: required),
+                    enableSsl: true,
+                    validateCertificateChain: true,
+                    validateCertificateName: false,
+                    clientCertificatePath: clientCertPath,
+                    clientCertificatePassword: ClientCertificatePassword,
+                    failFast: !succeeds // when we expect to fail, reduce timeouts, no point retrying
+                );
+            }
+
+            if (succeeds)
             {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Required,
-                    true,
-                    true,
-                    null,
-                    null,
-                    null,
-                    Resources.Cert_Client2,
-                    Password,
-                    true);
-            });
-        }
-
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1()
-        {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
-                true,
-                true,
-                null,
-                null,
-                null,
-                Resources.Cert_Client1,
-                Password);
-        }
-
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1KnowsClient1_clientDoesNotProvideCerts()
-        {
-            await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
-                true,
-                true,
-                null,
-                null,
-                null,
-                null,
-                null);
-        }
-
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthOptional_Server1NotKnowsClient2()
-        {
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async () =>
+                await TryStartClientAsync();
+            }
+            else
             {
-                await using var client = await StartClientAsync(Resources.Cluster_MA_Optional,
-                    true,
-                    true,
-                    null,
-                    null,
-                    null,
-                    Resources.Cert_Client2,
-                    Password,
-                    true);
-            });
+                await AssertEx.ThrowsAsync<ConnectionException>(TryStartClientAsync);
+            }
         }
 
-        [Test]
-        public async Task TestSSLEnabled_mutualAuthDisabled_Client1()
+        // when mutual auth is disabled, the client cert does not matter
+        [TestCase(true, true)]
+        [TestCase(true, false)]
+        [TestCase(false, true)]
+        [TestCase(false, false)]
+
+        public async Task MutualAuthDisabled(bool knowsClient, bool withCert)
         {
-            await using var client = await StartClientAsync(Resources.Cluster_Ssl_Signed,
-                true,
-                true,
-                null,
-                null,
-                null,
-                Resources.Cert_Client1,
-                Password);
+            var clientCertNumber = knowsClient ? 1 : 2;
+            var clientCertPath = withCert
+                ? TestFiles.GetFullPath(this, ClientCertificatePath, $"{ClientCertificatePrefix}client{clientCertNumber}.pfx")
+                : null;
+
+            await using var client = await StartClientAsync(
+                serverXml: GetServerXml_Ssl(signed: true),
+                enableSsl: true,
+                validateCertificateChain: true,
+                validateCertificateName: null,
+                clientCertificatePath: clientCertPath,
+                clientCertificatePassword: ClientCertificatePassword);
         }
     }
 }

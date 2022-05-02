@@ -546,21 +546,17 @@ function install-root-ca-windows ( $filename, $add = $true ) {
 
         if ($add) {
             if ($existing.Count -eq 0) {
-                $store.Add($cert)
-                write-output "CERTS: added cert '$($cert.Subject)' ($($cert.Thumbprint)) to Cert:\LocalMachine\Root"
-            }
-            else {
+            $store.Add($cert)
+            write-output "CERTS: added cert '$($cert.Subject)' to Cert:\LocalMachine\Root"
+        }
+        else {
                 write-output "CERTS: found cert '$($cert.Subject)' ($($cert.Thumbprint)) already in Cert:\LocalMachine\Root"
             }
         }
         else {
             if ($existing.Count -eq 1) {
-                $store.Remove($cert)
-                write-output "CERTS: removed cert '$($cert.Subject)' ($($cert.Thumbprint)) from Cert:\LocalMachine\Root"
-            }
-            else {
-                write-output "CERTS: cert '$($cert.Subject)' ($($cert.Thumbprint)) not in Cert:\LocalMachine\Root"
-            }
+            $store.Remove($cert)
+            write-output "CERTS: removed cert '$($cert.Subject)' from Cert:\LocalMachine\Root"
         }
     }
     catch {
@@ -579,24 +575,13 @@ function install-root-ca-linux ( $filename, $add = $true ) {
     try {
         $fileonly = [IO.Path]::GetFileName($filename)
         if ($add) {
-            if (-not (test-path "/usr/local/share/ca-certificates/$fileonly")) {
-                sudo cp $filename /usr/local/share/ca-certificates/
-                sudo update-ca-certificates
-                write-output "CERTS: added cert '$fileonly' to /usr/local/share/ca-certificates"
-            }
-            else {
-                write-output "CERTS: found cert '$fileonly' already in /usr/local/share/ca-certificates"
-            }
+            cp $filename /usr/local/share/ca-certificates/
+            update-ca-certificates
         }
         else {
-            if (test-path "/usr/local/share/ca-certificates/$fileonly") {
-                sudo rm /usr/local/share/ca-certificates/$fileonly
-                sudo update-ca-certificates --fresh
-                write-output "CERTS: removed cert '$fileonly' from /usr/local/share/ca-certificates"
-            }
-            else {
-                write-output "CERTS: cert '$fileonly' not in /usr/local/share/ca-certificates"
-            }
+            $fileonly = [IO.Path]::GetFileName($filename)
+            rm /usr/local/share/ca-certificates/$fileonly
+            update-ca-certificates --fresh
         }
         $global:CERTSEXITCODE = 0
     }
@@ -620,7 +605,7 @@ function install-root-ca ( $filename, $add = $true ) {
     }
 }
 
-function remove-root-ca ( $filename ) {
+function remove-root-ca ( $fiename ) {
     install-root-ca $filename $false
 }
 
