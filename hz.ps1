@@ -1134,6 +1134,39 @@ function hz-install-root-ca {
     Write-Output ""
 }
 
+# ensure we have the test certificates, or create them
+function ensure-certs {
+    if ($options.enterprise) {
+        if (test-path "$tmpDir/certs") {
+            Write-Output "Detected $tmpDir/certs directory"
+        }
+        else {
+            Write-Output "Missing $tmpDir/certs directory, generating"
+            hz-generate-certs
+        }
+    }
+}
+
+# generate the test certificates
+function hz-generate-certs {
+    . "$buildDir/certs.ps1"
+    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
+    if ($CERTSEXITCODE) {
+        Die "Failed to generate test certificates."
+    }
+    Write-Output ""
+}
+
+# install the root-ca certificate
+function hz-install-root-ca {
+    . "$buildDir/certs.ps1"
+    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to install the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
 # remove the root-ca certificate
 function hz-remove-root-ca {
     . "$buildDir/certs.ps1"
