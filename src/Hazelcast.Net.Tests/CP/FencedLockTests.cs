@@ -1,6 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,12 +21,33 @@ using Hazelcast.CP;
 using Hazelcast.Exceptions;
 using Hazelcast.Protocol;
 using Hazelcast.Testing;
+using Hazelcast.Tests.CP._;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.CP
 {
+    namespace _
+    {
+        internal static class CPSubsystemExtensions
+        {
+            public static CPSessionManager GetSessionManager(this ICPSubsystem cp)
+                => ((CPSubsystem) cp)._cpSubsystemSession;
+
+            public static async Task CloseGroupSessionAsync(this CPSessionManager sm, ICPGroupId groupId)
+            {
+                await sm.CloseSessionAsync((CPGroupId) groupId, sm.GetSessionId((CPGroupId) groupId));
+            }
+
+            public static void InvalidateGroupSession(this CPSessionManager sm, ICPGroupId groupId)
+                => sm.InvalidateSession((CPGroupId) groupId, sm.GetSessionId((CPGroupId) groupId));
+
+            public static long GetGroupSessionId(this CPSessionManager sm, ICPGroupId groupId)
+                => sm.GetSessionId((CPGroupId) groupId);
+        }
+    }
+    
     [Timeout(30_000)]
-    internal class FencedLockTests : SingleMemberClientRemoteTestBase
+    internal class FencedLockTests : MultiMembersRemoteTestBase
     {
         private IFencedLock _lock;
         private IDisposable HConsoleForTest()
@@ -26,12 +59,32 @@ namespace Hazelcast.Tests.CP
                 .Configure<FencedLock>().SetPrefix("TEST")
                 .Configure<FencedLock>().SetMaxLevel());
 
+        protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
+
+        [OneTimeSetUp]
+        public async Task TestOneTimeSetUp()
+        {
+            // CP-subsystem wants at least 3 members
+            for (var i = 0; i < 3; i++) await AddMember().CfAwait();
+            Client = await CreateAndStartClientAsync().CfAwait();
+        }
+
+        [OneTimeTearDown]
+        public async Task TestOneTimeTearDown()
+        {
+            if (Client == null) return;
+
+            await Client.DisposeAsync();
+            Client = null;
+        }
+
+        public IHazelcastClient Client { get; private set; }
+
         [TearDown]
         public async Task TearDown()
         {
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            await sessionService.CloseSessionAsync((CPGroupId)_lock.GroupId, sessionId);
+            // tear down the CP session after each test, so each test runs its own session
+            await Client.CPSubsystem.GetSessionManager().CloseGroupSessionAsync(_lock.GroupId);
         }
 
         [Test]
@@ -707,13 +760,13 @@ namespace Hazelcast.Tests.CP
 
             long fence = await _lock.LockAndGetFenceAsync();
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            sessionService.InvalidateSession((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            sessionService.InvalidateGroupSession(_lock.GroupId);
 
             await Task.Delay(6_000);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.AreNotEqual(newSessionId, sessionId);
 
@@ -730,13 +783,13 @@ namespace Hazelcast.Tests.CP
 
             await AssertFencedLockValidAsync(_lock, 1, fence);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            sessionService.InvalidateSession((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            sessionService.InvalidateGroupSession(_lock.GroupId);
 
             await Task.Delay(6_000);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.AreNotEqual(newSessionId, sessionId);
 
@@ -753,11 +806,11 @@ namespace Hazelcast.Tests.CP
 
             await AssertFencedLockValidAsync(_lock, 1, fence);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            await sessionService.CloseSessionAsync((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            await sessionService.CloseGroupSessionAsync(_lock.GroupId);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.AreNotEqual(newSessionId, sessionId);
             Assert.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync(TimeSpan.FromSeconds(1)));
@@ -774,11 +827,11 @@ namespace Hazelcast.Tests.CP
 
             await AssertFencedLockValidAsync(_lock, 1, fence);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            await sessionService.CloseSessionAsync((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            await sessionService.CloseGroupSessionAsync(_lock.GroupId);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.AreNotEqual(newSessionId, sessionId);
             Assert.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync());
@@ -796,11 +849,11 @@ namespace Hazelcast.Tests.CP
 
             await AssertFencedLockValidAsync(_lock, 1, fence);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            await sessionService.CloseSessionAsync((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            await sessionService.CloseGroupSessionAsync(_lock.GroupId);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             await DoLockOnAnotherContextAsync(lockName);
 
@@ -821,11 +874,11 @@ namespace Hazelcast.Tests.CP
 
             await AssertFencedLockValidAsync(_lock, 1, fence);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
-            await sessionService.CloseSessionAsync((CPGroupId)_lock.GroupId, sessionId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
+            await sessionService.CloseGroupSessionAsync(_lock.GroupId);
 
-            var newSessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             await DoLockOnAnotherContextAsync(lockName);
 
@@ -849,8 +902,8 @@ namespace Hazelcast.Tests.CP
 
             }).ConfigureAwait(false);
 
-            var sessionService = ((CPSubsystem)Client.CPSubsystem)._cpSubsystemSession;
-            var sessionId = sessionService.GetSessionId((CPGroupId)_lock.GroupId);
+            var sessionService = Client.CPSubsystem.GetSessionManager();
+            var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.That(sessionService.GetAcquiredSessionCount((CPGroupId)_lock.GroupId, sessionId), Is.EqualTo(1));
 

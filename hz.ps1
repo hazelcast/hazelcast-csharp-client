@@ -192,7 +192,7 @@ $actions = @(
     },
     @{ name = "test";
        desc = "runs the tests";
-       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key" )
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
@@ -261,6 +261,18 @@ $actions = @(
     @{ name = "update-doc-version";
        desc = "updates versions in doc version.md";
        note = "The resulting commit still needs to be pushed."
+    },
+    @{ name = "generate-certs";
+       desc = "generates the test certificates";
+       need = @( "certs-tools" )
+    },
+    @{ name = "install-root-ca";
+       desc = "(experimental) installs the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
+    },
+    @{ name = "remove-root-ca";
+       desc = "(experimental) removes the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
     }
 )
 
@@ -325,7 +337,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-$serverVersion = $options.server # use specified value by default FIXME KILL THIS?
+$serverVersion = $options.server # use specified value by default
 $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
@@ -484,7 +496,7 @@ function findLatestVersion($path) {
 # ensures that a command exists in the path
 function ensure-command($command) {
     $r = get-command $command 2>&1
-    if ($nul -eq $r.Name) {
+    if ($null -eq $r.Name) {
         Die "Command '$command' is missing."
     }
     else {
@@ -530,10 +542,6 @@ function determine-server-version {
     # this will be updated below if required
     $script:serverVersion = $version
 
-    # set server version (to filter tests)
-    # this will be updated below if required
-    $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
-
     if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
         return
@@ -545,7 +553,6 @@ function determine-server-version {
         get-master-server-version $r
         $version = $r.version
         Write-Output "Server: determined version $version from GitHub"
-        $env:HAZELCAST_SERVER_VERSION=$version.TrimEnd("-SNAPSHOT")
         $script:serverVersion = $version
     }
 
@@ -589,7 +596,6 @@ function determine-server-version {
         if ($response.StatusCode -eq 200) {
             Write-Output "Server: found version $nodeVersion on Maven, using this version"
             $script:serverVersion = $nodeVersion
-            $env:HAZELCAST_SERVER_VERSION=$nodeVersion.TrimEnd("-SNAPSHOT")
             return;
         }
         else {
@@ -747,9 +753,6 @@ function ensure-server-files {
             ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
             ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
         }
-
-        # ensure we have the hazelcast enterprise test jar
-        ensure-jar "hazelcast-enterprise-${serverVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}:jar:tests"
     }
     else {
 
@@ -1084,11 +1087,60 @@ function ensure-build-proj {
     }
 }
 
+# ensure we have openssl and keytool for certs
+function ensure-certs-tools {
+    ensure-command "openssl"
+    ensure-command "keytool"
+}
+
 function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
         remove-item $dir -force -recurse
     }
+}
+
+# ensure we have the test certificates, or create them
+function ensure-certs {
+    if ($options.enterprise) {
+        if (test-path "$tmpDir/certs") {
+            Write-Output "Detected $tmpDir/certs directory"
+        }
+        else {
+            Write-Output "Missing $tmpDir/certs directory, generating"
+            hz-generate-certs
+        }
+    }
+}
+
+# generate the test certificates
+function hz-generate-certs {
+    . "$buildDir/certs.ps1"
+    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
+    if ($CERTSEXITCODE) {
+        Die "Failed to generate test certificates."
+    }
+    Write-Output ""
+}
+
+# install the root-ca certificate
+function hz-install-root-ca {
+    . "$buildDir/certs.ps1"
+    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to install the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
+# remove the root-ca certificate
+function hz-remove-root-ca {
+    . "$buildDir/certs.ps1"
+    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to remove the ROOT CA certificate."
+    }
+    Write-Output ""
 }
 
 # noop
@@ -1721,7 +1773,8 @@ function start-remote-controller() {
 	}
     else {
         set-content "$tmpDir/rc/pid" $script:remoteController.Id
-        Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
+        set-content "$tmpDir/rc/version" $serverVersion
+        Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
     }
 }
 
@@ -1790,6 +1843,7 @@ function stop-remote-controller() {
         Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
         $script:remoteController.Kill($true) # entire tree
         rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
 	}
     else {
         Write-Output "Remote controller is not running."
@@ -1813,6 +1867,7 @@ function kill-remote-controller() {
         $rcpid = get-content "$tmpDir/rc/pid"
         kill-tree $rcpid
         rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
         Write-Output "Remote controller process $pid has been killed"
     }
 }
@@ -1970,6 +2025,10 @@ function hz-test {
             start-remote-controller
             $ownsrc = $true # we own it and need to stop it
         }
+        $v = get-content "$tmpDir/rc/version"
+        if ($v -ne $serverVersion) {
+            Die "Remote controller runs server version $v not $serverVersion."
+        }
 
         Write-Output ""
         Write-Output "Run tests..."
@@ -1988,6 +2047,19 @@ function hz-test {
 
     Write-Output ""
     Write-Output "Summary:"
+
+    $v = ""
+    foreach ($testResult in $script:testResults) {
+        if ($v -eq "" -and (test-path $testResult)) {
+            get-content $testResult | foreach-object {
+                if ($_ -match '\[\[\[DetectedServerVersion:(?<version>[^\]]*)\]\]\]') {
+                    $v = $Matches.version
+                }
+            }
+        }
+    }
+
+    Write-Output "  $("server version".PadRight(16)) :  $v"
 
     foreach ($testResult in $script:testResults) {
 
@@ -2274,6 +2346,7 @@ register-needs dotnet-complete dotnet-minimal # order is important, if we need b
 register-needs java server-version server-files # ensure server files *after* server version!
 register-needs enterprise-key nuget-api-key
 register-needs build-proj can-sign docfx
+register-needs certs
 
 # gather needs from actions
 $actions | foreach-object {
