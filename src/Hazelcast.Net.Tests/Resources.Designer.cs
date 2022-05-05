@@ -61,26 +61,6 @@ namespace Hazelcast.Tests {
         }
         
         /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Cert_Client1 {
-            get {
-                object obj = ResourceManager.GetObject("Cert_Client1", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Byte[].
-        /// </summary>
-        internal static byte[] Cert_Client2 {
-            get {
-                object obj = ResourceManager.GetObject("Cert_Client2", resourceCulture);
-                return ((byte[])(obj));
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
         ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
         ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
@@ -113,46 +93,6 @@ namespace Hazelcast.Tests {
         internal static string Cluster_Kerberos {
             get {
                 return ResourceManager.GetString("Cluster_Kerberos", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
-        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
-        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
-        ///
-        ///    &lt;network&gt;
-        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
-        ///        &lt;outbound-ports&gt;
-        ///            &lt;!--
-        ///            Allowed port range when connecting to other nodes.
-        ///        [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string Cluster_MA_Optional {
-            get {
-                return ResourceManager.GetString("Cluster_MA_Optional", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
-        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
-        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
-        ///
-        ///    &lt;network&gt;
-        ///        &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
-        ///        &lt;outbound-ports&gt;
-        ///            &lt;!--
-        ///            Allowed port range when connecting to other nodes.
-        ///        [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string Cluster_MA_Required {
-            get {
-                return ResourceManager.GetString("Cluster_MA_Required", resourceCulture);
             }
         }
         
@@ -191,26 +131,6 @@ namespace Hazelcast.Tests {
         internal static string Cluster_Ssl {
             get {
                 return ResourceManager.GetString("Cluster_Ssl", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
-        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
-        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
-        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
-        ///  
-        ///  &lt;network&gt;
-        ///    &lt;port auto-increment=&quot;true&quot; port-count=&quot;100&quot;&gt;5701&lt;/port&gt;
-        ///    &lt;outbound-ports&gt;
-        ///      &lt;!--
-        ///            Allowed port range when connecting to other nodes.
-        ///            0 or * me [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string Cluster_Ssl_Signed {
-            get {
-                return ResourceManager.GetString("Cluster_Ssl_Signed", resourceCulture);
             }
         }
         
