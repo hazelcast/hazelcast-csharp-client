@@ -26,11 +26,7 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class RetryStrategy : IRetryStrategy
     {
-        private int _initialBackOffMilliseconds;
-        private int _maxBackOffMilliseconds;
-        private double _multiplier;
-        private long _timeoutMilliseconds;
-        private double _jitter;
+        private RetryOptions _retryOptions;
 
         private readonly string _action;
         private readonly ILogger _logger;
@@ -71,12 +67,10 @@ namespace Hazelcast.Clustering
 #pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
             _action = action.ToLowerInvariant();
 #pragma warning restore CA1308
-            _initialBackOffMilliseconds = initialBackOffMilliseconds;
-            _maxBackOffMilliseconds = maxBackOffMilliseconds;
+
+            _retryOptions = new RetryOptions(initialBackOffMilliseconds, maxBackOffMilliseconds, multiplier, timeoutMilliseconds, jitter);
             _currentBackOffMilliseconds = initialBackOffMilliseconds;
-            _multiplier = multiplier;
-            _timeoutMilliseconds = timeoutMilliseconds;
-            _jitter = jitter;
+
             _logger = loggerFactory?.CreateLogger<RetryStrategy>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             Restart();
@@ -92,16 +86,16 @@ namespace Hazelcast.Clustering
 
             var elapsed = (int)(DateTime.UtcNow - _begin).TotalMilliseconds;
 
-            _logger.IfDebug()?.LogDebug("Elapsed {Elapsed}ms, timeout={TimeoutMilliseconds}ms, back-off={CurrentBackOffMilliseconds}ms ({InitialBackOffMilliseconds}-{MaxBackOffMilliseconds}, m={Multiplier}, j={Jitter})", elapsed, _timeoutMilliseconds, _currentBackOffMilliseconds, _initialBackOffMilliseconds, _maxBackOffMilliseconds, _multiplier, _jitter);
+            _logger.IfDebug()?.LogDebug("Elapsed {Elapsed}ms, timeout={TimeoutMilliseconds}ms, back-off={CurrentBackOffMilliseconds}ms ({InitialBackOffMilliseconds}-{MaxBackOffMilliseconds}, m={Multiplier}, j={Jitter})", elapsed, _retryOptions.TimeoutMilliseconds, _currentBackOffMilliseconds, _retryOptions.InitialBackoffMilliseconds, _retryOptions.MaxBackoffMilliseconds, _retryOptions.Multiplier, _retryOptions.Jitter);
 
-            if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
+            if (_retryOptions.TimeoutMilliseconds > 0 && elapsed > _retryOptions.TimeoutMilliseconds)
             {
-                _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, timeout ({TimeoutMilliseconds}ms).", _action, _attempts, elapsed, _timeoutMilliseconds);
+                _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, timeout ({TimeoutMilliseconds}ms).", _action, _attempts, elapsed, _retryOptions.TimeoutMilliseconds);
                 return false;
             }
 
-            var delay = (int)(_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
-            delay = Math.Min(delay, Math.Max(0, (int)(_timeoutMilliseconds - elapsed)));
+            var delay = (int)(_currentBackOffMilliseconds * (1 - _retryOptions.Jitter * (1 - RandomProvider.NextDouble())));
+            delay = Math.Min(delay, Math.Max(0, (int)(_retryOptions.TimeoutMilliseconds - elapsed)));
 
             _logger.IfDebug()?.LogDebug("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, will retry in {Delay}ms", _action, _attempts, elapsed, delay);
 
@@ -120,7 +114,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            _currentBackOffMilliseconds = (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            _currentBackOffMilliseconds = (int)Math.Min(_currentBackOffMilliseconds * _retryOptions.Multiplier, _retryOptions.MaxBackoffMilliseconds);
             return true;
         }
 
@@ -128,18 +122,41 @@ namespace Hazelcast.Clustering
         public void Restart()
         {
             _attempts = 0;
-            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
+            _currentBackOffMilliseconds = Math.Min(_retryOptions.MaxBackoffMilliseconds, _retryOptions.InitialBackoffMilliseconds);
             _begin = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
         public void ChangeStrategy(ConnectionRetryOptions options)
         {
-            Interlocked.CompareExchange(ref _initialBackOffMilliseconds, options.InitialBackoffMilliseconds, options.InitialBackoffMilliseconds);
-            Interlocked.CompareExchange(ref _maxBackOffMilliseconds, options.MaxBackoffMilliseconds, options.MaxBackoffMilliseconds);
-            Interlocked.CompareExchange(ref _multiplier, options.Multiplier, options.Multiplier);
-            Interlocked.CompareExchange(ref _timeoutMilliseconds, options.ClusterConnectionTimeoutMilliseconds, options.ClusterConnectionTimeoutMilliseconds);
-            Interlocked.CompareExchange(ref _jitter, options.Jitter, options.Jitter);
+            var newOptions = new RetryOptions(options.InitialBackoffMilliseconds,
+                options.MaxBackoffMilliseconds,
+                options.Multiplier,
+                options.ClusterConnectionTimeoutMilliseconds,
+                options.Jitter);
+
+            _retryOptions = newOptions;
+        }
+
+        /// <summary>
+        /// Internal structure of Retry strategy. It is used to work on options atomically.
+        /// </summary>
+        private struct RetryOptions
+        {
+            public RetryOptions(int initialBackoffMilliseconds, int maxBackoffMilliseconds, double multiplier, long timeoutMilliseconds, double jitter)
+            {
+                InitialBackoffMilliseconds = initialBackoffMilliseconds;
+                MaxBackoffMilliseconds = maxBackoffMilliseconds;
+                Multiplier = multiplier;
+                TimeoutMilliseconds = timeoutMilliseconds;
+                Jitter = jitter;
+            }
+
+            public int InitialBackoffMilliseconds { get; }
+            public int MaxBackoffMilliseconds { get; }
+            public double Multiplier { get; }
+            public long TimeoutMilliseconds { get; }
+            public double Jitter { get; }
         }
     }
 }

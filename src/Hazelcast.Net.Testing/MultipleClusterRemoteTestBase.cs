@@ -75,7 +75,7 @@ namespace Hazelcast.Testing
         protected virtual string RcAlternativeClusterConfiguration => Remote.Resources.alternative;
 
         /// <summary>
-        /// Cluster has 277 partion
+        /// Gets an alternative remote cluster configuration which has 277 partion.
         /// </summary>
         protected virtual string RcPartitionClusterConfiguration => Remote.Resources.partition;
 
@@ -85,15 +85,21 @@ namespace Hazelcast.Testing
         protected Remote.IRemoteControllerClient RcClient { get; private set; }
 
         /// <summary>
-        /// Gets the remote controller cluster.
+        /// Gets the remote controller cluster which is reachable by options.Network. 
+        /// Configured by <see cref="RcClusterConfiguration"/>
         /// </summary>
         protected Remote.Cluster RcClusterPrimary { get; private set; }
 
         /// <summary>
-        /// Uses username password authentication
+        /// An alternative cluster to <see cref="RcClusterPrimary"/>. It is used as failover cluster. It uses username password authentication. 
+        /// Configured by <see cref="RcClusterAlternative"/>
         /// </summary>
         protected Remote.Cluster RcClusterAlternative { get; private set; }
 
+        /// <summary>
+        /// An alternative cluster to <see cref="RcClusterPrimary"/>. It is used as failover cluster and has 277 partitions. 
+        /// Configured by <see cref="RcPartitionClusterConfiguration"/>
+        /// </summary>
         protected Remote.Cluster RcClusterPartition { get; private set; }
 
         /// <summary>
