@@ -97,8 +97,7 @@ An @Hazelcast.IHazelcastClient instance goes through the following @Hazelcast.Cl
 * @Hazelcast.ClientState.Started: the client has started, and is now trying to connect to a first member (transition state)
 * @Hazelcast.ClientState.Connected: the client is connected to at least one member (operational state)
 * @Hazelcast.ClientState.Disconnected: the client has disconnected, due to its last member leaving the cluster, or a network error. Depending on its configuration it will either try to connect again (and transition back to @Hazelcast.ClientState.Connected if successful) or fail and transition to @Hazelcast.ClientState.Shutdown (transition state)
-* @Hazelcast.ClientState.Switching: Client failed, and switching to next cluster. It occurs only `Failover` is enabled.
-* @Hazelcast.ClientState.Switched: Client switched the cluster, and will try to reconnect. It occurs only `Failover` is enabled.
+* @Hazelcast.ClientState.ClientChangedCluster: Client switched the cluster, and will try to reconnect. It occurs only `Failover` is enabled.
 * @Hazelcast.ClientState.ShuttingDown: the client has been disposed, i.e. properly requested to shut down, and is shutting down (transition state)
 * @Hazelcast.ClientState.Shutdown: the client has shut down (final state)
 
