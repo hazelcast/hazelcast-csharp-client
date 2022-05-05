@@ -1,0 +1,508 @@
+= Configuration Options Wrap-Up
+
+This page lists the complete set of options available to configure the Hazelcast .NET client. All of these are provided through the `HazelcastOptions` class; see {apidocBaseUrl}/Hazelcast.HazelcastOptions.html[here] for full documentation of this class.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.ClusterName.html#Hazelcast_HazelcastOptions_ClusterName[`ClusterName`]
+|Gets or sets the name of the cluster.
+
+This must match the name of the cluster that the client is going to connect to.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.ClientName.html#Hazelcast_HazelcastOptions_ClientName[`ClientName`]
+|Gets or sets the name of the client.
+
+This is optional. If no client name is specified, a name will be generated.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.Labels.html#Hazelcast_HazelcastOptions_Labels[`Labels`]
+|Gets the set of client labels.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.LoadBalancer.html#Hazelcast_HazelcastOptions_LoadBalancer[`LoadBalancer`]
+|Gets the {apidocBaseUrl}/Hazelcast.Core.SingletonServiceFactory-1.html[`SingletonServiceFactory<TService>`] for the {apidocBaseUrl}/Hazelcast.Clustering.LoadBalancing.ILoadBalancer.html[`ILoadBalancer`].
+
+When set in the configuration file, it is defined as an injected type, for instance:
+
+[source,json]
+----
+"loadBalancer":
+{
+  "typeName": "My.LoadBalancer",
+  "args":
+  {
+    "foo": 42
+  }
+}
+----
+
+where `typeName` is the name of the type, and `args` is an optional dictionary of arguments for the type constructor.
+In addition to custom type names, `typeName` can be any of the predefined `Random`, `RoundRobin` or `Static` values.
+
+The default load balancer is the {apidocBaseUrl}/Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.html[`RoundRobinLoadBalancer`].
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.ServiceProvider.html#Hazelcast_HazelcastOptions_ServiceProvider[`ServiceProvider`]
+|Gets the https://docs.microsoft.com/dotnet/api/system.iserviceprovider[`IServiceProvider`].
+
+In dependency-injection scenario the service provider may be available, so that service factories can return injected services. In non-dependency-injection scenario, this returns `null`.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.LoggerFactory.html#Hazelcast_HazelcastOptions_LoggerFactory[`LoggerFactory`]
+|Gets the {apidocBaseUrl}/Hazelcast.Core.SingletonServiceFactory-1.html[`SingletonServiceFactory<TService>`] for https://docs.microsoft.com/dotnet/api/microsoft.extensions.logging.iloggerfactory[`ILoggerFactory`].
+
+The only option available for logging is the `ILoggerFactory` creator, which can only be set programmatically. All other logging options (level, etc.) are configured via the default Microsoft configuration system. See https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging[here] for details and documentation.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.PatternMatcher.html#Hazelcast_HazelcastOptions_PatternMatcher[`PatternMatcher`]
+|Gets or sets the configuration pattern matcher.
+
+This can only be set programmatically.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.NearCaches.html#Hazelcast_HazelcastOptions_NearCaches[`NearCaches`]
+|Gets the dictionary which contains {apidocBaseUrl}/Hazelcast.NearCaching.NearCacheOptions.html[`NearCacheOptions`] for each near cache.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.FlakeIdGenerators.html#Hazelcast_HazelcastOptions_FlakeIdGenerators[`FlakeIdGenerators`]
+|Gets the dictionary which contains {apidocBaseUrl}/Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.html[`FlakeIdGeneratorOptions`] for each Flake Id Generator.
+
+|{apidocBaseUrl}/Hazelcast.HazelcastOptions.Subscribers.html#Hazelcast_HazelcastOptions_Subscribers[`Subscribers`]
+|Gets the list of subscribers.
+
+Subscribers can be added to the configuration programmatically via the {apidocBaseUrl}/Hazelcast.HazelcastOptions.AddSubscriber.html#Hazelcast_HazelcastOptions_AddSubscriber_Hazelcast_IHazelcastClientEventSubscriber_[`AddSubscriber(IHazelcastClientEventSubscriber)`] method or any of its overloads. A subscriber is a class that implements {apidocBaseUrl}/Hazelcast.IHazelcastClientEventSubscriber.html[`IHazelcastClientEventSubscriber`] and subscribes the client to events as soon as the client is connected.
+
+In a configuration file, they are defined as an array of injected types, for instance:
+
+[source,json]
+----
+"subscribers": [
+  {
+    "typeName": "My.Subscriber, My.Dll"
+  },
+  {
+    "typeName": "My.OtherSubscriber, My.dll",
+    "args":
+    {
+      "foo": 33
+    }
+  }
+]
+----
+
+where `typeName` is the name of the type, and `args` is an optional dictionary of arguments for the type constructor.
+|===
+
+== Authentication
+
+Access {apidocBaseUrl}/Hazelcast.Clustering.AuthenticationOptions.html[`AuthenticationOptions`] via `options.Authentication`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Clustering.AuthenticationOptions.CredentialsFactory.html#Hazelcast_Clustering_AuthenticationOptions_CredentialsFactory[`CredentialsFactory`]
+|Gets the {apidocBaseUrl}/Hazelcast.Core.SingletonServiceFactory-1.html[`SingletonServiceFactory<TService>`] for the {apidocBaseUrl}/Hazelcast.Security.ICredentialsFactory.html[`ICredentialsFactory`].
+
+When set in the configuration file, it is defined as an injected type, for instance:
+
+[source,json]
+----
+"credentialsFactory":
+{
+  "typeName": "My.CredentialsFactory",
+  "args":
+  {
+    "foo": 42
+  }
+}
+----
+
+where `typeName` is the name of the type, and `args` is an optional dictionary of arguments for the type constructor.
+In addition, shortcuts exists for common credentials factory. The whole `credentialsFactory` block can be omitted and replaced by one of the following:
+
+Username and password:
+
+[source,json]
+----
+"username-password":
+{
+  "username": "someone",
+  "password": "secret"
+}
+----
+
+Kerberos:
+
+[source,json]
+----
+"kerberos":
+{
+  "spn": "service-provider-name"
+}
+----
+
+Token:
+
+[source,json]
+----
+"token":
+{
+  "data": "some-secret-token",
+  "encoding": "none"
+}
+----
+
+Supported encodings are: `none` and `base64`.
+|===
+
+== Heartbeat
+
+Access {apidocBaseUrl}/Hazelcast.Clustering.HeartbeatOptions.html[`HeartbeatOptions`] via `options.Heartbeat`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Clustering.HeartbeatOptions.PeriodMilliseconds.html#Hazelcast_Clustering_HeartbeatOptions_PeriodMilliseconds[`PeriodMilliseconds`]
+|Gets or sets the heartbeat period.
+
+Heartbeat will run periodically, and send a ping request to connections that have not been written to over the previous period.
+
+|{apidocBaseUrl}/Hazelcast.Clustering.HeartbeatOptions.TimeoutMilliseconds.html#Hazelcast_Clustering_HeartbeatOptions_TimeoutMilliseconds[`TimeoutMilliseconds`]
+|Gets or sets the timeout (how long to wait before declaring a connection down).
+
+Heartbeat will consider that connections that have not received data for the timeout duration, although they should have been pinged, are down.
+
+The timeout should be longer than the period.
+|===
+
+== Messaging
+
+Access {apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.html[`MessagingOptions`] via `options.Messaging`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.html#Hazelcast_Messaging_MessagingOptions_MinRetryDelayMilliseconds[`MinRetryDelayMilliseconds`]
+|Gets or sets the minimum retry delay.
+
+|{apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.RetryUnsafeOperations.html#Hazelcast_Messaging_MessagingOptions_RetryUnsafeOperations[`RetryUnsafeOperations`]
+|Whether to retry all operations including unsafe operations.
+
+Operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retry for all operations, set this property to `true`.
+
+However, note that a failed operation leaves the cluster in an undecided state. The cluster may have received the request and executed the operation, but failed to respond to the client. For idempotent operations this is harmless, but for non idempotent ones retrying can cause undesirable effects. Also note that the redo can perform on any member.
+
+For these reasons, this is `false` by default.
+
+|{apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.RetryTimeoutSeconds.html#Hazelcast_Messaging_MessagingOptions_RetryTimeoutSeconds[`RetryTimeoutSeconds`]
+|Gets or sets the invocation timeout.
+
+This is a soft timeout that prevents retrying an invocation for too long in case it fails. It does not controls the duration of a single try, and does not abort it. And invocation single try can run for as long as the connection that supports it remains open.
+
+|{apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.html#Hazelcast_Messaging_MessagingOptions_RetryOnClientReconnecting[`RetryOnClientReconnecting`]
+|Whether to retry an invocation that has failed to start because the client was offline but still active and reconnecting.
+
+This is `true` by default, i.e., if the client got disconnected and is reconnecting, invocations will be retried until they reach their timeout, or the client reconnects. Set this to `false` if you want invocations to fail immediately in case the client gets disconnected, even if it is trying to reconnect.
+
+Note that this only applies to invocation that failed to start, and therefore this is safe for all invocations. See `RetryUnsafeOperations` above for what happens once the invocation has started.
+|===
+
+== Networking
+
+Access {apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.html[`NetworkingOptions`] via `options.Networking`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.Addresses.html#Hazelcast_Networking_NetworkingOptions_Addresses[`Addresses`]
+|Gets or sets the list of initial addresses.
+
+The client uses this list to find a running member and connect to it. This initial member will then send the list of other members to the client.
+
+Each address must be a valid IPv4 or IPv6 address.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.ShuffleAddresses.html#Hazelcast_Networking_NetworkingOptions_ShuffleAddresses[`ShuffleAddresses`]
+|Whether to shuffle addresses when attempting to connect to the cluster.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.SmartRouting.html#Hazelcast_Networking_NetworkingOptions_SmartRouting[`SmartRouting`]
+|Whether smart routing is enabled.
+
+If true (default), client will route the key based operations to owner of the key at the best effort.
+
+Note that it however does not guarantee that the operation will always be executed on the owner, as the member table is only updated every 10 seconds.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.RedoOperations.html#Hazelcast_Networking_NetworkingOptions_RedoOperations[`RedoOperations`]
+|Whether to retry operations.
+
+While sending the requests to related members, operations can fail due to various reasons. Read-only operations are retried by default. If you want to enable retry for the other operations, set this property to `true`.
+
+Note that it is not clear whether the operation is performed or not. For idempotent operations this is harmless, but for non idempotent ones retrying can cause undesirable effects. Also note that the redo can perform on any member.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode[`ReconnectMode`]
+|Gets or sets the ReconnectMode in case the client is disconnected.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.Reconnect.html#Hazelcast_Networking_NetworkingOptions_Reconnect[`Reconnect`]
+|Whether to attempt to automatically reconnect a client that has been disconnected.
+
+This is `true` by default, i.e., a client that has been disconnected but is still active will try to reconnect to the cluster. Set this to `false` if you want it to shut down and never reconnect.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.UsePublicAddresses.html#Hazelcast_Networking_NetworkingOptions_UsePublicAddresses[`UsePublicAddresses`]
+|Whether to use the public addresses of members.
+
+When connecting to clusters where members have different public and internal addresses, this option can be used to indicate whether to use, or not use, the public addresses. When `null` (by default), the client will try to determine which address to use automatically.
+
+|{apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.html#Hazelcast_Networking_NetworkingOptions_ConnectionTimeoutMilliseconds[`ConnectionTimeoutMilliseconds`]
+|Gets or sets the connection timeout.
+
+This timeout is used in various places. It is the connection timeout for each individual socket. It is also the timeout for cloud discovery.
+|===
+
+== SSL
+
+Access {apidocBaseUrl}/Hazelcast.Networking.SslOptions.html[`SslOptions`] via `options.Ssl`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.Enabled.html#Hazelcast_Networking_SslOptions_Enabled[`Enabled`]
+|Whether to enable SSL.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.ValidateCertificateChain.html#Hazelcast_Networking_SslOptions_ValidateCertificateChain[`ValidateCertificateChain`]
+|Whether to validate the certificate chain.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.ValidateCertificateName.html#Hazelcast_Networking_SslOptions_ValidateCertificateName[`ValidateCertificateName`]
+|Whether to validate the certificate name.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.CheckCertificateRevocation.html#Hazelcast_Networking_SslOptions_CheckCertificateRevocation[`CheckCertificateRevocation`]
+|Whether to check for certificate revocation.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.CertificateName.html#Hazelcast_Networking_SslOptions_CertificateName[`CertificateName`]
+|Gets or sets the name of the certificate.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.CertificatePath.html#Hazelcast_Networking_SslOptions_CertificatePath[`CertificatePath`]
+|Gets or sets the full path of the certificate file.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.CertificatePath.html#Hazelcast_Networking_SslOptions_CertificatePassword[`CertificatePassword`]
+|Gets or sets the password for the certificate file.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SslOptions.Protocol.html#Hazelcast_Networking_SslOptions_Protocol[`Protocol`]
+|Gets or sets the SSL protocol.
+
+The protocol must be a member of the https://docs.microsoft.com/dotnet/api/system.security.authentication.sslprotocols[`SslProtocols`] enum, and currently only `Tls`, `Tls11` and `Tls12` are supported, though only the latest is recommended.
+|===
+
+== Cloud
+
+Access {apidocBaseUrl}/Hazelcast.Networking.CloudOptions.html[`CloudOptions`] via `options.Cloud`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Networking.CloudOptions.Enabled.html#Hazelcast_Networking_CloudOptions_Enabled[`Enabled`]
+|Whether Hazelcast Cloud is enabled.
+
+This property is read-only and is set automatically when {apidocBaseUrl}/Hazelcast.Networking.CloudOptions.DiscoveryToken.html#Hazelcast_Networking_CloudOptions_DiscoveryTokenDiscoveryToken is not null nor empty.
+
+|{apidocBaseUrl}/Hazelcast.Networking.CloudOptions.DiscoveryToken.html#Hazelcast_Networking_CloudOptions_DiscoveryToken[`DiscoveryToken`]
+|Gets or sets the discovery token of the cluster.
+
+|{apidocBaseUrl}/Hazelcast.Networking.CloudOptions.Url.html#Hazelcast_Networking_CloudOptions_Url[`Url`]
+|Gets or sets the cloud URL base.
+|===
+
+== Socket
+
+Access {apidocBaseUrl}/Hazelcast.Networking.SocketOptions.html[`SocketOptions`] via `options.Socket`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Networking.SocketOptions.BufferSizeKiB.html#Hazelcast_Networking_SocketOptions_BufferSizeKiB[`BufferSizeKiB`]
+|The send and receive buffers size.
+
+The buffer size is expressed in Kibibytes, ie units of 1024 bytes. This sets the size of both the send and receive buffers.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SocketOptions.KeepAlive.html#Hazelcast_Networking_SocketOptions_KeepAlive[`KeepAlive`]
+|Whether to keep the socket alive.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SocketOptions.LingerSeconds.html#Hazelcast_Networking_SocketOptions_LingerSeconds[`LingerSeconds`]
+|The number of seconds to remain connected after the socket Close() method is called, or zero to disconnect immediately.
+
+|{apidocBaseUrl}/Hazelcast.Networking.SocketOptions.TcpNoDelay.html#Hazelcast_Networking_SocketOptions_TcpNoDelay[`TcpNoDelay`]
+|Whether the socket is using the Nagle algorithm.
+|===
+
+== ConnectionRetry
+
+Access {apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.html[`ConnectionRetryOptions`] via `options.ConnectionRetry`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.InitialBackoffMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_InitialBackoffMilliseconds[`InitialBackoffMilliseconds`]
+|Gets or sets the initial back-off time in milliseconds.
+
+|{apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.MaxBackoffMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_MaxBackoffMilliseconds[`MaxBackoffMilliseconds`]
+|Gets or sets the maximum back-off time in milliseconds.
+
+|{apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.Multiplier.html#Hazelcast_Core_ConnectionRetryOptions_Multiplier[`Multiplier`]
+|Gets or sets the multiplier.
+
+|{apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.ClusterConnectionTimeoutMilliseconds.html#Hazelcast_Core_ConnectionRetryOptions_ClusterConnectionTimeoutMilliseconds[`ClusterConnectionTimeoutMilliseconds `]
+|Gets or sets the timeout in milliseconds.
+
+|{apidocBaseUrl}/Hazelcast.Core.ConnectionRetryOptions.Jitter.html#Hazelcast_Core_ConnectionRetryOptions_Jitter[`Jitter `]
+|Gets or sets the jitter.
+|===
+
+== Events
+
+Access {apidocBaseUrl}/Hazelcast.Events.EventsOptions.html[`EventsOptions`] via `options.Events`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Events.EventsOptions.SubscriptionCollectDelay.html#Hazelcast_Events_EventsOptions_SubscriptionCollectDelay[`SubscriptionCollectDelay`]
+|Gets or sets the delay before collecting subscriptions starts.
+
+|{apidocBaseUrl}/Hazelcast.Events.EventsOptions.SubscriptionCollectPeriod.html#Hazelcast_Events_EventsOptions_SubscriptionCollectPeriod[`SubscriptionCollectPeriod`]
+|Gets or sets the period of the subscription collection.
+
+|{apidocBaseUrl}/Hazelcast.Events.EventsOptions.SubscriptionCollectTimeout.html#Hazelcast_Events_EventsOptions_SubscriptionCollectTimeout[`SubscriptionCollectTimeout`]
+|Gets or sets the subscription collection timeout, after which a subscription is considered dead and removed.
+|===
+
+== Preview
+
+Access {apidocBaseUrl}/Hazelcast.PreviewOptions.html[`PreviewOptions`] via `options.Preview`.
+
+Preview options are unsupported options that are provided to enable behaviors of the client that remain experimental and/or may break backward compatibility.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.PreviewOptions.EnableNewReconnectOptions.html#Hazelcast_PreviewOptions_EnableNewReconnectOptions[`EnableNewReconnectOptions`]
+|(unsupported) Whether to enable the new reconnect options.
+
+The {apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.ReconnectMode.html#Hazelcast_Networking_NetworkingOptions_ReconnectMode[`ReconnectMode`] option specifies a synchronous and an asynchronous mode, but they are both implemented in the same way. These modes actually don't make a lot of sense. And, reconnection is disabled by default.
+
+When the new reconnect options are enabled, this option is ignored, and replaced by the {apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.Reconnect.html#Hazelcast_Networking_NetworkingOptions_Reconnect[`Reconnect`] option, which is a boolean and indicates whether to reconnect or not. It is true by default. Invocations that fail because the client is reconnecting will be retried (all of them, reads and writes) until the client is reconnected, or the invocation times out.
+
+|{apidocBaseUrl}/Hazelcast.PreviewOptions.EnableNewReconnectOptions.html#Hazelcast_PreviewOptions_EnableNewRetryOptions[`EnableNewRetryOptions`]
+|(unsupported) Whether to enable the new retry options.
+
+Retrying failed invocations was originally controlled by the {apidocBaseUrl}/Hazelcast.Networking.NetworkingOptions.RedoOperations.html#Hazelcast_Networking_NetworkingOptions_RedoOperations[`RedoOperations`] option. This option belongs more to messaging, where we may want to enable finer-grain control of retries.
+
+When the new retry options are enabled, this option is ignored and replaced by the {apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.RetryUnsafeOperations.html#Hazelcast_Messaging_MessagingOptions_RetryUnsafeOperations[`RetryUnsafeOperations`] option: all safe (read) operations are retried by default, and this option controls whether to retry unsafe (write) operations. It is `false` by default. In addition, a new option is introduced, {apidocBaseUrl}/Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.html#Hazelcast_Messaging_MessagingOptions_RetryOnClientReconnecting[`RetryOnClientReconnecting`] which controls retries when the operation cannot even start because the client is reconnecting. It is `true` by default.
+|===
+
+== Metrics
+
+Access {apidocBaseUrl}/Hazelcast.Metrics.MetricsOptions.html[`MetricsOptions`] via `options.Metrics`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Metrics.MetricsOptions.Enabled.html#Hazelcast_Metrics_MetricsOptions_Enabled[`Enabled`]
+|Whether client statistics are enabled.
+
+|{apidocBaseUrl}/Hazelcast.Metrics.MetricsOptions.PeriodSeconds.html#Hazelcast_Metrics_MetricsOptions_PeriodSeconds[`PeriodSeconds`]
+|Gets or sets the period at which client metrics are sent to the cluster.
+|===
+
+== Serialization
+
+Access {apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.html[`SerializationOptions`] via `options.Serialization`.
+
+{apidocBaseUrl}/Hazelcast.Serialization.IIdentifiedDataSerializable.html[`IIdentifiedDataSerializable`], {apidocBaseUrl}/Hazelcast.Serialization.IPortable.html[`IPortable`], custom serializers, and global serializer can be configured using this config.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness[`Endianness`]
+|Gets or sets the Endianness. This value should match the server configuration.
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ValidateClassDefinitions[`ValidateClassDefinitions`]
+|Whether to check for class definition errors at start, and throw an Serialization Exception with error definition.
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.PortableVersion.html#Hazelcast_Serialization_SerializationOptions_PortableVersion[`PortableVersion`]
+|Gets or sets the portable version.
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.ClassDefinitions.html#Hazelcast_Serialization_SerializationOptions_ClassDefinitions[`ClassDefinitions`]
+|Gets the collection of {apidocBaseUrl}/Hazelcast.Serialization.IClassDefinition.html[`IClassDefinition`].
+
+This can only be done programmatically.
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.PortableFactories.html#Hazelcast_Serialization_SerializationOptions_PortableFactories[`PortableFactories`]
+|Gets the collection of {apidocBaseUrl}/Hazelcast.Serialization.FactoryOptions-1.html[`FactoryOptions<T>`] of {apidocBaseUrl}/Hazelcast.Serialization.IPortableFactory.html[`IPortableFactory`].
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.DataSerializableFactories.html#Hazelcast_Serialization_SerializationOptions_DataSerializableFactories[`DataSerializableFactories`]
+|Gets the collection of {apidocBaseUrl}/Hazelcast.Serialization.FactoryOptions-1.html[`FactoryOptions<T>`] of {apidocBaseUrl}/Hazelcast.Serialization.IDataSerializableFactory.html[`IDataSerializableFactory`].
+
+|{apidocBaseUrl}/Hazelcast.Serialization.SerializationOptions.Serializers.html#Hazelcast_Serialization_SerializationOptions_Serializers[`Serializers`]
+|Gets the collection of {apidocBaseUrl}/Hazelcast.Serialization.SerializerOptions.html[`SerializerOptions`].
+|===
+
+== GlobalSerializer
+
+Access {apidocBaseUrl}/Hazelcast.Serialization.GlobalSerializerOptions.html[`GlobalSerializerOptions`] via `options.GlobalSerializer`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.Serialization.GlobalSerializerOptions.OverrideClrSerialization.html#Hazelcast_Serialization_GlobalSerializerOptions_OverrideClrSerialization[`OverrideClrSerialization`]
+|Whether to fully override (and ignore) the native CLR serialization.
+|===
+
+== NearCache
+
+Access {apidocBaseUrl}/Hazelcast.NearCaching.CommonNearCacheOptions.html[`CommonNearCacheOptions`] via `options.NearCache`.
+
+[%header,cols="2a,4a"]
+|===
+|Option Name
+|Description
+
+|{apidocBaseUrl}/Hazelcast.NearCaching.CommonNearCacheOptions.ReconciliationIntervalSeconds.html#Hazelcast_NearCaching_CommonNearCacheOptions_ReconciliationIntervalSeconds[`ReconciliationIntervalSeconds`]
+|Gets or sets the reconciliation interval.
+
+|{apidocBaseUrl}/Hazelcast.NearCaching.CommonNearCacheOptions.MinReconciliationIntervalSeconds.html#Hazelcast_NearCaching_CommonNearCacheOptions_MinReconciliationIntervalSeconds[`MinReconciliationIntervalSeconds`]
+|Gets or sets the minimum reconciliation interval.
+
+|{apidocBaseUrl}/Hazelcast.NearCaching.CommonNearCacheOptions.MaxToleratedMissCount.html#Hazelcast_NearCaching_CommonNearCacheOptions_MaxToleratedMissCount[`MaxToleratedMissCount`]
+|Gets or sets the maximum tolerated miss count.
+|===
+
+
+
+
+
+
+
+
+
+
+
+

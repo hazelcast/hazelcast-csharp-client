@@ -1,0 +1,12 @@
+= Configuring for Monitoring
+
+???
+
+== Enabling Client Metrics
+
+???
+
+== Logging Configuration
+
+???
+

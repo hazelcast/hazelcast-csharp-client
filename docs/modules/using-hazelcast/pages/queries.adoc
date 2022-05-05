@@ -1,0 +1,61 @@
+= Queries
+
+Hazelcast partitions your data and spreads it across cluster of members. You can iterate over the map entries and look for certain entries (specified by predicates) you are interested in. However, this is not very efficient because you will have to bring the entire entry set and iterate locally. Instead, Hazelcast allows you to run distributed queries on your distributed map.
+
+== How Distributed Query Works
+
+. The requested predicate is sent to each member in the cluster.
+. Each member looks at its own local entries and filters them according to the predicate. At this stage, key-value pairs of the entries are deserialized and then passed to the predicate.
+. The predicate requester merges all the results coming from each member into a single set.
+
+Distributed query is highly scalable. If you add new members to the cluster, the partition count for each member is reduced and thus the time spent by each member on iterating its entries is reduced. In addition, the pool of partition threads evaluates the entries concurrently in each member, and the network traffic is also reduced since only filtered data is sent to the requester.
+
+=== Predicates Class Operators
+
+There are many built-in `IPredicate` implementations for your query requirements available via `Hazelcast.Query.Predicates` static class. Some of them are explained below.
+
+* `True()`, `False()`: Predicates returning true and hence including all the entries or false for filtering all out.
+* `EqualTo()`, `NotEqualTo()`: Checks if attribute value is equal or not equal to a given value.
+* `InstanceOf()`: Checks if attribute value has a certain type.
+* `Like()`, `ILike()`: Checks if attribute value matches some case-sensitive (like) or case-insensitive (ilike) string pattern. % (percentage sign) is the placeholder for any number of characters, _ (underscore) is placeholder a single character.
+* `GreaterThan()`, `GreaterThanOrEqualTo()`, `LessThan()`, `LessThanOrEqualTo()`: Checks if attribute value is in specified relation with a value.
+* `Between()`: Checks if attribute value is in between two values (both are inclusive).
+* `In()`: Checks if attribute value is an element of a certain list.
+* `Not()`: Negates a provided predicate result.
+* `Match()`: Checks if attribute value matches some regular expression.
+* `Sql()`: Query using SQL syntax.
+
+=== Example using Predicates
+
+Please see the below example code for using `Predicates`.
+
+[source,csharp]
+----
+var users = await client.GetMapAsync<string, User>("users");
+// Add some users to the Distributed Map
+
+// Create a Predicate from a SQL-like Where clause
+var sqlQuery = Predicates.Sql("active AND age BETWEEN 18 AND 21");
+
+// Creating the same Predicate as above but with a builder
+var criteriaQuery = Predicates.And(
+    Predicates.EqualTo("active", true),
+    Predicates.Between("age", 18, 21)
+);
+
+// Get result collections using the two different Predicates
+var result1 = await users.GetValuesAsync(sqlQuery);
+var result2 = await users.GetValuesAsync(criteriaQuery);
+----
+
+== Querying by Combining Predicates
+
+
+== Querying with SQL
+
+== Querying with JSON Strings
+
+== Filtering with Paging Predicates
+
+== Fast-Aggregations
+

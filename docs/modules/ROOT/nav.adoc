@@ -1,19 +1,35 @@
 
 * xref:quickstart.adoc[Quickstart]
 
-.Configuration
-* xref:???.adoc[]
-include::???:partial$nav.adoc[]
+* Configuration
+** xref:configuration:overview.adoc[Configuration Overview]
+** xref:configuration:connections.adoc[Network and Cluster Connections]
+** xref:configuration:security.adoc[Security]
+** xref:configuration:failures.adoc[Handling Failures]
+** xref:configuration:monitoring.adoc[Monitoring]
+** xref:configuration:logging.adoc[Logging]
+** xref:configuration:sys-props.adoc[]
 
-.Serialization
-* xref:???.adoc[]
-include::???:partial$nav.adoc[]
+* Serialization
+** xref:serialization:overview.adoc[Overview]
+** xref:serialization:ids.adoc[IdentifiedDataSerializable]
+** xref:serialization:portable.adoc[Portable]
+** xref:serialization:custom.adoc[Custom]
+** xref:serialization:json.adoc[JSON]
+** xref:serialization:global.adoc[Global]
 
-.Using Hazelcast Features
-* xref:???.adoc[]
-include::???:partial$nav.adoc[]
+* Using Hazelcast Features
+** xref:using-hazelcast:objects.adoc[]
+** xref:using-hazelcast:primitives.adoc[]
+** xref:using-hazelcast:queries.adoc[]
+** xref:using-hazelcast:computing.adoc[]
+** xref:using-hazelcast:cp-subsystem.adoc[]
+** xref:using-hazelcast:locking.adoc[]
 
-* xref:apidoc.adoc[API Documentation]
+* xref:events.adoc[]
+* xref:examples.adoc[]
+* xref:apidoc.adoc[]
+* xref:development.adoc[]
 
-.Release Notes
-* xref:???.doc[]
+* Release Notes
+** xref:release-notes.adoc[]

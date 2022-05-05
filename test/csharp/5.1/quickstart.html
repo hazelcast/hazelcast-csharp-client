@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Quickstart</title>
+    <link rel="canonical" href="http://localhost:5000/csharp/5.1/quickstart.html">
+    <link rel="prev" href="index.html">
+    <link rel="next" href="configuration/overview.html">
+    <meta name="description" content="This tutorial introduces you to Hazelcast&#x27;s .NET client. At the end of this tutorial, you&#x27;ll know how to install the client and connect it a Hazelcast cluster, work with an in-memory storage such as a map, and perform queries using SQL.">
+    <meta name="generator" content="Antora 3.0.1">
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css"
+/>
+<!-- Apply the site styles after the docsearch ones -->
+<link rel="stylesheet" href="../../_/css/site.css">
+<style>
+  .nav-item[data-depth="1"] {
+  color: #6d7480;
+}
+</style>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+<meta name="google-site-verification" content="8R6s5prYCHuUDIJfpL-WfcRCcN-VYjG1ps1o-dKT7Ro" />
+<script src="https://kit.fontawesome.com/11f046e3f7.js" crossorigin="anonymous"></script>
+<script src="https://cdn.lr-ingest.io/LogRocket.min.js" crossorigin="anonymous"></script>
+<script>window.LogRocket && window.LogRocket.init('fppkhg/documentation');</script>
+<link rel="icon" href="../../_/img/favicon.ico" type="image/x-icon">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://hazelcast.com/"><img src="../../_/img/hazelcast-header.svg"></img></a>
+      <a class="navbar-item" id="documentation-header" href="http://localhost:5000">Documentation</img></a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Products</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://hazelcast.com/products/cloud/" onclick="window.open(this.href,'_blank');return false;">Hazelcast Cloud</a>
+            <a class="navbar-item" href="https://hazelcast.com/products/hazelcast-platform/" onclick="window.open(this.href,'_blank');return false;">Hazelcast Platform</a>          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Learn</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="../../home/index.html">Docs</a>
+            <a class="navbar-item" href="https://training.hazelcast.com/" onclick="window.open(this.href,'_blank');return false;">Online Training</a>
+            <a class="navbar-item" href="https://hazelcast.com/resources/" onclick="window.open(this.href,'_blank');return false;">Search All Resources</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Resources</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://hazelcast.com/hub/" onclick="window.open(this.href,'_blank');return false;">Integration Hub</a>
+            <a class="navbar-item" href="https://hazelcast.com/use-cases/" onclick="window.open(this.href,'_blank');return false;">Use Cases</a>
+            <a class="navbar-item" href="https://hazelcast.com/community/" onclick="window.open(this.href,'_blank');return false;">Community</a>
+            <a class="navbar-item" href="https://hazelcast.com/blog/" onclick="window.open(this.href,'_blank');return false;">Blog</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">API Reference</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item"href="https://docs.hazelcast.org/docs/latest/javadoc" onclick="window.open(this.href,'_blank');return false;">Java</a>
+            <a class="navbar-item"href="https://pkg.go.dev/github.com/hazelcast/hazelcast-go-client?tab=versions" onclick="window.open(this.href,'_blank');return false;">Go</a>
+            <a class="navbar-item"href="http://hazelcast.github.io/hazelcast-csharp-client/api-index.html" onclick="window.open(this.href,'_blank');return false;">C#</a>
+            <a class="navbar-item"href="http://hazelcast.github.io/hazelcast-cpp-client/api-index.html" onclick="window.open(this.href,'_blank');return false;">C++</a>
+            <a class="navbar-item" href="https://readthedocs.org/projects/hazelcast/" onclick="window.open(this.href,'_blank');return false;">Python</a>
+            <a class="navbar-item" href="http://hazelcast.github.io/hazelcast-nodejs-client/" onclick="window.open(this.href,'_blank');return false;">Node.js</a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item searchbox">
+            <a id="search-open" ><i class="fa fa-search" aria-hidden="true"></i></a>
+            <input id="search-input" type="text" placeholder="Search docs">
+            <label class="filter checkbox">
+              <input id="facet" type="checkbox" onclick="applyFacetedSearch()"> All products
+            </label>
+        </div>
+        <div class="navbar-item">
+          <a href="https://hazelcast.com/get-started" onclick="window.open(this.href,'_blank');return false;">
+          <button class="button">Get Hazelcast</button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="cookie-banner" id="cookie">
+<p>
+    This website uses cookies to give you the best experience.
+    <a href="https://hazelcast.com/privacy/">Learn more</a>
+  </p>
+<button class="close" id="cookie-close">Close</button>
+</div></header>
+<div class="body">
+<div class="nav-container" data-component="csharp" data-version="5.1">
+  <aside class="nav">
+      <div class="nav-panel-explore" data-panel="explore">
+    <div class="context">
+      <span class="title">.NET</span>
+        <span class="version">5.2-SNAPSHOT</span>
+      <button class="nav-item-toggle nav-explore-toggle"></button>
+    </div>
+  <ul class="components">
+    <li style="list-style: none;">Select a different product or version:</li>
+    </br>
+        <li class="component is-current">
+            <span class="title">.NET <a class="more-versions">See all versions</a><a class="fewer-versions">See fewer versions</a></span>
+          <ul class="versions">
+                    <li class="version is-current is-latest">
+                      <a href="index.html">5.2-SNAPSHOT</a>
+                    </li>
+          </ul>
+        </li>
+  </ul>
+</div>
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+  <ul class="nav-list">
+      <li class="nav-item" data-depth="0">
+          <ul class="nav-list">
+      <li class="nav-item is-current-page" data-depth="1">
+            <a class="nav-link
+
+            " href="quickstart.html">Quickstart</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Configuration</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/overview.html">Configuration Overview</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/connections.html">Network and Cluster Connections</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/security.html">Security</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/failures.html">Handling Failures</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/monitoring.html">Monitoring</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/logging.html">Logging</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/sys-props.html">Configuration Options Wrap-Up</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Serialization</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/overview.html">Overview</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/ids.html">IdentifiedDataSerializable</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/portable.html">Portable</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/custom.html">Custom</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/json.html">JSON</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/global.html">Global</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Using Hazelcast Features</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/objects.html">Distributed Objects</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/primitives.html">Primitives</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/queries.html">Queries</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/computing.html">Computing</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/cp-subsystem.html">CP Subsystem</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/locking.html">Locking</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="events.html">Events</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="examples.html">Example Codes</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="apidoc.html">API Documentation</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="development.html">Development and Contributing</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Release Notes</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="release-notes.html">5.2 Release Notes</a>
+              </li>
+  </ul>
+      </li>
+  </ul>
+      </li>
+  </ul>
+  </nav>
+</div>
+    </div>
+  </aside>
+</div>
+<div id="hide-nav">
+  <button>
+    <span>
+      ᐸ
+    </span>
+  </button>
+</div>
+<main class="article">
+    <script>
+    function closeBanner() {
+      document.getElementById('latest-banner').style.display = 'none'
+      const now = new Date()
+      const item = {
+        expiry: now.getTime() + 86400,
+      }
+      localStorage.setItem('latestBannerCookie', JSON.stringify(item))
+    }
+  </script>
+  <div class="content">
+<article class="doc">
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">.NET</a></li>
+    <li><a href="quickstart.html">Quickstart</a></li>
+  </ul>
+</nav>
+<button class="nav-toggle"></button>
+<h1 class="page">Quickstart</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Hazelcast .NET client brings the full power of the Hazelcast high-performance, in-memory computing platform to the Microsoft .NET ecosystem.
+The client allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures
+such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.</p>
+</div>
+<div class="paragraph">
+<div class="title">NET client supports most of the Hazelcast features; see <a href="https://hazelcast.com/clients/dotnet/#client-features">here</a>.</div>
+<p>This tutorial introduces you to Hazelcast&#8217;s .NET client. At the end of this tutorial, you&#8217;ll know how to install the client and connect it a Hazelcast cluster, work with an in-memory storage such as a map, and perform queries using SQL.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="before-you-begin"><a class="anchor" href="#before-you-begin"></a>Before You Begin</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To complete this tutorial, you need the following:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>The Hazelcast .NET client is distributed as a NuGet package which targets .NET Standard versions 2.0 and 2.1.
+It can therefore be used in any application targeting .NET versions that support these .NET Standard versions:</p>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://dotnet.microsoft.com/en-us/download/dotnet-framework">.NET Framework</a> 4.6.2 and newer, on Windows</p>
+</li>
+<li>
+<p>.NET Core <a href="https://dotnet.microsoft.com/en-us/download/dotnet/2.1">2.1</a> and <a href="https://dotnet.microsoft.com/en-us/download/dotnet/3.1">3.1</a>, on Windows, Linux and MacOS</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><a href="https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell?view=powershell-7.2">PowerShell</a> shell and scripting language.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The upcoming .NET 5 version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step-1-installation"><a class="anchor" href="#step-1-installation"></a>Step 1. Installation</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The .NET client is distributed via NuGet as a package named <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.NET</a>.
+You can install it like any other NuGet package, either via the Visual Studio GUI, or via the package manager:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">PM&gt; Install-Package Hazelcast.NET</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or via the .NET CLI:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">&gt; dotnet add package Hazelcast.NET</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Or by manually adding to the project as a package reference:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">&lt;PackageReference Include="Hazelcast.NET" Version="5.1-SNAPSHOT" /&gt;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In addition, when installing in a .NET Framework project,
+some binding redirects are currently required. Although we try hard to align all our dependencies,
+there are some inconsistencies even within Microsoft&#8217;s own packages that it is not possible to avoid redirects entirely.
+You can enable <code>&lt;AutoGenerateBindingRedirects&gt;</code> in your project file, and Visual Studio should populate your
+application config files with the appropriate binding redirects.</p>
+</div>
+<div class="paragraph">
+<p>Alternatively, the following redirects should be sufficient at the moment:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-xml hljs" data-lang="xml">&lt;assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"&gt;
+  &lt;dependentAssembly&gt;
+    &lt;assemblyIdentity name="System.Buffers" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" /&gt;
+    &lt;bindingRedirect oldVersion="0.0.0.0-4.0.3.0" newVersion="4.0.3.0" /&gt;
+  &lt;/dependentAssembly&gt;
+&lt;/assemblyBinding&gt;
+&lt;assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"&gt;
+  &lt;dependentAssembly&gt;
+    &lt;assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" /&gt;
+   &lt;bindingRedirect oldVersion="0.0.0.0-5.0.0.0" newVersion="5.0.0.0" /&gt;
+  &lt;/dependentAssembly&gt;
+&lt;/assemblyBinding&gt;</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step-2-start-a-hazelcast-cluster"><a class="anchor" href="#step-2-start-a-hazelcast-cluster"></a>Step 2. Start a Hazelcast Cluster</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Start a cluster with the default settings using either of the following ways:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="#cloud:getting-started.adoc" class="xref unresolved">Hazelcast Cloud</a></p>
+</li>
+<li>
+<p><a href="#hazelcast:getting-started:quickstart.adoc" class="xref unresolved">Hazelcast CLI</a></p>
+</li>
+<li>
+<p><a href="#hazelcast:getting-started:get-started-docker.adoc" class="xref unresolved">Docker</a></p>
+</li>
+<li>
+<p><a href="#hazelcast:getting-started:get-started-binary.adoc" class="xref unresolved">Binary distributions</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When you done, you will have a Hazelcast with a single server on your local machine (if you&#8217;ve used CLI, Docker or binary distributions).</p>
+</div>
+<div class="paragraph">
+<p>If you want to use Hazelcast Cloud, follow <a href="#cloud:net-client.adoc" class="xref unresolved">these instructions</a>.</p>
+</div>
+<div class="paragraph">
+<p>Alternatively, the Hazelcast .NET client <a href="https://github.com/hazelcast/hazelcast-csharp-client">repository</a> on GitHub provides a
+Powershell script which can be used to download and run a Hazelcast test server. For instance, the following downloads and starts a server version 5.2-SNAPSHOT:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">PS&gt; ./hz.ps1 run-server -server 5.2-SNAPSHOT</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let&#8217;s use Docker for this tutorial by executing the following command on a terminal:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">docker run -it --rm -p 5701:5701 hazelcast/hazelcast:5.2-SNAPSHOT</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step-3-connect-to-the-cluster"><a class="anchor" href="#step-3-connect-to-the-cluster"></a>Step 3. Connect to the Cluster</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Once the client is installed and a default cluster is started, you&#8217;re ready to use the Hazelcast client in your .NET application.
+Connect your client to the cluster with this single line:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await using var client = await HazelcastClientFactory.StartNewClientAsync();</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is enough to connect to the cluster you&#8217;ve created in Step 2 with default settings. When you run it, you will see the client is connected to the cluster.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-shell hljs" data-lang="shell">???
+[DefaultLogger] INFO at LifecycleService: HazelcastClient is STARTING
+[DefaultLogger] INFO at LifecycleService: HazelcastClient is STARTED
+[DefaultLogger] INFO at ConnectionManager: Trying to connect to 127.0.0.1:5701
+[DefaultLogger] INFO at LifecycleService: HazelcastClient is CONNECTED
+[DefaultLogger] INFO at ConnectionManager: Authenticated with server 172.17.0.2:5701:6d3e6437-ca4b-4c90-8f96-84757fd028c2, server version: 5.2-SNAPSHOT, local address: 127.0.0.1:51818
+[DefaultLogger] INFO at ClusterService:
+Members [1] {
+    Member [172.17.0.2]:5701 - 6d3e6437-ca4b-4c90-8f96-84757fd028c2
+}
+???</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You can also build the <code>HazelcastOptions</code> factory with options and start the client to connect to the cluster with the provided options.
+A simple example is as follows.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var options = HazelcastOptions.Build();
+options.Networking.Addresses.Add("127.0.0.1"); <i class="conum" data-value="1"></i><b>(1)</b>
+options.ClusterName = "dev"; <i class="conum" data-value="2"></i><b>(2)</b>
+options.ClientName = "MyClient"; <i class="conum" data-value="3"></i><b>(3)</b>
+
+await using var client = await HazelcastClientFactory.StartNewClientAsync(options); <i class="conum" data-value="4"></i><b>(4)</b></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>IP addresses of one or more servers in the cluster. For this example, this is the localhost (127.0.0.1) from Step 2 since you&#8217;ve created a single-server cluster on your local machine.
+If you have multiple servers, you can provide their addresses separated by comma. The client uses the addresses provided here to find and connect
+to a running cluster member server. It is still enough to provide only one server&#8217;s IP address; this initial member then sends the list of other members to the client.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Name of the Hazelcast cluster. You&#8217;ve started a cluster with default settings in Step 2, which assigns the default name <code>dev</code> to the cluster. So you don&#8217;t need to explicitly provide it. However,
+if you created a cluster with a name different than the default one, you need to provide that cluster name here.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Name for your client, which is optional. This may be useful when you want to monitor your client on, for example, Hazelcast Management Center to easily spot the name of the client.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>See the <a href="configuration/connections.html" class="xref page">configuration</a> for more options available for the .NET client.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step-4-work-with-an-in-memory-storage"><a class="anchor" href="#step-4-work-with-an-in-memory-storage"></a>Step 4. Work with an In-Memory Storage</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Let&#8217;s manipulate a distributed map on a cluster using the client.</p>
+</div>
+<div class="paragraph">
+<p>Save the following file as <code>it.js</code> and run it using <code>node it.js</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await using var map = await client.GetMapAsync&lt;string, int&gt;("personnel-map");
+
+await map.SetAsync("Alice", IT));
+await map.SetAsync("Bob", IT));
+await map.SetAsync("Clark", IT));
+
+
+console.log('Added IT personnel. Logging all known personnel');
+const allPersonnel = await personnelMap.entrySet();
+allPersonnel.forEach(function (person) {
+    console.log(`${person[0]} is in ${person[1]} department`);
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You will see the following output.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-plain hljs" data-lang="plain">???
+Added IT personnel. Logging all known personnel
+Alice is in IT department
+Clark is in IT department
+Bob is in IT department
+???</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The example puts all the IT personnel into a cluster-wide <code>personnel-map</code> and then prints all the known personnel.</p>
+</div>
+<div class="paragraph">
+<p>Now, create a <code>sales.js</code> file as shown below and run it using <code>node sales.js</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">const client = await Client.newHazelcastClient();
+const personnelMap = await client.getMap('personnelMap');
+await personnelMap.put('Denise', 'Sales');
+await personnelMap.put('Erwing', 'Sales');
+await personnelMap.put('Faith', 'Sales');
+console.log('Added Sales personnel. Logging all known personnel');
+const allPersonnel = await personnelMap.entrySet();
+allPersonnel.forEach(function (person) {
+    console.log(`${person[0]} is in ${person[1]} department`);
+});</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You will see the following output.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-plain hljs" data-lang="plain">Added Sales personnel. Logging all known personnel
+Denise is in Sales department
+Erwing is in Sales department
+Faith is in Sales department
+Alice is in IT department
+Clark is in IT department
+Bob is in IT department</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>sales.js</code> code adds only the sales employees, but you get the list all known employees
+including the ones in IT. That is because <code>personnelMap</code> lives in the cluster and no matter which client you use,
+you can access the whole map.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="step-5-work-with-sql"><a class="anchor" href="#step-5-work-with-sql"></a>Step 5. Work with SQL</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>You can query the entries of a map in your cluster using SQL from your Node.js app.</p>
+</div>
+<div class="paragraph">
+<p>Create a map called <code>employees</code> that contains values of type <code>Employee</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">class Employee {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+        this.factoryId = 1;
+        this.classId = 2;
+    }
+    readPortable(reader) {
+        this.name = reader.readString('name');
+        this.age = reader.readInt('age');
+    }
+    writePortable(writer) {
+        writer.writeString('name', this.name);
+        writer.writeInt('age', this.age);
+    }
+}
+const employees = await client.getMap('employees');
+await employees.set(1, new Employee('John Doe', 33));
+await employees.set(2, new Employee('Jane Doe', 29));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Before starting to query data, you must create a mapping for the <code>employees</code> map.
+The <code>CREATE MAPPING</code> SQL statement is used for this; you can refer to <a href="#sql:create-mapping.adoc" class="xref unresolved">here</a> for its details.
+For the <code>Employee</code> class above, the mapping statement is shown below. It is enough to create the mapping once per map.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">await client.getSql().execute(`
+    CREATE MAPPING IF NOT EXISTS employees (
+        __key DOUBLE,
+        name VARCHAR,
+        age INT
+    )
+    TYPE IMap
+    OPTIONS (
+      'keyFormat' = 'double',
+      'valueFormat' = 'portable',
+      'valuePortableFactoryId' = '1',
+      'valuePortableClassId' = '2'
+    )
+`);</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The following code prints names of the employees whose age is less than 30:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-javascript hljs" data-lang="javascript">const sqlResult = await client.getSql().execute('SELECT name FROM employees WHERE age &lt; 30');
+for await (const row of sqlResult) {
+    console.log(row.name); // Jane Doe
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>See the full <a href="https://github.com/hazelcast/hazelcast-nodejs-client/blob/master/code_samples/sql-basic-usage.js">sample code</a> for a basic SQL usage.
+See <a href="#nodejs-samples.adoc" class="xref unresolved">here</a> for more SQL usages by the Node.js client.
+See <a href="#sql:sql-overview">here</a> to learn Hazelcast&#8217;s SQL feature in detail.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="next-steps"><a class="anchor" href="#next-steps"></a>Next Steps</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>See <a href="#nodejs-conf.adoc" class="xref unresolved">here</a> on how to configure and fine-tune your client.</p>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="index.html">.NET</a></span>
+  <span class="next"><a href="configuration/overview.html">Configuration Overview</a></span>
+</nav>
+</article>
+<aside class="toc sidebar" data-title="Contents" data-levels="1">
+  <div class="toc-menu">
+  </div>
+  </br>
+<div id="feedback-prompt">
+  <form name="docs-feedback" id="feedback-form" netlify-honeypot="bot-field" method="POST" data-netlify="true">
+    <label>Was this page helpful?</label><br>
+    <p class="hidden">
+    <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+    </p>
+    <input type="radio" id="yes" name="helpful" value="yes" onclick="submitForm()">
+    <label for="yes" id="yes-button"><i class="far fa-check-circle"></i> Yes</label>
+    <input type="radio" id="no" name="helpful" value="no" onclick="submitForm()">
+    <label for="no" id="no-button"><i class="far fa-times-circle"></i> No</label><br>
+    </select>
+</form>
+</div>
+<script>
+  function submitForm() {
+    document.getElementById("feedback-form").submit();
+  }
+</script>
+  <div class="edit-this-page"><a class="git-pull" href="file:///Users/serdarozmen/Desktop/hazelcast-csharp-client/docs/modules/ROOT/pages/quickstart.adoc" onclick="window.open(this.href,'_blank');return false;">Edit this page</a></div>
+</aside>
+  </div>
+</main>
+
+</div>
+<footer class="footer">
+  <a href="https://hazelcast.com/terms-of-use/">Terms of service</a>
+  <a href="https://hazelcast.com/privacy/">Privacy</a>
+  <a href="https://hazelcast.com/contact/">Contact us</a>
+</footer>
+<script src="../../_/js/site.js"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
+  <script>
+    const search = window.docsearch({
+      apiKey: 'ef7bd9485eafbd75d6e8425949eda1f5',
+      indexName: 'prod_hazelcast_docs',
+      appId: 'QK2EAH8GB0',
+      inputSelector: '#search-input',
+      // Set debug to true to inspect the dropdown
+      debug: false,
+      // Display 25 results in the dropdown
+      // and search only the current product
+      algoliaOptions: { hitsPerPage: 25, facetFilters: ["tags:csharp-5.1"] },
+    });
+  </script>
+  <script>
+    function closeBanner() {
+      var banner = document.getElementById('latest-banner')
+      if (banner) {
+        banner.style.display = 'none'
+        const now = new Date()
+        const item = {
+          expiry: now.getTime() + 86400000,
+        }
+        localStorage.setItem('latestBannerCookie', JSON.stringify(item))
+      }
+    }
+  </script>
+  </body>
+</html>

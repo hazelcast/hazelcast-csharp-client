@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Events</title>
+    <link rel="canonical" href="http://localhost:5000/csharp/5.1/events.html">
+    <link rel="prev" href="using-hazelcast/locking.html">
+    <link rel="next" href="examples.html">
+    <meta name="generator" content="Antora 3.0.1">
+<link
+rel="stylesheet"
+href="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.css"
+/>
+<!-- Apply the site styles after the docsearch ones -->
+<link rel="stylesheet" href="../../_/css/site.css">
+<style>
+  .nav-item[data-depth="1"] {
+  color: #6d7480;
+}
+</style>
+<link rel="preconnect" href="https://fonts.gstatic.com">
+<link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+<meta name="google-site-verification" content="8R6s5prYCHuUDIJfpL-WfcRCcN-VYjG1ps1o-dKT7Ro" />
+<script src="https://kit.fontawesome.com/11f046e3f7.js" crossorigin="anonymous"></script>
+<script src="https://cdn.lr-ingest.io/LogRocket.min.js" crossorigin="anonymous"></script>
+<script>window.LogRocket && window.LogRocket.init('fppkhg/documentation');</script>
+<link rel="icon" href="../../_/img/favicon.ico" type="image/x-icon">
+  </head>
+  <body class="article">
+<header class="header">
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <a class="navbar-item" href="https://hazelcast.com/"><img src="../../_/img/hazelcast-header.svg"></img></a>
+      <a class="navbar-item" id="documentation-header" href="http://localhost:5000">Documentation</img></a>
+      <button class="navbar-burger" data-target="topbar-nav">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </div>
+    <div id="topbar-nav" class="navbar-menu">
+      <div class="navbar-start">
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Products</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://hazelcast.com/products/cloud/" onclick="window.open(this.href,'_blank');return false;">Hazelcast Cloud</a>
+            <a class="navbar-item" href="https://hazelcast.com/products/hazelcast-platform/" onclick="window.open(this.href,'_blank');return false;">Hazelcast Platform</a>          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Learn</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="../../home/index.html">Docs</a>
+            <a class="navbar-item" href="https://training.hazelcast.com/" onclick="window.open(this.href,'_blank');return false;">Online Training</a>
+            <a class="navbar-item" href="https://hazelcast.com/resources/" onclick="window.open(this.href,'_blank');return false;">Search All Resources</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">Resources</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item" href="https://hazelcast.com/hub/" onclick="window.open(this.href,'_blank');return false;">Integration Hub</a>
+            <a class="navbar-item" href="https://hazelcast.com/use-cases/" onclick="window.open(this.href,'_blank');return false;">Use Cases</a>
+            <a class="navbar-item" href="https://hazelcast.com/community/" onclick="window.open(this.href,'_blank');return false;">Community</a>
+            <a class="navbar-item" href="https://hazelcast.com/blog/" onclick="window.open(this.href,'_blank');return false;">Blog</a>
+          </div>
+        </div>
+        <div class="navbar-item has-dropdown is-hoverable">
+          <a class="navbar-link" href="#" onclick="return false">API Reference</a>
+          <div class="navbar-dropdown">
+            <a class="navbar-item"href="https://docs.hazelcast.org/docs/latest/javadoc" onclick="window.open(this.href,'_blank');return false;">Java</a>
+            <a class="navbar-item"href="https://pkg.go.dev/github.com/hazelcast/hazelcast-go-client?tab=versions" onclick="window.open(this.href,'_blank');return false;">Go</a>
+            <a class="navbar-item"href="http://hazelcast.github.io/hazelcast-csharp-client/api-index.html" onclick="window.open(this.href,'_blank');return false;">C#</a>
+            <a class="navbar-item"href="http://hazelcast.github.io/hazelcast-cpp-client/api-index.html" onclick="window.open(this.href,'_blank');return false;">C++</a>
+            <a class="navbar-item" href="https://readthedocs.org/projects/hazelcast/" onclick="window.open(this.href,'_blank');return false;">Python</a>
+            <a class="navbar-item" href="http://hazelcast.github.io/hazelcast-nodejs-client/" onclick="window.open(this.href,'_blank');return false;">Node.js</a>
+          </div>
+        </div>
+      </div>
+      <div class="navbar-end">
+        <div class="navbar-item searchbox">
+            <a id="search-open" ><i class="fa fa-search" aria-hidden="true"></i></a>
+            <input id="search-input" type="text" placeholder="Search docs">
+            <label class="filter checkbox">
+              <input id="facet" type="checkbox" onclick="applyFacetedSearch()"> All products
+            </label>
+        </div>
+        <div class="navbar-item">
+          <a href="https://hazelcast.com/get-started" onclick="window.open(this.href,'_blank');return false;">
+          <button class="button">Get Hazelcast</button>
+          </a>
+        </div>
+      </div>
+    </div>
+  </nav>
+  <div class="cookie-banner" id="cookie">
+<p>
+    This website uses cookies to give you the best experience.
+    <a href="https://hazelcast.com/privacy/">Learn more</a>
+  </p>
+<button class="close" id="cookie-close">Close</button>
+</div></header>
+<div class="body">
+<div class="nav-container" data-component="csharp" data-version="5.1">
+  <aside class="nav">
+      <div class="nav-panel-explore" data-panel="explore">
+    <div class="context">
+      <span class="title">.NET</span>
+        <span class="version">5.2-SNAPSHOT</span>
+      <button class="nav-item-toggle nav-explore-toggle"></button>
+    </div>
+  <ul class="components">
+    <li style="list-style: none;">Select a different product or version:</li>
+    </br>
+        <li class="component is-current">
+            <span class="title">.NET <a class="more-versions">See all versions</a><a class="fewer-versions">See fewer versions</a></span>
+          <ul class="versions">
+                    <li class="version is-current is-latest">
+                      <a href="index.html">5.2-SNAPSHOT</a>
+                    </li>
+          </ul>
+        </li>
+  </ul>
+</div>
+    <div class="panels">
+<div class="nav-panel-menu is-active" data-panel="menu">
+  <nav class="nav-menu">
+  <ul class="nav-list">
+      <li class="nav-item" data-depth="0">
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="quickstart.html">Quickstart</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Configuration</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/overview.html">Configuration Overview</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/connections.html">Network and Cluster Connections</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/security.html">Security</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/failures.html">Handling Failures</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/monitoring.html">Monitoring</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/logging.html">Logging</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="configuration/sys-props.html">Configuration Options Wrap-Up</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Serialization</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/overview.html">Overview</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/ids.html">IdentifiedDataSerializable</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/portable.html">Portable</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/custom.html">Custom</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/json.html">JSON</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="serialization/global.html">Global</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Using Hazelcast Features</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/objects.html">Distributed Objects</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/primitives.html">Primitives</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/queries.html">Queries</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/computing.html">Computing</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/cp-subsystem.html">CP Subsystem</a>
+              </li>
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="using-hazelcast/locking.html">Locking</a>
+              </li>
+  </ul>
+      </li>
+      <li class="nav-item is-current-page" data-depth="1">
+            <a class="nav-link
+
+            " href="events.html">Events</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="examples.html">Example Codes</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="apidoc.html">API Documentation</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+            <a class="nav-link
+
+            " href="development.html">Development and Contributing</a>
+              </li>
+      <li class="nav-item" data-depth="1">
+              <span class="nav-text">Release Notes</span>
+              <button class="nav-item-toggle"></button>
+          <ul class="nav-list">
+      <li class="nav-item" data-depth="2">
+            <a class="nav-link
+
+            " href="release-notes.html">5.2 Release Notes</a>
+              </li>
+  </ul>
+      </li>
+  </ul>
+      </li>
+  </ul>
+  </nav>
+</div>
+    </div>
+  </aside>
+</div>
+<div id="hide-nav">
+  <button>
+    <span>
+      ᐸ
+    </span>
+  </button>
+</div>
+<main class="article">
+    <script>
+    function closeBanner() {
+      document.getElementById('latest-banner').style.display = 'none'
+      const now = new Date()
+      const item = {
+        expiry: now.getTime() + 86400,
+      }
+      localStorage.setItem('latestBannerCookie', JSON.stringify(item))
+    }
+  </script>
+  <div class="content">
+<article class="doc">
+<nav class="breadcrumbs" aria-label="breadcrumbs">
+  <ul>
+    <li><a href="index.html">.NET</a></li>
+    <li><a href="events.html">Events</a></li>
+  </ul>
+</nav>
+<button class="nav-toggle"></button>
+<h1 class="page">Events</h1>
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>Events in the Hazelcast .NET Client rely on a handler-based model close to the C# <code>event</code> model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. Indeed, the following code has limitations:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">thing.Updated += OnThingUpdated;
+thing.Deleted += OnThingDeleted;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here,</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>the operations are distinct, whereas Hazelcast subscriptions can handle multiple events at once</p>
+</li>
+<li>
+<p>the subscription is synchronous, whereas Hazelcast needs to notify the members of the subscription</p>
+</li>
+<li>
+<p>the handlers, e.g., <code>OnThingUpdated</code> are synchronous.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="hazelcast-events"><a class="anchor" href="#hazelcast-events"></a>Hazelcast Events</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>To overcome these limitations, the Hazelcast .NET Client uses the following syntax:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var id = await thing.SubscribeAsync(events =&gt; events
+    .Updated(OnThingUpdated)
+    .Deleted(OnThingDeleted));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Here, the handlers can be synchronous, for instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">private void OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{
+    ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>But they can also be asynchronous, for instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">private async ValueTask OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{
+    await ...
+}</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>In the example, the two events are subscribed at once and that subscription is represented by the returned <code>id</code>, which is a <code>Guid</code>. The two events can only be unsubscribed at once too, by passing this <code>id</code> back to the <code>UnsubscribeAsync</code> method:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">await thing.UnsubscribeAsync(id);
+Subscribing involves exchanging messages with the server, and takes time. Where traditional C# happily does:
+
+thing.Updated += DoThis;
+thing.Updated += AlsoDoThis;</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>It would be much more efficient to group the two handlers:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var id = await thing.SubscribeAsync(events =&gt; events
+    .Updated((sender, args) =&gt;
+    {
+        DoThis(sender, args);
+        AlsoDoThis(sender, args);
+    }));</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is also the only way to guarantee the order of execution of the two handlers, as the order in which events trigger is not specified, and should not be relied upon.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="client-events"><a class="anchor" href="#client-events"></a>Client Events</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.IHazelcastClient.html">IHazelcastClient</a> exposes the following events:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><code>StateChanged</code> triggers when the client state changes</p>
+</li>
+<li>
+<p><code>PartitionLost</code> triggers when a partition is lost</p>
+</li>
+<li>
+<p><code>PartitionsUpdated</code> triggers when the partitions table is updated</p>
+</li>
+<li>
+<p><code>MembersUpdated</code> triggers when the members list is updated</p>
+</li>
+<li>
+<p><code>ObjectCreated</code> triggers when a distributed object is created</p>
+</li>
+<li>
+<p><code>ObjectDestroyed</code> triggers when a distributed object is destroyed</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>The <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.IHazelcastClient.html">IHazelcastClient</a> directly supports subscribing to events. For instance:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlightjs highlight"><code class="language-csharp hljs" data-lang="csharp">var id = await client.SubscribeAsync(events =&gt; events
+    .StateChanged((sender, args) =&gt; {
+        System.Console.WriteLine($"New client state: {args.State}");
+    }));</code></pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="statechanged"><a class="anchor" href="#statechanged"></a>StateChanged</h3>
+<div class="paragraph">
+<p>This event triggers whenever the state of the client changes. Handles receive an instance of the <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.StateChangedEventArgs.html">StateChangedEventArgs</a> class, which exposes the following property:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.StateChangedEventArgs.State.html#Hazelcast_StateChangedEventArgs_State">State</a>: the new <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html">ClientState</a></p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>An <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.IHazelcastClient.html">IHazelcastClient</a> instance goes through the following <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html">ClientState</a> states:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Starting">Starting</a>: the client is starting and has not started to connect to members yet (transition state)</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Started">Started</a>: the client has started, and is now trying to connect to a first member (transition state)</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Connected">Connected</a>: the client is connected to at least one member (operational state)</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Disconnected">Disconnected</a>: the client has disconnected, due to its last member leaving the cluster, or a network error. Depending on its configuration it will either try to connect again (and transition back to <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Connected">Connected</a> if successful) or fail and transition to <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown">Shutdown</a> (transition state)</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_ShuttingDown">ShuttingDown</a>: the client has been disposed, i.e., properly requested to shut down, and is shutting down (transition state)</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown">Shutdown</a>: the client has shut down (final state)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="partitionlost"><a class="anchor" href="#partitionlost"></a>PartitionLost</h3>
+<div class="paragraph">
+<p>This event triggers whenever the server notifies the client that a partition has been lost, usually because a member carrying that partition has left the cluster. Handlers receive an instance of the <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.PartitionLostEventArgs.html">PartitionLostEventArgs</a> class, which exposes the following properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.PartitionLostEventArgs.PartitionId.html#Hazelcast_Events_PartitionLostEventArgs_PartitionId">PartitionId</a>: the identifier of the lost partition</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.PartitionLostEventArgs.LostBackupCount.html#Hazelcast_Events_PartitionLostEventArgs_LostBackupCount">LostBackupCount</a>: how many backups were lost</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.PartitionLostEventArgs.IsAllReplicasInPartitionLost.html#Hazelcast_Events_PartitionLostEventArgs_IsAllReplicasInPartitionLost">IsAllReplicasInPartitionLost</a>: whether all replicas were lost</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.PartitionLostEventArgs.Member.html#Hazelcast_Events_PartitionLostEventArgs_Member">Member</a>: the member that was lost</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect2">
+<h3 id="partitionsupdated"><a class="anchor" href="#partitionsupdated"></a>PartitionsUpdated</h3>
+<div class="paragraph">
+<p>This event triggers whenever the server notifies the client of a new partitions list. This happens when the partitions list changes, but also periodically when the server wants to ensure that clients are aware of partitions. Handlers do not receive any event arguments.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="membersupdated"><a class="anchor" href="#membersupdated"></a>MembersUpdated</h3>
+<div class="paragraph">
+<p>This event triggers whenever the server notifies the client of a new members list. This happens when members are added or removed from the cluster, but also periodically when the server wants to ensure that clients know about members. Handlers receive an instance of the <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.MembersUpdatedEventArgs.html">MembersUpdatedEventArgs</a> class, which exposes the following properties:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.MembersUpdatedEventArgs.AddedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_AddedMembers">AddedMembers</a>: a collection of <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing the members that were added to the cluster</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.MembersUpdatedEventArgs.RemovedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_RemovedMembers">RemovedMembers</a>: a collection of <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing the members that were removed from the cluster</p>
+</li>
+<li>
+<p><a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Events.MembersUpdatedEventArgs.Members.html#Hazelcast_Events_MembersUpdatedEventArgs_Members">Members</a>: a collection of <a href="http://hazelcast.github.io/hazelcast-csharp-client/latest/api//Hazelcast.Models.MemberInfo.html">MemberInfo</a> representing all members in the cluster</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+<nav class="pagination">
+  <span class="prev"><a href="using-hazelcast/locking.html">Locking</a></span>
+  <span class="next"><a href="examples.html">Example Codes</a></span>
+</nav>
+</article>
+<aside class="toc sidebar" data-title="Contents" data-levels="1">
+  <div class="toc-menu">
+  </div>
+  </br>
+<div id="feedback-prompt">
+  <form name="docs-feedback" id="feedback-form" netlify-honeypot="bot-field" method="POST" data-netlify="true">
+    <label>Was this page helpful?</label><br>
+    <p class="hidden">
+    <label>Don’t fill this out if you’re human: <input name="bot-field" /></label>
+    </p>
+    <input type="radio" id="yes" name="helpful" value="yes" onclick="submitForm()">
+    <label for="yes" id="yes-button"><i class="far fa-check-circle"></i> Yes</label>
+    <input type="radio" id="no" name="helpful" value="no" onclick="submitForm()">
+    <label for="no" id="no-button"><i class="far fa-times-circle"></i> No</label><br>
+    </select>
+</form>
+</div>
+<script>
+  function submitForm() {
+    document.getElementById("feedback-form").submit();
+  }
+</script>
+  <div class="edit-this-page"><a class="git-pull" href="file:///Users/serdarozmen/Desktop/hazelcast-csharp-client/docs/modules/ROOT/pages/events.adoc" onclick="window.open(this.href,'_blank');return false;">Edit this page</a></div>
+</aside>
+  </div>
+</main>
+
+</div>
+<footer class="footer">
+  <a href="https://hazelcast.com/terms-of-use/">Terms of service</a>
+  <a href="https://hazelcast.com/privacy/">Privacy</a>
+  <a href="https://hazelcast.com/contact/">Contact us</a>
+</footer>
+<script src="../../_/js/site.js"></script>
+<script async src="../../_/js/vendor/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docsearch.js@2/dist/cdn/docsearch.min.js"></script>
+  <script>
+    const search = window.docsearch({
+      apiKey: 'ef7bd9485eafbd75d6e8425949eda1f5',
+      indexName: 'prod_hazelcast_docs',
+      appId: 'QK2EAH8GB0',
+      inputSelector: '#search-input',
+      // Set debug to true to inspect the dropdown
+      debug: false,
+      // Display 25 results in the dropdown
+      // and search only the current product
+      algoliaOptions: { hitsPerPage: 25, facetFilters: ["tags:csharp-5.1"] },
+    });
+  </script>
+  <script>
+    function closeBanner() {
+      var banner = document.getElementById('latest-banner')
+      if (banner) {
+        banner.style.display = 'none'
+        const now = new Date()
+        const item = {
+          expiry: now.getTime() + 86400000,
+        }
+        localStorage.setItem('latestBannerCookie', JSON.stringify(item))
+      }
+    }
+  </script>
+  </body>
+</html>

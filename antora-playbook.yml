@@ -3,7 +3,7 @@
 site:
   title: Documentation
   url: ??? netlify staging
-  start_page: csharp:ROOT:index.adoc
+  start_page: csharp:ROOT:quickstart.adoc
   keys:
     docsearch_id: 'QK2EAH8GB0'
     docsearch_api: 'ef7bd9485eafbd75d6e8425949eda1f5'
@@ -26,3 +26,5 @@ asciidoc:
     idseparator: '-'
     # Variables used in the docs
     page-survey: https://www.surveymonkey.co.uk/r/NYGJNF9
+  extensions:
+    - ./docs-tabs-library/tabs-block.js
