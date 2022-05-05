@@ -54,13 +54,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "github", "github", "{0C348B
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{B5D6257C-DD75-4E7E-A779-EC9152AA6B28}"
 	ProjectSection(SolutionItems) = preProject
+		.github\workflows\assign-milestones.js = .github\workflows\assign-milestones.js
+		.github\workflows\assign-milestones.yml = .github\workflows\assign-milestones.yml
 		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
 		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
-		.github\workflows\build-release.yml = .github\workflows\trigger-release.yml
-		.github\workflows\build-release.yml = .github\workflows\release-scripts.js
 		.github\workflows\jira-label.yml = .github\workflows\jira-label.yml
+		.github\workflows\release-scripts.js = .github\workflows\release-scripts.js
 		.github\workflows\report-pr.yml = .github\workflows\report-pr.yml
+		.github\workflows\trigger-release.yml = .github\workflows\trigger-release.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}"
