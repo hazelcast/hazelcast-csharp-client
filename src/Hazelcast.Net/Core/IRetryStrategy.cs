@@ -32,7 +32,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Changes options of strategy.
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="options">The new options for the strategy.</param>
         void ChangeStrategy(ConnectionRetryOptions options);
 
         /// <summary>

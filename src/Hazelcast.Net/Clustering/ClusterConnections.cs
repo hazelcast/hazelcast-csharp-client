@@ -140,16 +140,12 @@ namespace Hazelcast.Clustering
                         exception = null;
                         details = "failed (member is not active)";
                     }
-                    else if (exception is ClientNotAllowedInClusterException)
-                    {
-                        connectionRequest.Complete(success: false);
-                        break;
-                    }
                     else if (exception is TimeoutException)
                     {
                         exception = null;
                         details = "failed (socket timeout)";
                     }
+                    //ClientNotAllowedInClusterException is reported here.
                     else if (exception != null)
                         details = $"failed ({exception.GetType()}: {exception.Message})";
                     _logger.IfWarning()?.LogWarning(exception, "Could not connect to member {MemberId} at {ConnectAddress}: {Details}.", member.Id.ToShortString(), member.ConnectAddress, details);
@@ -394,7 +390,8 @@ namespace Hazelcast.Clustering
             {
                 if (e is ClientNotAllowedInClusterException && _clusterState.IsFailoverEnabled)
                 {
-                    throw;//if failover enabled, client can try other clusters
+                    // we have failover, initiate it.
+                    await _clusterState.ChangeStateAndWait(ClientState.Disconnected).CfAwait();
                 }
                 else
                 {
@@ -546,8 +543,8 @@ namespace Hazelcast.Clustering
                             }
                             else if (attempt.Exception is ClientNotAllowedInClusterException)
                             {
-                                _logger.LogWarning("Failed to connect to cluster since client is not allowed.");
-                                throw attempt.Exception;
+                                _logger.LogWarning($"Failed to connect to cluster since client is not allowed. " +
+                                    $"Exception:{nameof(ClientNotAllowedInClusterException)}, Message:{attempt.Exception.Message}");
                             }
                             else
                             {
@@ -561,12 +558,7 @@ namespace Hazelcast.Clustering
                             _logger.IfDebug()?.LogDebug("Failed to connect to address {Address}.", address);
                         }
                     }
-                }
-                catch (ClientNotAllowedInClusterException ex)
-                {
-                    // no need to furher try
-                    throw;
-                }
+                }               
                 catch (Exception e)
                 {
                     // the GetClusterAddresses() enumerator itself can throw, if a configured
@@ -770,14 +762,10 @@ namespace Hazelcast.Clustering
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
 
             // notify partitioner
-            try
-            {
-                _clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount);
-            }
-            catch (Exception e)
+            if (!_clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount))
             {
                 await connection.DisposeAsync().CfAwait(); // does not throw
-                throw;
+                throw new ClientNotAllowedInClusterException($"Received partition count value {result.PartitionCount} but expected {_clusterState.Partitioner.Count}.");
             }
 
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();

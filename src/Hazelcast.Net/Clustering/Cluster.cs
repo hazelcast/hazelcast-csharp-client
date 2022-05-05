@@ -181,15 +181,8 @@ namespace Hazelcast.Clustering
             if (!changed)
                 throw new ConnectionException("Failed to connected (aborted).");
 
-            // connect
-            try
-            {
-                await Connections.ConnectAsync(cancellationToken).CfAwait();
-            }
-            catch (ClientNotAllowedInClusterException e)
-            {
-                await State.ChangeStateAndWait(ClientState.Disconnected).CfAwait();                
-            }
+            // connect            
+            await Connections.ConnectAsync(cancellationToken).CfAwait();
         }
 
         /// <inheritdoc />

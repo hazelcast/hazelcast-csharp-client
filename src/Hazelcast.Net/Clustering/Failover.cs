@@ -71,8 +71,7 @@ namespace Hazelcast.Clustering
 
             _clusterEnumerator = _clusters.GetEnumerator();
             ResetToFirstCluster();
-
-            _isEnabled = options.Failover.Enabled;
+                        
             _maxTryCount = options.Failover.TryCount;
 
             HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.FAILOVER"));
