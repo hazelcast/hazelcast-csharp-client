@@ -85,6 +85,7 @@ namespace Hazelcast.Clustering
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<MemberConnection>();
 
+            MemberAddress = address; // may change after connection is established.
             HConsole.Configure(x => x.Configure<MemberConnection>().SetIndent(4).SetPrefix("MBR.CONN"));
         }
 
@@ -144,6 +145,11 @@ namespace Hazelcast.Clustering
         /// Gets the network address the client is connected to.
         /// </summary>
         public NetworkAddress Address { get; }
+
+        /// <summary>
+        /// Gets the network address reported by the member.
+        /// </summary>
+        public NetworkAddress MemberAddress { get; private set; }
 
         /// <summary>
         /// Gets the local endpoint of the socket connection.
@@ -219,6 +225,7 @@ namespace Hazelcast.Clustering
             ClusterId = result.ClusterId;
             ConnectTime = DateTimeOffset.Now;
             Principal = result.Principal;
+            MemberAddress = result.MemberAddress;
 
             bool disposed;
             lock (_mutex)
