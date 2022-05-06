@@ -71,17 +71,9 @@ namespace Hazelcast.Clustering
 
             _members = new MemberTable();
 
-            _clusterState.StateChanged += (state) =>
+            _clusterState.ClusterOptionsChanged += (options) =>
             {
-                if (state == ClientState.ClientChangedCluster)
-                    Clear();
-
-                return default;
-            };
-
-            _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
-            {
-                _loadBalancer = options.LoadBalancer?.Service ?? _loadBalancer;
+                Clear();
             };
 
             // members to connect

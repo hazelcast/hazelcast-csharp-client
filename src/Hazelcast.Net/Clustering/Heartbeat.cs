@@ -51,14 +51,7 @@ namespace Hazelcast.Clustering
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
-
-            _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
-            {
-                if (options.Heartbeat == null) return;
-
-                InitializeDuration(options.Heartbeat);
-            };
-
+            
             if (options.PeriodMilliseconds < 0)
             {
                 _logger.LogInformation("Heartbeat is disabled (period < 0)");

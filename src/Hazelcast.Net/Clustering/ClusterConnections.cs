@@ -38,7 +38,7 @@ namespace Hazelcast.Clustering
         private readonly ClusterMembers _clusterMembers;
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
-        private readonly SerializationService _serializationService;
+        
 
         // member id -> connection
         // TODO: consider we are duplicating this with members?
@@ -65,10 +65,9 @@ namespace Hazelcast.Clustering
         {
             _clusterState = clusterState;
             _clusterMembers = clusterMembers;
-            _serializationService = serializationService;
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterConnections>();
-            _authenticator = new Authenticator(_clusterState.Options.Authentication, _serializationService, _clusterState.LoggerFactory);
+            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
             _connectRetryStrategy = new RetryStrategy("connect to cluster", _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
 
             if (_clusterState.IsSmartRouting)
@@ -79,7 +78,7 @@ namespace Hazelcast.Clustering
             //Cluster changed, renew options if necessary.
             _clusterState.ClusterOptionsChanged += (ClusterOptions options) =>
             {
-                _authenticator = new Authenticator(options.Authentication, _serializationService, _clusterState.LoggerFactory);
+                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
 
                 _connectRetryStrategy.ChangeStrategy(options.Networking.ConnectionRetry);
             };
