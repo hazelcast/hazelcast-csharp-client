@@ -60,6 +60,20 @@ namespace Hazelcast.Testing
         }
 
         /// <summary>
+        /// Shutdowns a member from the cluster.
+        /// </summary>
+        /// <param name="memberId">The identifier of the member to remove.</param>
+        /// <returns>A task that will complete when the member has been shutdown.</returns>
+        protected async Task ShutdownMember(Guid memberId)
+        {
+            if (RcMembers.TryRemove(memberId, out var member))
+            {
+                await RcClient.ShutdownMemberAsync(RcCluster.Id, member.Uuid);
+            }
+        }
+
+
+        /// <summary>
         /// Gets the remote members.
         /// </summary>
         protected ConcurrentDictionary<Guid, Member> RcMembers { get; } = new ConcurrentDictionary<Guid, Member>();
