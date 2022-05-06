@@ -24,20 +24,22 @@ namespace Hazelcast.Testing.TestServer
     /// <summary>
     /// Represents a server listener.
     /// </summary>
+    /// <remarks>
+    /// <para>The server listener is not thread-safe in some ways, e.g. trying to stop it
+    /// while it is starting, and other exotic operations, are going to produce unspecified
+    /// results.</para>
+    /// <para>The server listener is not fully multi-threaded.</para>
+    /// </remarks>
     internal sealed class ServerSocketListener : IAsyncDisposable
     {
-        private readonly ManualResetEvent _accepted = new ManualResetEvent(false);
-        private readonly ISequence<int> _connectionIdSequence = new Int32Sequence();
-
         private readonly IPEndPoint _endpoint;
         private readonly string _hcname;
 
-        private Socket _socket;
-        private CancellationTokenSource _cancellationTokenSource;
-        private ServerSocketConnection _serverConnection;
         private Action<ServerSocketConnection> _onAcceptConnection;
         private Func<ServerSocketListener, ValueTask> _onShutdown;
-        private Task _listeningThenShutdown;
+        private Socket _listeningSocket;
+        private bool _stopped;
+        private Task _accepting;
         private int _isActive;
 
         /// <summary>
@@ -62,7 +64,7 @@ namespace Hazelcast.Testing.TestServer
         { }
 
         /// <summary>
-        /// Gets or sets the function that accepts connections.
+        /// Gets or sets the action that will be executed when a connection has been accepted.
         /// </summary>
         public Action<ServerSocketConnection> OnAcceptConnection
         {
@@ -71,19 +73,22 @@ namespace Hazelcast.Testing.TestServer
             get => _onAcceptConnection;
             set
             {
-                if (_isActive == 1)
+                if (_isActive == 1 || _stopped)
                     throw new InvalidOperationException("Cannot set the property once the listener is active.");
 
                 _onAcceptConnection = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
 
+        /// <summary>
+        /// Gets or sets the action that will be executed when the listener has shut down.
+        /// </summary>
         public Func<ServerSocketListener, ValueTask> OnShutdown
         {
             get => _onShutdown;
             set
             {
-                if (_isActive == 1)
+                if (_isActive == 1 || _stopped)
                     throw new InvalidOperationException("Cannot set the property once the listener is active.");
 
                 _onShutdown = value ?? throw new ArgumentNullException(nameof(value));
@@ -94,20 +99,26 @@ namespace Hazelcast.Testing.TestServer
         /// Starts listening.
         /// </summary>
         /// <returns>A task that will complete when the listener has started listening.</returns>
+        /// <remarks>
+        /// <para>The listener must be disposed in order to stop. It cannot be restarted.</para>
+        /// </remarks>
         public Task StartAsync()
         {
+            if (_stopped)
+                throw new InvalidOperationException("Cannot start a listener that has been stopped.");
+
             HConsole.WriteLine(this, "Start listener");
 
             if (_onAcceptConnection == null)
                 throw new InvalidOperationException("No connection handler has been configured.");
 
             HConsole.WriteLine(this, "Create listener socket");
-            _socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            _listeningSocket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             try
             {
-                _socket.Bind(_endpoint);
-                _socket.Listen(10);
+                _listeningSocket.Bind(_endpoint);
+                _listeningSocket.Listen(10);
             }
             catch (Exception e)
             {
@@ -116,140 +127,58 @@ namespace Hazelcast.Testing.TestServer
                 throw;
             }
 
-            _cancellationTokenSource = new CancellationTokenSource();
-
-            _listeningThenShutdown = Task.Run(() =>
-            {
-                HConsole.WriteLine(this, "Start listening");
-                Interlocked.Exchange(ref _isActive, 1);
-                var waitHandles = new[] { _accepted, _cancellationTokenSource.Token.WaitHandle };
-                while (true)
-                {
-                    // set the event to non-signaled state
-                    _accepted.Reset();
-
-                    // start an asynchronous socket to listen for connections
-                    HConsole.WriteLine(this, "Listening");
-                    _socket.BeginAccept(AcceptCallback, _socket);
-
-                    // TODO consider doing things differently (low)
-                    // we could do this and remain purely async, and then onAcceptConnection
-                    // could be async too, etc - and we'd need to benchmark to see what is
-                    // faster...
-                    //var handler = _socket.AcceptAsync();
-                    // ...
-
-                    // wait until a connection is accepted or listening is cancelled
-                    var n = WaitHandle.WaitAny(waitHandles);
-                    if (n == 1) break;
-                }
-                HConsole.WriteLine(this, "Stop listening");
-
-            }, CancellationToken.None).ContinueWith(ShutdownInternal, default, default, TaskScheduler.Current);
+            _accepting = AcceptAsync(_listeningSocket);
 
             HConsole.WriteLine(this, "Started listener");
 
             return Task.CompletedTask;
         }
 
-        private async Task ShutdownInternal(Task task)
+        // reference: https://github.com/davidfowl/DotNetCodingPatterns/blob/main/2.md
+        // except here we want to be able to control when to stop accepting
+
+        private async Task AcceptAsync(Socket socket)
         {
+            HConsole.WriteLine(this, "Start listening");
+            Interlocked.Exchange(ref _isActive, 1);
+
+            while (!_stopped)
+            {
+                try
+                {
+                    Accept(await socket.AcceptAsync().CfAwait());
+                }
+                catch { /* stopped */ }
+            }
+
+            HConsole.WriteLine(this, "Stop listening");
             if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
                 return;
 
-            HConsole.WriteLine(this, "Shutdown socket");
-            //_socket.Shutdown(SocketShutdown.Both);
-            _socket.Close();
-            _socket.Dispose();
-
-            HConsole.WriteLine(this, "Listener is down");
-
             // notify
-            if (_onShutdown != null)
-                await _onShutdown(this).CfAwait();
-        }
-
-        /// <summary>
-        /// Stops listening.
-        /// </summary>
-        /// <returns>A task that will complete when the listener has stopped listening.</returns>
-        public async ValueTask StopAsync()
-        {
-            HConsole.WriteLine(this, "Stop listener");
-
-            _cancellationTokenSource?.Cancel();
-            if (_listeningThenShutdown != null)
-                await _listeningThenShutdown.CfAwait();
-
-            HConsole.WriteLine(this, "Stopped listener");
+            if (_onShutdown != null) await _onShutdown.AwaitEach(this).CfAwait();
         }
 
         /// <summary>
         /// Accepts a connection.
         /// </summary>
-        /// <param name="result">The status of the asynchronous listening.</param>
-        private void AcceptCallback(IAsyncResult result)
+        private void Accept(Socket socket)
         {
             HConsole.WriteLine(this, "Accept connection");
-
-            // signal the main thread to continue
-            try
-            {
-                _accepted.Set();
-            }
-            catch
-            {
-                // can happen if the listener has been disposed
-                // ignore
-            }
-
-            // get the socket that handles the client request
-            var listener = (Socket) result.AsyncState;
-
-            Socket handler;
-            try
-            {
-                // may throw if the socket is not connected anymore
-                // also when the server is stopping
-                handler = listener.EndAccept(result);
-            }
-            catch (Exception e)
-            {
-                if (_isActive == 0)
-                {
-                    HConsole.WriteLine(this, "Ignore exception (listener is down)");
-                }
-                else if (_cancellationTokenSource.IsCancellationRequested)
-                {
-                    HConsole.WriteLine(this, "Abort connection (listened is shutting down)");
-                }
-                else
-                {
-                    _cancellationTokenSource.Cancel();
-                    HConsole.WriteLine(this, "Abort connection");
-                }
-                HConsole.WriteLine(this, e);
-                return;
-            }
 
             try
             {
                 // we now have a connection
-                _serverConnection = new ServerSocketConnection(Guid.NewGuid(), handler, _hcname);
-                _onAcceptConnection(_serverConnection);
+                _onAcceptConnection(new ServerSocketConnection(Guid.NewGuid(), socket, _hcname));
             }
             catch (Exception e)
             {
                 HConsole.WriteLine(this, "Failed to accept a connection");
                 HConsole.WriteLine(this, e);
-                HConsole.WriteLine(this, _cancellationTokenSource.IsCancellationRequested
-                    ? "Abort connection (server is stopping)"
-                    : "Abort connection");
 
                 try
                 {
-                    handler.Shutdown(SocketShutdown.Both);
-                    handler.Dispose();
+                    socket.Dispose();
                 }
                 catch { /* ignore */}
             }
@@ -258,28 +187,14 @@ namespace Hazelcast.Testing.TestServer
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            try
-            {
-                _accepted.Dispose();
-            }
-            catch { /* ignore */ }
+            if (_stopped) return;
 
             try
             {
-                if (_serverConnection != null)
-                    await _serverConnection.DisposeAsync().CfAwait();
-            }
-            catch { /* ignore */ }
-
-            try
-            {
-                _socket.Dispose();
-            }
-            catch { /* ignore */ }
-
-            try
-            {
-                _cancellationTokenSource.Dispose();
+                _stopped = true;
+                if (_listeningSocket != null) _listeningSocket.Dispose();
+                if (_accepting != null) await _accepting.CfAwait();
+                HConsole.WriteLine(this, "Stopped listener");
             }
             catch { /* ignore */ }
         }

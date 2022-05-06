@@ -68,9 +68,6 @@ namespace Hazelcast.Tests.Core
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
-            // which derives from SocketException - use a constraint so NUnit is happy
-
             await AssertEx.ThrowsAsync<SocketException>(async () =>
             {
                 // socket exception, connection refused
@@ -87,9 +84,6 @@ namespace Hazelcast.Tests.Core
 
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
-            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
-            // which derives from SocketException - use a constraint so NUnit is happy
-
             await AssertEx.ThrowsAsync<SocketException>(async () =>
             {
                 // socket exception, connection refused
@@ -104,9 +98,6 @@ namespace Hazelcast.Tests.Core
 
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
-
-            // for some reason netstandard throws System.Net.Internals.SocketExceptionFactory+ExtendedSocketException
-            // which derives from SocketException - use a constraint so NUnit is happy
 
             await AssertEx.ThrowsAsync<SocketException>(async () =>
             {

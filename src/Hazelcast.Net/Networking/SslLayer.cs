@@ -48,7 +48,7 @@ namespace Hazelcast.Networking
             // https://referencesource.microsoft.com/#System/net/System/Net/SecureProtocols/_SslState.cs,5d0d274f6285d5dd
 
             var p = typeof(ServicePointManager).GetProperty("DisableSystemDefaultTlsVersions", BindingFlags.Static | BindingFlags.NonPublic);
-            return p == null || ! (bool) p.GetValue(null);
+            return p == null || !(bool)p.GetValue(null);
         }
 
         public SslLayer(SslOptions options, ILoggerFactory loggerFactory)
@@ -67,7 +67,12 @@ namespace Hazelcast.Networking
 
             var clientCertificates = GetClientCertificatesOrDefault();
 
-            var targetHost = _options.CertificateName ?? ""; // TODO: uh?!
+            // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
+            // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
+            // options.CertificateName *must* be set to the server certificate name.
+
+            var targetHost = _options.CertificateName ?? "";
+            _logger.LogDebug("TargetHost: {TargetHost}", targetHost);
 
             // _options.Protocol is 'None' by default
             //
@@ -106,7 +111,7 @@ namespace Hazelcast.Networking
                 throw new ConnectionException("Failed to establish an SSL connection (see inner exception).", e);
             }
 
-            _logger.LogInformation($"Established SSL connection, protocol {sslStream.SslProtocol}, {(sslStream.IsEncrypted?"":"not ")}encrypted, {(sslStream.IsMutuallyAuthenticated?"":"not ")}mutually authenticated");
+            _logger.LogInformation($"Established SSL connection, protocol {sslStream.SslProtocol}, {(sslStream.IsEncrypted ? "" : "not ")}encrypted, {(sslStream.IsMutuallyAuthenticated ? "" : "not ")}mutually authenticated");
 
             return sslStream;
         }
@@ -127,7 +132,7 @@ namespace Hazelcast.Networking
             }
             catch (Exception e)
             {
-                _logger.LogWarning(e, $"Failed to load client certificate at \"{_options.CertificatePath}\".");
+                _logger.IfWarning()?.LogWarning(e, "Failed to load client certificate at \"{CertificatePath}\".", _options.CertificatePath);
                 throw;
             }
 
@@ -149,8 +154,7 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateChain)
                 {
-                    _logger.LogWarning($"SSL certificate error: {policyErrors} (chain status: " +
-                                       $" {string.Join(", ", chain.ChainStatus.Select(x => x.StatusInformation))}).");
+                    _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors} (chain status: {StatusInformations}).", policyErrors, string.Join(", ", chain.ChainStatus.Select(x => x.StatusInformation)));
                     validation = false;
                 }
                 else
@@ -163,7 +167,13 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateName)
                 {
-                    _logger.LogWarning($"SSL certificate error: {policyErrors}.");
+                    var name = "";
+                    try
+                    {
+                        name = $" (cert name: '{cert.Subject}')";
+                    }
+                    catch { /* bah */ }
+                    _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}{Name}.", policyErrors, name);
                     validation = false;
                 }
                 else
@@ -174,7 +184,7 @@ namespace Hazelcast.Networking
 
             if (policyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
             {
-                _logger.LogWarning($"SSL certificate error: {policyErrors}.");
+                _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}.", policyErrors);
                 validation = false;
             }
 

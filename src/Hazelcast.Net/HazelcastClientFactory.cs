@@ -17,6 +17,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Projection;
@@ -207,6 +208,25 @@ namespace Hazelcast
 
             // clone the options - we don't want any change to the original options to impact this client
             options = options.Clone();
+
+            if (options.Networking.Cloud.Enabled)
+            {
+                // if cloud is enabled we must force usage of public addresses
+                // otherwise, ConnectAddressResolver may decide to use internal addresses if SSL is enabled
+                // TODO: why?
+
+                if (options.Networking.UsePublicAddresses.HasValue)
+                {
+                    if (!options.Networking.UsePublicAddresses.Value)
+                        throw new ConfigurationException("If CloudDiscovery is enabled, then UsePublicAddress cannot be false.");
+                }
+                else
+                {
+                    var logger = options.LoggerFactory.Service.CreateLogger(typeof (HazelcastClientFactory));
+                    options.Networking.UsePublicAddresses = true;
+                    logger.LogDebug("Options: Networking.Cloud.Enabled is true => set Networking.UsePublicAddress to true.");
+                }
+            }
 
             // this ensures that the clock is correctly configured before anything else
             // happens - remember the clock is static - so we are doing it here - and
