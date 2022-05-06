@@ -102,8 +102,6 @@ namespace Hazelcast.Tests.Remote
 
             var countOfClients = int.Parse(Encoding.UTF8.GetString(response.Result));
 
-            Assert.AreEqual(0, countOfClients);
-
             // instance1 shouldn't have any clients due to unisocket mode
             script = "result = instance_0.getClientService().getConnectedClients().size().toString();";
             response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
