@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Remote
 
         [Test]
         public async Task TestDistributedObjectEventsWithDummyClient()
-        {            
+        {
             var memberA = await AddMember();
             var memberB = await AddMember();
 
@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Remote
 
             var client = await CreateAndStartClientAsync(opt =>
             {
-                opt.Networking.SmartRouting = false;                                
+                opt.Networking.SmartRouting = false;
             });
 
             var map = await client.GetMapAsync<int, int>("myMap");
@@ -63,7 +63,7 @@ namespace Hazelcast.Tests.Remote
 
             await ShutdownMember(Guid.Parse(memberA.Uuid));
             memberA = await AddMember();
-            
+
             await AssertEx.SucceedsEventually(async () =>
             {
                 var script = "instance_0.getMap(\"myMap\").put(1,1)";
@@ -85,18 +85,27 @@ namespace Hazelcast.Tests.Remote
             var client = await CreateAndStartClientAsync(opt =>
             {
                 opt.Networking.SmartRouting = false;
+                opt.Networking.ShuffleAddresses = false;
                 opt.Networking.Addresses.Clear();
                 opt.Networking.Addresses.Add(memberA.Host + ":" + memberA.Port);
                 opt.Networking.Addresses.Add(memberB.Host + ":" + memberB.Port);
             });
 
-            var script = "result = instance_0.getClientService().getConnectedClients().size().toString();";
+            var map = await client.GetMapAsync<int, int>("oneMemberMap");
+            for (int i = 0; i < 100; i++)
+            {
+                await map.PutAsync(i, i);
+            }
+
+            var script = "result = instance_1.getClientService().getConnectedClients().size().toString();";
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
 
             var countOfClients = int.Parse(Encoding.UTF8.GetString(response.Result));
 
+            Assert.AreEqual(0, countOfClients);
+
             // instance1 shouldn't have any clients due to unisocket mode
-            script = "result = instance_1.getClientService().getConnectedClients().size().toString();";
+            script = "result = instance_0.getClientService().getConnectedClients().size().toString();";
             response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Hazelcast.Testing.Remote.Lang.JAVASCRIPT);
             countOfClients += int.Parse(Encoding.UTF8.GetString(response.Result));
 
