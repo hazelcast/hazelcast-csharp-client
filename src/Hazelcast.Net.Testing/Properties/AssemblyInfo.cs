@@ -23,7 +23,7 @@ using Hazelcast;
 
 #else
 
-[assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
+[assembly: InternalsVisibleTo("Hazelcast.Net.Tests")] // Required for Failover, Network and MemberConnection tests
 
 #endif
 

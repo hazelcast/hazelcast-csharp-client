@@ -100,7 +100,10 @@ namespace Hazelcast.Clustering
             {
                 _currentTryCount = 0;
             }
-            //we only count disconnected states
+            //We only count disconnected states.
+            //Failover works on each Disconnected state even it is very first connection,
+            //and a network glitch caused connection failure.We don't try the current cluster,
+            //skip to next one until establishing a connection or exhausting the try count.
             else if (clientState == ClientState.Disconnected && CanSwitchClusterOptions)
             {
                 SwitchClusterOptions();

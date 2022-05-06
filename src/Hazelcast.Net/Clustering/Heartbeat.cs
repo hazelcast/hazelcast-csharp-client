@@ -74,9 +74,10 @@ namespace Hazelcast.Clustering
         {
             HConsole.WriteLine(this, "Initialize durations...");
 
-            // stop heartbeat during exchanging.
+            // stop heartbeat during exchanging. 
             if (_active == 1 && _heartbeating != null)
             {
+                // heartbeating won't throw.
                 _cancel.Cancel();
                 _cancel.Dispose();
             }
@@ -150,14 +151,26 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "Stopped.");
         }
 
+        /// <summary>
+        /// Heartbeats periodically. Doesn't throw.
+        /// </summary>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/> to be able to cancel.</param>
+        /// <returns>awaitable <see cref="Task"/></returns>
         private async Task BeatAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                await Task.Delay(_period, cancellationToken).CfAwait();
-                if (cancellationToken.IsCancellationRequested) break;
-                HConsole.WriteLine(this, $"Run with period={_period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}, timeout={_timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}");
-                await RunAsync(cancellationToken).CfAwait();
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(_period, cancellationToken).CfAwait();
+                    if (cancellationToken.IsCancellationRequested) break;
+                    HConsole.WriteLine(this, $"Run with period={_period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}, timeout={_timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}");
+                    await RunAsync(cancellationToken).CfAwait();
+                }
+            }
+            catch (Exception)
+            {
+                //Exception observed
             }
         }
 
