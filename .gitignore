@@ -33,3 +33,9 @@ build/hazelcast-*.xml
 
 /_ReSharper.Caches
 .github/secrets
+
+/node_modules/
+/test/
+package-lock.json
+.idea/
+*.iml
