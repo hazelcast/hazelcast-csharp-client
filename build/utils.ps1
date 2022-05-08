@@ -1,4 +1,4 @@
-# utilities for hz.ps1
+﻿# utilities for hz.ps1
 
 # die - PowerShell display of errors is a pain
 function Die ( $message ) {
@@ -464,4 +464,27 @@ function get-project-name ( $path ) {
     $n = $path.SubString($p+1)
     $n = $n.SubString(0, $n.Length - '.csproj'.Length)
     return $n;
+}
+
+function read-file ( $filename ) {
+    $text = get-content -raw -path $filename
+    $text = $text.Replace("`r", "").TrimEnd("`n")
+    return $text
+}
+
+function write-file ( $filename, $text ) {
+    $text = $text.Replace("`n", [Environment]::Newline)
+    set-content -noNewLine -encoding utf8 $filename $text
+}
+
+function test-command
+{
+    param ($command)
+
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = "stop"
+
+    try { if (Get-Command $command) { $true } }
+    catch { $false }
+    finally { $ErrorActionPreference=$oldPreference }
 }

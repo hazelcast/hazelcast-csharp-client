@@ -290,6 +290,10 @@ namespace Hazelcast.Tests.DotNet
             Assert.IsTrue(t.IsCanceled);
             Assert.IsTrue(task1.IsCanceled);
             Assert.IsTrue(task2.IsCanceled);
+
+            // would still need to observe each task's canceled exception
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await task1);
+            await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await task2);
         }
 
         [Test]

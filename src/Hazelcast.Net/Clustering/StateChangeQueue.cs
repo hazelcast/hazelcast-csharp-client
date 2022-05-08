@@ -106,7 +106,7 @@ namespace Hazelcast.Clustering
             }
 
             // queue the marker
-            if (!_states.TryWrite((ClientState) marker))
+            if (!_states.TryWrite((ClientState)marker))
             {
                 // embarrassing - should never happen, our code should *not*
                 // dispose the state change queue while adding states!
@@ -118,10 +118,11 @@ namespace Hazelcast.Clustering
             await completion.Task.CfAwait();
         }
 
+
         // fails to add a state
         private void FailAdd(ClientState state)
         {
-            _logger.LogWarning($"Failed to add a state {state}.");
+            _logger.IfWarning()?.LogWarning("Failed to add a state {State}.", state);
             ThrowIfDisposed();
         }
 
@@ -130,7 +131,7 @@ namespace Hazelcast.Clustering
         {
             await foreach (var state in _states)
             {
-                var marker = (int) state;
+                var marker = (int)state;
                 if (marker < 0)
                 {
                     if (_markers.TryRemove(marker, out var completion))

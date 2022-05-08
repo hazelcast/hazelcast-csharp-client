@@ -40,25 +40,7 @@
       </data-serializable-factory>
     </data-serializable-factories>
   </serialization>
-
-	<cp-subsystem>
-		<base-dir>/custom-cp-dir</base-dir>
-	        <locks>
-            <fenced-lock>
-                <name>lock</name>
-                <lock-acquire-limit>0</lock-acquire-limit>
-            </fenced-lock>
-            <fenced-lock>
-                <name>limited-reentrant-lock</name>
-                <lock-acquire-limit>10</lock-acquire-limit>
-            </fenced-lock>
-            <fenced-lock>
-                <name>non-reentrant-lock</name>
-                <lock-acquire-limit>1</lock-acquire-limit>
-            </fenced-lock>
-        </locks>
-	</cp-subsystem>
-
+  
   <queue name="ClientQueueTest*">
     <!--
             Maximum size of the queue. When a JVM's local queue size reaches the maximum,
