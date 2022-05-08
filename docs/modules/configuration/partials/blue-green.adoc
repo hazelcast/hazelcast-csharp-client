@@ -1,7 +1,0 @@
-= Configuring for Blue-Green Deployments
-
-???
-
-== Before You Begin
-
-???

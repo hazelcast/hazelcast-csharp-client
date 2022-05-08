@@ -1,7 +1,0 @@
-= Handling Failures
-
-???
-
-== Handling Client Connection Failure
-
-== Handling Retry-able Operation Failure
