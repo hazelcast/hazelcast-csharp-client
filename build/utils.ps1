@@ -1,4 +1,4 @@
-# utilities for hz.ps1
+﻿# utilities for hz.ps1
 
 # die - PowerShell display of errors is a pain
 function Die ( $message ) {
@@ -475,4 +475,16 @@ function read-file ( $filename ) {
 function write-file ( $filename, $text ) {
     $text = $text.Replace("`n", [Environment]::Newline)
     set-content -noNewLine -encoding utf8 $filename $text
+}
+
+function test-command
+{
+    param ($command)
+
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = "stop"
+
+    try { if (Get-Command $command) { $true } }
+    catch { $false }
+    finally { $ErrorActionPreference=$oldPreference }
 }

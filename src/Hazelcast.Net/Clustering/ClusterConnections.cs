@@ -546,6 +546,9 @@ namespace Hazelcast.Clustering
                     // TODO: it's the actual DNS that should retry!
                 }
 
+                // TODO: some errors should not be retried!
+                // for instance, an invalid SSL cert will not become magically valid
+
                 try
                 {
                     // try to retry, maybe with a delay - handles cancellation

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -44,6 +45,34 @@ namespace Hazelcast.Testing.Remote
             : base(inputProtocol, outputProtocol)
         { }
 
+        /// <summary>
+        /// Creates and connects a new remote controller client.
+        /// </summary>
+        /// <param name="rcHostAddress">The remote controller address.</param>
+        /// <param name="port">The remote controller port.</param>
+        /// <returns>A new remote controller client.</returns>
+        public static Task<IRemoteControllerClient> CreateAsync(string rcHostAddress = "127.0.0.1", int port = 9701)
+            => CreateAsync(IPAddress.Parse(rcHostAddress), port);
+        
+        /// <summary>
+        /// Creates and connects a new remote controller client.
+        /// </summary>
+        /// <param name="rcHostAddress">The remote controller address.</param>
+        /// <param name="port">The remote controller port.</param>
+        /// <returns>A new remote controller client.</returns>
+        public static async Task<IRemoteControllerClient> CreateAsync(IPAddress rcHostAddress, int port = 9701)
+        {
+            var configuration = new Thrift.TConfiguration();
+            var tSocketTransport = new Thrift.Transport.Client.TSocketTransport(rcHostAddress, port, configuration);
+            var transport = new Thrift.Transport.TFramedTransport(tSocketTransport);
+            if (!transport.IsOpen)
+            {
+                await transport.OpenAsync(CancellationToken.None).CfAwait();
+            }
+            var protocol = new TBinaryProtocol(transport);
+            return Create(protocol);
+        }
+        
         /// <summary>
         /// Creates a new remote controller client.
         /// </summary>

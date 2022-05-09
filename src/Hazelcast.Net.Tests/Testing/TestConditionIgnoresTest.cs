@@ -18,15 +18,36 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Testing
 {
     [TestFixture]
-    [ServerCondition("[0.3]")]
-    public class TestConditions3Tests
+    [ServerVersion("0.1")] // avoid detection
+    public class TestConditionIgnoresTest
     {
+        private int _count;
+
+        [OneTimeTearDown]
+        public void TearDown()
+        {
+            Assert.That(_count, Is.EqualTo(2), "Some tests did not run?");
+        }
+
         // this test should never execute
-        //
         [Test]
-        public void Fail()
+        [ServerCondition("[0.3]")]
+        public void WouldFail()
         {
             Assert.Fail();
+        }
+
+        [Test]
+        public void NoConditionSucceeds()
+        {
+            _count++;
+        }
+
+        [Test]
+        [ServerCondition("[0.1]")]
+        public void ConditionSucceeds()
+        {
+            _count++;
         }
     }
 }
