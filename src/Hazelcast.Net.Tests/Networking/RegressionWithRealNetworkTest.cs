@@ -83,9 +83,11 @@ namespace Hazelcast.Tests.Networking
         [TestCase(true, "localhost", "127.0.0.1")]
         [TestCase(true, "127.0.0.1", "localhost")]
         [TestCase(true, "localhost", "localhost")]
+        [TestCase(true, "127.0.0.1", "127.0.0.1")]
         [TestCase(false, "localhost", "127.0.0.1")]
         [TestCase(false, "127.0.0.1", "localhost")]
         [TestCase(false, "localhost", "localhost")]
+        [TestCase(false, "127.0.0.1", "127.0.0.1")]
         public async Task TestConnectionCountAfterClientReconnect(bool smartRouting, string memberAddress, string clientAddress)
         {
             using var _ = HConsoleForTest();
@@ -96,7 +98,7 @@ namespace Hazelcast.Tests.Networking
             var client = await CreateAndStartClientAsync(options =>
            {
                options.Networking.SmartRouting = smartRouting;
-               options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
+               options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = long.MaxValue;
                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
                options.Networking.Addresses.Clear();
                options.Networking.Addresses.Add(clientAddress + ":" + member.Port);
@@ -104,11 +106,11 @@ namespace Hazelcast.Tests.Networking
            });
             #endregion
 
-            var map = await client.GetMapAsync<int, int>("TestMap_" + DateTime.UtcNow.Millisecond);
+            
             var clientImp = (HazelcastClient)client;
 
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
-            await map.PutAsync(1, 1);
+            
 
             await RcClient.ShutdownMemberAsync(customCluster.Id, member.Uuid);
 
@@ -127,7 +129,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(ClientState.Connected, client.State);
             }, 10_000, 500);
 
-            await map.PutAsync(1, 1);
+            
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
 
             #region TearDown
@@ -165,6 +167,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
                 options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
                 options.ClusterName = customCluster.Id;
+                options.Heartbeat.TimeoutMilliseconds = 6_000;
             });
             #endregion
 
@@ -179,7 +182,7 @@ namespace Hazelcast.Tests.Networking
             }, 10_000, 500);
 
             await RcClient.ShutdownMemberAsync(customCluster.Id, member.Uuid);
-            await Task.Delay(client.Options.Heartbeat.PeriodMilliseconds);
+            await Task.Delay(2*client.Options.Heartbeat.PeriodMilliseconds);
             member = await RcClient.StartMemberAsync(customCluster.Id);
 
             await AssertEx.SucceedsEventually(async () =>
