@@ -84,8 +84,7 @@ namespace Hazelcast.Clustering
         {
             get => _clusterOptionsChanged;
             set
-            {
-                _state.ThrowIfPropertiesAreReadOnly();
+            {                
                 _clusterOptionsChanged = value;
             }
         }
