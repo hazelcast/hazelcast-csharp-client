@@ -30,207 +30,198 @@ namespace Hazelcast.CP
     /// </summary>
     internal partial class FencedLock : CPDistributedObjectBase, IFencedLock
     {
-        /// <summary>
-        /// Gets the current context identifier.
-        /// </summary>
-        /// <remarks>
-        /// Hazelcast APIs call this the thread identified and maintain locks "per threads",
-        /// so we are keeping the name here internally, but in reality this is not a thread
-        /// identifier anymore - it is attached to the async context so it can flow with
-        /// async operations.
-        /// </remarks>
-        private static long ContextId => AsyncContext.Current.Id;
-        private readonly ConcurrentDictionary<long, ContextOwnership> _lockedThreadToSession = new ConcurrentDictionary<long, ContextOwnership>();
+        private readonly AsyncContextLocker _contextLocker = new AsyncContextLocker();
+        private readonly ConcurrentDictionary<long, long> _lockedSessionIds = new ConcurrentDictionary<long, long>(); // context -> session
         private readonly CPSessionManager _cpSessionManager;
         private readonly CPGroupId _groupId;
-        private int _destroyed;
-        //Holds whether current async flow took the semaphore
-        private static AsyncLocal<bool> LocalSemaphoreContext { get; } = new AsyncLocal<bool>() { Value = false };
+        private readonly string _fullName;
+        private int _destroyed, _disposed;
         public const long InvalidFence = 0;
-        ICPGroupId ICPDistributedObject.GroupId => _groupId;
-        long IFencedLock.InvalidFence => InvalidFence;
 
-        public FencedLock(string name, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) : base(ServiceNames.FencedLock, name, groupId, cluster)
+        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) 
+            : base(ServiceNames.FencedLock, objectName, groupId, cluster)
         {
-            _cpSessionManager = subsystemSession;
+            _fullName = fullName; // FIXME this should be a base class property
             _groupId = groupId;
-            HConsole.Configure(x => x.Configure<FencedLock>().SetIndent(2).SetPrefix("FENCEDLOCK"));
+            _cpSessionManager = subsystemSession;
         }
 
+        /// <inheritdoc />
+        ICPGroupId ICPDistributedObject.GroupId => _groupId;
+
+        /// <inheritdoc />
+        long IFencedLock.InvalidFence => InvalidFence;
+
         #region IFencedLock Methods
+
+        // Java has a threadId -> sessionId dictionary and code is inherently thread-safe since
+        // it is threadId-based. If it gets the sessionId associated with a threadId, it knows
+        // that it will not change since only the current thread can change it.
+        //
+        // C# is not threadId-based but contextId-based and therefore unsafe, since multiple tasks
+        // can run with the same contextId at the same time. If it gets the sessionId associated
+        // with a contextId, it cannot assume that it will not change, since another task with
+        // the same context could be running in parallel.
+        //
+        // In order to make sure to serializes FencedLock method, i.e. to ensure that only one
+        // method at a time can access the sessionId associated with a contextId, we use a
+        // AsyncContextLocker which allows us to acquire an exclusive lock over the async context
+        // at the beginning of each method.
+        //
+        // Note that AsyncContextLocker locks are obtained within the scope of the locker, so
+        // two FencedLock (i.e. two lockers) do not interfere with each other, they run with two
+        // totally different locker i.e. sets of locks, and can both lock the contexts
+        // independently.
+        //
+        // The AsyncContextLocker LockAsync method returns an IDisposable object that releases
+        // the lock upon being disposed. Therefore, if the lock is declared with the 'using var'
+        // pattern, we know that it will be disposed and thus released when exiting the scope of
+        // the method (even in case of exceptions).
+        //
+        // ->  in the end we can have code very similar to Java except for the context locker.
+        //
+        // The AsyncContextLocker uses a reference-counting mechanism to ensure that it does not
+        // leak lock objects when no task owns a lock for a given contextId.
+
         /// <inheritdoc/>  
         public async Task<long> GetFenceAsync()
         {
-            var threadId = ContextId;
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
-            HConsole.WriteLine(this, $"GetFenceAsync->Thread{threadId}, Session:{sessionId}, Semaphore:{contextOwnership.GetHashCode()}");
 
-            try
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
+
+            if (sessionId == CPSessionManager.NoSessionId)
             {
-                if (sessionId == CPSessionManager.NoSessionId)
-                {
-                    _lockedThreadToSession.TryRemove(threadId, out var _);
-                    throw new SynchronizationLockException();
-                }
-
-                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-                if (ownership.LockedBy(threadId, sessionId))
-                {
-                    AsyncContext.RequireNew();
-                    contextOwnership.SessionId = sessionId;
-                    _lockedThreadToSession[threadId] = contextOwnership;
-                    return ownership.Fence;
-                }
-
-                VerifyNoLockedSessionExist(threadId);
-                throw new SynchronizationLockException();
+                _lockedSessionIds.TryRemove(contextId, out _);
+                throw new SynchronizationLockException($"Context {contextId} does not own lock {_fullName}.");
             }
-            finally
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            if (lockedByCurrent)
             {
-                if (LocalSemaphoreContext.Value)
-                    contextOwnership.Semaphore.Release();
+                _lockedSessionIds[contextId] = sessionId;
+                return ownership.Fence;
             }
+
+            VerifyNoLock(contextId);
+            throw new SynchronizationLockException($"Context {contextId} does not own lock {_fullName}.");
         }
 
         /// <inheritdoc/>  
         public async Task<int> GetLockCountAsync()
         {
-            var threadId = ContextId;
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
 
-            try
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            if (lockedByCurrent)
             {
-                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-                if (ownership.LockedBy(threadId, sessionId))
-                {
-                    contextOwnership.SessionId = sessionId;
-                    _lockedThreadToSession[threadId] = contextOwnership;
-                }
-                else
-                    VerifyNoLockedSessionExist(threadId);
-
-                return ownership.LockCount;
+                _lockedSessionIds[contextId] = sessionId;
             }
-            finally
+            else
             {
-                if (LocalSemaphoreContext.Value)
-                    contextOwnership.Semaphore.Release();
+                VerifyNoLock(contextId);
             }
+
+            return ownership.LockCount;
         }
 
         /// <inheritdoc/>  
         public async Task<bool> IsLockedAsync()
         {
-            var threadId = ContextId;
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
-            HConsole.WriteLine(this, $"IsLockedAsync->Thread{threadId}, Session:{sessionId}, Semaphore:semaphore.GetHashCode()");
-            try
+
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            if (lockedByCurrent)
             {
-                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-                if (ownership.LockedBy(threadId, sessionId))
-                {
-                    contextOwnership.SessionId = sessionId;
-                    _lockedThreadToSession[threadId] = contextOwnership;
-                    return true;
-                }
-
-                VerifyNoLockedSessionExist(threadId);
-
-                return ownership.Locked;
+                _lockedSessionIds[contextId] = sessionId;
+                return true;
             }
-            finally
-            {
-                if (LocalSemaphoreContext.Value)
-                    contextOwnership.Semaphore.Release();
-            }
+
+            VerifyNoLock(contextId);
+            return ownership.Locked;
         }
 
-        public async Task<bool> IsLockedByCurrentContext()
+        /// <inheritdoc/>        
+        public async Task<bool> IsLockedByCurrentContextAsync()
         {
-            var threadId = ContextId;
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
-            HConsole.WriteLine(this, $"IsLockedByCurrentContext->Thread{threadId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
-            try
+
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            if (lockedByCurrent)
             {
-                var ownership = await RequestLockOwnershipStateAsync().CfAwait();
-
-                var lockedByCurrent = ownership.LockedBy(threadId, sessionId);
-
-                if (lockedByCurrent)
-                {
-                    contextOwnership.SessionId = sessionId;
-                    _lockedThreadToSession[threadId] = contextOwnership;
-                }
-                else
-                    VerifyNoLockedSessionExist(threadId);
-
-                return lockedByCurrent;
+                _lockedSessionIds[contextId] = sessionId;
             }
-            finally
+            else
             {
-                if (LocalSemaphoreContext.Value)
-                    contextOwnership.Semaphore.Release();
+                VerifyNoLock(contextId);
             }
+
+            return lockedByCurrent;
         }
 
         /// <inheritdoc/>        
         public async Task<long> LockAndGetFenceAsync()
         {
-            var threadId = ContextId;
-            var invocationId = Guid.NewGuid();// required by server, to make the call idempotetent?
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
 
             while (true)
             {
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
-                var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, true);
-                HConsole.WriteLine(this, $"LockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
+
+                VerifyNoLockOrValidSession(contextId, sessionId, false);
+
                 try
                 {
-                    long fence = await RequestLockAsync(sessionId, threadId, invocationId).CfAwait();
-
+                    // go to the server to lock - if we get a valid fence, return
+                    var fence = await RequestLockAsync(sessionId, contextId, invocationId).CfAwait();
                     if (fence != InvalidFence)
                     {
-                        contextOwnership.SessionId = sessionId;
-                        _lockedThreadToSession[threadId] = contextOwnership;
+                        _lockedSessionIds[contextId] = sessionId;
                         return fence;
                     }
 
-                    throw new LockAcquireLimitReachedException($"Lock[{Name}] reentrant lock limit is already reached!");
+                    throw new LockAcquireLimitReachedException($"Lock[{_fullName}] re-entrant lock limit has been reached.");
 
                 }
-                catch (RemoteException e)
+                catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
                 {
-                    if (e is RemoteException { Error: RemoteError.SessionExpiredException })
-                    {
-                        _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
-                        VerifyNoLockedSessionExist(threadId);
-                    }
-                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
-                    {
-                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        throw;
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                    VerifyNoLock(contextId);
+                    // loop and try again
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    throw; // FIXME: Java throws new IllegalMonitorStateException
                 }
                 catch
                 {
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
                     throw;
-                }
-                finally
-                {
-                    if (LocalSemaphoreContext.Value)
-                        contextOwnership.Semaphore.Release();
                 }
             }
         }
@@ -250,69 +241,51 @@ namespace Hazelcast.CP
         /// <inheritdoc/> 
         public async Task<long> TryLockAndGetFenceAsync(TimeSpan timeout)
         {
-            var threadId = ContextId;
-            Guid invocationId = Guid.NewGuid();
-            var timeoutMilliseconds = (long)Math.Round(Math.Max(0, timeout.TotalMilliseconds));
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
+
+            var timeoutMilliseconds = (long) Math.Round(Math.Max(0, timeout.TotalMilliseconds));
+            var start = Clock.Milliseconds;
 
             while (true)
             {
-                var start = Clock.Milliseconds;
                 var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
-                var contextOwnership = VerifyNoLockOnThread(threadId, sessionId);
-                HConsole.WriteLine(this, $"TryLockAndGetFenceAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
+
+                VerifyNoLockOrValidSession(contextId, sessionId, true);
 
                 try
                 {
-                    long fence = await RequestTryLockAsync(sessionId, threadId, invocationId, timeoutMilliseconds).CfAwait();
+                    var fence = await RequestTryLockAsync(sessionId, contextId, invocationId, timeoutMilliseconds).CfAwait();
 
                     if (fence != InvalidFence)
                     {
-                        contextOwnership.SessionId = sessionId;
-                        _lockedThreadToSession[threadId] = contextOwnership;
+                        _lockedSessionIds[contextId] = sessionId;
                     }
                     else
                     {
                         _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        RemoveLocks(threadId, sessionId);
                     }
 
                     return fence;
                 }
-                catch (RemoteException e)
+                catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
                 {
-                    if (e is RemoteException { Error: RemoteError.SessionExpiredException })
-                    {
-                        _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
-                        VerifyNoLockedSessionExist(threadId);
-
-                        long duration = Clock.Milliseconds - start;
-
-                        if (duration <= 0)
-                            return InvalidFence;
-                    }
-                    else if (e is RemoteException { Error: RemoteError.WaitKeyCancelledException })
-                    {
-                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        RemoveLocks(threadId, sessionId);
-                        return InvalidFence;
-                    }
-                    else
-                    {
-                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                        RemoveLocks(threadId, sessionId);
-                        throw;
-                    }
+                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                    VerifyNoLock(contextId);
+                    var elapsed = Clock.Milliseconds - start;
+                    if (elapsed > timeoutMilliseconds) return InvalidFence;
+                    // else loop and try again
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    return InvalidFence;
                 }
                 catch
                 {
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                    RemoveLocks(threadId, sessionId);
                     throw;
-                }
-                finally
-                {
-                    if (LocalSemaphoreContext.Value)
-                        contextOwnership.Semaphore.Release();
                 }
             }
         }
@@ -334,149 +307,85 @@ namespace Hazelcast.CP
         /// <inheritdoc/> 
         public async Task UnlockAsync()
         {
-            var threadId = ContextId;
+            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
+            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
-            var contextOwnership = VerifyNoLockOnThread(threadId, sessionId, false);
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
 
             if (sessionId == CPSessionManager.NoSessionId)
             {
-                RemoveLocks(threadId, sessionId);
-                throw new SynchronizationLockException();
+                _lockedSessionIds.TryRemove(contextId, out _);
+                throw new SynchronizationLockException(); // FIXME illegal monitor state?
             }
 
             try
             {
-                Guid invocationId = Guid.NewGuid();
-                HConsole.WriteLine(this, $"UnlockAsync->Thread{threadId}, Invocation:{invocationId}, Session:{sessionId}, Semaphore:{contextOwnership.Semaphore.GetHashCode()}");
-                bool stillLockedByCurrentThread = await RequestUnlockAsync(sessionId, threadId, invocationId).CfAwait();
+                var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
+
+                var stillLockedByCurrentThread = await RequestUnlockAsync(sessionId, contextId, invocationId).CfAwait();
 
                 if (stillLockedByCurrentThread)
                 {
-                    contextOwnership.SessionId = sessionId;
-                    _lockedThreadToSession[threadId] = contextOwnership;
+                    _lockedSessionIds[contextId] = sessionId;
                 }
                 else
                 {
-                    RemoveLocks(threadId, sessionId);
+                    _lockedSessionIds.TryRemove(contextId, out _);
                 }
 
                 _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
             }
-            catch (RemoteException e)
+            catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
             {
-                if (e is RemoteException { Error: RemoteError.SessionExpiredException })
-                {
-                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
-                    RemoveLocks(threadId, sessionId);
-                }
-                else if (e is RemoteException { Error: RemoteError.IllegalMonitorState })
-                {
-                    RemoveLocks(threadId, sessionId);
-                }
-
+                _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                _lockedSessionIds.TryRemove(contextId, out _);
                 throw;
             }
-            finally
+            catch (RemoteException e) when (e.Error == RemoteError.IllegalMonitorState)
             {
-                if (LocalSemaphoreContext.Value)
-                    contextOwnership.Semaphore.Release();
+                _lockedSessionIds.TryRemove(contextId, out _);
+                throw;
             }
         }
 
-        private void RemoveLocks(long threadId, long sessionId)
-        {
-            HConsole.WriteLine(this, $"RemoveLocks->Thread{threadId}, Session:{sessionId}, CanRemove:{LocalSemaphoreContext.Value}");
-            //Only holder of the semaphore can release it. 
-            if (_lockedThreadToSession.TryRemove(threadId, out var contextOwnership) && LocalSemaphoreContext.Value)
-            {
-                HConsole.WriteLine(this, $"Remove lock, Thread:{AsyncContext.Current.Id}");
-                //Current flow released the semaphore.
-                LocalSemaphoreContext.Value = false;
-                //Dispose it during general disposing process otherwise other waiters may throw.
-                contextOwnership.Semaphore.Release();
-                contextOwnership.Semaphore.Dispose();
-            }
-        }
         #endregion
 
-        /// <summary>
-        /// Verifies there is no lock between ThreadId->SessionId. Otherwise throws.
-        /// </summary>
-        /// <param name="threadId"></param>
-        /// <param name="sessionId"></param>
-        /// <param name="releaseSession"></param>
-        /// <exception cref="LockOwnershipLostException"></exception>
-        private ContextOwnership VerifyNoLockOnThread(long threadId, long sessionId, bool releaseSession = true, bool force = false)
+        private void VerifyNoLockOrValidSession(long contextId, long sessionId, bool releaseSession)
         {
-            if (!_lockedThreadToSession.TryGetValue(threadId, out var contextOwnership))
+            if (_lockedSessionIds.TryGetValue(contextId, out var lockedSessionId) && lockedSessionId != sessionId)
             {
-                var tempOwnership = new ContextOwnership(sessionId, threadId);
-                contextOwnership = _lockedThreadToSession.GetOrAdd(threadId, tempOwnership);
-                //don't leak.
-                if (tempOwnership.GetHashCode() != contextOwnership.GetHashCode())
-                    tempOwnership.Dispose();
-                HConsole.WriteLine(this, $"Verified by Thread:{ Environment.CurrentManagedThreadId }, Context:{threadId}, Semaphore: {contextOwnership.Semaphore.GetHashCode() }, Count: { contextOwnership.Semaphore.CurrentCount}");
-            }
-
-            var isLocked = contextOwnership.Semaphore.Wait(0);
-            //Flag it if current flow got the resource.
-            //If the flow can have the semaphore, then
-            //it can work on the resource. Only one flow can work
-            //on the resource from same context at the same time.
-            //Unfortunately, we cannot put a semaphore to lock the resource
-            //on its life cycle(lock->unlock) because semaphore dosen't hold owner info
-            //and parent invoker may call another fenced lock API on the lock
-            //and it will fail since LocalSemaphoreContext is local to flow,
-            //other async siblings invoked by same parent are not aware of it.
-            //User MUST NOT invoke the same fenced lock at the parallel OR
-            //AsyncContext.RequireNew() should be called before each parallel invoke.
-            LocalSemaphoreContext.Value = isLocked;
-
-            HConsole.WriteLine(this, $"Context {AsyncContext.Current.Id} Semaphore: {contextOwnership.Semaphore.GetHashCode() } can take the lock -> {isLocked}");
-
-            if ((contextOwnership.SessionId != sessionId && contextOwnership.ContextId == threadId) || !isLocked)
-            {
-                RemoveLocks(threadId, sessionId);
-                HConsole.WriteLine(this, $"Release session (Session:{sessionId},Contex:{threadId}), Context Sesion {contextOwnership.SessionId}, Context {contextOwnership.ContextId}, Thread { Environment.CurrentManagedThreadId }  { contextOwnership.GetHashCode() }, Count: {contextOwnership.Semaphore.CurrentCount}");
-                if (releaseSession)
-                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-
-                throw new LockOwnershipLostException($"Current thread/context/async flow is not owner of the Lock[{Name}] because its Session[{contextOwnership.SessionId}] is closed by server!");
-            }
-
-            return contextOwnership;
-        }
-
-        /// <summary>
-        /// Verifies there is no ThreadId -> SessionId map. Otherwise throws.
-        /// </summary>
-        /// <param name="threadId"></param>
-        /// <exception cref="LockOwnershipLostException"></exception>
-        private void VerifyNoLockedSessionExist(long threadId)
-        {
-            if (_lockedThreadToSession.TryGetValue(threadId, out var contextOwnership))
-            {
-                RemoveLocks(threadId, contextOwnership.SessionId);
+                _lockedSessionIds.TryRemove(contextId, out _);
+                if (releaseSession) _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                throw new LockOwnershipLostException($"Context {contextId} lost lock {_fullName} because the associated session {lockedSessionId} was closed.");
             }
         }
 
-        public async override ValueTask DestroyAsync()
+        private void VerifyNoLock(long contextId)
         {
-            if (Interlocked.CompareExchange(ref _destroyed, 1, 0) == 1) return;
+            if (_lockedSessionIds.TryRemove(contextId, out var lockedSessionId))
+            {
+                throw new LockOwnershipLostException($"Context {contextId} lost lock {_fullName} because the associated session {lockedSessionId} was closed.");
+            }
+        }
 
-            try
-            {
-                await RequestDestroyAsync().CfAwait();
-            }
-            finally
-            {
-                foreach (var s in _lockedThreadToSession.Values)
-                {
-                    s.Dispose();
-                }
-                _lockedThreadToSession.Clear();
-            }
+        public override async ValueTask DestroyAsync()
+        {
+            if (!_destroyed.InterlockedZeroToOne()) return;
+
+            await RequestDestroyAsync().CfAwait();
+
+            // note: still needs to be disposed to clear the _contextLocker
+        }
+
+        /// <inheritdoc />
+        public override ValueTask DisposeAsync()
+        {
+            if (!_disposed.InterlockedZeroToOne()) return default;
+
+            _contextLocker.Dispose();
+
+            return base.DisposeAsync();
         }
 
         internal class LockOwnershipState
@@ -497,29 +406,6 @@ namespace Hazelcast.CP
             public bool Locked => FencedLock.InvalidFence != Fence;
 
             public bool LockedBy(long threadId, long sessionId) => Locked && SessionId == sessionId && ThreadId == threadId;
-        }
-
-        internal class ContextOwnership : IDisposable
-        {
-            public ContextOwnership(long sessionId, long contextId)
-            {
-                SessionId = sessionId;
-                ContextId = contextId;
-                Semaphore = new SemaphoreSlim(1, 1);
-            }
-
-            public long SessionId { get; set; }
-            public SemaphoreSlim Semaphore { get; }
-
-            /// <summary>
-            /// Gets Context Id. In Java context, it can act as thread id too. 
-            /// </summary>
-            public long ContextId { get; }
-
-            public void Dispose()
-            {
-                Semaphore.Dispose();
-            }
         }
     }
 }
