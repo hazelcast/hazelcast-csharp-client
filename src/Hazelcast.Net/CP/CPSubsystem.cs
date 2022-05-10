@@ -30,10 +30,10 @@ namespace Hazelcast.CP
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
-        //internal for testing
-        internal readonly CPSessionManager _cpSubsystemSession;
-        private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
         private readonly ConcurrentDictionary<string, IFencedLock> _fencedLocks = new ConcurrentDictionary<string, IFencedLock>();
+
+        // ReSharper disable once InconsistentNaming - internal for tests
+        internal readonly CPSessionManager _cpSubsystemSession;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
@@ -182,9 +182,6 @@ namespace Hazelcast.CP
 
         public async ValueTask DisposeAsync()
         {
-            foreach (var item in _cpObjectsByName.Values)
-                await item.DestroyAsync().CfAwaitNoThrow();
-
             await _cpSubsystemSession.DisposeAsync().CfAwaitNoThrow();
         }
     }
