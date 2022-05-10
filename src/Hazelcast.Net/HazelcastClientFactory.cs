@@ -101,6 +101,19 @@ namespace Hazelcast
             return client;
         }
 
+        // FIXME document failover methods + should it be StartNewFailoverClientAsync?
+        // then we should be able to create a client with the failover options, and then the rest is standard
+
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException(); // FIXME
+        }
+
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastFailoverOptions configure, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException(); // FIXME
+        }
+
         /// <summary>
         /// Gets a new starting <see cref="IHazelcastClient"/> instance with automatic options.
         /// </summary>
@@ -173,6 +186,16 @@ namespace Hazelcast
 
             var client = CreateClient(options);
             return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
+        }
+
+        public static HazelcastClientStart GetNewStartingClient(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException(); // FIXME
+        }
+
+        public static HazelcastClientStart GetNewStartingClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException(); // FIXME
         }
 
         private static HazelcastOptions GetOptions(Action<HazelcastOptions> configure)

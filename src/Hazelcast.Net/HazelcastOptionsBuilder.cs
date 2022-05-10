@@ -24,7 +24,7 @@ namespace Hazelcast
     /// <summary>
     /// Provides a way to build <see cref="HazelcastOptions"/> instances in a fluent way.
     /// </summary>
-    public class HazelcastOptionsBuilder
+    public sealed partial class HazelcastOptionsBuilder
     {
         private string[] _args;
         private IDictionary<string, string> _switchMappings;
@@ -36,6 +36,8 @@ namespace Hazelcast
         private string _altKey;
         private List<Action<IConfiguration, HazelcastOptions>> _configureActions;
         private List<Action<HazelcastOptions>> _preConfigureActions;
+        private List<Action<IConfiguration, HazelcastFailoverOptions>> _configureFailoverActions;
+        private List<Action<HazelcastFailoverOptions>> _preConfigureFailoverActions;
         private List<Action<IConfigurationBuilder>> _setups;
 
         /// <summary>
@@ -186,6 +188,44 @@ namespace Hazelcast
         }
 
         /// <summary>
+        /// Adds an <see cref="HazelcastFailoverOptions"/> configuration delegate.
+        /// </summary>
+        /// <param name="configure">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithFailover(Action<IConfiguration, HazelcastFailoverOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            _configureFailoverActions ??= new List<Action<IConfiguration, HazelcastFailoverOptions>>();
+            _configureFailoverActions.Add(configure);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an <see cref="HazelcastFailoverOptions"/> default configuration delegate.
+        /// </summary>
+        /// <param name="configure">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithFailoverDefault(Action<HazelcastFailoverOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            _preConfigureFailoverActions ??= new List<Action<HazelcastFailoverOptions>>();
+            _preConfigureFailoverActions.Add(configure);
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an <see cref="HazelcastOptions"/> configuration delegate.
+        /// </summary>
+        /// <param name="configure">The delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithFailover(Action<HazelcastFailoverOptions> configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            return WithFailover((_, o) => configure(o));
+        }
+
+        /// <summary>
         /// Adds an <see cref="IConfigurationBuilder"/> configuration delegate.
         /// </summary>
         /// <param name="configure">The delegate.</param>
@@ -216,11 +256,27 @@ namespace Hazelcast
                 preConfigure(options);
         }
 
+        private void PreConfigureFailover(HazelcastFailoverOptions options)
+        {
+            if (_preConfigureFailoverActions == null) return;
+
+            foreach (var preConfigure in _preConfigureFailoverActions)
+                preConfigure(options);
+        }
+
         private void Configure(IConfiguration configuration, HazelcastOptions options)
         {
             if (_configureActions == null) return;
 
             foreach (var configure in _configureActions)
+                configure(configuration, options);
+        }
+
+        private void ConfigureFailover(IConfiguration configuration, HazelcastFailoverOptions options)
+        {
+            if (_configureActions == null) return;
+
+            foreach (var configure in _configureFailoverActions)
                 configure(configuration, options);
         }
 
@@ -234,13 +290,34 @@ namespace Hazelcast
                 setup(builder);
         }
 
+        private void SetupFailover(IConfigurationBuilder builder)
+        {
+            // FIXME???
+            //builder.AddHazelcastAndDefaults(_args, _switchMappings, _defaults, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+            builder.AddHazelcastFailoverAndDefaults(_args, _switchMappings, _defaults, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+
+            if (_setups == null) return;
+
+            foreach (var setup in _setups)
+                setup(builder);
+        }
+
         /// <summary>
         /// Builds the options.
         /// </summary>
         /// <returns>The options.</returns>
         public HazelcastOptions Build()
         {
-            return HazelcastOptions.Build(Setup, PreConfigure, Configure, _altKey);
+            return Build<HazelcastOptions>(Setup, PreConfigure, Configure, _altKey);
+        }
+
+        /// <summary>
+        /// Builds the failover options.
+        /// </summary>
+        /// <returns>The options.</returns>
+        public HazelcastFailoverOptions BuildFailover()
+        {
+            return Build<HazelcastFailoverOptions>(SetupFailover, PreConfigureFailover, ConfigureFailover, _altKey);
         }
     }
 }

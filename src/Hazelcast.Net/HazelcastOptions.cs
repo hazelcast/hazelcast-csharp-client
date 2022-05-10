@@ -27,8 +27,13 @@ namespace Hazelcast
     /// <summary>
     /// Represents the Hazelcast client options.
     /// </summary>
-    public sealed partial class HazelcastOptions
+    public sealed partial class HazelcastOptions : HazelcastOptionsBase
     {
+        /// <summary>
+        /// Gets the Hazelcast configuration section name, which is <c>"hazelcast"</c>.
+        /// </summary>
+        internal const string SectionNameConstant = "hazelcast";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
         /// </summary>
@@ -76,6 +81,9 @@ namespace Hazelcast
 
             FlakeIdGenerators = other.FlakeIdGenerators.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
         }
+
+        /// <inheritdoc />
+        internal override string SectionName => SectionNameConstant;
 
         /// <summary>
         /// Gets the <see cref="IServiceProvider"/>.

@@ -31,7 +31,7 @@ namespace Hazelcast.Testing
         /// </summary>
         protected virtual HazelcastOptions CreateHazelcastOptions()
         {
-            var options = HazelcastOptions.Build(builder =>
+            var options = HazelcastOptionsBuilder.Build<HazelcastOptions>(builder =>
             {
                 builder.AddHazelcastAndDefaults(null);
                 builder.AddUserSecrets(GetType().Assembly, true);
@@ -54,7 +54,7 @@ namespace Hazelcast.Testing
         /// different value e.g. "hazelcast-tests-something" can be specified to select
         /// different groups of secrets for different tests.</para>
         /// </remarks>
-        protected virtual string ConfigurationSecretsKey { get; } = HazelcastOptions.Hazelcast;
+        protected virtual string ConfigurationSecretsKey { get; } = HazelcastOptions.SectionNameConstant;
 
         /// <summary>
         /// Creates a client.
