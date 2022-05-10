@@ -41,7 +41,7 @@ namespace Hazelcast.CP
         public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) 
             : base(ServiceNames.FencedLock, objectName, groupId, cluster)
         {
-            _fullName = fullName; // FIXME this should be a base class property
+            _fullName = fullName; // TODO: this should be a base class property
             _groupId = groupId;
             _cpSessionManager = subsystemSession;
         }
@@ -216,7 +216,7 @@ namespace Hazelcast.CP
                 catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
                 {
                     _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
-                    throw; // FIXME: Java throws new IllegalMonitorStateException
+                    throw; // note: Java throws new IllegalMonitorStateException
                 }
                 catch
                 {
@@ -316,7 +316,7 @@ namespace Hazelcast.CP
             if (sessionId == CPSessionManager.NoSessionId)
             {
                 _lockedSessionIds.TryRemove(contextId, out _);
-                throw new SynchronizationLockException(); // FIXME illegal monitor state?
+                throw new SynchronizationLockException(); // note: Java throws new IllegalMonitorStateException
             }
 
             try
