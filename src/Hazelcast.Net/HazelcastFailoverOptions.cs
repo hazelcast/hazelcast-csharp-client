@@ -22,9 +22,15 @@ namespace Hazelcast
     /// </summary>
     /// <remarks>
     /// <para>The client initially tries to connect to the first cluster of the <see cref="Clusters"/>
-    /// list. When it fails, or if the client eventually gets disconnected, it tries each cluster in
-    /// the list in order, and cycle the list at most <see cref="TryCount"/> times before failing and
-    /// shutting down.</para>
+    /// list, then tries each cluster in the list in order, and cycle the list at most <see cref="TryCount"/>
+    /// times before failing and shutting down.</para>
+    /// <para>When the client gets disconnected, it first tries to reconnect to the current cluster,
+    /// then tries each cluster in the list in order, and cycle the list at most <see cref="TryCount"/>
+    /// times before failing and shutting down.</para>
+    /// <para>So if the <see cref="Clusters"/> list is (A, B, C) and client is disconnected from B and
+    /// <see cref="TryCount"/> is 2, it will try C, B, A, C, B, A in this order and then shutdown.</para>
+    /// <para>The retry strategy for each cluster is configured with a 2 minutes timeout, i.e. the
+    /// client will try to connect to each cluster for at most 2 minutes before failing.</para>
     /// </remarks>
     public sealed class HazelcastFailoverOptions : HazelcastOptionsBase
     {
