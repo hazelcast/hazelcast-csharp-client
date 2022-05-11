@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Clustering;
@@ -84,17 +83,6 @@ namespace Hazelcast
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
-
-        /// <summary>
-        /// Gets the <see cref="IServiceProvider"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>In dependency-injection scenario the service provider may be available,
-        /// so that service factories can return injected services. In non-dependency-injection
-        /// scenario, this returns <c>null</c>.</para>
-        /// </remarks>
-        /// <returns>The service provider.</returns>
-        public IServiceProvider ServiceProvider { get; internal set; }
 
         /// <summary>
         /// (unsupported) Gets the <see cref="PreviewOptions"/>.

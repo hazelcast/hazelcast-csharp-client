@@ -17,34 +17,24 @@ using System.Linq;
 
 namespace Hazelcast
 {
-    // FIXME discussion
-    //
-    // TODO: which one is best / easier to understand here?
-    // var failoverOptions = new HazelcastOptionsBuilder().WithFailover(...).BuildFailover();
-    // var failoverOptions = new HazelcastOptionsBuilder().Failover.With(...).Build();
-    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
-    //
-    // var client = await HazelcastClientFactory.StartNewClientAsync(failoverOptions);
-    //
-    // TODO: overload resolution?
-    // var client = await HazelcastClientFactory.StartNewClientAsync(options => {
-    //   options.ClusterName = "bob";
-    // });
-    // var client = await HazelcastClientFactory.StartNewClientAsync((HazelcastOptions options) => { ... });
-    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(options => { ... });
-    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(options => { ... });
-    // var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options => { ... });
-    //
-    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
-    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(failoverOptions);
-    //
-    // DECISION
-    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
-    // var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
-
     /// <summary>
     /// Represents the Hazelcast client failover options.
     /// </summary>
+    /// <remarks>
+    /// FIXME: specs & docs are not consistent!
+    /// https://docs.hazelcast.com/hazelcast/latest/getting-started/blue-green says:
+    /// <para>Through this configuration, the client is directed to connect to the clusters
+    /// indicated by <see cref="Clusters"/> in the given order of the list. The client
+    /// initially connects to the first cluster of the list. Should this cluster fail, the
+    /// client would attempt to reconnect to it <see cref="TryCount"/> times, then to each
+    /// subsequent cluster in the list <see cref="TryCount"/> times, until it succeeds to
+    /// connect to a cluster, or fails and shuts down.</para>
+    /// https://docs.hazelcast.com/hazelcast/latest/clients/java#ordering-of-clusters-when-clients-try-to-connect says:
+    /// ... the client will try each cluster once, in order, and repeat the entire list
+    /// <see cref="TryCount"/> times ... this is different ... and also the list does
+    /// not appear to be circular, so if the client is running on the last cluster of the
+    /// list it immediately increments and tests <see cref="TryCount"/>?
+    /// </remarks>
     public sealed class HazelcastFailoverOptions : HazelcastOptionsBase
     {
         /// <summary>
@@ -57,7 +47,7 @@ namespace Hazelcast
         /// </summary>
         public HazelcastFailoverOptions()
         {
-            Clients = new List<HazelcastOptions>();
+            Clusters = new List<HazelcastOptions>();
         }
 
         /// <summary>
@@ -66,23 +56,24 @@ namespace Hazelcast
         private HazelcastFailoverOptions(HazelcastFailoverOptions other)
         {
             TryCount = other.TryCount;
-            Clients = new List<HazelcastOptions>(other.Clients.Select(x => x.Clone()));
+            Clusters = new List<HazelcastOptions>(other.Clusters.Select(x => x.Clone()));
         }
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
 
         /// <summary>
-        /// FIXME document
+        /// Gets or sets the number of times that the client will try to reconnect to each
+        /// cluster in the failover setup before shutting down.
         /// </summary>
         public int TryCount { get; set; }
 
         /// <summary>
-        /// FIXME document
+        /// Gets the list of cluster in the failover setup.
         /// </summary>
         // TODO: consider supporting merging external files?
         // "clients": [ { "client": "path-to-json" }, ... ]
-        public IList<HazelcastOptions> Clients { get; }
+        public IList<HazelcastOptions> Clusters { get; }
 
         /// <summary>
         /// Clones the options.
