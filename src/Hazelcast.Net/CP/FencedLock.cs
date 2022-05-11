@@ -63,26 +63,9 @@ namespace Hazelcast.CP
         // the same context could be running in parallel.
         //
         // In order to make sure to serializes FencedLock method, i.e. to ensure that only one
-        // method at a time can access the sessionId associated with a contextId, we use a
-        // AsyncContextLocker which allows us to acquire an exclusive lock over the async context
-        // at the beginning of each method.
-        //
-        // Note that AsyncContextLocker locks are obtained within the scope of the locker, so
-        // two FencedLock (i.e. two lockers) do not interfere with each other, they run with two
-        // totally different locker i.e. sets of locks, and can both lock the contexts
-        // independently.
-        //
-        // The AsyncContextLocker LockAsync method returns an IDisposable object that releases
-        // the lock upon being disposed. Therefore, if the lock is declared with the 'using var'
-        // pattern, we know that it will be disposed and thus released when exiting the scope of
-        // the method (even in case of exceptions).
-        //
-        // ->  in the end we can have code very similar to Java except for the context locker.
-        //
-        // The AsyncContextLocker uses a reference-counting mechanism to ensure that it does not
-        // leak lock objects when no task owns a lock for a given contextId.
-        //
-        // FIXME but if we have a lockContext then we can use it instead !!
+        // method at a time can access the sessionId associated with a contextId, acquire an
+        // exclusive lock on the LockContext itself at the beginning of each method. It is
+        // automatically release (thanks to the 'using var' pattern) at the end of the method.
 
         /// <inheritdoc/>  
         public async Task<long> GetFenceAsync(LockContext lockContext)
