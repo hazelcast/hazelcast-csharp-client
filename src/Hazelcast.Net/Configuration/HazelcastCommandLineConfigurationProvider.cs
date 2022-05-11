@@ -30,19 +30,20 @@ namespace Hazelcast.Configuration
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastCommandLineConfigurationProvider"/> class.
         /// </summary>
-        /// <param name="args">The command line args.</param>
-        /// <param name="switchMappings">The switch mappings.</param>
-        public HazelcastCommandLineConfigurationProvider(IEnumerable<string> args, IDictionary<string, string> switchMappings = null)
-            : base(FilterArgs(args, switchMappings), switchMappings)
+        public HazelcastCommandLineConfigurationProvider(HazelcastCommandLineConfigurationSource source)
+            : base(FilterArgs(source.Args, source.SwitchMappings, source.KeyRoot), source.SwitchMappings)
         { }
 
         /// <summary>
         /// (internal for tests only)
         /// Filters arguments.
         /// </summary>
-        internal static IEnumerable<string> FilterArgs(IEnumerable<string> args, IDictionary<string, string> switchMappings)
+        internal static IEnumerable<string> FilterArgs(IEnumerable<string> args, IDictionary<string, string> switchMappings, string keyRoot)
         {
-            var hazelcastAndKeyDelimiter = "hazelcast" + ConfigurationPath.KeyDelimiter;
+            var keyRootAndKeyDelimiter = keyRoot + ConfigurationPath.KeyDelimiter;
+            var keyRootAndDot = keyRoot + '.';
+            var slashKeyRootAndDot = '/' + keyRoot + '.';
+            var dashKeyRootAndDot = "--" + keyRoot + '.';
 
             using var enumerator = args.GetEnumerator();
             while (enumerator.MoveNext())
@@ -69,7 +70,7 @@ namespace Hazelcast.Configuration
                     argk = argk.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
                     if (switchMappings.TryGetValue(argk, out var argm) && 
-                        argm.StartsWith(hazelcastAndKeyDelimiter, StringComparison.Ordinal))
+                        argm.StartsWith(keyRootAndKeyDelimiter, StringComparison.Ordinal))
                     {
                         // yield the key
                         yield return "--" + argm;
@@ -84,8 +85,8 @@ namespace Hazelcast.Configuration
                     }
                 }
 
-                if (arg.StartsWith("/hazelcast.", StringComparison.Ordinal) ||
-                    arg.StartsWith("--hazelcast.", StringComparison.Ordinal))
+                if (arg.StartsWith(slashKeyRootAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(dashKeyRootAndDot, StringComparison.Ordinal))
                 {
                     if ((pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                     {
@@ -104,7 +105,7 @@ namespace Hazelcast.Configuration
                         if (enumerator.MoveNext()) yield return enumerator.Current;
                     }
                 }
-                else if (arg.StartsWith("hazelcast.", StringComparison.Ordinal) &&
+                else if (arg.StartsWith(keyRootAndDot, StringComparison.Ordinal) &&
                          (pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                 {
                     // yield the key

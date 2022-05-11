@@ -35,8 +35,10 @@ namespace Hazelcast.Configuration
         /// </summary>
         internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
         {
-            static KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)
-                => kvp.Key.StartsWith("hazelcast.", StringComparison.Ordinal)
+            var keyRootAndDot = source.KeyRoot + '.';
+
+            KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)
+                => kvp.Key.StartsWith(keyRootAndDot, StringComparison.Ordinal)
                     ? new KeyValuePair<string, string>(kvp.Key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal), kvp.Value)
                     : kvp;
 

@@ -17,6 +17,27 @@ using System.Linq;
 
 namespace Hazelcast
 {
+    // FIXME discussion
+    //
+    // TODO: which one is best / easier to understand here?
+    // var failoverOptions = new HazelcastOptionsBuilder().WithFailover(...).BuildFailover();
+    // var failoverOptions = new HazelcastOptionsBuilder().Failover.With(...).Build();
+    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
+    //
+    // var client = await HazelcastClientFactory.StartNewClientAsync(failoverOptions);
+    //
+    // TODO: overload resolution?
+    // var client = await HazelcastClientFactory.StartNewClientAsync(options => {
+    //   options.ClusterName = "bob";
+    // });
+    // var client = await HazelcastClientFactory.StartNewClientAsync((HazelcastOptions options) => { ... });
+    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(options => { ... });
+    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(options => { ... });
+    // var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options => { ... });
+    //
+    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
+    // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(failoverOptions);
+
     /// <summary>
     /// Represents the Hazelcast client failover options.
     /// </summary>

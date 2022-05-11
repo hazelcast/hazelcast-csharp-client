@@ -28,6 +28,16 @@ namespace Hazelcast.Configuration
     /// </remarks>
     internal class HazelcastEnvironmentVariablesConfigurationProvider : ConfigurationProvider
     {
+        private readonly string _keyRootAndDot;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastEnvironmentVariablesConfigurationProvider"/>.
+        /// </summary>
+        public HazelcastEnvironmentVariablesConfigurationProvider(HazelcastEnvironmentVariablesConfigurationSource source)
+        {
+            _keyRootAndDot = source.KeyRoot + '.';
+        }
+
         /// <inheritdoc />
         public override void Load()
             => Load(Environment.GetEnvironmentVariables());
@@ -44,7 +54,8 @@ namespace Hazelcast.Configuration
             {
                 var key = (string) envVariable.Key;
 
-                if (!key.StartsWith("hazelcast.", StringComparison.OrdinalIgnoreCase)) continue;
+                // FIXME should not use a constant here and we should probably pass it in the ctor
+                if (!key.StartsWith(_keyRootAndDot, StringComparison.OrdinalIgnoreCase)) continue;
 
                 key = key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
                 Data[key] = (string)envVariable.Value;

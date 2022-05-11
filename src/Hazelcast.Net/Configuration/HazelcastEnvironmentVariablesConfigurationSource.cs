@@ -21,10 +21,15 @@ namespace Hazelcast.Configuration
     /// </summary>
     internal class HazelcastEnvironmentVariablesConfigurationSource : IConfigurationSource
     {
+        /// <summary>
+        /// Gets or sets the key root.
+        /// </summary>
+        public string KeyRoot { get; set; }
+
         /// <inheritdoc />
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new HazelcastEnvironmentVariablesConfigurationProvider();
+            return new HazelcastEnvironmentVariablesConfigurationProvider(this);
         }
     }
 }

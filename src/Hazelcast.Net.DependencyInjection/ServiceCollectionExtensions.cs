@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -31,7 +32,7 @@ namespace Hazelcast.DependencyInjection
         /// <returns>The service collection.</returns>
         public static IServiceCollection AddHazelcast(this IServiceCollection services, IConfiguration configuration)
         {
-            configuration = configuration.GetSection("hazelcast");
+            configuration = configuration.GetSection(HazelcastOptions.SectionNameConstant);
 
             // wire the Hazelcast-specific configuration
             services.AddOptions();
@@ -56,6 +57,12 @@ namespace Hazelcast.DependencyInjection
             });
 
             return services;
+        }
+
+        // FIXME document and implement
+        public static IServiceCollection AddHazelcastFailover(this IServiceCollection services, IConfiguration configuration)
+        {
+            throw new NotImplementedException();
         }
     }
 }

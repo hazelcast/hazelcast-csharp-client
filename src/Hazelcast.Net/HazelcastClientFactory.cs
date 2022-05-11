@@ -25,7 +25,6 @@ using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Serialization.DefaultSerializers;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -101,17 +100,30 @@ namespace Hazelcast
             return client;
         }
 
-        // FIXME document failover methods + should it be StartNewFailoverClientAsync?
-        // then we should be able to create a client with the failover options, and then the rest is standard
-
+        // FIXME document + name StartNewFailoverClientAsync?
         public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
+            => StartNewClientAsync(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+
+        // FIXME document
+        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException(); // FIXME
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            return StartNewClientAsyncInternal(options, cancellationToken);
         }
 
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastFailoverOptions configure, CancellationToken cancellationToken = default)
+        // implements the async part of StartNewClientAsync w/ cancellation
+        private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastFailoverOptions options, CancellationToken cancellationToken)
         {
-            throw new NotImplementedException(); // FIXME
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var client = CreateClient(options.Clients[0]); // FIXME need to implement this properly
+            await client.StartAsync(cancellationToken).CfAwait();
+            return client;
         }
 
         /// <summary>
@@ -188,19 +200,31 @@ namespace Hazelcast
             return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
         }
 
+        // FIXME document
         public static HazelcastClientStart GetNewStartingClient(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
-        {
-            throw new NotImplementedException(); // FIXME
-        }
+            => GetNewStartingClient(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
 
+        // FIXME document
         public static HazelcastClientStart GetNewStartingClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
         {
-            throw new NotImplementedException(); // FIXME
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            var client = CreateClient(options.Clients[0]); // FIXME implement properly
+            return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
         }
 
         private static HazelcastOptions GetOptions(Action<HazelcastOptions> configure)
         {
             return new HazelcastOptionsBuilder().With(configure).Build();
+        }
+
+        private static HazelcastFailoverOptions GetFailoverOptions(Action<HazelcastFailoverOptions> configure)
+        {
+            return new HazelcastOptionsBuilder().WithFailover(configure).BuildFailover();
         }
 
         // (internal for tests only) creates the serialization service
