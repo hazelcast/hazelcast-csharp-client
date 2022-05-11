@@ -19,12 +19,24 @@
 ** xref:serialization:global.adoc[Global]
 
 * Using Hazelcast Features
-** xref:using-hazelcast:objects.adoc[]
+** Distributed Objects
+*** xref:using-hazelcast:obj-overview.adoc[Overview]
+*** xref:using-hazelcast:obj-maps.adoc[HMap-HMultiMap-HReplicatedMap]
+*** xref:using-hazelcast:obj-list.adoc[]
+*** xref:using-hazelcast:obj-queue.adoc[]
+*** xref:using-hazelcast:obj-ringbuffer.adoc[]
+*** xref:using-hazelcast:obj-set.adoc[]
+*** xref:using-hazelcast:obj-topic.adoc[]
 ** xref:using-hazelcast:primitives.adoc[]
 ** xref:using-hazelcast:queries.adoc[]
 ** xref:using-hazelcast:computing.adoc[]
 ** xref:using-hazelcast:cp-subsystem.adoc[]
 ** xref:using-hazelcast:locking.adoc[]
+** xref:using-hazelcast:transactions.adoc[]
+** xref:using-hazelcast:data-affinity.adoc[]
+
+* SQL
+include::sql:partial$nav.adoc[]
 
 * xref:events.adoc[]
 * xref:examples.adoc[]
