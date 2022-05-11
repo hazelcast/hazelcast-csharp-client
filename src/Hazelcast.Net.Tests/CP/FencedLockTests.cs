@@ -93,10 +93,11 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
-            await _lock.LockAsync();
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
+            await _lock.LockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -105,10 +106,11 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            Assert.IsTrue(await _lock.TryLockAsync());
-            Assert.IsTrue(await _lock.TryLockAsync());
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            Assert.IsTrue(await _lock.TryLockAsync(lockContext));
+            Assert.IsTrue(await _lock.TryLockAsync(lockContext));
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -117,10 +119,11 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            Assert.True(await _lock.TryLockAsync(TimeSpan.FromSeconds(1)));
-            Assert.True(await _lock.TryLockAsync(TimeSpan.FromSeconds(1)));
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            Assert.True(await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1)));
+            Assert.True(await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1)));
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -128,21 +131,22 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence1 = await _lock.LockAndGetFenceAsync();
-            var fence2 = await _lock.LockAndGetFenceAsync();
+
+            using var lockContext = new LockContext();
+            var fence1 = await _lock.LockAndGetFenceAsync(lockContext);
+            var fence2 = await _lock.LockAndGetFenceAsync(lockContext);
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence2);
             Assert.AreEqual(fence1, fence2);
 
-            var fence3 = await _lock.GetFenceAsync();
+            var fence3 = await _lock.GetFenceAsync(lockContext);
             Assert.AreEqual(fence1, fence3);
 
-            await AssertIsLockedAsync(_lock, 2, fence3);
+            await AssertIsLockedAsync(_lock, lockContext, 2, fence3);
 
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
-
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -150,18 +154,20 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence1 = await _lock.TryLockAndGetFenceAsync();
-            var fence2 = await _lock.TryLockAndGetFenceAsync();
+
+            using var lockContext = new LockContext();
+            var fence1 = await _lock.TryLockAndGetFenceAsync(lockContext);
+            var fence2 = await _lock.TryLockAndGetFenceAsync(lockContext);
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence2);
             Assert.AreEqual(fence1, fence2);
 
-            var fence3 = await _lock.GetFenceAsync();
+            var fence3 = await _lock.GetFenceAsync(lockContext);
             Assert.AreEqual(fence1, fence3);
 
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -169,18 +175,20 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence1 = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromSeconds(1));
-            var fence2 = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromSeconds(1));
+
+            using var lockContext = new LockContext();
+            var fence1 = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromSeconds(1));
+            var fence2 = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromSeconds(1));
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence2);
             Assert.AreEqual(fence1, fence2);
 
-            var fence3 = await _lock.GetFenceAsync();
+            var fence3 = await _lock.GetFenceAsync(lockContext);
             Assert.AreEqual(fence1, fence3);
 
-            await _lock.UnlockAsync();
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -189,17 +197,12 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            using var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            try
-            {
-                Assert.False(await _lock.TryLockAsync()); // cannot take the lock
-            }
-            finally
-            {
-                await otherContext.UnlockAsync();
-            }
+            using var lockContext = new LockContext();
+
+            Assert.False(await _lock.TryLockAsync(lockContext)); // cannot take the lock
         }
 
         [Test]
@@ -208,17 +211,12 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            using var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            try
-            {
-                Assert.False(await _lock.TryLockAsync(TimeSpan.FromSeconds(1))); // cannot take the lock
-            }
-            finally
-            {
-                await otherContext.UnlockAsync();
-            }
+            using var lockContext = new LockContext();
+
+            Assert.False(await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1))); // cannot take the lock
         }
 
         [Test]
@@ -227,10 +225,12 @@ namespace Hazelcast.Tests.CP
             const string lockName = "non-reentrant-lock@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
-            await AssertEx.ThrowsAsync<LockAcquireLimitReachedException>(async () => await _lock.LockAsync());
+            using var lockContext = new LockContext();
 
-            await _lock.UnlockAsync();
+            await _lock.LockAsync(lockContext);
+            await AssertEx.ThrowsAsync<LockAcquireLimitReachedException>(async () => await _lock.LockAsync(lockContext));
+
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -239,14 +239,15 @@ namespace Hazelcast.Tests.CP
             const string lockName = "non-reentrant-lock@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
 
-            Assert.False(await _lock.TryLockAsync());
-            Assert.True(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.TryLockAsync(lockContext));
+            Assert.True(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
-            Assert.AreNotEqual(FencedLock.InvalidFence, await _lock.GetFenceAsync());
+            Assert.AreNotEqual(FencedLock.InvalidFence, await _lock.GetFenceAsync(lockContext));
 
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -255,18 +256,19 @@ namespace Hazelcast.Tests.CP
             const string lockName = "non-reentrant-lock@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
 
-            var fence1 = await _lock.GetFenceAsync();
-            var fence2 = await _lock.TryLockAndGetFenceAsync();
+            var fence1 = await _lock.GetFenceAsync(lockContext);
+            var fence2 = await _lock.TryLockAndGetFenceAsync(lockContext);
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreEqual(FencedLock.InvalidFence, fence2);
-            Assert.True(await _lock.IsLockedByCurrentContextAsync());
+            Assert.True(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
-            Assert.AreEqual(fence1, await _lock.GetFenceAsync());
+            Assert.AreEqual(fence1, await _lock.GetFenceAsync(lockContext));
 
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -275,18 +277,19 @@ namespace Hazelcast.Tests.CP
             const string lockName = "non-reentrant-lock@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
 
-            var fence1 = await _lock.GetFenceAsync();
-            var fence2 = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromSeconds(1));
+            var fence1 = await _lock.GetFenceAsync(lockContext);
+            var fence2 = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromSeconds(1));
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreEqual(FencedLock.InvalidFence, fence2);
-            Assert.True(await _lock.IsLockedByCurrentContextAsync());
+            Assert.True(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
-            Assert.AreEqual(fence1, await _lock.GetFenceAsync());
+            Assert.AreEqual(fence1, await _lock.GetFenceAsync(lockContext));
 
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -299,19 +302,21 @@ namespace Hazelcast.Tests.CP
             // test the re-entrance whereas Java does it the other way round, but
             // the result is the same - testing the very same thing
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            using var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
+
+            using var lockContext = new LockContext();
 
             async Task Reenter()
             {
-                await _lock.LockAsync();
-                await _lock.LockAsync();
-                await _lock.UnlockAsync();
-                await _lock.UnlockAsync();
+                await _lock.LockAsync(lockContext);
+                await _lock.LockAsync(lockContext);
+                await _lock.UnlockAsync(lockContext);
+                await _lock.UnlockAsync(lockContext);
             }
 
             var reentering = Reenter();
-            await otherContext.UnlockAsync();
+            await _lock.UnlockAsync(otherContext);
 
             var task = await Task.WhenAny(reentering, Task.Delay(TimeSpan.FromSeconds(10)));
             Assert.That(task, Is.EqualTo(reentering));
@@ -324,7 +329,8 @@ namespace Hazelcast.Tests.CP
             var client = await CreateAndStartClientAsync().CfAwait(); // use our own client since we are going to dispose it
             _lock = await client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
             await client.DisposeAsync();
 
             var script = $"result = instance_0.getCPSubsystem().getLock(\"{lockName}\").isLocked() ? \"1\" : \"0\";";
@@ -342,19 +348,20 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
-            await AssertIsLockedAsync(_lock);
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
-        private static async Task AssertIsLockedAsync(IFencedLock fencedLock, int count = 1, long? fence = default)
+        private static async Task AssertIsLockedAsync(IFencedLock fencedLock, LockContext lockContext, int count = 1, long? fence = default)
         {
-            fence ??= await fencedLock.GetFenceAsync();
+            fence ??= await fencedLock.GetFenceAsync(lockContext);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence);
 
             Assert.True(await fencedLock.IsLockedAsync());
             Assert.That(await fencedLock.GetLockCountAsync(), Is.EqualTo(count));
-            Assert.True(await fencedLock.IsLockedByCurrentContextAsync());
+            Assert.True(await fencedLock.IsLockedAsync(lockContext));
         }
 
         [Test]
@@ -362,9 +369,10 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence = await _lock.LockAndGetFenceAsync();
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence);
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -372,9 +380,10 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence = await _lock.TryLockAndGetFenceAsync();
+            using var lockContext = new LockContext();
+            var fence = await _lock.TryLockAndGetFenceAsync(lockContext);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence);
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -382,9 +391,10 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var fence = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromSeconds(1));
+            using var lockContext = new LockContext();
+            var fence = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromSeconds(1));
             Assert.AreNotEqual(FencedLock.InvalidFence, fence);
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -392,10 +402,11 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var locked = await _lock.TryLockAsync();
+            using var lockContext = new LockContext();
+            var locked = await _lock.TryLockAsync(lockContext);
             Assert.True(locked);
-            await AssertIsLockedAsync(_lock);
-            await _lock.UnlockAsync();
+            await AssertIsLockedAsync(_lock, lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -403,10 +414,11 @@ namespace Hazelcast.Tests.CP
         {
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
-            var locked = await _lock.TryLockAsync(TimeSpan.FromSeconds(1));
+            using var lockContext = new LockContext();
+            var locked = await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1));
             Assert.True(locked);
-            await AssertIsLockedAsync(_lock);
-            await _lock.UnlockAsync();
+            await AssertIsLockedAsync(_lock, lockContext);
+            await _lock.UnlockAsync(lockContext);
         }
 
         [Test]
@@ -415,17 +427,18 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
 
-            var otherContext = new OtherContextLock(_lock);
-            var otherContextLocking = otherContext.LockAsync();
+            var otherContext = new LockContext();
+            var otherContextLocking = _lock.LockAsync(otherContext);
 
             await Task.Delay(TimeSpan.FromSeconds(5));
             Assert.That(otherContextLocking.IsCompleted, Is.False);
-            await AssertIsLockedAsync(_lock);
+            await AssertIsLockedAsync(_lock, lockContext);
 
             Assert.That(otherContextLocking.IsCompleted, Is.False);
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
             await otherContextLocking;
         }
 
@@ -435,7 +448,8 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.UnlockAsync());
+            using var lockContext = new LockContext();
+            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.UnlockAsync(lockContext));
         }
 
         [Test]
@@ -444,7 +458,8 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync());
+            using var lockContext = new LockContext();
+            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
         }
 
         [Test]
@@ -462,7 +477,8 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            using var lockContext = new LockContext();
+            Assert.False(await _lock.IsLockedAsync(lockContext));
         }
 
         [Test]
@@ -471,13 +487,14 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
+            await _lock.UnlockAsync(lockContext);
 
             Assert.False(await _lock.IsLockedAsync());
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(0));
 
-            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync());
+            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
         }
 
         [Test]
@@ -486,15 +503,16 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
-            await _lock.UnlockAsync();
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
+            await _lock.UnlockAsync(lockContext);
 
-            var otherContext = new OtherContextLock(_lock);
-            var otherFence = await otherContext.TryLockAndGetFenceAsync();
+            var otherContext = new LockContext();
+            var otherFence = await _lock.TryLockAndGetFenceAsync(otherContext);
 
             Assert.Greater(otherFence, fence);
-            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync());
+            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
         }
 
         [Test]
@@ -503,24 +521,25 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
 
-            var otherContext = new OtherContextLock(_lock);
-            var otherFenceTask = otherContext.TryLockAndGetFenceAsync(TimeSpan.FromSeconds(60));
+            var otherContext = new LockContext();
+            var otherFenceTask = _lock.TryLockAndGetFenceAsync(otherContext, TimeSpan.FromSeconds(60));
 
-            await _lock.UnlockAsync();
+            await _lock.UnlockAsync(lockContext);
 
             var otherFence = await otherFenceTask;
 
             Assert.Greater(otherFence, fence);
 
             Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
 
-            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync());
+            await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
 
-            await otherContext.UnlockAsync();
+            await _lock.UnlockAsync(otherContext);
         }
 
         [Test]
@@ -529,12 +548,13 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            Assert.ThrowsAsync<RemoteException>(async () => await _lock.UnlockAsync());
+            using var lockContext = new LockContext();
+            Assert.ThrowsAsync<RemoteException>(async () => await _lock.UnlockAsync(lockContext));
             Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
         }
 
@@ -544,14 +564,15 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            var fence = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(100));
+            using var lockContext = new LockContext();
+            var fence = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(100));
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
             Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
         }
 
@@ -561,19 +582,20 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
             // "1500ms is upper bound of lock service"
             // this is a direct copy of a Java test which comes without comments,
             // and I have no idea what is the purpose of the test (note that 1500ms
             // is not really a "max timeout" and a timeout of 20s is accepted as
             // well...)
-            var fence = await _lock.TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(1500 + 1));
+            using var lockContext = new LockContext();
+            var fence = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(1500 + 1));
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
             Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
             Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
         }
 
@@ -583,8 +605,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -603,7 +626,7 @@ namespace Hazelcast.Tests.CP
                 Assert.AreEqual(newSessionId, CPSessionManager.NoSessionId);
             }, 20_000, 500);
 
-            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.LockAsync());
+            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.LockAsync(lockContext));
         }
 
         [Test]
@@ -612,8 +635,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -629,7 +653,7 @@ namespace Hazelcast.Tests.CP
                 Assert.AreEqual(newSessionId, CPSessionManager.NoSessionId);
             }, 20_000, 500);
 
-            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync());
+            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync(lockContext));
         }
 
         [Test]
@@ -638,8 +662,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -655,7 +680,7 @@ namespace Hazelcast.Tests.CP
                 Assert.AreEqual(newSessionId, CPSessionManager.NoSessionId);
             }, 20_000, 500);
 
-            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync(TimeSpan.FromSeconds(1)));
+            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1)));
             Assert.False(await _lock.IsLockedAsync());
         }
 
@@ -665,8 +690,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -682,8 +708,8 @@ namespace Hazelcast.Tests.CP
                 Assert.AreEqual(newSessionId, CPSessionManager.NoSessionId);
             }, 20_000, 500);
 
-            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync(lockContext));
+            Assert.False(await _lock.IsLockedAsync(lockContext));
             Assert.False(await _lock.IsLockedAsync());
         }
 
@@ -693,8 +719,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -703,11 +730,11 @@ namespace Hazelcast.Tests.CP
             var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
             Assert.AreNotEqual(newSessionId, sessionId);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync(lockContext));
+            Assert.False(await _lock.IsLockedAsync(lockContext));
 
         }
 
@@ -717,8 +744,9 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var fence = await _lock.LockAndGetFenceAsync();
-            await AssertIsLockedAsync(_lock, 1, fence);
+            using var lockContext = new LockContext();
+            var fence = await _lock.LockAndGetFenceAsync(lockContext);
+            await AssertIsLockedAsync(_lock, lockContext, 1, fence);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
@@ -727,11 +755,11 @@ namespace Hazelcast.Tests.CP
             var newSessionId = sessionService.GetGroupSessionId(_lock.GroupId);
             Assert.AreNotEqual(newSessionId, sessionId);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
-            Assert.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.GetFenceAsync());
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.GetFenceAsync(lockContext));
+            Assert.False(await _lock.IsLockedAsync(lockContext));
         }
 
         [Test]
@@ -741,18 +769,19 @@ namespace Hazelcast.Tests.CP
 
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            var otherContext = new OtherContextLock(_lock);
-            await otherContext.LockAsync();
+            var otherContext = new LockContext();
+            await _lock.LockAsync(otherContext);
 
             var sessionService = Client.CPSubsystem.GetSessionManager();
             var sessionId = sessionService.GetGroupSessionId(_lock.GroupId);
 
             Assert.That(sessionService.GetAcquiredSessionCount((CPGroupId)_lock.GroupId, sessionId), Is.EqualTo(1));
 
-            var fence = await _lock.TryLockAndGetFenceAsync();
+            using var lockContext = new LockContext();
+            var fence = await _lock.TryLockAndGetFenceAsync(lockContext);
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
-            Assert.False(await _lock.IsLockedByCurrentContextAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
 
             Assert.That(sessionService.GetAcquiredSessionCount((CPGroupId)_lock.GroupId, sessionId), Is.EqualTo(1));
         }
@@ -763,71 +792,11 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            await _lock.LockAsync();
+            using var lockContext = new LockContext();
+            await _lock.LockAsync(lockContext);
             await _lock.DestroyAsync();
 
-            await AssertEx.ThrowsAsync<RemoteException>(async () => await _lock.LockAsync());
-        }
-
-        private class OtherContextLock
-        {
-            private readonly IFencedLock _fencedLock;
-            private readonly TaskCompletionSource<long> _locked = new TaskCompletionSource<long>();
-            private readonly TaskCompletionSource<long> _unlock = new TaskCompletionSource<long>();
-            private Task _locking;
-
-            public OtherContextLock(IFencedLock fencedLock)
-            {
-                _fencedLock = fencedLock;
-            }
-
-            private async Task LockingAsync(int mode, TimeSpan timeout = default)
-            {
-                AsyncContext.RequireNew();
-                switch (mode)
-                {
-                    case 1:
-                        await _fencedLock.LockAsync().CfAwait();
-                        _locked.TrySetResult(-1);
-                        break;
-                    case 2:
-                        _locked.TrySetResult(await _fencedLock.TryLockAndGetFenceAsync().CfAwait());
-                        break;
-                    case 3:
-                        _locked.TrySetResult(await _fencedLock.TryLockAndGetFenceAsync(timeout).CfAwait());
-                        break;
-                }
-
-                await _unlock.Task.CfAwait();
-                await _fencedLock.UnlockAsync().CfAwait();
-            }
-
-            public Task LockAsync()
-            {
-                if (_locking != null) throw new InvalidOperationException();
-                _locking = LockingAsync(1);
-                return _locked.Task;
-            }
-
-            public Task<long> TryLockAndGetFenceAsync()
-            {
-                if (_locking != null) throw new InvalidOperationException();
-                _locking = LockingAsync(2);
-                return _locked.Task;
-            }
-
-            public Task<long> TryLockAndGetFenceAsync(TimeSpan timeout)
-            {
-                if (_locking != null) throw new InvalidOperationException();
-                _locking = LockingAsync(3, timeout);
-                return _locked.Task;
-            }
-
-            public Task UnlockAsync()
-            {
-                _unlock.TrySetResult(0);
-                return _locking;
-            }
+            await AssertEx.ThrowsAsync<RemoteException>(async () => await _lock.LockAsync(lockContext));
         }
     }
 }

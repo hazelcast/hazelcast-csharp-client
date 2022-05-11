@@ -30,12 +30,11 @@ namespace Hazelcast.CP
     /// </summary>
     internal partial class FencedLock : CPDistributedObjectBase, IFencedLock
     {
-        private readonly AsyncContextLocker _contextLocker = new AsyncContextLocker();
         private readonly ConcurrentDictionary<long, long> _lockedSessionIds = new ConcurrentDictionary<long, long>(); // context -> session
         private readonly CPSessionManager _cpSessionManager;
         private readonly CPGroupId _groupId;
         private readonly string _fullName;
-        private int _destroyed, _disposed;
+        private int _destroyed;
         public const long InvalidFence = 0;
 
         public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) 
@@ -82,12 +81,16 @@ namespace Hazelcast.CP
         //
         // The AsyncContextLocker uses a reference-counting mechanism to ensure that it does not
         // leak lock objects when no task owns a lock for a given contextId.
+        //
+        // FIXME but if we have a lockContext then we can use it instead !!
 
         /// <inheritdoc/>  
-        public async Task<long> GetFenceAsync()
+        public async Task<long> GetFenceAsync(LockContext lockContext)
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
@@ -114,8 +117,18 @@ namespace Hazelcast.CP
         /// <inheritdoc/>  
         public async Task<int> GetLockCountAsync()
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            // the original Java code (below) does some sanity-checking on this operation
+            // but that requires a context and is totally not required, so we just don't
+            // do it - keeping the Java code here as a reference.
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            return ownership.LockCount;
+
+            /*
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
@@ -133,13 +146,24 @@ namespace Hazelcast.CP
             }
 
             return ownership.LockCount;
+            */
         }
 
         /// <inheritdoc/>  
         public async Task<bool> IsLockedAsync()
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            // the original Java code (below) does some sanity-checking on this operation
+            // but that requires a context and is totally not required, so we just don't
+            // do it - keeping the Java code here as a reference.
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            return ownership.Locked;
+
+            /*
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
@@ -155,13 +179,16 @@ namespace Hazelcast.CP
 
             VerifyNoLock(contextId);
             return ownership.Locked;
+            */
         }
 
         /// <inheritdoc/>        
-        public async Task<bool> IsLockedByCurrentContextAsync()
+        public async Task<bool> IsLockedAsync(LockContext lockContext)
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
@@ -182,10 +209,12 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/>        
-        public async Task<long> LockAndGetFenceAsync()
+        public async Task<long> LockAndGetFenceAsync(LockContext lockContext)
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
 
             while (true)
@@ -227,22 +256,24 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/> 
-        public Task LockAsync()
+        public Task LockAsync(LockContext lockContext)
         {
-            return LockAndGetFenceAsync();
+            return LockAndGetFenceAsync(lockContext);
         }
 
         /// <inheritdoc/> 
-        public Task<long> TryLockAndGetFenceAsync()
+        public Task<long> TryLockAndGetFenceAsync(LockContext lockContext)
         {
-            return TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0));
+            return TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0));
         }
 
         /// <inheritdoc/> 
-        public async Task<long> TryLockAndGetFenceAsync(TimeSpan timeout)
+        public async Task<long> TryLockAndGetFenceAsync(LockContext lockContext, TimeSpan timeout)
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
 
             var timeoutMilliseconds = (long) Math.Round(Math.Max(0, timeout.TotalMilliseconds));
@@ -291,24 +322,26 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/> 
-        public async Task<bool> TryLockAsync(TimeSpan timeout)
+        public async Task<bool> TryLockAsync(LockContext lockContext, TimeSpan timeout)
         {
-            var fence = await TryLockAndGetFenceAsync(timeout).CfAwait();
+            var fence = await TryLockAndGetFenceAsync(lockContext, timeout).CfAwait();
             return fence != InvalidFence;
         }
 
         /// <inheritdoc/> 
-        public async Task<bool> TryLockAsync()
+        public async Task<bool> TryLockAsync(LockContext lockContext)
         {
-            var fence = await TryLockAndGetFenceAsync(TimeSpan.FromMilliseconds(0)).CfAwait();
+            var fence = await TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0)).CfAwait();
             return fence != InvalidFence;
         }
 
         /// <inheritdoc/> 
-        public async Task UnlockAsync()
+        public async Task UnlockAsync(LockContext lockContext)
         {
-            var contextId = AsyncContext.Current.Id; // the asynchronous context identified (equivalent to Java thread identifier)
-            using var contextLock = await _contextLocker.LockAsync(contextId).CfAwait(); // lock the asynchronous context
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
@@ -376,16 +409,6 @@ namespace Hazelcast.CP
             await RequestDestroyAsync().CfAwait();
 
             // note: still needs to be disposed to clear the _contextLocker
-        }
-
-        /// <inheritdoc />
-        public override ValueTask DisposeAsync()
-        {
-            if (!_disposed.InterlockedZeroToOne()) return default;
-
-            _contextLocker.Dispose();
-
-            return base.DisposeAsync();
         }
 
         internal class LockOwnershipState
