@@ -117,6 +117,6 @@ namespace Hazelcast.CP
         /// Gets whether the lock is held by the current <see cref="AsyncContext"/> or not.
         /// </summary>
         /// <returns<see cref="true"/> if the lock is held by the current <see cref="AsyncContext"/> otherwise <see cref = "false" /></returns>
-        Task<bool> IsLockedByCurrentContext();
+        Task<bool> IsLockedByCurrentContextAsync();
     }
 }
