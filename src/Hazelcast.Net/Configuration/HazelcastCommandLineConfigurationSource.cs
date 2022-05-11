@@ -32,11 +32,6 @@ namespace Hazelcast.Configuration
         /// </summary>
         public IEnumerable<string> Args { get; set; }
 
-        /// <summary>
-        /// Gets or sets the key root.
-        /// </summary>
-        public string KeyRoot { get; set; }
-
         /// <inheritdoc />
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {

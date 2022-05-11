@@ -100,12 +100,12 @@ namespace Hazelcast
             return client;
         }
 
-        // FIXME document + name StartNewFailoverClientAsync?
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
-            => StartNewClientAsync(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+        // FIXME document
+        public static ValueTask<IHazelcastClient> StartNewFailoverClientAsync(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
+            => StartNewFailoverClientAsync(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
 
         // FIXME document
-        public static ValueTask<IHazelcastClient> StartNewClientAsync(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
+        public static ValueTask<IHazelcastClient> StartNewFailoverClientAsync(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -113,11 +113,11 @@ namespace Hazelcast
             // and, we *must* do this in a non-async method for the change to bubble up!
             AsyncContext.Ensure();
 
-            return StartNewClientAsyncInternal(options, cancellationToken);
+            return StartNewFailoverClientAsyncInternal(options, cancellationToken);
         }
 
         // implements the async part of StartNewClientAsync w/ cancellation
-        private static async ValueTask<IHazelcastClient> StartNewClientAsyncInternal(HazelcastFailoverOptions options, CancellationToken cancellationToken)
+        private static async ValueTask<IHazelcastClient> StartNewFailoverClientAsyncInternal(HazelcastFailoverOptions options, CancellationToken cancellationToken)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -201,11 +201,11 @@ namespace Hazelcast
         }
 
         // FIXME document
-        public static HazelcastClientStart GetNewStartingClient(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
-            => GetNewStartingClient(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+        public static HazelcastClientStart GetNewStartingFailoverClient(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
+            => GetNewStartingFailoverClient(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
 
         // FIXME document
-        public static HazelcastClientStart GetNewStartingClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
+        public static HazelcastClientStart GetNewStartingFailoverClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -224,7 +224,7 @@ namespace Hazelcast
 
         private static HazelcastFailoverOptions GetFailoverOptions(Action<HazelcastFailoverOptions> configure)
         {
-            return new HazelcastOptionsBuilder().WithFailover(configure).BuildFailover();
+            return new HazelcastFailoverOptionsBuilder().With(configure).Build();
         }
 
         // (internal for tests only) creates the serialization service

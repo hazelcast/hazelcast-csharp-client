@@ -78,7 +78,7 @@ namespace Hazelcast.Configuration
         public static IConfigurationBuilder AddHazelcastEnvironmentVariables(this IConfigurationBuilder configurationBuilder)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
-            configurationBuilder.Add(new HazelcastEnvironmentVariablesConfigurationSource { KeyRoot = HazelcastOptions.SectionNameConstant });
+            configurationBuilder.Add(new HazelcastEnvironmentVariablesConfigurationSource());
             return configurationBuilder;
         }
 
@@ -96,7 +96,7 @@ namespace Hazelcast.Configuration
         public static IConfigurationBuilder AddHazelcastCommandLine(this IConfigurationBuilder configurationBuilder, string[] args, IDictionary<string, string> switchMappings = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
-            configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args, SwitchMappings = switchMappings, KeyRoot = HazelcastOptions.SectionNameConstant });
+            configurationBuilder.Add(new HazelcastCommandLineConfigurationSource { Args = args, SwitchMappings = switchMappings });
             return configurationBuilder;
         }
 
@@ -109,7 +109,7 @@ namespace Hazelcast.Configuration
         public static IConfigurationBuilder AddHazelcastInMemoryCollection(this IConfigurationBuilder configurationBuilder, IEnumerable<KeyValuePair<string, string>> initialData)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
-            configurationBuilder.Add(new HazelcastMemoryConfigurationSource { InitialData = initialData, KeyRoot = HazelcastOptions.SectionNameConstant });
+            configurationBuilder.Add(new HazelcastMemoryConfigurationSource { InitialData = initialData });
             return configurationBuilder;
         }
 
@@ -228,7 +228,7 @@ namespace Hazelcast.Configuration
 
             // process hazelcast-style environment variables if normal environment variables are processed
             i = sources.IndexOf(source => source is EnvironmentVariablesConfigurationSource);
-            if (i != -1) sources.Insert(i + 1, new HazelcastEnvironmentVariablesConfigurationSource { KeyRoot = HazelcastOptions.SectionNameConstant });
+            if (i != -1) sources.Insert(i + 1, new HazelcastEnvironmentVariablesConfigurationSource());
 
             // process hazelcast-style command line arguments if normal command line arguments are processed
             i = sources.LastIndexOf(source => source is CommandLineConfigurationSource);

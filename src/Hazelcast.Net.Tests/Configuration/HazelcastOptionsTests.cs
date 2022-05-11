@@ -39,8 +39,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build<HazelcastOptions>((Action<IConfigurationBuilder>) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build<HazelcastOptions>(null, null, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build(null, null, null, "key"));
         }
 
         [Test]
@@ -630,7 +630,7 @@ namespace Hazelcast.Tests.Configuration
             stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
-            options = HazelcastOptionsBuilder.Build<HazelcastOptions>(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
+            options = HazelcastOptionsBuilder.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
                 null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);

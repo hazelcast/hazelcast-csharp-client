@@ -27,24 +27,29 @@ namespace Hazelcast.Configuration
     /// </remarks>
     internal class HazelcastCommandLineConfigurationProvider : CommandLineConfigurationProvider
     {
+        private static readonly string HazelcastAndKeyDelimiter = HazelcastOptions.SectionNameConstant + ConfigurationPath.KeyDelimiter;
+        private const string HazelcastAndDot = HazelcastOptions.SectionNameConstant + ".";
+        private const string SlashHazelcastAndDot = "/" + HazelcastAndDot;
+        private const string DashHazelcastAndDot = "--" + HazelcastAndDot;
+
+        private static readonly string FailoverAndKeyDelimiter = HazelcastFailoverOptions.SectionNameConstant + ConfigurationPath.KeyDelimiter;
+        private const string FailoverAndDot = HazelcastFailoverOptions.SectionNameConstant + ".";
+        private const string SlashFailoverAndDot = "/" + FailoverAndDot;
+        private const string DashFailoverAndDot = "--" + FailoverAndDot;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastCommandLineConfigurationProvider"/> class.
         /// </summary>
         public HazelcastCommandLineConfigurationProvider(HazelcastCommandLineConfigurationSource source)
-            : base(FilterArgs(source.Args, source.SwitchMappings, source.KeyRoot), source.SwitchMappings)
+            : base(FilterArgs(source.Args, source.SwitchMappings), source.SwitchMappings)
         { }
 
         /// <summary>
         /// (internal for tests only)
         /// Filters arguments.
         /// </summary>
-        internal static IEnumerable<string> FilterArgs(IEnumerable<string> args, IDictionary<string, string> switchMappings, string keyRoot)
+        internal static IEnumerable<string> FilterArgs(IEnumerable<string> args, IDictionary<string, string> switchMappings)
         {
-            var keyRootAndKeyDelimiter = keyRoot + ConfigurationPath.KeyDelimiter;
-            var keyRootAndDot = keyRoot + '.';
-            var slashKeyRootAndDot = '/' + keyRoot + '.';
-            var dashKeyRootAndDot = "--" + keyRoot + '.';
-
             using var enumerator = args.GetEnumerator();
             while (enumerator.MoveNext())
             {
@@ -70,23 +75,23 @@ namespace Hazelcast.Configuration
                     argk = argk.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
                     if (switchMappings.TryGetValue(argk, out var argm) && 
-                        argm.StartsWith(keyRootAndKeyDelimiter, StringComparison.Ordinal))
+                        (argm.StartsWith(HazelcastAndKeyDelimiter, StringComparison.Ordinal) ||
+                         argm.StartsWith(FailoverAndKeyDelimiter, StringComparison.Ordinal)))
                     {
                         // yield the key
                         yield return "--" + argm;
 
                         // yield the value
-#pragma warning disable CA1508 // Avoid dead conditional code - false positive due to range operator?!
-                        // ReSharper disable once ConditionIsAlwaysTrueOrFalse
                         if (argv != null) yield return argv;
-#pragma warning restore CA1508 
                         else if (enumerator.MoveNext()) yield return enumerator.Current;
                         continue; // next!
                     }
                 }
 
-                if (arg.StartsWith(slashKeyRootAndDot, StringComparison.Ordinal) ||
-                    arg.StartsWith(dashKeyRootAndDot, StringComparison.Ordinal))
+                if (arg.StartsWith(SlashHazelcastAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(DashHazelcastAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(SlashFailoverAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(DashFailoverAndDot, StringComparison.Ordinal))
                 {
                     if ((pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                     {
@@ -105,7 +110,8 @@ namespace Hazelcast.Configuration
                         if (enumerator.MoveNext()) yield return enumerator.Current;
                     }
                 }
-                else if (arg.StartsWith(keyRootAndDot, StringComparison.Ordinal) &&
+                else if ((arg.StartsWith(HazelcastAndDot, StringComparison.Ordinal) || 
+                          arg.StartsWith(FailoverAndDot, StringComparison.Ordinal)) &&
                          (pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                 {
                     // yield the key

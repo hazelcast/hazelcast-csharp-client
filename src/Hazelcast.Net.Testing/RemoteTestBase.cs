@@ -31,7 +31,7 @@ namespace Hazelcast.Testing
         /// </summary>
         protected virtual HazelcastOptions CreateHazelcastOptions()
         {
-            var options = HazelcastOptionsBuilder.Build<HazelcastOptions>(builder =>
+            var options = HazelcastOptionsBuilder.Build(builder =>
             {
                 builder.AddHazelcastAndDefaults(null);
                 builder.AddUserSecrets(GetType().Assembly, true);

@@ -37,6 +37,10 @@ namespace Hazelcast
     //
     // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
     // var client = await HazelcastFailoverClientFactory.StartNewClientAsync(failoverOptions);
+    //
+    // DECISION
+    // var failoverOptions = new HazelcastFailoverOptionsBuilder().With(...).Build();
+    // var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
 
     /// <summary>
     /// Represents the Hazelcast client failover options.
