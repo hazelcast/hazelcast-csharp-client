@@ -640,5 +640,28 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
         }
+
+        [Test]
+        public void Failover()
+        {
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(Resources.HazelcastFailoverOptions));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastFailoverOptions();
+            configuration.HzBind(HazelcastFailoverOptions.SectionNameConstant, options);
+
+            Assert.That(options.TryCount, Is.EqualTo(42));
+            Assert.That(options.Clusters.Count, Is.EqualTo(2));
+
+            Assert.That(options.Clusters[0].ClientName, Is.EqualTo("client"));
+            Assert.That(options.Clusters[0].ClusterName, Is.EqualTo("cluster"));
+            Assert.That(options.Clusters[0].Networking.ConnectionRetry.Jitter, Is.EqualTo(1004));
+
+            Assert.That(options.Clusters[1].ClientName, Is.EqualTo("client2"));
+            Assert.That(options.Clusters[1].ClusterName, Is.EqualTo("cluster2"));
+        }
     }
 }

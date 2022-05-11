@@ -21,19 +21,10 @@ namespace Hazelcast
     /// Represents the Hazelcast client failover options.
     /// </summary>
     /// <remarks>
-    /// FIXME: specs & docs are not consistent!
-    /// https://docs.hazelcast.com/hazelcast/latest/getting-started/blue-green says:
-    /// <para>Through this configuration, the client is directed to connect to the clusters
-    /// indicated by <see cref="Clusters"/> in the given order of the list. The client
-    /// initially connects to the first cluster of the list. Should this cluster fail, the
-    /// client would attempt to reconnect to it <see cref="TryCount"/> times, then to each
-    /// subsequent cluster in the list <see cref="TryCount"/> times, until it succeeds to
-    /// connect to a cluster, or fails and shuts down.</para>
-    /// https://docs.hazelcast.com/hazelcast/latest/clients/java#ordering-of-clusters-when-clients-try-to-connect says:
-    /// ... the client will try each cluster once, in order, and repeat the entire list
-    /// <see cref="TryCount"/> times ... this is different ... and also the list does
-    /// not appear to be circular, so if the client is running on the last cluster of the
-    /// list it immediately increments and tests <see cref="TryCount"/>?
+    /// <para>The client initially tries to connect to the first cluster of the <see cref="Clusters"/>
+    /// list. When it fails, or if the client eventually gets disconnected, it tries each cluster in
+    /// the list in order, and cycle the list at most <see cref="TryCount"/> times before failing and
+    /// shutting down.</para>
     /// </remarks>
     public sealed class HazelcastFailoverOptions : HazelcastOptionsBase
     {
