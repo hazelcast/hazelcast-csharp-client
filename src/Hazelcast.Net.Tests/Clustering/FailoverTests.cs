@@ -13,10 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
@@ -26,27 +22,28 @@ using Hazelcast.Partitioning;
 using Hazelcast.Security;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
-using Microsoft.Extensions.Logging;
+
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
 using Hazelcast.Testing.Configuration;
-using static Hazelcast.Testing.Remote.RemoteController;
 using Hazelcast.Exceptions;
-using Hazelcast.Testing.Remote;
+
 
 namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
-    [Timeout(30_000)]
+    [Timeout(60_000)]
     internal class FailoverTests : MultipleClusterRemoteTestBase
     {
         private IDisposable HConsoleForTest()
+
 
             => HConsole.Capture(options => options
                 .ClearAll()
                 .Configure().SetMinLevel()
                 .Configure<HConsoleLoggerProvider>().SetMaxLevel()
+                .Configure<Failover>().SetPrefix("FAILOVER").SetMaxLevel() 
                 .Configure<FailoverTests>().SetPrefix("TEST").SetMaxLevel()
             );
 
@@ -67,8 +64,8 @@ namespace Hazelcast.Tests.Clustering
                     .Build();
 
                 var mockpartitioner = Mock.Of<Partitioner>();
-                var mock = new Mock<ClusterState>(options, "clusterName", "clientName", mockpartitioner, new NullLoggerFactory());
-                return mock.Object;
+                return new ClusterState(options, "clusterName", "clientName", mockpartitioner, new NullLoggerFactory());
+               
             }
         }
 
@@ -83,7 +80,7 @@ namespace Hazelcast.Tests.Clustering
         }
 
         [Test]
-        public void TestClusterDisconnectedIncreaseCount()
+        public void TestChangeRequestIncreaseTryCount()
         {
             var options = new HazelcastOptionsBuilder()
                 .With("hazelcast.clusterName", "first")
@@ -94,21 +91,25 @@ namespace Hazelcast.Tests.Clustering
                 .With("hazelcast.failover.clusters.0.networking.addresses.0", "123.1.1.2")
                 .Build();
 
-            var failover = new Failover(MockClusterState, options, new NullLoggerFactory());
+
+            var clusterState = MockClusterState;
+            var failover = new Failover(clusterState, options, new NullLoggerFactory());
+
+            clusterState.ChangeState(ClientState.Disconnected);
 
             Assert.AreEqual(0, failover.CurrentTryCount);
 
-            failover.OnClusterStateChanged(ClientState.Disconnected);
+            failover.RequestClusterChange();
             Assert.AreEqual(1, failover.CurrentTryCount);
             Assert.True(failover.CanSwitchClusterOptions);
 
-            failover.OnClusterStateChanged(ClientState.Disconnected);
+            failover.RequestClusterChange();
             Assert.AreEqual(2, failover.CurrentTryCount);
-            Assert.False(failover.CanSwitchClusterOptions);//no right to switch anymore, alredy tried 2 times
+            Assert.False(failover.CanSwitchClusterOptions);//no chance to switch anymore, alredy tried 2 times as configured
 
-            failover.OnClusterStateChanged(ClientState.Connected);
-            Assert.AreEqual(0, failover.CurrentTryCount);
-            Assert.True(failover.CanSwitchClusterOptions);
+            failover.RequestClusterChange();
+            Assert.AreEqual(2, failover.CurrentTryCount);
+            Assert.False(failover.CanSwitchClusterOptions);                        
         }
 
 
@@ -140,8 +141,8 @@ namespace Hazelcast.Tests.Clustering
                 .With("hazelcast.failover.clusters.0.authentication.username-password.password", password)
                 .With("hazelcast.failover.clusters.0.heartbeat.timeoutMilliseconds", hearthBeat)
                 .Build();
-
-            var failover = new Failover(MockClusterState, options, new NullLoggerFactory());
+            var clusterState = MockClusterState;
+            var failover = new Failover(clusterState, options, new NullLoggerFactory());
             failover.ClusterOptionsChanged += delegate (ClusterOptions currentCluster)
             {
                 countOfClusterChangedRaised++;
@@ -168,19 +169,19 @@ namespace Hazelcast.Tests.Clustering
 
             //initial one must be cluster 1
             assertForCluster1(failover);
-
-            //try 1
-            failover.OnClusterStateChanged(ClientState.Disconnected);
+            clusterState.ChangeState(ClientState.Disconnected);
+            //try 1, go to cluster 2
+            failover.RequestClusterChange();
             assertForCluster2(failover);
             Assert.AreEqual(1, countOfClusterChangedRaised);
 
-            //try 2
-            failover.OnClusterStateChanged(ClientState.Disconnected);
+            //try 2, go to cluster 1
+            failover.RequestClusterChange();
             assertForCluster1(failover);
             Assert.AreEqual(2, countOfClusterChangedRaised);
 
-            //already tried 2 cluster, so no switching
-            failover.OnClusterStateChanged(ClientState.Disconnected);
+            //already tried 2 cluster, so no switching, trycount exhausted
+            failover.RequestClusterChange();
             assertForCluster1(failover);
             Assert.AreEqual(2, countOfClusterChangedRaised);
         }
@@ -243,18 +244,14 @@ namespace Hazelcast.Tests.Clustering
             var map = await client.GetMapAsync<string, string>(mapName);
             Assert.IsNotNull(map);
 
-            // firs cluster should be A
+            // first cluster should be A
             await assertClusterA(map, client.ClusterName, options);
 
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
 
-            //give some time to client to change cluster
-            await Task.Delay(3_000);
-
             //Now, we should failover to cluster B
-            Assert.AreEqual(ClientState.Connected, client.State);
-
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 20_000, 500);
             await assertClusterB(map, client.ClusterName, options);
 
             // Start cluster A again
@@ -265,21 +262,19 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster B :{RcClusterAlternative.Id}");
             await KillMembersOnAsync(RcClusterAlternative.Id, membersB);
 
-            await Task.Delay(3_000);
-
-            Assert.AreEqual(ClientState.Connected, client.State);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 20_000, 500);
             await assertClusterA(map, client.ClusterName, options);
 
-            Assert.GreaterOrEqual(numberOfStateChanged, 9);
+            Assert.GreaterOrEqual(numberOfStateChanged, 8);
             /*
                 Expected State Flow: Due to test environment, client can experience more state changes, it's ok.
                 0 Starting
                 1 Started
                 2 Connected
-                3 Disconnected                
+                3 Disconnected                      
                 4 Switched
                 5 Connected
-                6 Disconnected                
+                6 Disconnected      
                 7 Switched
                 8 Connected
              */
@@ -288,6 +283,7 @@ namespace Hazelcast.Tests.Clustering
         }
 
         [Test]
+
         public async Task TestClientThrowExceptionOnFailover()
         {
             var _ = HConsoleForTest();
@@ -299,7 +295,7 @@ namespace Hazelcast.Tests.Clustering
                     opt.Networking.Addresses.Clear();
                     opt.Networking.Addresses.Add("127.0.0.1:5701");
                     opt.Networking.ReconnectMode = Hazelcast.Networking.ReconnectMode.ReconnectAsync;
-                    opt.Networking.ConnectionTimeoutMilliseconds = 10_000;
+                    opt.Networking.ConnectionTimeoutMilliseconds = 5_000;
                     opt.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
                     opt.Networking.ConnectionRetry.InitialBackoffMilliseconds = 5_000;
 
@@ -385,8 +381,6 @@ namespace Hazelcast.Tests.Clustering
             var membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
             var membersB = await StartMembersOn(RcClusterPartition.Id, 1);
 
-            bool connectionExceptionThrowed = false;
-
             // Since connections are managed at the backend,
             // cannot cacth the exception with an simple assertion
 
@@ -400,6 +394,8 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+
+            //Failover to B and fail due to different partition count            
 
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
             membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
@@ -415,7 +411,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"Asserting Cluster A - {RcClusterPrimary.Id}");
 
             Assert.AreEqual(RcClusterPrimary.Id, currentClusterId);
-            
+
             await map.PutAsync(clusterAKey, clusterAData);
             var readData = await map.GetAsync(clusterAKey);
             Assert.AreEqual(clusterAData, readData);

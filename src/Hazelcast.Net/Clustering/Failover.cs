@@ -71,20 +71,20 @@ namespace Hazelcast.Clustering
 
             _clusterEnumerator = _clusters.GetEnumerator();
             ResetToFirstCluster();
-                        
+
             _maxTryCount = options.Failover.TryCount;
 
             HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.FAILOVER"));
         }
 
         /// <summary>
-        /// Gets or sets action that will be executed after cluster options are switched
+        /// Triggers when failover is possible, and cluster options are changed.
         /// </summary>
         public Action<ClusterOptions> ClusterOptionsChanged
         {
             get => _clusterOptionsChanged;
             set
-            {                
+            {
                 _clusterOptionsChanged = value;
             }
         }
@@ -99,19 +99,24 @@ namespace Hazelcast.Clustering
             {
                 _currentTryCount = 0;
             }
-            //We only count disconnected states.
-            //Failover works on each Disconnected state even it is very first connection,
-            //and a network glitch caused connection failure.We don't try the current cluster,
-            //skip to next one until establishing a connection or exhausting the try count.
-            else if (clientState == ClientState.Disconnected && CanSwitchClusterOptions)
-            {
-                SwitchClusterOptions();
-                _currentTryCount++;
-                _state.ChangeState(ClientState.ClientChangedCluster);
-                HConsole.WriteLine(this, "CLUSTER SWITCHED");
-            }
 
             return default;
+        }
+
+        /// <summary>
+        /// Changes the cluster options, and triggers <see cref="ClusterOptionsChanged"/>
+        /// </summary>
+        /// <remarks>Failover can only work when client state is <see cref="ClientState.Disconnected"/></remarks>
+        /// <returns>true if options changed, otherwise false</returns>
+        public bool RequestClusterChange()
+        {
+            if (_state.ClientState == ClientState.Disconnected && CanSwitchClusterOptions)
+            {
+                SwitchClusterOptions();                
+                HConsole.WriteLine(this, "CLUSTER OPTIONS SWITCHED");
+                return true;
+            }
+            return false;
         }
 
         /// <summary>
@@ -123,13 +128,14 @@ namespace Hazelcast.Clustering
             if (!_clusterEnumerator.MoveNext())
             {
                 ResetToFirstCluster();
+                _currentTryCount++;
             }
 
             _clusterOptionsChanged?.Invoke(CurrentClusterOptions);
         }
 
         private void ResetToFirstCluster()
-        {
+        {            
             _clusterEnumerator.Reset();
             _clusterEnumerator.MoveNext();//request for first item
         }
@@ -148,6 +154,12 @@ namespace Hazelcast.Clustering
         /// Gets number of trial for the <see cref="CurrentClusterOptions"/>
         /// </summary>
         public int CurrentTryCount => _currentTryCount;
+
+        /// <summary>
+        /// Gets whether current cluster options set by Failover, 
+        /// and client will establish a connection to a backup cluster.
+        /// </summary>
+        public bool IsChangingCluster => _currentTryCount > 0;
 
         /// <summary>
         /// Gets or sets <see cref="Failover"/> whether is enabled.

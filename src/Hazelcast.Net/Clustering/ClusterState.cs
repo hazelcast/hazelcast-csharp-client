@@ -55,7 +55,7 @@ namespace Hazelcast.Clustering
 
             StateChanged += _failover.OnClusterStateChanged;
 
-            ClusterOptionsChanged += cluster =>
+            _failover.ClusterOptionsChanged += cluster =>
             {
                 AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
                 ClusterName = cluster.ClusterName;                              
@@ -90,20 +90,7 @@ namespace Hazelcast.Clustering
                 ThrowIfPropertiesAreReadOnly();
                 _shutdownRequested = value;
             }
-        }
-
-        /// <summary>
-        /// Triggers when cluster options changed after a failover
-        /// If you don't need to new cluster options, you can subscribe to <see cref="StateChanged"/>
-        /// </summary>
-        public Action<ClusterOptions> ClusterOptionsChanged
-        {
-            get => _failover.ClusterOptionsChanged;
-            set
-            {                
-                _failover.ClusterOptionsChanged = value;
-            }
-        }
+        }     
 
         #endregion
 
@@ -299,8 +286,7 @@ namespace Hazelcast.Clustering
 
                 // never going to be connected
                 if (ClientState != ClientState.Started &&
-                    ClientState != ClientState.Disconnected &&
-                    ClientState != ClientState.ClientChangedCluster) return new ValueTask<bool>(false);
+                    ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
             }
 
             return WaitForConnectedAsync2(cancellationToken);
@@ -318,8 +304,7 @@ namespace Hazelcast.Clustering
 
                 // never going to be connected
                 if (ClientState != ClientState.Started &&
-                    ClientState != ClientState.Disconnected &&
-                    ClientState != ClientState.ClientChangedCluster) return false;
+                    ClientState != ClientState.Disconnected) return false;
 
                 // must wait
                 wait = new TaskCompletionSource<ClientState>();
@@ -328,8 +313,7 @@ namespace Hazelcast.Clustering
                 {
                     // either connected, or never going to be connected
                     if (x != ClientState.Started &&
-                        x != ClientState.Disconnected &&
-                        x != ClientState.ClientChangedCluster)
+                        x != ClientState.Disconnected)
                         wait.TrySetResult(x);
 
                     // keep waiting
@@ -399,11 +383,11 @@ namespace Hazelcast.Clustering
         /// Whether smart routing is enabled.
         /// </summary>
         public bool IsSmartRouting => Options.Networking.SmartRouting;
-
+        
         /// <summary>
-        /// Whether failover is enabled.
+        /// Gets Failover service.
         /// </summary>
-        public bool IsFailoverEnabled => _failover.Enabled;
+        public Failover Failover => _failover;
 
         /// <summary>
         /// Gets the address provider.

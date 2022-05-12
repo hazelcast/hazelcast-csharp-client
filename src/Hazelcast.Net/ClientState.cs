@@ -73,11 +73,10 @@ namespace Hazelcast
         ShuttingDown,
 
         /// <summary>
-        /// The client switched the cluster options, and will reconnect with new options due to failover.
-        /// <para>This state is reached when failover enabled, cluster options
-        /// are changed, cache is cleared.Then, client will reconnect with new options.</para>
+        /// Client has swicthed to a new cluster and connected to it due to failover.
         /// </summary>
-        ClientChangedCluster,
+        /// <remarks>Connected state will be reached after this state.</remarks>
+        ClusterChanged,
 
         /// <summary>
         /// The client has shut down.

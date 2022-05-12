@@ -71,7 +71,7 @@ namespace Hazelcast.Clustering
 
             _members = new MemberTable();
 
-            _clusterState.ClusterOptionsChanged += (options) =>
+            _clusterState.Failover.ClusterOptionsChanged += (options) =>
             {
                 Clear();
             };
@@ -182,7 +182,11 @@ namespace Hazelcast.Clustering
                     {
                         // change Started | Disconnected -> Connected, ignore otherwise, it could be ShuttingDown or Shutdown
                         _logger.IfDebug()?.LogDebug("Added connection {ConnectionId} to member {MemberId} at {Address}, now connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClientChangedCluster, ClientState.Disconnected);
+
+                        if (_clusterState.Failover.IsChangingCluster)
+                            _clusterState.ChangeState(ClientState.ClusterChanged);
+
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClusterChanged, ClientState.Disconnected);
                         _connected = true;
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
@@ -267,7 +271,7 @@ namespace Hazelcast.Clustering
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
                         _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
                         drain = true;
@@ -477,7 +481,10 @@ namespace Hazelcast.Clustering
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, now connected.", removed.Count, added.Count, members.Count);
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClientChangedCluster, ClientState.Disconnected);
+                        if (_clusterState.Failover.IsChangingCluster)
+                            _clusterState.ChangeState(ClientState.ClusterChanged);
+
+                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClusterChanged, ClientState.Disconnected);
                         _connected = true;
                     }
                     else
@@ -518,7 +525,7 @@ namespace Hazelcast.Clustering
                     {
                         // no more connected member, we are now disconnected
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
                         _connected = false;
                         disconnected = true;
                     }

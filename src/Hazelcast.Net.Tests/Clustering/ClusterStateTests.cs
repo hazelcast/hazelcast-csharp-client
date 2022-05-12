@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Clustering
             const string clusterName2 = "second";
             const string address1 = "127.0.0.1";
             const string address2 = "127.0.0.2";
-            var countOfStateChanged = 0;
+            var countOfOptionsChanged = 0;
 
             var clusterState = CreateClusterState(clusterName1, clusterName2, address1, address2);
 
@@ -71,37 +71,36 @@ namespace Hazelcast.Tests.Clustering
                 Assert.True(addresses.Contains(networkAddress));
             };
             
-            clusterState.StateChanged += x =>
+            clusterState.Failover.ClusterOptionsChanged += x =>
             {
-                countOfStateChanged++;
-                return default;
+                countOfOptionsChanged++;                
             };
-
-            //assume that client connected to first cluster
-            clusterState.ChangeState(ClientState.Connected);
-            Assert.That(countOfStateChanged, Is.EqualTo(1));
-
+                        
+            //assume that client connected to first cluster            
             // Verify cluster is first
             verifyClusterIs(clusterState, clusterName1, address1);
 
+            clusterState.ChangeState(ClientState.Disconnected);
+
             //failover to next-> cluster 2
-            clusterState.ChangeState(ClientState.Disconnected);//connected->disconnected->switched
-            verifyClusterIs(clusterState, clusterName2, address2);
-            Assert.AreEqual(ClientState.ClientChangedCluster, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(3));
+            clusterState.Failover.RequestClusterChange();
+            verifyClusterIs(clusterState, clusterName2, address2);            
+            Assert.That(countOfOptionsChanged, Is.EqualTo(1));
 
             //failover to next-> cluster 1
-            clusterState.ChangeState(ClientState.Disconnected);//disconnected->switched
-            verifyClusterIs(clusterState, clusterName1, address1);
-            Assert.AreEqual(ClientState.ClientChangedCluster, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(5));
+            clusterState.Failover.RequestClusterChange();
+            verifyClusterIs(clusterState, clusterName1, address1);            
+            Assert.That(countOfOptionsChanged, Is.EqualTo(2));
 
-            //cannot failover anymore, still cluster 1
-            clusterState.ChangeState(ClientState.Disconnected);//disconnected.
+            //cannot failover anymore(trycount==2), still cluster 1
+            clusterState.Failover.RequestClusterChange();
             verifyClusterIs(clusterState, clusterName1, address1);
+            
+            Assert.That(countOfOptionsChanged, Is.EqualTo(2));
 
-            Assert.AreEqual(ClientState.Disconnected, clusterState.ClientState);
-            Assert.That(countOfStateChanged, Is.EqualTo(6));
+            //We have exhausted all tries, so new state won't affect the failover anymore
+            clusterState.ChangeState(ClientState.Connected);
+            Assert.That(countOfOptionsChanged, Is.EqualTo(2));
         }
     }
 }
