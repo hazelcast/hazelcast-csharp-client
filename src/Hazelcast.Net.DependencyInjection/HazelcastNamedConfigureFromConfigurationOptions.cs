@@ -26,10 +26,11 @@ namespace Hazelcast.DependencyInjection
     /// <para>This class is a custom implementation of <see cref="NamedConfigureFromConfigurationOptions{TOptions}"/>
     /// which uses the Hazelcast configuration binder instead of the default Microsoft binder.</para>
     /// </remarks>
-    public class HazelcastNamedConfigureFromConfigurationOptions : ConfigureNamedOptions<HazelcastOptions>
+    public class HazelcastNamedConfigureFromConfigurationOptions<TOptions> : ConfigureNamedOptions<TOptions>
+        where TOptions : HazelcastOptionsBase
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="HazelcastNamedConfigureFromConfigurationOptions"/> class.
+        /// Initializes a new instance of the <see cref="HazelcastNamedConfigureFromConfigurationOptions{TOptions}"/> class.
         /// </summary>
         /// <param name="name">The name of the options.</param>
         /// <param name="configuration">The configuration.</param>
@@ -38,7 +39,7 @@ namespace Hazelcast.DependencyInjection
             : base(name, options => Configure(options, configuration, serviceProvider))
         { }
 
-        private static void Configure(HazelcastOptions options, IConfiguration configuration, IServiceProvider serviceProvider)
+        private static void Configure(TOptions options, IConfiguration configuration, IServiceProvider serviceProvider)
         {
             configuration.HzBind(options);
             options.ServiceProvider = serviceProvider;

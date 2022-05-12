@@ -28,6 +28,15 @@ namespace Hazelcast.Configuration
     /// </remarks>
     internal class HazelcastEnvironmentVariablesConfigurationProvider : ConfigurationProvider
     {
+        private const string HazelcastAndDot = HazelcastOptions.SectionNameConstant + ".";
+        private const string FailoverAndDot = HazelcastFailoverOptions.SectionNameConstant + ".";
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HazelcastEnvironmentVariablesConfigurationProvider"/>.
+        /// </summary>
+        public HazelcastEnvironmentVariablesConfigurationProvider(HazelcastEnvironmentVariablesConfigurationSource source)
+        { }
+
         /// <inheritdoc />
         public override void Load()
             => Load(Environment.GetEnvironmentVariables());
@@ -44,7 +53,8 @@ namespace Hazelcast.Configuration
             {
                 var key = (string) envVariable.Key;
 
-                if (!key.StartsWith("hazelcast.", StringComparison.OrdinalIgnoreCase)) continue;
+                if (!key.StartsWith(HazelcastAndDot, StringComparison.OrdinalIgnoreCase) &&
+                    !key.StartsWith(FailoverAndDot, StringComparison.OrdinalIgnoreCase)) continue;
 
                 key = key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
                 Data[key] = (string)envVariable.Value;

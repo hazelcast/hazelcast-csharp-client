@@ -35,7 +35,7 @@ namespace Hazelcast.Configuration
         /// <inheritdoc />
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new HazelcastCommandLineConfigurationProvider(Args, SwitchMappings);
+            return new HazelcastCommandLineConfigurationProvider(this);
         }
     }
 }

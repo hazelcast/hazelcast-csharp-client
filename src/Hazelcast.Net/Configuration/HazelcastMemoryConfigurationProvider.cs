@@ -25,6 +25,9 @@ namespace Hazelcast.Configuration
     /// </summary>
     internal class HazelcastMemoryConfigurationProvider : MemoryConfigurationProvider
     {
+        private const string HazelcastKeyAndDot = HazelcastOptions.SectionNameConstant + ".";
+        private const string FailoverKeyAndDot = HazelcastFailoverOptions.SectionNameConstant + ".";
+
         public HazelcastMemoryConfigurationProvider(HazelcastMemoryConfigurationSource source)
             : base(FilterSource(source))
         { }
@@ -35,8 +38,8 @@ namespace Hazelcast.Configuration
         /// </summary>
         internal static MemoryConfigurationSource FilterSource(HazelcastMemoryConfigurationSource source)
         {
-            static KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)
-                => kvp.Key.StartsWith("hazelcast.", StringComparison.Ordinal)
+            KeyValuePair<string, string> Filter(KeyValuePair<string, string> kvp)
+                => kvp.Key.StartsWith(HazelcastKeyAndDot, StringComparison.Ordinal) || kvp.Key.StartsWith(FailoverKeyAndDot, StringComparison.Ordinal)
                     ? new KeyValuePair<string, string>(kvp.Key.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal), kvp.Value)
                     : kvp;
 

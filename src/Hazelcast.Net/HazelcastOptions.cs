@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Clustering;
@@ -27,8 +26,13 @@ namespace Hazelcast
     /// <summary>
     /// Represents the Hazelcast client options.
     /// </summary>
-    public sealed partial class HazelcastOptions
+    public sealed partial class HazelcastOptions : HazelcastOptionsBase
     {
+        /// <summary>
+        /// Gets the Hazelcast configuration section name, which is <c>"hazelcast"</c>.
+        /// </summary>
+        internal const string SectionNameConstant = "hazelcast";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastOptions"/> class.
         /// </summary>
@@ -77,16 +81,8 @@ namespace Hazelcast
             FlakeIdGenerators = other.FlakeIdGenerators.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
         }
 
-        /// <summary>
-        /// Gets the <see cref="IServiceProvider"/>.
-        /// </summary>
-        /// <remarks>
-        /// <para>In dependency-injection scenario the service provider may be available,
-        /// so that service factories can return injected services. In non-dependency-injection
-        /// scenario, this returns <c>null</c>.</para>
-        /// </remarks>
-        /// <returns>The service provider.</returns>
-        public IServiceProvider ServiceProvider { get; internal set; }
+        /// <inheritdoc />
+        internal override string SectionName => SectionNameConstant;
 
         /// <summary>
         /// (unsupported) Gets the <see cref="PreviewOptions"/>.

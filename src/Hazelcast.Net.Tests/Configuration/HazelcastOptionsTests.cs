@@ -39,8 +39,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build(null, null, null, "key"));
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.AreEqual("dev", options.ClusterName);
         }
@@ -81,7 +81,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.AreEqual("dev", options.ClusterName);
         }
@@ -95,7 +95,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             return options;
         }
@@ -327,7 +327,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -347,7 +347,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -367,7 +367,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -654,7 +654,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
             configuration.HzBind("alt", options);
 
             Assert.AreEqual("altClient", options.ClientName);
@@ -669,8 +669,8 @@ namespace Hazelcast.Tests.Configuration
             stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
-            options = HazelcastOptions.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
-                null, null, "alt"); 
+            options = HazelcastOptionsBuilder.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
+                null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);
             Assert.AreEqual("cluster", options.ClusterName);
@@ -678,6 +678,29 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(options.Networking.Addresses.Count, Is.EqualTo(2));
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
+        }
+
+        [Test]
+        public void Failover()
+        {
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(Resources.HazelcastFailoverOptions));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastFailoverOptions();
+            configuration.HzBind(HazelcastFailoverOptions.SectionNameConstant, options);
+
+            Assert.That(options.TryCount, Is.EqualTo(42));
+            Assert.That(options.Clusters.Count, Is.EqualTo(2));
+
+            Assert.That(options.Clusters[0].ClientName, Is.EqualTo("client"));
+            Assert.That(options.Clusters[0].ClusterName, Is.EqualTo("cluster"));
+            Assert.That(options.Clusters[0].Networking.ConnectionRetry.Jitter, Is.EqualTo(1004));
+
+            Assert.That(options.Clusters[1].ClientName, Is.EqualTo("client2"));
+            Assert.That(options.Clusters[1].ClusterName, Is.EqualTo("cluster2"));
         }
     }
 }

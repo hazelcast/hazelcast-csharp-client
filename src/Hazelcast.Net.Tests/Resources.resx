@@ -136,6 +136,9 @@
   <data name="EmptyWithComments" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\EmptyWithComments.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
+  <data name="HazelcastFailoverOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Options\HazelcastFailoverOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
   <data name="HazelcastOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\HazelcastOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>

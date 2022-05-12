@@ -162,6 +162,35 @@ namespace Hazelcast.Tests {
         
         /// <summary>
         ///   Looks up a localized string similar to {
+        ///  
+        ///  &quot;hazelcast-failover&quot;: {
+        ///    &quot;tryCount&quot;: 42,
+        ///    &quot;clusters&quot;: [
+        ///      {
+        ///        // name of the client
+        ///        &quot;clientName&quot;: &quot;client&quot;,
+        ///
+        ///        // name of the cluster
+        ///        &quot;clusterName&quot;: &quot;cluster&quot;,
+        ///
+        ///        // how long to pause before looking for clients again, when trying to
+        ///        // set the client that handles cluster view events, and no client is
+        ///        // available
+        ///        &quot;waitForClientMilliseconds&quot;: 1001,
+        ///
+        ///        // client labels
+        ///        &quot;labels&quot;: [
+        ///          &quot;label_1&quot;,
+        /// [rest of string was truncated]&quot;;.
+        /// </summary>
+        internal static string HazelcastFailoverOptions {
+            get {
+                return ResourceManager.GetString("HazelcastFailoverOptions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {
         ///  &quot;hazelcast&quot;: {
         ///
         ///    // name of the client

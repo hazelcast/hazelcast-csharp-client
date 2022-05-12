@@ -53,7 +53,7 @@ namespace Hazelcast.Tests.Remote
             AddIfMissing(keyValues, "Logging:LogLevel:System", "Information");
             AddIfMissing(keyValues, "Logging:LogLevel:Microsoft", "Information");
 
-            return HazelcastOptions.Build(
+            return HazelcastOptionsBuilder.Build(
                 builder =>
                 {
                     builder.AddHazelcastAndDefaults(null);
