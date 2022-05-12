@@ -58,7 +58,7 @@ namespace Hazelcast
             LoggerFactory = other.LoggerFactory.Clone();
             PatternMatcher = other.PatternMatcher;
 
-            ((IClientOptions) this).ClientNamePrefix = ((IClientOptions) other).ClientNamePrefix;
+            ((IClusterOptions)this).ClientNamePrefix = ((IClusterOptions)other).ClientNamePrefix;
 
             Preview = other.Preview.Clone();
             Core = other.Core.Clone();
@@ -70,8 +70,6 @@ namespace Hazelcast
             Messaging = other.Messaging.Clone(Preview);
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
-
-            Failover = other.Failover.Clone();
 
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
