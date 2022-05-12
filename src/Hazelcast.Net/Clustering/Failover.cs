@@ -29,7 +29,6 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class Failover
     {
-        private readonly ILogger _logger;
         private readonly ClusterState _state;
         private readonly IEnumerable<ClusterOptions> _clusters;
         private readonly IEnumerator<ClusterOptions> _clusterEnumerator;
@@ -44,7 +43,6 @@ namespace Hazelcast.Clustering
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             if (state == null) throw new ArgumentNullException(nameof(state));
 
-            _logger = loggerFactory.CreateLogger<Failover>();
             _state = state;
             _isEnabled = options.Failover.Enabled;
 
@@ -110,9 +108,10 @@ namespace Hazelcast.Clustering
         /// <returns>true if options changed, otherwise false</returns>
         public bool RequestClusterChange()
         {
-            if (_state.ClientState == ClientState.Disconnected && CanSwitchClusterOptions)
+            if ((_state.ClientState == ClientState.Disconnected || _state.ClientState == ClientState.Started) &&
+                CanSwitchClusterOptions)
             {
-                SwitchClusterOptions();                
+                SwitchClusterOptions();
                 HConsole.WriteLine(this, "CLUSTER OPTIONS SWITCHED");
                 return true;
             }
@@ -135,9 +134,9 @@ namespace Hazelcast.Clustering
         }
 
         private void ResetToFirstCluster()
-        {            
+        {
             _clusterEnumerator.Reset();
-            _clusterEnumerator.MoveNext();//request for first item
+            _clusterEnumerator.MoveNext();//request for first item            
         }
 
         /// <summary>
