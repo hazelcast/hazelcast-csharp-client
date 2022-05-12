@@ -2,7 +2,7 @@
 
 `HMap` is a distributed key/value store corresponding to a server-side map which can be considered as a distributed implementation of the well-known .NET `IDictionary<K,V>`, with data being partitioned over members of the cluster, thus providing horizontal scalability. It is one of the most important Hazelcast data structures. Additionally, Hazelcast provides the following map-related data structures:
 
-* An `HMultiMap` map is a distributed key/value store corresponding to a server-side xref:hazelcast:data-structures:multimap.adoc[MultiMap]: a specialized map that supports storing multiple values under a single key.
+* An `HMultiMap` map is a distributed key/value store corresponding to a server-side xref:{page-latest-supported-hazelcast}@hazelcast:data-structures:multimap.adoc[MultiMap]: a specialized map that supports storing multiple values under a single key.
 * An `HReplicatedMap` map is a distributed key/value store corresponding to a server-side xref:hazelcast:data-structures:replicated-map.adoc[ReplicatedMap]: a specialized map where data is replicated to all members of the cluster, instead of being partitioned, thus providing faster read/write accesses at the cost of higher server memory consumption.
 
 The maps' behavior can be configured on the server: see the general map xref:hazelcast:data-structures:map.adoc[documentation] for complete details about maps.
