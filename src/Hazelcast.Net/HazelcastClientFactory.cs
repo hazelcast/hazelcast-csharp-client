@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Aggregation;
@@ -146,7 +147,7 @@ namespace Hazelcast
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
 
-            var client = CreateClient(options.Clusters[0]); // FIXME actually implement failover!
+            var client = CreateClient(options);
             await client.StartAsync(cancellationToken).CfAwait();
             return client;
         }
@@ -275,7 +276,7 @@ namespace Hazelcast
             // and, we *must* do this in a non-async method for the change to bubble up!
             AsyncContext.Ensure();
 
-            var client = CreateClient(options.Clusters[0]); // FIXME actually implement failover!
+            var client = CreateClient(options);
             return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
         }
 
@@ -311,12 +312,39 @@ namespace Hazelcast
         }
 
         // creates the client
-        private static HazelcastClient CreateClient(HazelcastOptions options)
+        private static HazelcastClient CreateClient(HazelcastOptionsBase hazelcastOptions)
         {
-            if (options == null) throw new ArgumentNullException(nameof(options));
+            if (hazelcastOptions == null) throw new ArgumentNullException(nameof(hazelcastOptions));
 
-            // clone the options - we don't want any change to the original options to impact this client
-            options = options.Clone();
+            void QuickLogDebug(HazelcastOptions o, string message)
+            {
+                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));
+                o.Networking.UsePublicAddresses = true;
+                logger.LogDebug(message);
+            }
+
+            if (hazelcastOptions is HazelcastOptions options)
+            {
+                // clone the options - we don't want any change to the original options to impact this client
+                options = options.Clone();
+            }
+            else
+            {
+                var opt = ((HazelcastFailoverOptions)hazelcastOptions);                
+
+                if (!opt.Clusters.Any())
+                    throw new ConfigurationException("If Failover is enabled, then clusters should be provided.");
+
+                if (opt.Clusters[0].Networking.ConnectionTimeoutMilliseconds < 0)
+                {
+                    opt.Clusters[0].Networking.ConnectionTimeoutMilliseconds = 120_000;
+                    QuickLogDebug(opt.Clusters[0], "Options: Clusters[0].Networking.ConnectionTimeoutMilliseconds is infinite => set it to 120sec.");
+                }                    
+                
+                opt.Enabled = true;
+                options = opt.Clusters[0].Clone();
+                options.FailoverOptions = opt.Clone();//safe,no cyclic clone                 
+            }
 
             if (options.Networking.Cloud.Enabled)
             {
@@ -331,9 +359,7 @@ namespace Hazelcast
                 }
                 else
                 {
-                    var logger = options.LoggerFactory.Service.CreateLogger(typeof (HazelcastClientFactory));
-                    options.Networking.UsePublicAddresses = true;
-                    logger.LogDebug("Options: Networking.Cloud.Enabled is true => set Networking.UsePublicAddress to true.");
+                    QuickLogDebug(options, "Options: Networking.Cloud.Enabled is true => set Networking.UsePublicAddress to true.");
                 }
             }
 

@@ -39,14 +39,14 @@ namespace Hazelcast.Clustering
         /// <param name="options">The cluster configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public Cluster(IHazelcastOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
+        public Cluster(HazelcastOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (serializationService == null) throw new ArgumentNullException(nameof(serializationService));
             if (loggerFactory is null) throw new ArgumentNullException(nameof(loggerFactory));
 
             var clientName = string.IsNullOrWhiteSpace(options.ClientName)
-                ? options.ClientNamePrefix + ClusterIdSequence.GetNext()
+                ? ((IClusterOptions)options).ClientNamePrefix + ClusterIdSequence.GetNext()
                 : options.ClientName;
 
             var clusterName = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;

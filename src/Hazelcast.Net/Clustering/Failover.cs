@@ -30,55 +30,42 @@ namespace Hazelcast.Clustering
     internal class Failover
     {
         private readonly ClusterState _state;
-        private readonly IEnumerable<ClusterOptions> _clusters;
-        private readonly IEnumerator<ClusterOptions> _clusterEnumerator;
+        private readonly IEnumerable<HazelcastOptions> _clusters;
+        private readonly IEnumerator<HazelcastOptions> _clusterEnumerator;
         private int _currentTryCount;
         private readonly int _maxTryCount;
         private bool _isEnabled;
-        private Action<ClusterOptions> _clusterOptionsChanged;
+        private Action<HazelcastOptions> _clusterOptionsChanged;
 
-        internal Failover(ClusterState state, IHazelcastOptions options, ILoggerFactory loggerFactory)
+        internal Failover(ClusterState state, HazelcastOptions options)
         {
-            if (options == null || options.Failover == null) throw new ArgumentNullException(nameof(options));
-            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+            if (options == null) throw new ArgumentNullException(nameof(options));
             if (state == null) throw new ArgumentNullException(nameof(state));
 
             _state = state;
-            _isEnabled = options.Failover.Enabled;
+            _isEnabled = options.FailoverOptions.Enabled;
 
-            if (!options.Failover.Clusters.Any() && options.Failover.Enabled)
+            if (Enabled)
             {
-                throw new ConfigurationException("Failover is enabled but there is no cluster(s) provided. Please, check your configurations.");
+                _clusters = new List<HazelcastOptions>(options.FailoverOptions.Clusters);
+            }
+            else
+            {   //there is one cluster config, failover disabled.
+                _clusters = new List<HazelcastOptions>() { options };
             }
 
-            //main cluster config is also an alternative cluster in a circular list (->blue->green->)
-            var clusterList = new List<ClusterOptions>
-            {
-                new ClusterOptions()
-                {
-                    Authentication = options.Authentication,
-                    ClusterName = options.ClusterName,
-                    Heartbeat = options.Heartbeat,
-                    LoadBalancer = options.LoadBalancer,
-                    Networking = options.Networking,
-                    WaitForConnectionMilliseconds = options.WaitForConnectionMilliseconds
-                }
-            };
-            clusterList.AddRange(options.Failover.Clusters);
-            _clusters = clusterList;
+            _maxTryCount = options.FailoverOptions.TryCount;
 
             _clusterEnumerator = _clusters.GetEnumerator();
             ResetToFirstCluster();
 
-            _maxTryCount = options.Failover.TryCount;
-
-            HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.FAILOVER"));
+            HConsole.Configure(x => x.Configure<Failover>().SetPrefix("CLUST.FAILOVER"));
         }
 
         /// <summary>
         /// Triggers when failover is possible, and cluster options are changed.
         /// </summary>
-        public Action<ClusterOptions> ClusterOptionsChanged
+        public Action<HazelcastOptions> ClusterOptionsChanged
         {
             get => _clusterOptionsChanged;
             set
@@ -147,7 +134,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets current <see cref="ClusterOptions" />
         /// </summary>
-        public ClusterOptions CurrentClusterOptions => _clusterEnumerator.Current;
+        public HazelcastOptions CurrentClusterOptions => _clusterEnumerator.Current;
 
         /// <summary>
         /// Gets number of trial for the <see cref="CurrentClusterOptions"/>

@@ -39,7 +39,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
         /// </summary>
-        public ClusterState(IHazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
+        public ClusterState(HazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
             ClusterName = clusterName;//TODO:should remove? given name can be overrided ex: dev
@@ -51,14 +51,14 @@ namespace Hazelcast.Clustering
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
-            _failover = new Failover(this, options, loggerFactory);
+            _failover = new Failover(this, options);
 
             StateChanged += _failover.OnClusterStateChanged;
 
             _failover.ClusterOptionsChanged += cluster =>
             {
                 AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
-                ClusterName = cluster.ClusterName;                              
+                ClusterName = cluster.ClusterName;
             };
 
             HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
@@ -90,7 +90,7 @@ namespace Hazelcast.Clustering
                 ThrowIfPropertiesAreReadOnly();
                 _shutdownRequested = value;
             }
-        }     
+        }
 
         #endregion
 
@@ -377,13 +377,13 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the options.
         /// </summary>
-        public IHazelcastOptions Options { get; }
+        public HazelcastOptions Options { get; }
 
         /// <summary>
         /// Whether smart routing is enabled.
         /// </summary>
         public bool IsSmartRouting => Options.Networking.SmartRouting;
-        
+
         /// <summary>
         /// Gets Failover service.
         /// </summary>
@@ -397,7 +397,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets <see cref="ClusterOptions"/> of current cluster
         /// </summary>
-        public ClusterOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
+        public HazelcastOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
 
         /// <summary>
         /// Gets the partitioner.

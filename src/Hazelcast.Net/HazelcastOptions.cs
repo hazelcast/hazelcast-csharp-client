@@ -74,7 +74,7 @@ namespace Hazelcast
             Messaging = other.Messaging.Clone(Preview);
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
-
+            
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
 
@@ -95,6 +95,13 @@ namespace Hazelcast
         /// <returns>The core options.</returns>
         [BinderIgnore(false)]
         internal CoreOptions Core { get; } = new CoreOptions();
+
+        /// <summary>
+        /// Gets the <see cref="HazelcastFailoverOptions"/>.
+        /// </summary>
+        /// <returns>The failover options.</returns>
+        [BinderIgnore(false)]
+        internal HazelcastFailoverOptions FailoverOptions { get; set; } = new HazelcastFailoverOptions();
 
         /// <summary>
         /// Gets the metrics options.

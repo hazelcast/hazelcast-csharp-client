@@ -122,9 +122,6 @@ namespace Hazelcast.Tests.Configuration
 
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
-
-            var clusterOptions = (IHazelcastOptions)options;
-            Assert.AreEqual(1000, clusterOptions.WaitForConnectionMilliseconds);
         }
 
         [Test]
@@ -547,45 +544,7 @@ namespace Hazelcast.Tests.Configuration
 
             // TODO: whatever keys?
         }
-        [Test]
-        public void TestFailOverOptions()
-        {
-            int tryCount = 3;
-            string clusterName = "failOverCluster";
-            int waitForConnectionMiliseonds = 135;
-            string address = "196.1.2.5";
-            string loadBalancer = "ROUNDROBIN";
-            string authToken = "SUNSHINYDAY";
-            int hearthBeat = 995;
-
-
-            string jsonConfig = $"{{\"hazelcast\":{{\"failover\":{{\"tryCount\":{tryCount},\"clusters\":[{{\"clusterName\":\"{clusterName}\",\"waitForConnectionMilliseconds\":{waitForConnectionMiliseonds},\"networking\":{{\"addresses\":[\"{address}\"]}},\"loadBalancer\":{{\"typeName\":\"{loadBalancer}\"}},\"authentication\":{{\"token\":{{\"data\":\"{authToken}\",\"encoding\": \"none\"}}}},\"heartBeat\":{{\"timeoutMilliseconds\":{hearthBeat}}}}}]}}}}}}";
-
-
-            var options = ReadResource(jsonConfig);
-
-            Assert.AreEqual(tryCount, options.Failover.TryCount);
-            Assert.That(options.Failover.Clusters, Is.Not.Null.Or.Empty);
-            Assert.That(options.Failover.Clusters.Count, Is.EqualTo(1));
-            var cluster = options.Failover.Clusters.First();
-            Assert.AreEqual(cluster.ClusterName, clusterName);
-            Assert.AreEqual(cluster.WaitForConnectionMilliseconds, waitForConnectionMiliseonds);
-
-            Assert.That(cluster.Networking, Is.Not.Null);
-            Assert.That(cluster.Networking.Addresses, Is.Not.Null.Or.Empty);
-            Assert.That(cluster.Networking.Addresses.Count, Is.EqualTo(1));
-            Assert.AreEqual(address, cluster.Networking.Addresses.First());
-
-            Assert.That(cluster.LoadBalancer.Service, Is.Not.Null);
-            Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
-
-            Assert.That(cluster.Authentication.CredentialsFactory.Service, Is.Not.Null);
-            Assert.IsInstanceOf<TokenCredentials>(cluster.Authentication.CredentialsFactory.Service.NewCredentials());
-            Assert.AreEqual(Encoding.UTF8.GetBytes(authToken), ((ITokenCredentials)cluster.Authentication.CredentialsFactory.Service.NewCredentials()).GetToken());
-
-            Assert.That(cluster.Heartbeat, Is.Not.Null);
-            Assert.AreEqual(hearthBeat, cluster.Heartbeat.TimeoutMilliseconds);
-        }
+     
 
         public class TestPortableFactory : IPortableFactory
         {
@@ -680,27 +639,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
         }
 
-        [Test]
-        public void Failover()
-        {
-            var stream = new MemoryStream(Encoding.UTF8.GetBytes(Resources.HazelcastFailoverOptions));
-
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonStream(stream);
-            var configuration = builder.Build();
-
-            var options = new HazelcastFailoverOptions();
-            configuration.HzBind(HazelcastFailoverOptions.SectionNameConstant, options);
-
-            Assert.That(options.TryCount, Is.EqualTo(42));
-            Assert.That(options.Clusters.Count, Is.EqualTo(2));
-
-            Assert.That(options.Clusters[0].ClientName, Is.EqualTo("client"));
-            Assert.That(options.Clusters[0].ClusterName, Is.EqualTo("cluster"));
-            Assert.That(options.Clusters[0].Networking.ConnectionRetry.Jitter, Is.EqualTo(1004));
-
-            Assert.That(options.Clusters[1].ClientName, Is.EqualTo("client2"));
-            Assert.That(options.Clusters[1].ClusterName, Is.EqualTo("cluster2"));
-        }
+  
     }
 }

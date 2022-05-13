@@ -12,16 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections.Generic;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Core;
+using Hazelcast.Events;
+using Hazelcast.Messaging;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Represents Cluster level option arrangments. <see cref"IClusterOptions"> could use the <see cref="ClusterOptions"> 
-    /// as propety like other option interfaces but <see cref="HazelcastOptions"> have to change hierarchy of all options in <see cref"IClusterOptions">. 
-    /// This is the reason <see cref="ClusterOptions"> implements <see cref"IClusterOptions">.
+    /// Represents cluster-level options.
     /// </summary>
     internal interface IClusterOptions
     {
@@ -29,6 +30,16 @@ namespace Hazelcast.Clustering
         /// Gets or sets the cluster name.
         /// </summary>
         string ClusterName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client name.
+        /// </summary>
+        string ClientName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the client name prefix.
+        /// </summary>
+        string ClientNamePrefix { get; set; }
 
         /// <summary>
         /// Gets or sets the delay to pause for when looking for a client
@@ -41,6 +52,11 @@ namespace Hazelcast.Clustering
         /// connection, else will wait for <see cref="WaitForConnectionMilliseconds"/> before retrying.</para>
         /// </remarks>
         int WaitForConnectionMilliseconds { get; set; }
+
+        /// <summary>
+        /// Gets the client labels.
+        /// </summary>
+        ISet<string> Labels { get; }
 
         /// <summary>
         /// Gets the service factory for <see cref="ILoadBalancer"/>.
@@ -68,8 +84,18 @@ namespace Hazelcast.Clustering
         HeartbeatOptions Heartbeat { get; }
 
         /// <summary>
+        /// Gets the messaging options.
+        /// </summary>
+        MessagingOptions Messaging { get; }
+
+        /// <summary>
         /// Gets the networking options.
         /// </summary>
         NetworkingOptions Networking { get; }
+
+        /// <summary>
+        /// Gets the events options.
+        /// </summary>
+        EventsOptions Events { get; }
     }
 }

@@ -76,9 +76,9 @@ namespace Hazelcast.Clustering
             _clusterState.StateChanged += OnStateChanged;
 
             //Cluster changed, renew options if necessary.
-            _clusterState.Failover.ClusterOptionsChanged += (ClusterOptions options) =>
+            _clusterState.Failover.ClusterOptionsChanged += (HazelcastOptions options) =>
             {
-                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
             };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
@@ -404,7 +404,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when reconnected.</returns>
         private async Task ReconnectAsync(CancellationToken cancellationToken)
         {
-            var shouldRetry = false;
+            bool shouldRetry;
             do
             {
                 try
@@ -424,11 +424,11 @@ namespace Hazelcast.Clustering
                         _logger.LogError("Failed to reconnect.");
                     }
                     else
-                    {
-                        shouldRetry = false;
+                    {                        
                         _logger.IfDebug()?.LogDebug("Reconnected");
                     }
 
+                    shouldRetry = false;
                     // we have been reconnected (rejoice) - of course, nothing guarantees that it
                     // will last, but then OnConnectionClosed will deal with it
                 }

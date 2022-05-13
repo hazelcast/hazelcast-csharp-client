@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Hazelcast.Configuration.Binding;
 
 namespace Hazelcast
 {
@@ -54,10 +55,17 @@ namespace Hazelcast
         {
             TryCount = other.TryCount;
             Clusters = new List<HazelcastOptions>(other.Clusters.Select(x => x.Clone()));
+            Enabled = other.Enabled;
         }
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
+
+        /// <summary>
+        /// Gets status of failover
+        /// </summary>
+        [BinderIgnore(false)]
+        internal bool Enabled { get; set; }
 
         /// <summary>
         /// Gets or sets the number of times that the client will try to reconnect to each
@@ -75,6 +83,7 @@ namespace Hazelcast
         /// <summary>
         /// Clones the options.
         /// </summary>
+        /// <remarks>Dosen't clone <see cref="HazelcastOptions.FailoverOptions"/> due to cyclic dependncy</remarks>
         /// <returns>A deep clone of the options.</returns>
         internal HazelcastFailoverOptions Clone() => new HazelcastFailoverOptions(this);
     }
