@@ -3,6 +3,7 @@
 site:
   title: Documentation
   url: ??? netlify staging
+  robots: disallow
   start_page: csharp:ROOT:quickstart.adoc
   keys:
     docsearch_id: 'QK2EAH8GB0'

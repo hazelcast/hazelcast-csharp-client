@@ -11,6 +11,6 @@ asciidoc:
     page-latest-supported-hazelcast: '5.1'
     page-toclevels: 1
     tabsize: 4
-    apidocBaseUrl: http://hazelcast.github.io/hazelcast-csharp-client/latest/api/
+    apidocBaseUrl: http://hazelcast.github.io/hazelcast-csharp-client/latest/api
 nav:
 - modules/ROOT/nav.adoc
