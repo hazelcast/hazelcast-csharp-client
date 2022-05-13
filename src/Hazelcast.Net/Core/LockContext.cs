@@ -46,13 +46,10 @@ namespace Hazelcast.Core
     /// identifier at codec and cluster level, for all locking purposes.
     /// </para>
     /// </remarks>
-    public sealed class LockContext : IDisposable
+    public sealed class LockContext
     {
         // the sequence of unique identifiers for contexts
         private static ISequence<long> _idSequence = new Int64Sequence();
-
-        // semaphore for exclusive access to this lock context
-        private readonly SemaphoreSlim _semaphore = new SemaphoreSlim(1, 1);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="LockContext"/> class.
@@ -70,38 +67,6 @@ namespace Hazelcast.Core
         /// Gets the unique identifier for of this context.
         /// </summary>
         public long Id { get; }
-
-        /// <summary>
-        /// Exclusively locks on this <see cref="LockContext"/>.
-        /// </summary>
-        internal Task LockAsync()
-        {
-            return _semaphore.WaitAsync();
-        }
-
-        /// <summary>
-        /// Gets the exclusive lock on this <see cref="LockContext"/>.
-        /// </summary>
-        /// <returns>An <see cref="IDisposable"/> instance that must be disposed to release the lock.</returns>
-        internal async Task<IDisposable> GetLockAsync()
-        {
-            await LockAsync().CfAwait();
-            return new DisposeAction(Release);
-        }
-
-        /// <summary>
-        /// Releases the exclusive lock.
-        /// </summary>
-        internal void Release()
-        {
-            _semaphore.Release();
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            _semaphore.Dispose();
-        }
 
         /// <summary>
         /// (internal for tests only) Resets the sequence of unique identifiers.
