@@ -26,6 +26,7 @@ using Moq;
 using NUnit.Framework;
 using Hazelcast.Exceptions;
 using Hazelcast.Configuration;
+using Hazelcast.Tests.Networking;
 
 namespace Hazelcast.Tests.Clustering
 {
@@ -210,7 +211,7 @@ namespace Hazelcast.Tests.Clustering
             await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
 
             //Now, we should failover to cluster B
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 20_000, 500);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
             await assertClusterB(map, client.ClusterName);
 
             // Start cluster A again
@@ -221,7 +222,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster B :{RcClusterAlternative.Id}");
             await KillMembersOnAsync(RcClusterAlternative.Id, membersB);
 
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 20_000, 500);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
             await assertClusterA(map, client.ClusterName);
 
             Assert.GreaterOrEqual(numberOfStateChanged, 8);

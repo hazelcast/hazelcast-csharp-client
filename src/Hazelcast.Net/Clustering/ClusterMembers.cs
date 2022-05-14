@@ -65,7 +65,7 @@ namespace Hazelcast.Clustering
 
             _clusterState = clusterState;
             _terminateConnections = terminateConnections;
-            _loadBalancer = clusterState.CurrentClusterOptions.LoadBalancer.Service ?? new RandomLoadBalancer();
+            _loadBalancer = clusterState.Options.LoadBalancer.Service ?? new RandomLoadBalancer();
 
             _logger = _clusterState.LoggerFactory.CreateLogger<ClusterMembers>();
 

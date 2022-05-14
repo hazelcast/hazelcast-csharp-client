@@ -750,7 +750,7 @@ namespace Hazelcast.Clustering
             // directly connect to the specified address (internal/public determination happened beforehand)
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.CurrentClusterOptions.Networking, _clusterState.CurrentClusterOptions.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 Closed = OnConnectionClosed
             };
