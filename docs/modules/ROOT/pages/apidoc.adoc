@@ -1,0 +1,3 @@
+= API Documentation
+
+See http://hazelcast.github.io/hazelcast-csharp-client/latest/api/index.html[here] for the Hazelcast .NET client API documentation.

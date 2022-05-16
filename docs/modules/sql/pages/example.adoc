@@ -1,0 +1,14 @@
+= Example Query using SQL
+
+This SQL query returns map entries whose values are more than 1:
+
+[source,csharp]
+----
+await using var map = await client.GetMapAsync<int, string>("MyMap");
+await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"{v}"));
+
+await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} WHERE this > 2");
+
+await foreach (var row in result.EnumerateOnceAsync())
+    Console.WriteLine($"{row.GetKey<int>()}: {row.GetValue<string>()}");
+----

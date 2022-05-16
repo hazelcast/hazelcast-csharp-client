@@ -1,0 +1,64 @@
+= Global Serialization
+
+The global serializer is identical to custom serializers from the implementation perspective. It is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them. By default, the global serializer does not handle .NET Serializable instances. However, you can configure it to be responsible for those instances.
+
+A custom serializer should be registered for a specific class type. The global serializer will handle all class types if all the steps in searching for a serializer, as described previously, fail.
+
+Use cases may be as follows:
+
+* Third party serialization frameworks can be integrated using the global serializer.
+* For your custom objects, you can implement a single serializer to handle all of them.
+
+A sample global serializer that integrates with a third party serializer is shown below.
+
+[source,csharp]
+----
+public class GlobalSerializer : IStreamSerializer<object>
+{
+    public const int TypeId = 20;
+
+    public void Write(IObjectDataOutput output, object obj)
+    {
+        output.write(MyFavoriteSerializer.Serialize(obj))
+    }
+
+    public object Read(IObjectDataInput input)
+    {
+        return MyFavoriteSerializer.Deserialize(input);
+    }
+
+    int ISerializer.TypeId => TypeId;
+}
+----
+
+Then, you should register the global serializer in the configuration:
+
+[tabs]
+==== 
+Programmatic:: 
++ 
+-- 
+[source,csharp]
+----
+var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+hazelcastOptions.Serialization.GlobalSerializer.Creator =
+    () => new GlobalSerializer();
+----
+--
+
+Declarative::
++
+[source,xml]
+----
+{
+    "hazelcast": {
+        "serialization": {
+            "globalSerializer": {
+                "serializedTypeName": "CustomSerializableType",
+                "overrideClrSerialization": true
+            }
+        }
+    }
+}
+----
+====

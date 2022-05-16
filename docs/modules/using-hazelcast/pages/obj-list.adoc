@@ -1,0 +1,53 @@
+= HList
+
+`HList` is a distributed list corresponding to a server-side list which can be considered as a distributed implementation of the well-known C# `IList<T>`. `HList` is a specialized `IHCollection`.
+
+The list behavior can be configured on the server; see its xref:hazelcast:data-structures:list.adoc[documentation] for the complete details.
+
+== Defining Lists
+
+Lists are fully identified by their type and unique name, regardless of the types specified for list items. In other words, an `HList<string>` and `HList<int>` named with the same name are backed by the same cluster structure. Obviously, referring to a list with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
+
+The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (xref:serialization:overview.adoc[Serialization documentation]). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
+
+== Creating & Destroying Lists
+
+A list is obtained from the Hazelcast .NET Client, and is created on-demand: if a list with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:
+
+[source,csharp]
+----
+var list = await client.GetListAsync<string>("my-list");
+----
+
+Lists should be disposed after usage, in order to release their resources. Note that this only releases client-side resources, but the actual data remain available on the cluster for further usage. In order to wipe the list and its data entirely from the cluster, it needs to be destroyed:
+
+[source,csharp]
+----
+await list.DestroyAsync();
+----
+
+== Using Lists
+
+The `HList` structure is completely documented in the associated {apiDocBaseUrl}/Hazelcast.DistributedObjects.IHList-1.html[`IHMap<TKey, TValue>`] reference documentation. It provides methods to manipulate items, such as:
+
+* `AddAsync(item)` adds an item to the list
+* `GetAsync(index)` retrieves the item in the specified position
+* `GetAllAsync()` retrieves the items
+* `GetSizeAsync()` gets the number of items, and `IsEmptyAsync()` determines whether the list is empty
+* `RemoveAsync(index)` removes an item
+
+The `HList` structure exposes events (see the xref:events.adoc[events documentation]) at list level. A complete list of events is provided in the {apiDocBaseUrl}/Hazelcast.DistributedObjects.CollectionItemEventHandlers-1.html[CollectionItemEventHandlers<T> documentation]. The following example illustrates how to subscribe and unsubscribe to list events:
+
+[source,csharp]
+----
+var id = await list.SubscribeAsync(events => events
+    .ItemAdded((sender, args) => {
+        logger.LogInformation($"Item {args.Item} was added.")
+    }));
+
+// ...
+
+await list.UnsubscribeAsync(id);
+----
+
+Note that the handler methods passed to, e.g., `ItemRemoved` or `Cleared`, can be asynchronous, too.
