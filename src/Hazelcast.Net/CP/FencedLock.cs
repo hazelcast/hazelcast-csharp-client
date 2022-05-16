@@ -533,8 +533,11 @@ namespace Hazelcast.CP
         internal class LockOwnershipState
         {
             public long Fence { get; }
-            public long SessionId { get; }
-            public long ThreadId { get; }
+
+            private long SessionId { get; }
+
+            private long ThreadId { get; }
+
             public int LockCount { get; }
 
             public LockOwnershipState(long fence, long sessionId, long threadId, int lockCount)
