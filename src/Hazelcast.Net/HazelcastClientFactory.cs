@@ -111,9 +111,8 @@ namespace Hazelcast
         /// <para>Options are built via the <see cref="HazelcastFailoverOptionsBuilder.Build()"/> method
         /// and passed to the <paramref name="configure"/> method,
         /// where they can be refined and adjusted, before being used to create the client.</para>
-        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
-        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
-        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// <para>By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewFailoverClientAsync(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
@@ -126,9 +125,8 @@ namespace Hazelcast
         /// <param name="cancellationToken">A optional cancellation token.</param>
         /// <returns>A new <see cref="IHazelcastClient"/> instance.</returns>
         /// <remarks>
-        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
-        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
-        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// <para>By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
         public static ValueTask<IHazelcastClient> StartNewFailoverClientAsync(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
@@ -242,9 +240,8 @@ namespace Hazelcast
         /// <para>Options are built via the <see cref="HazelcastFailoverOptionsBuilder.Build()"/> method and passed to
         /// the <paramref name="configure"/> method,
         /// where they can be refined and adjusted, before being used to create the client.</para>
-        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
-        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
-        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// <para>By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
         public static HazelcastClientStart GetNewStartingFailoverClient(Action<HazelcastFailoverOptions> configure, CancellationToken cancellationToken = default)
@@ -263,9 +260,8 @@ namespace Hazelcast
         /// start <see cref="Task"/> has completed can have unspecified results, including throwing exceptions. Make sure that the start
         /// <see cref="Task"/> has actually completed before using the client.</para>
         /// <para>In any case, the start <see cref="Task"/> must be awaited, as it may fail with an exception that must be observed.</para>
-        /// <para>By default, the client connection timeout is infinite. If this method cannot establish
-        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
-        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// <para>By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
         public static HazelcastClientStart GetNewStartingFailoverClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
