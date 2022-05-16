@@ -49,9 +49,11 @@ namespace Hazelcast.Tests.Networking
         // this test validates that a client that starts connecting to a cluster that is not yet ready,
         // will eventually succeeds and connect once the cluster becomes ready.
         [Test]
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task TestClientConnectionBeforeServerReady(bool smartRouting)
+        [TestCase(true, ReconnectMode.ReconnectAsync)]
+        [TestCase(true, ReconnectMode.ReconnectSync)]
+        [TestCase(false, ReconnectMode.ReconnectAsync)]
+        [TestCase(false, ReconnectMode.ReconnectSync)]
+        public async Task TestClientConnectionBeforeServerReady(bool smartRouting, ReconnectMode reconnectMode)
         {
             using var _ = HConsoleForTest();
 
@@ -59,7 +61,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.SmartRouting = smartRouting;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
-                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                options.Networking.ReconnectMode = reconnectMode;
                 options.ClusterName = RcCluster.Id;
             });
 
@@ -106,11 +108,11 @@ namespace Hazelcast.Tests.Networking
            });
             #endregion
 
-            
+
             var clientImp = (HazelcastClient)client;
 
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
-            
+
 
             await RcClient.ShutdownMemberAsync(customCluster.Id, member.Uuid);
 
@@ -129,7 +131,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(ClientState.Connected, client.State);
             }, 10_000, 500);
 
-            
+
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
 
             #region TearDown
@@ -182,7 +184,7 @@ namespace Hazelcast.Tests.Networking
             }, 10_000, 500);
 
             await RcClient.ShutdownMemberAsync(customCluster.Id, member.Uuid);
-            await Task.Delay(2*client.Options.Heartbeat.PeriodMilliseconds);
+            await Task.Delay(2 * client.Options.Heartbeat.PeriodMilliseconds);
             member = await RcClient.StartMemberAsync(customCluster.Id);
 
             await AssertEx.SucceedsEventually(async () =>
