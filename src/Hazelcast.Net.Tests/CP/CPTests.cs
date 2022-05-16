@@ -24,12 +24,12 @@ namespace Hazelcast.Tests.CP
         [Test]
         public void ParseName()
         {
-            Assert.That(CPSubsystem.ParseName("foo"), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
-            Assert.That(CPSubsystem.ParseName("foo@bar"), Is.EqualTo(("bar", "foo")));
-            Assert.That(CPSubsystem.ParseName("   foo   @   bar   "), Is.EqualTo(("bar", "foo")));
-            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
-            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToLower()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
-            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToUpper()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo")));
+            Assert.That(CPSubsystem.ParseName("foo"), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo", "foo@" + CPSubsystem.DefaultGroupName)));
+            Assert.That(CPSubsystem.ParseName("foo@bar"), Is.EqualTo(("bar", "foo", "foo@bar")));
+            Assert.That(CPSubsystem.ParseName("   foo   @   bar   "), Is.EqualTo(("bar", "foo", "foo@bar")));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo", "foo@" + CPSubsystem.DefaultGroupName)));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToLower()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo", "foo@" + CPSubsystem.DefaultGroupName)));
+            Assert.That(CPSubsystem.ParseName("foo@" + CPSubsystem.DefaultGroupName.ToUpper()), Is.EqualTo((CPSubsystem.DefaultGroupName, "foo", "foo@" + CPSubsystem.DefaultGroupName)));
 
             Assert.Throws<NotSupportedException>(() => CPSubsystem.ParseName("foo@" + CPSubsystem.MetaDataGroupName));
 
