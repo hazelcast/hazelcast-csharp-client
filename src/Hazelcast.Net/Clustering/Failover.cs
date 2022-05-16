@@ -23,9 +23,8 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Failover class holds given alternative failover cluster options. 
-    /// It switches the cluster options by listening <see cref="OnClusterStateChanged"/> event handler. On each call of the event, 
-    /// tracks the number of trials and switches the current cluster <see cref="CurrentClusterOptions"/> to next one.
+    /// Failover class holds condigured alternative failover cluster options, and switches them 
+    /// by request.  
     /// </summary>
     internal class Failover
     {
@@ -91,7 +90,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Changes the cluster options, and triggers <see cref="ClusterOptionsChanged"/>
         /// </summary>
-        /// <remarks>Failover can only work when client state is <see cref="ClientState.Disconnected"/></remarks>
+        /// <remarks>Failover can only work when client state is <see cref="ClientState.Disconnected"/> or <see cref="ClientState.Started"/></remarks>
         /// <returns>true if options changed, otherwise false</returns>
         public bool RequestClusterChange()
         {
