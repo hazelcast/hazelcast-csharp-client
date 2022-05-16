@@ -14,8 +14,6 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
-using Hazelcast.Core;
-using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.CP
 {
@@ -65,6 +63,6 @@ namespace Hazelcast.CP
         /// Doesn't do anything for now, but some cleanup may be implemented later. <para/>
         /// As such it is recommended to wrap object usage into <code>using</code> statement for better compatibility with future versions.
         /// </remarks>
-        public ValueTask DisposeAsync() => default;
+        public virtual ValueTask DisposeAsync() => default;
     }
 }

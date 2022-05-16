@@ -31,7 +31,7 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="groupId"></param>
         /// <returns></returns>
-        internal async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
+        private async Task<long> RequestGenerateThreadIdAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionGenerateThreadIdCodec.EncodeRequest(groupId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -44,7 +44,7 @@ namespace Hazelcast.CP
         /// </summary>
         /// <param name="groupId"></param>
         /// <returns>CPSession and heartbeat milliseconds</returns>
-        internal async Task<(CPSession, long)> RequestNewSessionAsync(CPGroupId groupId)
+        private async Task<(CPSession, long)> RequestNewSessionAsync(CPGroupId groupId)
         {
             var requestMessage = CPSessionCreateSessionCodec.EncodeRequest(groupId, _cluster.ClientId.ToString());
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
@@ -53,7 +53,7 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Closes the session on the server
+        /// (internal for tests) Closes the session on the server
         /// </summary>
         /// <param name="groupId"></param>
         /// <param name="sessionId"></param>
@@ -73,7 +73,7 @@ namespace Hazelcast.CP
         /// <param name="groupId"></param>
         /// <param name="sessionId"></param>
         /// <returns></returns>
-        internal async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
+        private async Task RequestSessionHeartbeat(CPGroupId groupId, long sessionId)
         {
             var requestMessage = CPSessionHeartbeatSessionCodec.EncodeRequest(groupId, sessionId);
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
