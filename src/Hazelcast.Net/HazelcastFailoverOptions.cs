@@ -22,13 +22,13 @@ namespace Hazelcast
     /// Represents the Hazelcast client failover options.
     /// </summary>
     /// <remarks>
-    /// <para>The client initially tries to connect to the first cluster of the <see cref="Clusters"/>
+    /// <para>The client initially tries to connect to the first cluster of the <see cref="Clients"/>
     /// list, then tries each cluster in the list in order, and cycle the list at most <see cref="TryCount"/>
     /// times before failing and shutting down.</para>
     /// <para>When the client gets disconnected, it first tries to reconnect to the current cluster,
     /// then tries each cluster in the list in order, and cycle the list at most <see cref="TryCount"/>
     /// times before failing and shutting down.</para>
-    /// <para>So if the <see cref="Clusters"/> list is (A, B, C) and client is disconnected from B and
+    /// <para>So if the <see cref="Clients"/> list is (A, B, C) and client is disconnected from B and
     /// <see cref="TryCount"/> is 2, it will try C, B, A, C, B, A in this order and then shutdown.</para>
     /// <para>The retry strategy for each cluster is configured with a 2 minutes timeout, i.e. the
     /// client will try to connect to each cluster for at most 2 minutes before failing.</para>
@@ -45,7 +45,7 @@ namespace Hazelcast
         /// </summary>
         public HazelcastFailoverOptions()
         {
-            Clusters = new List<HazelcastOptions>();
+            Clients = new List<HazelcastOptions>();
         }
 
         /// <summary>
@@ -54,7 +54,7 @@ namespace Hazelcast
         private HazelcastFailoverOptions(HazelcastFailoverOptions other)
         {
             TryCount = other.TryCount;
-            Clusters = new List<HazelcastOptions>(other.Clusters.Select(x => x.Clone()));
+            Clients = new List<HazelcastOptions>(other.Clients.Select(x => x.Clone()));
             Enabled = other.Enabled;
         }
 
@@ -78,7 +78,7 @@ namespace Hazelcast
         /// </summary>
         // TODO: consider supporting merging external files?
         // "clients": [ { "client": "path-to-json" }, ... ]
-        public IList<HazelcastOptions> Clusters { get; }
+        public IList<HazelcastOptions> Clients { get; }
 
         /// <summary>
         /// Clones the options.

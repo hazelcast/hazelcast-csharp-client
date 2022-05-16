@@ -83,7 +83,7 @@ namespace Hazelcast.DependencyInjection
             {
                 // propagates the service provide + initialize the logger factory
                 // assumes that the ILoggerFactory has been registered in the container
-                foreach (var clusterOptions in options.Clusters)
+                foreach (var clusterOptions in options.Clients)
                 {
                     clusterOptions.ServiceProvider = options.ServiceProvider;
                     clusterOptions.LoggerFactory.ServiceProvider = clusterOptions.ServiceProvider;

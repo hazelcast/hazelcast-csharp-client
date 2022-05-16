@@ -93,7 +93,7 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             opt.Enabled = true;
-            var options = opt.Clusters[0];
+            var options = opt.Clients[0];
             options.FailoverOptions = opt;
 
             var clusterState = MockClusterState(options);
@@ -180,7 +180,7 @@ namespace Hazelcast.Tests.Clustering
                        }));
 
 
-                     opt.Clusters.Add(clusterA);
+                     opt.Clients.Add(clusterA);
 
                      //cannot override loadbalancer,retry, heartbeat etc. just network info
                      var clusterB = new HazelcastOptions();
@@ -188,7 +188,7 @@ namespace Hazelcast.Tests.Clustering
                      clusterB.Networking.Addresses.Add("127.0.0.1:5703");
                      clusterB.Networking.SmartRouting = useSmartConnection;// that doesn't override to primary                     
                      clusterB.Authentication.CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory("test", "1234");
-                     opt.Clusters.Add(clusterB);
+                     opt.Clients.Add(clusterB);
                  })
                  .WithHConsoleLogger()
                  .Build();
@@ -272,7 +272,7 @@ namespace Hazelcast.Tests.Clustering
                       }));
 
 
-                    opt.Clusters.Add(clusterA);
+                    opt.Clients.Add(clusterA);
 
                     //cannot override loadbalancer,retry, heartbeat etc. just network info
                     var clusterB = new HazelcastOptions();
@@ -280,7 +280,7 @@ namespace Hazelcast.Tests.Clustering
                     clusterB.Networking.Addresses.Add("127.0.0.1:5703");
                     clusterB.Networking.SmartRouting = useSmartConnection;// that doesn't override to primary                    
                     clusterB.Authentication.CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory("test", "1234");
-                    opt.Clusters.Add(clusterB);
+                    opt.Clients.Add(clusterB);
                 })
                 .WithHConsoleLogger()
                 .Build();
@@ -361,14 +361,14 @@ namespace Hazelcast.Tests.Clustering
                     clusterA.Networking.ConnectionTimeoutMilliseconds = 10_000;
                     clusterA.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
 
-                    opt.Clusters.Add(clusterA);
+                    opt.Clients.Add(clusterA);
 
                     //cannot override loadbalancer,retry, heartbeat etc. just network info
                     var clusterB = new HazelcastOptions();
                     clusterB.ClusterName = RcClusterAlternative.Id;
                     clusterB.Networking.Addresses.Add("127.0.0.1:5702");
                     clusterB.Authentication.CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory("test", "1234");
-                    opt.Clusters.Add(clusterB);
+                    opt.Clients.Add(clusterB);
                 })
                 .WithHConsoleLogger()
                 .Build();
@@ -420,14 +420,14 @@ namespace Hazelcast.Tests.Clustering
                       }));
 
 
-                    opt.Clusters.Add(clusterA);
+                    opt.Clients.Add(clusterA);
 
                     //cannot override loadbalancer,retry, heartbeat etc. just network info
                     var clusterB = new HazelcastOptions();
                     clusterB.ClusterName = RcClusterAlternative.Id;
                     clusterB.Networking.Addresses.Add("127.0.0.1:5703");
                     clusterB.Authentication.CredentialsFactory.Creator = () => new UsernamePasswordCredentialsFactory("test", "1234");
-                    opt.Clusters.Add(clusterB);
+                    opt.Clients.Add(clusterB);
                 })
                 .WithHConsoleLogger()
                 .Build();

@@ -97,7 +97,7 @@ namespace Hazelcast.Testing.Logging
                 .With((configuration, hazelcastOptions) =>
                 {
                     // configure logging factory and add the logging provider
-                    hazelcastOptions.Clusters[0].LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
+                    hazelcastOptions.Clients[0].LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
                         loggingBuilder
                             .AddConfiguration(configuration.GetSection("logging"))
                             .AddHConsole());

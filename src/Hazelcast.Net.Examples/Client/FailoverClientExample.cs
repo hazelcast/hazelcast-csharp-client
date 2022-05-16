@@ -36,7 +36,7 @@ namespace Hazelcast.Examples.Client
                     //Subscribe to client state changes.
                     clusterBlue.AddSubscriber(s => s.StateChanged((sender, args) => Console.WriteLine($"Client state changed: {args.State}")));
                     //clusterBlue sets all options for the client.
-                    p.Clusters.Add(clusterBlue);
+                    p.Clients.Add(clusterBlue);
 
                     var clusterGreen = new HazelcastOptions();
                     clusterGreen.ClusterName = "green";
@@ -44,7 +44,7 @@ namespace Hazelcast.Examples.Client
                     clusterGreen.Networking.ReconnectMode = Networking.ReconnectMode.ReconnectAsync;
                     //clusterGreen can only change network and authentication options
                     //other options must be same with first cluster, such as heartbeat, loadBalancer etc.
-                    p.Clusters.Add(clusterGreen);
+                    p.Clients.Add(clusterGreen);
 
                     p.TryCount = 2;
                 })

@@ -91,7 +91,7 @@ namespace Hazelcast.Tests.Remote
             }, null, null, ConfigurationSecretsKey);
 
             failoverOptions.TryCount = 1;
-            failoverOptions.Clusters.Add(CreateHazelcastOptions());
+            failoverOptions.Clients.Add(CreateHazelcastOptions());
 
             return failoverOptions;
         }

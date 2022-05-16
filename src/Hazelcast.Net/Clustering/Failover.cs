@@ -46,7 +46,7 @@ namespace Hazelcast.Clustering
 
             if (Enabled)
             {
-                _clusters = new List<HazelcastOptions>(options.FailoverOptions.Clusters);
+                _clusters = new List<HazelcastOptions>(options.FailoverOptions.Clients);
             }
             else
             {   //there is one cluster config, failover disabled.

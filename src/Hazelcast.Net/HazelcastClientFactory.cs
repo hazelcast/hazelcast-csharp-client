@@ -314,8 +314,7 @@ namespace Hazelcast
 
             void QuickLogDebug(HazelcastOptions o, string message)
             {
-                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));
-                o.Networking.UsePublicAddresses = true;
+                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));               
                 logger.LogDebug(message);
             }
 
@@ -328,17 +327,17 @@ namespace Hazelcast
             {
                 var opt = ((HazelcastFailoverOptions)hazelcastOptions);                
 
-                if (!opt.Clusters.Any())
+                if (!opt.Clients.Any())
                     throw new ConfigurationException("If Failover is enabled, then clusters should be provided.");
 
-                if (opt.Clusters[0].Networking.ConnectionTimeoutMilliseconds < 0)
+                if (opt.Clients[0].Networking.ConnectionTimeoutMilliseconds < 0)
                 {
-                    opt.Clusters[0].Networking.ConnectionTimeoutMilliseconds = 120_000;
-                    QuickLogDebug(opt.Clusters[0], "Options: Clusters[0].Networking.ConnectionTimeoutMilliseconds is infinite => set it to 120sec.");
+                    opt.Clients[0].Networking.ConnectionTimeoutMilliseconds = 120_000;
+                    QuickLogDebug(opt.Clients[0], "Options: Clusters[0].Networking.ConnectionTimeoutMilliseconds is infinite => set it to 120sec.");
                 }                    
                 
                 opt.Enabled = true;
-                options = opt.Clusters[0].Clone();
+                options = opt.Clients[0].Clone();
                 options.FailoverOptions = opt.Clone();//safe,no cyclic clone                 
             }
 
@@ -355,6 +354,7 @@ namespace Hazelcast
                 }
                 else
                 {
+                    options.Networking.UsePublicAddresses = true;
                     QuickLogDebug(options, "Options: Networking.Cloud.Enabled is true => set Networking.UsePublicAddress to true.");
                 }
             }
