@@ -39,6 +39,7 @@ namespace Hazelcast.Clustering
         /// <param name="options">The cluster configuration.</param>
         /// <param name="serializationService">The serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
+        // FIXME the point of IClusterOptions was to avoid passing HazelcastOptions here so we need to rethink it all
         public Cluster(HazelcastOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));

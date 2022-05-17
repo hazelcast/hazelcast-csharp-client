@@ -74,7 +74,7 @@ namespace Hazelcast.NearCaching
             _evictionPercentage = nearCacheOptions.EvictionPercentage;
             _cleanupInterval = nearCacheOptions.CleanupPeriodSeconds * 1000;
 
-            cluster.State.Failover.ClusterOptionsChanged += (options) =>
+            cluster.State.Failover.ClusterChanged += (options) =>
             {
                  Clear();
             };

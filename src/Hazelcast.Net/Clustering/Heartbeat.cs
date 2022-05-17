@@ -70,7 +70,7 @@ namespace Hazelcast.Clustering
             // stop heartbeat during exchanging. 
             if (_active == 1 && _heartbeating != null)
             {
-                // heartbeating won't throw.
+                // _heartbeating won't throw and we cannot await in sync method
                 _cancel.Cancel();
                 _cancel.Dispose();
             }

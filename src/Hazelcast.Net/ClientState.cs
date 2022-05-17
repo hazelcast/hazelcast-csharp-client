@@ -19,25 +19,27 @@ namespace Hazelcast
     /// </summary>
     public enum ClientState
     {
-        // NOTE:
-        // the original ClientState for a new client is the default value,
-        // i.e. zero. we don't make it ClientState.Unknown because we don't
-        // want it to be publicly visible, as this is a purely internal state
-
         /// <summary>
         /// The client is starting.
         /// </summary>
         /// <remarks>
         /// <para>The client will transition to <see cref="Started"/> when it has started.</para>
         /// </remarks>
-        Starting, // zero is the default value, make sure real states start at 1
+        Starting,
 
         /// <summary>
         /// The client has started, and is now trying to connect to a first member.
         /// </summary>
+        /// <remarks>
         /// <para>The client will transition to <see cref="Connected"/> when it
         /// has successfully connected, or to <see cref="Shutdown"/> in case it fails
         /// to connect.</para>
+        /// <para>In a failover scenario, the client may try more than one cluster
+        /// until it manages to establish a first connection.</para>
+        /// <para>In the case where the client cannot immediately connect to the first cluster
+        /// of the failover list and has to try other clusters, it will transition to <see cref="ClusterChanged"/>
+        /// when it manages to connect to a cluster, even if it is the first cluster of the list.</para>
+        /// </remarks>
         Started,
 
         /// <summary>
@@ -45,9 +47,9 @@ namespace Hazelcast
         /// </summary>
         /// <remarks>
         /// <para>The client will remain connected as long as it is not required to
-        /// disconnect by the user (in which case it will transition to <see cref="ShuttingDown"/>
+        /// disconnect by the user (in which case it will transition to <see cref="ShuttingDown"/>)
         /// or disconnected by the server or the network (in which case in will
-        /// transition to <see cref="Disconnected"/>.</para>
+        /// transition to <see cref="Disconnected"/>).</para>
         /// </remarks>
         Connected,
 
@@ -55,9 +57,17 @@ namespace Hazelcast
         /// The client has been disconnected.
         /// </summary>
         /// <remarks>
-        /// <para>Depending on the configuration, the client may try to reconnected, and
-        /// if successful, transition back to <see cref="Connected"/>. Otherwise, it
-        /// will transition to <see cref="Shutdown"/>.</para>
+        /// <para>Depending on the configuration, the client may try to reconnect, to the
+        /// same cluster or (if failover is enabled) to other clusters. If it can successfully
+        /// reconnect to the same cluster, it transitions back to <see cref="Connected"/>.
+        /// Alternatively, if failover is enabled, it will try to connect to other clusters and,
+        /// if successful, transition to <see cref="ClusterChanged"/>.
+        /// If all reconnection attempts fail, it transitions to <see cref="Shutdown"/>.</para>
+        /// <para>Note that if failover is involved, the client will transition to
+        /// <see cref="ClusterChanged"/> if it can reconnect to any cluster, and that includes
+        /// the original cluster it was connected to. For instance, after being disconnected
+        /// from A, the client tries to reconnect to A, then fails over to B, then C, then
+        /// A again and succeeds: this is considered a cluster change.</para>
         /// </remarks>
         Disconnected,
 
@@ -73,10 +83,19 @@ namespace Hazelcast
         ShuttingDown,
 
         /// <summary>
-        /// Client has swicthed to a new cluster and connected to it due to failover.
+        /// The client, which was <see cref="Disconnected"/>, is about to reconnect to a different cluster.
         /// </summary>
-        /// <remarks>Connected state will be reached after this state.</remarks>
-        ClusterChanged,
+        /// <remarks>
+        /// <para>This state is reached when a <see cref="Disconnected"/> client managed to
+        /// establish a connection to a member of a different cluster, in a failover scenario. It
+        /// is also reached when a <see cref="Started"/> client failed to immediately connect to
+        /// the first cluster of a failover scenario, and had to try more clusters.</para>
+        /// <para>As soon as a client enters a failover scenario, it will enter <see cref="ClusterChanged"/>
+        /// before entering <see cref="Connected"/>, even though it ends up connecting to the first
+        /// cluster, or re-connecting to the original cluster.</para>
+        /// <para>The client performs some house-keeping tasks, then transitions to <see cref="Connected"/>.</para>
+        /// </remarks>
+        ClusterChanged, // should be 'ChangingCluster' really but we have to stick with Java's names
 
         /// <summary>
         /// The client has shut down.
