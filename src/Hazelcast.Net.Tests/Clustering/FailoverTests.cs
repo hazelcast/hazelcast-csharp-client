@@ -18,7 +18,6 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Partitioning;
-using Hazelcast.Security;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -43,14 +42,14 @@ namespace Hazelcast.Tests.Clustering
                 .Configure<FailoverTests>().SetPrefix("TEST").SetMaxLevel()
             );
 
-        private const string ClusterAName = "clusterA";
-        private const string ClusterBName = "clusterB";
+        private const string NameA = "clusterA";
+        private const string NameB = "clusterB";
 
-        private const string ClusterAKey = "keyForClusterA";
-        private const string ClusterAData = "dataForClusterA";
+        private const string KeyA = "keyForClusterA";
+        private const string ValueA = "dataForClusterA";
 
-        private const string ClusterBKey = "keyForClusterB";
-        private const string ClusterBData = "dataForClusterB";
+        private const string KeyB = "keyForClusterB";
+        private const string ValueB = "dataForClusterB";
 
         private static ClusterState MockClusterState(HazelcastOptions options)
         {
@@ -167,7 +166,7 @@ namespace Hazelcast.Tests.Clustering
 
         [TestCase(true, 1)]
         [TestCase(false, 1)]
-        public async Task TestClientCanFailover(bool useSmartConnection, int memberCount)
+        public async Task TestClientCanFailover(bool smartRouting, int memberCount)
         {
             //var _ = HConsoleForTest();
 
@@ -188,7 +187,7 @@ namespace Hazelcast.Tests.Clustering
                              o.Networking.ReconnectMode = Hazelcast.Networking.ReconnectMode.ReconnectAsync;
                              o.Networking.ConnectionTimeoutMilliseconds = 10_000;
                              o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
-                             o.Networking.SmartRouting = useSmartConnection;
+                             o.Networking.SmartRouting = smartRouting;
                              o.AddSubscriber(events =>
                                  events.StateChanged((sender, arg) =>
                                  {
@@ -204,7 +203,7 @@ namespace Hazelcast.Tests.Clustering
                          {
                              o.ClusterName = RcClusterAlternative.Id;
                              o.Networking.Addresses.Add("127.0.0.1:5703");
-                             o.Networking.SmartRouting = useSmartConnection;// that doesn't override to primary                     
+                             o.Networking.SmartRouting = smartRouting;// that doesn't override primary                     
                              o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
                          })
                          .Build());
@@ -215,8 +214,8 @@ namespace Hazelcast.Tests.Clustering
             //Actual testing
 
             HConsole.WriteLine(this, "Creating Members");
-            var membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
-            var membersB = await StartMembersOn(RcClusterAlternative.Id, 1);
+            var membersA = await StartMembersAsync(RcClusterPrimary, 1);
+            var membersB = await StartMembersAsync(RcClusterAlternative, 1);
 
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
             var mapName = CreateUniqueName();
@@ -227,21 +226,29 @@ namespace Hazelcast.Tests.Clustering
             await AssertClusterA(map, client.ClusterName);
 
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterPrimary, membersA);
 
             //Now, we should failover to cluster B
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.AreEqual(ClientState.Connected, client.State);
+                Assert.AreEqual(RcClusterAlternative.Id, client.ClusterName);
+            }, 60_000, 500);
             await AssertClusterB(map, client.ClusterName);
 
             // Start cluster A again
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
-            membersA = await StartMembersOn(RcClusterPrimary.Id, memberCount);
+            membersA = await StartMembersAsync(RcClusterPrimary, memberCount);
 
             // Kill B
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster B :{RcClusterAlternative.Id}");
-            await KillMembersOnAsync(RcClusterAlternative.Id, membersB);
+            await KillMembersAsync(RcClusterAlternative, membersB);
 
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.AreEqual(ClientState.Connected, client.State);
+                Assert.AreEqual(RcClusterPrimary.Id, client.ClusterName);
+            }, 60_000, 500);
             await AssertClusterA(map, client.ClusterName);
 
             Assert.GreaterOrEqual(numberOfStateChanged, 8);
@@ -257,13 +264,12 @@ namespace Hazelcast.Tests.Clustering
                 7 Switched
                 8 Connected
              */
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterPrimary, membersA);
         }
-
 
         [TestCase(true, 1)]
         [TestCase(false, 1)]
-        public async Task TestClientCanFailoverFirstClusterNotUp(bool useSmartConnection, int memberCount)
+        public async Task TestClientCanFailoverFirstClusterNotUp(bool smartRouting, int memberCount)
         {
             var _ = HConsoleForTest();
 
@@ -284,7 +290,7 @@ namespace Hazelcast.Tests.Clustering
                             o.Networking.ReconnectMode = Hazelcast.Networking.ReconnectMode.ReconnectAsync;
                             o.Networking.ConnectionTimeoutMilliseconds = 10_000;
                             o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
-                            o.Networking.SmartRouting = useSmartConnection;
+                            o.Networking.SmartRouting = smartRouting;
                             o.AddSubscriber(events =>
                                 events.StateChanged((sender, arg) =>
                                 {
@@ -300,7 +306,7 @@ namespace Hazelcast.Tests.Clustering
                         {
                             o.ClusterName = RcClusterAlternative.Id;
                             o.Networking.Addresses.Add("127.0.0.1:5703");
-                            o.Networking.SmartRouting = useSmartConnection;// that doesn't override to primary                    
+                            o.Networking.SmartRouting = smartRouting;// that doesn't override primary                    
                             o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
                         })
                         .Build());
@@ -311,7 +317,7 @@ namespace Hazelcast.Tests.Clustering
             //Actual testing
             HConsole.WriteLine(this, "Creating Members");
 
-            var membersB = await StartMembersOn(RcClusterAlternative.Id, 1);
+            var membersB = await StartMembersAsync(RcClusterAlternative, 1);
 
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
             var mapName = CreateUniqueName();
@@ -324,11 +330,11 @@ namespace Hazelcast.Tests.Clustering
 
             //Start A before switch
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
-            var membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
+            var membersA = await StartMembersAsync(RcClusterPrimary, 1);
 
             // Kill B
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster B :{RcClusterAlternative.Id}");
-            await KillMembersOnAsync(RcClusterAlternative.Id, membersB);
+            await KillMembersAsync(RcClusterAlternative, membersB);
 
             //We should be at A
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
@@ -336,11 +342,11 @@ namespace Hazelcast.Tests.Clustering
 
             // Start cluster B again
             HConsole.WriteLine(this, $"START: Members of Cluster B :{RcClusterAlternative.Id}");
-            membersB = await StartMembersOn(RcClusterAlternative.Id, memberCount);
+            membersB = await StartMembersAsync(RcClusterAlternative, memberCount);
 
             // Kill A
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterPrimary, membersA);
 
             //Now, we should failover to cluster B
             await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
@@ -360,8 +366,8 @@ namespace Hazelcast.Tests.Clustering
                 8 Connected
              */
 
-            await KillMembersOnAsync(RcClusterAlternative.Id, membersB);
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterAlternative, membersB);
+            await KillMembersAsync(RcClusterPrimary, membersA);
         }
 
         [Test]
@@ -402,24 +408,24 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             HConsole.WriteLine(this, "Creating Members");
-            var membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
+            var membersA = await StartMembersAsync(RcClusterPrimary, 1);
 
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(failoverOptions);
             var mapName = CreateUniqueName();
 
             var map = await client.GetMapAsync<string, string>(mapName);
-            await map.PutAsync(ClusterAKey, ClusterAData);
+            await map.PutAsync(KeyA, ValueA);
 
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
 
             // kill all members, client will try to fall over and eventually fail and shutdown
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterPrimary, membersA);
 
             await AssertEx.SucceedsEventually(async () =>
             {
                 try
                 {
-                    await client.GetMapAsync<string, string>(ClusterAKey);
+                    await client.GetMapAsync<string, string>(KeyA);
                     throw new Exception("Expected GetMapAsync to fail.");
                 }
                 catch (ClientOfflineException)
@@ -479,8 +485,8 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             HConsole.WriteLine(this, "Creating Members");
-            var membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
-            var membersB = await StartMembersOn(RcClusterPartition.Id, 1);
+            var membersA = await StartMembersAsync(RcClusterPrimary, 1);
+            var membersB = await StartMembersAsync(RcClusterPartition, 1);
 
             // Since connections are managed at the backend,
             // cannot catch the exception with an simple assertion
@@ -489,18 +495,18 @@ namespace Hazelcast.Tests.Clustering
             var mapName = CreateUniqueName();
 
             var map = await client.GetMapAsync<string, string>(mapName);
-            await map.PutAsync(ClusterAKey, ClusterAData);
-            await client.GetMapAsync<string, string>(ClusterAKey);
+            await map.PutAsync(KeyA, ValueA);
+            await client.GetMapAsync<string, string>(KeyA);
 
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
-            await KillMembersOnAsync(RcClusterPrimary.Id, membersA);
+            await KillMembersAsync(RcClusterPrimary, membersA);
 
             //Failover to B and fail due to different partition count            
 
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
-            membersA = await StartMembersOn(RcClusterPrimary.Id, 1);
+            membersA = await StartMembersAsync(RcClusterPrimary, 1);
 
-            var val = await map.GetAsync(ClusterAKey);
+            var val = await map.GetAsync(KeyA);
 
             Assert.AreEqual(ClientState.Connected, client.State);
             Assert.True(isLastStateConnected);
@@ -512,12 +518,12 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.AreEqual(RcClusterPrimary.Id, currentClusterId);
 
-            await map.PutAsync(ClusterAKey, ClusterAData);
-            var readData = await map.GetAsync(ClusterAKey);
-            Assert.AreEqual(ClusterAData, readData);
+            await map.PutAsync(KeyA, ValueA);
+            var value = await map.GetAsync(KeyA);
+            Assert.AreEqual(ValueA, value);
 
-            readData = await map.GetAsync(ClusterBData);
-            Assert.AreNotEqual(ClusterBData, readData);
+            value = await map.GetAsync(KeyB);
+            Assert.AreNotEqual(ValueB, value);
         }
 
         private async Task AssertClusterB(IHMap<string, string> map, string currentClusterId)
@@ -526,12 +532,12 @@ namespace Hazelcast.Tests.Clustering
 
             Assert.AreEqual(RcClusterAlternative.Id, currentClusterId);
 
-            await map.PutAsync(ClusterBKey, ClusterBData);
-            var readData = await map.GetAsync(ClusterBKey);
-            Assert.AreEqual(ClusterBData, readData);
+            await map.PutAsync(KeyB, ValueB);
+            var value = await map.GetAsync(KeyB);
+            Assert.AreEqual(ValueB, value);
 
-            readData = await map.GetAsync(ClusterAKey);
-            Assert.AreNotEqual(ClusterAData, readData);
+            value = await map.GetAsync(KeyA);
+            Assert.AreNotEqual(ValueA, value);
         }
 
     }

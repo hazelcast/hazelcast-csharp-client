@@ -12,28 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Testing;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
 {
-    internal class MultipleClusterRemoteTestBase : RemoteTestBase
+    // TODO: merge this in the FailoverTests, does not belong here
+    internal class MultipleClusterRemoteTestBase : RemoteTestBase 
     {
         [SetUp]
         public async Task ClusterOneTimeSetUp()
         {
-            // create remote client and cluster
+            // create the RC client
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
+
+            // create clusters
             RcClusterPrimary = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
-            RcClusterAlternative = await RcClient.CreateClusterAsync(Remote.Resources.alternative).CfAwait();
-            RcClusterPartition = await RcClient.CreateClusterAsync(Remote.Resources.partition).CfAwait();
+            RcClusterAlternative = await RcClient.CreateClusterAsync(RcAlternativeClusterConfiguration).CfAwait();
+            RcClusterPartition = await RcClient.CreateClusterAsync(RcPartitionClusterConfiguration).CfAwait();
         }
 
         [TearDown]
@@ -59,77 +58,67 @@ namespace Hazelcast.Testing
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            var clusterOptions = (IClusterOptions)options;
+            var clusterOptions = (IClusterOptions) options;
             clusterOptions.ClusterName = RcClusterPrimary?.Id ?? clusterOptions.ClusterName;
             return options;
         }
 
         /// <summary>
-        /// Gets the remote cluster configuration.
+        /// Gets the primary cluster configuration.
         /// </summary>
-        protected virtual string RcClusterConfiguration => Remote.Resources.hazelcast;
+        protected virtual string RcClusterConfiguration => Resources.hazelcast;
 
         /// <summary>
-        /// Gets the alternative remote cluster configuration.
+        /// Gets an alternative cluster configuration with username and password authentication.
         /// </summary>
-        protected virtual string RcAlternativeClusterConfiguration => Remote.Resources.alternative;
+        protected virtual string RcAlternativeClusterConfiguration => Resources.alternative;
 
         /// <summary>
-        /// Gets an alternative remote cluster configuration which has 277 partion.
+        /// Gets an alternative cluster configuration with a different number of partitions.
         /// </summary>
-        protected virtual string RcPartitionClusterConfiguration => Remote.Resources.partition;
+        protected virtual string RcPartitionClusterConfiguration => Resources.partition;
 
         /// <summary>
         /// Gets the remote controller client.
         /// </summary>
-        protected Remote.IRemoteControllerClient RcClient { get; private set; }
+        protected IRemoteControllerClient RcClient { get; private set; }
 
         /// <summary>
-        /// Gets the remote controller cluster which is reachable by options.Network. 
-        /// Configured by <see cref="RcClusterConfiguration"/>
+        /// Gets the primary cluster.
         /// </summary>
         protected Remote.Cluster RcClusterPrimary { get; private set; }
 
         /// <summary>
-        /// An alternative cluster to <see cref="RcClusterPrimary"/>. It is used as failover cluster. It uses username password authentication. 
-        /// Configured by <see cref="RcClusterAlternative"/>
+        /// Gets an alternative cluster which requires username and password authentication.
         /// </summary>
         protected Remote.Cluster RcClusterAlternative { get; private set; }
 
         /// <summary>
-        /// An alternative cluster to <see cref="RcClusterPrimary"/>. It is used as failover cluster and has 277 partitions. 
-        /// Configured by <see cref="RcPartitionClusterConfiguration"/>
+        /// Gets an alternative cluster which has a different number of partitions.
         /// </summary>
         protected Remote.Cluster RcClusterPartition { get; private set; }
 
         /// <summary>
-        /// Kills given member list on given cluster
+        /// Kills the specified cluster members.
         /// </summary>
-        /// <param name="clusterID"></param>
-        /// <param name="members"></param>
-        /// <returns></returns>
-        protected async Task KillMembersOnAsync(string clusterID, Member[] members)
+        protected async Task KillMembersAsync(Remote.Cluster cluster, Member[] members)
         {
             foreach (var member in members)
             {
-                await RcClient.ShutdownMemberAsync(clusterID, member.Uuid);
+                await RcClient.ShutdownMemberAsync(cluster.Id, member.Uuid);
             }
         }
 
         /// <summary>
-        /// Starts number of members on given cluster
+        /// Starts members on a cluster.
         /// </summary>
-        /// <param name="clusterId"></param>
-        /// <param name="numberOfMembers"></param>
-        /// <returns></returns>
-        protected async Task<Member[]> StartMembersOn(string clusterId, int numberOfMembers)
+        protected async Task<Member[]> StartMembersAsync(Remote.Cluster cluster, int count)
         {
-            Member[] members = new Member[numberOfMembers];
-            for (int i = 0; i < numberOfMembers; i++)
+            var members = new Member[count];
+            for (var i = 0; i < count; i++)
             {
-                members[i] = await RcClient.StartMemberAsync(clusterId);
+                members[i] = await RcClient.StartMemberAsync(cluster.Id);
             }
-
             return members;
         }
     }
