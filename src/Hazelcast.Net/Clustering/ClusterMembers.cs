@@ -71,14 +71,6 @@ namespace Hazelcast.Clustering
 
             _members = new MemberTable();
 
-            // FIXME: when is ClusterOptionsChanged triggered exactly?
-            // assuming this is once we have entered failover so we ARE disconnected
-            // and the code that switches over to 'disconnected' drains the queue anyways
-            _clusterState.Failover.ClusterChanged += options =>
-            {
-                Clear();
-            };
-
             // members to connect
             if (clusterState.IsSmartRouting)
             {
@@ -840,25 +832,6 @@ namespace Hazelcast.Clustering
             return _members.TryGetMember(memberId, out var memberInfo)
                 ? memberInfo
                 : null;
-        }
-
-        /// <summary>
-        /// Clear all members and their connections.
-        /// </summary>
-        private void Clear() // FIXME DANGER + we don't need this
-        {
-            HConsole.WriteLine(this, "Clearing members");
-            //no one should interrupt the cleaning
-            lock (_mutex)
-            {
-                // FIXME NOT THIS
-                if (_clusterState.IsSmartRouting)
-                    foreach (var member in _members.Members)
-                        _memberConnectionQueue.Remove(member.Id);
-
-                // FIXME MAYBE THIS?
-                _members = new MemberTable();
-            }
         }
 
         /// <inheritdoc />
