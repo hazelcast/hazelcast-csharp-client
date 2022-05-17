@@ -2,7 +2,7 @@
   
   "hazelcast-failover": {
     "tryCount": 42,
-    "clusters": [
+    "clients": [
       {
         // name of the client
         "clientName": "client",

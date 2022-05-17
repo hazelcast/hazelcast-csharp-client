@@ -275,10 +275,10 @@ namespace Hazelcast.Clustering
                     });
             }
 
-            if (reconnect)
+            if (reconnect || _clusterState.Failover.Enabled)
             {
                 // reconnect via a background task
-                // operations will either retry until timeout, or fail
+                // operations will either retry until timeout, failover(if enabled) or fail
                 _reconnect = BackgroundTask.Run(ReconnectAsync);
             }
             else
