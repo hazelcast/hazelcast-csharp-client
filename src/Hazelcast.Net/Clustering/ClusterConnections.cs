@@ -76,7 +76,7 @@ namespace Hazelcast.Clustering
             _clusterState.StateChanged += OnStateChanged;
 
             //Cluster changed, renew options if necessary.
-            _clusterState.Failover.ClusterOptionsChanged += (HazelcastOptions options) =>
+            _clusterState.Failover.ClusterChanged += (HazelcastOptions options) =>
             {
                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
             };
@@ -378,12 +378,17 @@ namespace Hazelcast.Clustering
                 // we have been connected (rejoice) - of course, nothing guarantees that it
                 // will last, but then OnConnectionClosed will deal with it
             }
-            catch (Exception)
+            catch (Exception) // FIXME! what is this?
             {
+                // FIXME
+                // this was the first time we tried to connect
+                // and we failed and maybe we can try another one
+                // we should NOT use reconnect here BUT have a loop in this method
+
                 //if there is a bg task to reconnect(most likely not in the current state),
                 //it will eventually will fail and do failover(if possible). If not,
                 //we can start a new one with new cluster options.
-                if (_reconnect == null && _clusterState.Failover.RequestClusterChange())
+                if (_reconnect == null && _clusterState.Failover.TryNextCluster())
                 {
                     _reconnect = BackgroundTask.Run(ReconnectAsync);
                 }
@@ -404,7 +409,7 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when reconnected.</returns>
         private async Task ReconnectAsync(CancellationToken cancellationToken)
         {
-            bool shouldRetry;
+            var tryNextCluster = false;
             do
             {
                 try
@@ -428,28 +433,36 @@ namespace Hazelcast.Clustering
                         _logger.IfDebug()?.LogDebug("Reconnected");
                     }
 
-                    shouldRetry = false;
                     // we have been reconnected (rejoice) - of course, nothing guarantees that it
                     // will last, but then OnConnectionClosed will deal with it
                 }
-                catch (Exception e)//could be ClientNotAllowedInClusterException
+                catch (Exception e) // could be ClientNotAllowedInClusterException
                 {
-                    //We have failed connect to the cluster, and retried.
-                    //Now, try to do failover if possible.
-                    if (_clusterState.Failover.RequestClusterChange())
+                    // we *have* retried and failed
+                    if (_clusterState.Failover.Enabled)
                     {
-                        shouldRetry = true;
-                        _logger.LogWarning("Client does failover to next cluster.");
+                        // try to failover to next cluster
+                        if (_clusterState.Failover.TryNextCluster())
+                        {
+                            // ok to try the next cluster!
+                            tryNextCluster = true;
+                            _logger.LogWarning(e, "Failed to connect to cluster, failover to next cluster.");
+                        }
+                        else
+                        {
+                            // this is hopeless, shutdown, and log (we are a background task!)
+                            _clusterState.RequestShutdown();
+                            _logger.LogError(e, "Failed to connect to cluster, and exhausted failover options.");
+                        }
                     }
                     else
                     {
-                        shouldRetry = false;
-                        // we *have* retried and failed, shutdown, and log (we are a background task!)
+                        // this is hopeless, shutdown, and log (we are a background task!)
                         _clusterState.RequestShutdown();
                         _logger.LogError(e, "Failed to reconnect.");
                     }
                 }
-            } while (shouldRetry);
+            } while (tryNextCluster);
 
             // in any case, remove ourselves
             _reconnect = null;

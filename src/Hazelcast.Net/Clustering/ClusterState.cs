@@ -55,7 +55,7 @@ namespace Hazelcast.Clustering
 
             StateChanged += _failover.OnClusterStateChanged;
 
-            _failover.ClusterOptionsChanged += cluster =>
+            _failover.ClusterChanged += cluster =>
             {
                 AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
                 ClusterName = cluster.ClusterName;

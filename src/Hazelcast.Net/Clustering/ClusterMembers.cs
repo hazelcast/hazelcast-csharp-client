@@ -37,7 +37,7 @@ namespace Hazelcast.Clustering
         private readonly object _mutex = new object();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
-        private ILoadBalancer _loadBalancer;
+        private readonly ILoadBalancer _loadBalancer;
 
         private readonly TerminateConnections _terminateConnections;
         private readonly MemberConnectionQueue _memberConnectionQueue;
@@ -71,7 +71,10 @@ namespace Hazelcast.Clustering
 
             _members = new MemberTable();
 
-            _clusterState.Failover.ClusterOptionsChanged += (options) =>
+            // FIXME: when is ClusterOptionsChanged triggered exactly?
+            // assuming this is once we have entered failover so we ARE disconnected
+            // and the code that switches over to 'disconnected' drains the queue anyways
+            _clusterState.Failover.ClusterChanged += options =>
             {
                 Clear();
             };
@@ -224,9 +227,17 @@ namespace Hazelcast.Clustering
                         _logger.IfDebug()?.LogDebug("Added connection {ConnectionId} to member {MemberId} at {Address}, now connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
                         if (_clusterState.Failover.IsChangingCluster)
-                            _clusterState.ChangeState(ClientState.ClusterChanged);
+                        {
+                            // Started | Disconnected -> connected BUT changing cluster, trigger ClusterChanged then Connected
+                            _clusterState.ChangeState(ClientState.ClusterChanged, ClientState.Started, ClientState.Disconnected);
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.ClusterChanged);
+                        }
+                        else
+                        {
+                            // Started | Disconnected -> connected NOT changing cluster, directly trigger Connected
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        }
 
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClusterChanged, ClientState.Disconnected);
                         _connected = true;
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
@@ -312,6 +323,7 @@ namespace Hazelcast.Clustering
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
                         _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
+                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
@@ -522,10 +534,19 @@ namespace Hazelcast.Clustering
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, now connected.", removed.Count, added.Count, members.Count);
-                        if (_clusterState.Failover.IsChangingCluster)
-                            _clusterState.ChangeState(ClientState.ClusterChanged);
 
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.ClusterChanged, ClientState.Disconnected);
+                        if (_clusterState.Failover.IsChangingCluster)
+                        {
+                            // Started | Disconnected -> connected BUT changing cluster, trigger ClusterChanged then Connected
+                            _clusterState.ChangeState(ClientState.ClusterChanged, ClientState.Started, ClientState.Disconnected);
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.ClusterChanged);
+                        }
+                        else
+                        {
+                            // Started | Disconnected -> connected NOT changing cluster, directly trigger Connected
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        }
+
                         _connected = true;
                     }
                     else
@@ -566,6 +587,7 @@ namespace Hazelcast.Clustering
                     {
                         // no more connected member, we are now disconnected
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
+                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
                         _connected = false;
                         disconnected = true;
@@ -823,16 +845,18 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Clear all members and their connections.
         /// </summary>
-        private void Clear()
+        private void Clear() // FIXME DANGER + we don't need this
         {
             HConsole.WriteLine(this, "Clearing members");
             //no one should interrupt the cleaning
             lock (_mutex)
             {
+                // FIXME NOT THIS
                 if (_clusterState.IsSmartRouting)
                     foreach (var member in _members.Members)
                         _memberConnectionQueue.Remove(member.Id);
 
+                // FIXME MAYBE THIS?
                 _members = new MemberTable();
             }
         }

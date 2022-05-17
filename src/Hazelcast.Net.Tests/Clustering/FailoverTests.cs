@@ -80,74 +80,93 @@ namespace Hazelcast.Tests.Clustering
             const string address2 = "2.2.2.2";
             const string username = "MARVIN";
 
+            var clusterChangedCount = 0;
 
-            int countOfClusterChangedRaised = 0;
-
-            var opt = new HazelcastFailoverOptionsBuilder()
-                .With("hazelcast-failover.tryCount", "2")
-                .With("hazelcast-failover.clusters.0.networking.addresses.0", address1)
-                .With("hazelcast-failover.clusters.0.clusterName", clusterName1)
-                .With("hazelcast-failover.clusters.1.clusterName", clusterName2)
-                .With("hazelcast-failover.clusters.1.networking.addresses.0", address2)
-                .With("hazelcast-failover.clusters.1.authentication.username-password.username", username)
+            var failoverOptions = new HazelcastFailoverOptionsBuilder()
+                .With(fo =>
+                {
+                    fo.TryCount = 2;
+                    fo.Clients.Add(new HazelcastOptionsBuilder()
+                        .With(o =>
+                        {
+                            o.ClusterName = clusterName1;
+                            o.Networking.Addresses.Add(address1);
+                        })
+                        .Build());
+                    fo.Clients.Add(new HazelcastOptionsBuilder()
+                        .With(o =>
+                        {
+                            o.ClusterName = clusterName2;
+                            o.Networking.Addresses.Add(address2);
+                            o.Authentication.ConfigureUsernamePasswordCredentials(username, "");
+                        })
+                        .Build());
+                })
                 .Build();
 
-            opt.Enabled = true;
-            var options = opt.Clients[0];
-            options.FailoverOptions = opt;
+            failoverOptions.Enabled = true;
+
+            var options = failoverOptions.Clients[0];
+            options.FailoverOptions = failoverOptions;
 
             var clusterState = MockClusterState(options);
 
             var failover = new Failover(clusterState, options);
-            failover.ClusterOptionsChanged += delegate (HazelcastOptions currentCluster)
+
+            failover.ClusterChanged += _ => 
             {
-                countOfClusterChangedRaised++;
+                clusterChangedCount++;
             };
 
-            void assertForCluster1(Failover failover)
+            void AssertCluster1(Failover fo)
             {
-                Assert.AreEqual(clusterName1, failover.CurrentClusterOptions.ClusterName);
-                Assert.True(failover.CurrentClusterOptions.Networking.Addresses.Contains(address1));
+                Assert.AreEqual(clusterName1, fo.CurrentClusterOptions.ClusterName);
+                Assert.True(fo.CurrentClusterOptions.Networking.Addresses.Contains(address1));
             };
 
-            void assertForCluster2(Failover failover)
+            void AssertCluster2(Failover fo)
             {
-                Assert.AreEqual(clusterName2, failover.CurrentClusterOptions.ClusterName);
-                Assert.True(failover.CurrentClusterOptions.Networking.Addresses.Contains(address2));
-                Assert.False(failover.CurrentClusterOptions.Networking.Addresses.Contains(address1));
-                Assert.AreEqual(failover.CurrentClusterOptions.Authentication.CredentialsFactory.Service.NewCredentials().Name, username);
+                Assert.AreEqual(clusterName2, fo.CurrentClusterOptions.ClusterName);
+                Assert.True(fo.CurrentClusterOptions.Networking.Addresses.Contains(address2));
+                Assert.False(fo.CurrentClusterOptions.Networking.Addresses.Contains(address1));
+                Assert.AreEqual(fo.CurrentClusterOptions.Authentication.CredentialsFactory.Service.NewCredentials().Name, username);
             };
 
-            //initial one must be cluster 1
-            assertForCluster1(failover);
+            // initial one must be cluster 1
+            AssertCluster1(failover);
             clusterState.ChangeState(ClientState.Disconnected);
 
-            //Loop 1, Try 1
-            failover.RequestClusterChange();
-            assertForCluster2(failover);
-            Assert.AreEqual(1, countOfClusterChangedRaised);
-            Assert.AreEqual(0, failover.CurrentTryCount);
+            var expectedCount = 1;
 
-            //Loop 1, Try 2
-            failover.RequestClusterChange();
-            assertForCluster1(failover);
-            Assert.AreEqual(2, countOfClusterChangedRaised);
-            Assert.AreEqual(1, failover.CurrentTryCount);
+            // Loop 1, Try 1
+            Assert.That(failover.TryNextCluster());
+            AssertCluster2(failover);
+            Assert.AreEqual(expectedCount, clusterChangedCount);
+            Assert.AreEqual(expectedCount, failover.CurrentTryCount);
+            expectedCount++;
 
-            //Loop 2, Try 1
-            failover.RequestClusterChange();
-            assertForCluster2(failover);
-            Assert.AreEqual(3, countOfClusterChangedRaised);
-            Assert.AreEqual(1, failover.CurrentTryCount);
+            // Loop 1, Try 2
+            Assert.That(failover.TryNextCluster());
+            AssertCluster1(failover);
+            Assert.AreEqual(expectedCount, clusterChangedCount);
+            Assert.AreEqual(expectedCount, failover.CurrentTryCount);
+            expectedCount++;
 
-            //Loop 2, Try 2
-            failover.RequestClusterChange();
-            assertForCluster1(failover);
-            Assert.AreEqual(4, countOfClusterChangedRaised);
-            Assert.AreEqual(2, failover.CurrentTryCount);
+            // Loop 2, Try 1
+            Assert.That(failover.TryNextCluster());
+            AssertCluster2(failover);
+            Assert.AreEqual(expectedCount, clusterChangedCount);
+            Assert.AreEqual(expectedCount, failover.CurrentTryCount);
+            expectedCount++;
 
-            //Loop 3-> spent all tries
-            Assert.False(failover.RequestClusterChange());
+            // Loop 2, Try 2
+            Assert.That(failover.TryNextCluster());
+            AssertCluster1(failover);
+            Assert.AreEqual(expectedCount, clusterChangedCount);
+            Assert.AreEqual(expectedCount, failover.CurrentTryCount);
+
+            // Loop 3-> spent all tries
+            Assert.False(failover.TryNextCluster());
         }
 
         [TestCase(true, 1)]

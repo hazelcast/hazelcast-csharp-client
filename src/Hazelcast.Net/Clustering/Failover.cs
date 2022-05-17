@@ -16,138 +16,125 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Hazelcast.Configuration;
 using Hazelcast.Core;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Clustering
 {
     /// <summary>
-    /// Failover class holds condigured alternative failover cluster options, and switches them 
-    /// by request.  
+    /// Manages the clusters failover.
     /// </summary>
     internal class Failover
     {
         private readonly ClusterState _state;
-        private readonly IEnumerable<HazelcastOptions> _clusters;
+        private readonly List<HazelcastOptions> _clusters;
         private readonly IEnumerator<HazelcastOptions> _clusterEnumerator;
-        private int _currentTryCount;
-        private readonly int _maxTryCount;
+        private readonly int _maxCount;
+        private int _count;
         private bool _isEnabled;
-        private Action<HazelcastOptions> _clusterOptionsChanged;
+        private Action<HazelcastOptions> _clusterChanged;
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Failover"/> class.
+        /// </summary>
         internal Failover(ClusterState state, HazelcastOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            if (state == null) throw new ArgumentNullException(nameof(state));
 
-            _state = state;
-            _isEnabled = options.FailoverOptions.Enabled;
+            _state = state ?? throw new ArgumentNullException(nameof(state));
+            _isEnabled = options.FailoverOptions.Enabled; // TODO why 'enabled' in options ?!
 
-            if (Enabled)
-            {
-                _clusters = new List<HazelcastOptions>(options.FailoverOptions.Clients);
-            }
-            else
-            {   //there is one cluster config, failover disabled.
-                _clusters = new List<HazelcastOptions>() { options };
-            }
+            // no failover if only one cluster is declared in the failover configuration
+            _clusters = Enabled 
+                ? new List<HazelcastOptions>(options.FailoverOptions.Clients) 
+                : new List<HazelcastOptions> { options };
 
-            _maxTryCount = options.FailoverOptions.TryCount;
+            // total count is try-count (the whole list) times the number of clusters
+            // so for instance if we have 3 clusters and try-count is 2, we can switch
+            // to another cluster 6 times and then we have to give up
+            _maxCount = options.FailoverOptions.TryCount * _clusters.Count;
 
-            _clusterEnumerator = _clusters.GetEnumerator();
-            ResetToFirstCluster();
+            // enumerate clusters, go to the first cluster
+            _clusterEnumerator = _clusters.GetEnumerator(); // TODO: dispose the enumerator
+            _clusterEnumerator.MoveNext();
 
             HConsole.Configure(x => x.Configure<Failover>().SetPrefix("CLUST.FAILOVER"));
         }
 
         /// <summary>
-        /// Triggers when failover is possible, and cluster options are changed.
+        /// Triggers when a new set of cluster options is selected.
         /// </summary>
-        public Action<HazelcastOptions> ClusterOptionsChanged
+        public Action<HazelcastOptions> ClusterChanged
         {
-            get => _clusterOptionsChanged;
+            get => _clusterChanged;
             set
             {
-                _clusterOptionsChanged = value;
+                // TODO we should lock on readonly properties but at the moment it fails
+                _clusterChanged = value;
             }
         }
 
         /// <summary>
-        /// Handles the event. If <see cref="CanSwitchClusterOptions"/> is true, and state is disconnected, it switches the <see cref="CurrentClusterOptions"/> to next one.
+        /// Handles the event and resets the try count upon connection.
         /// </summary>
         public ValueTask OnClusterStateChanged(ClientState clientState)
         {
-            //We have connected, reset the counter.
+            // we have connected, reset the counter
             if (clientState == ClientState.Connected)
-            {
-                _currentTryCount = 0;
-            }
+                _count = 0;
 
             return default;
         }
 
         /// <summary>
-        /// Changes the cluster options, and triggers <see cref="ClusterOptionsChanged"/>
+        /// Tries to switch to the next cluster.
         /// </summary>
-        /// <remarks>Failover can only work when client state is <see cref="ClientState.Disconnected"/> or <see cref="ClientState.Started"/></remarks>
-        /// <returns>true if options changed, otherwise false</returns>
-        public bool RequestClusterChange()
+        /// <remarks>
+        /// <para>Failover can only switch to the next cluster when the client state is either
+        /// <see cref="ClientState.Disconnected"/> or <see cref="ClientState.Started"/>.</para>
+        /// </remarks>
+        /// <returns><c>true</c> if successfully switched to the next cluster; otherwise <c>false</c>.</returns>
+        public bool TryNextCluster()
         {
-            if ((_state.ClientState == ClientState.Disconnected || _state.ClientState == ClientState.Started) &&
-                CanSwitchClusterOptions)
+            // only disconnected if client state is Disconnected or Started
+            if (_state.ClientState != ClientState.Disconnected && _state.ClientState != ClientState.Started)
+                return false;
+
+            // TODO: this should be validated in the builder, not here?
+            if (!_isEnabled || _clusters.Count == 0)
+                return false;
+
+            if (_count == _maxCount) return false;
+
+            _count += 1;
+
+            if (!_clusterEnumerator.MoveNext()) // rotate the list
             {
-                SwitchClusterOptions();
-                HConsole.WriteLine(this, "CLUSTER OPTIONS SWITCHED");
-                return true;
-            }
-            return false;
-        }
-
-        /// <summary>
-        /// Rotates the <see cref="CurrentClusterOptions"/> according to position of the <see cref="_clusterEnumerator"/> 
-        /// and triggers the <see cref="ClusterOptionsChanged"/>
-        /// </summary>
-        private void SwitchClusterOptions()
-        {
-            if (!_clusterEnumerator.MoveNext())
-            {
-                ResetToFirstCluster();
-                _currentTryCount++;
+                _clusterEnumerator.Reset();
+                _clusterEnumerator.MoveNext();
             }
 
-            _clusterOptionsChanged?.Invoke(CurrentClusterOptions);
-        }
+            _clusterChanged?.Invoke(CurrentClusterOptions);
 
-        private void ResetToFirstCluster()
-        {
-            _clusterEnumerator.Reset();
-            _clusterEnumerator.MoveNext();//request for first item            
+            return true;
         }
 
         /// <summary>
-        /// Gets whether current conditions are suitable to change cluster options to next one.
-        /// </summary>
-        public bool CanSwitchClusterOptions => _currentTryCount < _maxTryCount && _isEnabled && _clusters.Any();
-
-        /// <summary>
-        /// Gets current <see cref="ClusterOptions" />
+        /// Gets current cluster options.
         /// </summary>
         public HazelcastOptions CurrentClusterOptions => _clusterEnumerator.Current;
 
         /// <summary>
-        /// Gets number of trial for the <see cref="CurrentClusterOptions"/>
+        /// Gets number of times we have switched to a new cluster.
         /// </summary>
-        public int CurrentTryCount => _currentTryCount;
+        public int CurrentTryCount => _count;
 
         /// <summary>
-        /// Gets whether current cluster options set by Failover, 
-        /// and client will establish a connection to a backup cluster.
+        /// Determines whether the client is currently falling over to another cluster.
         /// </summary>
-        public bool IsChangingCluster => _currentTryCount > 0;
+        public bool IsChangingCluster => _count > 0;
 
         /// <summary>
-        /// Gets or sets <see cref="Failover"/> whether is enabled.
+        /// Gets or sets a value indicating whether <see cref="Failover"/> is enabled.
         /// </summary>
         public bool Enabled
         {
