@@ -286,6 +286,7 @@ namespace Hazelcast.Clustering
 
                 // never going to be connected
                 if (ClientState != ClientState.Started &&
+                    ClientState != ClientState.ClusterChanged &&
                     ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
             }
 
@@ -313,6 +314,7 @@ namespace Hazelcast.Clustering
                 {
                     // either connected, or never going to be connected
                     if (x != ClientState.Started &&
+                        x != ClientState.ClusterChanged &&
                         x != ClientState.Disconnected)
                         wait.TrySetResult(x);
 

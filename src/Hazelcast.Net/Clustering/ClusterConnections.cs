@@ -355,9 +355,10 @@ namespace Hazelcast.Clustering
             if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
                 throw new ConnectionException("Failed to connect (aborted).");
 
-            var tryNextCluster = false;
+            bool tryNextCluster;
             do
             {
+                tryNextCluster = false;
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
@@ -418,9 +419,10 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when reconnected.</returns>
         private async Task ReconnectAsync(CancellationToken cancellationToken)
         {
-            var tryNextCluster = false;
+            bool tryNextCluster;
             do
             {
+                tryNextCluster = false;
                 try
                 {
                     // establishes the first connection, throws if it fails
