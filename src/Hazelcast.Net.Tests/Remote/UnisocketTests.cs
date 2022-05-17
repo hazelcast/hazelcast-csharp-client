@@ -16,7 +16,7 @@ namespace Hazelcast.Tests.Remote
         {
             foreach (var member in RcMembers)
             {
-                await ShutdownMember(member.Key);
+                await RemoveMember(member.Key);
             }
         }
         /// <summary>
@@ -61,7 +61,7 @@ namespace Hazelcast.Tests.Remote
             var map = await client.GetMapAsync<int, int>("myMap");
             await map.SubscribeAsync(events => events.EntryAdded((sender, args) => { eventCount++; }));
 
-            await ShutdownMember(Guid.Parse(memberA.Uuid));
+            await RemoveMember(Guid.Parse(memberA.Uuid));
             memberA = await AddMember();
 
             await AssertEx.SucceedsEventually(async () =>

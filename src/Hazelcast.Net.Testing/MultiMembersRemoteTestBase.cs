@@ -31,7 +31,7 @@ namespace Hazelcast.Testing
             // terminate & remove members
             foreach (var member in RcMembers.Values)
             {
-                await RcClient.StopMemberAsync(RcCluster, member);
+                await RemoveMember(member.Uuid);
             }
         }
 
@@ -60,18 +60,14 @@ namespace Hazelcast.Testing
         }
 
         /// <summary>
-        /// Shutdowns a member from the cluster.
+        /// Removes a member from the cluster.
         /// </summary>
         /// <param name="memberId">The identifier of the member to remove.</param>
-        /// <returns>A task that will complete when the member has been shutdown.</returns>
-        protected async Task ShutdownMember(Guid memberId)
+        /// <returns>A task that will complete when the member has been removed.</returns>
+        protected async Task RemoveMember(string memberId)
         {
-            if (RcMembers.TryRemove(memberId, out var member))
-            {
-                await RcClient.ShutdownMemberAsync(RcCluster.Id, member.Uuid);
-            }
+            await RemoveMember(Guid.Parse(memberId));
         }
-
 
         /// <summary>
         /// Gets the remote members.
