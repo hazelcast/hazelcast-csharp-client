@@ -45,6 +45,42 @@
     <base-dir>/custom-cp-dir</base-dir>
     <cp-member-count>3</cp-member-count>
     <group-size>3</group-size>
+
+    <!-- 
+    Duration for a CP session to be kept alive after the last received heartbeat. A CP 
+    session is closed if no session heartbeat is received during this duration. Session
+    TTL must be decided wisely. If a very low value is set, a CP session can be closed
+    prematurely if its owner Hazelcast instance temporarily loses connectivity to CP 
+    Subsystem because of a network partition or a GC pause. In such an occasion, all 
+    CP resources of this Hazelcast instance, such as FencedLock or ISemaphore, are 
+    released. On the other hand, if a very large value is set, CP resources can remain
+    assigned to an actually crashed Hazelcast instance for too long and liveliness 
+    problems can occur.
+    Must be greater than session-heartbeat-interval-seconds, and smaller than or equal
+    to missing-cp-member-auto-removal-seconds.
+    Default value is 300 seconds.
+    
+    Duration between last heartbeat sent by client, and session expiration.
+    -->
+    <session-time-to-live-seconds>90</session-time-to-live-seconds>
+
+    <!--
+    Interval for the periodically-committed CP session heartbeats.
+    Must be smaller than session-time-to-live-seconds.
+    Default value is 5 seconds.
+
+    Value is sent back to the client and used by the client as the heartbeat period.
+    -->
+    <session-heartbeat-interval-seconds>5</session-heartbeat-interval-seconds>
+
+    <!--
+    Duration to wait before automatically removing a missing CP member from CP Subsystem.
+
+    Must be greater than or equal to session-time-to-live-seconds.
+    Default value is 14400 seconds (4 hours).
+    -->
+    <missing-cp-member-auto-removal-seconds>14400</missing-cp-member-auto-removal-seconds>
+
     <locks>
       <fenced-lock>
         <name>lock</name>
