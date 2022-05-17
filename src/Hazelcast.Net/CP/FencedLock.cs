@@ -218,34 +218,29 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/>  
-        public async Task<int> GetLockCountAsync()
+        public async Task<int> GetLockCountAsync(LockContext lockContext)
         {
-            // the original Java code (below) does some sanity-checking on this operation
-            // but that requires a context and is totally not required, so we just don't
-            // do it - keeping the Java code here as a reference.
+            // the original Java code does some sanity-checking on this operation but
+            // due to race conditions linked to contexts, we totally cannot do it.
+            //
+            // the lockContext parameter is kept for consistency so all IFencedLock
+            // methods require a LockContext - but it is pointless here and not used.
 
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
             return ownership.LockCount;
 
             /*
-            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
-
             var contextId = lockContext.Id; // (equivalent to Java thread identifier)
-            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
-
-            VerifyNoLockOrValidSession(contextId, sessionId, false);
+            var lockState = GetOrCreateLockState(contextId, sessionId); // note: handles sessionId being NoSessionId
 
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
             var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+            CollectLock(lockState);
 
             if (lockedByCurrent)
             {
-                _lockedSessionIds[contextId] = sessionId;
-            }
-            else
-            {
-                VerifyNoLock(contextId);
+                // we cannot make any decision here!
             }
 
             return ownership.LockCount;
@@ -253,40 +248,38 @@ namespace Hazelcast.CP
         }
 
         /// <inheritdoc/>  
-        public async Task<bool> IsLockedAsync()
+        public async Task<bool> IsLockedAsync(LockContext lockContext)
         {
-            // the original Java code (below) does some sanity-checking on this operation
-            // but that requires a context and is totally not required, so we just don't
-            // do it - keeping the Java code here as a reference.
+            // the original Java code does some sanity-checking on this operation but
+            // due to race conditions linked to contexts, we totally cannot do it.
+            //
+            // the lockContext parameter is kept for consistency so all IFencedLock
+            // methods require a LockContext - but it is pointless here and not used.
 
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
             return ownership.Locked;
 
             /*
-            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
-
             var contextId = lockContext.Id; // (equivalent to Java thread identifier)
-            using var contextLock = await lockContext.GetLockAsync().CfAwait(); // lock the context
             var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
 
             VerifyNoLockOrValidSession(contextId, sessionId, false);
 
             var ownership = await RequestLockOwnershipStateAsync().CfAwait();
             var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+            CollectLock(lockState);
 
             if (lockedByCurrent)
             {
-                _lockedSessionIds[contextId] = sessionId;
-                return true;
+                // we cannot make any decision here!
             }
 
-            VerifyNoLock(contextId);
             return ownership.Locked;
             */
         }
 
         /// <inheritdoc/>        
-        public async Task<bool> IsLockedAsync(LockContext lockContext)
+        public async Task<bool> IsLockedByContextAsync(LockContext lockContext)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
 

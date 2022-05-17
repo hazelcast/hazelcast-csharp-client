@@ -19,8 +19,6 @@ using Hazelcast.Core;
 
 namespace Hazelcast.CP
 {
-    // FIXME document lockContext
-
     /// <summary>
     /// Represents a linearizable, distributed, reentrant implementation of the Java Lock.
     /// </summary>
@@ -39,106 +37,121 @@ namespace Hazelcast.CP
         long InvalidFence { get; }
 
         /// <summary>
-        /// Acquires the lock.
+        /// Acquires the lock for the specified <paramref name="lockContext"/> context.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// When the caller already holds the lock and the current <see cref="LockAsync"/> call is      
-        /// reentrant, the call can throw <see cref="LockAcquireLimitReachedException"/> 
-        /// if the lock acquire limit is already reached.</para>
+        /// When the <paramref name="lockContext"/> already holds the lock and the current <see cref="LockAsync"/>
+        /// call is reentrant, the call can throw <see cref="LockAcquireLimitReachedException"/> if the lock
+        /// acquisition limit is already reached.</para>
         /// </remarks>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         Task LockAsync(LockContext lockContext);
 
         /// <summary>
-        /// Acquires the lock and returns the fencing token assigned to the current context for this lock acquire. 
+        /// Acquires the lock and returns the fencing token assigned to the specified <paramref name="lockContext"/>
+        /// context for this lock acquisition. 
         /// </summary>
+        /// <returns>The fencing token if the lock was acquired; otherwise <see cref="InvalidFence"/>.</returns>
+        /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         /// <remarks>
-        /// <para>If the lock is acquired reentrantly, the same fencing token is returned, or the <see cref="LockAsync"/> call can 
-        /// throw <see cref="LockAcquireLimitReachedException"/>  if the lock acquire limit is already reached.</para>
+        /// <para>If the lock is acquired in a reentrant way, the same fencing token is returned, or the
+        /// <see cref="LockAsync"/> call can throw <see cref="LockAcquireLimitReachedException"/> if the
+        /// lock acquisition limit is already reached.</para>
         /// <para>Fencing tokens are monotonic numbers that are incremented each time the lock switches 
         /// from the free state to the acquired state. They are simply used for ordering lock holders. 
         /// A lock holder can pass its fencing to the shared resource to fence off previous lock holders. 
         /// When this resource receives an operation, it can validate the fencing token in the operation.</para>
         /// </remarks>
-        /// <returns>The fencing token if the lock was acquired and <see cref="InvalidFence"/> otherwise.</returns>
-        /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         Task<long> LockAndGetFenceAsync(LockContext lockContext);
 
         /// <summary>
-        /// Acquires the lock if it is available or already held by the current context at the time of invocation 
-        /// and the acquire limit is not exceeded, and immediately returns with the value true. If the lock is not 
-        /// available, then this method immediately returns with the value false. When the call is reentrant, 
-        /// it can return false if the lock acquire limit is exceeded.
+        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context. 
         /// </summary>
-        /// <param name="timeout">The maximum time to wait for the lock</param>
+        /// <param name="timeout">The maximum time to wait for the lock.</param>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns><c>true</c> if the lock was acquired otherwise <c>false</c></returns>
+        /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>If the lock is available or already held by the current specified <paramref name="lockContext"/>
+        /// at the time of invocation and the acquisition limit is not exceeded, the method immediately returns
+        /// <c>true</c>. If the lock is not immediately available, the method waits for the specified
+        /// <paramref name="timeout"/>, and eventually returns <c>false</c>.
+        /// </para>
+        /// </remarks>
         Task<bool> TryLockAsync(LockContext lockContext, TimeSpan timeout);
 
         /// <summary>
-        /// Acquires the lock if it is available or already held by the current context at the time of invocation 
-        /// and the acquire limit is not exceeded, and immediately returns with the value true. If the lock is not 
-        /// available, then this method immediately returns with the value false. When the call is reentrant, 
-        /// it can return false if the lock acquire limit is exceeded.
+        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context. 
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns><c>true</c> if the lock was acquired otherwise <c>false</c></returns>
+        /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>If the lock is available or already held by the current specified <paramref name="lockContext"/>
+        /// at the time of invocation and the acquisition limit is not exceeded, the method immediately returns
+        /// <c>true</c>. If the lock is not immediately available, the method immediately returns <c>false</c>.
+        /// </para>
+        /// </remarks>
         Task<bool> TryLockAsync(LockContext lockContext);
 
         /// <summary>
-        /// Acquires the lock only if it is free or already held by the current context at the time of invocation
-        /// and the acquire limit is not exceeded, and returns the fencing token assigned to the current context
-        /// for this lock acquire. If the lock is acquired reentrantly, the same fencing token is returned. 
-        /// If the lock is already held by another caller or the lock acquire limit is exceeded, then this method 
-        /// immediately returns <see cref="InvalidFence"/> that represents a failed lock attempt.
+        /// Tries to acquire the lock and return the fencing token assigned to the specified <paramref name="lockContext"/>
+        /// context for this lock acquisition. 
         /// </summary>
-        /// <param name="timeout">The maximum time to wait for the lock</param>
+        /// <param name="timeout">The maximum time to wait for the lock.</param>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns>The fencing token if the lock was acquired and <see cref="InvalidFence"/> otherwise</returns>
+        /// <returns>The fencing token if the lock was acquired; otherwise <see cref="InvalidFence"/>.</returns>
+        /// <remarks>
+        /// <para>If the lock is available or already held by the current specified <paramref name="lockContext"/>
+        /// at the time of invocation and the acquisition limit is not exceeded, the method immediately returns
+        /// the fencing token assigned to this acquisition. If the lock is not immediately available, the method
+        /// immediately returns <see cref="InvalidFence"/> representing a failed lock attempt. </para>
+        /// </remarks>
         Task<long> TryLockAndGetFenceAsync(LockContext lockContext, TimeSpan timeout);
 
         /// <summary>
-        /// Acquires the lock only if it is free or already held by the current context at the time of invocation
-        /// and the acquire limit is not exceeded, and returns the fencing token assigned to the current context
-        /// for this lock acquire. If the lock is acquired reentrantly, the same fencing token is returned. 
-        /// If the lock is already held by another caller or the lock acquire limit is exceeded, then this method 
-        /// immediately returns <see cref="InvalidFence"/> that represents a failed lock attempt.
+        /// Tries to acquire the lock and return the fencing token assigned to the specified <paramref name="lockContext"/>
+        /// context for this lock acquisition. 
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns>The fencing token if the lock was acquired and <see cref="InvalidFence"/> otherwise</returns>
+        /// <returns>The fencing token if the lock was acquired; otherwise <see cref="InvalidFence"/>.</returns>
+        /// <remarks>
+        /// <para>If the lock is available or already held by the current specified <paramref name="lockContext"/>
+        /// at the time of invocation and the acquisition limit is not exceeded, the method immediately returns
+        /// the fencing token assigned to this acquisition. If the lock is not immediately available, the method
+        /// immediately returns <see cref="InvalidFence"/> representing a failed lock attempt. </para>
+        /// </remarks>
         Task<long> TryLockAndGetFenceAsync(LockContext lockContext);
 
         /// <summary>
-        /// Releases the lock if the lock is currently held by the current context.
+        /// Releases the lock if the lock is currently held by the specified <paramref name="lockContext"/> context.
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         Task UnlockAsync(LockContext lockContext);
 
         /// <summary>
-        /// Checks whether this lock is locked or not.
+        /// Determines whether this lock is held by any context or not.
         /// </summary>
-        /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
-        Task<bool> IsLockedAsync();
+        /// <returns><c>true</c> if the lock is held by any context; otherwise <c>false</c>.</returns>
+        Task<bool> IsLockedAsync(LockContext lockContext);
 
         /// <summary>
-        /// Gets the fencing token, if the lock is held by the current context.
+        /// Gets the fencing token, if the lock is held by the specified <paramref name="lockContext"/> context.
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns>The fencing token, if the lock is held by the current context; otherwise <see cref="InvalidFence"/>.</returns>
+        /// <returns>The fencing token, if the lock is held by the specified <paramref name="lockContext"/> context; otherwise <see cref="InvalidFence"/>.</returns>
         Task<long> GetFenceAsync(LockContext lockContext);
 
         /// <summary>
-        /// Gets the reentrant lock count of the lock.
+        /// Gets the reentrant lock count of the lock, for whichever context is locking it.
         /// </summary>
         /// <returns>The reentrant lock count of the lock, or zero if it is not locked.</returns>
-        Task<int> GetLockCountAsync();
+        Task<int> GetLockCountAsync(LockContext lockContext);
 
         /// <summary>
-        /// Determines whether the lock is held by the current context or not.
+        /// Determines whether the lock is held by the specified <paramref name="lockContext"/> context or not.
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
-        /// <returns><c>true</c> if the lock is held by the current context; otherwise <c>false</c>.</returns>
-        Task<bool> IsLockedAsync(LockContext lockContext);
+        /// <returns><c>true</c> if the lock is held by the specified <paramref name="lockContext"/> context; otherwise <c>false</c>.</returns>
+        Task<bool> IsLockedByContextAsync(LockContext lockContext);
     }
 }

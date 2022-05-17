@@ -245,8 +245,8 @@ namespace Hazelcast.Tests.CP
             await _lock.LockAsync(lockContext);
 
             Assert.False(await _lock.TryLockAsync(lockContext));
-            Assert.True(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
             Assert.AreNotEqual(FencedLock.InvalidFence, await _lock.GetFenceAsync(lockContext));
 
             await _lock.UnlockAsync(lockContext);
@@ -266,8 +266,8 @@ namespace Hazelcast.Tests.CP
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreEqual(FencedLock.InvalidFence, fence2);
-            Assert.True(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
             Assert.AreEqual(fence1, await _lock.GetFenceAsync(lockContext));
 
             await _lock.UnlockAsync(lockContext);
@@ -287,8 +287,8 @@ namespace Hazelcast.Tests.CP
 
             Assert.AreNotEqual(FencedLock.InvalidFence, fence1);
             Assert.AreEqual(FencedLock.InvalidFence, fence2);
-            Assert.True(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
             Assert.AreEqual(fence1, await _lock.GetFenceAsync(lockContext));
 
             await _lock.UnlockAsync(lockContext);
@@ -403,9 +403,9 @@ namespace Hazelcast.Tests.CP
             fence ??= await fencedLock.GetFenceAsync(lockContext);
             Assert.AreNotEqual(FencedLock.InvalidFence, fence);
 
-            Assert.True(await fencedLock.IsLockedAsync());
-            Assert.That(await fencedLock.GetLockCountAsync(), Is.EqualTo(count));
             Assert.True(await fencedLock.IsLockedAsync(lockContext));
+            Assert.That(await fencedLock.GetLockCountAsync(lockContext), Is.EqualTo(count));
+            Assert.True(await fencedLock.IsLockedByContextAsync(lockContext));
         }
 
         [Test]
@@ -532,7 +532,8 @@ namespace Hazelcast.Tests.CP
             var lockName = CreateUniqueName() + "@group1";
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
-            Assert.False(await _lock.IsLockedAsync());
+            var lockContext = new LockContext();
+            Assert.False(await _lock.IsLockedAsync(lockContext));
         }
 
         [Test]
@@ -542,7 +543,7 @@ namespace Hazelcast.Tests.CP
             _lock = await Client.CPSubsystem.GetLockAsync(lockName);
 
             var lockContext = new LockContext();
-            Assert.False(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
         }
 
         [Test]
@@ -555,8 +556,8 @@ namespace Hazelcast.Tests.CP
             await _lock.LockAsync(lockContext);
             await _lock.UnlockAsync(lockContext);
 
-            Assert.False(await _lock.IsLockedAsync());
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(0));
+            Assert.False(await _lock.IsLockedAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(0));
 
             await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
         }
@@ -597,9 +598,9 @@ namespace Hazelcast.Tests.CP
 
             Assert.Greater(otherFence, fence);
 
-            Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
 
             await AssertEx.ThrowsAsync<SynchronizationLockException>(async () => await _lock.GetFenceAsync(lockContext));
 
@@ -617,9 +618,9 @@ namespace Hazelcast.Tests.CP
 
             var lockContext = new LockContext();
             Assert.ThrowsAsync<RemoteException>(async () => await _lock.UnlockAsync(lockContext));
-            Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
         }
 
         [Test]
@@ -635,9 +636,9 @@ namespace Hazelcast.Tests.CP
             var fence = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(100));
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
-            Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
         }
 
         [Test]
@@ -658,9 +659,9 @@ namespace Hazelcast.Tests.CP
             var fence = await _lock.TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(1500 + 1));
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
-            Assert.True(await _lock.IsLockedAsync());
-            Assert.False(await _lock.IsLockedAsync(lockContext));
-            Assert.That(await _lock.GetLockCountAsync(), Is.EqualTo(1));
+            Assert.True(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
+            Assert.That(await _lock.GetLockCountAsync(lockContext), Is.EqualTo(1));
         }
 
         [Test]
@@ -745,7 +746,7 @@ namespace Hazelcast.Tests.CP
             }, 20_000, 500);
 
             await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.TryLockAsync(lockContext, TimeSpan.FromSeconds(1)));
-            Assert.False(await _lock.IsLockedAsync());
+            Assert.False(await _lock.IsLockedAsync(lockContext));
         }
 
         [Test]
@@ -773,8 +774,8 @@ namespace Hazelcast.Tests.CP
             }, 20_000, 500);
 
             await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
             Assert.False(await _lock.IsLockedAsync(lockContext));
-            Assert.False(await _lock.IsLockedAsync());
         }
 
         [Test]
@@ -798,7 +799,7 @@ namespace Hazelcast.Tests.CP
             await _lock.LockAsync(otherContext);
 
             await AssertEx.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.UnlockAsync(lockContext));
-            Assert.False(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
 
         }
 
@@ -823,7 +824,7 @@ namespace Hazelcast.Tests.CP
             await _lock.LockAsync(otherContext);
 
             Assert.ThrowsAsync<LockOwnershipLostException>(async () => await _lock.GetFenceAsync(lockContext));
-            Assert.False(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
         }
 
         [Test]
@@ -845,7 +846,7 @@ namespace Hazelcast.Tests.CP
             var fence = await _lock.TryLockAndGetFenceAsync(lockContext);
 
             Assert.AreEqual(FencedLock.InvalidFence, fence);
-            Assert.False(await _lock.IsLockedAsync(lockContext));
+            Assert.False(await _lock.IsLockedByContextAsync(lockContext));
 
             Assert.That(sessionService.GetAcquiredSessionCount((CPGroupId)_lock.GroupId, sessionId), Is.EqualTo(1));
         }
