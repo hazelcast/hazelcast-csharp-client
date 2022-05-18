@@ -1,0 +1,59 @@
+= Computing
+
+This section explains how you can use Hazelcast's entry processor implementation in the .NET client.
+
+== Using EntryProcessor
+
+Hazelcast supports entry processing. An entry processor is a function that executes your code on a map entry in an atomic way.
+
+An entry processor is a good option if you perform bulk processing on an IHMap. Usually you perform a loop of keys - executing `IHMap.GetAsync(key)`, mutating the value and finally putting the entry back in the map using `IHMap.PutAsync(key,value)`. If you perform this process from a client or from a member where the keys do not exist, you effectively perform two network hops for each update: the first to retrieve the data and the second to update the mutated value.
+
+If you are doing the process described above, you should consider using entry processors. An entry processor executes a read and updates upon the member where the data resides. This eliminates the costly network hops described above.
+
+NOTE: Entry processor is meant to process a single entry per call. Processing multiple entries and data structures in an entry processor is not supported as it may result in deadlocks on the server side.
+
+Hazelcast sends the entry processor to each cluster member and these members apply it to the map entries. Therefore, if you add more members, the processing completes faster.
+
+== Processing Entries
+
+The `Hazelcast.DistributedObjects.IHMap` interface provides the following functions for entry processing:
+
+* `ExecuteAsync<T>(IEntryProcessor<T>, TKey)` processes an entry mapped by a key.
+* `ExecuteAsync<T>(IEntryProcessor<T>, IEnumerable<TKey>)` processes entries mapped by a list of keys.
+* `ExecuteAsync<T>(IEntryProcessor<T>, IPredicate)` processes all entries in a map with a defined predicate.
+* `ExecuteAsync<T>(IEntryProcessor<T>)` processes all entries in a map.
+
+In the .NET client, an `IEntryProcessor` should be `IIdentifiedDataSerializable` or `IPortable` because the server should be able to deserialize it to process.
+
+The following is an example for `IEntryProcessor` which is `IIdentifiedDataSerializable`.
+
+[source,csharp]
+----
+public class IdentifiedEntryProcessor : IEntryProcessor<string>, IIdentifiedDataSerializable
+{
+    public const int FactoryIdConst = 5; // Id of corresponding IDataSerializableFactory
+    public const int ClassIdConst = 1; // corresponds to Java's IdentifiedEntryProcessor.CLASS_ID
+
+    public int FactoryId => FactoryIdConst;
+    public int ClassId => ClassIdConst;
+
+    private string _value;
+
+    public IdentifiedEntryProcessor(string value)
+    {
+        _value = value;
+    }
+
+    public void ReadData(IObjectDataInput input)
+    {
+        _value = input.ReadString();
+    }
+
+    public void WriteData(IObjectDataOutput output)
+    {
+        output.WriteString(_value);
+    }
+}
+----
+
+Now, you need to make sure that the Hazelcast member recognizes the entry processor. For this, you need to implement the Java equivalent of your entry processor and its factory, and create your own compiled class or JAR files. For adding your own compiled class or JAR files to the server's CLASSPATH, see Adding User Library to CLASSPATH.

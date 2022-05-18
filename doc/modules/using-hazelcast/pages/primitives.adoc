@@ -1,0 +1,64 @@
+= Primitives
+
+== AtomicLong
+
+NOTE: IAtomicLong is a member of CP Subsystem API. For detailed information, see the xref:using-hazelcast:cp-subsystem.adoc[CP SubSystem documentation].
+
+Hazelcast IAtomicLong is the distributed implementation of `java.util.concurrent.atomic.AtomicLong` and offers most of its operations such as `Get`, `Set`, `GetAndSet`, `CompareAndSet`, and `IncrementAndGet`. You can also think of it as implementing most of @`System.Interlocked` methods for `long` (`System.Int64`) distributed values. Since IAtomicLong is a distributed implementation, these operations involve remote calls and thus their performances differ from local, in-memory, atomic longs.
+
+The following example code creates an instance, increments it by a million and prints the count.
+
+[source,csharp]
+----
+await using var client = await HazelcastClientFactory.StartNewClientAsync();
+await using var counter = await client.CPSubSystem.GetAtomicLongAsync("counter-unique-name");
+
+for (int i = 0; i < 1000 * 1000; i++ )
+{
+    if (i % 500000 == 0)
+        Console.WriteLine($"At: {i}");
+
+    await counter.IncrementAndGetAsync();
+}
+Console.WriteLine($"Count is {await counter.GetAsync()}");
+----
+
+When you start other instances with the code above, you will see the count as member count times a million.
+
+Note that sending functions to and executing functions on AtomicLong as documented for the xref:hazelcast:data-structures:iatomiclong.adoc[Java client] are not supported by the .NET client.
+
+== AtomicReference
+
+NOTE: IAtomicReference is a member of CP Subsystem API. For detailed information, see the xref:using-hazelcast:cp-subsystem.adoc[CP SubSystem documentation].
+
+Hazelcast IAtomicReference is the distributed implementation of `java.util.concurrent.atomic.AtomicReference` and offers most of its operations such as `Get`, `Set`, `GetAndSet`, and `CompareAndSet`. You can also think of `GetAndSet`, `CompareAndSet` as `@System.Interlocked Exchange` and `CompareExchange` methods for distributed values. Since IAtomicReference is a distributed implementation, these operations involve remote calls and thus their performances differ from local, in-memory, references.
+
+The following example code adds a dot the end of any string added to the shared reference:
+
+[source,csharp]
+----
+var cancellationSource = new CancellationTokenSource();
+var cancellationToken = cancellationSource.Token;
+
+await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+await using var sentence = await client.CPSubsystem.GetAtomicReferenceAsync<string>("sentence-unique-key");
+
+while (!cancellationToken.IsCancellationRequested)
+{
+    var value = await sentence.GetAsync();
+
+    if (value != null && !value.EndsWith("."))
+    {
+        var newValue = value + ".";
+
+        if (!await sentence.CompareAndSetAsync(value, newValue))
+            continue;
+    }
+
+    await Task.Delay(100, cancellationToken);
+}
+
+await sentence.DestroyAsync();
+----
+
+Note that sending functions to, and executing functions on AtomicReference as documented for the xref:hazelcast:data-structures:iatomiclong.adoc[Java client] are not supported by the .NET client.

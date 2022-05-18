@@ -1,0 +1,97 @@
+= Data Types
+
+The SQL service supports a set of SQL data types represented by `Hazelcast.Sql.SqlColumnType` enum. The table below shows SQL datatype, and corresponding .NET types.
+
+[cols="3,2"]
+|===
+|Column Type |.NET
+
+|VARCHAR
+|`string`
+
+|BOOLEAN
+|`bool`
+
+|TINYINT
+|`byte`
+
+|SMALLINT
+|`short`
+
+|INTEGER
+|`int`
+
+|BIGINT
+|`long`
+
+|DECIMAL
+|`Hazelcast.Sql.HBigDecimal`
+
+|REAL
+|`float`
+
+|DOUBLE
+|`double`
+
+|DATE
+|`Hazelcast.Sql.HLocalDate`
+
+|TIME
+|`Hazelcast.Sql.HLocalTime`
+
+|TIMESTAMP
+|`Hazelcast.Sql.HLocalDateTime`
+
+|TIMESTAMP_WITH_TIME_ZONE
+|`Hazelcast.Sql.HOffsetDateTime`
+
+|OBJECT
+|Any class
+
+|NULL
+|`null`
+|===
+
+All `Hazelcast.Sql.*` types have a conversion to and from their closest built-in counterparts. Table below lists possible conversions.
+
+[cols="3,1,2"]
+|===
+|Hazelcast Type |To .NET Type |From .NET Type
+
+|`Hazelcast.Sql.HBigDecimal`
+|``decimal``footnote:[Possible `OverflowException`]
+|`decimal`
+
+|`Hazelcast.Sql.HLocalDate`
+|``DateTime``footnote:aoorexc[Possible `ArgumentOutOfRangeException`]
+|`DateTime`
+
+|`Hazelcast.Sql.HLocalTime`
+|`TimeSpan`
+|`TimeSpan`, `DateTime`
+
+|`Hazelcast.Sql.HLocalDateTime`
+|``DateTime``footnote:aoorexc[]
+|`DateTime`
+
+|`Hazelcast.Sql.HOffsetDateTime`
+|``DateTimeOffset``footnote:aoorexc[]
+|`DateTimeOffset`
+|===
+
+* **Decimal String Format**: SQL `DECIMAL` type uses dot as separator.
++
+Examples: `12345`, `123456.789`.
+* **Date String Format**: SQL `DATE` type uses `yyyy-mm-dd` format.
++
+Examples: `2021-07-01`, `1990-12-31`.
+* **Time String Format**: SQL `TIME` uses `HH:mm:ss.SSS` where `HH` is in 24-hour format, and `SSS` represents nanoseconds and can be at most 9 digits long.
++
+Examples: `10:20:30`, `23:59:59.999999999`
+* **Timestamp String Format**: SQL `TIMESTAMP` type uses `yyyy-mm-dd(T|t)HH:mm:ss.SSS` which is the combination of `DATE` and `TIME` strings. There must be a `T` or `t` letter in between.
++
+Examples: `2021-07-01T10:20:30`, `1990-12-31t23:59:59.999999999`
+* **Timestamp with Timezone String Format**: SQL `TIMESTAMP WITH TIMEZONE` uses `yyyy-mm-dd(T|t)HH:mm:ss.SSS{timezoneString}` which is the combination of `TIMESTAMP` and timezone strings. The timezone string can be one of `Z`, `+hh:mm` or `-hh:mm` where `hh` represents hour-in-day, and `mm` represents minutes-in-hour. The timezone must be in the range `[-18:00, +18:00]`.
++
+Examples: `2021-07-01T10:20:30Z`, `1990-12-31t23:59:59.999999999+11:30`
+

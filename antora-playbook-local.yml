@@ -1,0 +1,28 @@
+site:
+  title: Documentation
+  url: http://localhost:5000
+  start_page: csharp:ROOT:quickstart.adoc
+  robots: disallow
+  keys:
+    docsearch_id: 'QK2EAH8GB0'
+    docsearch_api: 'ef7bd9485eafbd75d6e8425949eda1f5'
+    docsearch_index: 'prod_hazelcast_docs'
+content:
+  sources: 
+  - url: .
+    branches: HEAD
+    start_path: doc
+ui: 
+  bundle:
+    url: https://github.com/hazelcast/hazelcast-docs-ui/releases/latest/download/ui-bundle.zip
+    snapshot: true
+asciidoc:
+  attributes:
+    # Inlude next and previous links on each page
+    page-pagination: true
+    idprefix: ''
+    # Separate anchor link names by dashes
+    idseparator: '-'
+    # Variables used in the docs
+  extensions:
+    - doc/docs-tabs-library/tabs-block.js
