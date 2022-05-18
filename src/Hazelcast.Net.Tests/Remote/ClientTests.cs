@@ -54,6 +54,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
         public async Task FailoverClientCanConnect()
         {
             // most basic test just to ensure that a failover client can connect
@@ -67,6 +68,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
         public async Task FailoverClientCanConnectAsync()
         {
             // most basic test just to ensure that a failover client can connect
