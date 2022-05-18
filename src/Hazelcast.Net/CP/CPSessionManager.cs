@@ -20,9 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Core.TaskCoreExtensions;
 
 namespace Hazelcast.CP
 {
