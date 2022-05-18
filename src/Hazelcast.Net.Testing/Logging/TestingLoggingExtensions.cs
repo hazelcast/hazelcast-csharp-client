@@ -79,5 +79,30 @@ namespace Hazelcast.Testing.Logging
                             .AddHConsole());
                 });
         }
+
+        /// <summary>
+        /// Configure an <see cref="ILoggerFactory"/> with a logger to <see cref="HConsole"/>.
+        /// </summary>
+        /// <param name="builder">The options builder.</param>
+        /// <param name="hazelcastLevel">The log level for Hazelcast code.</param>
+        /// <returns>This options builder.</returns>
+        public static HazelcastFailoverOptionsBuilder WithHConsoleLogger(this HazelcastFailoverOptionsBuilder builder, LogLevel hazelcastLevel = LogLevel.Debug)
+        {
+            //cannot extend generic, so duplicated.
+            return builder
+                .With("Logging:LogLevel:Default", "Debug")
+                .With("Logging:LogLevel:System", "Information")
+                .With("Logging:LogLevel:Microsoft", "Information")
+                .With("Logging:LogLevel:Hazelcast", hazelcastLevel.ToString())
+                .With((configuration, hazelcastOptions) =>
+                {
+                    // configure logging factory and add the logging provider
+                    hazelcastOptions.Clients[0].LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
+                        loggingBuilder
+                            .AddConfiguration(configuration.GetSection("logging"))
+                            .AddHConsole());
+                });
+        }
+
     }
 }

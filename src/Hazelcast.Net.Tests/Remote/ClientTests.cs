@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.Testing;
+using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote
@@ -50,6 +51,51 @@ namespace Hazelcast.Tests.Remote
             await clientStart.Task;
 
             await client.DisposeAsync();
+        }
+
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task FailoverClientCanConnect()
+        {
+            // most basic test just to ensure that a failover client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var client = await HazelcastClientFactory.StartNewFailoverClientAsync(CreateHazelcastFailoverOptions());
+
+            await client.DisposeAsync();
+        }
+
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task FailoverClientCanConnectAsync()
+        {
+            // most basic test just to ensure that a failover client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var clientStart = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
+            var client = clientStart.Client;
+
+            await clientStart.Task;
+
+            await client.DisposeAsync();
+        }
+
+        private HazelcastFailoverOptions CreateHazelcastFailoverOptions()
+        {
+            var failoverOptions = HazelcastFailoverOptionsBuilder.Build(builder =>
+            {
+                builder.AddHazelcastAndDefaults(null);
+                builder.AddUserSecrets(GetType().Assembly, true);
+            }, null, null, ConfigurationSecretsKey);
+
+            failoverOptions.TryCount = 1;
+            failoverOptions.Clients.Add(CreateHazelcastOptions());
+
+            return failoverOptions;
         }
     }
 }

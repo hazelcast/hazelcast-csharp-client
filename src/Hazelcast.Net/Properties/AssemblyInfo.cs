@@ -33,7 +33,7 @@ using Hazelcast;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("hb")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")] // test mocks
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]//test mocks
 
 #endif
 

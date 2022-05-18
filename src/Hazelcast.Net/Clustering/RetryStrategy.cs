@@ -26,14 +26,14 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class RetryStrategy : IRetryStrategy
     {
-        private readonly int _initialBackOffMilliseconds;
-        private readonly int _maxBackOffMilliseconds;
-        private readonly double _multiplier;
-        private readonly long _timeoutMilliseconds;
-        private readonly double _jitter;
         private readonly string _action;
         private readonly ILogger _logger;
 
+        private int _initialBackoffMilliseconds { get; }
+        private int _maxBackoffMilliseconds { get; }
+        private double _multiplier { get; }
+        private long _timeoutMilliseconds { get; }
+        private double _jitter { get; }
         private int _currentBackOffMilliseconds;
         private int _attempts;
         private DateTime _begin;
@@ -70,12 +70,15 @@ namespace Hazelcast.Clustering
 #pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
             _action = action.ToLowerInvariant();
 #pragma warning restore CA1308
-            _initialBackOffMilliseconds = initialBackOffMilliseconds;
-            _maxBackOffMilliseconds = maxBackOffMilliseconds;
-            _currentBackOffMilliseconds = initialBackOffMilliseconds;
+
+
+            _initialBackoffMilliseconds = initialBackOffMilliseconds;
+            _maxBackoffMilliseconds = maxBackOffMilliseconds;
             _multiplier = multiplier;
             _timeoutMilliseconds = timeoutMilliseconds;
             _jitter = jitter;
+            _currentBackOffMilliseconds = initialBackOffMilliseconds;
+
             _logger = loggerFactory?.CreateLogger<RetryStrategy>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             Restart();
@@ -91,7 +94,7 @@ namespace Hazelcast.Clustering
 
             var elapsed = (int)(DateTime.UtcNow - _begin).TotalMilliseconds;
 
-            _logger.IfDebug()?.LogDebug("Elapsed {Elapsed}ms, timeout={TimeoutMilliseconds}ms, back-off={CurrentBackOffMilliseconds}ms ({InitialBackOffMilliseconds}-{MaxBackOffMilliseconds}, m={Multiplier}, j={Jitter})", elapsed, _timeoutMilliseconds, _currentBackOffMilliseconds, _initialBackOffMilliseconds, _maxBackOffMilliseconds, _multiplier, _jitter);
+            _logger.IfDebug()?.LogDebug("Elapsed {Elapsed}ms, timeout={TimeoutMilliseconds}ms, back-off={CurrentBackOffMilliseconds}ms ({InitialBackOffMilliseconds}-{MaxBackOffMilliseconds}, m={Multiplier}, j={Jitter})", elapsed, _timeoutMilliseconds, _currentBackOffMilliseconds, _initialBackoffMilliseconds, _maxBackoffMilliseconds, _multiplier, _jitter);
 
             if (_timeoutMilliseconds > 0 && elapsed > _timeoutMilliseconds)
             {
@@ -119,7 +122,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            _currentBackOffMilliseconds = (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            _currentBackOffMilliseconds = (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackoffMilliseconds);
             return true;
         }
 
@@ -127,8 +130,10 @@ namespace Hazelcast.Clustering
         public void Restart()
         {
             _attempts = 0;
-            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
+            _currentBackOffMilliseconds = Math.Min(_maxBackoffMilliseconds, _initialBackoffMilliseconds);
             _begin = DateTime.UtcNow;
         }
+
+
     }
 }

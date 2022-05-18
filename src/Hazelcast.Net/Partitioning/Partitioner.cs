@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.Partitioning
 {
@@ -123,19 +124,23 @@ namespace Hazelcast.Partitioning
         /// to the known partitions count. Otherwise, a <see cref="InvalidOperationException"/>
         /// is thrown.</para>
         /// </remarks>
-        public void SetOrVerifyPartitionCount(int count)
+        /// <returns>Returns False if counts are not matched otherwise True</returns>
+        public bool SetOrVerifyPartitionCount(int count)
         {
             lock (_partitionsLock)
             {
-                if (_partitions == null)
+                if (_partitions == null && Count == 0)
                 {
                     Count = count;
+                    
                 }
                 else if (Count != count)
-                {
-                    throw new InvalidOperationException($"Received count value {count} but expected {Count}.");
+                {                    
+                    return false;
                 }
             }
+
+            return true;
         }
     }
 }

@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning;
 using Hazelcast.Partitioning.Strategies;
 using NUnit.Framework;
@@ -97,7 +98,7 @@ namespace Hazelcast.Tests.Partitioning
             Assert.That(partitioner.GetPartitionId(new PartitionHashClass(int.MinValue).PartitionHash), Is.EqualTo(0));
             Assert.That(partitioner.GetRandomPartitionId(), Is.EqualTo(0));
 
-            partitioner.SetOrVerifyPartitionCount(4);
+            Assert.True(partitioner.SetOrVerifyPartitionCount(4));
 
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(Guid.Empty));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
@@ -119,7 +120,8 @@ namespace Hazelcast.Tests.Partitioning
 
             Assert.That(partitioner.NotifyPartitionView(originClientId, 0, map));
 
-            Assert.Throws<InvalidOperationException>(() => partitioner.SetOrVerifyPartitionCount(7));
+            //this is not InvaliOperationException anymore
+            Assert.False(partitioner.SetOrVerifyPartitionCount(7));
 
             Assert.That(partitioner.GetPartitionOwner(1), Is.EqualTo(map[1]));
             Assert.That(partitioner.GetPartitionOwner(-1), Is.EqualTo(Guid.Empty));
