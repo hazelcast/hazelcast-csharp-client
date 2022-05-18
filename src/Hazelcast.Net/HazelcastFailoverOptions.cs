@@ -71,7 +71,8 @@ namespace Hazelcast
         /// Gets or sets the number of times that the client will try to reconnect to each
         /// cluster in the failover setup before shutting down.
         /// </summary>
-        public int TryCount { get; set; }
+        /// <remarks>Default try count is infinite.</remarks>
+        public int TryCount { get; set; } = int.MaxValue;
 
         /// <summary>
         /// Gets the list of cluster in the failover setup.
