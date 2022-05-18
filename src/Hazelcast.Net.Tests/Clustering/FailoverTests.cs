@@ -21,7 +21,6 @@ using Hazelcast.Partitioning;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Moq;
 using NUnit.Framework;
 using Hazelcast.Exceptions;
 using Hazelcast.Configuration;
@@ -53,7 +52,7 @@ namespace Hazelcast.Tests.Clustering
 
         private static ClusterState MockClusterState(HazelcastOptions options)
         {
-            return new ClusterState(options, "clusterName", "clientName", Mock.Of<Partitioner>(), new NullLoggerFactory());
+            return new ClusterState(options, "clusterName", "clientName", new Partitioner(), new NullLoggerFactory());
         }
 
         [Test]
