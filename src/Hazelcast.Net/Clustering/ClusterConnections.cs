@@ -800,6 +800,16 @@ namespace Hazelcast.Clustering
             // connect to the server (may throw and that is ok here)
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
+            // if we are running a failover client but the cluster we just connected to does not support failover
+            // then the client is not allowed in that cluster - in this case, terminate the connection and throw
+            if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)
+            {
+                await connection.DisposeAsync().CfAwait();
+                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " + 
+                    "(client is configured with failover but cluster does not support failover. " + 
+                    "Failover is an Hazelcast Enterprise feature.).");
+            }
+
             // report
             _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}" +
                                    " on connection {ConnectionId} from {LocalAddress}" +
