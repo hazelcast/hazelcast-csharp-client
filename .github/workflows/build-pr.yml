@@ -69,11 +69,27 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
 
+      # obtain the snk file required to sign assemblies
+      # the snk is avail as secrets.HZ_SNK as a Base64 string
+      - name: Obtain assembly signature key
+        id: getsnk
+        shell: bash
+        run: |
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
+          ls -l ./build/hazelcast.snk
+
       # build
       - name: Build
         id: build
         shell: pwsh
         run: ./hz.ps1 -localRestore -repro -sign build #,docs,pubdocs
+
+      # clear the snk file
+      - name: Clear assembly signature key
+        if: (success() || failure()) && steps.getsnk.conclusion == 'success'
+        shell: bash
+        run: |
+          if [ -f ./build/hazelcast.snk ]; then rm ./build/hazelcast.snk; fi
 
       # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
