@@ -73,7 +73,7 @@ jobs:
       - name: Build
         id: build
         shell: pwsh
-        run: ./hz.ps1 -localRestore -repro -sign build #,docs,pubdocs
+        run: ./hz.ps1 -localRestore build #,docs,pubdocs
 
       # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
