@@ -39,7 +39,7 @@ using Hazelcast;
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
 
 // moq
-[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")];
+[assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]
 
 #endif
 
