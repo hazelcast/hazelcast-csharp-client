@@ -29,7 +29,7 @@ using Hazelcast.Configuration;
 namespace Hazelcast.Tests.Clustering
 {
     [Category("enterprise")]
-    [Timeout(120_000)]
+    [Timeout(150_000)]
     internal class FailoverTests : MultipleClusterRemoteTestBase
     {
         private IDisposable HConsoleForTest()
@@ -323,7 +323,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.IsNotNull(map);
 
             // first cluster should be B, A is not up
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
             await AssertClusterB(map, client.ClusterName);
 
             //Start A before switch
@@ -335,7 +335,7 @@ namespace Hazelcast.Tests.Clustering
             await KillMembersAsync(RcClusterAlternative, membersB);
 
             //We should be at A
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
             await AssertClusterA(map, client.ClusterName);
 
             // Start cluster B again
@@ -347,7 +347,7 @@ namespace Hazelcast.Tests.Clustering
             await KillMembersAsync(RcClusterPrimary, membersA);
 
             //Now, we should failover to cluster B
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
             await AssertClusterB(map, client.ClusterName);
 
             Assert.GreaterOrEqual(numberOfStateChanged, 8);
