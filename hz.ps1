@@ -1143,6 +1143,7 @@ function ensure-certs {
         else {
             Write-Output "Missing $tmpDir/certs directory, generating"
             hz-generate-certs
+            hz-install-root-ca
         }
     }
 }
