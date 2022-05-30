@@ -12,14 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Globalization;
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Hazelcast
 {
     /// <summary>
     /// Provides constants for assembly signing.
     /// </summary>
-    internal class AssemblySigning
+    internal static class AssemblySigning
     {
         /// <summary>
         /// Gets the Hazelcast assembly signing public key.
@@ -34,5 +37,33 @@ namespace Hazelcast
                                           "c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a" +
                                           "4a2b4fd353e81238b89ae09e5ba0ab615c5fef7937aabab4e240c3dffe2b948047769eeb07f674" +
                                           "589d0bb3";
+
+        // note: The public key token is represented by the last 8 bytes of the SHA-1
+        // hash of the public key under which the application is signed.
+
+        internal static string PublicKeyToken { get; } = GetKeyToken(PublicKey);
+
+        /// <summary>
+        /// Gets the key token corresponding to a key.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <returns>The key token.</returns>
+        internal static string GetKeyToken(string key)
+        {
+            var bytes = new byte[key.Length / 2];
+            for (var i = 0; i < key.Length / 2; i++)
+#pragma warning disable CA1305 // Specify IFormatProvider - no
+                bytes[i] = byte.Parse(key.Substring(i * 2, 2), NumberStyles.AllowHexSpecifier);
+#pragma warning restore CA1305 // Specify IFormatProvider
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms - well, that's what PublicKeyToken uses
+            using var csp = new SHA1CryptoServiceProvider();
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+            var hash = csp.ComputeHash(bytes);
+            var text = new StringBuilder();
+            for (var i = 0; i < 8; i++)
+                //token[i] = hash[^(i + 1)];
+                text.Append($"{hash[^(i + 1)]:x2}");
+            return text.ToString();
+        }
     }
 }
