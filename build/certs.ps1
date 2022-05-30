@@ -532,13 +532,35 @@ function install-root-ca-windows ( $filename, $add = $true ) {
     }
 
     try {
+        $existing = ($store.Certificates | where { $_.Subject -eq $cert.Subject -and $_.Thumbprint -ne $cert.Thumbprint })
+
+        if ($existing.Count -ne 0) {
+            write-output "CERTS: found one or more rogue root-ca cert already in Cert:\LocalMachine\Root, removing"
+            $existing | foreach-object { 
+                $store.Remove($_) 
+                write-output "CERTS: removed cert '$($_.Subject)' ($($_.Thumbprint)) from Cert:\LocalMachine\Root"
+            }
+        }
+
+        $existing = ($store.Certificates | where { $_.Subject -eq $cert.Subject })
+
         if ($add) {
-            $store.Add($cert)
-            write-output "CERTS: added cert '$($cert.Subject)' to Cert:\LocalMachine\Root"
+            if ($existing.Count -eq 0) {
+                $store.Add($cert)
+                write-output "CERTS: added cert '$($cert.Subject)' ($($cert.Thumbprint)) to Cert:\LocalMachine\Root"
+            }
+            else {
+                write-output "CERTS: found cert '$($cert.Subject)' ($($cert.Thumbprint)) already in Cert:\LocalMachine\Root"
+            }
         }
         else {
-            $store.Remove($cert)
-            write-output "CERTS: removed cert '$($cert.Subject)' from Cert:\LocalMachine\Root"
+            if ($existing.Count -eq 1) {
+                $store.Remove($cert)
+                write-output "CERTS: removed cert '$($cert.Subject)' ($($cert.Thumbprint)) from Cert:\LocalMachine\Root"
+            }
+            else {
+                write-output "CERTS: cert '$($cert.Subject)' ($($cert.Thumbprint)) not in Cert:\LocalMachine\Root"
+            }
         }
     }
     catch {
@@ -555,14 +577,26 @@ function install-root-ca-windows ( $filename, $add = $true ) {
 # same, but for Linux
 function install-root-ca-linux ( $filename, $add = $true ) {
     try {
+        $fileonly = [IO.Path]::GetFileName($filename)
         if ($add) {
-            cp $filename /usr/local/share/ca-certificates/
-            update-ca-certificates
+            if (-not (test-path "/usr/local/share/ca-certificates/$fileonly")) {
+                cp $filename /usr/local/share/ca-certificates/
+                update-ca-certificates
+                write-output "CERTS: added cert '$fileonly' to /usr/local/share/ca-certificates"
+            }
+            else {
+                write-output "CERTS: found cert '$fileonly' already in /usr/local/share/ca-certificates"
+            }
         }
         else {
-            $fileonly = [IO.Path]::GetFileName($filename)
-            rm /usr/local/share/ca-certificates/$fileonly
-            update-ca-certificates --fresh
+            if (test-path "/usr/local/share/ca-certificates/$fileonly") {
+                rm /usr/local/share/ca-certificates/$fileonly
+                update-ca-certificates --fresh
+                write-output "CERTS: removed cert '$fileonly' from /usr/local/share/ca-certificates"
+            }
+            else {
+                write-output "CERTS: cert '$fileonly' not in /usr/local/share/ca-certificates"
+            }
         }
         $global:CERTSEXITCODE = 0
     }
@@ -586,7 +620,7 @@ function install-root-ca ( $filename, $add = $true ) {
     }
 }
 
-function remove-root-ca ( $fiename ) {
+function remove-root-ca ( $filename ) {
     install-root-ca $filename $false
 }
 
