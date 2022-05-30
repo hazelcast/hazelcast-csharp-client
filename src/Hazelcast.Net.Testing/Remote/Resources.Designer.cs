@@ -90,24 +90,6 @@ namespace Hazelcast.Testing.Remote {
         ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
         ///    &lt;property name=&quot;haze [rest of string was truncated]&quot;;.
         /// </summary>
-        internal static string credential {
-            get {
-                return ResourceManager.GetString("credential", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
-        ///&lt;hazelcast xmlns=&quot;http://www.hazelcast.com/schema/config&quot;
-        ///           xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
-        ///           xsi:schemaLocation=&quot;http://www.hazelcast.com/schema/config
-        ///           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd&quot;&gt;
-        ///
-        ///  &lt;properties&gt;
-        ///    &lt;property name=&quot;hazelcast.map.invalidation.batch.enabled&quot;&gt;false&lt;/property&gt;
-        ///    &lt;property name=&quot;hazelcast.cache.invalidation.batch.size&quot;&gt;10&lt;/property&gt;
-        ///    &lt;property name=&quot;haze [rest of string was truncated]&quot;;.
-        /// </summary>
         internal static string hazelcast {
             get {
                 return ResourceManager.GetString("hazelcast", resourceCulture);

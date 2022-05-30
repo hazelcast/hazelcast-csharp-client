@@ -203,8 +203,7 @@ namespace Hazelcast.Tests.Clustering
                          {
                              o.ClusterName = RcClusterAlternative.Id;
                              o.Networking.Addresses.Add("127.0.0.1:5703");
-                             o.Networking.SmartRouting = smartRouting;// that doesn't override primary                     
-                             o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
+                             o.Networking.SmartRouting = smartRouting;// that doesn't override primary                                                  
                          })
                          .Build());
                  })
@@ -306,8 +305,7 @@ namespace Hazelcast.Tests.Clustering
                         {
                             o.ClusterName = RcClusterAlternative.Id;
                             o.Networking.Addresses.Add("127.0.0.1:5703");
-                            o.Networking.SmartRouting = smartRouting;// that doesn't override primary                    
-                            o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
+                            o.Networking.SmartRouting = smartRouting;// that doesn't override primary                                                
                         })
                         .Build());
                 })
@@ -399,8 +397,7 @@ namespace Hazelcast.Tests.Clustering
                         .With(o =>
                         {
                             o.ClusterName = RcClusterAlternative.Id;
-                            o.Networking.Addresses.Add("127.0.0.1:5702");
-                            o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
+                            o.Networking.Addresses.Add("127.0.0.1:5702");                            
                         })
                         .Build());
                 })
@@ -476,8 +473,7 @@ namespace Hazelcast.Tests.Clustering
                         .With(o =>
                         {
                             o.ClusterName = RcClusterAlternative.Id;
-                            o.Networking.Addresses.Add("127.0.0.1:5703");
-                            o.Authentication.ConfigureUsernamePasswordCredentials("test", "1234");
+                            o.Networking.Addresses.Add("127.0.0.1:5703");                            
                         })
                         .Build());
                 })
