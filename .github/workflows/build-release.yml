@@ -196,7 +196,7 @@ jobs:
         run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
 
       # obtain the snk file required to sign assemblies
-      # the snk is avail as secrets.HZ_SNK as a Base64 string
+      # the snk is avail as secrets.HAZELCAST_SNK as a Base64 string
       - name: Obtain assembly signature key
         id: getsnk
         shell: bash
