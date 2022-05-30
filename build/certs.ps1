@@ -580,8 +580,8 @@ function install-root-ca-linux ( $filename, $add = $true ) {
         $fileonly = [IO.Path]::GetFileName($filename)
         if ($add) {
             if (-not (test-path "/usr/local/share/ca-certificates/$fileonly")) {
-                cp $filename /usr/local/share/ca-certificates/
-                update-ca-certificates
+                sudo cp $filename /usr/local/share/ca-certificates/
+                sudo update-ca-certificates
                 write-output "CERTS: added cert '$fileonly' to /usr/local/share/ca-certificates"
             }
             else {
@@ -590,8 +590,8 @@ function install-root-ca-linux ( $filename, $add = $true ) {
         }
         else {
             if (test-path "/usr/local/share/ca-certificates/$fileonly") {
-                rm /usr/local/share/ca-certificates/$fileonly
-                update-ca-certificates --fresh
+                sudo rm /usr/local/share/ca-certificates/$fileonly
+                sudo update-ca-certificates --fresh
                 write-output "CERTS: removed cert '$fileonly' from /usr/local/share/ca-certificates"
             }
             else {
