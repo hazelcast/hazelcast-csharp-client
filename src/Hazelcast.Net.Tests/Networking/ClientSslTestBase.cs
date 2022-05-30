@@ -64,7 +64,7 @@
 // definition.
 
 #if !SSLCERTS_JAVA && !SSLCERTS_MIXED && !SSLCERTS_CUSTOM
-#define SSLCERTS_MIXED
+#define SSLCERTS_CUSTOM
 #endif
 
 using System;
