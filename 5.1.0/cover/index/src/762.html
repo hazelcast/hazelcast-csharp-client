@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Aggregation\AggregatorBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Exceptions;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Aggregation
+{
+    /// &lt;summary&gt;
+    /// Provides a base class for all &lt;see cref=&quot;IAggregator{TResult}&quot;/&gt; implementations.
+    /// &lt;/summary&gt;
+    internal abstract class AggregatorBase&lt;TResult&gt; : IAggregator&lt;TResult&gt;, IIdentifiedDataSerializable
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AggregatorBase{TResult}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        protected AggregatorBase()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;AggregatorBase{TResult}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;attributePath&quot;&gt;The attribute path.&lt;/param&gt;
+        protected AggregatorBase(string attributePath)
+        {
+            if (string.IsNullOrWhiteSpace(attributePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(attributePath));
+            AttributePath = attributePath;
+        }
+
+        public string AttributePath { get; set; }
+
+        /// &lt;inheritdoc /&gt;
+        public void ReadData(IObjectDataInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
+
+            AttributePath = input.ReadString();
+            ReadAggregatorData(input);
+        }
+
+        /// &lt;summary&gt;
+        /// Deserializes the aggregator by reading from an &lt;see cref=&quot;IObjectDataInput&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;input&quot;&gt;The input serialized data.&lt;/param&gt;
+        /// &lt;remarks&gt;The attribute path has already been deserialized.&lt;/remarks&gt;
+        protected abstract void ReadAggregatorData(IObjectDataInput input);
+
+        /// &lt;inheritdoc /&gt;
+        public void WriteData(IObjectDataOutput output)
+        {
+            if (output == null) throw new ArgumentNullException(nameof(output));
+
+            output.WriteString(AttributePath);
+            WriteAggregatorData(output);
+        }
+
+        /// &lt;summary&gt;
+        /// Serializes the object by writing to an &lt;see cref=&quot;IObjectDataOutput&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;output&quot;&gt;The output serialized data.&lt;/param&gt;
+        /// &lt;remarks&gt;The attribute path has already been serialized.&lt;/remarks&gt;
+        protected abstract void WriteAggregatorData(IObjectDataOutput output);
+
+        /// &lt;inheritdoc /&gt;
+        public int FactoryId =&gt; FactoryIds.AggregatorDsFactoryId;
+
+        /// &lt;inheritdoc /&gt;
+        public abstract int ClassId { get; }
+    }
+
+    // TODO: implement BigDecimalAverageAggregator
+    // TODO: implement BigDecimalSumAggregator
+    // TODO: implement BigIntegerAverageAggregator
+    // TODO: implement DistinctValuesAggregator (returns java serializable)
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,35,1],[30,11,30,12,1],[36,9,36,55,1],[38,13,38,58,1],[38,59,38,141,1],[39,13,39,43,1],[40,9,40,10,1],[42,39,42,43,1],[42,44,42,48,1],[47,13,47,31,1],[47,32,47,79,1],[49,13,49,48,1],[50,13,50,39,1],[51,9,51,10,1],[63,13,63,32,1],[63,33,63,81,1],[65,13,65,47,1],[66,13,66,41,1],[67,9,67,10,1],[77,33,77,65,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Partitioning\Partitioner.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Partitioning
+{
+    internal class Partitioner
+    {
+        private readonly object _partitionsLock = new object();
+        private PartitionTable _partitions;
+
+        static Partitioner()
+        {
+            HConsole.Configure(x =&gt; x.Configure&lt;Partitioner&gt;().SetPrefix(&quot;PART&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the number of partitions.
+        /// &lt;/summary&gt;
+        public int Count { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the member owning a partition.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
+        /// &lt;returns&gt;The unique identifier of the member owning the partition with the specified &lt;paramref name=&quot;partitionId&quot;/&gt;,
+        /// or an empty &lt;see cref=&quot;Guid&quot;/&gt; if that partition has no owner.&lt;/returns&gt;
+        public Guid GetPartitionOwner(int partitionId)
+        {
+            if (partitionId &lt; 0) return default;
+
+            // once _partitions has a value, it won&#39;t be null again
+            // and we can use whatever value it has, and references are atomic
+            // ReSharper disable once ConvertIfStatementToReturnStatement
+            if (_partitions == null) return default;
+            // ReSharper disable once InconsistentlySynchronizedField
+            return _partitions.MapPartitionId(partitionId);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the member owning the partition corresponding to a partition hash.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitionHash&quot;&gt;The partition hash.&lt;/param&gt;
+        /// &lt;returns&gt;The unique identifier of the owner owning the partition corresponding to the specified
+        /// &lt;paramref name=&quot;partitionHash&quot;/&gt;, or an empty &lt;see cref=&quot;Guid&quot;/&gt; if that partition has no owner.&lt;/returns&gt;
+        public Guid GetPartitionHashOwner(int partitionHash)
+        {
+            return GetPartitionOwner(GetPartitionId(partitionHash));
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the identifier of the partition corresponding to a partition hash.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitionHash&quot;&gt;The partition hash.&lt;/param&gt;
+        /// &lt;returns&gt;The identifier of the partition corresponding to the specified &lt;paramref name=&quot;partitionHash&quot;/&gt;.&lt;/returns&gt;
+        public int GetPartitionId(int partitionHash)
+        {
+            if (Count == 0) return 0;
+
+            // we can use whatever value count is, and it is atomic
+            return partitionHash == int.MinValue // cannot Abs(int.MinValue)
+                ? 0
+                : Math.Abs(partitionHash) % Count;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a random partition identifier.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A random partition identifier.&lt;/returns&gt;
+        public int GetRandomPartitionId()
+        {
+            return RandomProvider.Next(Count);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies the partitioner of a new partition view.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;originClientId&quot;&gt;The unique identifier of the client originating the view.&lt;/param&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version of the view.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionsMap&quot;&gt;The partitions map.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the new view superseded and replaced the existing one; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public bool NotifyPartitionView(Guid originClientId, int version, Dictionary&lt;int, Guid&gt; partitionsMap)
+        {
+            if (partitionsMap == null) throw new ArgumentNullException(nameof(partitionsMap));
+
+            HConsole.WriteLine(this, $&quot;Received partition table v{version}&quot;);
+            HConsole.WriteLine(this, 10, $&quot;Partitions v{version}:\n&quot; +
+                                        string.Join(&quot;\n&quot;, partitionsMap.Select(kvp =&gt; $&quot;\t{kvp.Key,-16}{kvp.Value}&quot;)));
+
+            lock (_partitionsLock) // one at a time please
+            {
+                if (_partitions != null &amp;&amp; !_partitions.IsSupersededBy(originClientId, version, partitionsMap))
+                    return false;
+
+                _partitions = new PartitionTable(originClientId, version, partitionsMap);
+                Count = _partitions.Count;
+                return true;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Sets or verifies the partition count.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;count&quot;&gt;The partition count.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The specified &lt;paramref name=&quot;count&quot;/&gt; must be either the first one,
+        /// i.e. the partitioner does not know of partitions yet, or it must be equal
+        /// to the known partitions count. Otherwise, a &lt;see cref=&quot;InvalidOperationException&quot;/&gt;
+        /// is thrown.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        /// &lt;returns&gt;Returns False if counts are not matched otherwise True&lt;/returns&gt;
+        public bool SetOrVerifyPartitionCount(int count)
+        {
+            lock (_partitionsLock)
+            {
+                if (_partitions == null &amp;&amp; Count == 0)
+                {
+                    Count = count;
+                    
+                }
+                else if (Count != count)
+                {                    
+                    return false;
+                }
+            }
+
+            return true;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[25,9,25,64,1],[31,9,31,10,1],[36,28,36,32,1],[36,33,36,45,1],[46,13,46,33,1],[46,34,46,49,1],[51,13,51,37,1],[51,38,51,53,1],[53,13,53,60,1],[64,13,64,69,1],[74,13,74,28,1],[74,29,74,38,1],[77,13,79,51,1],[88,13,88,47,1],[100,13,100,39,1],[100,40,100,95,1],[106,13,106,35,1],[108,17,108,112,1],[109,21,109,34,1],[111,17,111,90,1],[112,17,112,43,1],[113,17,113,29,1],[115,9,115,10,1],[130,13,130,35,1],[132,17,132,55,1],[134,21,134,35,1],[137,22,137,41,1],[139,21,139,34,1],[141,13,141,14,1],[143,13,143,25,1],[144,9,144,10,1]]);
+    </script>
+  </body>
+</html>

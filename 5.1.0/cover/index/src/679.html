@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\EnumExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq.Expressions;
+using System.Reflection.Emit;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for &lt;see cref=&quot;Enum&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal static class EnumExtensions
+    {
+        /// &lt;summary&gt;
+        /// Determines whether one or more bit fields are set in the current instance.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the enumeration.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;value&quot;&gt;This instance value.&lt;/param&gt;
+        /// &lt;param name=&quot;flags&quot;&gt;An enumeration value.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if all the bit field or bit fields that are set in flag are also set in the current instance; otherwise, &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This extension methods works for enumerations backed by an &lt;see cref=&quot;int&quot;/&gt; value, or any smaller value.
+        /// No test is performed on &lt;c&gt;value.GetTypeCode()&lt;/c&gt; and therefore results for enumerations backed, by example,
+        /// by a &lt;see cref=&quot;long&quot;/&gt; are unspecified.&lt;/para&gt;
+        /// &lt;para&gt;This is a convenient replacement for &lt;see cref=&quot;Enum.HasFlag&quot;/&gt; which is way slower.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static bool HasAll&lt;T&gt;(this T value, T flags) where T : struct, Enum
+        {
+            var cflags = Converter&lt;T&gt;.ToLong(flags);
+            return (Converter&lt;T&gt;.ToLong(value) &amp; cflags) == cflags;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether one or more bit fields are set in the current instance.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the enumeration.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;value&quot;&gt;This instance value.&lt;/param&gt;
+        /// &lt;param name=&quot;flags&quot;&gt;An enumeration value.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if any of the bit field or bit fields that are set in flag are also set in the current instance; otherwise, &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public static bool HasAny&lt;T&gt;(this T value, T flags) where T : struct, Enum
+            =&gt; (Converter&lt;T&gt;.ToLong(value) &amp; Converter&lt;T&gt;.ToLong(flags)) &gt; 0;
+
+        /// &lt;summary&gt;
+        /// Determines whether one or more bit fields are not set in the current instance.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the enumeration.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;value&quot;&gt;This instance value.&lt;/param&gt;
+        /// &lt;param name=&quot;flags&quot;&gt;An enumeration value.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if none of the bit field or bit fields that are set in flag are also set in the current instance; otherwise, &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        public static bool HasNone&lt;T&gt;(this T value, T flags) where T : struct, Enum
+            =&gt; (Converter&lt;T&gt;.ToLong(value) &amp; Converter&lt;T&gt;.ToLong(flags)) == 0;
+
+        // An enum declaration may explicitly declare an underlying type of byte, sbyte, short, ushort, int, uint, long or ulong.
+        // see https://devblogs.microsoft.com/premier-developer/dissecting-new-generics-constraints-in-c-7-3/
+        //
+        // var i = (int) enumValue is fine &amp; fast, as long as we are not using generics
+        // we *could* write extensions for all our enums, that&#39;s be fast code but... tedious?
+        // = (int) (IConvertible) enumValue -&gt; implies boxing/unboxing
+        // code below is a good compromise
+
+        private static class Converter&lt;TEnum&gt; where TEnum : struct, Enum
+        {
+            public static readonly Func&lt;TEnum, long&gt; ToLong = CreateToLong();
+
+            private static Func&lt;TEnum, long&gt; CreateToLong()
+            {
+                var parameter = Expression.Parameter(typeof (TEnum));
+                //var convert = Expression.ConvertChecked(parameter, typeof (long));
+                var convert = Expression.Convert(parameter, typeof(long));
+                return Expression.Lambda&lt;Func&lt;TEnum, long&gt;&gt;(convert, parameter).Compile();
+
+                // code below would work in NetStandard 2.1 but only benchmarking could determine whether it&#39;s worth it
+
+                /*
+                var method = new DynamicMethod(
+                    name: &quot;ConvertToLong&quot;,
+                    returnType: typeof(long),
+                    parameterTypes: new[] { typeof(TEnum) },
+                    m: typeof(EnumExtensions).Module,
+                    skipVisibility: true);
+
+                ILGenerator ilGen = method.GetILGenerator();
+
+                ilGen.Emit(OpCodes.Ldarg_0);
+                ilGen.Emit(OpCodes.Conv_I8);
+                ilGen.Emit(OpCodes.Ret);
+
+                return (Func&lt;TEnum, long&gt;) method.CreateDelegate(typeof(Func&lt;TEnum, long&gt;));
+                */
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[41,13,41,53,1],[42,13,42,68,1],[53,16,53,77,1],[63,16,63,78,0],[75,13,75,78,1],[79,17,79,70,1],[81,17,81,75,1],[82,17,82,91,1]]);
+    </script>
+  </body>
+</html>

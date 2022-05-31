@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterConnections.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Networking;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+using MemberInfo = Hazelcast.Models.MemberInfo;
+
+namespace Hazelcast.Clustering
+{
+    internal class ClusterConnections : IAsyncDisposable
+    {
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly object _mutex = new object();
+
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMembers _clusterMembers;
+        private readonly IRetryStrategy _connectRetryStrategy;
+        private readonly ILogger _logger;
+
+
+        // member id -&gt; connection
+        // TODO: consider we are duplicating this with members?
+        private readonly ConcurrentDictionary&lt;Guid, MemberConnection&gt; _connections = new ConcurrentDictionary&lt;Guid, MemberConnection&gt;();
+
+        // connection -&gt; completion
+        private readonly ConcurrentDictionary&lt;MemberConnection, TaskCompletionSource&lt;object&gt;&gt; _completions = new ConcurrentDictionary&lt;MemberConnection, TaskCompletionSource&lt;object&gt;&gt;();
+
+        private Authenticator _authenticator;
+        private Action&lt;MemberConnection&gt; _connectionCreated;
+        private Func&lt;MemberConnection, bool, bool, bool, ValueTask&gt; _connectionOpened;
+        private Func&lt;MemberConnection, ValueTask&gt; _connectionClosed;
+        private BackgroundTask _reconnect;
+        private Guid _clusterId;
+
+        private readonly Task _connectMembers;
+
+        private volatile int _disposed; // disposed flag
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterConnections&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public ClusterConnections(ClusterState clusterState, ClusterMembers clusterMembers, SerializationService serializationService)
+        {
+            _clusterState = clusterState;
+            _clusterMembers = clusterMembers;
+
+            _logger = _clusterState.LoggerFactory.CreateLogger&lt;ClusterConnections&gt;();
+            _authenticator = new Authenticator(_clusterState.Options.Authentication, serializationService, _clusterState.LoggerFactory);
+            _connectRetryStrategy = new RetryStrategy(&quot;connect to cluster&quot;, _clusterState.Options.Networking.ConnectionRetry, _clusterState.LoggerFactory);
+
+            if (_clusterState.IsSmartRouting)
+                _connectMembers = ConnectMembers(_cancel.Token);
+
+            _clusterState.StateChanged += OnStateChanged;
+
+            //Cluster changed, renew options if necessary.
+            _clusterState.Failover.ClusterChanged += options =&gt;
+            {
+               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+            };
+
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterConnections&gt;().SetPrefix(&quot;CCNX&quot;));
+        }
+
+        #region Connect Members
+
+        private async Task&lt;(bool, bool, Exception)&gt; EnsureConnectionInternalAsync(MemberInfo member, CancellationToken cancellationToken)
+        {
+            Exception exception = null;
+            var wasCanceled = false;
+
+            try
+            {
+                var attempt = await EnsureConnectionAsync(member, cancellationToken).CfAwait();
+                if (attempt) return (true, false, null);
+                exception = attempt.Exception;
+            }
+            catch (OperationCanceledException)
+            {
+                wasCanceled = true;
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            return (false, wasCanceled, exception);
+        }
+
+        // background task that connect members
+        private async Task ConnectMembers(CancellationToken cancellationToken)
+        {
+            await foreach (var connectionRequest in _clusterMembers.MemberConnectionRequests.WithCancellation(cancellationToken))
+            {
+                var member = connectionRequest.Member;
+
+                _logger.IfDebug()?.LogDebug(&quot;Ensure client {ClientName} is connected to member {MemberId} at {ConnectAddress}.&quot;, _clusterState.ClientName, member.Id.ToShortString(), member.ConnectAddress);
+
+                var (success, wasCanceled, exception) = await EnsureConnectionInternalAsync(member, cancellationToken).CfAwait();
+                if (success)
+                {
+                    connectionRequest.Complete(success: true);
+                    continue;
+                }
+
+                if (_disposed &gt; 0)
+                {
+                    _logger.IfWarning()?.LogWarning(&quot;Could not connect to member {MemberId} at {ConnectAddress}: shutting down.&quot;, member.Id.ToShortString(), member.ConnectAddress);
+                }
+                else
+                {
+                    var details = wasCanceled ? &quot;canceled&quot; : &quot;failed&quot;;
+                    if (exception is RemoteException { Error: RemoteError.HazelcastInstanceNotActive })
+                    {
+                        exception = null;
+                        details = &quot;failed (member is not active)&quot;;
+                    }
+                    else if (exception is TimeoutException)
+                    {
+                        exception = null;
+                        details = &quot;failed (socket timeout)&quot;;
+                    }
+                    //ClientNotAllowedInClusterException is reported here.
+                    else if (exception != null)
+                        details = $&quot;failed ({exception.GetType()}: {exception.Message})&quot;;
+                    _logger.IfWarning()?.LogWarning(exception, &quot;Could not connect to member {MemberId} at {ConnectAddress}: {Details}.&quot;, member.Id.ToShortString(), member.ConnectAddress, details);
+                }
+
+                connectionRequest.Complete(success: false);
+            }
+        }
+
+        #endregion
+
+        #region Events
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when a connection is created.
+        /// &lt;/summary&gt;
+        public Action&lt;MemberConnection&gt; ConnectionCreated
+        {
+            get =&gt; _connectionCreated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _connectionCreated = value;
+            }
+        }
+
+        private void RaiseConnectionCreated(MemberConnection connection)
+        {
+            _connectionCreated?.Invoke(connection);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when a connection is opened.
+        /// &lt;/summary&gt;
+        public Func&lt;MemberConnection, bool, bool, bool, ValueTask&gt; ConnectionOpened
+        {
+            get =&gt; _connectionOpened;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _connectionOpened = value;
+            }
+        }
+
+        private async ValueTask RaiseConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+        {
+            if (_connectionOpened == null) return;
+
+            try
+            {
+                await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while raising ConnectionOpened.&quot;);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when a connection is closed.
+        /// &lt;/summary&gt;
+        public Func&lt;MemberConnection, ValueTask&gt; ConnectionClosed
+        {
+            get =&gt; _connectionClosed;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _connectionClosed = value;
+            }
+        }
+
+        private async ValueTask RaiseConnectionClosed(MemberConnection connection)
+        {
+            if (_connectionClosed == null) return;
+
+            try
+            {
+                await _connectionClosed.AwaitEach(connection).CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Caught exception while raising ConnectionClosed.&quot;);
+            }
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        private ValueTask OnStateChanged(ClientState state)
+        {
+            _logger.IfDebug()?.LogDebug(&quot;State changed: {State}&quot;, state);
+
+            // only if disconnected
+            if (state != ClientState.Disconnected) return default;
+
+            // and still disconnected - if the cluster is down or shutting down, give up
+            if (_clusterState.ClientState != ClientState.Disconnected)
+            {
+                _logger.LogInformation(&quot;Disconnected (shutting down)&quot;);
+                return default;
+            }
+
+            // the cluster is disconnected, but not down
+            bool reconnect;
+            if (_clusterState.Options.Networking.Preview.EnableNewReconnectOptions)
+            {
+                reconnect = _clusterState.Options.Networking.Reconnect;
+                if (_logger.IsEnabled(LogLevel.Information))
+                {
+#pragma warning disable CA1308 // Normalize strings to uppercase - we are not normalizing here
+                    var option = _clusterState.Options.Networking.Reconnect.ToString().ToLowerInvariant();
+#pragma warning restore CA1308
+                    var action = reconnect ? &quot;reconnect&quot; : &quot;shut down&quot;;
+                    _logger.LogInformation($&quot;Disconnected (reconnect == {option} =&gt; {action})&quot;);
+                }
+            }
+            else
+            {
+                reconnect = _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectAsync ||
+                            _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectSync;
+                _logger.LogInformation(&quot;Disconnected (reconnect mode == {ReconnectMode} =&gt; {ReconnectAction})&quot;,
+                    _clusterState.Options.Networking.ReconnectMode,
+                    _clusterState.Options.Networking.ReconnectMode switch
+                    {
+                        ReconnectMode.DoNotReconnect =&gt; &quot;shut down&quot;,
+                        ReconnectMode.ReconnectSync =&gt; &quot;reconnect (synchronously)&quot;,
+                        ReconnectMode.ReconnectAsync =&gt; &quot;reconnect (asynchronously)&quot;,
+                        _ =&gt; &quot;meh?&quot;
+                    });
+            }
+
+            if (reconnect || _clusterState.Failover.Enabled)
+            {
+                // reconnect via a background task
+                // operations will either retry until timeout, failover(if enabled) or fail
+                _reconnect = BackgroundTask.Run(ReconnectAsync);
+            }
+            else
+            {
+                _clusterState.RequestShutdown();
+            }
+
+            return default;
+        }
+
+        /// &lt;summary&gt;
+        /// Handles a &lt;see cref=&quot;MemberConnection&quot;/&gt; going down.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        private async ValueTask OnConnectionClosed(MemberConnection connection)
+        {
+            _logger.IfDebug()?.LogDebug(&quot;Connection {ConnectionId} to member {MemberId} at {Address} closed.&quot;, connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+
+            TaskCompletionSource&lt;object&gt; connectCompletion;
+            lock (_mutex)
+            {
+                // if the connection was not added yet, ignore
+                if (!_connections.TryGetValue(connection.MemberId, out var existing))
+                {
+                    _logger.IfDebug()?.LogDebug(&quot;Found no connection to member {MemberId}, ignore.&quot;, connection.MemberId.ToShortString());
+                    return;
+                }
+
+                // must be matching, might have been replaced
+                if (existing.Id == connection.Id)
+                {
+                    // else remove (safe, mutex)
+                    _connections.TryRemove(connection.MemberId, out _);
+                    _logger.IfDebug()?.LogDebug(&quot;Removed connection {ConnectionId} to member {MemberId} at {Address}.&quot;, connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+                }
+                else
+                {
+                    _logger.IfDebug()?.LogDebug(&quot;Connection {ConnectionId} to member {MemberId} already replaced by {ExistingId)}.&quot;, connection.Id.ToShortString(), connection.MemberId.ToShortString(), existing.Id.ToShortString());
+                }
+
+                // and get its &#39;connect&#39; completion source
+                _completions.TryGetValue(connection, out connectCompletion);
+            }
+
+            // if still connecting... wait until done, because we cannot
+            // eg trigger the &#39;closed&#39; event before or while the &#39;opened&#39;
+            // triggers
+            if (connectCompletion != null)
+            {
+                await connectCompletion.Task.CfAwait();
+                _completions.TryRemove(connection, out _);
+            }
+
+            // proceed: raise &#39;closed&#39;
+            await RaiseConnectionClosed(connection).CfAwait(); // does not throw
+        }
+
+        #endregion
+
+        #region Properties
+
+        /// &lt;summary&gt;
+        /// Gets the number of open connections to members.
+        /// &lt;/summary&gt;
+        public int Count =&gt; _connections.Count;
+
+        #endregion
+
+        /// &lt;summary&gt;
+        /// Connects to the cluster.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when connected.&lt;/returns&gt;
+        public async Task ConnectAsync(CancellationToken cancellationToken)
+        {
+            using var cancellation = _cancel.LinkedWith(cancellationToken);
+            cancellationToken = cancellation.Token;
+
+            // properties cannot be changed once connected
+            _clusterState.SetPropertiesReadOnly();
+
+            // we have started, and are now trying to connect
+            if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
+                throw new ConnectionException(&quot;Failed to connect (aborted).&quot;);
+
+            bool tryNextCluster;
+            do
+            {
+                tryNextCluster = false;
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    HConsole.WriteLine(this, $&quot;{_clusterState.ClientName} connecting&quot;);
+
+                    // establishes the first connection, throws if it fails
+                    await ConnectFirstAsync(cancellationToken).CfAwait();
+
+                    // once the first connection is established, we should use it to subscribe
+                    // to the cluster views event, and then we should receive a members view,
+                    // which in turn should change the state to Connected - unless something
+                    // goes wrong
+                    // TODO: consider *not* waiting for this and running directly on the member we&#39;re connected to?
+                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+
+                    HConsole.WriteLine(this, $&quot;{_clusterState.ClientName} connected&quot;);
+
+                    if (!connected)
+                        throw new ConnectionException(&quot;Failed to connect.&quot;);
+
+                    // we have been connected (rejoice) - of course, nothing guarantees that it
+                    // will last, but then OnConnectionClosed will deal with it
+                }
+                catch (Exception e) // could be ClientNotAllowedInClusterException
+                {
+                    // we *have* retried and failed
+                    if (_clusterState.Failover.Enabled)
+                    {
+                        // try to failover to next cluster
+                        if (_clusterState.Failover.TryNextCluster())
+                        {
+                            // ok to try the next cluster!
+                            tryNextCluster = true;
+                            _logger.LogWarning(e, &quot;Failed to connect to cluster, trying next cluster.&quot;);
+                        }
+                        else
+                        {
+                            // this is hopeless, shutdown and throw (but log some details)
+                            _clusterState.RequestShutdown();
+                            _logger.LogWarning(&quot;Failed to connect to cluster, and exhausted failover options.&quot;);
+                            throw;
+                        }
+                    }
+                    else
+                    {
+                        // this is hopeless, shutdown and throw
+                        _clusterState.RequestShutdown();
+                        throw;
+                    }
+                }
+            } while (tryNextCluster);
+        }
+
+        /// &lt;summary&gt;
+        /// Reconnects to the cluster.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when reconnected.&lt;/returns&gt;
+        private async Task ReconnectAsync(CancellationToken cancellationToken)
+        {
+            bool tryNextCluster;
+            do
+            {
+                tryNextCluster = false;
+                try
+                {
+                    // establishes the first connection, throws if it fails
+                    await ConnectFirstAsync(cancellationToken).CfAwait();
+
+                    // once the first connection is established, we should use it to subscribe
+                    // to the cluster views event, and then we should receive a members view,
+                    // which in turn should change the state to Connected - unless something
+                    // goes wrong
+                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+
+                    if (!connected)
+                    {
+                        // we are a background task and cannot throw!
+                        _logger.LogError(&quot;Failed to reconnect.&quot;);
+                    }
+                    else
+                    {                        
+                        _logger.IfDebug()?.LogDebug(&quot;Reconnected&quot;);
+                    }
+
+                    // we have been reconnected (rejoice) - of course, nothing guarantees that it
+                    // will last, but then OnConnectionClosed will deal with it
+                }
+                catch (Exception e) // could be ClientNotAllowedInClusterException
+                {
+                    // we *have* retried and failed
+                    if (_clusterState.Failover.Enabled)
+                    {
+                        // try to failover to next cluster
+                        if (_clusterState.Failover.TryNextCluster())
+                        {
+                            // ok to try the next cluster!
+                            tryNextCluster = true;
+                            _logger.LogWarning(e, &quot;Failed to connect to cluster, failover to next cluster.&quot;);
+                        }
+                        else
+                        {
+                            // this is hopeless, shutdown, and log (we are a background task!)
+                            _clusterState.RequestShutdown();
+                            _logger.LogError(e, &quot;Failed to connect to cluster, and exhausted failover options.&quot;);
+                        }
+                    }
+                    else
+                    {
+                        // this is hopeless, shutdown, and log (we are a background task!)
+                        _clusterState.RequestShutdown();
+                        _logger.LogError(e, &quot;Failed to reconnect.&quot;);
+                    }
+                }
+            } while (tryNextCluster);
+
+            // in any case, remove ourselves
+            _reconnect = null;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the cluster addresses.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;All cluster addresses.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This methods first list the known members&#39; addresses, and then the
+        /// configured addresses. Each group can be shuffled, depending on options.
+        /// The returned addresses are distinct across both groups, i.e. each address
+        /// is returned only once.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private IEnumerable&lt;NetworkAddress&gt; GetClusterAddresses()
+        {
+            var shuffle = _clusterState.Options.Networking.ShuffleAddresses;
+            var distinct = new HashSet&lt;NetworkAddress&gt;();
+
+            static IEnumerable&lt;NetworkAddress&gt; Distinct(IEnumerable&lt;NetworkAddress&gt; aa, ISet&lt;NetworkAddress&gt; d, bool s)
+            {
+                if (s) aa = aa.Shuffle();
+
+                foreach (var a in aa)
+                {
+                    if (d.Add(a)) yield return a;
+                }
+            }
+
+            // get known members&#39; addresses
+            var addresses = _clusterMembers.GetMembers().Select(x =&gt; x.ConnectAddress);
+            foreach (var address in Distinct(addresses, distinct, shuffle))
+                yield return address;
+
+            // get configured addresses that haven&#39;t been tried already
+            addresses = _clusterState.AddressProvider.GetAddresses();
+            foreach (var address in Distinct(addresses, distinct, shuffle))
+                yield return address;
+        }
+
+
+        /// &lt;summary&gt;
+        /// Opens a first connection to the cluster (no connection yet).
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when connected.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Tries all the candidate addresses until one works; tries again
+        /// according to the configured retry strategy, and if nothing works,
+        /// end up throwing an exception.&lt;/para&gt;
+        /// &lt;/remarks&gt;        
+        private async Task ConnectFirstAsync(CancellationToken cancellationToken)
+        {
+            var tried = new HashSet&lt;NetworkAddress&gt;();
+            bool canRetry, isExceptionThrown = false;
+
+            _connectRetryStrategy.Restart();
+
+            do
+            {
+                try
+                {
+                    // try each address (unique by the IPEndPoint)
+                    foreach (var address in GetClusterAddresses())
+                    {
+                        if (cancellationToken.IsCancellationRequested)
+                            break;
+
+                        tried.Add(address);
+
+                        HConsole.WriteLine(this, $&quot;Try to connect {_clusterState.ClientName} to server at {address}&quot;);
+
+                        _logger.IfDebug()?.LogDebug(&quot;Try to connect {ClientName} to cluster {ClusterName} server at {MemberAddress}&quot;, _clusterState.ClientName, _clusterState.ClusterName, address);
+
+                        var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
+
+                        if (attempt)
+                        {
+                            var connection = attempt.Value;
+                            HConsole.WriteLine(this, $&quot;Connected {_clusterState.ClientName} via {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {address}&quot;);
+                            return; // successful exit, a first connection has been opened
+                        }
+
+                        HConsole.WriteLine(this, $&quot;Failed to connect to address {address}&quot;);
+
+                        if (attempt.HasException)
+                        {
+                            if (attempt.Exception is RemoteException { Error: RemoteError.HazelcastInstanceNotActive })
+                            {
+
+                                _logger.LogWarning($&quot;Failed to connect to address {address} (member is not active).&quot;);
+                            }
+                            else if (attempt.Exception is TimeoutException)
+                            {
+                                _logger.LogWarning($&quot;Failed to connect to address {address} (socket timeout).&quot;);
+                            }
+                            else if (attempt.Exception is ClientNotAllowedInClusterException)
+                            {
+                                isExceptionThrown = true;
+                                _logger.IfWarning()?.LogWarning(&quot;Failed to connect to cluster since client is not allowed. &quot; +
+                                                                $&quot;Exception:{nameof(ClientNotAllowedInClusterException)}, Message:{attempt.Exception.Message}&quot;);
+                                throw attempt.Exception; //no chance, give up
+                            }
+                            else
+                            {
+                                isExceptionThrown = true;
+                                _logger.LogError(attempt.Exception, &quot;Failed to connect to address {address}.&quot;, address.ToString());
+
+                            }
+                        }
+                        else
+                        {
+                            _logger.IfDebug()?.LogDebug(&quot;Failed to connect to address {Address}.&quot;, address);
+                        }
+                    }
+                }
+                catch (ClientNotAllowedInClusterException)
+                {
+                    // Cluster doesn&#39;t allow us, give up. If failover is possible it will take care of situation.
+                    break;
+                }
+                catch (Exception e)
+                {
+                    // the GetClusterAddresses() enumerator itself can throw, if a configured
+                    // address is invalid or cannot be resolved via DNS... a DNS problem may
+                    // be transient: better retry
+
+                    isExceptionThrown = true;
+                    _logger.LogError(e, &quot;Connection attempt failed due to possible DNS error.&quot;);
+
+                    // TODO: it&#39;s the actual DNS that should retry!
+                }
+
+                // TODO: some errors should not be retried!
+                // for instance, an invalid SSL cert will not become magically valid
+
+                try
+                {
+                    // try to retry, maybe with a delay - handles cancellation
+                    canRetry = await _connectRetryStrategy.WaitAsync(cancellationToken).CfAwait();
+                }
+                catch (OperationCanceledException) // don&#39;t gather the cancel exception
+                {
+                    canRetry = false; // retry strategy was canceled
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, &quot;Connection attempt has thrown.&quot;);
+                    canRetry = false; // retry strategy threw
+                    isExceptionThrown = true;
+                }
+
+            } while (canRetry);
+
+            string msgSomeThingWentWrong = &quot;&quot;;
+
+            if (isExceptionThrown)
+                msgSomeThingWentWrong = &quot;Some exceptions were thrown and have been written to the log. Please refer to the log for details.&quot;;
+
+            // canceled exception?
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException($&quot;The cluster connection operation to \&quot;{_clusterState.ClusterName}\&quot; has been canceled. &quot; +
+                    $&quot;The following addresses where tried: {string.Join(&quot;, &quot;, tried)}.&quot; +
+                    $&quot; {msgSomeThingWentWrong}&quot;);
+
+            // other exception
+            throw new ConnectionException($&quot;Unable to connect to the cluster \&quot;{_clusterState.ClusterName}\&quot;. &quot; +
+                $&quot;The following addresses where tried: {string.Join(&quot;, &quot;, tried)}.&quot; +
+                $&quot;{msgSomeThingWentWrong}&quot;);
+        }
+
+
+        /// &lt;summary&gt;
+        /// Opens a first connection to an address (no other connections).
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The address.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The opened connection, if successful.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method does not throw.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private async Task&lt;Attempt&lt;MemberConnection&gt;&gt; ConnectFirstAsync(NetworkAddress address, CancellationToken cancellationToken)
+        {
+            // lock the address - can only connect once at a time per address
+            // but! this is the first connection so nothing else can connect
+            //using var locked = _addressLocker.LockAsync(address);
+
+            try
+            {
+                // this may throw
+#pragma warning disable CA2000 // Dispose objects before losing scope
+                // &quot;The allocating method does not have dispose ownership; that is, the responsibility
+                // to dispose the object is transferred to another object or wrapper that&#39;s created
+                // in the method and returned to the caller.&quot; - here: the Attempt&lt;&gt;.
+                return await ConnectAsync(address, cancellationToken).CfAwait();
+#pragma warning restore CA2000
+            }
+            catch (Exception e)
+            {
+                // don&#39;t throw, just fail
+                HConsole.WriteLine(this, &quot;Exceptions while connecting &quot; + e);
+                return Attempt.Fail&lt;MemberConnection&gt;(e);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Ensures that a connection exists to a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This method does not throw.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private async Task&lt;Attempt&lt;MemberConnection&gt;&gt; EnsureConnectionAsync(MemberInfo member, CancellationToken cancellationToken)
+        {
+            // if we already have a connection for that member, to the right address, return the connection if
+            // it is active, or fail it if is not: cannot open yet another connection to that same address, we&#39;ll
+            // have to wait for the inactive connection to be removed. OTOH if we have a connection for that
+            // member to a wrong address, keep proceeding and try to open a connection to the right address.
+            if (_connections.TryGetValue(member.Id, out var connection))
+            {
+                var active = connection.Active;
+
+                if (connection.Address == member.ConnectAddress)
+                {
+                    _logger.IfDebug()?.LogDebug(&quot;Found {PrefixActive}active connection {ConnectionId} from client {ClientName} to member {MemberId} at {Address}.&quot;, (active ? &quot;&quot; : &quot;non-&quot;), connection.Id.ToShortString(), _clusterState.ClientName, member.Id.ToShortString(), connection.Address);
+                    return Attempt.If(active, connection);
+                }
+
+                _logger.IfDebug()?.LogDebug(&quot;Found {PrefixActive}active connection {ConnectionId} from client {ClientName} to member {MemberId} at {Address}, but member address is {ConnectAddress}.&quot;, (active ? &quot;&quot; : &quot;non-&quot;), connection.Id.ToShortString(), _clusterState.ClientName, member.Id.ToShortString(), connection.Address, member.ConnectAddress);
+            }
+
+            // ConnectMembers invokes EnsureConnectionAsync sequentially, and is suspended
+            // whenever we need to connect the very first address, therefore each address
+            // can only be connected once at a time = no need for locks here
+
+            // exit now if canceled
+            if (cancellationToken.IsCancellationRequested)
+                return Attempt.Fail&lt;MemberConnection&gt;();
+
+            try
+            {
+                // else actually connect
+                // this may throw
+                _logger.IfDebug()?.LogDebug(&quot;Client {ClientName} is not connected to member {MemberId} at {ConnectAddress}, connecting.&quot;, _clusterState.ClientName, member.Id.ToShortString(), member.ConnectAddress);
+
+#pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
+                var memberConnection = await ConnectAsync(member.ConnectAddress, cancellationToken).CfAwait();
+#pragma warning restore CA2000
+                if (memberConnection.MemberId != member.Id)
+                {
+                    _logger.IfWarning()?.LogWarning(&quot;Client {ClientName} connected address {ConnectAddress} expecting member {MemberId} but found member {MemberId}, dropping the connection.&quot;, _clusterState.ClientName, member.ConnectAddress, member.Id.ToShortString(), memberConnection.MemberId);
+                    _clusterMembers.TerminateConnection(memberConnection);
+                    return Attempt.Fail&lt;MemberConnection&gt;();
+                }
+                return memberConnection;
+            }
+            catch (Exception e)
+            {
+                // don&#39;t throw, just fail
+                return Attempt.Fail&lt;MemberConnection&gt;(e);
+            }
+        }
+
+        private static async ValueTask ThrowDisconnected(MemberConnection connection)
+        {
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new TargetDisconnectedException();
+        }
+
+        private static async ValueTask ThrowRejected(MemberConnection connection)
+        {
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new ConnectionException(&quot;Connection was not accepted.&quot;);
+        }
+
+        private static async ValueTask ThrowCanceled(MemberConnection connection)
+        {
+            // disposing the connection *will* run OnConnectionClosed which will
+            // remove the connection from all the places it needs to be removed from
+            await connection.DisposeAsync().CfAwait();
+            throw new OperationCanceledException();
+        }
+
+        /// &lt;summary&gt;
+        /// Opens a connection to an address.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The address.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the connection has been established, and represents the associated client.&lt;/returns&gt;
+        private async Task&lt;MemberConnection&gt; ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        {
+            // directly connect to the specified address (internal/public determination happened beforehand)
+
+            // create the connection to the member
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.CurrentClusterOptions.Networking, _clusterState.CurrentClusterOptions.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            {
+                Closed = OnConnectionClosed
+            };
+
+            RaiseConnectionCreated(connection);
+
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+
+            // note: soon as ConnectAsync returns, the connection can close anytime - this is handled by
+            // adding the connection to _connections within _connectionsMutex + managing a connection
+            // completions that ensures that either neither Opened nor Closed trigger, or both trigger
+            // and in the right order, Closed after Opened has completed
+
+            // connect to the server (may throw and that is ok here)
+            var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
+
+            // if we are running a failover client but the cluster we just connected to does not support failover
+            // then the client is not allowed in that cluster - in this case, terminate the connection and throw
+            if (_clusterState.Options.FailoverOptions.Enabled &amp;&amp; !result.FailoverSupported)
+            {
+                await connection.DisposeAsync().CfAwait();
+                throw new ClientNotAllowedInClusterException(&quot;Client is not allowed in cluster &quot; + 
+                    &quot;(client is configured with failover but cluster does not support failover. &quot; + 
+                    &quot;Failover is an Hazelcast Enterprise feature.).&quot;);
+            }
+
+            // report
+            _logger.LogInformation(&quot;Authenticated client &#39;{ClientName}&#39; ({ClientId}) running version {ClientVersion}&quot; +
+                                   &quot; on connection {ConnectionId} from {LocalAddress}&quot; +
+                                   &quot; to member {MemberId} at {Address}&quot; +
+                                   &quot; of cluster &#39;{ClusterName}&#39; ({ClusterId}) running version {HazelcastServerVersion}.&quot;,
+                _clusterState.ClientName, _clusterState.ClientId.ToShortString(), ClientVersion.Version,
+                connection.Id.ToShortString(), connection.LocalEndPoint,
+                result.MemberId.ToShortString(), address,
+                _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
+
+            // notify partitioner
+            if (!_clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount))
+            {
+                await connection.DisposeAsync().CfAwait(); // does not throw
+                throw new ClientNotAllowedInClusterException($&quot;Received partition count value {result.PartitionCount} but expected {_clusterState.Partitioner.Count}.&quot;);
+            }
+
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+            if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
+
+            // isFirst: this is the first connection (but maybe after we&#39;ve been disconnected)
+            // isFirstEver: this is the first connection, ever
+            // isNewCluster: when isFirst, this is also a new cluster (either because isFirstEver, or because of a cluster id change)
+            var isFirst = false;
+            var isFirstEver = false;
+            var isNewCluster = false;
+            var accepted = false;
+
+            // register the connection
+            lock (_mutex)
+            {
+                if (_disposed == 0)
+                {
+                    isFirst = _connections.IsEmpty;
+                    isFirstEver = isFirst &amp;&amp; _clusterId == default;
+                    accepted = true;
+
+                    // ok to connect to a different cluster only if this is the very first connection
+                    isNewCluster = _clusterId != connection.ClusterId;
+                    if (isNewCluster)
+                    {
+                        if (!_connections.IsEmpty)
+                        {
+                            _logger.IfWarning()?.LogWarning(&quot;Cannot accept a connection to cluster {ClusterId} which is not the current cluster ({CurrentClusterId}).&quot;, connection.ClusterId, _clusterId);
+                            accepted = false;
+                        }
+                        else
+                        {
+                            _clusterId = connection.ClusterId;
+                        }
+                    }
+                }
+
+                // finally, add the connection
+                if (accepted)
+                {
+                    _logger.IfDebug()?.LogDebug(&quot;Added connection {ConnectionId} to member {MemberId} at {Address}.&quot;, connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+                    _connections[connection.MemberId] = connection;
+                    _completions[connection] = new TaskCompletionSource&lt;object&gt;(TaskCreationOptions.RunContinuationsAsynchronously);
+                }
+            }
+
+            // these Throw methods dispose the connection, which will then be removed from _connections
+            // we are safe
+            if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();
+            if (!connection.Active) await ThrowDisconnected(connection).CfAwait();
+            if (!accepted) await ThrowRejected(connection).CfAwait();
+
+            // NOTE: connections are opened either by &#39;connect first&#39; or by &#39;connect members&#39; and
+            // both ensure that one connection is opened after another - not concurrently - thus
+            // making sure that there is no race condition here and the ConnectionOpened for the
+            // isFirst connection will indeed trigger before any other connection is created - think
+            // about it if adding support for parallel connections!
+
+            // connection is opened
+            await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+
+            lock (_mutex)
+            {
+                // there is always a completion, but we have to TryRemove from concurrent dictionaries
+                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
+            }
+
+            return connection;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            HConsole.WriteLine(this, &quot;Terminate ConnectMembers&quot;);
+            // be sure to properly terminate _connectMembers, even though, because the
+            // MemberConnectionQueue has been disposed already, the task should have
+            // ended by now
+            _cancel.Cancel();
+            if (_connectMembers != null)
+                await _connectMembers.CfAwaitCanceled();
+            _cancel.Dispose();
+
+            // stop and dispose the reconnect task if it&#39;s running
+            HConsole.WriteLine(this, &quot;Terminate Reconnect&quot;);
+            var reconnect = _reconnect;
+            if (reconnect != null)
+                await reconnect.CompletedOrCancelAsync(true).CfAwait();
+
+            // trash all remaining connections
+            HConsole.WriteLine(this, &quot;Tear down Connections&quot;);
+            ICollection&lt;MemberConnection&gt; connections;
+            lock (_mutex) connections = _connections.Values;
+            foreach (var connection in connections)
+                await connection.DisposeAsync().CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,90,1],[35,9,35,55,1],[45,9,45,137,1],[48,9,48,185,1],[64,9,64,135,1],[66,13,66,42,1],[67,13,67,46,1],[69,13,69,86,1],[70,13,70,137,1],[71,13,71,156,1],[73,13,73,46,1],[74,17,74,65,1],[76,13,76,58,1],[79,13,81,16,1],[81,16,81,126,1],[81,126,82,13,1],[82,13,82,14,1],[82,14,82,15,1],[85,9,85,10,1],[91,13,91,40,1],[92,13,92,37,1],[96,17,96,96,1],[97,17,97,29,1],[97,30,97,57,1],[98,17,98,47,1],[99,13,99,14,1],[100,13,100,47,0],[102,17,102,36,0],[103,13,103,14,0],[104,13,104,32,0],[106,17,106,31,0],[107,13,107,14,0],[109,13,109,52,1],[110,9,110,10,1],[115,28,115,49,1],[115,50,115,52,1],[115,53,115,129,1],[117,17,117,55,1],[119,17,119,206,1],[121,17,121,130,1],[122,17,122,29,1],[124,21,124,63,1],[125,21,125,30,1],[128,17,128,35,1],[130,21,130,181,1],[134,21,134,71,1],[135,21,135,104,1],[137,25,137,42,1],[138,25,138,67,1],[140,26,140,60,0],[142,25,142,42,0],[143,25,143,61,0],[146,26,146,48,0],[147,25,147,90,0],[148,21,148,197,1],[151,17,151,60,1],[152,13,152,14,1],[153,9,153,10,0],[164,20,164,38,1],[167,17,167,62,1],[168,17,168,44,1],[169,13,169,14,1],[174,13,174,52,1],[175,9,175,10,1],[182,20,182,37,1],[185,17,185,62,1],[186,17,186,43,1],[187,13,187,14,1],[192,13,192,43,1],[192,44,192,51,0],[196,17,196,109,1],[197,13,197,14,1],[198,13,198,32,0],[200,17,200,89,0],[201,13,201,14,0],[202,9,202,10,1],[209,20,209,37,1],[212,17,212,62,1],[213,17,213,43,1],[214,13,214,14,1],[219,13,219,43,1],[219,44,219,51,0],[223,17,223,73,1],[224,13,224,14,1],[225,13,225,32,0],[227,17,227,89,0],[228,13,228,14,0],[229,9,229,10,1],[237,13,237,74,1],[240,13,240,51,1],[240,52,240,67,1],[243,13,243,71,1],[245,17,245,72,0],[246,17,246,32,0],[251,13,251,84,1],[253,17,253,72,1],[254,17,254,61,1],[257,21,257,107,1],[259,21,259,72,1],[260,21,260,97,1],[265,17,266,107,1],[267,17,271,57,1],[271,57,271,68,1],[271,68,272,56,1],[272,56,272,83,1],[272,83,273,57,1],[273,57,273,85,1],[273,85,274,30,1],[274,30,274,36,0],[274,36,275,24,1],[278,13,278,61,1],[282,17,282,65,1],[286,17,286,49,1],[289,13,289,28,1],[298,13,298,200,1],[301,13,301,26,1],[304,17,304,86,1],[306,21,306,139,0],[307,21,307,28,0],[311,17,311,50,1],[314,21,314,72,1],[315,21,315,209,1],[319,21,319,231,0],[323,17,323,77,1],[324,13,324,14,1],[329,13,329,43,1],[331,17,331,56,1],[332,17,332,59,1],[336,13,336,63,1],[337,9,337,10,1],[346,29,346,47,1],[357,13,357,76,1],[358,13,358,52,1],[361,13,361,51,1],[364,13,364,110,1],[365,17,365,79,0],[370,17,370,40,1],[373,21,373,70,1],[377,21,377,74,1],[384,21,384,108,1],[388,21,388,36,1],[389,25,389,77,0],[393,17,393,18,1],[394,17,394,36,1],[397,21,397,56,1],[400,25,400,69,1],[403,29,403,51,1],[404,29,404,105,1],[409,29,409,61,0],[410,29,410,113,0],[411,29,411,35,0],[417,25,417,57,1],[418,25,418,31,1],[420,17,420,18,1],[421,15,421,38,1],[422,9,422,10,1],[434,17,434,40,1],[438,21,438,74,1],[444,21,444,108,1],[446,21,446,36,1],[449,25,449,66,0],[453,25,453,68,1],[458,17,458,18,1],[459,17,459,36,1],[462,21,462,56,1],[465,25,465,69,1],[468,29,468,51,1],[469,29,469,110,1],[474,29,474,61,1],[475,29,475,114,1],[481,25,481,57,1],[482,25,482,69,1],[484,17,484,18,1],[485,15,485,38,1],[488,13,488,31,1],[489,9,489,10,1],[503,13,503,77,1],[504,13,504,58,1],[508,17,508,23,1],[508,24,508,42,1],[510,26,510,31,1],[510,32,510,34,1],[510,35,510,37,1],[512,21,512,34,1],[512,35,512,50,1],[514,13,514,14,1],[517,13,517,70,1],[517,70,517,86,1],[517,86,517,88,1],[518,22,518,33,1],[518,34,518,36,1],[518,37,518,75,1],[519,17,519,38,1],[522,13,522,70,1],[523,22,523,33,1],[523,34,523,36,1],[523,37,523,75,1],[524,17,524,38,1],[525,9,525,10,1],[540,13,540,55,1],[541,28,541,53,1],[543,13,543,45,1],[550,30,550,41,1],[550,42,550,44,1],[550,45,550,66,1],[552,25,552,71,1],[555,25,555,44,1],[559,25,559,197,1],[561,25,561,101,1],[563,25,563,37,1],[565,29,565,60,1],[567,29,567,36,1],[572,25,572,50,1],[574,29,574,120,1],[577,33,577,119,0],[579,34,579,76,1],[581,33,581,113,0],[583,34,583,94,1],[585,33,585,58,0],[586,33,587,161,0],[588,33,588,57,0],[592,33,592,58,1],[593,33,593,132,1],[599,29,599,109,0],[601,21,601,22,1],[602,17,602,18,1],[603,17,603,59,0],[606,21,606,27,0],[608,17,608,36,1],[614,21,614,46,1],[615,21,615,97,1],[618,17,618,18,1],[626,21,626,99,1],[627,17,627,18,1],[628,17,628,51,1],[630,21,630,38,1],[631,17,631,18,1],[632,17,632,36,0],[634,21,634,75,0],[635,21,635,38,0],[636,21,636,46,0],[637,17,637,18,0],[639,15,639,32,1],[641,13,641,47,1],[643,13,643,35,1],[644,17,644,142,1],[647,13,647,59,1],[648,17,650,50,1],[653,13,655,45,1],[656,9,656,10,1],[681,17,681,81,1],[688,17,688,58,1],[690,9,690,10,1],[706,13,706,73,1],[708,17,708,48,1],[710,17,710,65,1],[712,21,712,293,1],[713,21,713,59,1],[716,17,716,352,0],[724,13,724,59,1],[725,17,725,57,0],[731,17,731,215,1],[734,17,734,111,1],[736,17,736,60,1],[738,21,738,296,0],[739,21,739,75,0],[740,21,740,61,0],[742,17,742,41,1],[747,17,747,58,1],[749,9,749,10,1],[755,13,755,55,0],[756,13,756,53,0],[763,13,763,55,0],[764,13,764,75,0],[771,13,771,55,0],[772,13,772,52,0],[786,13,789,15,1],[791,13,791,48,1],[793,13,793,59,1],[793,60,793,102,0],[801,13,801,100,1],[805,13,805,92,1],[807,17,807,59,0],[808,17,810,71,0],[814,13,821,100,1],[824,13,824,93,1],[826,17,826,59,0],[827,17,827,169,0],[830,13,830,59,1],[830,60,830,102,0],[831,13,831,36,1],[831,37,831,83,0],[836,13,836,33,1],[837,13,837,37,1],[838,13,838,38,1],[839,13,839,34,1],[842,13,842,26,1],[844,17,844,36,1],[846,21,846,52,1],[847,21,847,68,1],[848,21,848,37,1],[851,21,851,71,1],[852,21,852,38,1],[854,25,854,51,1],[856,29,856,203,0],[857,29,857,46,0],[861,29,861,63,1],[867,17,867,30,1],[869,21,869,207,1],[870,21,870,68,1],[871,21,871,133,1],[873,13,873,14,1],[877,13,877,59,1],[877,60,877,102,0],[878,13,878,36,1],[878,37,878,83,0],[879,13,879,27,1],[879,28,879,70,0],[888,13,888,99,1],[890,13,890,26,1],[893,17,893,76,1],[893,77,893,104,1],[894,13,894,14,1],[896,13,896,31,1],[897,9,897,10,1],[902,13,902,71,1],[903,17,903,24,0],[909,13,909,30,1],[910,13,910,41,1],[911,17,911,57,1],[912,13,912,31,1],[916,13,916,40,1],[917,13,917,35,1],[918,17,918,72,1],[923,13,923,26,1],[923,27,923,61,1],[924,22,924,36,1],[924,37,924,39,1],[924,40,924,51,1],[925,17,925,59,1],[926,9,926,10,1]]);
+    </script>
+  </body>
+</html>

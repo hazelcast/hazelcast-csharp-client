@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\TimeSpanExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the &lt;see cref=&quot;TimeSpan&quot;/&gt; struct.
+    /// &lt;/summary&gt;
+    internal static class TimeSpanExtensions
+    {
+        /// &lt;summary&gt;
+        /// The constant -1ms value.
+        /// &lt;/summary&gt;
+        public static TimeSpan MinusOneMillisecond { get; } = TimeSpan.FromMilliseconds(-1);
+
+        /// &lt;summary&gt;
+        /// Gets the value of the current &lt;see cref=&quot;TimeSpan&quot;/&gt; structure expressed in whole milliseconds.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;timespan&quot;&gt;The &lt;see cref=&quot;TimeSpan&quot;/&gt;.&lt;/param&gt;
+        /// &lt;param name=&quot;roundToZero&quot;&gt;Whether it is OK to round a value to zero.&lt;/param&gt;
+        /// &lt;returns&gt;The value of the &lt;paramref name=&quot;timespan&quot;/&gt; structure expressed in whole milliseconds.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If the rounded value is zero, but the non-rounded value is not zero (for instance,
+        /// if &lt;paramref name=&quot;timespan&quot;/&gt; is 0.666ms), the returned value depends on &lt;paramref name=&quot;roundToZero&quot;/&gt;.
+        /// If it is &lt;c&gt;true&lt;/c&gt; then 0 is returned; otherwise, 1 (or -1) is returned, assuming that 0 might have some
+        /// special meaning that should be avoided.&lt;/para&gt;
+        /// &lt;para&gt;If the value is negative, the returned value is -1.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static long RoundedMilliseconds(this TimeSpan timespan, bool roundToZero = true)
+        {
+            var milliseconds = timespan.TotalMilliseconds;
+
+            if (milliseconds == 0) return 0;
+
+            var rounded = (long) milliseconds;
+            if (rounded != 0) return rounded &gt; 0 ? rounded : -1;
+            if (roundToZero) return 0;
+            return milliseconds &gt; 0 ? 1 : -1;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,54,27,58,1],[27,63,27,92,1],[44,13,44,59,1],[46,13,46,35,1],[46,36,46,45,1],[48,13,48,47,1],[49,13,49,30,1],[49,31,49,65,1],[50,13,50,29,1],[50,30,50,39,1],[51,13,51,46,1]]);
+    </script>
+  </body>
+</html>

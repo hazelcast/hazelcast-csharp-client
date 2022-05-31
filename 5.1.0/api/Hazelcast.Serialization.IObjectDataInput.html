@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IObjectDataInput Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IObjectDataInput Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Serialization.IObjectDataInput">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Serialization_IObjectDataInput" data-uid="Hazelcast.Serialization.IObjectDataInput" class="text-break">IObjectDataInput Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Serialization.html">Hazelcast.Serialization</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Provides decoding methods for primitive and array of primitive types reading from the serialized byte array.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IObjectDataInput</code></pre>
+  </div>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_Endianness" data-uid="Hazelcast.Serialization.IObjectDataInput.Endianness" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.Endianness.html#Hazelcast_Serialization_IObjectDataInput_Endianness">Endianness</a>
+        </td>
+        <td class="markdown level1 summary"><p>The configured endianness via <a class="xref" href="Hazelcast.Serialization.SerializationOptions.Endianness.html#Hazelcast_Serialization_SerializationOptions_Endianness">Endianness</a></p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_Read_System_Byte___" data-uid="Hazelcast.Serialization.IObjectDataInput.Read(System.Byte[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.Read.html#Hazelcast_Serialization_IObjectDataInput_Read_System_Byte___">Read(Byte[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads into byte array <code data-dev-comment-type="paramref" class="paramref">bytes</code> as much as possible to fill the provided array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_Read_System_Byte___System_Int32_System_Int32_" data-uid="Hazelcast.Serialization.IObjectDataInput.Read(System.Byte[],System.Int32,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.Read.html#Hazelcast_Serialization_IObjectDataInput_Read_System_Byte___System_Int32_System_Int32_">Read(Byte[], Int32, Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads into byte array <code data-dev-comment-type="paramref" class="paramref">bytes</code> starting from the offset value. As much as count bytes will be written if there is available content.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadBoolean" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadBoolean" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadBoolean.html#Hazelcast_Serialization_IObjectDataInput_ReadBoolean">ReadBoolean()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a bool value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadBooleanArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadBooleanArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadBooleanArray.html#Hazelcast_Serialization_IObjectDataInput_ReadBooleanArray">ReadBooleanArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a bool array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadByte" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadByte" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadByte.html#Hazelcast_Serialization_IObjectDataInput_ReadByte">ReadByte()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return an unsigned byte.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadByteArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadByteArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadByteArray.html#Hazelcast_Serialization_IObjectDataInput_ReadByteArray">ReadByteArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return byte array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadChar" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadChar" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadChar.html#Hazelcast_Serialization_IObjectDataInput_ReadChar">ReadChar()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a char value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadCharArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadCharArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadCharArray.html#Hazelcast_Serialization_IObjectDataInput_ReadCharArray">ReadCharArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a char array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadDouble" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadDouble" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadDouble.html#Hazelcast_Serialization_IObjectDataInput_ReadDouble">ReadDouble()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return double value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadDoubleArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadDoubleArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadDoubleArray.html#Hazelcast_Serialization_IObjectDataInput_ReadDoubleArray">ReadDoubleArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return double array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadFloat" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadFloat" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadFloat.html#Hazelcast_Serialization_IObjectDataInput_ReadFloat">ReadFloat()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a float value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadFloatArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadFloatArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadFloatArray.html#Hazelcast_Serialization_IObjectDataInput_ReadFloatArray">ReadFloatArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a float array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadInt" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadInt" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadInt.html#Hazelcast_Serialization_IObjectDataInput_ReadInt">ReadInt()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Read and return a signed integer value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadIntArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadIntArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadIntArray.html#Hazelcast_Serialization_IObjectDataInput_ReadIntArray">ReadIntArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return an int array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadLong" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadLong" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadLong.html#Hazelcast_Serialization_IObjectDataInput_ReadLong">ReadLong()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a signed long value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadLongArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadLongArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadLongArray.html#Hazelcast_Serialization_IObjectDataInput_ReadLongArray">ReadLongArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return long array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadObject__1" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadObject``1" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadObject.html#Hazelcast_Serialization_IObjectDataInput_ReadObject__1">ReadObject&lt;T&gt;()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return the object</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadSByte" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadSByte" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadSByte.html#Hazelcast_Serialization_IObjectDataInput_ReadSByte">ReadSByte()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a signed byte value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadShort" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadShort" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadShort.html#Hazelcast_Serialization_IObjectDataInput_ReadShort">ReadShort()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a signed short value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadShortArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadShortArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadShortArray.html#Hazelcast_Serialization_IObjectDataInput_ReadShortArray">ReadShortArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a short array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadString" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadString" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadString.html#Hazelcast_Serialization_IObjectDataInput_ReadString">ReadString()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return a UTF-8 encoded string</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadStringArray" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadStringArray" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadStringArray.html#Hazelcast_Serialization_IObjectDataInput_ReadStringArray">ReadStringArray()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads and return utf-8 encoded string array</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_ReadUShort" data-uid="Hazelcast.Serialization.IObjectDataInput.ReadUShort" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.ReadUShort.html#Hazelcast_Serialization_IObjectDataInput_ReadUShort">ReadUShort()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Read and return am unsigned short value</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IObjectDataInput_SkipBytes_System_Int32_" data-uid="Hazelcast.Serialization.IObjectDataInput.SkipBytes(System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IObjectDataInput.SkipBytes.html#Hazelcast_Serialization_IObjectDataInput_SkipBytes_System_Int32_">SkipBytes(Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries Skips <code data-dev-comment-type="paramref" class="paramref">count</code> number of bytes if possible.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\PortableContext.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    internal sealed partial class PortableContext : IPortableContext
+    {
+        private readonly ConcurrentDictionary&lt;int, ClassDefinitionContext&gt; _classDefContextMap =
+            new ConcurrentDictionary&lt;int, ClassDefinitionContext&gt;();
+
+        private readonly SerializationService _serializationService;
+        private readonly int _version;
+
+        internal PortableContext(SerializationService serializationService, int version)
+        {
+            _serializationService = serializationService;
+            _version = version;
+        }
+
+        public int GetClassVersion(int factoryId, int classId)
+        {
+            return GetClassDefContext(factoryId).GetClassVersion(classId);
+        }
+
+        public void SetClassVersion(int factoryId, int classId, int version)
+        {
+            GetClassDefContext(factoryId).SetClassVersion(classId, version);
+        }
+
+        public IClassDefinition LookupClassDefinition(int factoryId, int classId, int version)
+        {
+            return GetClassDefContext(factoryId).Lookup(classId, version);
+        }
+
+        public IClassDefinition LookupClassDefinition(IData data)
+        {
+            if (!data.IsPortable) throw new ArgumentException(&quot;Data is not Portable.&quot;, nameof(data));
+
+            using var input = _serializationService.CreateObjectDataInput(data);
+
+            var factoryId = input.ReadInt();
+            var classId = input.ReadInt();
+            var version = input.ReadInt();
+
+            return LookupClassDefinition(factoryId, classId, version) ??
+                   ReadClassDefinition(input, factoryId, classId, version);
+        }
+
+        public IClassDefinition RegisterClassDefinition(IClassDefinition cd)
+        {
+            return GetClassDefContext(cd.FactoryId).Register(cd);
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        public IClassDefinition LookupOrRegisterClassDefinition(IPortable p)
+        {
+            var portableVersion = PortableVersionHelper.GetVersion(p, _version);
+            var cd = LookupClassDefinition(p.FactoryId, p.ClassId, portableVersion);
+            if (cd == null)
+            {
+                var writer = new ClassDefinitionWriter(this, p.FactoryId, p.ClassId, portableVersion);
+                p.WritePortable(writer);
+                cd = writer.RegisterAndGet();
+            }
+            return cd;
+        }
+
+        public IFieldDefinition GetFieldDefinition(IClassDefinition classDef, string name)
+        {
+            var fd = classDef.GetField(name);
+            if (fd == null)
+            {
+                var fieldNames = name.Split(&#39;.&#39;);
+                if (fieldNames.Length &gt; 1)
+                {
+                    var currentClassDef = classDef;
+                    for (var i = 0; i &lt; fieldNames.Length; i++)
+                    {
+                        name = fieldNames[i];
+                        fd = currentClassDef.GetField(name);
+                        if (i == fieldNames.Length - 1)
+                        {
+                            break;
+                        }
+                        if (fd == null)
+                        {
+                            throw new ArgumentException(&quot;Unknown field: &quot; + name);
+                        }
+                        currentClassDef = LookupClassDefinition(fd.FactoryId, fd.ClassId,
+                            fd.Version);
+                        if (currentClassDef == null)
+                        {
+                            throw new ArgumentException(&quot;Not a registered Portable field: &quot; + fd);
+                        }
+                    }
+                }
+            }
+            return fd;
+        }
+
+        public int GetVersion()
+        {
+            return _version;
+        }
+
+        public Endianness Endianness =&gt; _serializationService.Endianness;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot; /&gt;
+        internal IClassDefinition ReadClassDefinition(ObjectDataInput @in, int factoryId, int classId,
+            int version)
+        {
+            var register = true;
+            var builder = new ClassDefinitionBuilder(factoryId, classId, version);
+            // final position after portable is read
+            @in.ReadInt();
+            // field count
+            var fieldCount = @in.ReadInt();
+            var offset = @in.Position;
+            for (var i = 0; i &lt; fieldCount; i++)
+            {
+                var pos = @in.ReadInt(offset + i* BytesExtensions.SizeOfInt);
+                @in.Position = pos;
+                var len = @in.ReadShort();
+                var chars = new char[len];
+                for (var k = 0; k &lt; len; k++)
+                {
+                    chars[k] = (char) @in.ReadByte();
+                }
+                var type = (FieldType) (@in.ReadByte());
+                var name = new string(chars);
+                var fieldFactoryId = 0;
+                var fieldClassId = 0;
+                int fieldVersion = version;
+                if (type == FieldType.Portable)
+                {
+                    // is null
+                    if (@in.ReadBoolean())
+                    {
+                        register = false;
+                    }
+                    fieldFactoryId = @in.ReadInt();
+                    fieldClassId = @in.ReadInt();
+                    if (register)
+                    {
+                        fieldVersion = @in.ReadInt();
+                        ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
+                    }
+                }
+                else
+                {
+                    if (type == FieldType.PortableArray)
+                    {
+                        var k1 = @in.ReadInt();
+                        fieldFactoryId = @in.ReadInt();
+                        fieldClassId = @in.ReadInt();
+                        if (k1 &gt; 0)
+                        {
+                            var p = @in.ReadInt();
+                            @in.Position = p;
+                            fieldVersion = @in.ReadInt();
+                            ReadClassDefinition(@in, fieldFactoryId, fieldClassId, fieldVersion);
+                        }
+                        else
+                        {
+                            register = false;
+                        }
+                    }
+                }
+                builder.AddField(new FieldDefinition(i, name, type, fieldFactoryId, fieldClassId, fieldVersion));
+            }
+            var classDefinition = builder.Build();
+            if (register)
+            {
+                classDefinition = RegisterClassDefinition(classDefinition);
+            }
+            return classDefinition;
+        }
+
+        private ClassDefinitionContext GetClassDefContext(int factoryId)
+        {
+            return _classDefContextMap.GetOrAdd(factoryId,
+                theFactoryId =&gt; new ClassDefinitionContext(this, theFactoryId));
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,24,69,1],[29,9,29,89,1],[31,13,31,58,1],[32,13,32,32,1],[33,9,33,10,1],[37,13,37,75,1],[42,13,42,77,1],[43,9,43,10,1],[47,13,47,75,1],[52,13,52,34,0],[52,35,52,102,0],[54,13,54,81,0],[56,13,56,45,0],[57,13,57,43,0],[58,13,58,43,0],[60,13,61,76,0],[62,9,62,10,0],[66,13,66,66,1],[72,13,72,81,1],[73,13,73,85,1],[74,13,74,28,1],[76,17,76,103,1],[77,17,77,41,1],[78,17,78,46,1],[80,13,80,23,1],[85,13,85,46,0],[86,13,86,28,0],[88,17,88,50,0],[89,17,89,43,0],[91,21,91,52,0],[92,26,92,35,0],[92,37,92,58,0],[92,60,92,63,0],[94,25,94,46,0],[95,25,95,61,0],[96,25,96,56,0],[100,25,100,40,0],[102,29,102,83,0],[104,25,105,41,0],[106,25,106,53,0],[108,29,108,99,0],[113,13,113,23,0],[118,13,118,29,1],[121,41,121,73,0],[127,13,127,33,1],[128,13,128,83,1],[130,13,130,27,1],[132,13,132,44,1],[133,13,133,39,1],[134,18,134,27,1],[134,29,134,43,1],[134,45,134,48,1],[136,17,136,78,1],[137,17,137,36,1],[138,17,138,43,1],[139,17,139,43,1],[140,22,140,31,1],[140,33,140,40,1],[140,42,140,45,1],[142,21,142,54,1],[144,17,144,57,1],[145,17,145,46,1],[146,17,146,40,1],[147,17,147,38,1],[148,17,148,44,1],[149,17,149,48,1],[152,21,152,43,1],[154,25,154,42,1],[156,21,156,52,1],[157,21,157,50,1],[158,21,158,34,1],[160,25,160,54,1],[161,25,161,94,1],[166,21,166,57,1],[168,25,168,48,1],[169,25,169,56,1],[170,25,170,54,1],[171,25,171,36,1],[173,29,173,51,1],[174,29,174,46,1],[175,29,175,58,1],[176,29,176,98,1],[180,29,180,46,1],[184,17,184,114,1],[186,13,186,51,1],[187,13,187,26,1],[189,17,189,76,1],[191,13,191,36,1],[196,13,197,33,1],[197,33,197,79,1],[197,79,197,81,1]]);
+    </script>
+  </body>
+</html>

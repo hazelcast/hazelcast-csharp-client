@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.ClusterOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Clustering;
+using Hazelcast.Clustering.LoadBalancing;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+using Hazelcast.Events;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Networking;
+
+namespace Hazelcast
+{
+    // beware! the IClusterOptions is internal, and therefore its /// documentation
+    // is NOT inherited = do NOT use &lt;inheritdoc /&gt; here but DO duplicate the docs
+
+    public partial class HazelcastOptions : IClusterOptions // ClusterName, Subscribers
+    {
+        private string _clientNamePrefix;
+
+        /// &lt;summary&gt;
+        /// Gets the default cluster name, which is &lt;c&gt;&quot;dev&quot;&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The default cluster name, which is &lt;c&gt;&quot;dev&quot;&lt;/c&gt;.&lt;/returns&gt;
+        internal const string DefaultClusterName = &quot;dev&quot;;
+
+        /// &lt;summary&gt;
+        /// Gets the default client name prefix, which is &lt;c&gt;&quot;hz.client_&quot;&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The default client name prefix, which is &lt;c&gt;&quot;hz.client_&quot;&lt;/c&gt;.&lt;/returns&gt;
+        internal const string DefaultClientNamePrefix = &quot;hz.client_&quot;;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the cluster.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This must match the name of the cluster that the client is going to connect to.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public string ClusterName { get; set; } = DefaultClusterName;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the name of the client.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is optional. If no client name is specified, a name will be generated.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public string ClientName { get; set; } // null by default
+
+        /// &lt;inheritdoc /&gt;
+        string IClusterOptions.ClientNamePrefix
+        {
+            get =&gt; string.IsNullOrWhiteSpace(_clientNamePrefix) ? DefaultClientNamePrefix : _clientNamePrefix;
+            set =&gt; _clientNamePrefix = value;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        int IClusterOptions.WaitForConnectionMilliseconds { get; set; } = 1_000;
+
+        /// &lt;summary&gt;
+        /// Gets the set of client labels.
+        /// &lt;/summary&gt;
+        public ISet&lt;string&gt; Labels { get; } = new HashSet&lt;string&gt;();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;AuthenticationOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public AuthenticationOptions Authentication { get; } = new AuthenticationOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;SingletonServiceFactory{TService}&quot;/&gt; for the &lt;see cref=&quot;ILoadBalancer&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When set in the configuration file, it is defined as an injected type, for instance:
+        /// &lt;code&gt;
+        /// &quot;loadBalancer&quot;:
+        /// {
+        ///   &quot;typeName&quot;: &quot;My.LoadBalancer&quot;,
+        ///   &quot;args&quot;:
+        ///   {
+        ///     &quot;foo&quot;: 42
+        ///   }
+        /// }
+        /// &lt;/code&gt;
+        /// where &lt;c&gt;typeName&lt;/c&gt; is the name of the type, and &lt;c&gt;args&lt;/c&gt; is an optional dictionary
+        /// of arguments for the type constructor.&lt;/para&gt;
+        /// &lt;para&gt;In addition to custom type names, &lt;c&gt;typeName&lt;/c&gt; can be any of the
+        /// predefined &lt;c&gt;Random&lt;/c&gt;, &lt;c&gt;RoundRobin&lt;/c&gt; or &lt;c&gt;Static&lt;/c&gt; values.&lt;/para&gt;
+        /// &lt;para&gt;The default load balancer is the &lt;see cref=&quot;RoundRobinLoadBalancer&quot;/&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public SingletonServiceFactory&lt;ILoadBalancer&gt; LoadBalancer { get; }
+            = new SingletonServiceFactory&lt;ILoadBalancer&gt; { Creator = () =&gt; new RoundRobinLoadBalancer() };
+
+        [BinderName(&quot;loadBalancer&quot;)]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0051 // Remove unused private members
+        // ReSharper disable once UnusedMember.Local
+        private InjectionOptions LoadBalancerBinder
+#pragma warning restore IDE0051 // Remove unused private members
+        {
+            get =&gt; default;
+            set
+            {
+                var typeName = value.TypeName;
+                if (string.IsNullOrWhiteSpace(typeName))
+                    throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(value));
+
+                LoadBalancer.Creator = typeName.ToUpperInvariant() switch
+                {
+                    &quot;RANDOM&quot; =&gt; () =&gt; new RandomLoadBalancer(),
+                    &quot;ROUNDROBIN&quot; =&gt; () =&gt; new RoundRobinLoadBalancer(),
+                    &quot;STATIC&quot; =&gt; () =&gt; new StaticLoadBalancer(value.Args),
+                    _ =&gt; () =&gt; ServiceFactory.CreateInstance&lt;ILoadBalancer&gt;(value.TypeName, value.Args)
+                };
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;HeartbeatOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public HeartbeatOptions Heartbeat { get; } = new HeartbeatOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;MessagingOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public MessagingOptions Messaging { get; } // initialized in ctor
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;NetworkingOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public NetworkingOptions Networking { get; } // initialized in ctor
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;EventsOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public EventsOptions Events { get; } = new EventsOptions();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[53,37,53,41,1],[53,42,53,46,1],[53,51,53,69,1],[53,51,53,69,1],[61,36,61,40,1],[61,41,61,45,1],[66,20,66,110,1],[67,20,67,45,1],[71,61,71,65,0],[71,66,71,70,0],[71,75,71,80,1],[71,75,71,80,1],[76,38,76,42,1],[76,47,76,68,1],[76,47,76,68,1],[81,55,81,59,1],[81,64,81,91,1],[81,64,81,91,1],[105,70,105,74,1],[106,15,106,76,1],[106,76,106,104,0],[106,104,106,106,1],[106,15,106,76,1],[106,76,106,104,1],[106,104,106,106,1],[115,20,115,27,1],[118,17,118,47,1],[119,17,119,57,1],[120,21,120,95,0],[122,17,124,33,1],[124,33,124,39,1],[124,39,124,63,1],[124,63,125,37,1],[125,37,125,43,1],[125,43,125,71,1],[125,71,126,33,1],[126,33,126,39,0],[126,39,126,73,0],[126,73,127,26,1],[127,26,127,32,1],[127,32,127,104,1],[127,104,128,19,1],[129,13,129,14,1],[135,45,135,49,1],[135,54,135,76,1],[135,54,135,76,1],[140,45,140,49,1],[145,47,145,51,1],[150,39,150,43,1],[150,48,150,67,1],[150,48,150,67,1]]);
+    </script>
+  </body>
+</html>

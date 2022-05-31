@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\FencedLock.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.DistributedObjects;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Implementation of &lt;see cref=&quot;IFencedLock&quot;/&gt;
+    /// &lt;/summary&gt;
+    internal partial class FencedLock : CPDistributedObjectBase, IFencedLock
+    {
+        private readonly Dictionary&lt;long, LockState&gt; _locks = new Dictionary&lt;long, LockState&gt;();
+        private readonly object _locksMutex = new object();
+
+        private readonly CPSessionManager _cpSessionManager;
+        private readonly CPGroupId _groupId;
+        private readonly string _fullName;
+        private int _destroyed;
+        public const long InvalidFence = 0;
+
+        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) 
+            : base(ServiceNames.FencedLock, objectName, groupId, cluster)
+        {
+            _fullName = fullName; // TODO: this should be a base class property
+            _groupId = groupId;
+            _cpSessionManager = subsystemSession;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        ICPGroupId ICPDistributedObject.GroupId =&gt; _groupId;
+
+        /// &lt;inheritdoc /&gt;
+        long IFencedLock.InvalidFence =&gt; InvalidFence;
+
+        #region LockState
+
+        private class LockState
+        {
+            public LockState(long contextId, long sessionId)
+            {
+                ContextId = contextId;
+                SessionId = sessionId;
+            }
+
+            public long ContextId { get; }
+
+            public long SessionId { get; }
+
+            public int Count { get; set; }
+        }
+
+        // gets the LockState associated with a contextId
+        // if no LockState was associated with the contextId, create a new one
+        // otherwise, ensure that the sessionIds match
+        // and, if they don&#39;t, remove the LockState and throw (optionally release the session)
+        //
+        // once a LockState has been returned by GetOrCreateLockState,
+        // it should either be entered, exited, collected or removed
+        private LockState GetOrCreateLockState(long contextId, long sessionId, bool releaseSession = false, bool acceptNoSession = false)
+        {
+            lock (_locksMutex)
+            {
+                if (_locks.TryGetValue(contextId, out var lockState))
+                {
+                    if (lockState.SessionId != sessionId) // includes sessionId being CPSessionManager.NoSessionId
+                    {
+                        _locks.Remove(contextId);
+                        if (releaseSession) _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        throw new LockOwnershipLostException($&quot;Context {contextId} lost lock {_fullName} because the associated session {lockState.SessionId} was closed.&quot;);
+                    }
+                }
+                else if (sessionId == CPSessionManager.NoSessionId)
+                {
+                    if (acceptNoSession)
+                    {
+                        lockState = new LockState(contextId, sessionId);
+                    }
+                    else
+                    {
+                        throw new SynchronizationLockException($&quot;Context {contextId} does not own lock {_fullName}.&quot;); // note: Java throws new IllegalMonitorStateException
+                    }
+                }
+                else
+                {
+                    lockState = _locks[contextId] = new LockState(contextId, sessionId);
+                }
+
+                return lockState;
+            }
+        }
+
+        // removes a LockState entirely, because it is not valid anymore
+        // so if it is actually removed, with a count &gt; 0, throw
+        private void RemoveLock(LockState lockState)
+        {
+            lock (_locksMutex)
+            {
+                if (_locks.TryGetValue(lockState.ContextId, out var ls) &amp;&amp; lockState == ls)
+                {
+                    _locks.Remove(lockState.ContextId);
+                    if (lockState.Count &gt; 0)
+                        throw new LockOwnershipLostException($&quot;Context {lockState.ContextId} lost lock {_fullName} because the associated session {lockState.SessionId} was closed.&quot;);
+                }
+            }
+        }
+
+        // enters a lock = increments the reference count of its LockState
+        // if the count becomes zero, removes the LockState
+        // (due to concurrency, we may ExitLock following an unlock, before EnterLock following a lock,
+        // and then the count would go 0 -&gt; -1 on ExitLock -&gt; 0 on EnterLock, so we have to test for
+        // zero here too and not only in ExitLock)
+        private void EnterLock(LockState lockState)
+        {
+            lock (_locksMutex)
+            {
+                lockState.Count++;
+                if (lockState.Count == 0 &amp;&amp; _locks.TryGetValue(lockState.ContextId, out var ls) &amp;&amp; lockState == ls)
+                    _locks.Remove(lockState.ContextId);
+            }
+        }
+
+        // exits a lock = decrements the reference count of its LockState
+        // if the count becomes zero, removes the LockState
+        private void ExitLock(LockState lockState)
+        {
+            lock (_locksMutex)
+            {
+                lockState.Count--;
+                if (lockState.Count == 0 &amp;&amp; _locks.TryGetValue(lockState.ContextId, out var ls) &amp;&amp; lockState == ls)
+                    _locks.Remove(lockState.ContextId);
+            }
+        }
+
+        // collects a lock = removes its LockState if the count is zero
+        private void CollectLock(LockState lockState)
+        {
+            lock (_locksMutex)
+            {
+                if (lockState.Count == 0 &amp;&amp; _locks.TryGetValue(lockState.ContextId, out var ls) &amp;&amp; lockState == ls)
+                    _locks.Remove(lockState.ContextId);
+            }
+        }
+
+        #endregion
+
+        #region IFencedLock Methods
+
+        // Java has a threadId -&gt; sessionId dictionary and code is inherently thread-safe since
+        // it is threadId-based. If it gets the sessionId associated with a threadId, it knows
+        // that it will not change since only the current thread can change it.
+        //
+        // C# is not threadId-based but contextId-based and therefore unsafe, since multiple tasks
+        // can run with the same contextId at the same time. If it gets the sessionId associated
+        // with a contextId, it cannot assume that it will not change, since another task with
+        // the same context could be running in parallel.
+        //
+        // We cannot simply serialize FencedLock methods as a blocked LockAsync call could then
+        // block a TryLockAsync call - which should instead return immediately - in other words
+        // we cannot put an exclusive lock around cluster-side operations - thus, we have to
+        // leave with race conditions and try our best to mitigate them.
+
+        /// &lt;inheritdoc/&gt;  
+        public async Task&lt;long&gt; GetFenceAsync(LockContext lockContext)
+        {
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+
+            var lockState = GetOrCreateLockState(contextId, sessionId); // note: handles sessionId being NoSessionId
+
+            // if count is zero then we cannot possibly get a fence
+            if (lockState.Count == 0)
+            {
+                CollectLock(lockState);
+                throw new SynchronizationLockException($&quot;Context {contextId} does not own lock {_fullName}.&quot;);
+            }
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            // we *cannot* trust the returned value (lockedByCurrent) for any LockState-related
+            // operations, since another task may lock/unlock anytime, so lockedByCurrent could
+            // be false and yet we *already* are locked by current. all we can do is collect
+            // the LockState.
+            CollectLock(lockState);
+
+            if (lockedByCurrent) return ownership.Fence;
+
+            // now it becomes tricky
+            // server says we do not own the lock, and what shall we do?
+            // see notes in IsLockedAsync for a complete discussion,
+            // there is nothing we can do about lockState
+
+            // throw for this call
+            throw new SynchronizationLockException($&quot;Context {contextId} does not own lock {_fullName}.&quot;);
+        }
+
+        /// &lt;inheritdoc/&gt;  
+        public async Task&lt;int&gt; GetLockCountAsync(LockContext lockContext)
+        {
+            // the original Java code does some sanity-checking on this operation but
+            // due to race conditions linked to contexts, we totally cannot do it.
+            //
+            // the lockContext parameter is kept for consistency so all IFencedLock
+            // methods require a LockContext - but it is pointless here and not used.
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            return ownership.LockCount;
+
+            /*
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+            var lockState = GetOrCreateLockState(contextId, sessionId); // note: handles sessionId being NoSessionId
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+            CollectLock(lockState);
+
+            if (lockedByCurrent)
+            {
+                // we cannot make any decision here!
+            }
+
+            return ownership.LockCount;
+            */
+        }
+
+        /// &lt;inheritdoc/&gt;  
+        public async Task&lt;bool&gt; IsLockedAsync(LockContext lockContext)
+        {
+            // the original Java code does some sanity-checking on this operation but
+            // due to race conditions linked to contexts, we totally cannot do it.
+            //
+            // the lockContext parameter is kept for consistency so all IFencedLock
+            // methods require a LockContext - but it is pointless here and not used.
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            return ownership.Locked;
+
+            /*
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+
+            VerifyNoLockOrValidSession(contextId, sessionId, false);
+
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+            CollectLock(lockState);
+
+            if (lockedByCurrent)
+            {
+                // we cannot make any decision here!
+            }
+
+            return ownership.Locked;
+            */
+        }
+
+        /// &lt;inheritdoc/&gt;        
+        public async Task&lt;bool&gt; IsLockedByContextAsync(LockContext lockContext)
+        {
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+
+            var lockState = GetOrCreateLockState(contextId, sessionId, acceptNoSession: true);
+            if (sessionId == CPSessionManager.NoSessionId) return false;
+
+            var count0 = lockState.Count;
+            var ownership = await RequestLockOwnershipStateAsync().CfAwait();
+            var lockedByCurrent = ownership.LockedBy(contextId, sessionId);
+
+            // we *cannot* trust the returned value (lockedByCurrent) for any LockState-related
+            // operations, since another task may lock/unlock anytime, so lockedByCurrent could
+            // be false and yet we *already* are locked by current. all we can do is collect
+            // the LockState.
+            CollectLock(lockState);
+
+            if (!lockedByCurrent)
+            {
+                // now it becomes tricky
+                //
+                // Java can immediately assume that if we think we are locked, we have lost
+                // the lock, and we must throw + clear our internal structures. .NET is
+                // different due to contexts vs. threads.
+                //
+                // and, we cannot prevent the race conditions, because we would need to block
+                // on locks, and locking can block for a long time, so it&#39;s all not good.
+                //
+                // if current lockState.Count is zero, then we don&#39;t think we own the lock, so
+                // everything is all right. on the other hand, if lockState.Count is &gt;0, then
+                // we think we own the lock. but, due to concurrency, maybe the current context
+                // acquired the lock *after* we RequestLockOwnershipStateAsync and everything
+                // is actually all right too.
+                //
+                // using the following heuristics: if count is now &gt;0 and it was zero *before*
+                // RequestLockOwnershipStateAsync, then probably the lock was acquired in the
+                // meantime and things are ok - on the other hand if it was &gt;0 before, then we
+                // can conclude that something is wrong.
+                //
+                // still, consider the following sequence:
+                // - count &quot;before&quot; is 1
+                // - lock is unlocked
+                // - we RequestLockOwnershipStateAsync and lockedByCurrent is false
+                // - locked is locked
+                // - count &quot;after&quot; is 1
+                //
+                // yet we still own the lock - ok, at the time of testing, we had temporarily
+                // lost it, so it&#39;s OK to throw, but we CANNOT make a decision for lockState
+                // as, in this example, it is perfectly valid. we simply don&#39;t know.
+                //
+                // so we have to leave it unchanged. if we actually lost the lock, that HAS
+                // to be a session issue, so a later call to any method will cause an
+                // exception to be thrown in GetOrCreateLockState - compared to Java, we may
+                // throw more exceptions, or throw later.
+
+                if (lockState.Count &gt; 0 &amp;&amp; count0 &gt; 0)
+                    throw new LockOwnershipLostException($&quot;Context {contextId} lost lock {_fullName} because the associated session {lockState.SessionId} was closed.&quot;);
+            }
+
+            return lockedByCurrent;
+        }
+
+        /// &lt;inheritdoc/&gt;        
+        public async Task&lt;long&gt; LockAndGetFenceAsync(LockContext lockContext)
+        {
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
+
+            while (true)
+            {
+                var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
+                var lockState = GetOrCreateLockState(contextId, sessionId, true);
+
+                try
+                {
+                    // go to the server to lock - if we get a valid fence, return
+                    var fence = await RequestLockAsync(sessionId, contextId, invocationId).CfAwait();
+                    if (fence != InvalidFence)
+                    {
+                        EnterLock(lockState);
+                        return fence;
+                    }
+
+                    // going to be caught &amp; rethrown below &amp; it will release the session &amp; collect the lock
+                    throw new LockAcquireLimitReachedException($&quot;Lock[{_fullName}] re-entrant lock limit has been reached.&quot;);
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
+                {
+                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                    RemoveLock(lockState);
+                    // loop and try again
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    CollectLock(lockState);
+                    throw; // note: Java throws new IllegalMonitorStateException
+                }
+                catch
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    CollectLock(lockState);
+                    throw;
+                }
+            }
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public Task LockAsync(LockContext lockContext)
+        {
+            return LockAndGetFenceAsync(lockContext);
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public Task&lt;long&gt; TryLockAndGetFenceAsync(LockContext lockContext)
+        {
+            return TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0));
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public async Task&lt;long&gt; TryLockAndGetFenceAsync(LockContext lockContext, TimeSpan timeout)
+        {
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
+
+            var timeoutMilliseconds = (long) Math.Round(Math.Max(0, timeout.TotalMilliseconds));
+            var start = Clock.Milliseconds;
+
+            while (true)
+            {
+                var sessionId = await _cpSessionManager.AcquireSessionAsync(CPGroupId).CfAwait();
+                var lockState = GetOrCreateLockState(contextId, sessionId, true);
+
+                try
+                {
+                    var fence = await RequestTryLockAsync(sessionId, contextId, invocationId, timeoutMilliseconds).CfAwait();
+                    if (fence != InvalidFence)
+                    {
+                        EnterLock(lockState);
+                    }
+                    else
+                    {
+                        _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                        CollectLock(lockState);
+                    }
+
+                    return fence;
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
+                {
+                    _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                    RemoveLock(lockState);
+                    var elapsed = Clock.Milliseconds - start;
+                    if (elapsed &gt; timeoutMilliseconds) return InvalidFence;
+                    // else loop and try again
+                }
+                catch (RemoteException e) when (e.Error == RemoteError.WaitKeyCancelledException)
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    CollectLock(lockState);
+                    return InvalidFence;
+                }
+                catch
+                {
+                    _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+                    CollectLock(lockState);
+                    throw;
+                }
+            }
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public async Task&lt;bool&gt; TryLockAsync(LockContext lockContext, TimeSpan timeout)
+        {
+            var fence = await TryLockAndGetFenceAsync(lockContext, timeout).CfAwait();
+            return fence != InvalidFence;
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public async Task&lt;bool&gt; TryLockAsync(LockContext lockContext)
+        {
+            var fence = await TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0)).CfAwait();
+            return fence != InvalidFence;
+        }
+
+        /// &lt;inheritdoc/&gt; 
+        public async Task UnlockAsync(LockContext lockContext)
+        {
+            if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
+
+            var contextId = lockContext.Id; // (equivalent to Java thread identifier)
+            var sessionId = _cpSessionManager.GetSessionId(CPGroupId);
+
+            var lockState = GetOrCreateLockState(contextId, sessionId); // note: handles sessionId being NoSessionId
+
+            try
+            {
+                var invocationId = Guid.NewGuid(); // required by server, to make the call idempotent
+                _ = await RequestUnlockAsync(sessionId, contextId, invocationId).CfAwait();
+
+                // note: unlocking when not-locked causes a RemoteException w/ Error IllegalMonitorState
+                // and message &quot;Current thread is not owner of the lock!&quot; so we *know* that if we go past
+                // the RequestUnlockAsync call, then we *have* effectively decreased the lock count by 1.
+
+                // we *cannot* trust the returned value (stillLockedByCurrentContext) since another task
+                // may lock/unlock anytime, all we can do is decrement the reference count, which will
+                // remove the state when count reaches zero.
+                // it *may* be that the lockState has been removed already, but it does not really matter.
+                ExitLock(lockState);
+
+                // release session
+                _cpSessionManager.ReleaseSession(CPGroupId, sessionId);
+            }
+            catch (RemoteException e) when (e.Error == RemoteError.SessionExpiredException)
+            {
+                _cpSessionManager.InvalidateSession(CPGroupId, sessionId);
+                RemoveLock(lockState);
+                throw;
+            }
+            catch (RemoteException e) when (e.Error == RemoteError.IllegalMonitorState)
+            {
+                RemoveLock(lockState);
+                throw;
+            }
+        }
+
+        #endregion
+
+        public override async ValueTask DestroyAsync()
+        {
+            if (!_destroyed.InterlockedZeroToOne()) return;
+
+            await RequestDestroyAsync().CfAwait();
+
+            // note: still needs to be disposed to clear the _contextLocker
+        }
+
+        internal class LockOwnershipState
+        {
+            public long Fence { get; }
+
+            private long SessionId { get; }
+
+            private long ThreadId { get; }
+
+            public int LockCount { get; }
+
+            public LockOwnershipState(long fence, long sessionId, long threadId, int lockCount)
+            {
+                Fence = fence;
+                SessionId = sessionId;
+                ThreadId = threadId;
+                LockCount = lockCount;
+            }
+
+            public bool Locked =&gt; FencedLock.InvalidFence != Fence;
+
+            public bool LockedBy(long threadId, long sessionId) =&gt; Locked &amp;&amp; SessionId == sessionId &amp;&amp; ThreadId == threadId;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,97,1],[34,9,34,60,1],[43,15,43,74,1],[45,13,45,34,1],[46,13,46,32,1],[47,13,47,50,1],[48,9,48,10,1],[51,52,51,60,1],[54,42,54,54,0],[60,13,60,61,1],[62,17,62,39,1],[63,17,63,39,1],[64,13,64,14,1],[66,37,66,41,1],[68,37,68,41,1],[70,32,70,36,1],[70,37,70,41,1],[82,13,82,31,1],[84,17,84,70,1],[86,21,86,58,1],[88,25,88,50,1],[89,25,89,44,1],[89,45,89,100,1],[90,25,90,173,1],[93,22,93,68,1],[95,21,95,41,1],[97,25,97,73,1],[101,25,101,119,1],[106,21,106,89,1],[109,17,109,34,1],[111,9,111,10,1],[117,13,117,31,1],[119,17,119,92,1],[121,21,121,56,1],[122,21,122,45,1],[123,25,123,183,0],[125,13,125,14,1],[126,9,126,10,1],[135,13,135,31,1],[137,17,137,35,1],[138,17,138,116,1],[139,21,139,56,0],[140,13,140,14,1],[141,9,141,10,1],[147,13,147,31,1],[149,17,149,35,1],[150,17,150,116,1],[151,21,151,56,1],[152,13,152,14,1],[153,9,153,10,1],[158,13,158,31,1],[160,17,160,116,1],[161,21,161,56,1],[162,13,162,14,1],[163,9,163,10,1],[186,13,186,37,1],[186,38,186,91,0],[188,13,188,44,1],[189,13,189,71,1],[191,13,191,72,1],[194,13,194,38,1],[196,17,196,40,1],[197,17,197,111,1],[200,13,200,78,1],[201,13,201,76,1],[207,13,207,36,1],[209,13,209,33,1],[209,34,209,57,1],[217,13,217,107,0],[218,9,218,10,1],[229,13,229,78,1],[230,13,230,40,1],[248,9,248,10,1],[259,13,259,78,1],[260,13,260,37,1],[279,9,279,10,1],[284,13,284,37,1],[284,38,284,91,0],[286,13,286,44,1],[287,13,287,71,1],[289,13,289,95,1],[290,13,290,59,1],[290,60,290,73,1],[292,13,292,42,1],[293,13,293,78,1],[294,13,294,76,1],[300,13,300,36,1],[302,13,302,34,1],[340,17,340,55,1],[341,21,341,169,0],[344,13,344,36,1],[345,9,345,10,1],[350,13,350,37,1],[350,38,350,91,0],[352,13,352,44,1],[353,13,353,47,1],[355,13,355,25,0],[357,17,357,98,1],[358,17,358,82,1],[363,21,363,102,1],[364,21,364,47,1],[366,25,366,46,1],[367,25,367,38,1],[371,21,371,126,1],[373,43,373,96,1],[375,21,375,79,0],[376,21,376,43,0],[378,17,378,18,0],[379,43,379,98,1],[381,21,381,76,0],[382,21,382,44,0],[383,21,383,27,0],[385,17,385,22,1],[387,21,387,76,1],[388,21,388,44,1],[389,21,389,27,1],[391,13,391,14,0],[392,9,392,10,1],[397,13,397,54,1],[403,13,403,87,1],[409,13,409,37,1],[409,38,409,91,0],[411,13,411,44,1],[412,13,412,47,1],[414,13,414,97,1],[415,13,415,44,1],[417,13,417,25,0],[419,17,419,98,1],[420,17,420,82,1],[424,21,424,126,1],[425,21,425,47,1],[427,25,427,46,1],[431,25,431,80,1],[432,25,432,48,1],[435,21,435,34,1],[437,43,437,96,0],[439,21,439,79,0],[440,21,440,43,0],[441,21,441,62,0],[442,21,442,55,0],[442,56,442,76,0],[444,17,444,18,0],[445,43,445,98,0],[447,21,447,76,0],[448,21,448,44,0],[449,21,449,41,0],[451,17,451,22,0],[453,21,453,76,0],[454,21,454,44,0],[455,21,455,27,0],[457,13,457,14,0],[458,9,458,10,1],[463,13,463,87,1],[464,13,464,42,1],[465,9,465,10,1],[470,13,470,108,1],[471,13,471,42,1],[472,9,472,10,1],[477,13,477,37,1],[477,38,477,91,0],[479,13,479,44,1],[480,13,480,71,1],[482,13,482,72,1],[486,17,486,51,1],[487,17,487,92,1],[497,17,497,37,1],[500,17,500,72,1],[501,13,501,14,1],[502,39,502,92,1],[504,17,504,75,0],[505,17,505,39,0],[506,17,506,23,0],[508,39,508,88,1],[510,17,510,39,1],[511,17,511,23,1],[513,9,513,10,1],[519,13,519,52,1],[519,53,519,60,0],[521,13,521,51,1],[524,9,524,10,1],[528,33,528,37,1],[530,38,530,42,1],[532,37,532,41,1],[534,36,534,40,1],[536,13,536,96,1],[538,17,538,31,1],[539,17,539,39,1],[540,17,540,37,1],[541,17,541,39,1],[542,13,542,14,1],[544,35,544,67,1],[546,68,546,124,1]]);
+    </script>
+  </body>
+</html>

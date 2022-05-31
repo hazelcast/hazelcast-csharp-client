@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\TaskParallelExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    internal static class TaskParallelExtensions
+    {
+        /// &lt;summary&gt;
+        /// Loop on &lt;see cref=&quot;IEnumerable&lt;T&gt;&quot;/&gt; at parallel async. The method does not observe exceptions.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;&lt;/typeparam&gt;
+        /// &lt;param name=&quot;enumerable&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;action&quot;&gt;The action will be run for each element&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;parallelTask&quot;&gt;Number of tasks at parallel&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public static async Task ParallelForEachAsync&lt;T&gt;(this IEnumerable&lt;T&gt; enumerable, Func&lt;T, CancellationToken, Task&gt; action, CancellationToken cancellationToken, int parallelTask = 4)
+        {
+            var tasks = new List&lt;Task&gt;();
+
+            var enumerator = enumerable.GetEnumerator();
+
+            void StartCurrent()
+            {
+                var currentTask = action?.Invoke(enumerator.Current, cancellationToken);
+
+                if (currentTask != default)
+                    tasks.Add(currentTask);
+            }
+
+            //Start tasks as much as possible.
+            while (tasks.Count &lt; parallelTask &amp;&amp; enumerator.MoveNext() &amp;&amp; !cancellationToken.IsCancellationRequested)
+                StartCurrent();
+
+            // when a tasks completes, try to add next one.
+            while (tasks.Count &gt; 0)
+            {
+                var completed = await Task.WhenAny(tasks).CfAwait();
+                tasks.Remove(completed);
+
+                if (enumerator.MoveNext() &amp;&amp; !cancellationToken.IsCancellationRequested)
+                    StartCurrent();
+            }
+        }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,13,36,42,1],[38,13,38,57,1],[42,17,42,89,1],[44,17,44,44,1],[45,21,45,44,1],[46,13,46,14,1],[49,13,49,118,1],[50,17,50,32,1],[53,13,53,36,1],[55,17,55,69,1],[56,17,56,41,1],[58,17,58,89,1],[59,21,59,36,0],[61,9,61,10,1]]);
+    </script>
+  </body>
+</html>

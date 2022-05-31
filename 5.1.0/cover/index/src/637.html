@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HTopic.Events.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HTopic&lt;T&gt; // Events
+    {
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;Guid&gt; SubscribeAsync(Action&lt;TopicEventHandlers&lt;T&gt;&gt; events, object state = null)
+        {
+            if (events == null) throw new ArgumentNullException(nameof(events));
+
+            var handlers = new TopicEventHandlers&lt;T&gt;();
+            events(handlers);
+
+            var subscription = new ClusterSubscription(
+                TopicAddMessageListenerCodec.EncodeRequest(Name, Cluster.IsSmartRouting),
+                ReadSubscribeResponse,
+                CreateUnsubscribeRequest,
+                ReadUnsubscribeResponse,
+                HandleEventAsync,
+                new SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;(Name, handlers, state));
+
+            await Cluster.Events.AddSubscriptionAsync(subscription).CfAwait();
+
+            return subscription.Id;
+        }
+
+        private ValueTask HandleEventAsync(ClientMessage eventMessage, object state)
+        {
+            return TopicAddMessageListenerCodec.HandleEventAsync(eventMessage, HandleTopicEventAsync, state, LoggerFactory);
+        }
+
+        private async ValueTask HandleTopicEventAsync(IData itemData, long publishTime, Guid memberId, object state)
+        {
+            var sstate = ToSafeState&lt;SubscriptionState&lt;TopicEventHandlers&lt;T&gt;&gt;&gt;(state);
+
+            var member = Cluster.Members.GetMember(memberId);
+
+            // that one is not lazy...
+            var item = ToObject&lt;T&gt;(itemData);
+
+            // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+            foreach (var handler in sstate.Handlers)
+            {
+                // there is only one event type...
+                await handler.HandleAsync(this, member, publishTime, item, state).CfAwait();
+            }
+        }
+
+        private ClientMessage CreateUnsubscribeRequest(Guid subscriptionId, object state)
+            =&gt; TopicRemoveMessageListenerCodec.EncodeRequest(Name, subscriptionId);
+
+        private static Guid ReadSubscribeResponse(ClientMessage responseMessage, object state)
+            =&gt; TopicAddMessageListenerCodec.DecodeResponse(responseMessage).Response;
+
+        private static bool ReadUnsubscribeResponse(ClientMessage message, object state)
+            =&gt; TopicRemoveMessageListenerCodec.DecodeResponse(message).Response;
+
+        public ValueTask&lt;bool&gt; UnsubscribeAsync(Guid subscriptionId)
+            =&gt; UnsubscribeBaseAsync(subscriptionId);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,13,30,32,1],[30,33,30,81,0],[32,13,32,56,1],[33,13,33,30,1],[35,13,41,86,1],[43,13,43,79,1],[45,13,45,36,1],[46,9,46,10,1],[50,13,50,125,1],[55,13,55,87,1],[57,13,57,62,1],[60,13,60,46,1],[63,22,63,33,1],[63,34,63,36,1],[63,37,63,52,1],[66,17,66,93,1],[68,9,68,10,1],[71,16,71,83,1],[74,16,74,85,1],[77,16,77,80,1],[80,16,80,52,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ExceptionExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics;
+using System.Linq.Expressions;
+using System.Reflection;
+using System.Runtime.ExceptionServices;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for exceptions.
+    /// &lt;/summary&gt;
+#if NET6_0_OR_GREATER
+    [StackTraceHidden]
+#endif
+    internal static class ExceptionExtensions
+    {
+        /// &lt;summary&gt;Stores the current stack trace into the specified &lt;typeparamref name=&quot;TException&quot;/&gt; exception instance.&lt;/summary&gt;
+        /// &lt;typeparam name=&quot;TException&quot;&gt;The type of the exception.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;The unthrown &lt;typeparamref name=&quot;TException&quot;/&gt; exception.&lt;/param&gt;
+        /// &lt;returns&gt;The &lt;paramref name=&quot;exception&quot;/&gt; exception instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Use this method to store a stack trace into an exception without having to throw it.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static TException SetCurrentStackTrace&lt;TException&gt;(this TException exception)
+            where TException : Exception
+        {
+            // starting with .NET 5, ExceptionDispatchInfo can do what we want - but the StackTraceHidden
+            // attribute is internal in .NET 5 so we cannot hide this SetCurrentStackTrace extension
+            // method - therefore we use the new ExceptionDispatchInfo for .NET 6 and greater only
+            //
+            // for everything else, we have to force the stack trace through reflection, and to manually
+            // remove the first line -  which will be this SetCurrentStackTrace extension.
+
+#if NET6_0_OR_GREATER
+            exception = (TException) ExceptionDispatchInfo.SetCurrentStackTrace(exception);
+#else
+            var stackTraceString = new StackTrace(fNeedFileInfo: true).ToString();
+            var pos = stackTraceString.IndexOf(&#39;\n&#39;);
+            if (pos &gt; 0) stackTraceString = stackTraceString.Substring(pos + 1);
+            SetStackTraceField(exception, stackTraceString);
+#endif
+            return exception;
+        }
+
+        // compiles a dynamic method that sets the Exception._stackTraceString internal field via reflection
+        private static readonly Action&lt;Exception, string&gt; SetStackTraceField = new Func&lt;Action&lt;Exception, string&gt;&gt;(() =&gt;
+        {
+            var target = Expression.Parameter(typeof(Exception));
+            var stackTraceString = Expression.Parameter(typeof (string));
+            var stackTraceStringField = typeof(Exception).GetField(&quot;_stackTraceString&quot;, BindingFlags.NonPublic | BindingFlags.Instance);
+            var assign = Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
+            return Expression.Lambda&lt;Action&lt;Exception, string&gt;&gt;(assign, target, stackTraceString).Compile();
+        })();
+
+        /// &lt;summary&gt;
+        /// Captures an exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;e&quot;&gt;The exception to capture.&lt;/param&gt;
+        /// &lt;returns&gt;The new &lt;see cref=&quot;ExceptionDispatchInfo&quot;/&gt; which captures the exception.&lt;/returns&gt;
+        public static ExceptionDispatchInfo Capture(this Exception e)
+            =&gt; ExceptionDispatchInfo.Capture(e);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[49,13,49,92,1],[56,13,56,30,1],[60,9,62,13,0],[62,13,62,66,0],[62,66,63,13,0],[63,13,63,74,0],[63,74,64,13,0],[64,13,64,137,0],[64,137,65,13,0],[65,13,65,111,0],[65,111,66,13,0],[66,13,66,109,0],[66,109,67,14,0],[75,16,75,48,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheEntry.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.NearCaching
+{
+    /// &lt;summary&gt;
+    /// Represents an entry in the &lt;see cref=&quot;NearCache&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class NearCacheEntry
+    {
+        private readonly long _creationTime;
+        private readonly long _expirationTime;
+
+        private long _sequence;
+        private long _hits;
+
+        private long _lastHitTime;
+        private volatile int _partitionId;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheEntry&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueObject&quot;&gt;The value object.&lt;/param&gt;
+        /// &lt;param name=&quot;timeToLive&quot;&gt;The time the entry lives, before expiring.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;paramref name=&quot;valueObject&quot;/&gt; can be either &lt;see cref=&quot;IData&quot;/&gt; or
+        /// TValue, depending on the configured &lt;see cref=&quot;InMemoryFormat&quot;/&gt; of the cache.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal NearCacheEntry(IData keyData, object valueObject, long timeToLive)
+        {
+            KeyData = keyData;
+            ValueObject = valueObject;
+            _creationTime = Clock.Milliseconds;
+            _expirationTime = timeToLive &gt; 0 ? _creationTime + timeToLive : Clock.Never;
+            _lastHitTime = Clock.Never;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the unique identifier of the entry.
+        /// &lt;/summary&gt;
+        public Guid Guid { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets the key data of the entry.
+        /// &lt;/summary&gt;
+        public IData KeyData { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the value object of the entry.
+        /// &lt;/summary&gt;
+        public object ValueObject { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the number of time the entry has been hit.
+        /// &lt;/summary&gt;
+        public long Hits =&gt; Interlocked.Read(ref _hits);
+
+        /// &lt;summary&gt;
+        /// Gets or sets the partition identifier corresponding to the entry key.
+        /// &lt;/summary&gt;
+        public int PartitionId
+        {
+            get =&gt; _partitionId;
+            set =&gt; _partitionId = value;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the sequence value of the entry.
+        /// &lt;/summary&gt;
+        public long Sequence
+        {
+            get =&gt; Interlocked.Read(ref _sequence);
+            set =&gt; Interlocked.Exchange(ref _sequence, value);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the time when the entry was last hit.
+        /// &lt;/summary&gt;
+        internal long LastHitTime =&gt; Interlocked.Read(ref _lastHitTime);
+
+        /// &lt;summary&gt;
+        /// Notifies the record that it has been hit.
+        /// &lt;/summary&gt;
+        internal void NotifyHit()
+        {
+            Interlocked.Increment(ref _hits);
+            Interlocked.Exchange(ref _lastHitTime, Clock.Milliseconds);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the record is expired at a given time.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;time&quot;&gt;A time.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the record is expired at the specified time; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        internal bool IsExpiredAt(long time)
+        {
+            return _expirationTime &gt; Clock.Never &amp;&amp; _expirationTime &lt;= time;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the record is idle at a given time.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;idleMilliseconds&quot;&gt;The period of time a record can remain un-hit before becoming idle.&lt;/param&gt;
+        /// &lt;param name=&quot;time&quot;&gt;A time.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the record is idle at the specified time; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;A record is idle if it has not been hit since &lt;paramref name=&quot;idleMilliseconds&quot;/&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal bool IsIdleAt(long idleMilliseconds, long time)
+        {
+            if (idleMilliseconds &lt;= 0) return false;
+
+            var lastAccessTime = Interlocked.Read(ref _lastHitTime);
+
+            return lastAccessTime &gt; Clock.Never
+                ? lastAccessTime + idleMilliseconds &lt; time
+                : _creationTime + idleMilliseconds &lt; time;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[46,9,46,84,1],[48,13,48,31,1],[49,13,49,39,1],[50,13,50,48,1],[51,13,51,89,1],[52,13,52,40,1],[53,9,53,10,1],[58,28,58,32,1],[58,33,58,37,1],[63,32,63,36,1],[68,37,68,41,1],[73,29,73,56,1],[80,20,80,32,1],[81,20,81,40,1],[89,20,89,51,1],[90,20,90,62,1],[96,38,96,72,1],[103,13,103,46,1],[104,13,104,72,1],[105,9,105,10,1],[114,13,114,77,1],[128,13,128,39,1],[128,40,128,53,1],[130,13,130,69,1],[132,13,134,59,1]]);
+    </script>
+  </body>
+</html>

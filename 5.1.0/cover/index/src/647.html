@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\CPSession.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Hazelcast.Core;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Represents the Session State on CPSubsystem
+    /// &lt;/summary&gt;
+    internal class CPSession
+    {
+        private readonly long _id;
+        private int _acquireCount;
+        private readonly long _creationTime;
+        private readonly long _ttlMiliseconds;
+
+        public CPSession(long id, long ttlMiliseconds)
+        {
+            _id = id;
+            _ttlMiliseconds = ttlMiliseconds;
+            _creationTime = Clock.Milliseconds;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets whether session is valid.
+        /// &lt;/summary&gt;
+        public bool IsValid =&gt; IsInUse || !IsExpired;
+
+        /// &lt;summary&gt;
+        /// Gets whether session is active.
+        /// &lt;/summary&gt;
+        public bool IsInUse =&gt; Interlocked.CompareExchange(ref _acquireCount, 0, 0) &gt; 0;
+
+        /// &lt;summary&gt;
+        /// Gets whether session is expired.
+        /// &lt;/summary&gt;
+        public bool IsExpired =&gt; IsSessionExpired(Clock.Milliseconds);
+
+        /// &lt;summary&gt;
+        /// Gets Session Id
+        /// &lt;/summary&gt;
+        public long Id =&gt; _id;
+
+        /// &lt;summary&gt;
+        /// Gets acquire count
+        /// &lt;/summary&gt;
+        public int AcquireCount =&gt; _acquireCount;
+
+        /// &lt;summary&gt;
+        /// Checks session is expired to given milliseconds
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;timestamp&quot;&gt;milliseonds&lt;/param&gt;
+        /// &lt;returns&gt;Is session expired&lt;/returns&gt;
+        private bool IsSessionExpired(long timestamp)
+        {
+            long expiration = _creationTime + _ttlMiliseconds;
+
+            if (expiration &lt; 0)
+                expiration = long.MaxValue;
+
+            return timestamp &gt; expiration;
+        }
+
+        /// &lt;summary&gt;
+        /// Increases number of aquisitions
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;count&quot;&gt;The number of aquisitions to increase.&lt;/param&gt;
+        /// &lt;returns&gt;Session Id&lt;/returns&gt;
+        public long Acquire(int count)
+        {
+            Interlocked.Add(ref _acquireCount, count);
+            return _id;
+        }
+
+        /// &lt;summary&gt;
+        /// Releases lock aquisitions.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;count&quot;&gt;The number of aquisitions to release.&lt;/param&gt;
+        public void Release(int count)
+        {
+            Interlocked.Add(ref _acquireCount, -count);
+        }
+
+        /// &lt;inheritdoc/&gt;     
+        public override bool Equals(object obj)
+        {
+            return obj is CPSession state &amp;&amp;
+                   _id == state._id;
+        }
+
+        /// &lt;inheritdoc/&gt;
+        public override int GetHashCode()
+        {
+            return _id.GetHashCode();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,55,1],[35,13,35,22,1],[36,13,36,46,1],[37,13,37,48,1],[38,9,38,10,1],[43,32,43,53,1],[48,32,48,88,1],[53,34,53,70,1],[58,27,58,30,1],[63,36,63,49,1],[72,13,72,63,1],[74,13,74,32,1],[75,17,75,44,0],[77,13,77,43,1],[87,13,87,55,1],[88,13,88,24,1],[97,13,97,56,1],[98,9,98,10,1],[103,13,104,37,1],[110,13,110,38,0]]);
+    </script>
+  </body>
+</html>

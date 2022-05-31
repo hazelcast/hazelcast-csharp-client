@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\AssemblySigning.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Globalization;
+using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using System.Text;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Provides constants for assembly signing.
+    /// &lt;/summary&gt;
+    internal static class AssemblySigning
+    {
+        /// &lt;summary&gt;
+        /// Gets the Hazelcast assembly signing public key.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This key is used in &lt;c&gt;AssemblyInfo.cs&lt;/c&gt; to expose the internals
+        /// of the &lt;c&gt;Hazelcast.Net&lt;/c&gt; assembly to other assemblies such as tests,
+        /// via &lt;see cref=&quot;InternalsVisibleToAttribute&quot;/&gt; attributes.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal const string PublicKey = &quot;00240000048000009400000006020000002400005253413100040000010001004d81045a994968&quot; +
+                                          &quot;ac643918d7bbce405b2473471d8de6aed6bbffc0fe1874bfcabf3c0b437c6c5293a589bdcbe884&quot; +
+                                          &quot;c6d86934069b35deaf5ab2e770cbff41a20dd4014bb53e481c30bd3ead29437b02dec5916a717a&quot; +
+                                          &quot;4a2b4fd353e81238b89ae09e5ba0ab615c5fef7937aabab4e240c3dffe2b948047769eeb07f674&quot; +
+                                          &quot;589d0bb3&quot;;
+
+        // note: The public key token is represented by the last 8 bytes of the SHA-1
+        // hash of the public key under which the application is signed.
+
+        internal static string PublicKeyToken { get; } = GetKeyToken(PublicKey);
+
+        /// &lt;summary&gt;
+        /// Gets the key token corresponding to a key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;returns&gt;The key token.&lt;/returns&gt;
+        internal static string GetKeyToken(string key)
+        {
+            var bytes = new byte[key.Length / 2];
+            for (var i = 0; i &lt; key.Length / 2; i++)
+#pragma warning disable CA1305 // Specify IFormatProvider - no
+                bytes[i] = byte.Parse(key.Substring(i * 2, 2), NumberStyles.AllowHexSpecifier);
+#pragma warning restore CA1305 // Specify IFormatProvider
+#pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms - well, that&#39;s what PublicKeyToken uses
+            using var csp = new SHA1CryptoServiceProvider();
+#pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+            var hash = csp.ComputeHash(bytes);
+            var text = new StringBuilder();
+            for (var i = 0; i &lt; 8; i++)
+                //token[i] = hash[^(i + 1)];
+                text.Append($&quot;{hash[^(i + 1)]:x2}&quot;);
+            return text.ToString();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[44,49,44,53,0],[44,58,44,80,0],[53,13,53,50,0],[54,18,54,27,0],[54,29,54,47,0],[54,49,54,52,0],[56,17,56,96,0],[59,13,59,61,0],[61,13,61,47,0],[62,13,62,44,0],[63,18,63,27,0],[63,29,63,34,0],[63,36,63,39,0],[65,17,65,53,0],[66,13,66,36,0],[67,9,67,10,0]]);
+    </script>
+  </body>
+</html>

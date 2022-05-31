@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterEvents.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Events;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Provides the cluster events service for a cluster.
+    /// &lt;/summary&gt;
+    internal partial class ClusterEvents : IAsyncDisposable
+    {
+        private readonly TerminateConnections _terminateConnections;
+
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMessaging _clusterMessaging;
+        private readonly ClusterMembers _clusterMembers;
+        private readonly DistributedEventScheduler _scheduler;
+        private readonly ILogger _logger;
+
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+        private readonly object _mutex = new object(); // subscriptions and connections
+
+        private Func&lt;ValueTask&gt; _partitionsUpdated;
+        private Func&lt;MembersUpdatedEventArgs, ValueTask&gt; _membersUpdated;
+
+        private readonly object _clusterViewsMutex = new object();
+        private MemberConnection _clusterViewsConnection; // the connection which supports the view event
+        private long _clusterViewsCorrelationId; // the correlation id of the view event subscription
+        private Task _clusterViewsTask; // the task that assigns a connection to support the view event
+
+        private volatile int _disposed;
+
+        // connections
+        private readonly HashSet&lt;MemberConnection&gt; _connections = new HashSet&lt;MemberConnection&gt;();
+        private TaskCompletionSource&lt;object&gt; _connectionOpened;
+
+        // subscription id -&gt; subscription
+        // the master subscriptions list
+        private readonly ConcurrentDictionary&lt;Guid, ClusterSubscription&gt; _subscriptions = new ConcurrentDictionary&lt;Guid, ClusterSubscription&gt;();
+
+        // subscribe tasks
+        private readonly object _subscribeTasksMutex = new object();
+        private Dictionary&lt;MemberConnection, Task&gt; _subscribeTasks = new Dictionary&lt;MemberConnection, Task&gt;(); // the tasks that subscribe new connections
+
+        // correlation id -&gt; subscription
+        // used to match a subscription to an incoming event message
+        // each connection has its own correlation id, so there can be many entries per cluster subscription
+        private readonly ConcurrentDictionary&lt;long, ClusterSubscription&gt; _correlatedSubscriptions = new ConcurrentDictionary&lt;long, ClusterSubscription&gt;();
+
+        // ghost subscriptions, to be collected
+        // subscriptions that have failed to properly unsubscribe and now we need to take care of them
+        private readonly HashSet&lt;MemberSubscription&gt; _collectSubscriptions = new HashSet&lt;MemberSubscription&gt;();
+        private readonly object _collectMutex = new object();
+        private Task _collectTask; // the task that collects ghost subscriptions
+
+        static ClusterEvents()
+        {
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterEvents&gt;().SetPrefix(&quot;CLUST.EVTS&quot;));
+        }
+
+        public ClusterEvents(ClusterState clusterState, ClusterMessaging clusterMessaging, TerminateConnections terminateConnections, ClusterMembers clusterMembers)
+        {
+            _clusterState = clusterState;
+            _clusterMessaging = clusterMessaging;
+            _clusterMembers = clusterMembers;
+
+            _logger = _clusterState.LoggerFactory.CreateLogger&lt;ClusterEvents&gt;();
+            _scheduler = new DistributedEventScheduler(_clusterState.LoggerFactory);
+            _terminateConnections = terminateConnections;
+
+            _objectLifecycleEventSubscription = new ObjectLifecycleEventSubscription(_clusterState, this)
+            {
+                ObjectCreated = args =&gt; _objectCreated.AwaitEach(args),
+                ObjectDestroyed = args =&gt; _objectDestroyed.AwaitEach(args)
+            };
+
+            _partitionLostEventSubscription = new PartitionLostEventSubscription(_clusterState, this, clusterMembers)
+            {
+                PartitionLost = args =&gt; _partitionLost.AwaitEach(args)
+            };
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Gets the subscriptions.
+        /// &lt;/summary&gt;
+        internal ConcurrentDictionary&lt;Guid, ClusterSubscription&gt; Subscriptions =&gt; _subscriptions;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Gets the correlated subscriptions.
+        /// &lt;/summary&gt;
+        internal ConcurrentDictionary&lt;long, ClusterSubscription&gt; CorrelatedSubscriptions =&gt; _correlatedSubscriptions;
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Gets the ghost subscriptions that need to be collected.
+        /// &lt;/summary&gt;
+        internal HashSet&lt;MemberSubscription&gt; CollectSubscriptions =&gt; _collectSubscriptions;
+
+        #region Add/Remove Subscriptions
+
+        // _connections is the list of known member connections
+        //   connections are added &amp; removed by handling the ConnectionOpened and ConnectionClosed events
+        //   note: a connection may be opened yet not correspond to any member
+        //
+        // _subscriptions is the list of known cluster subscriptions
+        //   subscriptions are added &amp; removed by invoking Add/RemoveSubscriptionAsync
+        //   each subscription in _subscriptions must be added to each connection in _connections
+        //
+        // when a subscription is added,
+        // - (mutex): capture _connections connections, add the subscription to _subscriptions
+        // - for each connection
+        //   - add a correlated subscription (before adding on server!)
+        //   - add the subscription to the connection on server
+        //     - fails
+        //       - remove the correlated subscription
+        //       - because
+        //         - the connection is not active anymore = skip &amp; continue with other connections
+        //         - any other reason = queue all member connections for collection
+        //       - fail
+        //   - try-add a member connection to subscription
+        //     - fails (because the subscription is not active anymore)
+        //       - remove the correlated subscription
+        //       - nothing else to do: the subscription has been de-activated = clean
+        //       - fail
+        //
+        // when a connection is added
+        // - (mutex): capture _subscriptions subscriptions, add the connection to _connections
+        // - for each subscription
+        //   - add a correlated subscription (before adding on server!)
+        //   - add the subscription to the connection on server
+        //     - fails
+        //       - remove the correlated subscription
+        //       - because
+        //         - the connection is not active anymore = queue all created member subscriptions for collection
+        //         - for any other reason = terminate the connection
+        //       - exit
+        //   - try-add the corresponding member connection to the subscription
+        //     - fails (because the subscription is not active anymore)
+        //       - remove the correlated subscription
+        //       - queue the member connection for collection
+        //       - skip &amp; continue with other subscriptions
+        //
+        //
+        // when a subscription is removed
+        // - (mutex): remove the subscription from _subscriptions
+        // - de-activate the subscription (cannot add member subscriptions anymore)
+        // - for each member connection in the subscription,
+        //   - clear the correlated subscription
+        //   - remove from server
+        //     - fails because the connection is not active anymore = consider it a success
+        //     - fails for any other reason = queue the member subscription for collection
+        //
+        // note: meanwhile, if a connection is
+        // - added: it will not see the subscription, or see it de-activated
+        // - removed: removing from server will be considered a success
+        //
+        //
+        // when a connection is removed
+        // - (mutex): capture _subscriptions subscriptions, remove the connection from _connections
+        // - for each subscription
+        //   - remove the member subscription for the removed connection (cannot remove from server, connection is down)
+        //   - remove the corresponding correlated subscription
+        // - if it is the cluster views connection
+        //   - clear
+        //   - remove the corresponding correlated subscription
+        //   - start assigning another connection
+        //
+        // note: meanwhile, if a subscription is
+        // - added: it will not see the connection
+        // - removed: never mind, we just have nothing to remove
+
+        /// &lt;summary&gt;
+        /// Adds a subscription.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;subscription&quot;&gt;The subscription.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the subscription has been added.&lt;/returns&gt;
+        public async Task AddSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken = default)
+        {
+            if (subscription == null) throw new ArgumentNullException(nameof(subscription));
+
+            // atomically get connections and add the subscription
+            List&lt;MemberConnection&gt; connections;
+            lock (_mutex)
+            {
+                // capture connections
+                connections = _connections.ToList();
+
+                // failing would be a nasty internal error but better report it
+                if (!_subscriptions.TryAdd(subscription.Id, subscription))
+                    throw new InvalidOperationException(&quot;A subscription with the same identifier already exists.&quot;);
+            }
+
+            // add the subscription to each captured connection
+            // TODO: consider adding in parallel
+            foreach (var connection in connections)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    CollectSubscription(subscription); // undo what has been done already
+                    cancellationToken.ThrowIfCancellationRequested(); // and throw
+                }
+
+                // this never throws
+                var attempt = await AddSubscriptionAsync(subscription, connection, cancellationToken).CfAwait();
+
+                switch (attempt.Value)
+                {
+                    case InstallResult.Success: // good
+                    case InstallResult.ConnectionNotActive: // ignore it
+                        continue;
+
+                    case InstallResult.SubscriptionNotActive:
+                        // not active = has been de-activated = what has been done already has been undone
+                        throw new HazelcastException(&quot;Failed to add the subscription because it was removed.&quot;);
+
+                    case InstallResult.Failed: // also if canceled
+                        CollectSubscription(subscription); // undo what has been done already
+                        throw new HazelcastException(&quot;Failed to add subscription (see inner exception).&quot;, attempt.Exception);
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+        }
+
+        // adds a subscription on one member
+        private async ValueTask&lt;Attempt&lt;InstallResult&gt;&gt; AddSubscriptionAsync(ClusterSubscription subscription, MemberConnection connection, CancellationToken cancellationToken)
+        {
+            // if we already know the connection is not active anymore, ignore it
+            // otherwise, install on this member - may throw if the connection goes away in the meantime
+            if (!connection.Active) return Attempt.Fail(InstallResult.ConnectionNotActive);
+
+            // add correlated subscription now so it is ready when the first events come
+            var correlationId = _clusterState.GetNextCorrelationId();
+            _correlatedSubscriptions[correlationId] = subscription;
+
+            // the original subscription.SubscribeRequest message may be used concurrently,
+            // we need a safe clone so we can use our own correlation id in a safe way.
+            var subscribeRequest = subscription.SubscribeRequest.CloneWithNewCorrelationId(correlationId);
+
+            // talk to the server
+            ClientMessage response;
+            try
+            {
+                response = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
+            }
+            catch (Exception e)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                return connection.Active
+                    ? Attempt.Fail(InstallResult.Failed, e) // also if canceled
+                    : Attempt.Fail(InstallResult.ConnectionNotActive);
+            }
+
+            // try to add the member subscription to the cluster subscription
+            // fails if the cluster subscription is not active anymore
+            var memberSubscription = subscription.ReadSubscriptionResponse(response, connection);
+            var added = subscription.TryAddMemberSubscription(memberSubscription);
+            if (added) return InstallResult.Success;
+
+            // the subscription is not active anymore
+            _correlatedSubscriptions.TryRemove(correlationId, out _);
+            CollectSubscription(memberSubscription);
+            return Attempt.Fail(InstallResult.SubscriptionNotActive);
+        }
+
+        // (background) adds subscriptions on one member - when a connection is added
+        private async Task AddSubscriptionsAsync(MemberConnection connection, IReadOnlyCollection&lt;ClusterSubscription&gt; subscriptions, CancellationToken cancellationToken)
+        {
+            // this is a background task and therefore should never throw!
+
+            foreach (var subscription in subscriptions)
+            {
+                if (cancellationToken.IsCancellationRequested) return;
+
+                // this never throws
+                var attempt = await AddSubscriptionAsync(subscription, connection, cancellationToken).CfAwait();
+
+                switch (attempt.Value)
+                {
+                    case InstallResult.Success: // ok
+                    case InstallResult.SubscriptionNotActive: // ignore it
+                        continue;
+
+                    case InstallResult.ConnectionNotActive:
+                        // not active = has been removed = what has been done already has been undone
+                        break; // simply exit
+
+                    case InstallResult.Failed:
+                        // failed to talk to the server - this connection is not working
+                        _terminateConnections.Add(connection);
+                        break; // exit
+
+                    default:
+                        continue;
+                }
+            }
+
+            // we are done now
+            lock (_subscribeTasksMutex) _subscribeTasks.Remove(connection);
+        }
+
+        /// &lt;summary&gt;
+        /// Removes a subscription.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;subscriptionId&quot;&gt;The unique identifier of the subscription.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;Whether the subscription was removed.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This may throw in something goes wrong. In this case, the subscription
+        /// is de-activated but remains in the lists, so that it is possible to try again.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public async ValueTask&lt;bool&gt; RemoveSubscriptionAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
+        {
+            // get and remove the subscription
+            ClusterSubscription subscription;
+            lock (_mutex)
+            {
+                if (!_subscriptions.TryRemove(subscriptionId, out subscription))
+                    return false; // unknown subscription
+            }
+
+            await RemoveSubscriptionAsync(subscription, cancellationToken).CfAwait();
+            return true;
+        }
+
+        // removes a subscription
+        private async ValueTask RemoveSubscriptionAsync(ClusterSubscription subscription, CancellationToken cancellationToken)
+        {
+            // de-activate the subscription: all further events will be ignored
+            subscription.Deactivate();
+
+            // for each member subscription
+            foreach (var memberSubscription in subscription)
+            {
+                // runs them all regardless of cancellation
+
+                // remove the correlated subscription
+                _correlatedSubscriptions.TryRemove(memberSubscription.CorrelationId, out _);
+
+                // remove from the server
+                // and, if it fails, enqueue for collection
+                if (await RemoveSubscriptionAsync(memberSubscription, cancellationToken).CfAwait())
+                    subscription.Remove(memberSubscription);
+                else
+                    CollectSubscription(memberSubscription);
+            }
+        }
+
+        // remove a subscription from one member
+        private async ValueTask&lt;bool&gt; RemoveSubscriptionAsync(MemberSubscription subscription, CancellationToken cancellationToken)
+        {
+            // fast: if the connection is down, consider the subscription removed
+            if (!subscription.Connection.Active) return true;
+
+            try
+            {
+                // remove the member subscription = trigger the server-side un-subscribe
+                // this *may* throw if we fail to talk to the member
+                // this *may* return false for some reason
+                var unsubscribeRequest = subscription.ClusterSubscription.CreateUnsubscribeRequest(subscription.ServerSubscriptionId);
+                var responseMessage = await _clusterMessaging.SendToMemberAsync(unsubscribeRequest, subscription.Connection, cancellationToken).CfAwait();
+                var removed = subscription.ClusterSubscription.ReadUnsubscribeResponse(responseMessage);
+                return removed;
+            }
+            catch (Exception e)
+            {
+                // if the connection is down, consider the subscription removed
+                if (!subscription.Connection.Active) return true;
+
+                // otherwise something went wrong and maybe we want to try again
+                _logger.LogError(e, &quot;Caught an exception while unsubscribing to events.&quot;);
+                return false;
+            }
+        }
+
+        // clears the subscriptions of a member that is gone fishing
+        // the connection is down, no way to unsubscribe, just clear the data structures
+        private void ClearMemberSubscriptions(IEnumerable&lt;ClusterSubscription&gt; subscriptions, MemberConnection connection)
+        {
+            foreach (var subscription in subscriptions)
+            {
+                // remove the correlated subscription
+                // remove the client subscription
+                if (subscription.TryRemove(connection, out var memberSubscription))
+                    _correlatedSubscriptions.TryRemove(memberSubscription.CorrelationId, out _);
+            }
+        }
+
+        #endregion
+
+        #region Cluster Members/Partitions Views
+
+        /// &lt;summary&gt;
+        /// Clears the connection currently supporting the cluster view event, if it matches the specified &lt;paramref name=&quot;connection&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;A connection.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;connection&quot;/&gt; was supporting the cluster view event, and was not the last connection,
+        /// this starts a background task to assign another connection to support the cluster view event.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private void ClearClusterViewsConnection(MemberConnection connection)
+        {
+            // note: we do not &quot;unsubscribe&quot; - if we come here, the connection is gone
+
+            lock (_clusterViewsMutex)
+            {
+                // if the specified client is *not* the cluster events client, ignore
+                if (_clusterViewsConnection != connection)
+                    return;
+
+                // otherwise, clear the connection
+                _clusterViewsConnection = null;
+                _correlatedSubscriptions.TryRemove(_clusterViewsCorrelationId, out _);
+                _clusterViewsCorrelationId = 0;
+
+                _logger.IfDebug()?.LogDebug(&quot;Cleared cluster views connection (was {ConnectionId}).&quot;, connection.Id.ToShortString());
+
+                // assign another connection (async)
+                _clusterViewsTask ??= AssignClusterViewsConnectionAsync(null, _cancel.Token);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Proposes a connection to support the cluster view event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;A connection.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;if there is no connection currently supporting the cluster view event, then this starts a background
+        /// task to assign a connection to support the event, trying the supplied &lt;paramref name=&quot;connection&quot;/&gt; first.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        private void ProposeClusterViewsConnection(MemberConnection connection)
+        {
+            lock (_clusterViewsMutex)
+            {
+                if (_clusterViewsConnection == null)
+                    _clusterViewsTask ??= AssignClusterViewsConnectionAsync(connection, _cancel.Token);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Assigns a connection to support the cluster view event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;An optional candidate connection.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when a connection has been assigned to handle the cluster views event.&lt;/returns&gt;
+        private async Task AssignClusterViewsConnectionAsync(MemberConnection connection, CancellationToken cancellationToken)
+        {
+            // TODO: consider throttling
+
+            ValueTask&lt;MemberConnection&gt; WaitRandomConnection(CancellationToken token)
+            {
+                var c = _clusterMembers.GetRandomConnection();
+                return c == null
+                    ? WaitRandomConnection2(token)
+                    : new ValueTask&lt;MemberConnection&gt;(c);
+            }
+
+            async ValueTask&lt;MemberConnection&gt; WaitRandomConnection2(CancellationToken token)
+            {
+                MemberConnection c = null;
+                while (!token.IsCancellationRequested &amp;&amp;
+                       ((c = _clusterMembers.GetRandomConnection()) == null || !c.Active))
+                {
+                    lock (_mutex) _connectionOpened = new TaskCompletionSource&lt;object&gt;();
+                    using var reg = token.Register(() =&gt; _connectionOpened.TrySetCanceled());
+                    await _connectionOpened.Task.CfAwait();
+                    lock (_mutex) _connectionOpened = null;
+                }
+                return c;
+            }
+
+            // this will only exit once a connection is assigned, or the task is
+            // cancelled, when the cluster goes down (and never up again)
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                connection ??= await WaitRandomConnection(cancellationToken).CfAwait();
+
+                // try to subscribe, relying on the default invocation timeout,
+                // so this is not going to last forever - we know it will end
+                var correlationId = _clusterState.GetNextCorrelationId();
+                if (!await SubscribeToClusterViewsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
+                {
+                    // failed =&gt; try another connection
+                    connection = null;
+                    continue;
+                }
+
+                // success!
+                lock (_clusterViewsMutex)
+                {
+                    if (connection.Active)
+                    {
+                        _clusterViewsConnection = connection;
+                        _clusterViewsCorrelationId = correlationId;
+                        _clusterViewsTask = null;
+                        HConsole.WriteLine(this, $&quot;ClusterViews: connection {connection.Id.ToShortString()} [{correlationId}]&quot;);
+                        break;
+                    }
+                }
+
+                // if the connection was not active anymore, we have rejected it
+                // if the connection was active, and we have accepted it, and it de-activates,
+                // then ClearClusterViewsConnection will deal with it
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Subscribes a connection to the cluster view event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;The correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the subscription has been processed, and represent whether it was successful.&lt;/returns&gt;
+        private async Task&lt;bool&gt; SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
+        {
+            // aka subscribe to member/partition view events
+            _logger.IfDebug()?.LogDebug(&quot;Subscribe to cluster views on connection {ConnectionId}.&quot;, connection.Id.ToShortString());
+
+            // handles the event
+            ValueTask HandleEventAsync(ClientMessage message, object _)
+                =&gt; ClientAddClusterViewListenerCodec.HandleEventAsync(message,
+                    HandleCodecMemberViewEvent,
+                    HandleCodecPartitionViewEvent,
+                    connection.Id,
+                    _clusterState.LoggerFactory);
+
+            try
+            {
+                var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
+                _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
+                _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
+                _logger.IfDebug()?.LogDebug(&quot;Subscribed to cluster views on connection {ConnectionId)}.&quot;, connection.Id.ToShortString());
+                return true;
+            }
+            catch (TargetDisconnectedException)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                // if the connection has died... and that can happen when switching members... no need to worry the
+                // user with a warning, a debug message should be enough
+                _logger.IfDebug()?.LogDebug(&quot;Failed to subscribe to cluster views on connection {ConnectionId)} (disconnected), may retry.&quot;, connection.Id.ToShortString());
+                return false;
+            }
+            catch (Exception e)
+            {
+                _correlatedSubscriptions.TryRemove(correlationId, out _);
+                _logger.IfWarning()?.LogWarning(e, &quot;Failed to subscribe to cluster views on connection {ConnectionId}, may retry.&quot;, connection.Id.ToShortString());
+                return false;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Handles the &#39;members view&#39; event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version.&lt;/param&gt;
+        /// &lt;param name=&quot;members&quot;&gt;The members.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        private async ValueTask HandleCodecMemberViewEvent(int version, ICollection&lt;MemberInfo&gt; members, object state)
+        {
+            _logger.LogDebug(&quot;Handle MemberView event.&quot;);
+            var eventArgs = await _clusterMembers.SetMembersAsync(version, members).CfAwait();
+
+            // nothing to do if members have been skipped (due to version)
+            if (eventArgs == null) return;
+
+            // raise events (On... does not throw)
+            await _membersUpdated.AwaitEach(eventArgs).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Handles the &#39;partitions view&#39; event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The version.&lt;/param&gt;
+        /// &lt;param name=&quot;partitions&quot;&gt;The partitions.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        private async ValueTask HandleCodecPartitionViewEvent(int version, IList&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt; partitions, object state)
+        {
+            var clientId = (Guid)state;
+
+            var updated = _clusterState.Partitioner.NotifyPartitionView(clientId, version, MapPartitions(partitions));
+            if (!updated) return;
+
+            // signal once
+            //if (Interlocked.CompareExchange(ref _firstPartitionsViewed, 1, 0) == 0)
+            //    _firstPartitionsView.Release();
+
+            // raise event
+            // On... does not throw
+            await _partitionsUpdated.AwaitEach().CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Maps partitions from the event representation to our internal representation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;partitions&quot;&gt;The event representation of partitions.&lt;/param&gt;
+        /// &lt;returns&gt;Our internal representation of partitions.&lt;/returns&gt;
+        private static Dictionary&lt;int, Guid&gt; MapPartitions(IEnumerable&lt;KeyValuePair&lt;Guid, IList&lt;int&gt;&gt;&gt; partitions)
+        {
+            var map = new Dictionary&lt;int, Guid&gt;();
+            foreach (var (memberId, partitionIds) in partitions)
+                foreach (var partitionId in partitionIds)
+                    map[partitionId] = memberId;
+            return map;
+        }
+
+        #endregion
+
+        #region Collect Ghosts
+
+        // add all member subscriptions of a cluster subscription to be collected, start the collect task if needed
+        private void CollectSubscription(ClusterSubscription subscription)
+        {
+            lock (_collectMutex)
+            {
+                foreach (var memberSubscription in subscription)
+                    _collectSubscriptions.Add(memberSubscription);
+                _collectTask ??= CollectSubscriptionsAsync(_cancel.Token);
+            }
+        }
+
+        // add a member subscription to be collected, start the collect task if needed
+        private void CollectSubscription(MemberSubscription subscription)
+        {
+            lock (_collectMutex)
+            {
+                _collectSubscriptions.Add(subscription);
+                _collectTask ??= CollectSubscriptionsAsync(_cancel.Token);
+            }
+        }
+
+        // body of the subscription collection task
+        private async Task CollectSubscriptionsAsync(CancellationToken cancellationToken)
+        {
+            List&lt;MemberSubscription&gt; removedSubscriptions = null;
+
+            HConsole.WriteLine(this, &quot;CollectSubscription starting&quot;);
+
+            // if canceled, will be awaited properly
+            await Task.Delay(_clusterState.Options.Events.SubscriptionCollectDelay, cancellationToken).CfAwait();
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                // capture subscriptions to collect
+                List&lt;MemberSubscription&gt; subscriptions;
+                lock (_collectMutex)
+                {
+                    subscriptions = _collectSubscriptions.ToList();
+                }
+
+                HConsole.WriteLine(this, $&quot;CollectSubscription loop for {subscriptions.Count} member subscriptions&quot;);
+
+                // try to remove captured subscriptions
+                // if canceled, will be awaited properly
+                removedSubscriptions?.Clear();
+                var timeLimit = DateTime.Now - _clusterState.Options.Events.SubscriptionCollectTimeout;
+                foreach (var subscription in subscriptions)
+                {
+                    HConsole.WriteLine(this, &quot;CollectSubscription collects&quot;);
+
+                    try
+                    {
+                        var removed = await RemoveSubscriptionAsync(subscription, cancellationToken).CfAwait();
+                        if (removed || subscription.ClusterSubscription.DeactivateTime &lt; timeLimit)
+                        {
+                            subscription.ClusterSubscription.Remove(subscription);
+                            (removedSubscriptions ??= new List&lt;MemberSubscription&gt;()).Add(subscription);
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        return; // cancelled - stop everything
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.LogError(e, &quot;An error occurred while collecting subscriptions.&quot;);
+                    }
+                }
+
+                HConsole.WriteLine(this, $&quot;CollectSubscription collected {removedSubscriptions?.Count ?? 0} subscriptions&quot;);
+
+                // update subscriptions to collect
+                // none remaining = exit the task
+                lock (_collectMutex)
+                {
+                    if (removedSubscriptions != null)
+                    {
+                        foreach (var subscription in removedSubscriptions)
+                            _collectSubscriptions.Remove(subscription);
+                    }
+
+                    if (_collectSubscriptions.Count == 0)
+                    {
+                        HConsole.WriteLine(this, &quot;CollectSubscription exits&quot;);
+                        _collectTask = null;
+                        return;
+                    }
+                }
+
+                HConsole.WriteLine(this, &quot;CollectSubscription waits&quot;);
+
+                // else, wait + loop / try again
+                // if canceled, will be awaited properly
+                await Task.Delay(_clusterState.Options.Events.SubscriptionCollectPeriod, cancellationToken).CfAwait();
+            }
+        }
+
+        #endregion
+
+        #region Events
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when members have been updated.
+        /// &lt;/summary&gt;
+        public Func&lt;MembersUpdatedEventArgs, ValueTask&gt; MembersUpdated
+        {
+            get =&gt; _membersUpdated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _membersUpdated = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when partitions have been updated.
+        /// &lt;/summary&gt;
+        public Func&lt;ValueTask&gt; PartitionsUpdated
+        {
+            get =&gt; _partitionsUpdated;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _partitionsUpdated = value;
+            }
+        }
+
+        #endregion
+
+        #region Event Handlers
+
+        /// &lt;summary&gt;
+        /// Handles a connection being created.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;&lt;/param&gt;
+        public void OnConnectionCreated(MemberConnection connection)
+        {
+            // wires reception of event messages
+            connection.ReceivedEvent += OnReceivedEvent;
+        }
+
+        /// &lt;summary&gt;
+        /// Handles a connection being opened.
+        /// &lt;/summary&gt;
+#pragma warning disable IDE0060 // Remove unused parameters
+#pragma warning disable CA1801 // Review unused parameters
+        // unused parameters are required, this is an event handler
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
+        {
+            // atomically add the connection and capture known subscriptions
+            List&lt;ClusterSubscription&gt; subscriptions;
+            lock (_mutex)
+            {
+                _connections.Add(connection);
+                subscriptions = _subscriptions.Values.ToList();
+                _connectionOpened?.TrySetResult(null);
+            }
+
+            // in case we don&#39;t have one already...
+            ProposeClusterViewsConnection(connection);
+
+            // for this new connection... we need to add all known subscriptions to it, and this is
+            // going to happen in the background - yes, it means that the connection could be used
+            // even before all subscriptions have been added and thus some events may fail to trigger,
+            // we don&#39;t offer any strict guarantee on events anyways
+
+            lock (_subscribeTasksMutex)
+            {
+                if (_subscribeTasks != null)
+                    _subscribeTasks[connection] = AddSubscriptionsAsync(connection, subscriptions, _cancel.Token);
+            }
+
+            return default;
+        }
+
+        /// &lt;summary&gt;
+        /// Handles a connection being closed.
+        /// &lt;/summary&gt;
+        public ValueTask OnConnectionClosed(MemberConnection connection)
+        {
+            // atomically remove the connection and capture known subscriptions
+            List&lt;ClusterSubscription&gt; subscriptions;
+            lock (_mutex)
+            {
+                _connections.Remove(connection);
+                subscriptions = _subscriptions.Values.ToList();
+            }
+
+            // just clear subscriptions,
+            // cannot unsubscribes from the server since the client is not connected anymore
+            ClearMemberSubscriptions(subscriptions, connection);
+
+            // clear, if that was the cluster views connection,
+            // and then start the task to assign another one)
+            ClearClusterViewsConnection(connection);
+
+            return default;
+        }
+
+        /// &lt;summary&gt;
+        /// Handles an event message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The event message.&lt;/param&gt;
+        public void OnReceivedEvent(ClientMessage message)
+        {
+            HConsole.WriteLine(this, &quot;Handle event message&quot;);
+
+            // get the matching subscription
+            if (!_correlatedSubscriptions.TryGetValue(message.CorrelationId, out var subscription))
+            {
+                _clusterState.Instrumentation.CountMissedEvent(message);
+                _logger.IfWarning()?.LogWarning(&quot;No event handler for [{CorrelationId}]&quot;, message.CorrelationId);
+                HConsole.WriteLine(this, $&quot;No event handler for [{message.CorrelationId}]&quot;);
+                return;
+            }
+
+            // schedule the event - will run async, but sequentially per-partition
+            // (queues the event, returns immediately, does not await on handlers)
+            _scheduler.Add(subscription, message);
+        }
+
+        #endregion
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            HConsole.WriteLine(this, &quot;Dispose scheduler.&quot;);
+            await _scheduler.DisposeAsync().CfAwait();
+            HConsole.WriteLine(this, &quot;Dispose subscriptions.&quot;);
+            await _objectLifecycleEventSubscription.DisposeAsync().CfAwait();
+            await _partitionLostEventSubscription.DisposeAsync().CfAwait();
+
+            _cancel.Cancel();
+
+            HConsole.WriteLine(this, &quot;Await cluster views task.&quot;);
+            await _clusterViewsTask.MaybeNull().CfAwaitCanceled();
+            HConsole.WriteLine(this, &quot;Dispose collect task.&quot;);
+            await _collectTask.MaybeNull().CfAwaitCanceled();
+
+            HConsole.WriteLine(this, &quot;Await subscribe tasks.&quot;);
+            Task[] tasks;
+            lock (_subscribeTasksMutex)
+            {
+                tasks = _subscribeTasks.Values.ToArray();
+                _subscribeTasks = null;
+            }
+            await Task.WhenAll(tasks).CfAwait();
+
+            _cancel.Dispose();
+
+            // connection is going down
+            // it will be disposed as well as all other connections
+            // and subscriptions will terminate
+            _clusterViewsConnection = null;
+
+            HConsole.WriteLine(this, &quot;Down.&quot;);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[44,9,44,90,1],[45,9,45,55,1],[50,9,50,67,1],[58,9,58,99,1],[63,9,63,145,1],[66,9,66,69,1],[67,9,67,111,1],[72,9,72,155,1],[76,9,76,112,1],[77,9,77,62,1],[83,9,83,10,1],[85,9,85,165,1],[87,13,87,42,1],[88,13,88,50,1],[89,13,89,46,1],[91,13,91,81,1],[92,13,92,85,1],[93,13,93,58,1],[95,13,97,41,1],[97,41,97,71,1],[97,71,98,43,1],[98,43,98,75,1],[98,75,99,15,1],[101,13,103,41,1],[103,41,103,71,0],[103,71,104,15,1],[105,9,105,10,1],[110,83,110,97,1],[115,93,115,117,1],[120,70,120,91,1],[203,13,203,38,1],[203,39,203,93,0],[207,13,207,26,1],[210,17,210,53,1],[213,17,213,75,1],[214,21,214,116,0],[215,13,215,14,1],[219,22,219,36,1],[219,37,219,39,1],[219,40,219,51,1],[221,17,221,63,1],[223,21,223,55,0],[224,21,224,70,0],[228,17,228,113,1],[230,17,230,39,1],[238,25,238,112,0],[241,25,241,59,0],[242,25,242,126,0],[245,25,245,59,0],[248,9,248,10,1],[255,13,255,36,1],[255,37,255,92,0],[258,13,258,70,1],[259,13,259,68,1],[263,13,263,107,1],[269,17,269,144,1],[270,13,270,14,1],[271,13,271,32,0],[273,17,273,74,0],[274,17,276,71,0],[281,13,281,98,1],[282,13,282,83,1],[283,13,283,23,1],[283,24,283,53,1],[286,13,286,70,0],[287,13,287,53,0],[288,13,288,70,0],[289,9,289,10,1],[296,22,296,38,1],[296,39,296,41,1],[296,42,296,55,1],[298,17,298,63,1],[298,64,298,71,0],[301,17,301,113,1],[303,17,303,39,1],[315,25,315,63,0],[324,13,324,40,1],[324,41,324,76,1],[325,9,325,10,1],[341,13,341,26,1],[343,17,343,81,1],[344,21,344,34,1],[345,13,345,14,1],[347,13,347,86,1],[348,13,348,25,1],[349,9,349,10,1],[355,13,355,39,1],[358,22,358,44,1],[358,45,358,47,1],[358,48,358,60,1],[363,17,363,93,1],[367,17,367,100,1],[368,21,368,61,1],[370,21,370,61,1],[371,13,371,14,1],[372,9,372,10,1],[378,13,378,49,1],[378,50,378,62,0],[385,17,385,135,1],[386,17,386,155,1],[387,17,387,105,1],[388,17,388,32,1],[390,13,390,32,1],[393,17,393,53,1],[393,54,393,66,0],[396,17,396,91,1],[397,17,397,30,1],[399,9,399,10,1],[405,22,405,38,1],[405,39,405,41,1],[405,42,405,55,1],[409,17,409,84,1],[410,21,410,97,1],[412,9,412,10,1],[430,13,430,38,1],[433,17,433,59,1],[434,21,434,28,1],[437,17,437,48,1],[438,17,438,87,1],[439,17,439,48,1],[441,17,441,134,1],[444,17,444,94,1],[445,13,445,14,1],[446,9,446,10,1],[458,13,458,38,1],[460,17,460,53,1],[461,21,461,104,1],[462,13,462,14,1],[463,9,463,10,1],[477,17,477,63,1],[478,17,480,58,1],[485,17,485,43,1],[486,17,487,91,1],[489,21,489,34,1],[489,35,489,90,1],[490,21,490,58,1],[490,58,490,92,1],[490,92,490,94,1],[491,21,491,60,1],[492,21,492,34,1],[492,35,492,60,1],[493,17,493,18,1],[494,17,494,26,1],[495,13,495,14,1],[499,13,499,63,1],[501,17,501,88,1],[505,17,505,74,1],[506,17,506,113,1],[509,21,509,39,1],[510,21,510,30,1],[514,17,514,42,1],[516,21,516,43,1],[518,25,518,62,1],[519,25,519,68,1],[520,25,520,50,1],[522,25,522,31,1],[524,17,524,18,0],[530,9,530,10,1],[542,13,542,132,1],[546,20,550,49,1],[554,17,554,90,1],[555,17,555,101,1],[556,17,556,137,1],[557,17,557,138,1],[558,17,558,29,1],[560,13,560,48,0],[562,17,562,74,0],[565,17,565,173,0],[566,17,566,30,0],[568,13,568,32,1],[570,17,570,74,1],[571,17,571,164,1],[572,17,572,30,1],[574,9,574,10,1],[584,13,584,58,1],[585,13,585,95,1],[588,13,588,35,1],[588,36,588,43,0],[591,13,591,66,1],[592,9,592,10,1],[602,13,602,40,1],[604,13,604,119,1],[605,13,605,26,1],[605,27,605,34,1],[613,13,613,60,1],[614,9,614,10,1],[623,13,623,51,1],[624,22,624,50,1],[624,51,624,53,1],[624,54,624,64,1],[625,26,625,41,1],[625,42,625,44,1],[625,45,625,57,1],[626,21,626,49,1],[627,13,627,24,1],[637,13,637,33,0],[639,26,639,48,0],[639,49,639,51,0],[639,52,639,64,0],[640,21,640,67,0],[641,17,641,75,0],[642,13,642,14,0],[643,9,643,10,0],[648,13,648,33,1],[650,17,650,57,1],[651,17,651,75,1],[652,13,652,14,1],[653,9,653,10,1],[658,13,658,66,1],[663,13,663,114,1],[665,13,665,63,1],[669,17,669,37,1],[671,21,671,68,1],[672,17,672,18,1],[678,17,678,47,1],[679,17,679,104,1],[680,26,680,42,1],[680,43,680,45,1],[680,46,680,59,1],[686,25,686,112,1],[687,25,687,100,1],[689,29,689,83,1],[690,29,690,105,1],[692,21,692,22,1],[693,21,693,55,0],[695,25,695,32,0],[697,21,697,40,0],[699,25,699,98,0],[700,21,700,22,0],[701,17,701,18,1],[707,17,707,37,1],[709,21,709,54,1],[711,34,711,50,1],[711,51,711,53,1],[711,54,711,74,1],[712,29,712,72,1],[715,21,715,58,1],[718,25,718,45,1],[719,25,719,32,1],[721,17,721,18,0],[727,17,727,119,0],[729,9,729,10,1],[740,20,740,35,1],[743,17,743,62,1],[744,17,744,41,1],[745,13,745,14,1],[753,20,753,38,1],[756,17,756,62,1],[757,17,757,44,1],[758,13,758,14,1],[772,13,772,57,1],[773,9,773,10,1],[787,13,787,26,1],[789,17,789,46,1],[790,17,790,64,1],[791,17,791,55,1],[792,13,792,14,1],[795,13,795,55,1],[802,13,802,40,1],[804,17,804,45,1],[805,21,805,115,1],[806,13,806,14,1],[808,13,808,28,1],[818,13,818,26,1],[820,17,820,49,1],[821,17,821,64,1],[822,13,822,14,1],[826,13,826,65,1],[830,13,830,53,1],[832,13,832,28,1],[844,13,844,100,1],[846,17,846,73,1],[847,17,847,114,1],[849,17,849,24,0],[854,13,854,51,1],[855,9,855,10,1],[862,13,862,71,1],[863,17,863,24,0],[866,13,866,55,1],[868,13,868,78,1],[869,13,869,76,1],[871,13,871,30,1],[874,13,874,67,1],[876,13,876,62,1],[880,13,880,40,1],[882,17,882,58,1],[883,17,883,40,1],[884,13,884,14,1],[885,13,885,49,1],[887,13,887,31,1],[892,13,892,44,1],[895,9,895,10,1]]);
+    </script>
+  </body>
+</html>

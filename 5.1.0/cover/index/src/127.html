@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\Collections\ReadOnlyLazyEntry`TKeyTValue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Serialization.Collections
+{
+    /// &lt;summary&gt;
+    /// Represents an entry in a lazy collection.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the key.&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TValue&quot;&gt;The type of the value.&lt;/typeparam&gt;
+    internal class ReadOnlyLazyEntry&lt;TKey, TValue&gt; : ReadOnlyLazyEntry&lt;TValue&gt;
+    {
+        private TKey _key;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        public ReadOnlyLazyEntry(TKey key, IData valueData)
+            : base(valueData)
+        {
+            Key = key;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        public ReadOnlyLazyEntry(IData keyData, TValue value)
+            : base(value)
+        {
+            KeyData = keyData;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        public ReadOnlyLazyEntry(TKey key, TValue value)
+            : base(value)
+        {
+            Key = key;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ReadOnlyLazyEntry{TKey,TValue}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;keyData&quot;&gt;The key data.&lt;/param&gt;
+        /// &lt;param name=&quot;valueData&quot;&gt;The value data.&lt;/param&gt;
+        public ReadOnlyLazyEntry(IData keyData, IData valueData)
+            : base(valueData)
+        {
+            KeyData = keyData;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the key source data.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Once &lt;see cref=&quot;Key&quot;/&gt; has been assigned, this property is reset to null.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public IData KeyData { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the key.
+        /// &lt;/summary&gt;
+        public TKey Key
+        {
+            get =&gt; _key;
+            set
+            {
+                _key = value;
+                HasKey = true;
+                KeyData = default;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the entry has its key already.
+        /// &lt;/summary&gt;
+        public bool HasKey { get; private set; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,15,32,30,0],[34,13,34,23,0],[35,9,35,10,0],[43,15,43,26,1],[45,13,45,31,1],[46,9,46,10,1],[54,15,54,26,0],[56,13,56,23,0],[57,9,57,10,0],[65,15,65,30,1],[67,13,67,31,1],[68,9,68,10,1],[76,32,76,36,1],[76,37,76,49,1],[83,20,83,24,1],[86,17,86,30,1],[87,17,87,31,1],[88,17,88,35,1],[89,13,89,14,1],[95,30,95,34,1],[95,35,95,47,1]]);
+    </script>
+  </body>
+</html>

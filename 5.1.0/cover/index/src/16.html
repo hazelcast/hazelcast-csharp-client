@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClientFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Aggregation;
+using Hazelcast.Clustering;
+using Hazelcast.Configuration;
+using Hazelcast.Core;
+using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Projection;
+using Hazelcast.Query;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Creates &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instances.
+    /// &lt;/summary&gt;
+    public static class HazelcastClientFactory
+    {
+        /// &lt;summary&gt;
+        /// Starts a new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with automatic options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;An optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastOptionsBuilder.Build()&quot;/&gt; method.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(CancellationToken cancellationToken = default)
+            =&gt; StartNewClientAsync(new HazelcastOptionsBuilder().Build(), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Starts a new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with configured options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;A &lt;see cref=&quot;HazelcastOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastOptionsBuilder.Build()&quot;/&gt; method and passed to the &lt;paramref name=&quot;configure&quot;/&gt; method,
+        /// where they can be refined and adjusted, before being used to create the client.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(Action&lt;HazelcastOptions&gt; configure, CancellationToken cancellationToken = default)
+            =&gt; StartNewClientAsync(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Starts a new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ValueTask&lt;IHazelcastClient&gt; StartNewClientAsync(HazelcastOptions options, CancellationToken cancellationToken = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            return StartNewClientAsyncInternal(options, cancellationToken);
+        }
+
+        // implements the async part of StartNewClientAsync w/ cancellation
+        private static async ValueTask&lt;IHazelcastClient&gt; StartNewClientAsyncInternal(HazelcastOptions options, CancellationToken cancellationToken)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var client = CreateClient(options);
+            await client.StartAsync(cancellationToken).CfAwait();
+            return client;
+        }
+
+        /// &lt;summary&gt;
+        /// Starts a new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance in failover mode with configured options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;A &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastFailoverOptionsBuilder.Build()&quot;/&gt; method
+        /// and passed to the &lt;paramref name=&quot;configure&quot;/&gt; method,
+        /// where they can be refined and adjusted, before being used to create the client.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ValueTask&lt;IHazelcastClient&gt; StartNewFailoverClientAsync(Action&lt;HazelcastFailoverOptions&gt; configure, CancellationToken cancellationToken = default)
+            =&gt; StartNewFailoverClientAsync(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Starts a new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; in failover mode instance with options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A new &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static ValueTask&lt;IHazelcastClient&gt; StartNewFailoverClientAsync(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            return StartNewFailoverClientAsyncInternal(options, cancellationToken);
+        }
+
+        // implements the async part of StartNewClientAsync w/ cancellation
+        private static async ValueTask&lt;IHazelcastClient&gt; StartNewFailoverClientAsyncInternal(HazelcastFailoverOptions options, CancellationToken cancellationToken)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            var client = CreateClient(options);
+            await client.StartAsync(cancellationToken).CfAwait();
+            return client;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a new starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with automatic options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;HazelcastClientStart&quot;/&gt; instance which exposes the &lt;see cref=&quot;IHazelcastClient&quot;/&gt; itself,
+        /// along with a &lt;see cref=&quot;Task&quot;/&gt; representing the start operation.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance is starting, but not started yet. Its start operation is represented by the returned
+        /// &lt;see cref=&quot;Task&quot;/&gt;, which will complete when the client has started, or when starting has failed. Trying to use the client before the
+        /// start &lt;see cref=&quot;Task&quot;/&gt; has completed can have unspecified results, including throwing exceptions. Make sure that the start
+        /// &lt;see cref=&quot;Task&quot;/&gt; has actually completed before using the client.&lt;/para&gt;
+        /// &lt;para&gt;In any case, the start &lt;see cref=&quot;Task&quot;/&gt; must be awaited, as it may fail with an exception that must be observed.&lt;/para&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastOptionsBuilder.Build()&quot;/&gt; method.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static HazelcastClientStart GetNewStartingClient(CancellationToken cancellationToken = default)
+            =&gt; GetNewStartingClient(new HazelcastOptionsBuilder().Build(), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Gets a new starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with configured options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;A &lt;see cref=&quot;HazelcastOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;HazelcastClientStart&quot;/&gt; instance which exposes the &lt;see cref=&quot;IHazelcastClient&quot;/&gt; itself,
+        /// along with a &lt;see cref=&quot;Task&quot;/&gt; representing the start operation.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance is starting, but not started yet. Its start operation is represented by the returned
+        /// &lt;see cref=&quot;Task&quot;/&gt;, which will complete when the client has started, or when starting has failed. Trying to use the client before the
+        /// start &lt;see cref=&quot;Task&quot;/&gt; has completed can have unspecified results, including throwing exceptions. Make sure that the start
+        /// &lt;see cref=&quot;Task&quot;/&gt; has actually completed before using the client.&lt;/para&gt;
+        /// &lt;para&gt;In any case, the start &lt;see cref=&quot;Task&quot;/&gt; must be awaited, as it may fail with an exception that must be observed.&lt;/para&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastOptionsBuilder.Build()&quot;/&gt; method and passed to the &lt;paramref name=&quot;configure&quot;/&gt; method,
+        /// where they can be refined and adjusted, before being used to create the client.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static HazelcastClientStart GetNewStartingClient(Action&lt;HazelcastOptions&gt; configure, CancellationToken cancellationToken = default)
+            =&gt; GetNewStartingClient(GetOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Gets a new starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance with options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;HazelcastClientStart&quot;/&gt; instance which exposes the &lt;see cref=&quot;IHazelcastClient&quot;/&gt; itself,
+        /// along with a &lt;see cref=&quot;Task&quot;/&gt; representing the start operation.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance is starting, but not started yet. Its start operation is represented by the returned
+        /// &lt;see cref=&quot;Task&quot;/&gt;, which will complete when the client has started, or when starting has failed. Trying to use the client before the
+        /// start &lt;see cref=&quot;Task&quot;/&gt; has completed can have unspecified results, including throwing exceptions. Make sure that the start
+        /// &lt;see cref=&quot;Task&quot;/&gt; has actually completed before using the client.&lt;/para&gt;
+        /// &lt;para&gt;In any case, the start &lt;see cref=&quot;Task&quot;/&gt; must be awaited, as it may fail with an exception that must be observed.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is infinite. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may appear to hang as it retries
+        /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static HazelcastClientStart GetNewStartingClient(HazelcastOptions options, CancellationToken cancellationToken = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            var client = CreateClient(options);
+            return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a new starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance in failover mode with configured options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;A &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;HazelcastClientStart&quot;/&gt; instance which exposes the &lt;see cref=&quot;IHazelcastClient&quot;/&gt; itself,
+        /// along with a &lt;see cref=&quot;Task&quot;/&gt; representing the start operation.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance is starting, but not started yet. Its start operation is represented by the returned
+        /// &lt;see cref=&quot;Task&quot;/&gt;, which will complete when the client has started, or when starting has failed. Trying to use the client before the
+        /// start &lt;see cref=&quot;Task&quot;/&gt; has completed can have unspecified results, including throwing exceptions. Make sure that the start
+        /// &lt;see cref=&quot;Task&quot;/&gt; has actually completed before using the client.&lt;/para&gt;
+        /// &lt;para&gt;In any case, the start &lt;see cref=&quot;Task&quot;/&gt; must be awaited, as it may fail with an exception that must be observed.&lt;/para&gt;
+        /// &lt;para&gt;Options are built via the &lt;see cref=&quot;HazelcastFailoverOptionsBuilder.Build()&quot;/&gt; method and passed to
+        /// the &lt;paramref name=&quot;configure&quot;/&gt; method,
+        /// where they can be refined and adjusted, before being used to create the client.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static HazelcastClientStart GetNewStartingFailoverClient(Action&lt;HazelcastFailoverOptions&gt; configure, CancellationToken cancellationToken = default)
+            =&gt; GetNewStartingFailoverClient(GetFailoverOptions(configure ?? throw new ArgumentNullException(nameof(configure))), cancellationToken);
+
+        /// &lt;summary&gt;
+        /// Gets a new starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance in failover mode with options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Options.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A optional cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;HazelcastClientStart&quot;/&gt; instance which exposes the &lt;see cref=&quot;IHazelcastClient&quot;/&gt; itself,
+        /// along with a &lt;see cref=&quot;Task&quot;/&gt; representing the start operation.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;IHazelcastClient&quot;/&gt; instance is starting, but not started yet. Its start operation is represented by the returned
+        /// &lt;see cref=&quot;Task&quot;/&gt;, which will complete when the client has started, or when starting has failed. Trying to use the client before the
+        /// start &lt;see cref=&quot;Task&quot;/&gt; has completed can have unspecified results, including throwing exceptions. Make sure that the start
+        /// &lt;see cref=&quot;Task&quot;/&gt; has actually completed before using the client.&lt;/para&gt;
+        /// &lt;para&gt;In any case, the start &lt;see cref=&quot;Task&quot;/&gt; must be awaited, as it may fail with an exception that must be observed.&lt;/para&gt;
+        /// &lt;para&gt;By default, the client connection timeout is 120 seconds. If this method cannot establish
+        /// a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
+        /// configuration option.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static HazelcastClientStart GetNewStartingFailoverClient(HazelcastFailoverOptions options, CancellationToken cancellationToken = default)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // every async operations using this client will need a proper async context
+            // and, we *must* do this in a non-async method for the change to bubble up!
+            AsyncContext.Ensure();
+
+            var client = CreateClient(options);
+            return new HazelcastClientStart(client, client.StartAsync(cancellationToken));
+        }
+
+        private static HazelcastOptions GetOptions(Action&lt;HazelcastOptions&gt; configure)
+        {
+            return new HazelcastOptionsBuilder().With(configure).Build();
+        }
+
+        private static HazelcastFailoverOptions GetFailoverOptions(Action&lt;HazelcastFailoverOptions&gt; configure)
+        {
+            return new HazelcastFailoverOptionsBuilder().With(configure).Build();
+        }
+
+        // (internal for tests only) creates the serialization service
+        internal static SerializationService CreateSerializationService(SerializationOptions options, ILoggerFactory loggerFactory)
+        {
+            // TODO: refactor serialization service entirely
+            // there should not be a &#39;builder&#39;
+            // it&#39;s all configuration or service
+            var serializationServiceBuilder = new SerializationServiceBuilder(loggerFactory);
+            serializationServiceBuilder
+                .SetConfig(options)
+                .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
+                .SetVersion(SerializationService.SerializerVersion) // uh? else default is wrong?
+                .AddHook&lt;PredicateDataSerializerHook&gt;() // shouldn&#39;t they be configurable?
+                .AddHook&lt;AggregatorDataSerializerHook&gt;()
+                .AddHook&lt;ProjectionDataSerializerHook&gt;()
+                .AddDefinitions(new ConstantSerializerDefinitions())
+                .AddDefinitions(new DefaultSerializerDefinitions())
+                ;
+
+            return serializationServiceBuilder.Build();
+        }
+
+        // creates the client
+        private static HazelcastClient CreateClient(HazelcastOptionsBase hazelcastOptions)
+        {
+            if (hazelcastOptions == null) throw new ArgumentNullException(nameof(hazelcastOptions));
+
+            void QuickLogDebug(HazelcastOptions o, string message)
+            {
+                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));               
+                logger.LogDebug(message);
+            }
+
+            if (hazelcastOptions is HazelcastOptions options)
+            {
+                // clone the options - we don&#39;t want any change to the original options to impact this client
+                options = options.Clone();
+            }
+            else
+            {
+                var opt = ((HazelcastFailoverOptions)hazelcastOptions);                
+
+                if (!opt.Clients.Any())
+                    throw new ConfigurationException(&quot;If Failover is enabled, then clusters should be provided.&quot;);
+
+                if (opt.Clients[0].Networking.ConnectionTimeoutMilliseconds &lt; 0)
+                {
+                    opt.Clients[0].Networking.ConnectionTimeoutMilliseconds = 120_000;
+                    QuickLogDebug(opt.Clients[0], &quot;Options: Clusters[0].Networking.ConnectionTimeoutMilliseconds is infinite =&gt; set it to 120sec.&quot;);
+                }                    
+                
+                opt.Enabled = true;
+                options = opt.Clients[0].Clone();
+                options.FailoverOptions = opt.Clone();//safe,no cyclic clone                 
+            }
+
+            if (options.Networking.Cloud.Enabled)
+            {
+                // if cloud is enabled we must force usage of public addresses
+                // otherwise, ConnectAddressResolver may decide to use internal addresses if SSL is enabled
+                // TODO: why?
+
+                if (options.Networking.UsePublicAddresses.HasValue)
+                {
+                    if (!options.Networking.UsePublicAddresses.Value)
+                        throw new ConfigurationException(&quot;If CloudDiscovery is enabled, then UsePublicAddress cannot be false.&quot;);
+                }
+                else
+                {
+                    options.Networking.UsePublicAddresses = true;
+                    QuickLogDebug(options, &quot;Options: Networking.Cloud.Enabled is true =&gt; set Networking.UsePublicAddress to true.&quot;);
+                }
+            }
+
+            // this ensures that the clock is correctly configured before anything else
+            // happens - remember the clock is static - so we are doing it here - and
+            // the clock will actually initialize once
+            // TODO: make the clock non-static and pass it to the client + where it&#39;s needed
+            Clock.Initialize(options.Core.Clock);
+
+            var loggerFactory = options.LoggerFactory.Service ?? new NullLoggerFactory();
+            var serializationService = CreateSerializationService(options.Serialization, loggerFactory);
+            var cluster = new Cluster(options, serializationService, loggerFactory);
+            var client = new HazelcastClient(options, cluster, serializationService, loggerFactory);
+
+            return client;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[52,16,52,93,0],[69,16,69,131,1],[85,13,85,33,1],[85,34,85,83,1],[89,13,89,35,1],[91,13,91,76,1],[97,13,97,33,1],[97,34,97,83,0],[99,13,99,48,1],[100,13,100,66,1],[101,13,101,27,1],[102,9,102,10,1],[119,16,119,147,0],[134,13,134,33,1],[134,34,134,83,0],[138,13,138,35,1],[140,13,140,84,1],[146,13,146,33,1],[146,34,146,83,0],[148,13,148,48,1],[149,13,149,66,1],[150,13,150,27,1],[151,9,151,10,1],[172,16,172,94,0],[195,16,195,132,0],[217,13,217,33,1],[217,34,217,83,0],[221,13,221,35,1],[223,13,223,48,1],[224,13,224,91,1],[248,16,248,148,0],[269,13,269,33,1],[269,34,269,83,0],[273,13,273,35,1],[275,13,275,48,1],[276,13,276,91,1],[281,13,281,74,0],[286,13,286,82,0],[295,13,295,94,1],[296,13,305,18,1],[307,13,307,56,1],[313,13,313,42,1],[313,43,313,101,0],[317,17,317,99,0],[318,17,318,42,0],[319,13,319,14,0],[321,13,321,62,1],[324,17,324,43,1],[328,17,328,72,1],[330,17,330,40,1],[331,21,331,115,1],[333,17,333,81,1],[335,21,335,87,0],[336,21,336,149,0],[339,17,339,36,1],[340,17,340,50,1],[341,17,341,55,1],[344,13,344,50,1],[350,17,350,68,0],[352,21,352,70,0],[353,25,353,130,0],[357,21,357,66,0],[358,21,358,133,0],[366,13,366,50,1],[368,13,368,90,1],[369,13,369,105,1],[370,13,370,85,1],[371,13,371,101,1],[373,13,373,27,1]]);
+    </script>
+  </body>
+</html>

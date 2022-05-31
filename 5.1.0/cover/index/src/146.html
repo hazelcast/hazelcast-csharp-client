@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Query\InstanceofPredicate.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Query
+{
+    internal class InstanceofPredicate : IPredicate, IIdentifiedDataSerializable
+    {
+        private string _className;
+
+        public InstanceofPredicate()
+        {
+        }
+
+        public InstanceofPredicate(string className)
+        {
+            _className = className;
+        }
+
+        public void ReadData(IObjectDataInput input)
+        {
+            _className = input.ReadString();
+        }
+
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteString(_className);
+        }
+
+        public int FactoryId =&gt; FactoryIds.PredicateFactoryId;
+
+        public int ClassId =&gt; PredicateDataSerializerHook.InstanceofPredicate;
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj is null) return false;
+            return obj is InstanceofPredicate other &amp;&amp; Equals(this, other);
+        }
+
+        private static bool Equals(InstanceofPredicate left, InstanceofPredicate right)
+        {
+            if (ReferenceEquals(left, right)) return true;
+            if (left is null || right is null) return false;
+
+            return left._className == right._className;
+        }
+
+        public override int GetHashCode()
+        {
+            // ReSharper disable NonReadonlyMemberInGetHashCode
+            return _className != null ? _className.GetHashCode(StringComparison.Ordinal) : 0;
+            // ReSharper enable NonReadonlyMemberInGetHashCode
+        }
+
+        public override string ToString()
+        {
+            return &quot;INSTANCEOF(&quot; + _className + &quot;)&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,9,24,37,1],[26,9,26,10,1],[28,9,28,53,1],[30,13,30,36,1],[31,9,31,10,1],[35,13,35,45,1],[36,9,36,10,1],[40,13,40,44,1],[41,9,41,10,1],[43,33,43,62,1],[45,31,45,78,1],[49,13,49,44,1],[49,45,49,57,1],[50,13,50,29,1],[50,30,50,43,1],[51,13,51,76,1],[56,13,56,46,1],[56,47,56,59,1],[57,13,57,47,1],[57,48,57,61,1],[59,13,59,56,1],[65,13,65,94,1],[71,13,71,53,1]]);
+    </script>
+  </body>
+</html>

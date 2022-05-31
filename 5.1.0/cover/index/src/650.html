@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\CPSubsystem.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Provides the &lt;see cref=&quot;ICPSubsystem&quot;/&gt; implementation.
+    /// &lt;/summary&gt;
+    internal class CPSubsystem : ICPSubsystem, IAsyncDisposable
+    {
+        private readonly Cluster _cluster;
+        private readonly SerializationService _serializationService;
+        private readonly ConcurrentDictionary&lt;string, IFencedLock&gt; _fencedLocks = new ConcurrentDictionary&lt;string, IFencedLock&gt;();
+
+        // ReSharper disable once InconsistentNaming - internal for tests
+        internal readonly CPSessionManager _cpSubsystemSession;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CPSubsystem&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;The cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
+        public CPSubsystem(Cluster cluster, SerializationService serializationService)
+        {
+            _cluster = cluster;
+            _serializationService = serializationService;
+            _cpSubsystemSession = new CPSessionManager(cluster);
+        }
+
+        // NOTES
+        //
+        // Java CP objects are managed by CPSubsystemImpl and created through ClientRaftProxyFactory
+        // which is a simplified factory, which does not cache AtomicLong, AtomicRef, and CountDownLatch,
+        // and sort-of caches (?) FencedLock and Semaphore.
+        //
+        // These objects are therefore IDistributedObject but *not* DistributedObjectBase, and *not*
+        // managed by the DistributedObjectFactory.
+        //
+        // The are destroyed via ClientProxy.destroy, which is getContext().getProxyManager().destroyProxy(this),
+        // which means they are destroyed by ProxyManager aka DistributedObjectFactory, which would try to
+        // remove them from cache (always missing) and end up doing proxy.destroyLocally() which eventually
+        // calls into the object&#39;s onDestroy() method.
+        //
+        // But... this is convoluted? For now, our objects inherit from CPObjectBase which is simpler than
+        // DistributedObjectBase, they do not hit DistributedObjectFactory at all, and implement their
+        // own destroy method.
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;IAtomicLong&gt; GetAtomicLongAsync(string name)
+        {
+            var (groupName, objectName, _) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            return new AtomicLong(objectName, groupId, _cluster);
+        }
+
+        public async Task&lt;IAtomicReference&lt;T&gt;&gt; GetAtomicReferenceAsync&lt;T&gt;(string name)
+        {
+            var (groupName, objectName, _) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            return new AtomicReference&lt;T&gt;(objectName, groupId, _cluster, _serializationService);
+        }
+
+        public async Task&lt;IFencedLock&gt; GetLockAsync(string name)
+        {
+            var (groupName, objectName, fullName) = ParseName(name);
+            var groupId = await GetGroupIdAsync(groupName).CfAwait();
+
+            // note: make sure to use the fully qualified fullName as a dictionary key
+
+            // the code we use is an exact match of the Java code
+            // TODO: think about simplifying with the commented code below
+            // TODO: make sure there is no race condition here
+            /*
+            while (true)
+            {
+                var fencedLock = _fencedLocks.GetOrAdd(key, _ =&gt; new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession));
+                if (fencedLock.GroupId.Equals(groupId))
+                    return fencedLock;
+
+                _fencedLocks.TryRemove(key, out _);
+                groupId = await GetGroupIdAsync(groupName).CfAwait();
+            }
+            */
+
+            while (true)
+            {
+                if (_fencedLocks.TryGetValue(fullName, out var fencedLock))
+                {
+                    // if the group ID matches, fine, else we are going to replace the lock
+                    if (fencedLock.GroupId.Equals(groupId))
+                        return fencedLock;
+                    _fencedLocks.TryRemove(fullName, out _);
+                }
+
+                // add a new fenced lock - there is a race condition, so another task may add one,
+                // and we need to verify that the group ID of the lock we get is correct (in case
+                // we don&#39;t add but just get the one that was added by the other task) - if it does
+                // not match then refresh the group ID and return - we want to be consistent
+                fencedLock = _fencedLocks.GetOrAdd(fullName, _ =&gt; new FencedLock(fullName, objectName, groupId, _cluster, _cpSubsystemSession));
+                if (fencedLock.GroupId.Equals(groupId))
+                    return fencedLock;
+
+                groupId = await GetGroupIdAsync(groupName).CfAwait();
+            }
+        }
+
+        // see: ClientRaftProxyFactory.java
+
+        private async Task&lt;CPGroupId&gt; GetGroupIdAsync(string proxyName)
+        {
+            var requestMessage = CPGroupCreateCPGroupCodec.EncodeRequest(proxyName);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = CPGroupCreateCPGroupCodec.DecodeResponse(responseMessage).GroupId;
+            return response;
+        }
+
+        // see: RaftService.java
+
+        internal const string DefaultGroupName = &quot;default&quot;;
+        internal const string MetaDataGroupName = &quot;METADATA&quot;;
+
+        // name should be &#39;objectName&#39; or &#39;objectName@groupName&#39;
+        public static (string groupName, string objectName, string fullName) ParseName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty);
+
+            name = name.Trim();
+            var pos = name.IndexOf(&#39;@&#39;, StringComparison.OrdinalIgnoreCase);
+
+            string groupName;
+            if (pos &lt; 0)
+            {
+                groupName = DefaultGroupName;
+            }
+            else
+            {
+                groupName = name[(pos + 1)..].Trim();
+                if (groupName.Equals(DefaultGroupName, StringComparison.OrdinalIgnoreCase))
+                    groupName = DefaultGroupName;
+            }
+
+            if (groupName.Length == 0)
+                throw new ArgumentException(&quot;CP group name cannot be an empty string.&quot;, nameof(name));
+
+            if (groupName.Contains(&quot;@&quot;, StringComparison.OrdinalIgnoreCase))
+                throw new ArgumentException(&quot;CP group name must be specified at most once.&quot;, nameof(name));
+
+            if (groupName.Equals(MetaDataGroupName, StringComparison.OrdinalIgnoreCase))
+                throw new NotSupportedException(&quot;CP data structures cannot run on the METADATA CP group.&quot;);
+
+            var objectName = pos &lt; 0 ? name : name.Substring(0, pos).Trim();
+
+            if (objectName.Length == 0)
+                throw new ArgumentException(&quot;Object name cannot be empty string.&quot;, nameof(name));
+
+            var fullName = objectName + &#39;@&#39; + groupName;
+
+            return (groupName, objectName, fullName);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _cpSubsystemSession.DisposeAsync().CfAwaitNoThrow();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,131,1],[43,9,43,87,1],[45,13,45,32,1],[46,13,46,58,1],[47,13,47,65,1],[48,9,48,10,1],[71,13,71,62,1],[72,13,72,70,1],[74,13,74,66,1],[75,9,75,10,1],[79,13,79,62,1],[80,13,80,70,1],[82,13,82,97,1],[83,9,83,10,1],[87,13,87,69,1],[88,13,88,70,1],[107,13,107,25,0],[109,17,109,76,1],[112,21,112,60,1],[113,25,113,43,1],[114,21,114,61,0],[121,17,121,145,1],[121,67,121,143,1],[122,17,122,56,1],[123,21,123,39,1],[125,17,125,70,0],[127,9,127,10,1],[133,13,133,85,1],[134,13,134,96,1],[135,13,135,94,1],[136,13,136,29,1],[137,9,137,10,1],[147,13,147,49,1],[147,50,147,109,1],[149,13,149,32,1],[150,13,150,77,1],[153,13,153,25,1],[155,17,155,46,1],[159,17,159,54,1],[160,17,160,92,1],[161,21,161,50,1],[164,13,164,39,1],[165,17,165,103,1],[167,13,167,77,1],[168,17,168,108,1],[170,13,170,89,1],[171,17,171,108,1],[173,13,173,77,1],[175,13,175,40,1],[176,17,176,98,1],[178,13,178,57,1],[180,13,180,54,1],[185,13,185,71,1],[186,9,186,10,1]]);
+    </script>
+  </body>
+</html>

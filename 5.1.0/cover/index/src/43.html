@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlQueryResult.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Sql
+{
+    /// &lt;inheritdoc cref=&quot;ISqlQueryResult&quot;/&gt;
+    internal class SqlQueryResult : ISqlQueryResult
+    {
+        private readonly SqlQueryId _queryId;
+        private readonly Func&lt;SqlQueryId, Task&gt; _closeQuery;
+        private readonly SerializationService _serializationService;
+        private readonly CancellationToken _cancellationToken;
+        private readonly Func&lt;SqlQueryId, int, CancellationToken, Task&lt;SqlPage&gt;&gt; _getNextPage;
+        private readonly SqlRowMetadata _metadata;
+        private readonly int _cursorBufferSize;
+        private CancellationTokenSource _combinedCancellation;
+        private bool _disposed;
+
+        // enumeration variables
+        // having them here allows for Enumerator to be a readonly struct
+        private bool _enumerateStarted;
+        private SqlPage _page;
+        private SqlRow _currentRow;
+        private int _currentRowIndex;
+
+        internal SqlQueryResult(
+            SerializationService serializationService,
+            SqlRowMetadata metadata, SqlPage firstPage,
+            int cursorBufferSize,
+            Func&lt;SqlQueryId, int, CancellationToken, Task&lt;SqlPage&gt;&gt; getNextPage,
+            SqlQueryId queryId,
+            Func&lt;SqlQueryId, Task&gt; closeQuery,
+            CancellationToken cancellationToken)
+        {
+            _queryId = queryId;
+            _closeQuery = closeQuery;
+            _serializationService = serializationService;
+            _cursorBufferSize = cursorBufferSize;
+            _metadata = metadata;
+            _page = firstPage;
+            _getNextPage = getNextPage;
+            _cancellationToken = cancellationToken;
+        }
+
+        public IAsyncEnumerator&lt;SqlRow&gt; GetAsyncEnumerator(CancellationToken cancellationToken)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(SqlQueryResult));
+
+            // cannot enumerate more than once, this is consistent with e.g. EF
+            if (_enumerateStarted) throw new InvalidOperationException(&quot;The result of a query cannot be enumerated more than once.&quot;);
+            _enumerateStarted = true;
+
+            // combine cancellation tokens if needed
+            if (cancellationToken == default)
+            {
+                cancellationToken = _cancellationToken;
+            }
+            else if (_cancellationToken != default)
+            {
+                _combinedCancellation = CancellationTokenSource.CreateLinkedTokenSource(_cancellationToken, cancellationToken);
+                cancellationToken = _combinedCancellation.Token;
+            }
+
+            return new Enumerator(this, cancellationToken);
+        }
+
+        private readonly struct Enumerator : IAsyncEnumerator&lt;SqlRow&gt;
+        {
+            private readonly SqlQueryResult _result;
+            private readonly CancellationToken _cancellationToken;
+
+            public Enumerator(SqlQueryResult result, CancellationToken cancellationToken)
+            {
+                _result = result;
+                _cancellationToken = cancellationToken;
+                _result._currentRowIndex = -1;
+            }
+
+            public async ValueTask&lt;bool&gt; MoveNextAsync()
+            {
+                _cancellationToken.ThrowIfCancellationRequested();
+
+                while (_result._page != null)
+                {
+                    _cancellationToken.ThrowIfCancellationRequested();
+
+                    // no more current row
+                    _result._currentRow = null;
+
+                    // try to increment index within the current page, return if successful
+                    if (++_result._currentRowIndex &lt; _result._page.RowCount) return true;
+
+                    // reached end of current page, if there is no further page stop enumerating
+                    if (_result._page.IsLast)
+                    {
+                        _result._page = null;
+                        return false;
+                    }
+
+                    // otherwise, try to retrieve the next page
+                    _result._page = await _result._getNextPage(_result._queryId, _result._cursorBufferSize, _cancellationToken).CfAwait();
+                    _result._currentRowIndex = -1;
+                }
+
+                return false;
+            }
+
+            public SqlRow Current
+            {
+                get
+                {
+                    // ensure it is valid to get the current row
+                    if (_cancellationToken.IsCancellationRequested || _result._currentRowIndex &lt; 0 || _result._currentRowIndex &gt;= _result._page.RowCount)
+                        throw new InvalidOperationException();
+
+                    // if the current row has already been hydrated, return it
+                    if (_result._currentRow != null) return _result._currentRow;
+
+                    // otherwise, hydrate the current row, cache it, and return it
+                    var columns = new List&lt;object&gt;(_result._page.ColumnCount);
+                    
+                    for (var columnIndex = 0; columnIndex &lt; _result._page.ColumnCount; columnIndex++)
+                    {
+                        columns.Add(_result._page[_result._currentRowIndex, columnIndex]);
+                    }
+
+                    var row = new SqlRow(columns, _result._metadata)
+                    {
+                        // use lazy deserialization by assigning the service 
+                        SerializationService = _result._serializationService
+                    };
+                    _result._currentRow = row;
+
+                    return _result._currentRow;
+                }
+            }
+
+            public ValueTask DisposeAsync()
+            {
+                // the enumerator is disposed by &#39;await foreach&#39; and why not use this opportunity to dispose the result as well?
+                return _result.DisposeAsync();
+            }
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
+            // if _page is null, or _page.IsLast, we have retrieved the very last page from the server, and
+            // the server has closed the query, and there is nothing we need to do anymore
+            if (_page == null || _page.IsLast) return;
+
+            // otherwise, the server is still running the query and we need to close it
+            try
+            {
+                await _closeQuery(_queryId).CfAwait();
+            }
+            catch
+            {
+                // TODO: do better
+            }
+
+            // dispose the combined cancellation if it has been created
+            _combinedCancellation?.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[44,9,51,49,1],[53,13,53,32,1],[54,13,54,38,1],[55,13,55,58,1],[56,13,56,50,1],[57,13,57,34,1],[58,13,58,31,1],[59,13,59,40,1],[60,13,60,52,1],[61,9,61,10,1],[65,13,65,27,1],[65,28,65,86,1],[68,13,68,35,1],[68,36,68,134,0],[69,13,69,38,1],[72,13,72,46,1],[74,17,74,56,1],[76,18,76,52,1],[78,17,78,128,0],[79,17,79,65,0],[82,13,82,60,1],[92,17,92,34,1],[93,17,93,56,1],[94,17,94,47,1],[95,13,95,14,1],[99,17,99,67,1],[101,17,101,46,1],[103,21,103,71,1],[106,21,106,48,1],[109,21,109,77,1],[109,78,109,90,1],[112,21,112,46,1],[114,25,114,46,1],[115,25,115,38,1],[119,21,119,139,1],[120,21,120,51,1],[123,17,123,30,0],[124,13,124,14,1],[131,21,131,154,1],[132,25,132,63,0],[135,21,135,53,1],[135,54,135,81,0],[138,21,138,79,1],[140,26,140,45,1],[140,47,140,86,1],[140,88,140,101,1],[142,25,142,91,1],[145,21,149,23,1],[150,21,150,47,1],[152,21,152,48,1],[159,17,159,47,1],[165,13,165,27,1],[165,28,165,35,1],[166,13,166,30,1],[170,13,170,47,1],[170,48,170,55,1],[175,17,175,55,1],[176,13,176,14,1],[177,13,177,18,0],[180,13,180,14,0],[183,13,183,46,1],[184,9,184,10,1]]);
+    </script>
+  </body>
+</html>

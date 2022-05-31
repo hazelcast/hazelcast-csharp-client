@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberSubscription.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents a member-level subscription to a cluster event.
+    /// &lt;/summary&gt;
+    internal class MemberSubscription
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberSubscription&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;clusterSubscription&quot;&gt;The cluster subscription.&lt;/param&gt;
+        /// &lt;param name=&quot;serverSubscriptionId&quot;&gt;The unique identifier assigned by the server to the client subscription.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;The correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection to the member.&lt;/param&gt;
+        public MemberSubscription(ClusterSubscription clusterSubscription, Guid serverSubscriptionId, long correlationId, MemberConnection connection)
+        {
+            ClusterSubscription = clusterSubscription;
+            ServerSubscriptionId = serverSubscriptionId;
+            CorrelationId = correlationId;
+            Connection = connection;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the cluster subscription owning this client subscription.
+        /// &lt;/summary&gt;
+        public ClusterSubscription ClusterSubscription { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier assigned by the server to this subscription.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is the identifier that needs to be used to unsubscribe.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Guid ServerSubscriptionId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the correlation identifier.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Event messages for this subscription will have this correlation identifier.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public long CorrelationId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the connection to the member.
+        /// &lt;/summary&gt;
+        public MemberConnection Connection { get; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,9,31,151,1],[33,13,33,55,1],[34,13,34,57,1],[35,13,35,43,1],[36,13,36,37,1],[37,9,37,10,1],[42,58,42,62,1],[50,44,50,48,1],[58,37,58,41,1],[63,46,63,50,1]]);
+    </script>
+  </body>
+</html>

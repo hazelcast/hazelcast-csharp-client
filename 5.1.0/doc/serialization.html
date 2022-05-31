@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Serialization | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Serialization | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="serialization">Serialization</h1>
+
+<p>Serialization is the process of converting an object into a stream of bytes to store the object in memory, a file or database, or transmit it through network.
+Its main purpose is to save the state of an object in order to be able to recreate it when needed. The reverse process is called deserialization.
+Hazelcast offers you its own native serialization methods. You will see these methods throughout the section.</p>
+<h2 id="default-types">Default Types</h2>
+<p>Hazelcast serializes all your objects before sending them to the server. The built-in primitive types are serialized natively and you cannot override this behavior. The following table is the conversion of types for Java server side.</p>
+<table>
+<thead>
+<tr>
+<th>.NET</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>bool</td>
+<td>Boolean</td>
+</tr>
+<tr>
+<td>byte</td>
+<td>Byte</td>
+</tr>
+<tr>
+<td>char</td>
+<td>Character</td>
+</tr>
+<tr>
+<td>short</td>
+<td>Short</td>
+</tr>
+<tr>
+<td>int</td>
+<td>Integer</td>
+</tr>
+<tr>
+<td>long</td>
+<td>Long</td>
+</tr>
+<tr>
+<td>float</td>
+<td>Float</td>
+</tr>
+<tr>
+<td>double</td>
+<td>Double</td>
+</tr>
+<tr>
+<td>string</td>
+<td>String</td>
+</tr>
+</tbody>
+</table>
+<p>and</p>
+<table>
+<thead>
+<tr>
+<th>.NET</th>
+<th>Java</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>DateTime</td>
+<td>java.util.Date</td>
+</tr>
+<tr>
+<td>System.Numeric.BigInteger</td>
+<td>java.math.BigInteger</td>
+</tr>
+<tr>
+<td>Guid</td>
+<td>java.util.UUID</td>
+</tr>
+</tbody>
+</table>
+<p>Arrays of the above types can be serialized as <code>bool[]</code>, <code>byte[]</code>, <code>short[]</code>, <code>int[]</code>, <code>long[]</code>, <code>float[]</code>, <code>double[]</code>,  <code>char[]</code> and <code>string[]</code>.</p>
+<h2 id="serialization-priority">Serialization Priority</h2>
+<p>When Hazelcast .NET client serializes an object into <code>IData</code>:</p>
+<ol>
+<li>It first checks whether the object is null.</li>
+<li>If the above check fails, then Hazelcast checks if it is an instance of <code>Hazelcast.Serialization.IIdentifiedDataSerializable</code>.</li>
+<li>If the above check fails, then Hazelcast checks if it is an instance of <code>Hazelcast.Serialization.IPortable</code>.</li>
+<li>If the above check fails, then Hazelcast checks if it is an instance of one of the default types (see above default types).</li>
+<li>If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of <code>IByteArraySerializer&lt;T&gt;</code> or <code>IStreamSerializer&lt;T&gt;</code>. Custom serializer is searched using the input object’s class and its parent class up to <code>Object</code>. If parent class search fails, all interfaces implemented by the class are also checked (note that the <em>order</em> in which these interfaces are checked is not specified).</li>
+<li>If the above check fails, then Hazelcast checks if it is Serializable ( <code>Type.IsSerializable</code> ) and a Global Serializer is not registered with CLR serialization Override feature.</li>
+<li>If the above check fails, Hazelcast will use the registered Global Serializer if one exists.</li>
+</ol>
+<p>Note that, at the moment, there is no built-in automatic support for <code>IEnumerable&lt;T&gt;</code> or <code>T[]</code> beyond the default types documented above.</p>
+<h2 id="identifieddataserializable-serialization">IdentifiedDataSerializable Serialization</h2>
+<p>For a faster serialization of objects, Hazelcast recommends to implement the <code>IdentifiedDataSerializable</code> interface. The following is an example of an object implementing this interface:</p>
+<pre><code class="lang-csharp">public class Employee : IIdentifiedDataSerializable
+{
+    public const int ClassId = 100;
+
+    public int Id { get; set; }
+    public string Name { get; set; }
+
+    public void ReadData(IObjectDataInput input)
+    {
+        Id = input.ReadInt();
+        Name = input.ReadString();
+    }
+
+    public void WriteData(IObjectDataOutput output)
+    {
+        output.WriteInt(Id);
+        output.WriteString(Name);
+    }
+
+    int IIdentifiedDataSerializable.FactoryId =&gt; SampleDataSerializableFactory.FactoryId;
+    int IIdentifiedDataSerializable.ClassId =&gt; 100;
+}
+</code></pre><p>IdentifiedDataSerializable uses the <code>Class</code> and <code>FactoryId</code> properties to reconstitute the object. To complete the implementation <code>IDataSerializableFactory</code> should also be implemented and registered into <code>SerializationOptions</code>. The factory&#39;s responsibility is to return an instance of the right <code>IIdentifiedDataSerializable</code> object, given the class identifier.</p>
+<p>A sample <code>IDataSerializableFactory</code> could be implemented as following:</p>
+<pre><code class="lang-csharp">public class SampleDataSerializableFactory : IDataSerializableFactory
+{
+    public const int FactoryId = 1000;
+
+    public IIdentifiedDataSerializable Create(int typeId)
+    {
+        if (typeId == Employee.ClassId) return new Employee();
+        return null;
+    }
+}
+</code></pre><p>The last step is to register the <code>IDataSerializableFactory</code> to the <code>SerializationOptions</code>.</p>
+<p><strong>Programmatic Configuration:</strong></p>
+<pre><code class="lang-csharp">var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+var factory = new SampleDataSerializableFactory();
+hazelcastOptions.Serialization
+    .AddDataSerializableFactory(SampleDataSerializableFactory.FactoryId, factory);
+</code></pre><p><strong>Declarative Configuration:</strong></p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;serialization&quot;: {
+            &quot;dataSerializableFactories&quot;: [
+                {
+                    &quot;id&quot;: 1000,
+                    &quot;typeName&quot;: &quot;SampleDataSerializableFactory&quot;
+                }
+            ]
+        }
+    }
+}
+</code></pre><p>Note that the identifier that is passed to the <code>SerializationOptions</code> is same as value of the <code>FactoryId</code> of the <code>Employee</code> class.</p>
+<p>Here (and in all examples below), <code>typeName</code> is the fully-qualified CLR type name. Depending on your code, it could be <code>&quot;MyFactory&quot;</code> but may have to be <code>&quot;My.Namespace.Factory&quot;</code> or even <code>&quot;My.Namespace.Factory, My.Assembly&quot;</code>.</p>
+<h2 id="portable-serialization">Portable Serialization</h2>
+<p>As an alternative to the existing serialization methods, Hazelcast offers portable serialization. To use it, you need to implement the <code>IPortable</code> interface. Portable serialization has the following advantages:</p>
+<ul>
+<li>Supporting multiversion of the same object type.</li>
+<li>Fetching individual fields without having to rely on the reflection.</li>
+<li>Querying and indexing support without deserialization and/or reflection.</li>
+</ul>
+<p>In order to support these features, a serialized <code>IPortable</code> object contains meta information like the version and concrete location of the each field in the binary data. This way Hazelcast is able to navigate in the binary data and deserialize only the required field without actually deserializing the whole object which improves the query performance.</p>
+<p>With multiversion support, you can have two members where each of them having different versions of the same object, and Hazelcast will store both meta information and use the correct one to serialize and deserialize portable objects depending on the member. This is very helpful when you are doing a rolling upgrade without shutting down the cluster.</p>
+<p>Also note that portable serialization is totally language independent and is used as the binary protocol between Hazelcast server and clients.</p>
+<p>A sample portable implementation of a <code>Customer</code> class looks like the following:</p>
+<pre><code class="lang-csharp">public class Customer : IPortable
+{
+    public const int ClassId = 1;
+
+    public string Name { get; set; }
+    public int Id { get; set; }
+    public DateTime LastOrder { get; set; }
+
+    int IPortable.FactoryId =&gt; SamplePortableFactory.FactoryId;
+    int IPortable.ClassId =&gt; ClassId;
+
+    public void WritePortable(IPortableWriter writer)
+    {
+        writer.WriteInt(&quot;id&quot;, Id);
+        writer.WriteString(&quot;name&quot;, Name);
+        writer.WriteLong(&quot;lastOrder&quot;, LastOrder.ToFileTimeUtc());
+    }
+
+    public void ReadPortable(IPortableReader reader)
+    {
+        Id = reader.ReadInt(&quot;id&quot;);
+        Name = reader.ReadString(&quot;name&quot;);
+        LastOrder = DateTime.FromFileTimeUtc(reader.ReadLong(&quot;lastOrder&quot;));
+    }
+}
+</code></pre><p>Similar to <code>IIdentifiedDataSerializable</code>, a Portable object must provide a <code>ClassId</code> and a <code>FactoryId</code> properties. The factory object will be used to create the Portable object given the classId.</p>
+<p>A sample <code>IPortableFactory</code> could be implemented as following:</p>
+<pre><code class="lang-csharp">public class SamplePortableFactory : IPortableFactory
+{
+    public const int FactoryId = 1;
+
+    public IPortable Create(int classId)
+    {
+        if (classId == Customer.ClassId)  return new Customer();
+        return null;
+    }
+}
+</code></pre><p>The last step is to register the <code>IPortableFactory</code> to the <code>SerializationOptions</code>.</p>
+<p><strong>Programmatic Configuration:</strong></p>
+<pre><code class="lang-c#">var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+var factory = new SamplePortableFactory();
+hazelcastOptions.Serialization
+    .AddPortableFactory(SamplePortableFactory.FactoryId, factory);
+</code></pre><p><strong>Declarative Configuration:</strong></p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;serialization&quot;: {
+            &quot;portableFactories&quot;: [
+                {
+                    &quot;id&quot;: 1,
+                    &quot;typeName&quot;: &quot;SamplePortableFactory&quot;
+                }
+            ]
+        }
+    }
+}
+</code></pre><p>Note that the identifier that is passed to the <code>SerializationConfig</code> is same as the value of the <code>FactoryId</code> of the <code>Customer</code> class.</p>
+<h2 id="custom-serialization">Custom Serialization</h2>
+<p>Hazelcast lets you plug a custom serializer to be used for serialization of objects.</p>
+<p>Let&#39;s say you have a class <code>CustomSerializableType</code> and you would like to customize the serialization, since you may want to use an external serializer for only one class.</p>
+<pre><code class="lang-csharp">public class CustomSerializableType
+{
+    public string Value { get; set; }
+}
+</code></pre><p>Let&#39;s say your custom <code>CustomSerializer</code> will serialize <code>CustomSerializableType</code>.</p>
+<pre><code class="lang-csharp">public class CustomSerializer : IStreamSerializer&lt;CustomSerializableType&gt;
+{
+    public const int TypeId = 10;
+
+    public void Write(IObjectDataOutput output, CustomSerializableType t)
+    {
+        var array = Encoding.UTF8.GetBytes(t.Value);
+        output.WriteInt(array.Length);
+        output.Write(array);
+    }
+
+    public CustomSerializableType Read(IObjectDataInput input)
+    {
+        var len = input.ReadInt();
+        var array = new byte[len];
+        input.Read(array, 0, array.Length);
+        return new CustomSerializableType { Value = Encoding.UTF8.GetString(array) };
+    }
+
+    int ISerializer.TypeId =&gt; TypeId;
+
+    public void Dispose()
+    { }
+}
+</code></pre><p>Note that the serializer <code>TypeId</code> must be unique as Hazelcast will use it to lookup the <code>CustomSerializer</code> while it deserializes the object.
+Now the last required step is to register the <code>CustomSerializer</code> to the configuration.</p>
+<p><strong>Programmatic Configuration:</strong></p>
+<pre><code class="lang-c#">var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+hazelcastOptions.Serialization.Serializers.Add(
+    new SerializerOptions {
+        SerializedType = typeof(CustomSerializableType),
+        Creator = () =&gt; new CustomSerializer()
+    }
+);
+</code></pre><p><strong>Declarative Configuration:</strong></p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;serialization&quot;: {
+            &quot;serializers&quot;: [
+                {
+                    &quot;serializedTypeName&quot;: &quot;CustomSerializableType&quot;,
+                    &quot;typeName&quot;: &quot;CustomSerializer&quot;
+                }
+            ]
+        }
+    }
+}
+</code></pre><p>From now on, Hazelcast will use <code>CustomSerializer</code> to serialize <code>CustomSerializableType</code> objects.</p>
+<h2 id="json-serialization">JSON Serialization</h2>
+<p>You can use the JSON formatted strings as objects in Hazelcast cluster. Starting with Hazelcast IMDG 3.12, the JSON serialization is one of the formerly supported serialization methods. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.</p>
+<p>In order to use JSON serialization, you should use the <code>HazelcastJsonValue</code> object for the key or value. Here is an example IMap usage:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, HazelcastJsonValue&gt;(&quot;map&quot;);
+</code></pre><p>We constructed a map in the cluster which has <code>string</code> as the key and <code>HazelcastJsonValue</code> as the value. <code>HazelcastJsonValue</code> is a simple wrapper and identifier for the JSON formatted strings. You can get the JSON string from the <code>HazelcastJsonValue</code> object by using the <code>ToString()</code> method. </p>
+<p>You can construct a <code>HazelcastJsonValue</code> using the <code>HazelcastJsonValue(string jsonString)</code> constructor. No JSON parsing is performed but it is your responsibility to provide correctly formatted JSON strings. The client will not validate the string, and it will send it to the cluster as it is. If you submit incorrectly formatted JSON strings and, later, if you query those objects, it is highly possible that you will get formatting errors since the server will fail to deserialize or find the query fields.</p>
+<p>Here is an example of how you can construct a <code>HazelcastJsonValue</code> and put to the map:</p>
+<pre><code class="lang-csharp">await map.PutAsync(&quot;item1&quot;, new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 4 }&quot;));
+await map.PutAsync(&quot;item2&quot;, new HazelcastJsonValue(&quot;{ \&quot;age\&quot;: 20 }&quot;));
+</code></pre><p>You can query JSON objects in the cluster using the <code>Predicate</code>s of your choice. An example JSON query for querying the values whose age is less than 6 is shown below:</p>
+<pre><code class="lang-csharp">    // Get the objects whose age is less than 6
+    var result = await map.GetValues(Predicates.IsLessThan(&quot;age&quot;, 6));
+
+    Console.WriteLine($&quot;Retrieved {result.Count} values whose age is less than 6.&quot;);
+    Console.WriteLine($&quot;Entry is: {result.First()}&quot;);
+</code></pre><h2 id="global-serialization">Global Serialization</h2>
+<p>The global serializer is identical to custom serializers from the implementation perspective. It is registered as a fallback serializer to handle all other objects if a serializer cannot be located for them. By default, the global serializer does not handle .NET Serializable instances. However, you can configure it to be responsible for those instances.</p>
+<p>A custom serializer should be registered for a specific class type. The global serializer will handle all class types if all the steps in searching for a serializer, as described previously, fail.</p>
+<p><strong>Use cases</strong></p>
+<ul>
+<li>Third party serialization frameworks can be integrated using the global serializer.</li>
+<li>For your custom objects, you can implement a single serializer to handle all of them.</li>
+</ul>
+<p>A sample global serializer that integrates with a third party serializer is shown below.</p>
+<pre><code class="lang-csharp">public class GlobalSerializer : IStreamSerializer&lt;object&gt;
+{
+    public const int TypeId = 20;
+
+    public void Write(IObjectDataOutput output, object obj)
+    {
+        output.write(MyFavoriteSerializer.Serialize(obj))
+    }
+
+    public object Read(IObjectDataInput input)
+    {
+        return MyFavoriteSerializer.Deserialize(input);
+    }
+
+    int ISerializer.TypeId =&gt; TypeId;
+}
+</code></pre><p>You should register the global serializer in the configuration.</p>
+<p><strong>Programmatic Configuration:</strong></p>
+<pre><code class="lang-csharp">var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+hazelcastOptions.Serialization.GlobalSerializer.Creator =
+    () =&gt; new GlobalSerializer();
+</code></pre><p><strong>Declarative Configuration:</strong></p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;serialization&quot;: {
+            &quot;globalSerializer&quot;: {
+                &quot;serializedTypeName&quot;: &quot;CustomSerializableType&quot;,
+                &quot;overrideClrSerialization&quot;: true
+            }
+        }
+    }
+}
+</code></pre></article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

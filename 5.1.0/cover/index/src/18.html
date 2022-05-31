@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastFailoverOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Configuration.Binding;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents the Hazelcast client failover options.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The client initially tries to connect to the first cluster of the &lt;see cref=&quot;Clients&quot;/&gt;
+    /// list, then tries each cluster in the list in order, and cycle the list at most &lt;see cref=&quot;TryCount&quot;/&gt;
+    /// times before failing and shutting down.&lt;/para&gt;
+    /// &lt;para&gt;When the client gets disconnected, it first tries to reconnect to the current cluster,
+    /// then tries each cluster in the list in order, and cycle the list at most &lt;see cref=&quot;TryCount&quot;/&gt;
+    /// times before failing and shutting down.&lt;/para&gt;
+    /// &lt;para&gt;So if the &lt;see cref=&quot;Clients&quot;/&gt; list is (A, B, C) and client is disconnected from B and
+    /// &lt;see cref=&quot;TryCount&quot;/&gt; is 2, it will try C, B, A, C, B, A in this order and then shutdown.&lt;/para&gt;
+    /// &lt;para&gt;The retry strategy for each cluster is configured with a 2 minutes timeout, i.e. the
+    /// client will try to connect to each cluster for at most 2 minutes before failing.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public sealed class HazelcastFailoverOptions : HazelcastOptionsBase
+    {
+        /// &lt;summary&gt;
+        /// Gets the Hazelcast failover configuration section name, which is &lt;c&gt;&quot;hazelcast-failover&quot;&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        internal const string SectionNameConstant = &quot;hazelcast-failover&quot;;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public HazelcastFailoverOptions()
+        {
+            Clients = new List&lt;HazelcastOptions&gt;();
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private HazelcastFailoverOptions(HazelcastFailoverOptions other)
+        {
+            TryCount = other.TryCount;
+            Clients = new List&lt;HazelcastOptions&gt;(other.Clients.Select(x =&gt; x.Clone()));
+            Enabled = other.Enabled;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        internal override string SectionName =&gt; SectionNameConstant;
+
+        /// &lt;summary&gt;
+        /// Gets status of failover
+        /// &lt;/summary&gt;
+        [BinderIgnore(false)]
+        internal bool Enabled { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the number of times that the client will try to reconnect to each
+        /// cluster in the failover setup before shutting down.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;Default try count is infinite.&lt;/remarks&gt;
+        public int TryCount { get; set; } = int.MaxValue;
+
+        /// &lt;summary&gt;
+        /// Gets the list of cluster in the failover setup.
+        /// &lt;/summary&gt;
+        // TODO: consider supporting merging external files?
+        // &quot;clients&quot;: [ { &quot;client&quot;: &quot;path-to-json&quot; }, ... ]
+        public IList&lt;HazelcastOptions&gt; Clients { get; }
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;Dosen&#39;t clone &lt;see cref=&quot;HazelcastOptions.FailoverOptions&quot;/&gt; due to cyclic dependncy&lt;/remarks&gt;
+        /// &lt;returns&gt;A deep clone of the options.&lt;/returns&gt;
+        internal HazelcastFailoverOptions Clone() =&gt; new HazelcastFailoverOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[46,9,46,42,1],[48,13,48,52,1],[49,9,49,10,1],[54,9,54,73,1],[56,13,56,39,1],[57,13,57,88,1],[57,76,57,85,1],[58,13,58,37,1],[59,9,59,10,1],[62,49,62,68,1],[68,33,68,37,1],[68,38,68,42,1],[75,31,75,35,1],[75,36,75,40,1],[75,45,75,57,1],[75,45,75,57,1],[82,50,82,54,1],[89,54,89,88,1]]);
+    </script>
+  </body>
+</html>

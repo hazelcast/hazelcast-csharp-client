@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlError.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Sql
+{
+    /// &lt;summary&gt;
+    /// A server-side error that is propagated to the client.
+    /// &lt;/summary&gt;
+    internal class SqlError
+    {
+        public int Code { get; }
+        public string Message { get; }
+        public Guid OriginatingMemberId { get; }
+
+        public string Suggestion { get; }
+
+        /// &lt;summary&gt;
+        /// Creates a new instance of &lt;see cref=&quot;SqlError&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public SqlError(int code, string message, Guid originatingMemberId, bool hasSuggestion, string suggestion)
+        {
+            Code = code;
+            Message = message;
+            OriginatingMemberId = originatingMemberId;
+            if (hasSuggestion) Suggestion = suggestion;
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[24,27,24,31,1],[25,33,25,37,1],[26,43,26,47,1],[28,36,28,40,1],[33,9,33,115,1],[35,13,35,25,1],[36,13,36,31,1],[37,13,37,55,1],[38,13,38,31,1],[38,32,38,56,1],[39,9,39,10,1]]);
+    </script>
+  </body>
+</html>

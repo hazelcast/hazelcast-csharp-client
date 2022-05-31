@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\CPSessionManager.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Manages server side cp session requests and heartbeat
+    /// &lt;/summary&gt;
+    internal partial class CPSessionManager : IAsyncDisposable
+    {
+        #region Properties
+        /// &lt;summary&gt;
+        /// SemaphoreSlim is used altough java client uses ReaderWriterLockSlim
+        /// &lt;para&gt;
+        /// Reason: &quot;ReaderWriterLockSlim has managed thread affinity; that is, each Thread object must make its 
+        /// own method calls to enter and exit lock modes. No thread can change the mode of another thread.&quot;
+        /// &lt;/para&gt;
+        /// &lt;seealso  href=&quot;https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim?view=net-6.0#remarks&quot;/&gt; 
+        /// &lt;/summary&gt;
+        private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
+        private readonly ConcurrentDictionary&lt;CPGroupId, SemaphoreSlim&gt; _groupIdSemaphores = new ConcurrentDictionary&lt;CPGroupId, SemaphoreSlim&gt;();
+        private readonly ConcurrentDictionary&lt;CPGroupId, CPSession&gt; _sessions = new ConcurrentDictionary&lt;CPGroupId, CPSession&gt;();
+        private int _disposed;
+        private readonly object _mutex = new object();
+        private readonly ILogger _logger;
+        private readonly Cluster _cluster;
+
+        public const long NoSessionId = -1;
+        #endregion
+
+        #region SessionManagement
+        public CPSessionManager(Cluster cluster)
+        {
+            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            _logger = _cluster.State.LoggerFactory.CreateLogger&lt;CPSessionManager&gt;();
+            _cancel = new CancellationTokenSource();
+            _heartbeating = Task.CompletedTask;
+            HConsole.Configure(x =&gt; x.Configure&lt;Heartbeat&gt;().SetPrefix(&quot;CP.SESSION&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Acquires the session by increasing given count, creates if absent.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;count&quot;&gt;Increase count of acquirment&lt;/param&gt;
+        /// &lt;returns&gt;Session Id&lt;/returns&gt;
+        public async Task&lt;long&gt; AcquireSessionAsync(CPGroupId groupId, int count = 1)
+        {
+            var session = await GetOrCreateSessionAsync(groupId).CfAwait();
+            session.Acquire(count);
+            return session.Id;
+        }
+
+        /// &lt;summary&gt;
+        /// Releases the session by decreasing given count
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;sessionId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;count&quot;&gt;Decrease count of release&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public void ReleaseSession(CPGroupId groupId, long sessionId, int count = 1)
+        {
+            if (_sessions.TryGetValue(groupId, out var sessionState) &amp;&amp; sessionState.Id == sessionId)
+            {
+                sessionState.Release(count);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Invalidates the given session after invalidation no more heartbeat will be sent.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;sessionId&quot;&gt;&lt;/param&gt;
+        public void InvalidateSession(CPGroupId groupId, long sessionId)
+        {
+            if (_sessions.TryGetValue(groupId, out var sessionState) &amp;&amp; sessionState.Id == sessionId)
+            {
+                _sessions.TryRemove(groupId, sessionState);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets session id by given group id
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;Session id or &lt;see cref=&quot;NoSessionId&quot;/&gt; if absent&lt;/returns&gt;
+        public long GetSessionId(CPGroupId groupId)
+        {
+            if (_sessions.TryGetValue(groupId, out var sessionState))
+                return sessionState.Id;
+            else
+                return NoSessionId;
+        }
+
+        public async Task CloseSessionAsync(CPGroupId groupId, long sessionId)
+        {
+            InvalidateSession(groupId, sessionId);
+            await RequestCloseSessionAsync(groupId, sessionId).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Shuts down sessions on server and disposes
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public async Task ShutdownAsync()
+        {
+            await _semaphoreReadWrite.WaitAsync().CfAwait();
+
+            try
+            {
+                IEnumerable&lt;(CPGroupId, CPSession)&gt; sessions;
+                lock (_mutex) sessions = _sessions.Select(p =&gt; (p.Key, p.Value));
+
+                var tasks = new List&lt;Task&gt;();
+                int taskCount = 4;
+                var enumerator = sessions.GetEnumerator();
+
+                void StartCurrent()
+                {
+                    var currentTask = CloseSessionAsync(enumerator.Current.Item1, enumerator.Current.Item2.Id);
+                    tasks.Add(currentTask);
+                }
+
+                //Start tasks as much as possible.
+                while (tasks.Count &lt; taskCount &amp;&amp; enumerator.MoveNext() &amp;&amp; !_cancel.Token.IsCancellationRequested)
+                    StartCurrent();
+
+                // when a tasks completes, try to add next one.
+                while (tasks.Count &gt; 0)
+                {
+                    var completed = await Task.WhenAny(tasks).CfAwait();
+                    tasks.Remove(completed);
+
+                    if (enumerator.MoveNext() &amp;&amp; !_cancel.Token.IsCancellationRequested)
+                        StartCurrent();
+                }
+            }
+            finally { _semaphoreReadWrite.Release(); }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or createas a session if absent by group id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;&lt;see cref=&quot;CPSubsystemSessionState&quot;/&gt;&lt;/returns&gt;
+        /// &lt;exception cref=&quot;HazelcastInstanceNotActiveException&quot;&gt;&lt;/exception&gt;
+        private async Task&lt;CPSession&gt; GetOrCreateSessionAsync(CPGroupId groupId)
+        {
+            await _semaphoreReadWrite.WaitAsync().CfAwait();
+
+            try
+            {
+                if (_disposed == 1) throw new ObjectDisposedException(&quot;CP Subsystem Session is already disposed.&quot;);
+
+                if (_sessions.TryGetValue(groupId, out var sessionState) &amp;&amp; sessionState.IsValid)
+                {
+                    return sessionState;
+                }
+                else
+                {
+                    // Wait and lock only for the groupId
+                    var semaphore = GetSemaphoreBy(groupId);
+                    await semaphore.WaitAsync().CfAwait();
+
+                    // check once more after groupId semaphore
+                    if (_sessions.TryGetValue(groupId, out sessionState) &amp;&amp; sessionState.IsValid)
+                    {
+                        return sessionState;
+                    }
+
+                    try
+                    {
+                        var session = await RequestNewSessionAsync(groupId).CfAwait();
+                        _sessions[groupId] = session.Item1;
+                        ScheduleHeartbeat(TimeSpan.FromMilliseconds(session.Item2));
+                        return session.Item1;
+                    }
+                    finally
+                    {
+                        semaphore.Release();
+                    }
+                }
+
+            }
+            finally { _semaphoreReadWrite.Release(); }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or create a &lt;see cref=&quot;SemaphoreSlim&quot;/&gt; for given group id
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;&lt;see cref=&quot;SemaphoreSlim&quot;/&gt;&lt;/returns&gt;
+        private SemaphoreSlim GetSemaphoreBy(CPGroupId groupId)
+        {
+            if (_groupIdSemaphores.TryGetValue(groupId, out var mutex))
+                return mutex;
+
+            var newMutex = new SemaphoreSlim(1, 1);
+            var mostRecent = _groupIdSemaphores.GetOrAdd(groupId, newMutex);
+            if (mostRecent != newMutex) newMutex.Dispose();
+            return mostRecent;
+        }
+        #endregion
+
+        #region Dispose&amp;Clear
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            //Dispose heartbeat
+            Interlocked.Exchange(ref _heartbeatState, 0);
+
+            Reset();
+            await ShutdownAsync().CfAwait();
+
+            _cancel.Cancel();
+
+            try
+            {
+                await _heartbeating.CfAwaitCanceled();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning(e, &quot;Caught an exception while disposing CP Session Heartbeat.&quot;);
+            }
+
+            _cancel.Dispose();
+            _semaphoreReadWrite.Dispose();
+        }
+
+
+        /// &lt;summary&gt;
+        /// Returns acquired session count. For testing purpose.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;sessionId&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        internal int GetAcquiredSessionCount(CPGroupId groupId, long sessionId)
+        {
+            if (_sessions.TryGetValue(groupId, out var sessionState) &amp;&amp; sessionState.Id == sessionId)
+            {
+                return sessionState.AcquireCount;
+            }
+
+            return 0;
+        }
+
+        /// &lt;summary&gt;
+        /// Resets internal states
+        /// &lt;/summary&gt;
+        public void Reset()
+        {
+            lock (_mutex)
+            {
+                foreach (var semaphore in _groupIdSemaphores.Values)
+                    semaphore.Dispose();
+
+                _groupIdSemaphores.Clear();
+
+                _sessions.Clear();
+            }
+        }
+        #endregion
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[41,9,41,86,1],[42,9,42,147,1],[43,9,43,130,1],[45,9,45,55,1],[53,9,53,49,1],[55,13,55,84,1],[56,13,56,85,1],[57,13,57,53,1],[58,13,58,48,1],[60,9,60,10,1],[70,13,70,76,1],[71,13,71,36,1],[72,13,72,31,1],[73,9,73,10,1],[84,13,84,102,1],[86,17,86,45,1],[88,9,88,10,1],[97,13,97,102,1],[99,17,99,60,1],[101,9,101,10,1],[110,13,110,70,1],[111,17,111,40,1],[113,17,113,36,1],[118,13,118,51,1],[119,13,119,74,1],[120,9,120,10,1],[128,13,128,61,1],[133,17,133,30,1],[133,31,133,64,1],[133,64,133,80,0],[133,80,133,82,1],[135,17,135,46,1],[136,17,136,35,1],[137,17,137,59,1],[141,21,141,112,0],[142,21,142,44,0],[143,17,143,18,0],[146,17,146,115,1],[147,21,147,36,0],[150,17,150,40,1],[152,21,152,73,0],[153,21,153,45,0],[155,21,155,89,0],[156,25,156,40,0],[158,13,158,14,1],[159,23,159,53,1],[160,9,160,10,1],[170,13,170,61,1],[174,17,174,36,1],[174,37,174,116,0],[176,17,176,98,1],[178,21,178,41,1],[183,21,183,61,1],[184,21,184,59,1],[187,21,187,98,1],[189,25,189,45,0],[194,25,194,87,1],[195,25,195,60,1],[196,25,196,85,1],[197,25,197,46,1],[201,25,201,45,1],[206,23,206,53,1],[207,9,207,10,1],[216,13,216,72,1],[217,17,217,30,1],[219,13,219,52,1],[220,13,220,77,1],[221,13,221,40,1],[221,41,221,60,0],[222,13,222,31,1],[229,13,229,71,1],[230,17,230,24,0],[233,13,233,58,1],[235,13,235,21,1],[236,13,236,45,1],[238,13,238,30,1],[242,17,242,55,1],[243,13,243,14,1],[244,13,244,32,0],[246,17,246,100,0],[247,13,247,14,0],[249,13,249,31,1],[250,13,250,43,1],[251,9,251,10,1],[262,13,262,102,1],[264,17,264,50,1],[267,13,267,22,0],[275,13,275,26,1],[277,26,277,39,1],[277,40,277,42,1],[277,43,277,68,1],[278,21,278,41,1],[280,17,280,44,1],[282,17,282,35,1],[283,13,283,14,1],[284,9,284,10,1]]);
+    </script>
+  </body>
+</html>

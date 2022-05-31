@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\FencedLock.Requests.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Implementation of server requests for &lt;see cref=&quot;FencedLock&quot;/&gt;
+    /// &lt;/summary&gt;
+    internal partial class FencedLock
+    {
+        protected async Task&lt;long&gt; RequestLockAsync(long sessionId, long threadId, Guid invocationId)
+        {
+            var requestMessage = FencedLockLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = FencedLockLockCodec.DecodeResponse(responseMessage);
+            return response.Response;
+        }
+
+        protected async Task&lt;long&gt; RequestTryLockAsync(long sessionId, long threadId, Guid invocationId, long timeoutMillisecond)
+        {
+            var requestMessage = FencedLockTryLockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId, timeoutMillisecond);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = FencedLockTryLockCodec.DecodeResponse(responseMessage);
+            return response.Response;
+        }
+
+        protected async Task&lt;bool&gt; RequestUnlockAsync(long sessionId, long threadId, Guid invocationId)
+        {
+            var requestMessage = FencedLockUnlockCodec.EncodeRequest(CPGroupId, Name, sessionId, threadId, invocationId);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = FencedLockUnlockCodec.DecodeResponse(responseMessage);
+            return response.Response;
+        }
+
+        protected async Task RequestDestroyAsync()
+        {
+            var requestMessage = CPGroupDestroyCPObjectCodec.EncodeRequest(CPGroupId, ServiceName, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var _ = CPGroupDestroyCPObjectCodec.DecodeResponse(responseMessage);
+        }
+
+        protected async Task&lt;FencedLock.LockOwnershipState&gt; RequestLockOwnershipStateAsync()
+        {
+            var requestMessage = FencedLockGetLockOwnershipCodec.EncodeRequest(CPGroupId, Name);
+            var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var response = FencedLockGetLockOwnershipCodec.DecodeResponse(responseMessage);
+            return new FencedLock.LockOwnershipState(response.Fence, response.SessionId, response.ThreadId, response.LockCount);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,13,31,120,1],[32,13,32,95,1],[33,13,33,80,1],[34,13,34,38,1],[35,9,35,10,1],[39,13,39,143,1],[40,13,40,95,1],[41,13,41,83,1],[42,13,42,38,1],[43,9,43,10,1],[47,13,47,122,1],[48,13,48,95,1],[49,13,49,82,1],[50,13,50,38,1],[51,9,51,10,1],[55,13,55,106,1],[56,13,56,95,1],[57,13,57,81,1],[58,9,58,10,1],[62,13,62,97,1],[63,13,63,95,1],[64,13,64,92,1],[65,13,65,129,1],[66,9,66,10,1]]);
+    </script>
+  </body>
+</html>

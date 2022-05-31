@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\StateChangeQueue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Raises client state change events sequentially, in order.
+    /// &lt;/summary&gt;
+    internal class StateChangeQueue : IAsyncDisposable
+    {
+        private readonly AsyncQueue&lt;ClientState&gt; _states = new AsyncQueue&lt;ClientState&gt;();
+        private readonly ConcurrentDictionary&lt;int, TaskCompletionSource&lt;object&gt;&gt; _markers = new ConcurrentDictionary&lt;int, TaskCompletionSource&lt;object&gt;&gt;();
+        private readonly Task _raising;
+        private readonly ILogger _logger;
+
+        private Func&lt;ClientState, ValueTask&gt; _stateChanged;
+        private volatile int _disposed;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;StateChangeQueue&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public StateChangeQueue(ILoggerFactory loggerFactory)
+        {
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger&lt;StateChangeQueue&gt;();
+
+            _raising = RaiseEvents();
+        }
+
+        // throws if this instance has been disposed
+        private void ThrowIfDisposed()
+        {
+            if (_disposed &gt; 0) throw new ObjectDisposedException(nameof(StateChangeQueue));
+        }
+
+        /// &lt;summary&gt;
+        /// Occurs when the state has changed.
+        /// &lt;/summary&gt;
+        public Func&lt;ClientState, ValueTask&gt; StateChanged
+        {
+            get =&gt; _stateChanged;
+            set
+            {
+                ThrowIfDisposed();
+                _stateChanged = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a state change to the queue.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The new state.&lt;/param&gt;
+        public void Add(ClientState state)
+        {
+            ThrowIfDisposed();
+            if (_states.TryWrite(state)) return;
+
+            FailAdd(state);
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a state change to the queue and wait for the corresponding event.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The new state.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the event corresponding to the state
+        /// has been fully handled.&lt;/returns&gt;
+        public async Task AddAndWait(ClientState state)
+        {
+            ThrowIfDisposed();
+
+            int marker;
+
+            // get a marker
+            var completion = new TaskCompletionSource&lt;object&gt;();
+            do
+            {
+                marker = -RandomProvider.Next();
+            } while (marker &lt; 0 &amp;&amp; !_markers.TryAdd(marker, completion));
+
+            // queue the state
+            if (!_states.TryWrite(state))
+            {
+                // embarrassing - should never happen, our code should *not*
+                // dispose the state change queue while adding states!
+                FailAdd(state);
+                return;
+            }
+
+            // queue the marker
+            if (!_states.TryWrite((ClientState)marker))
+            {
+                // embarrassing - should never happen, our code should *not*
+                // dispose the state change queue while adding states!
+                FailAdd(state);
+                return;
+            }
+
+            // wait until the marker is hit
+            await completion.Task.CfAwait();
+        }
+
+
+        // fails to add a state
+        private void FailAdd(ClientState state)
+        {
+            _logger.IfWarning()?.LogWarning(&quot;Failed to add a state {State}.&quot;, state);
+            ThrowIfDisposed();
+        }
+
+        // (background task loop) raises events
+        private async Task RaiseEvents()
+        {
+            await foreach (var state in _states)
+            {
+                var marker = (int)state;
+                if (marker &lt; 0)
+                {
+                    if (_markers.TryRemove(marker, out var completion))
+                        completion.TrySetResult(null);
+                    continue;
+                }
+
+                try
+                {
+                    await _stateChanged.AwaitEach(state).CfAwait();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $&quot;Caught error while raising StateChanged ({state}).&quot;);
+                }
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            // stop accepting new states
+            _states.Complete();
+
+            // wait until the events queue is drained
+            await _raising.CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,90,1],[30,9,30,155,1],[41,9,41,62,1],[43,13,43,39,1],[43,40,43,95,0],[44,13,44,70,1],[46,13,46,38,1],[47,9,47,10,1],[52,13,52,31,1],[52,32,52,92,0],[53,9,53,10,1],[60,20,60,33,1],[63,17,63,35,1],[64,17,64,89,1],[65,13,65,14,1],[74,13,74,31,1],[75,13,75,41,1],[75,42,75,49,1],[77,13,77,28,0],[78,9,78,10,0],[88,13,88,31,1],[93,13,93,65,1],[96,17,96,49,1],[97,15,97,74,1],[100,13,100,42,1],[104,17,104,32,0],[105,17,105,24,0],[109,13,109,56,1],[113,17,113,32,0],[114,17,114,24,0],[118,13,118,45,1],[119,9,119,10,1],[125,13,125,86,0],[126,13,126,31,0],[127,9,127,10,0],[132,28,132,37,1],[132,38,132,40,1],[132,41,132,48,1],[134,17,134,41,1],[135,17,135,32,1],[137,21,137,72,1],[138,25,138,55,1],[139,21,139,30,1],[144,21,144,68,1],[145,17,145,18,1],[146,17,146,36,0],[148,21,148,96,0],[149,17,149,18,0],[151,9,151,10,1],[158,13,158,71,1],[159,17,159,24,0],[162,13,162,32,1],[165,13,165,38,1],[166,9,166,10,1]]);
+    </script>
+  </body>
+</html>

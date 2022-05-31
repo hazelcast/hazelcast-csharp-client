@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>GitHub Actions | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="GitHub Actions | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../../images/favicon.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.0</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="github-actions">GitHub Actions</h1>
+
+<p>The Hazelcast .NET Client relies on GitHub Actions for CI. Workflows live in YAML files in <code>.github/workflows</code> and are described below.</p>
+<h2 id="build-branch">Build Branch</h2>
+<p>This workflow is defined in <code>build-branch.yml</code> and triggers on every push to a branch (except <code>release/*</code> branches). It runs one single job with the following steps:</p>
+<ul>
+<li>Install some utilities (e.g. PowerShell...) latest versions, for Linux (bash script)</li>
+<li>Install .NET (<code>actions/setup-dotnet</code>)</li>
+<li>Install JDK (<code>actions/setup-java</code>)</li>
+<li>Checkout our code (<code>actions/checkout</code>)</li>
+<li>Build and test (<code>hz.ps1</code>)</li>
+<li>Report the test results to the workflow log (<code>dorny/test-reporter</code>)</li>
+<li>Report the test coverage to the workflow log (<code>dotcover-report</code>)</li>
+<li>Upload the test coverage reports as an artifact, (<code>actions/upload-artifact</code>)</li>
+<li>Publish the test coverage report to <a href="https://app.codecov.io/gh/hazelcast/hazelcast-csharp-client">Codecov.io</a> (<code>codecov/codecov-action</code>)</li>
+</ul>
+<h2 id="build-pr">Build PR</h2>
+<p>This workflow is defined in <code>build-pr.yml</code> and triggers on every push to a PR. It runs one single job with the following steps:</p>
+<ul>
+<li>Install some utilities (e.g. PowerShell...) latest versions, for Linux (bash script)</li>
+<li>Install .NET (<code>actions/setup-dotnet</code>)</li>
+<li>Install JDK (<code>actions/setup-java</code>)</li>
+<li>Checkout our code (<code>actions/checkout</code>)</li>
+<li>Build and test (<code>hz.ps1</code>)</li>
+<li>Upload the test results as an artifact (<code>actions/upload-artifact</code>)</li>
+<li>Upload the test coverage reports as an artifact (<code>actions/upload-artifact</code>)</li>
+</ul>
+<p>Note that this workflow does not <em>report</em> nor <em>publish</em> anything, as it executes against a user&#39;s PR and thus has no permission to write to our repository. Therefore, a second workflow, defined in <code>report-pr.yml</code>, triggers after every run of <code>build-pr.yml</code>, and runs one single job with the following steps:</p>
+<ul>
+<li>Prepare the environment (bash script)</li>
+<li>Download the test results and coverage reports artifacts (<code>actions/github-script</code> + custom script)</li>
+<li>Unzip the downloaded artifacts, (bash script)</li>
+<li>Report the test results to the workflow log (<code>dorny/test-reporter</code>)</li>
+<li>Report the test coverage to the workflow log (<code>dotcover-report</code>)</li>
+<li>Publish the test coverage report to <a href="https://app.codecov.io/gh/hazelcast/hazelcast-csharp-client">Codecov.io</a> (<code>codecov/codecov-action</code>)</li>
+</ul>
+<p>In addition, this worklow is registered as a required status check for all protected branches (<code>master</code>, <code>4.0.z</code>...). These branches require that both the <em>Build PR</em> for Linux and Windows checks have passed before merging any PR.</p>
+<h2 id="build-release">Build Release</h2>
+<p>This workflow is defined in <code>build-release.yml</code> and triggers on every push to a <code>release/*</code> branch, and every push of a <code>v*</code> tag. It runs a combination of four jobs:</p>
+<h3 id="analyze">Analyze</h3>
+<p>The <em>Analyze</em> job runs the following steps:</p>
+<ul>
+<li>Checkout our code (<code>actions/checkout</code>)</li>
+<li>Analyze the situation (bash script) and determine whether it has been triggered by a branch or a tag, and a few other things</li>
+</ul>
+<h3 id="build">Build</h3>
+<p>The <em>Build</em> job runs if the <em>Analyze</em> job has validated the situation. It runs the following steps:</p>
+<ul>
+<li>Install some utilities (e.g. PowerShell...) latest versions, for Linux (bash script)</li>
+<li>Install .NET (<code>actions/setup-dotnet</code>)</li>
+<li>Install JDK (<code>actions/setup-java</code>)</li>
+<li>Checkout our code (<code>actions/checkout</code>)</li>
+<li>Verify that the branch or tag version matches the code version (<code>hz.ps1</code>)</li>
+<li>Obtains the assemblies signature key from GitHub Secrets (bash script)</li>
+<li>Build signed assemblies and test (<code>hz.ps1</code>)</li>
+<li>Report the test results to the workflow log (<code>dorny/test-reporter</code>)</li>
+<li>Report the test coverage to the workflow log (<code>dotcover-report</code>)</li>
+<li>Upload the test coverage reports as an artifact (<code>actions/upload-artifact</code>)</li>
+<li>Publish the test coverage report to <a href="https://app.codecov.io/gh/hazelcast/hazelcast-csharp-client">Codecov.io</a> (<code>codecov/codecov-action</code>)</li>
+<li>Pack the NuGet packages (<code>hz.ps1</code>)</li>
+<li>Upload the NuGet packages as an artifact (<code>actions/upload-artifact</code>)</li>
+<li>Publish the examples (<code>hz.ps1</code>)</li>
+<li>Uploads the examples as an artifact (<code>actions/upload-artifact</code>)</li>
+<li>Creates a documentation patch (<code>hz.ps1</code> + git commands)</li>
+<li>Uploads the documentation patch as an artifact (<code>actions/upload-artifact</code>)</li>
+</ul>
+<h3 id="publish">Publish</h3>
+<p>The <em>Publish</em> job runs if the <em>Build</em> job was successful, and is in fact <em>two</em> jobs, that run different steps, depending on whether the workflow handles a branch build (preparing for a release) or a tag build (releasing). These steps are detailed below: actions in <strong>bold</strong> impact publicly visible resources such as NuGet or the documentation.</p>
+<p>For <em>branch builds</em>, the job runs the following steps:</p>
+<ul>
+<li>Download the test coverage reports and doc patch artifacts (<code>actions/github-script</code> + custom script)</li>
+<li>Checkout the documentation (i.e. the <code>gh-pages</code> branch), apply the patch, and <strong>push documentation back to GitHub</strong> (<code>actions/checkout</code> + bash script)</li>
+<li>Publish the test coverage report to <a href="https://app.codecov.io/gh/hazelcast/hazelcast-csharp-client">Codecov.io</a> (<code>codecov/codecov-action</code>)</li>
+</ul>
+<p>As this is a branch build and not an official release, only the &quot;dev&quot; part of the documentation is updated.</p>
+<p>For <em>tag builds</em>, the job runs the following steps:</p>
+<ul>
+<li>Checkout our code (<code>actions/checkout</code>)</li>
+<li>Checkout devops extensions for the <code>hz.ps1</code> script from the <a href="https://github.com/hazelcast/devops">DevOps</a> private repository, into the <code>build/devops</code> directory (<code>actions/checkout</code>)</li>
+<li>Download the NuGet packages and doc patch artifacts (<code>actions/github-script</code> + custom script)</li>
+<li><strong>Upload the NuGet packages to NuGet</strong> (<code>hz.ps1</code> script devops extensions, and API key provided by GitHub Secrets)</li>
+<li>Checkout the documentation (i.e. the <code>gh-pages</code> branch), apply the patch, and <strong>push documentation back to GitHub</strong> (<code>actions/checkout</code> + bash script)</li>
+<li><strong>Delete the release branch</strong> (bash script)</li>
+</ul>
+<h2 id="notes">Notes</h2>
+<p>In order to ensure that the actions only run on our repository, and not on forks, each worfklow&#39;s job contains</p>
+<pre><code>if: github.repository == &#39;hazelcast/hazelcast-csharp-client&#39;
+</code></pre><p>For building and testing, our workflows use a strategy to ensure we test both on Linux and Windows:</p>
+<pre><code>strategy:
+  matrix:
+    os: [ ubuntu-latest, windows-latest ]
+</code></pre><h2 id="actions">Actions</h2>
+<h3 id="dotcover-report">dotcover-report</h3>
+<p>The <code>dotcover-report</code> custom action lives in the <code>.github/actions/dotcover-report</code> directory. It is implemented as a Node script, and accepts the following inputs:</p>
+<ul>
+<li><code>token</code> is the GitHub token</li>
+<li><code>name</code> is the name of the action, re-used when creating the check run</li>
+<li><code>path</code> is the path to the coverage reports</li>
+<li><code>version</code> is the client version</li>
+</ul>
+<p>The action scans the <code>path</code> for JSON coverage reports (one per target, e.g. <code>net462</code>, <code>netcoreapp3.1</code>...) and retrieves the global coverage percentage for each target. It then attaches a new check run to the commit SHA, containing these percentages, so that they become visible directly in GitHub.</p>
+<p>The <code>.github/actions.txt</code> file contains more details about that action.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\SocketExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;Socket&quot;/&gt; class.
+    /// &lt;/summary&gt;
+    internal static class SocketExtensions
+    {
+        // The purpose of this class is to provide Socket.ConnectAsync methods that support a combination
+        // of timeout and/or cancellation token. Prior to .NET 5, none of these options are built-in.
+        // Starting with .NET 5, cancellation token support token is built-in, but not timeout support.
+        //
+        // Support for timeout + cancellation token 
+
+        // our own extension, not provided by any framework
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)
+            =&gt; socket.ConnectAsync(endPoint, timeoutMilliseconds, default);
+
+#if !NET5_0_OR_GREATER
+
+        // that one is built-in starting with .NET 5
+        public static Task ConnectAsync(this Socket socket, EndPoint endPoint, CancellationToken cancellationToken)
+            =&gt; socket.ConnectAsync(endPoint, -1, cancellationToken);
+
+#endif
+
+        // our own extension, not provided by any framework
+        public static async Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds, CancellationToken cancellationToken)
+        {
+            if (socket == null) throw new ArgumentNullException(nameof(socket));
+
+            static void ConnectCallback(object sender, SocketAsyncEventArgs a)
+            {
+                var completionSource = (TaskCompletionSource&lt;Socket&gt;) a.UserToken;
+                if (a.SocketError == SocketError.Success)
+                    completionSource.TrySetResult(a.ConnectSocket);
+                else
+                    completionSource.TrySetException(new SocketException((int) a.SocketError));
+            }
+
+            var connected = new TaskCompletionSource&lt;Socket&gt;();
+            var e = new SocketAsyncEventArgs();
+            e.UserToken = connected;
+            e.RemoteEndPoint = endPoint;
+            e.Completed += ConnectCallback;
+            var pending = socket.ConnectAsync(e);
+
+            Task task;
+            if (pending)
+            {
+                var timeoutCancel = new CancellationTokenSource();
+                var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
+                var reg = cancellationToken.Register(() =&gt; timeoutCancel.Cancel());
+
+                task = await Task.WhenAny(connected.Task, timeoutTask).CfAwait();
+                await reg.DisposeAsync().CfAwait();
+                timeoutCancel.Cancel();
+                timeoutCancel.Dispose();
+                await timeoutTask.CfAwaitNoThrow();
+            }
+            else
+            {
+                task = connected.Task;
+                ConnectCallback(null, e);
+            }
+
+            e.Dispose();
+
+            if (task == connected.Task)
+            {
+                await task.CfAwait(); // throw if there is anything to throw (failed to connect...)
+                return;
+            }
+
+            // else, it was the timeout task
+
+            // we *need* to await connected.Task even when it was not the task returned by WhenAny else
+            // it may leak unobserved exceptions, as ConnectCallback may be invoked even when the socket
+            // is being teared down - however, ConnectCallback may also *not* be invoked, so we try to
+            // set result to force the task to complete, making sure we don&#39;t hang waiting for it
+            connected.TrySetResult(null);
+            await connected.Task.CfAwaitNoThrow(); // don&#39;t leave exceptions unobserved
+
+            TryCloseAndDispose(socket);
+
+            if (cancellationToken.IsCancellationRequested)
+                throw new OperationCanceledException(&quot;The socket connection operation has been canceled.&quot;);
+
+            throw new TimeoutException(&quot;The socket connection operation has timed out.&quot;);
+        }
+
+        [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
+        private static void TryCloseAndDispose(Socket socket)
+        {
+            try
+            {
+                socket.Close();
+                socket.Dispose();
+            }
+            catch { /* may happen, don&#39;t care */ }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,16,37,75,1],[50,13,50,32,1],[50,33,50,81,1],[54,17,54,83,1],[55,17,55,58,1],[56,21,56,68,1],[58,21,58,96,1],[59,13,59,14,1],[61,13,61,64,1],[62,13,62,48,1],[63,13,63,37,1],[64,13,64,41,1],[65,13,65,44,1],[66,13,66,50,1],[69,13,69,25,1],[71,17,71,67,1],[72,17,72,88,1],[73,17,73,60,1],[73,60,73,82,1],[73,82,73,84,1],[75,17,75,82,1],[76,17,76,52,1],[77,17,77,40,1],[78,17,78,41,1],[79,17,79,52,1],[80,13,80,14,1],[83,17,83,39,0],[84,17,84,42,0],[87,13,87,25,1],[89,13,89,40,1],[91,17,91,38,1],[92,17,92,24,1],[101,13,101,42,1],[102,13,102,51,1],[104,13,104,40,1],[106,13,106,59,1],[107,17,107,108,1],[109,13,109,90,1],[110,9,110,10,1]]);
+    </script>
+  </body>
+</html>

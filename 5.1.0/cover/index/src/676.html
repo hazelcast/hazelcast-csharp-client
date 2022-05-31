@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\DumpCoreExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Buffers;
+using System.Globalization;
+using System.Text;
+using Hazelcast.Exceptions;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for dumping objects.
+    /// &lt;/summary&gt;
+    internal static class DumpCoreExtensions
+    {
+        /// &lt;summary&gt;
+        /// Dumps an array of bytes into a readable format.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The array of bytes.&lt;/param&gt;
+        /// &lt;param name=&quot;length&quot;&gt;The number of bytes to dump, or zero to dump all bytes in the array.&lt;/param&gt;
+        /// &lt;param name=&quot;formatted&quot;&gt;Whether to format the output.&lt;/param&gt;
+        /// &lt;returns&gt;A readable string representation of the array of bytes.&lt;/returns&gt;
+        public static string Dump(this byte[] bytes, int length = 0, bool formatted = true)
+        {
+            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
+            if (length &gt; bytes.Length)
+                throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
+
+            if (length == 0) length = bytes.Length;
+
+            var text = new StringBuilder();
+
+            if (formatted)
+            {
+                var i = 0;
+                while (i &lt; length)
+                {
+                    for (var j = 0; j &lt; 8 &amp;&amp; i &lt; length; j++, i++)
+                    {
+                        if (j &gt; 0) text.Append(&#39; &#39;);
+                        text.AppendFormat(CultureInfo.InvariantCulture, &quot;{0:x2}&quot;, bytes[i]);
+                    }
+
+                    if (i &lt; length)
+                        text.AppendLine();
+                }
+            }
+            else
+            {
+                for (var i = 0; i &lt; length; i++)
+                    text.AppendFormat(CultureInfo.InvariantCulture, &quot;{0:x2}&quot;, bytes[i]);
+            }
+
+            return text.ToString();
+        }
+
+        /// &lt;summary&gt;
+        /// Dumps an sequence of bytes into a readable format.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The sequence of bytes.&lt;/param&gt;
+        /// &lt;param name=&quot;length&quot;&gt;The number of bytes to dump, or zero to dump all bytes in the sequence.&lt;/param&gt;
+        /// &lt;returns&gt;A readable string representation of the sequence of bytes.&lt;/returns&gt;
+        public static string Dump(this ReadOnlySequence&lt;byte&gt; bytes, int length = 0)
+        {
+            var a = new byte[bytes.Length];
+            bytes.CopyTo(a);
+            return a.Dump(length);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,13,37,31,1],[37,32,37,79,1],[38,13,38,39,1],[39,17,39,87,1],[41,13,41,29,1],[41,30,41,52,1],[43,13,43,44,1],[45,13,45,27,1],[47,17,47,27,1],[48,17,48,35,1],[50,26,50,35,1],[50,37,50,56,1],[50,58,50,61,1],[50,63,50,66,1],[52,25,52,35,1],[52,36,52,53,1],[53,25,53,93,1],[56,21,56,36,1],[57,25,57,43,1],[62,22,62,31,1],[62,33,62,43,1],[62,45,62,48,1],[63,21,63,89,1],[66,13,66,36,1],[77,13,77,44,1],[78,13,78,29,1],[79,13,79,35,1]]);
+    </script>
+  </body>
+</html>

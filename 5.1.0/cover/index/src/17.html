@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastClientStart.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Threading.Tasks;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents a starting &lt;see cref=&quot;IHazelcastClient&quot;/&gt;.
+    /// &lt;/summary&gt;
+#pragma warning disable CA1815 // Override equals and operator equals on value types - we&#39;re not comparing them
+    public readonly struct HazelcastClientStart
+#pragma warning restore CA1815
+    {
+        internal HazelcastClientStart(IHazelcastClient client, Task task)
+        {
+            Client = client;
+            Task = task;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;IHazelcastClient&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public IHazelcastClient Client { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the task which will complete when the client has started, or fail if the client fails to start.
+        /// &lt;/summary&gt;
+        public Task Task { get; }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,13,28,29,1],[29,13,29,25,1],[30,9,30,10,1],[35,42,35,46,1],[40,28,40,32,1]]);
+    </script>
+  </body>
+</html>

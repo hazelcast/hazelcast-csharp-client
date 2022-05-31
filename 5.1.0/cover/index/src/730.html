@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\Authenticator.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Security;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Authenticates client connections.
+    /// &lt;/summary&gt;
+    internal class Authenticator
+    {
+        private static string _clientVersion; // static cache (immutable value)
+        private readonly AuthenticationOptions _options;
+        private readonly SerializationService _serializationService;
+        private readonly ILogger _logger;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Authenticator&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public Authenticator(AuthenticationOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
+        {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory))).CreateLogger&lt;Authenticator&gt;();
+
+            HConsole.Configure(x =&gt; x.Configure&lt;Authenticator&gt;().SetIndent(4).SetPrefix(&quot;AUTH&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Authenticates the client connection.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;client&quot;&gt;The client to authenticate.&lt;/param&gt;
+        /// &lt;param name=&quot;clusterName&quot;&gt;The cluster name, as assigned by the client.&lt;/param&gt;
+        /// &lt;param name=&quot;clusterClientId&quot;&gt;The cluster unique identifier, as assigned by the client.&lt;/param&gt;
+        /// &lt;param name=&quot;clusterClientName&quot;&gt;The cluster client name, as assigned by the client.&lt;/param&gt;
+        /// &lt;param name=&quot;labels&quot;&gt;The client labels.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the client is authenticated.&lt;/returns&gt;
+        public async ValueTask&lt;AuthenticationResult&gt; AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet&lt;string&gt; labels, CancellationToken cancellationToken)
+        {
+            if (client == null) throw new ArgumentNullException(nameof(client));
+
+            // gets the credentials factory and don&#39;t dispose it
+            // if there is none, create the default one and dispose it
+            var credentialsFactory = _options.CredentialsFactory.Service;
+            using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
+            credentialsFactory ??= temp;
+
+            _logger.IfDebug()?.LogDebug(&quot;Authenticate with {CredentialsFactoryType}&quot;, credentialsFactory.GetType().Name);
+
+            var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+            if (result != null) return result;
+
+            // result is null, credentials failed but we may want to retry
+            if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
+            {
+                resettableCredentialsFactory.Reset();
+
+                // try again
+                result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+                if (result != null) return result;
+            }
+
+            // nah, no chance
+            throw new AuthenticationException(&quot;Invalid credentials.&quot;);
+        }
+
+        private static string ClientVersion
+        {
+            get
+            {
+                if (_clientVersion != null) return _clientVersion;
+                var version = typeof(Authenticator).Assembly.GetName().Version;
+                _clientVersion = version.Major + &quot;.&quot; + version.Minor;
+                if (version.Build &gt; 0) _clientVersion += &quot;.&quot; + version.Build;
+                return _clientVersion;
+            }
+        }
+
+        // tries to authenticate
+        // returns a result if successful
+        // returns null if failed due to credentials (may want to retry)
+        // throws if anything else went wrong
+        private async ValueTask&lt;AuthenticationResult&gt; TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet&lt;string&gt; labels, ICredentialsFactory credentialsFactory, CancellationToken cancellationToken)
+        {
+            const string clientType = &quot;CSP&quot;; // CSharp
+
+            var serializationVersion = _serializationService.GetVersion();
+            var clientVersion = ClientVersion;
+            var credentials = credentialsFactory.NewCredentials();
+
+            ClientMessage requestMessage;
+            switch (credentials)
+            {
+                case IPasswordCredentials passwordCredentials:
+                    requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    break;
+
+                case ITokenCredentials tokenCredentials:
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    break;
+
+                default:
+                    var bytes = _serializationService.ToData(credentials).ToByteArray();
+                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                    break;
+            }
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            HConsole.WriteLine(this, &quot;Send auth request&quot;);
+            var responseMessage = await client.SendAsync(requestMessage).CfAwait();
+            HConsole.WriteLine(this, &quot;Rcvd auth response&quot;);
+            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
+            HConsole.WriteLine(this, &quot;Auth response is: &quot; + (AuthenticationStatus) response.Status);
+
+            return (AuthenticationStatus) response.Status switch
+            {
+                AuthenticationStatus.Authenticated
+                    =&gt; new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name),
+
+                AuthenticationStatus.CredentialsFailed
+                    =&gt; null, // could want to retry
+
+                AuthenticationStatus.NotAllowedInCluster
+                    =&gt; throw new ClientNotAllowedInClusterException(&quot;Client is not allowed in cluster.&quot;),
+
+                AuthenticationStatus.SerializationVersionMismatch
+                    =&gt; throw new AuthenticationException(&quot;Serialization mismatch.&quot;),
+
+                _ =&gt; throw new AuthenticationException($&quot;Received unsupported status code {response.Status}.&quot;)
+            };
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[43,9,43,133,1],[45,13,45,84,1],[46,13,46,123,1],[47,13,47,127,1],[50,9,50,10,1],[64,13,64,32,1],[64,33,64,81,0],[68,13,68,74,1],[69,13,69,98,1],[70,13,70,41,1],[72,13,72,122,1],[74,13,74,167,1],[75,13,75,32,1],[75,33,75,47,1],[78,13,78,98,1],[80,17,80,54,0],[83,17,83,167,0],[84,17,84,36,0],[84,37,84,51,0],[88,13,88,71,1],[89,9,89,10,1],[95,17,95,44,1],[95,45,95,67,1],[96,17,96,80,1],[97,17,97,70,1],[98,17,98,39,1],[98,40,98,78,0],[99,17,99,39,1],[111,13,111,75,1],[112,13,112,47,1],[113,13,113,67,1],[119,21,119,240,1],[120,21,120,27,1],[123,21,123,219,0],[124,21,124,27,0],[127,21,127,89,0],[128,21,128,197,0],[132,13,132,62,1],[135,13,135,84,1],[137,13,137,86,1],[140,13,143,24,1],[143,24,143,242,1],[143,242,146,24,1],[146,24,146,28,1],[146,28,149,24,1],[149,24,149,105,0],[149,105,152,24,1],[152,24,152,84,0],[152,84,154,22,1],[154,22,154,111,0],[154,111,155,15,1],[156,9,156,10,1]]);
+    </script>
+  </body>
+</html>

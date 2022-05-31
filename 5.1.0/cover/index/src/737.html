@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\ClusterMessaging.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Provides the messaging services of a cluster.
+    /// &lt;/summary&gt;
+    internal class ClusterMessaging
+    {
+        private readonly ClusterState _clusterState;
+        private readonly ClusterMembers _clusterMembers;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClusterMessaging&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;clusterState&quot;&gt;The cluster state.&lt;/param&gt;
+        /// &lt;param name=&quot;clusterMembers&quot;&gt;The cluster members.&lt;/param&gt;
+        public ClusterMessaging(ClusterState clusterState, ClusterMembers clusterMembers)
+        {
+            _clusterState = clusterState;
+            _clusterMembers = clusterMembers;
+
+            HConsole.Configure(x =&gt; x.Configure&lt;ClusterMessaging&gt;().SetPrefix(&quot;MSGING&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to a random member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            return await SendAsyncInternal(message, null, -1, default, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;memberId&quot;/&gt; is the default value, sends the message to a random member. If it
+        /// is an unknown member, sends the message to a random number too.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, Guid memberId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            return await SendAsyncInternal(message, null, -1, memberId, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
+
+            return await SendAsyncInternal(message, memberConnection, -1, default, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;memberConnection&quot;&gt;The member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public async Task&lt;ClientMessage&gt; SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, long correlationId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
+
+            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to the member owning a key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendToKeyPartitionOwnerAsync(ClientMessage message, IData key, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (key == null) throw new ArgumentNullException(nameof(key));
+
+            var partitionId = _clusterState.Partitioner.GetPartitionId(key.PartitionHash);
+            if (partitionId &lt; 0) throw new ArgumentException(&quot;Could not get a partition for this key.&quot;, nameof(key));
+
+            message.PartitionId = partitionId;
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message to the member owning a partition.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the partition.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        public
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendToPartitionOwnerAsync(ClientMessage message, int partitionId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (partitionId &lt; 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
+
+            message.PartitionId = partitionId;
+            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;An optional target client.&lt;/param&gt;
+        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response is received, and represent the response message.&lt;/returns&gt;
+        private
+#if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken = default)
+        {
+            var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), cancellationToken);
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message to send.&lt;/param&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;An optional target member connection.&lt;/param&gt;
+        /// &lt;param name=&quot;targetPartitionId&quot;&gt;An optional target partition identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;targetMemberId&quot;&gt;An optional target member identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;A correlation identifier.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The response message.&lt;/returns&gt;
+        private async Task&lt;ClientMessage&gt; SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // fail fast, if the cluster is not active
+            _clusterState.ThrowIfNotActive();
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = correlationId;
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = connection != null ? new Invocation(message, _clusterState.Options.Messaging, connection) :
+                             targetPartitionId &gt;= 0 ? new Invocation(message, _clusterState.Options.Messaging, targetPartitionId) :
+                             targetMemberId != default ? new Invocation(message, _clusterState.Options.Messaging, targetMemberId) :
+                             new Invocation(message, _clusterState.Options.Messaging);
+
+            return await SendAsyncInternal(invocation, cancellationToken).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends an invocation request message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The response message.&lt;/returns&gt;
+        private async Task&lt;ClientMessage&gt; SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        {
+            // yield now, so the caller gets a task that can bubble up to user&#39;s code
+            // immediately without waiting for more synchronous operations to take place
+            await Task.Yield();
+
+            // NOTE: *every* invocation sent to the cluster goes through the code below
+
+            // if the client is active but not connected, we are going to retry the invocation for a while (assuming it
+            // is retryable) and then timeout and bubble the invocation to the user - and we do *not* have a way to sort
+            // of suspend the whole client waiting for it to reconnect, because... what sense does it make? That would
+            // be the &quot;sync&quot; reconnect mode - TODO: figure this out
+
+            while (true)
+            {
+                try
+                {
+                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
+                    return await connection.SendAsync(invocation, cancellationToken).CfAwait();
+                }
+                catch (TaskCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception exception)
+                {
+                    // if the client is not active, die - an active client is starting, started, connected or
+                    // disconnected - but attempting to reconnect - whereas a non-active client is down and
+                    // will not go back up
+                    _clusterState.ThrowIfNotActive(exception);
+
+                    // if the invocation is not retryable, throw
+                    bool retryUnsafeOperations, retryOnClientReconnecting;
+                    if (_clusterState.Options.Messaging.Preview.EnableNewRetryOptions)
+                    {
+                        // use the new set of options
+                        retryUnsafeOperations = _clusterState.Options.Messaging.RetryUnsafeOperations;
+                        retryOnClientReconnecting = _clusterState.Options.Messaging.RetryOnClientReconnecting;
+                    }
+                    else
+                    {
+                        // use the v4 set of options
+                        retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
+                        retryOnClientReconnecting = true;
+                    }
+                    if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
+                        throw;
+
+                    // else, wait for retrying
+                    // this will throw if it cannot retry
+                    await invocation.WaitRetryAsync(() =&gt; _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
+
+                    HConsole.WriteLine(this, &quot;Retrying...&quot;);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a connection for an invocation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
+        /// &lt;returns&gt;A connection for the invocation.&lt;/returns&gt;
+        /// &lt;exception cref=&quot;ClientOfflineException&quot;&gt;Occurs when no connection could be found.&lt;/exception&gt;
+        private MemberConnection GetInvocationConnection(Invocation invocation)
+        {
+            // try the target connection
+            var connection = invocation.TargetClientConnection;
+            if (connection != null) return connection;
+
+            // try the partition
+            if (invocation.TargetPartitionId &gt;= 0)
+            {
+                var memberId = _clusterState.Partitioner.GetPartitionOwner(invocation.TargetPartitionId);
+                if (_clusterMembers.TryGetConnection(memberId, out connection))
+                    return connection;
+            }
+
+            // try the member
+            if (invocation.TargetMemberId != default)
+            {
+                if (_clusterMembers.TryGetConnection(invocation.TargetMemberId, out connection))
+                    return connection;
+            }
+
+            // fall over to random client
+            connection = _clusterMembers.GetRandomConnection();
+            if (connection != null)
+                return connection;
+
+            // fail
+            throw _clusterState.ThrowClientOfflineException();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,9,38,90,1],[40,13,40,42,1],[41,13,41,46,1],[44,9,44,10,1],[54,13,54,33,1],[54,34,54,83,0],[56,13,56,101,1],[57,9,57,10,1],[72,13,72,33,1],[72,34,72,83,0],[74,13,74,102,1],[75,9,75,10,1],[86,13,86,33,1],[86,34,86,83,0],[87,13,87,42,1],[87,43,87,101,0],[89,13,89,113,1],[90,9,90,10,1],[102,13,102,33,1],[102,34,102,83,0],[103,13,103,42,1],[103,43,103,101,0],[105,13,105,128,1],[106,9,106,10,1],[121,13,121,33,1],[121,34,121,83,0],[122,13,122,29,1],[122,30,122,75,0],[124,13,124,91,1],[125,13,125,33,1],[125,34,125,118,0],[127,13,127,47,1],[128,13,128,98,1],[133,13,133,41,1],[135,9,135,10,1],[150,13,150,33,1],[150,34,150,83,0],[151,13,151,33,1],[151,34,151,93,0],[153,13,153,47,1],[154,13,154,98,1],[159,13,159,41,1],[161,9,161,10,1],[178,13,178,155,1],[183,13,183,41,1],[185,9,185,10,1],[199,13,199,33,1],[199,34,199,83,0],[202,13,202,46,1],[206,13,206,51,1],[207,13,207,96,1],[210,13,213,87,1],[215,13,215,85,1],[216,9,216,10,1],[228,13,228,32,1],[241,21,241,74,1],[242,21,242,96,1],[244,17,244,46,1],[246,21,246,27,1],[253,21,253,63,1],[257,21,257,87,1],[260,25,260,103,1],[261,25,261,111,1],[266,25,266,97,1],[267,25,267,58,1],[269,21,269,110,1],[270,25,270,31,1],[274,21,274,59,1],[274,59,274,95,1],[274,95,274,126,1],[277,17,277,18,1],[279,9,279,10,1],[290,13,290,64,1],[291,13,291,36,1],[291,37,291,55,1],[294,13,294,51,1],[296,17,296,106,1],[297,17,297,80,1],[298,21,298,39,1],[302,13,302,54,1],[304,17,304,97,0],[305,21,305,39,0],[309,13,309,64,1],[310,13,310,36,1],[311,17,311,35,1],[314,13,314,63,1]]);
+    </script>
+  </body>
+</html>

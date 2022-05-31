@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Clustering;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
+using Hazelcast.Metrics;
+using Hazelcast.Networking;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Represents the Hazelcast client options.
+    /// &lt;/summary&gt;
+    public sealed partial class HazelcastOptions : HazelcastOptionsBase
+    {
+        /// &lt;summary&gt;
+        /// Gets the Hazelcast configuration section name, which is &lt;c&gt;&quot;hazelcast&quot;&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        internal const string SectionNameConstant = &quot;hazelcast&quot;;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public HazelcastOptions()
+        {
+            Subscribers = new List&lt;IHazelcastClientEventSubscriber&gt;();
+            SubscribersBinder = new CollectionBinder&lt;InjectionOptions&gt;(x
+                =&gt; Subscribers.Add(new HazelcastClientEventSubscriber(x.TypeName)));
+
+            // initializers are executed prior to executing the constructor, so Preview has a value here,
+            // and we cannot use initializers for these properties these initializers cannot reference
+            // the non-static Preview property + the order of execution of initializers defined in partials
+            // is undefined
+            Networking = new NetworkingOptions(Preview);
+            Messaging = new MessagingOptions(Preview);
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private HazelcastOptions(HazelcastOptions other)
+        {
+            ClientName = other.ClientName;
+            ClusterName = other.ClusterName;
+            Subscribers = new List&lt;IHazelcastClientEventSubscriber&gt;(other.Subscribers);
+            Labels = new HashSet&lt;string&gt;(other.Labels);
+            LoggerFactory = other.LoggerFactory.Clone();
+            PatternMatcher = other.PatternMatcher;
+
+            ((IClusterOptions)this).ClientNamePrefix = ((IClusterOptions)other).ClientNamePrefix;
+
+            Preview = other.Preview.Clone();
+            Core = other.Core.Clone();
+            Heartbeat = other.Heartbeat.Clone();
+            Networking = other.Networking.Clone(Preview);
+            Authentication = other.Authentication.Clone();
+            LoadBalancer = other.LoadBalancer.Clone();
+            Serialization = other.Serialization.Clone();
+            Messaging = other.Messaging.Clone(Preview);
+            Events = other.Events.Clone();
+            Metrics = other.Metrics.Clone();
+            
+            NearCache = other.NearCache.Clone();
+            NearCaches = other.NearCaches.ToDictionary(kvp =&gt; kvp.Key, kvp =&gt; kvp.Value.Clone());
+
+            FlakeIdGenerators = other.FlakeIdGenerators.ToDictionary(kvp =&gt; kvp.Key, kvp =&gt; kvp.Value.Clone());
+        }
+
+        /// &lt;inheritdoc /&gt;
+        internal override string SectionName =&gt; SectionNameConstant;
+
+        /// &lt;summary&gt;
+        /// (unsupported) Gets the &lt;see cref=&quot;PreviewOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public PreviewOptions Preview { get; } = new PreviewOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;CoreOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The core options.&lt;/returns&gt;
+        [BinderIgnore(false)]
+        internal CoreOptions Core { get; } = new CoreOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The failover options.&lt;/returns&gt;
+        [BinderIgnore(false)]
+        internal HazelcastFailoverOptions FailoverOptions { get; set; } = new HazelcastFailoverOptions();
+
+        /// &lt;summary&gt;
+        /// Gets the metrics options.
+        /// &lt;/summary&gt;
+        public MetricsOptions Metrics { get; } = new MetricsOptions();
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A deep clone of the options.&lt;/returns&gt;
+        internal HazelcastOptions Clone() =&gt; new HazelcastOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[39,9,39,34,1],[41,13,41,71,1],[42,13,43,20,1],[43,20,43,83,1],[43,83,43,85,1],[49,13,49,57,1],[50,13,50,55,1],[51,9,51,10,1],[56,9,56,57,1],[58,13,58,43,1],[59,13,59,45,1],[60,13,60,88,1],[61,13,61,56,1],[62,13,62,57,1],[63,13,63,51,1],[65,13,65,98,1],[67,13,67,45,1],[68,13,68,39,1],[69,13,69,49,1],[70,13,70,58,1],[71,13,71,59,1],[72,13,72,55,1],[73,13,73,57,1],[74,13,74,56,1],[75,13,75,43,1],[76,13,76,45,1],[78,13,78,49,1],[79,13,79,98,1],[79,63,79,70,1],[79,79,79,96,1],[81,13,81,112,1],[81,77,81,84,1],[81,93,81,110,1],[82,9,82,10,1],[85,49,85,68,1],[90,41,90,45,1],[90,50,90,70,1],[90,50,90,70,1],[97,37,97,41,1],[97,46,97,63,1],[97,46,97,63,1],[104,61,104,65,1],[104,66,104,70,1],[104,75,104,105,1],[104,75,104,105,1],[109,41,109,45,1],[109,50,109,70,1],[109,50,109,70,1],[115,46,115,72,1]]);
+    </script>
+  </body>
+</html>

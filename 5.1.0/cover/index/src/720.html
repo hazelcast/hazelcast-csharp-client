@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastEnvironmentVariablesConfigurationProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast.Configuration
+{
+    /// &lt;summary&gt;
+    /// An environment variables based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Adds support for the hazelcast.x.y variables that do not respect the standard hazelcast__x__y pattern.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class HazelcastEnvironmentVariablesConfigurationProvider : ConfigurationProvider
+    {
+        private const string HazelcastAndDot = HazelcastOptions.SectionNameConstant + &quot;.&quot;;
+        private const string FailoverAndDot = HazelcastFailoverOptions.SectionNameConstant + &quot;.&quot;;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastEnvironmentVariablesConfigurationProvider&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public HazelcastEnvironmentVariablesConfigurationProvider(HazelcastEnvironmentVariablesConfigurationSource source)
+        { }
+
+        /// &lt;inheritdoc /&gt;
+        public override void Load()
+            =&gt; Load(Environment.GetEnvironmentVariables());
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Loads environment variables.
+        /// &lt;/summary&gt;
+        internal void Load(IDictionary envVariables)
+        {
+            Data = new Dictionary&lt;string, string&gt;(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var envVariable in envVariables.Cast&lt;DictionaryEntry&gt;())
+            {
+                var key = (string) envVariable.Key;
+
+                if (!key.StartsWith(HazelcastAndDot, StringComparison.OrdinalIgnoreCase) &amp;&amp;
+                    !key.StartsWith(FailoverAndDot, StringComparison.OrdinalIgnoreCase)) continue;
+
+                key = key.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+                Data[key] = (string)envVariable.Value;
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[37,9,37,123,1],[38,11,38,12,1],[42,16,42,59,1],[50,13,50,85,1],[52,22,52,37,1],[52,38,52,40,1],[52,41,52,77,1],[54,17,54,52,1],[56,17,57,89,1],[59,17,59,98,1],[60,17,60,55,1],[62,9,62,10,1]]);
+    </script>
+  </body>
+</html>

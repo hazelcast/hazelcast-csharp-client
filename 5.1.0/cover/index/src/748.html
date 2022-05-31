@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberConnectionQueue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents the queue of members that need to be connected.
+    /// &lt;/summary&gt;
+    internal class MemberConnectionQueue : IAsyncEnumerable&lt;MemberConnectionRequest&gt;, IAsyncDisposable
+    {
+        private readonly AsyncQueue&lt;MemberConnectionRequest&gt; _requests = new AsyncQueue&lt;MemberConnectionRequest&gt;();
+        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
+
+        private readonly SemaphoreSlim _resume = new SemaphoreSlim(0); // blocks the queue when it is suspended
+        private readonly SemaphoreSlim _enumerate = new SemaphoreSlim(1); // ensures there can be only 1 concurrent enumerator
+
+        private readonly object _mutex = new object();
+
+        private readonly ILogger _logger;
+
+        private volatile bool _disposed;
+        private MemberConnectionRequest _request;
+        private bool _suspended;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberConnectionQueue&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public MemberConnectionQueue(ILoggerFactory loggerFactory)
+        {
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger&lt;MemberConnectionQueue&gt;();
+
+            HConsole.Configure(x =&gt; x.Configure&lt;MemberConnectionQueue&gt;().SetPrefix(&quot;MBRQ&quot;));
+        }
+
+        public event EventHandler&lt;MemberInfo&gt; ConnectionFailed;
+
+        /// &lt;summary&gt;
+        /// Suspends the queue.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A &lt;see cref=&quot;ValueTask&quot;/&gt; that will be completed when the queue is suspended.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If an item is being processed, this waits for the processing to complete.&lt;/para&gt;
+        /// &lt;para&gt;When the queue is suspended, calls to the enumerator&#39;s MoveNextAsync() method blocks.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public ValueTask SuspendAsync()
+        {
+            lock (_mutex)
+            {
+                if (_disposed) return default; // nothing to suspend - but no need to throw about it
+
+                _logger.IfDebug()?.LogDebug(&quot;Suspend the members connection queue.&quot;);
+                _suspended = true;
+
+                // _request is a struct and cannot be null
+                // the default MemberConnectionRequest&#39;s Completion is the default ValueTask
+                // otherwise, is used to ensure that the request is completed before actually being suspended
+                return _request.Completion;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Resumes the queue.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If &lt;paramref name=&quot;drain&quot;/&gt; is &lt;c&gt;true&lt;/c&gt;, de-queues and ignores all queued items.&lt;/para&gt;
+        /// &lt;para&gt;Unblocks calls to the enumerator MoveNextAsync() method.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public void Resume(bool drain = false)
+        {
+            lock (_mutex)
+            {
+                if (_disposed) return; // nothing to resume - but no need to throw about it
+                if (!_suspended) throw new InvalidOperationException(&quot;Not suspended.&quot;);
+                _logger.IfDebug()?.LogDebug(&quot;{DrainState} the members connection queue.&quot;, (drain ? &quot;Drain and resume&quot; : &quot;Resume&quot;));
+                if (drain) _requests.ForEach(request =&gt; request.Cancel());
+                _suspended = false;
+                _resume.Release();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a member to connect.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member to connect.&lt;/param&gt;
+        public void Add(MemberInfo member)
+        {
+            if (_disposed) return; // no need to add - no need to throw about it
+
+            lock (_mutex)
+            {
+                if (!_requests.TryWrite(new MemberConnectionRequest(member)))
+                {
+                    // that should not happen, but log to be sure
+                    _logger.IfWarning()?.LogWarning(&quot;Failed to add member ({MemberId}).&quot;, member.Id.ToShortString());
+                }
+                else
+                {
+                    _logger.IfDebug()?.LogDebug(&quot;Added member {MemberId}&quot;, member.Id.ToShortString());
+                }
+            }
+        }
+
+        // when receiving members from the cluster... if a member is gone,
+        // we need to remove it from the queue, no need to ever try to connect
+        // to it again - so it remains in the _members async queue, but we
+        // flag it so that when we dequeue it, we can ignore it
+
+        /// &lt;summary&gt;
+        /// Removes a member.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;memberId&quot;&gt;The identifier of the member.&lt;/param&gt;
+        public void Remove(Guid memberId)
+        {
+            // cancel all corresponding requests - see notes in AsyncQueue, this is best-effort,
+            // a member that we want to remove *may* end up being enumerated, and we&#39;re going to
+            // to to connect to it, and either fail, or drop the connection - accepted tradeoff
+            lock (_mutex) _requests.ForEach(m =&gt;
+            {
+                if (m.Member.Id == memberId) m.Cancel();
+            });
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public IAsyncEnumerator&lt;MemberConnectionRequest&gt; GetAsyncEnumerator(CancellationToken cancellationToken = default)
+        {
+            if (_disposed) throw new ObjectDisposedException(nameof(MemberConnectionQueue));
+
+            // ensure that disposing this class cancels the enumeration
+            return new AsyncEnumerator(this, _cancel.Token, cancellationToken);
+        }
+
+        private class AsyncEnumerator : IAsyncEnumerator&lt;MemberConnectionRequest&gt;
+        {
+            private readonly MemberConnectionQueue _queue;
+            private readonly CancellationTokenSource _cancellation;
+            private IAsyncEnumerator&lt;MemberConnectionRequest&gt; _queueRequestsEnumerator;
+
+            public AsyncEnumerator(MemberConnectionQueue queue, CancellationToken cancellationToken1, CancellationToken cancellationToken2)
+            {
+                _queue = queue;
+                _cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken1, cancellationToken2);
+            }
+
+            public async ValueTask&lt;bool&gt; MoveNextAsync()
+            {
+                if (_cancellation.IsCancellationRequested) return false;
+
+                // if this is the first call, validate that we are only enumerating once at a time &amp; create the enumerator
+                if (_queueRequestsEnumerator == null)
+                {
+                    var acquired = await _queue._enumerate.WaitAsync(TimeSpan.Zero, default).CfAwait();
+                    if (!acquired) throw new InvalidOperationException(&quot;Can only enumerate once at a time.&quot;);
+                    _queueRequestsEnumerator = _queue._requests.GetAsyncEnumerator(_cancellation.Token);
+                }
+
+                // there is only one consumer, and the consumer *must* complete a request before picking a new one
+                if (_queue._request != null &amp;&amp; !_queue._request.Completed)
+                {
+                    throw new InvalidOperationException(&quot;Cannot move to next request if previous request has not completed.&quot;);
+                }
+
+                // loop until we have a valid request to return, because we may dequeue nulls or cancelled members
+                while (!_cancellation.IsCancellationRequested)
+                {
+                    // dequeue a request
+                    if (!await _queueRequestsEnumerator.MoveNextAsync().CfAwait())
+                        return false;
+
+                    while (!_cancellation.IsCancellationRequested)
+                    {
+                        // if not suspended, make that request the current one and return - this request is not in the queue
+                        // anymore, it&#39;s going to be processed no matter what even if the queue is drained or the member is
+                        // removed, and then the established connection (if any) will be dropped
+                        lock (_queue._mutex)
+                        {
+                            if (!_queue._suspended)
+                            {
+                                var request = _queueRequestsEnumerator.Current;
+                                if (request.Member == null || request.Cancelled) break; // that request is to be skipped
+                                request.Failed += (r, _) =&gt; _queue.ConnectionFailed?.Invoke(_queue, ((MemberConnectionRequest)r).Member);
+                                _queue._request = request;
+                                return true;
+                            }
+                        }
+
+                        // if we reach this point, we did not return nor break = the queue was suspended, wait until it is released
+                        // and then loop within the nested while =&gt; the dequeued request will be considered again
+                        await _queue._resume.WaitAsync(_cancellation.Token).CfAwaitCanceled();
+                    }
+                }
+
+                return false;
+            }
+
+            /// &lt;inheritdoc /&gt;
+            public MemberConnectionRequest Current =&gt; _queue._request;
+
+            public async ValueTask DisposeAsync()
+            {
+                if (_queueRequestsEnumerator != null)
+                {
+                    await _queueRequestsEnumerator.DisposeAsync().CfAwait();
+                    _queue._enumerate.Release();
+                }
+
+                _cancellation.Dispose();
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            lock (_mutex)
+            {
+                if (_disposed) return default;
+                _disposed = true;
+            }
+
+            _requests.Complete();
+            _cancel.Cancel();
+            _cancel.Dispose();
+
+            // cannot wait until enumeration (if any) is complete,
+            // because that depends on the caller calling MoveNext,
+            // instead, we return false if the caller calls MoveNext,
+            // and the caller should dispose the enumerator
+
+            _resume.Dispose();
+            _enumerate.Dispose();
+
+            return default;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,116,1],[31,9,31,90,1],[33,9,33,71,1],[34,9,34,74,1],[36,9,36,55,1],[48,9,48,67,1],[50,13,50,39,1],[50,40,50,95,0],[51,13,51,75,1],[54,9,54,10,1],[68,13,68,26,1],[70,17,70,31,1],[70,32,70,47,0],[72,17,72,86,1],[73,17,73,35,1],[78,17,78,44,1],[80,9,80,10,1],[91,13,91,26,1],[93,17,93,31,1],[93,32,93,39,1],[94,17,94,33,1],[94,34,94,88,0],[95,17,95,132,1],[96,17,96,27,1],[96,28,96,57,1],[96,57,96,73,1],[96,73,96,75,1],[97,17,97,36,1],[98,17,98,35,1],[99,13,99,14,1],[100,9,100,10,1],[108,13,108,27,1],[108,28,108,35,1],[110,13,110,26,1],[112,17,112,78,1],[115,21,115,118,0],[119,21,119,103,1],[121,13,121,14,1],[122,9,122,10,1],[138,13,138,26,1],[138,27,140,17,1],[140,17,140,45,1],[140,45,140,46,1],[140,46,140,57,1],[140,57,141,13,1],[141,13,141,14,1],[141,14,141,16,1],[142,9,142,10,1],[147,13,147,27,1],[147,28,147,93,0],[150,13,150,80,1],[159,13,159,140,1],[161,17,161,32,1],[162,17,162,121,1],[163,13,163,14,1],[167,17,167,59,1],[167,60,167,73,0],[170,17,170,54,1],[172,21,172,104,1],[173,21,173,35,1],[173,36,173,110,0],[174,21,174,105,1],[178,17,178,75,1],[180,21,180,127,0],[184,17,184,63,1],[187,21,187,83,1],[188,25,188,38,1],[190,21,190,67,1],[195,25,195,45,1],[197,29,197,52,1],[199,33,199,80,1],[200,33,200,81,1],[200,82,200,88,1],[201,33,201,138,1],[201,61,201,137,1],[202,33,202,59,1],[203,33,203,45,1],[205,25,205,26,1],[209,25,209,95,1],[213,17,213,30,0],[214,13,214,14,1],[217,55,217,70,1],[221,17,221,54,1],[223,21,223,77,1],[224,21,224,49,1],[227,17,227,41,1],[228,13,228,14,1],[236,13,236,26,1],[238,17,238,31,1],[238,32,238,47,0],[239,17,239,34,1],[240,13,240,14,1],[242,13,242,34,1],[243,13,243,30,1],[244,13,244,31,1],[251,13,251,31,1],[252,13,252,34,1],[254,13,254,28,1],[255,9,255,10,0]]);
+    </script>
+  </body>
+</html>

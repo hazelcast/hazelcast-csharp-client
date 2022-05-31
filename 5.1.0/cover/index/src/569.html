@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\CollectionItemEventHandlers.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Models;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represent collection item event handlers.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;T&quot;&gt;The collection item type.&lt;/typeparam&gt;
+    public sealed class CollectionItemEventHandlers&lt;T&gt; : EventHandlersBase&lt;ICollectionItemEventHandler&lt;T&gt;&gt;
+    {
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when an item is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public CollectionItemEventHandlers&lt;T&gt; ItemAdded(Action&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;&gt; handler)
+        {
+            Add(new CollectionItemEventHandler&lt;T&gt;(CollectionItemEventTypes.Added, handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when an item is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public CollectionItemEventHandlers&lt;T&gt; ItemAdded(Func&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;, ValueTask&gt; handler)
+        {
+            Add(new CollectionItemEventHandler&lt;T&gt;(CollectionItemEventTypes.Added, handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when an item is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public CollectionItemEventHandlers&lt;T&gt; ItemRemoved(Action&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;&gt; handler)
+        {
+            Add(new CollectionItemEventHandler&lt;T&gt;(CollectionItemEventTypes.Removed, handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when an item is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public CollectionItemEventHandlers&lt;T&gt; ItemRemoved(Func&lt;IHCollection&lt;T&gt;, CollectionItemEventArgs&lt;T&gt;, ValueTask&gt; handler)
+        {
+            Add(new CollectionItemEventHandler&lt;T&gt;(CollectionItemEventTypes.Removed, handler));
+            return this;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,13,35,103,1],[36,13,36,25,1],[46,13,46,93,0],[47,13,47,25,0],[57,13,57,105,1],[58,13,58,25,1],[68,13,68,95,0],[69,13,69,25,0]]);
+    </script>
+  </body>
+</html>

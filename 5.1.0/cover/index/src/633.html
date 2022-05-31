@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HRingBuffer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Hazelcast.Serialization.Collections;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    /// &lt;summary&gt;
+    /// Implements &lt;see cref=&quot;IHRingBuffer{TItem}&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TItem&quot;&gt;The type of the items.&lt;/typeparam&gt;
+    internal class HRingBuffer&lt;TItem&gt; : DistributedObjectBase, IHRingBuffer&lt;TItem&gt;
+    {
+        private long _capacity = -1;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HRingBuffer{TItem}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the ring buffer.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The factory owning this object.&lt;/param&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;The cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;The serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public HRingBuffer(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+            : base(ServiceNames.RingBuffer, name, factory, cluster, serializationService, loggerFactory)
+        {
+            const int maxBatchSize = 1000;
+            MaxBatchSize = maxBatchSize;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public int MaxBatchSize { get; }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; AddAsync(TItem item)
+            =&gt; await AddAsync(item, OverflowPolicy.Overwrite).CfAwait();
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; AddAsync(TItem item, OverflowPolicy overflowPolicy)
+        {
+            var itemData = ToSafeData(item);
+            var requestMessage = RingbufferAddCodec.EncodeRequest(Name, (int) overflowPolicy, itemData);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferAddCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; AddAllAsync(ICollection&lt;TItem&gt; items, OverflowPolicy overflowPolicy)
+        {
+            if (items.Count == 0) throw new ArgumentException(&quot;Cannot add zero items.&quot;, nameof(items));
+            var itemsData = ToSafeData(items);
+
+            var requestMessage = RingbufferAddAllCodec.EncodeRequest(Name, itemsData, (int) overflowPolicy);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferAddAllCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetCapacityAsync()
+        {
+            if (_capacity != -1) return _capacity;
+
+            var requestMessage = RingbufferCapacityCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return _capacity = RingbufferCapacityCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetHeadSequenceAsync()
+        {
+            var requestMessage = RingbufferHeadSequenceCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferHeadSequenceCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;IReadOnlyList&lt;TItem&gt;&gt; ReadManyAsync(long startSequence, int minCount, int maxCount)
+        {
+            if (startSequence &lt; 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
+            if (minCount &lt; 0) throw new ArgumentOutOfRangeException(nameof(minCount), &quot;The value of minCount must be equal to, or greater than, zero.&quot;);
+            if (maxCount &lt; minCount) throw new ArgumentOutOfRangeException(nameof(maxCount), &quot;The value of maxCount must be greater than, or equal to, the value of minCount.&quot;);
+
+            var capacity = await GetCapacityAsync().CfAwait();
+            if (minCount &gt; capacity) throw new ArgumentOutOfRangeException(nameof(minCount), &quot;The value of minCount must be smaller than, or equal to, the capacity.&quot;);
+            if (maxCount &gt; MaxBatchSize) throw new ArgumentOutOfRangeException(nameof(maxCount), &quot;The value of maxCount must be lower than, or equal to, the max batch size.&quot;);
+
+            var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = RingbufferReadManyCodec.DecodeResponse(responseMessage).Items;
+            return new ReadOnlyLazyList&lt;TItem&gt;(response, SerializationService);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask&lt;TItem&gt; ReadOneAsync(long sequence)
+        {
+            if (sequence &lt; 0) throw new ArgumentOutOfRangeException(nameof(sequence));
+
+            var requestMessage = RingbufferReadOneCodec.EncodeRequest(Name, sequence);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            var response = RingbufferReadOneCodec.DecodeResponse(responseMessage).Response;
+            return ToObject&lt;TItem&gt;(response);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetRemainingCapacityAsync()
+        {
+            var requestMessage = RingbufferRemainingCapacityCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferRemainingCapacityCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetSizeAsync()
+        {
+            var requestMessage = RingbufferSizeCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferSizeCodec.DecodeResponse(responseMessage).Response;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async Task&lt;long&gt; GetTailSequenceAsync()
+        {
+            var requestMessage = RingbufferTailSequenceCodec.EncodeRequest(Name);
+            var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
+            return RingbufferTailSequenceCodec.DecodeResponse(responseMessage).Response;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,37,1],[44,15,44,105,1],[47,13,47,41,1],[48,9,48,10,1],[51,35,51,39,1],[55,16,55,72,1],[60,13,60,45,1],[61,13,61,105,1],[62,13,62,124,1],[63,13,63,80,1],[64,9,64,10,1],[69,13,69,34,1],[69,35,69,104,0],[70,13,70,47,1],[72,13,72,109,1],[73,13,73,124,1],[74,13,74,83,1],[75,9,75,10,1],[80,13,80,33,1],[80,34,80,51,0],[82,13,82,78,1],[83,13,83,124,1],[84,13,84,97,1],[85,9,85,10,1],[90,13,90,82,1],[91,13,91,124,1],[92,13,92,89,1],[93,9,93,10,1],[98,13,98,35,1],[98,36,98,97,0],[99,13,99,30,1],[99,31,99,153,0],[100,13,100,37,1],[100,38,100,177,1],[102,13,102,63,1],[103,13,103,37,1],[103,38,103,168,1],[104,13,104,41,1],[104,42,104,176,1],[106,13,106,119,1],[107,13,107,124,1],[108,13,108,90,1],[109,13,109,80,1],[110,9,110,10,1],[115,13,115,30,1],[115,31,115,87,1],[117,13,117,87,1],[118,13,118,124,1],[119,13,119,92,1],[120,13,120,46,1],[121,9,121,10,1],[126,13,126,87,1],[127,13,127,124,1],[128,13,128,94,1],[129,9,129,10,1],[134,13,134,74,1],[135,13,135,124,1],[136,13,136,81,1],[137,9,137,10,1],[142,13,142,82,1],[143,13,143,124,1],[144,13,144,89,1],[145,9,145,10,1]]);
+    </script>
+  </body>
+</html>

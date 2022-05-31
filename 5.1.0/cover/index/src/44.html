@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlRow.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Sql
+{
+    /// &lt;summary&gt;
+    /// Represents a row in an &lt;see cref=&quot;ISqlQueryResult&quot;/&gt;.
+    /// &lt;/summary&gt;
+    public class SqlRow
+    {
+        private const string KeyColumnName = &quot;__key&quot;;
+        private const string ValueColumnName = &quot;this&quot;;
+        private readonly IList&lt;object&gt; _values;
+        internal SerializationService SerializationService { get; set; }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SqlRow&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;values&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;metadata&quot;&gt;&lt;/param&gt;
+        public SqlRow(IList&lt;object&gt; values, SqlRowMetadata metadata)
+        {
+            _values = values;
+            Metadata = metadata;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the row metadata.
+        /// &lt;/summary&gt;
+        public SqlRowMetadata Metadata { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the value of the column by identified by index
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the column value.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;index&quot;&gt;The index.&lt;/param&gt;
+        /// &lt;returns&gt;The value of the column.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;For performance purposes and to reduce allocations, the column value is deserialized 
+        /// but NOT cached. Avoid getting the value of a column multiple times. Cache it in a local variable
+        /// instead, if needed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public T GetColumn&lt;T&gt;(int index)
+        {
+            // Accept that column is already deserialized
+            if (SerializationService == null)
+            {
+                return (T) _values[index];
+            }
+            
+            //Lazy deserialization 
+            return (T) SerializationService.ToObject(_values[index]);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the value of a column identified by its name.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The expected type of the value.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name of the column.&lt;/param&gt;
+        /// &lt;returns&gt;The value of the column with the specified name.&lt;/returns&gt;
+        public T GetColumn&lt;T&gt;(string name) =&gt; GetColumn&lt;T&gt;(Metadata.GetColumnIndexByName(name));
+
+        /// &lt;summary&gt;
+        /// Gets the key of the row.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The expected type of the key.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The key of the row.&lt;/returns&gt;
+        public T GetKey&lt;T&gt;() =&gt; GetColumn&lt;T&gt;(KeyColumnName);
+
+        /// &lt;summary&gt;
+        /// Gets the value of the row.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The expected type of the value.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The value of the row.&lt;/returns&gt;
+        public T GetValue&lt;T&gt;() =&gt; GetColumn&lt;T&gt;(ValueColumnName);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,62,29,66,1],[29,67,29,71,1],[36,9,36,69,1],[38,13,38,30,1],[39,13,39,33,1],[40,9,40,10,1],[45,42,45,46,1],[61,13,61,46,1],[63,17,63,43,0],[67,13,67,70,1],[76,47,76,96,1],[83,33,83,60,1],[90,35,90,64,1]]);
+    </script>
+  </body>
+</html>

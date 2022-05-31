@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\ConstantSerializers\GuidSerializer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization.ConstantSerializers
+{
+    internal class GuidSerializer : SingletonSerializerBase&lt;Guid&gt;
+    {
+        public override int TypeId =&gt; SerializationConstants.ConstantTypeUuid;
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public override Guid Read(IObjectDataInput input)
+        {
+            var order = default(JavaUuidOrder);
+
+            order.X0 = input.ReadByte();
+            order.X1 = input.ReadByte();
+            order.X2 = input.ReadByte();
+            order.X3 = input.ReadByte();
+
+            order.X4 = input.ReadByte();
+            order.X5 = input.ReadByte();
+            order.X6 = input.ReadByte();
+            order.X7 = input.ReadByte();
+
+            order.X8 = input.ReadByte();
+            order.X9 = input.ReadByte();
+            order.XA = input.ReadByte();
+            order.XB = input.ReadByte();
+
+            order.XC = input.ReadByte();
+            order.XD = input.ReadByte();
+            order.XE = input.ReadByte();
+            order.XF = input.ReadByte();
+
+            return order.Value;
+        }
+
+        /// &lt;exception cref=&quot;System.IO.IOException&quot;&gt;&lt;/exception&gt;
+        public override void Write(IObjectDataOutput output, Guid obj)
+        {
+            var order = default(JavaUuidOrder);
+            order.Value = obj;
+            output.WriteByte(order.X0);
+            output.WriteByte(order.X1);
+            output.WriteByte(order.X2);
+            output.WriteByte(order.X3);
+
+            output.WriteByte(order.X4);
+            output.WriteByte(order.X5);
+            output.WriteByte(order.X6);
+            output.WriteByte(order.X7);
+
+            output.WriteByte(order.X8);
+            output.WriteByte(order.X9);
+            output.WriteByte(order.XA);
+            output.WriteByte(order.XB);
+
+            output.WriteByte(order.XC);
+            output.WriteByte(order.XD);
+            output.WriteByte(order.XE);
+            output.WriteByte(order.XF);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,39,22,78,1],[27,13,27,48,0],[29,13,29,41,0],[30,13,30,41,0],[31,13,31,41,0],[32,13,32,41,0],[34,13,34,41,0],[35,13,35,41,0],[36,13,36,41,0],[37,13,37,41,0],[39,13,39,41,0],[40,13,40,41,0],[41,13,41,41,0],[42,13,42,41,0],[44,13,44,41,0],[45,13,45,41,0],[46,13,46,41,0],[47,13,47,41,0],[49,13,49,32,0],[55,13,55,48,1],[56,13,56,31,1],[57,13,57,40,1],[58,13,58,40,1],[59,13,59,40,1],[60,13,60,40,1],[62,13,62,40,1],[63,13,63,40,1],[64,13,64,40,1],[65,13,65,40,1],[67,13,67,40,1],[68,13,68,40,1],[69,13,69,40,1],[70,13,70,40,1],[72,13,72,40,1],[73,13,73,40,1],[74,13,74,40,1],[75,13,75,40,1],[76,9,76,10,1]]);
+    </script>
+  </body>
+</html>

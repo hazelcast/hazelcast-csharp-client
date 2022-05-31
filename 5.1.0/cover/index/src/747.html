@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberConnection.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Concurrent;
+using System.Net;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Models;
+using Hazelcast.Networking;
+using Hazelcast.Protocol;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Clustering
+{
+    // NOTES
+    //
+    // older versions of the code had a background task that would check every invocation
+    // and terminate them if their attached client was not alive anymore - but really that
+    // should be taken care of by the OnShutdown handler when the socket goes down.
+    //
+    // also, every invocation has a timeout by default, so unless users set an absurdly
+    // long timeout, invocations *will* be collected eventually and we do not leak.
+
+    /// &lt;summary&gt;
+    /// Represents a connection to a cluster member.
+    /// &lt;/summary&gt;
+    internal class MemberConnection : IAsyncDisposable
+    {
+        internal static readonly byte[] ClientProtocolInitBytes = { 67, 80, 50 }; //&quot;CP2&quot;;
+
+        private readonly ConcurrentDictionary&lt;long, Invocation&gt; _invocations = new ConcurrentDictionary&lt;long, Invocation&gt;();
+
+        private readonly Authenticator _authenticator;
+        private readonly MessagingOptions _messagingOptions;
+        private readonly NetworkingOptions _networkingOptions;
+        private readonly SslOptions _sslOptions;
+        private readonly ISequence&lt;long&gt; _correlationIdSequence;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
+
+        private bool _readonlyProperties; // whether some properties (_onXxx) are readonly
+        private Action&lt;ClientMessage&gt; _receivedEvent;
+        private Func&lt;MemberConnection, ValueTask&gt; _closed;
+
+        private ClientSocketConnection _socketConnection;
+        private ClientMessageConnection _messageConnection;
+
+        private readonly object _mutex = new object();
+        private volatile bool _disposed;
+        private volatile bool _active;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MemberConnection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The network address.&lt;/param&gt;
+        /// &lt;param name=&quot;authenticator&quot;&gt;The authenticator.&lt;/param&gt;
+        /// &lt;param name=&quot;messagingOptions&quot;&gt;Messaging options.&lt;/param&gt;
+        /// &lt;param name=&quot;networkingOptions&quot;&gt;Networking options.&lt;/param&gt;
+        /// &lt;param name=&quot;sslOptions&quot;&gt;SSL options.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationIdSequence&quot;&gt;A sequence of unique correlation identifiers.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public MemberConnection(NetworkAddress address, Authenticator authenticator, MessagingOptions messagingOptions, NetworkingOptions networkingOptions, SslOptions sslOptions, ISequence&lt;long&gt; correlationIdSequence, ILoggerFactory loggerFactory)
+        {
+            Address = address ?? throw new ArgumentNullException(nameof(address));
+            _authenticator = authenticator ?? throw new ArgumentNullException(nameof(authenticator));
+            _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
+            _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
+            _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
+            _correlationIdSequence = correlationIdSequence ?? throw new ArgumentNullException(nameof(correlationIdSequence));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+            _logger = loggerFactory.CreateLogger&lt;MemberConnection&gt;();
+
+            MemberAddress = address; // may change after connection is established.
+            HConsole.Configure(x =&gt; x.Configure&lt;MemberConnection&gt;().SetIndent(4).SetPrefix(&quot;MBR.CONN&quot;));
+        }
+
+        #region Events
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when the connection receives an event message.
+        /// &lt;/summary&gt;
+        public Action&lt;ClientMessage&gt; ReceivedEvent
+        {
+            get =&gt; _receivedEvent;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _receivedEvent = value;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets an action that will be executed when the connection has closed.
+        /// &lt;/summary&gt;
+        public Func&lt;MemberConnection, ValueTask&gt; Closed
+        {
+            get =&gt; _closed;
+            set
+            {
+                if (_readonlyProperties)
+                    throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
+                _closed = value;
+            }
+        }
+
+        #endregion
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of this connection.
+        /// &lt;/summary&gt;
+        public Guid Id { get; } = Guid.NewGuid();
+
+        /// &lt;summary&gt;
+        /// Whether the connection is active.
+        /// &lt;/summary&gt;
+        public bool Active =&gt; _active;
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the cluster member that this connection is connected to.
+        /// &lt;/summary&gt;
+        public Guid MemberId { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the cluster that this connection is connected to.
+        /// &lt;/summary&gt;
+        public Guid ClusterId { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the network address the client is connected to.
+        /// &lt;/summary&gt;
+        public NetworkAddress Address { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the network address reported by the member.
+        /// &lt;/summary&gt;
+        public NetworkAddress MemberAddress { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the local endpoint of the socket connection.
+        /// &lt;/summary&gt;
+        public IPEndPoint LocalEndPoint =&gt; _socketConnection.LocalEndPoint;
+
+        /// &lt;summary&gt;
+        /// Gets the authentication principal.
+        /// &lt;/summary&gt;
+        public string Principal { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when the connection was established.
+        /// &lt;/summary&gt;
+        public DateTimeOffset ConnectTime { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when bytes where last read by the client.
+        /// &lt;/summary&gt;
+        public DateTime LastReadTime =&gt; _socketConnection?.LastReadTime ?? DateTime.MinValue;
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when bytes where last written by the client.
+        /// &lt;/summary&gt;
+        public DateTime LastWriteTime =&gt; _socketConnection?.LastWriteTime ?? DateTime.MinValue;
+
+        /// &lt;summary&gt;
+        /// Connects the client to the server.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;clusterState&quot;&gt;The cluster state.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the client is connected.&lt;/returns&gt;
+        public async ValueTask&lt;AuthenticationResult&gt; ConnectAsync(ClusterState clusterState, CancellationToken cancellationToken)
+        {
+            // as soon as we even try to connect, some properties cannot change anymore
+            _readonlyProperties = true;
+
+            // MessageConnection is just a wrapper around a true SocketConnection, and
+            // the SocketConnection must be open *after* everything has been wired
+
+            _socketConnection = new ClientSocketConnection(Id, Address.IPEndPoint, _networkingOptions, _sslOptions, _loggerFactory)
+            { OnShutdown = OnSocketShutdown };
+
+            _messageConnection = new ClientMessageConnection(_socketConnection, _loggerFactory)
+            { OnReceiveMessage = ReceiveMessage };
+
+            HConsole.Configure(x =&gt; x.Configure(_messageConnection).SetIndent(8).SetPrefix($&quot;CLT.MSG [{Id.ToShortString()}]&quot;));
+
+            AuthenticationResult result;
+            try
+            {
+                // connect
+                await _socketConnection.ConnectAsync(cancellationToken).CfAwait();
+                _logger.IfDebug()?.LogDebug(&quot;Established connection {Id} to {Address}.&quot;, Id.ToShortString(), Address);
+
+                // send protocol bytes
+                var sent = await _socketConnection.SendAsync(ClientProtocolInitBytes, ClientProtocolInitBytes.Length, cancellationToken).CfAwait();
+                if (!sent) throw new ConnectionException(&quot;Failed to send protocol bytes.&quot;);
+
+                // authenticate (does not return null, throws if it fails to authenticate)
+                result = await _authenticator
+                    .AuthenticateAsync(this, clusterState.ClusterName, clusterState.ClientId, clusterState.ClientName, clusterState.Options.Labels, cancellationToken)
+                    .CfAwait();
+            }
+            catch
+            {
+                lock (_mutex) _disposed = true;
+                await DisposeInnerConnectionAsync().CfAwait();
+                throw;
+            }
+
+            MemberId = result.MemberId;
+            ClusterId = result.ClusterId;
+            ConnectTime = DateTimeOffset.Now;
+            Principal = result.Principal;
+            MemberAddress = result.MemberAddress;
+
+            bool disposed;
+            lock (_mutex)
+            {
+                disposed = _disposed;
+                _active = !_disposed;
+            }
+
+            if (disposed)
+            {
+                await DisposeInnerConnectionAsync().CfAwait();
+                throw new ConnectionException(&quot;Failed to connect.&quot;);
+            }
+
+            return result;
+        }
+
+        /// &lt;summary&gt;
+        /// Handles connection shutdown.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the shutdown has been handled.&lt;/returns&gt;
+#pragma warning disable IDE0079 // Remove unnecessary suppression - false positive ?!
+#pragma warning disable CA1801 // Parameter is never used.
+        private async ValueTask OnSocketShutdown(SocketConnectionBase connection)
+#pragma warning restore CA1801
+#pragma warning restore IDE0079
+        {
+            await DisposeAsync().CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Handles messages.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The connection.&lt;/param&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the message has been handled.&lt;/returns&gt;
+#pragma warning disable IDE0079 // Remove unnecessary suppression - false positive ?!
+#pragma warning disable CA1801 // Parameter is never used.
+        private void ReceiveMessage(ClientMessageConnection connection, ClientMessage message)
+#pragma warning restore CA1801
+#pragma warning restore IDE0079
+        {
+            // proceed, regardless of _active, because why not?
+
+            if (message.IsEvent)
+            {
+                HConsole.WriteLine(this, $&quot;Receive event {Id.ToShortString()}:{message.CorrelationId}&quot; +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
+                ReceiveEvent(message); // should not throw
+                return;
+            }
+
+            if (message.IsBackupEvent)
+            {
+                HConsole.WriteLine(this, $&quot;Receive backup event {Id.ToShortString()}:{message.CorrelationId}&quot; +
+                                         HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
+
+                // backup events are not supported
+                _logger.IfWarning()?.LogWarning(&quot;Ignoring unsupported backup event.&quot;);
+                return;
+            }
+
+            // message has to be a response
+            HConsole.WriteLine(this, $&quot;Receive response {Id.ToShortString()}:{message.CorrelationId} from {MemberId.ToShortString()} at {Address}&quot; +
+                                     HConsole.Lines(this, 2, message.Dump(HConsole.Level(this))));
+
+            // find the corresponding invocation
+            // and remove invocation
+            if (!_invocations.TryRemove(message.CorrelationId, out var invocation))
+            {
+                // orphan messages are ignored (but logged)
+                _logger.IfWarning()?.LogWarning(&quot;Received message for unknown invocation {Id}:{CorrelationId}.&quot;, Id.ToShortString(), message.CorrelationId);
+                HConsole.WriteLine(this, $&quot;Unknown invocation {Id.ToShortString()}:{message.CorrelationId}&quot;);
+                return;
+            }
+
+            // receive exception or message
+            if (message.IsException)
+                ReceiveException(invocation, message); // should not throw
+            else
+                ReceiveResponse(invocation, message); // should not throw
+        }
+
+        // ReceiveMessage -&gt; event message
+        private void ReceiveEvent(ClientMessage message)
+        {
+            try
+            {
+                HConsole.WriteLine(this, $&quot;Raise event {Id.ToShortString()}:{message.CorrelationId}&quot;);
+                _receivedEvent(message);
+            }
+            catch (Exception e)
+            {
+                // _onReceiveEventMessage should just queue the event and not fail - if it fails
+                // then some nasty internal error is happening - log, at least, make some noise
+
+                _logger.IfWarning()?.LogWarning(e, &quot;Failed to raise event {Id}:{CorrelationId}.&quot;, Id.ToShortString(), message.CorrelationId);
+            }
+        }
+
+        // ReceiveMessage -&gt; exception message
+        private void ReceiveException(Invocation invocation, ClientMessage message)
+        {
+            Exception exception;
+            try
+            {
+                exception = RemoteExceptions.CreateException(MemberId, ErrorsCodec.Decode(message));
+            }
+            catch (Exception e)
+            {
+                exception = e;
+            }
+
+            HConsole.WriteLine(this, $&quot;Fail invocation {Id.ToShortString()}:{message.CorrelationId}&quot;);
+            invocation.TrySetException(exception);
+        }
+
+        // ReceiveMessage -&gt; response message
+        private void ReceiveResponse(Invocation invocation, ClientMessage message)
+        {
+            HConsole.WriteLine(this, $&quot;Complete invocation {Id.ToShortString()}:{message.CorrelationId}&quot;);
+
+            // returns immediately, releases the invocation task
+            invocation.TrySetResult(message);
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the response has been received, and represents the response.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The operation must complete within the default operation timeout specified by the networking options.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public async Task&lt;ClientMessage&gt; SendAsync(ClientMessage message)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = _correlationIdSequence.GetNext();
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = new Invocation(message, _messagingOptions, this);
+
+            // and send
+            return await SendAsync(invocation).CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends an invocation message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;invocation&quot;&gt;The invocation.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;remarks&gt;After first connection is established, &lt;b&gt;TargetDisconnectedException&lt;/b&gt; may be thrown. If
+        // the connected member reports an IP address different from the configured one. In this case, connection 
+        // will be switched, and an exception will be thrown.&lt;/remarks&gt;
+        /// &lt;returns&gt;A task that will complete when the response has been received, and represents the response.&lt;/returns&gt;
+        public Task&lt;ClientMessage&gt; SendAsync(Invocation invocation, CancellationToken cancellationToken = default)
+        {
+            return SendAsyncInternal(invocation, cancellationToken);
+        }
+
+        private async Task&lt;ClientMessage&gt; SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        {
+            if (invocation == null) throw new ArgumentNullException(nameof(invocation));
+
+            // _active     false ----&gt; true ----&gt; false
+            // _disposed   false            ----&gt; true
+            //             ^--------------^
+            //               here, ok to send messages, either active, or connecting
+
+            // adds the invocation, so that it can be completed as soon as the response is received
+            // it will be removed when receiving the response (or error or timeout or...)
+            lock (_mutex)
+            {
+                if (_disposed) throw new TargetDisconnectedException();
+                _invocations[invocation.CorrelationId] = invocation;
+            }
+
+            HConsole.WriteLine(this, $&quot;Send message {Id.ToShortString()}:{invocation.CorrelationId} to {MemberId.ToShortString()} at {Address}&quot; +
+                                     HConsole.Lines(this, 1, invocation.RequestMessage.Dump(HConsole.Level(this))));
+
+            // actually send the message
+            bool success;
+            Exception captured = null;
+            try
+            {
+                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
+            }
+            catch (Exception e)
+            {
+                HConsole.WriteLine(this, &quot;Exception while sending: &quot; + e);
+                captured = e;
+                _invocations.TryRemove(invocation.CorrelationId, out _);
+                if (_active) throw; // if not active, better throw a disconnected exception below
+                success = false;
+            }
+
+            if (!success)
+            {
+                _invocations.TryRemove(invocation.CorrelationId, out _);
+                HConsole.WriteLine(this, &quot;Failed to send a message.&quot;);
+
+                if (!_active)
+                    throw new TargetDisconnectedException(captured);
+
+                // TODO: we need a better exception
+                throw new TargetUnreachableException(captured);
+            }
+
+            // now wait for the response
+            HConsole.WriteLine(this, &quot;Wait for response...&quot;);
+
+            try
+            {
+                // propagate the cancellationToken to the invocation
+#if !NETSTANDARD2_0
+                await
+#endif
+                using var reg = cancellationToken.Register(invocation.TrySetCanceled);
+
+                var response = await invocation.Task.CfAwait();
+                HConsole.WriteLine(this, &quot;Received response&quot;);
+                return response;
+            }
+            catch (Exception e)
+            {
+                HConsole.WriteLine(this, $&quot;Failed ({e})&quot;);
+                _invocations.TryRemove(invocation.CorrelationId, out _);
+                throw;
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            bool active;
+            lock (_mutex)
+            {
+                if (_disposed) return;
+                _disposed = true;
+                active = _active;
+                _active = false;
+            }
+
+            try
+            {
+                // if we were connected, we need to trigger the closed event
+                if (active) await _closed.AwaitEach(this).CfAwait(); // may throw, never knows
+            }
+            catch (Exception e)
+            {
+                _logger.IfWarning()?.LogWarning(e, &quot;Caught an exception while raising Closed.&quot;);
+            }
+
+            // if if we were not yet active / connected, we might have ONE invocation
+            // pending: the authentication one - it is important to abort it too
+
+            // capture all invocations, _disposed is true so no new invocation can be
+            // accepted, and if one invocation completes, TrySetException will just do
+            // nothing
+            var invocations = _invocations.Values;
+            foreach (var invocation in invocations)
+            {
+                invocation.TrySetException(new TargetDisconnectedException().SetCurrentStackTrace()); // does not throw
+            }
+
+            // ConnectAsync would deal with the situation
+            if (!active) return;
+
+            // then kill our inner connection
+            await DisposeInnerConnectionAsync().CfAwait();
+
+            _logger.IfDebug()?.LogDebug(&quot;Connection {Id} closed and disposed.&quot;, Id.ToShortString());
+
+#pragma warning disable CA1816 // Dispose methods should call SuppressFinalize - DisposeAsync too!
+            GC.SuppressFinalize(this);
+#pragma warning restore CA1816
+        }
+
+        private async Task DisposeInnerConnectionAsync()
+        {
+            // tear down inner connections
+            if (_messageConnection != null) // also disposes the socket connection
+                await _messageConnection.DisposeAsync().CfAwait(); // does not throw
+            else if (_socketConnection != null)
+                await _socketConnection.DisposeAsync().CfAwait(); // does not throw
+
+            _messageConnection = null;
+            _socketConnection = null;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[44,9,44,82,1],[46,9,46,125,1],[63,9,63,55,1],[77,9,77,249,1],[79,13,79,83,1],[80,13,80,102,1],[81,13,81,111,1],[82,13,82,114,1],[83,13,83,93,1],[84,13,84,126,1],[85,13,85,102,1],[86,13,86,70,1],[88,13,88,37,1],[90,9,90,10,1],[99,20,99,34,1],[102,17,102,41,1],[103,21,103,98,0],[104,17,104,40,1],[105,13,105,14,1],[113,20,113,27,1],[116,17,116,41,1],[117,21,117,98,0],[118,17,118,33,1],[119,13,119,14,1],[127,26,127,30,1],[127,35,127,49,1],[132,31,132,38,1],[137,32,137,36,1],[137,37,137,49,1],[142,33,142,37,1],[142,38,142,50,1],[147,41,147,45,1],[152,47,152,51,0],[152,52,152,64,1],[157,44,157,75,1],[162,35,162,39,0],[162,40,162,52,1],[167,45,167,49,0],[167,50,167,62,1],[172,41,172,93,1],[177,42,177,95,1],[188,13,188,40,1],[193,13,194,47,1],[196,13,197,51,1],[205,17,205,83,1],[206,17,206,119,1],[209,17,209,148,1],[210,17,210,27,1],[210,28,210,92,1],[213,17,215,32,1],[216,13,216,14,1],[217,13,217,18,1],[219,17,219,30,1],[219,31,219,48,1],[220,17,220,63,1],[221,17,221,23,1],[224,13,224,40,1],[225,13,225,42,1],[226,13,226,46,1],[227,13,227,42,1],[228,13,228,50,1],[231,13,231,26,1],[233,17,233,38,1],[234,17,234,38,1],[235,13,235,14,1],[237,13,237,26,1],[239,17,239,63,0],[240,17,240,69,0],[243,13,243,27,1],[244,9,244,10,1],[257,13,257,44,1],[258,9,258,10,1],[274,13,274,33,1],[278,17,278,39,1],[279,17,279,24,1],[282,13,282,39,1],[288,17,288,87,0],[289,17,289,24,0],[298,13,298,84,1],[301,17,301,157,1],[303,17,303,24,1],[307,13,307,37,1],[308,17,308,55,1],[310,17,310,54,1],[311,9,311,10,1],[319,17,319,41,1],[320,13,320,14,1],[321,13,321,32,0],[326,17,326,142,0],[327,13,327,14,0],[328,9,328,10,1],[336,17,336,101,1],[337,13,337,14,1],[340,17,340,31,0],[341,13,341,14,0],[344,13,344,51,1],[345,9,345,10,1],[353,13,353,46,1],[354,9,354,10,1],[366,13,366,33,1],[366,34,366,83,0],[370,13,370,70,1],[371,13,371,96,1],[374,13,374,79,1],[377,13,377,58,1],[378,9,378,10,1],[391,13,391,69,1],[396,13,396,36,1],[396,37,396,89,0],[405,13,405,26,1],[407,17,407,31,1],[407,32,407,72,0],[408,17,408,69,1],[409,13,409,14,1],[416,13,416,39,1],[419,17,419,118,1],[420,13,420,14,1],[421,13,421,32,0],[424,17,424,30,0],[425,17,425,73,0],[426,17,426,29,0],[426,30,426,36,0],[427,17,427,33,0],[428,13,428,14,0],[430,13,430,26,1],[432,17,432,73,0],[435,17,435,30,0],[436,21,436,69,0],[439,17,439,64,0],[449,17,451,87,1],[453,17,453,64,1],[455,17,455,33,1],[456,13,456,14,0],[457,13,457,32,1],[460,17,460,73,1],[461,17,461,23,1],[463,9,463,10,1],[471,13,471,26,1],[473,17,473,31,1],[473,32,473,39,1],[474,17,474,34,1],[475,17,475,34,1],[476,17,476,33,1],[477,13,477,14,1],[482,17,482,28,1],[482,29,482,69,1],[483,13,483,14,1],[484,13,484,32,0],[486,17,486,97,0],[487,13,487,14,0],[495,13,495,51,1],[496,22,496,36,1],[496,37,496,39,1],[496,40,496,51,1],[498,17,498,102,1],[502,13,502,25,1],[502,26,502,33,1],[505,13,505,59,1],[507,13,507,101,1],[510,13,510,39,1],[512,9,512,10,1],[517,13,517,44,1],[518,17,518,67,1],[519,18,519,48,1],[520,17,520,66,0],[522,13,522,39,1],[523,13,523,38,1],[524,9,524,10,1]]);
+    </script>
+  </body>
+</html>

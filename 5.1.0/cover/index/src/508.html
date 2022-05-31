@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\NearCaching\NearCacheStatistics.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using Hazelcast.Core;
+using Hazelcast.Metrics;
+
+namespace Hazelcast.NearCaching
+{
+    internal class NearCacheStatistics : IMetricSource
+    {
+        private readonly MetricDescriptors _metricDescriptors;
+
+        private long _evictions;
+        private long _expirations;
+        private long _hits;
+        private long _misses;
+        private long _staleReads;
+        private long _ownedEntryCount;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;NearCacheStatistics&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The name of the cache.&lt;/param&gt;
+        public NearCacheStatistics(string name)
+        {
+            CreationTime = Clock.Milliseconds;
+            _metricDescriptors = new MetricDescriptors(name);
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the time when the cache was created.
+        /// &lt;/summary&gt;
+        public long CreationTime { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the number of hits.
+        /// &lt;/summary&gt;
+        public long Hits =&gt; Interlocked.Read(ref _hits);
+
+        /// &lt;summary&gt;
+        /// Gets the number of misses.
+        /// &lt;/summary&gt;
+        public long Misses =&gt; Interlocked.Read(ref _misses);
+
+        /// &lt;summary&gt;
+        /// Gets the number of stale reads.
+        /// &lt;/summary&gt;
+        public long StaleReads =&gt; Interlocked.Read(ref _staleReads);
+
+        /// &lt;summary&gt;
+        /// Gets the number of evictions.
+        /// &lt;/summary&gt;
+        public long Evictions =&gt; Interlocked.Read(ref _evictions);
+
+        /// &lt;summary&gt;
+        /// Gets the number of expirations.
+        /// &lt;/summary&gt;
+        public long Expirations =&gt; Interlocked.Read(ref _expirations);
+
+        /// &lt;summary&gt;
+        /// Gets the number of entries.
+        /// &lt;/summary&gt;
+        public long EntryCount
+        {
+            get =&gt; Interlocked.Read(ref _ownedEntryCount);
+            set =&gt; _ownedEntryCount = value;
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of an added entry.
+        /// &lt;/summary&gt;
+        public void NotifyEntryRemoved()
+        {
+            Interlocked.Decrement(ref _ownedEntryCount);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of a removed entry.
+        /// &lt;/summary&gt;
+        public void NotifyEntryAdded()
+        {
+            Interlocked.Increment(ref _ownedEntryCount);
+        }
+
+        /// &lt;summary&gt;
+        /// Resets the number of entries.
+        /// &lt;/summary&gt;
+        public void ResetEntryCount()
+        {
+            Interlocked.Exchange(ref _ownedEntryCount, 0);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of an eviction.
+        /// &lt;/summary&gt;
+        public void NotifyEviction()
+        {
+            Interlocked.Increment(ref _evictions);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of an expiration.
+        /// &lt;/summary&gt;
+        public void NotifyExpiration()
+        {
+            Interlocked.Increment(ref _expirations);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of a hit.
+        /// &lt;/summary&gt;
+        public void NotifyHit()
+        {
+            Interlocked.Increment(ref _hits);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of a miss.
+        /// &lt;/summary&gt;
+        public void NotifyMiss()
+        {
+            Interlocked.Increment(ref _misses);
+        }
+
+        /// &lt;summary&gt;
+        /// Notifies of a stale entry.
+        /// &lt;/summary&gt;
+        public void NotifyStaleRead()
+        {
+            Interlocked.Increment(ref _staleReads);
+        }
+
+
+        private class MetricDescriptors
+        {
+            private const string NearCacheAttributePrefix = &quot;nc&quot;;
+            private const string NearCacheDescriptorPrefix = &quot;nearcache&quot;;
+            private const string NearCacheDescriptorDiscriminator = &quot;name&quot;;
+            private readonly string _nearCacheName;
+
+            private MetricDescriptor&lt;T&gt; CreateDescriptor&lt;T&gt;(string metricName, MetricUnit unit)
+                =&gt; MetricDescriptor.Create&lt;T&gt;(NearCacheDescriptorPrefix, metricName, unit)
+                    .WithAttributePrefixes(NearCacheAttributePrefix, _nearCacheName) // override as &#39;nc.&lt;name&gt;.metric=value&#39; for attributes
+                    .WithDiscriminator(NearCacheDescriptorDiscriminator, _nearCacheName);
+
+            public MetricDescriptors(string nearCacheName)
+            {
+                _nearCacheName = nearCacheName.TrimStart(&#39;/&#39;);
+
+                CreationTime = CreateDescriptor&lt;long&gt;(&quot;creationTime&quot;, MetricUnit.Milliseconds);
+                Evictions = CreateDescriptor&lt;long&gt;(&quot;evictions&quot;, MetricUnit.Count);
+                Hits = CreateDescriptor&lt;long&gt;(&quot;hits&quot;, MetricUnit.Count);
+                Misses = CreateDescriptor&lt;long&gt;(&quot;misses&quot;, MetricUnit.Count);
+                EntryCount = CreateDescriptor&lt;long&gt;(&quot;ownedEntryCount&quot;, MetricUnit.Count);
+                Expirations = CreateDescriptor&lt;long&gt;(&quot;expirations&quot;, MetricUnit.Count);
+                Invalidations = CreateDescriptor&lt;long&gt;(&quot;invalidations&quot;, MetricUnit.Count);
+                InvalidationRequests = CreateDescriptor&lt;long&gt;(&quot;invalidationRequests&quot;, MetricUnit.Count);
+                OwnedEntryMemoryCost = CreateDescriptor&lt;long&gt;(&quot;ownedEntryMemoryCost&quot;, MetricUnit.Bytes);
+
+                // these exist in Java but not in Python?
+                LastPersistenceDuration = CreateDescriptor&lt;long&gt;(&quot;lastPersistenceDuration&quot;, MetricUnit.Milliseconds);
+                LastPersistenceKeyCount = CreateDescriptor&lt;long&gt;(&quot;lastPersistenceKeyCount&quot;, MetricUnit.Count);
+                LastPersistenceTime = CreateDescriptor&lt;long&gt;(&quot;lastPersistenceTime&quot;, MetricUnit.Milliseconds);
+                LastPersistenceWrittenBytes = CreateDescriptor&lt;long&gt;(&quot;lastPersistenceWrittenBytes&quot;, MetricUnit.Bytes);
+            }
+
+            public readonly MetricDescriptor&lt;long&gt; CreationTime;
+            public readonly MetricDescriptor&lt;long&gt; Evictions;
+            public readonly MetricDescriptor&lt;long&gt; Hits;
+            public readonly MetricDescriptor&lt;long&gt; Misses;
+            public readonly MetricDescriptor&lt;long&gt; EntryCount;
+            public readonly MetricDescriptor&lt;long&gt; Expirations;
+            public readonly MetricDescriptor&lt;long&gt; Invalidations;
+            public readonly MetricDescriptor&lt;long&gt; InvalidationRequests;
+            public readonly MetricDescriptor&lt;long&gt; OwnedEntryMemoryCost;
+
+            public readonly MetricDescriptor&lt;long&gt; LastPersistenceDuration;
+            public readonly MetricDescriptor&lt;long&gt; LastPersistenceKeyCount;
+            public readonly MetricDescriptor&lt;long&gt; LastPersistenceTime;
+            public readonly MetricDescriptor&lt;long&gt; LastPersistenceWrittenBytes;
+        }
+
+        public IEnumerable&lt;Metric&gt; PublishMetrics()
+        {
+            // these are the stats currently sent by the Java v4 client
+
+            yield return _metricDescriptors.CreationTime.WithValue(CreationTime);
+            yield return _metricDescriptors.Evictions.WithValue(Evictions);
+            yield return _metricDescriptors.Hits.WithValue(Hits);
+            yield return _metricDescriptors.Misses.WithValue(Misses);
+            yield return _metricDescriptors.EntryCount.WithValue(EntryCount);
+            yield return _metricDescriptors.Expirations.WithValue(Expirations);
+
+            yield return _metricDescriptors.Invalidations.WithoutValue();
+            yield return _metricDescriptors.InvalidationRequests.WithoutValue();
+            yield return _metricDescriptors.OwnedEntryMemoryCost.WithoutValue();
+
+            // TODO consider enabling these?
+            /*
+            yield return _metricDescriptors.LastPersistenceDuration.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceKeyCount.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceTime.WithoutValue();
+            yield return _metricDescriptors.LastPersistenceWrittenBytes.WithoutValue();
+            */
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,9,38,48,1],[40,13,40,47,1],[41,13,41,62,1],[42,9,42,10,1],[47,36,47,40,0],[52,29,52,56,1],[57,31,57,60,1],[62,35,62,68,1],[67,34,67,66,1],[72,36,72,70,0],[79,20,79,58,1],[80,20,80,44,0],[88,13,88,57,1],[89,9,89,10,1],[96,13,96,57,1],[97,9,97,10,1],[104,13,104,59,1],[105,9,105,10,1],[112,13,112,51,1],[113,9,113,10,1],[120,13,120,53,1],[121,9,121,10,1],[128,13,128,46,1],[129,9,129,10,1],[136,13,136,48,1],[137,9,137,10,1],[144,13,144,52,0],[145,9,145,10,0],[156,20,158,89,1],[160,13,160,59,1],[162,17,162,63,1],[164,17,164,96,1],[165,17,165,83,1],[166,17,166,73,1],[167,17,167,77,1],[168,17,168,90,1],[169,17,169,87,1],[170,17,170,91,1],[171,17,171,105,1],[172,17,172,105,1],[175,17,175,118,1],[176,17,176,111,1],[177,17,177,110,1],[178,17,178,119,1],[179,13,179,14,1],[201,13,201,82,0],[202,13,202,76,0],[203,13,203,66,0],[204,13,204,70,0],[205,13,205,78,0],[206,13,206,80,0],[208,13,208,74,0],[209,13,209,81,0],[210,13,210,81,0],[219,9,219,10,0]]);
+    </script>
+  </body>
+</html>

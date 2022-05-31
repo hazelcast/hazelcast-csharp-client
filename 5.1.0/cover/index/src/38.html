@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\HazelcastSqlException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.Serialization;
+using Hazelcast.Exceptions;
+using Hazelcast.Core;
+
+namespace Hazelcast.Sql
+{
+    /// &lt;summary&gt;
+    /// Represents the exception that is thrown by the SQL service in case of an error.
+    /// &lt;/summary&gt;
+    [Serializable]
+    public class HazelcastSqlException : HazelcastException
+    {
+        // NOTE: as per CA1032 we implement all constructors, but... keep them private/internal.
+        #pragma warning disable IDE0051 // Remove unused private members - of course
+
+        // TODO: consider adding values to Data[&quot;...&quot;] the way RemoteException does?
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        [ExcludeFromCodeCoverage]
+        private HazelcastSqlException()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        [ExcludeFromCodeCoverage]
+        private HazelcastSqlException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        [ExcludeFromCodeCoverage]
+        private HazelcastSqlException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private HazelcastSqlException(Guid clientId, Guid memberId, int errorCode, string message)
+            : base(message)
+        {
+            ClientId = clientId;
+            MemberId = memberId;
+            ErrorCode = errorCode;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        internal HazelcastSqlException(Guid clientId, SqlErrorCode errorCode, string message)
+            : this(clientId, Guid.Empty, (int)errorCode, message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        internal HazelcastSqlException(Guid clientId, SqlError error)
+            : this(clientId, error.OriginatingMemberId, error.Code, error.Message)
+        {
+            Suggestion = error.Suggestion;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastSqlException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information about the source or destination.&lt;/param&gt;
+        protected HazelcastSqlException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        {
+            ClientId = info.GetGuid(nameof(ClientId));
+            MemberId = info.GetGuid(nameof(MemberId));
+            ErrorCode = info.GetInt32(nameof(ErrorCode));
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override void GetObjectData(SerializationInfo info, StreamingContext context)
+        {
+            if (info == null) throw new ArgumentNullException(nameof(info));
+
+            info.AddValue(nameof(ClientId), ClientId);
+            info.AddValue(nameof(MemberId), MemberId);
+            info.AddValue(nameof(ErrorCode), ErrorCode);
+            base.GetObjectData(info, context);
+        }
+
+        /// &lt;summary&gt;
+        /// Get the identifier of the &lt;see cref=&quot;IHazelcastClient&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public Guid ClientId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the identifier of the member that reported the exception, if any, or &lt;c&gt;Guid.Empty&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If the exception was thrown by the client and not reported by a member, then the value is &lt;c&gt;Guid.Empty&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Guid MemberId { get; }
+
+
+        /// &lt;summary&gt;
+        /// Suggests a solution for the exception if any, or &lt;c&gt;String.Empty&lt;/c&gt;
+        /// &lt;/summary&gt;
+        public string Suggestion { get; } = String.Empty;
+
+        /// &lt;summary&gt;
+        /// Gets the code representing the error that occurred.
+        /// &lt;/summary&gt;
+        internal int ErrorCode { get; } // TODO: consider exposing this as a public enum?
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[61,15,61,28,1],[63,13,63,33,1],[64,13,64,33,1],[65,13,65,35,1],[66,9,66,10,1],[72,15,72,66,0],[73,11,73,12,0],[79,15,79,83,1],[81,13,81,43,1],[82,9,82,10,1],[90,15,90,34,0],[92,13,92,55,0],[93,13,93,55,0],[94,13,94,58,0],[95,9,95,10,0],[100,13,100,30,0],[100,31,100,77,0],[102,13,102,55,0],[103,13,103,55,0],[104,13,104,57,0],[105,13,105,47,0],[106,9,106,10,0],[111,32,111,36,0],[119,32,119,36,0],[125,36,125,40,1],[125,45,125,57,0],[125,45,125,57,1],[130,34,130,38,0]]);
+    </script>
+  </body>
+</html>
