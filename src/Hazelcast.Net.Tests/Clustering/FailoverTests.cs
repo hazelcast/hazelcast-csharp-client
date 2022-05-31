@@ -272,7 +272,7 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(false, 1)]
         public async Task TestClientCanFailoverFirstClusterNotUp(bool smartRouting, int memberCount)
         {
-            var _ = HConsoleForTest();
+            //using var _ = HConsoleForTest();
 
             var numberOfStateChanged = 0;
             var waitConnected = new AutoResetEvent(false);
@@ -337,7 +337,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.IsNotNull(map);
 
             // first cluster should be B, A is not up
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 60_000, 500);
+            Assert.That(await waitConnected.WaitOneAsync(90_000)); // get connected before timeout
             await AssertClusterB(map, client.ClusterName);
 
             //Start A before switch
