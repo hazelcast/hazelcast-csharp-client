@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
@@ -270,9 +271,11 @@ namespace Hazelcast.Tests.Clustering
         [TestCase(false, 1)]
         public async Task TestClientCanFailoverFirstClusterNotUp(bool smartRouting, int memberCount)
         {
-            var _ = HConsoleForTest();
+            //using var _ = HConsoleForTest();
 
             var numberOfStateChanged = 0;
+            var waitConnected = new AutoResetEvent(false);
+            var waitDisconnected = new AutoResetEvent(false);
 
             var failoverOptions = new HazelcastFailoverOptionsBuilder()
                 .With(fo =>
@@ -295,6 +298,15 @@ namespace Hazelcast.Tests.Clustering
                                 {
                                     HConsole.WriteLine(this, $"State Changed:{arg.State}");
                                     numberOfStateChanged++;
+                                    switch (arg.State)
+                                    {
+                                        case ClientState.Connected:
+                                            waitConnected.Set();
+                                            break;
+                                        case ClientState.Disconnected:
+                                            waitDisconnected.Set();
+                                            break;
+                                    }
                                 }));
                         })
                         .Build());
@@ -323,7 +335,7 @@ namespace Hazelcast.Tests.Clustering
             Assert.IsNotNull(map);
 
             // first cluster should be B, A is not up
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
+            Assert.That(await waitConnected.WaitOneAsync(90_000)); // get connected before timeout
             await AssertClusterB(map, client.ClusterName);
 
             //Start A before switch
@@ -335,8 +347,9 @@ namespace Hazelcast.Tests.Clustering
             await KillMembersAsync(RcClusterAlternative, membersB);
 
             //We should be at A
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
-            await AssertClusterA(map, client.ClusterName);
+            Assert.That(await waitDisconnected.WaitOneAsync(90_000)); // get disconnected before timeout
+            Assert.That(await waitConnected.WaitOneAsync(90_000)); // get reconnected before timeout
+            await AssertClusterA(map, client.ClusterName); // to the right cluster
 
             // Start cluster B again
             HConsole.WriteLine(this, $"START: Members of Cluster B :{RcClusterAlternative.Id}");
@@ -347,8 +360,9 @@ namespace Hazelcast.Tests.Clustering
             await KillMembersAsync(RcClusterPrimary, membersA);
 
             //Now, we should failover to cluster B
-            await AssertEx.SucceedsEventually(() => { Assert.AreEqual(ClientState.Connected, client.State); }, 90_000, 500);
-            await AssertClusterB(map, client.ClusterName);
+            Assert.That(await waitDisconnected.WaitOneAsync(90_000)); // get disconnected before timeout
+            Assert.That(await waitConnected.WaitOneAsync(90_000)); // get reconnected before timeout
+            await AssertClusterB(map, client.ClusterName); // to the right cluster
 
             Assert.GreaterOrEqual(numberOfStateChanged, 8);
             /*

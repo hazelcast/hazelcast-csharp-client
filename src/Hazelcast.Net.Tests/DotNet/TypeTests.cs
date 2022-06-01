@@ -85,11 +85,17 @@ namespace Hazelcast.Tests.DotNet
         // is in the currently executing assembly or in mscorlib.dll/System.Private.CoreLib.dll, it is sufficient
         // to supply the type name qualified by its namespace."
 
+#if NETFRAMEWORK && ASSEMBLY_SIGNING
+        private static string PublicKeyToken = AssemblySigning.PublicKeyToken;
+#else
+        private static string PublicKeyToken = "null";
+#endif
+
         private static readonly (string, Type, bool)[] CreateTypeSource =
         {
             // works with type.AssemblyQualifiedName
-            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=null", typeof(Thing), true),
-            ($"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}, {IntDetails}]], Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=null", typeof(Thing<int>), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken={PublicKeyToken}", typeof(Thing), true),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing`1[[System.Int32, {IntAssembly}, {IntDetails}]], Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken={PublicKeyToken}", typeof(Thing<int>), true),
 
             // missing namespace = cannot work
             ("Thing", typeof(Thing), false),
@@ -110,8 +116,14 @@ namespace Hazelcast.Tests.DotNet
 
             // different version... random public key... does not matter
             // regardless of whether the assemblies are signed or not - Type.GetType does not care
+#if NETFRAMEWORK && ASSEMBLY_SIGNING
+            // except when signing with net framework of course
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=2.0.0.0", typeof(Thing), false),
+            ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=99.0.0.0", typeof(Thing), false),
+#else
             ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=2.0.0.0", typeof(Thing), true),
             ("Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version=99.0.0.0", typeof(Thing), true),
+#endif
 
             // except, .NET Framework wants the public key token to make sense & match
             ($"Hazelcast.Tests.DotNet.TypeTests+Thing, Hazelcast.Net.Tests, Version={OurVersion}, Culture=neutral, PublicKeyToken=7caaaaaabea7798e", typeof(Thing), !IsFramework),
