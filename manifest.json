@@ -3907,18 +3907,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHRingBuffer-1.yml",
       "output": {
         ".html": {
-          "relative_path": "5.1.0/api/Hazelcast.DistributedObjects.IHRingBuffer-1.html",
-          "hash": "Okow9SXottV2GiyKv3JWRmGlTEURrtF9OmsLUNlawak="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHRingBuffer-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.1.0/api/Hazelcast.DistributedObjects.IHRingBuffer-1.AddAsync.html",
           "hash": "k96jKvxiuYxmNAUDNHF4syA0spjj3ggKvTMGKobTQ3E="
         }
@@ -4029,6 +4017,18 @@
         ".html": {
           "relative_path": "5.1.0/api/Hazelcast.DistributedObjects.IHRingBuffer-1.MaxBatchSize.html",
           "hash": "EZLGx/em/VLqQ2VKegkqq3vTgodi1nbrFgGp61JBJOc="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHRingBuffer-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.1.0/api/Hazelcast.DistributedObjects.IHRingBuffer-1.html",
+          "hash": "Okow9SXottV2GiyKv3JWRmGlTEURrtF9OmsLUNlawak="
         }
       },
       "is_incremental": false,
@@ -6091,18 +6091,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Exceptions.TaskTimeoutException.yml",
       "output": {
         ".html": {
-          "relative_path": "5.1.0/api/Hazelcast.Exceptions.TaskTimeoutException.html",
-          "hash": "YYxGy1cuj8OexyQC9PFhF/tOEP8T9xmPt9KscBvmqSw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Exceptions.TaskTimeoutException.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.1.0/api/Hazelcast.Exceptions.TaskTimeoutException.-ctor.html",
           "hash": "YhX31VvanwyrTKe8WgFNOZwpzjxE27CIYHg2DVn9PlY="
         }
@@ -6117,6 +6105,18 @@
         ".html": {
           "relative_path": "5.1.0/api/Hazelcast.Exceptions.TaskTimeoutException.Task.html",
           "hash": "4uotlEdxxDVd/iWwDrW+yHNcLom5ybg/kebS02npeu0="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Exceptions.TaskTimeoutException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.1.0/api/Hazelcast.Exceptions.TaskTimeoutException.html",
+          "hash": "YYxGy1cuj8OexyQC9PFhF/tOEP8T9xmPt9KscBvmqSw="
         }
       },
       "is_incremental": false,
@@ -9403,30 +9403,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.NearCaching.NearCacheOptions.yml",
       "output": {
         ".html": {
-          "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.-ctor.html",
-          "hash": "AJUzuThF4yA2Uk2woUj58lfsN7yPHG1C6zRKGIkEriw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.NearCaching.NearCacheOptions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy.html",
-          "hash": "nQ/nbwA42Sl8K8SKxEBEnxFyiukylMbcj4eQGoTpD8E="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.NearCaching.NearCacheOptions.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.InMemoryFormat.html",
           "hash": "CRAAD7g3X7qUew2jfT+IYLzaRlp0MZtF8uJJaRQEfpg="
         }
@@ -9501,6 +9477,30 @@
         ".html": {
           "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.html",
           "hash": "2Zkz7o+wdThSOPS2VEumKXEXIAm61R+sTnKTVO3EuZ0="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.NearCaching.NearCacheOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.-ctor.html",
+          "hash": "AJUzuThF4yA2Uk2woUj58lfsN7yPHG1C6zRKGIkEriw="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.NearCaching.NearCacheOptions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.1.0/api/Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy.html",
+          "hash": "nQ/nbwA42Sl8K8SKxEBEnxFyiukylMbcj4eQGoTpD8E="
         }
       },
       "is_incremental": false,
