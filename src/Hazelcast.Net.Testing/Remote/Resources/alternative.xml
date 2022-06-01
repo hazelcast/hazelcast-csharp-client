@@ -10,27 +10,6 @@
     <property name="hazelcast.partition.count">271</property>
   </properties>
 
-
-	<security enabled="true">
-		<realms>
-			<realm name="simpleRealm">
-				<authentication>
-					<simple>
-						<user username="test" password="1234">
-							<role>monitor</role>
-							<role>hazelcast</role>
-							<role>admin</role>
-						</user>
-					</simple>
-				</authentication>
-			</realm>
-		</realms>
-		<client-authentication realm="simpleRealm" />
-		<client-permissions>
-			<all-permissions principal="admin" />
-		</client-permissions>
-	</security>
-
   <network>
     <port auto-increment="true" port-count="100">5703</port>
     <outbound-ports>
