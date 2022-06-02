@@ -63,5 +63,6 @@ Therefore, you should set an SSL configuration as described in the the [TLS/SSL]
 `clients[0] -> clients[1] ->  clients[0] -> ...` When one of the clusters is connected, `TryCount` will be reset. After connection is established, client state will be `ClusterChanged` and then `Connected`.
 > Note: `SmartRouting` option cannot be different between given client configurations. Client will use the `clients[0].Networking.SmartRouting` option for all clusters, and it cannot be overwritten by alternative client configurations.
 
-> Note: Please be aware of that failover can occur during very first connection to the cluster. Whenever client cannot connect on `Started` state, failover can also happen.
- 
+> Note: Please be aware of that failover can occur during very first connection to the cluster. Whenever client cannot connect on `Started` state, failover can also happen. 
+
+[More about failover](failover.md)
