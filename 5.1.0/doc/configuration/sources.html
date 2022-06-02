@@ -86,7 +86,9 @@
 patterns. The Hazelcast client configuration is represented by the <a class="xref" href="../../api/Hazelcast.HazelcastOptions.html">HazelcastOptions</a> class. When simply instantiated, this
 class contains the default options (i.e. it does not even read the options file):</p>
 <pre><code class="lang-csharp">var options = new HazelcastOptions();
-</code></pre><p>For anything more realistic though, different approaches are available, as detailed below.</p>
+</code></pre><blockquote><p>For failover client, please see the <a href="../failover.html">failover documentation</a>.</p>
+</blockquote>
+<p>For anything more realistic though, different approaches are available, as detailed below.</p>
 <p>This page does not document the options themselves. Options that can be configured are fully documented on the <a href="options.html">Options</a> page.</p>
 <h3 id="simple-environment">Simple Environment</h3>
 <p>In a simple, non-hosted environment without dependency injection, options need to be <em>built</em> using the
