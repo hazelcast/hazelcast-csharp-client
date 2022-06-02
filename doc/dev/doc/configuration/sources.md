@@ -6,6 +6,7 @@ class contains the default options (i.e. it does not even read the options file)
 ```csharp
 var options = new HazelcastOptions();
 ```
+> For failover client, please [see](../failover.md).
 
 For anything more realistic though, different approaches are available, as detailed below.
 
