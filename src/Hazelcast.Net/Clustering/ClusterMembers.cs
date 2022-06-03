@@ -77,12 +77,12 @@ namespace Hazelcast.Clustering
                 // initialize the queue of members to connect
                 // and the handler to re-queue members that have failed, *if* they are still members
                 _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
-                _memberConnectionQueue.ConnectionFailed += (_, member) =>
+                _memberConnectionQueue.ConnectionFailed += (_, request) =>
                 {
                     lock (_mutex)
                     {
-                        if (_members.ContainsMember(member.Id))
-                            _memberConnectionQueue.Add(member);
+                        if (_members.ContainsMember(request.Member.Id))
+                            _memberConnectionQueue.AddAgain(request);
                     }
                 };
             }
