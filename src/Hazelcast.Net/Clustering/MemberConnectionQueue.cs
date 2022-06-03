@@ -59,6 +59,16 @@ namespace Hazelcast.Clustering
         public event EventHandler<MemberConnectionRequest> ConnectionFailed;
 
         /// <summary>
+        /// (internals for tests only) Gets the count of requests in the queue.
+        /// </summary>
+        internal int RequestsCount => _requests.Count;
+
+        /// <summary>
+        /// (internals for tests only) Gets the count of delayed requests in the queue.
+        /// </summary>
+        internal int DelayedRequestsCount => _delayed.Count;
+
+        /// <summary>
         /// Suspends the queue.
         /// </summary>
         /// <returns>A <see cref="ValueTask"/> that will be completed when the queue is suspended.</returns>
@@ -151,7 +161,6 @@ namespace Hazelcast.Clustering
                 _requests.TryWrite(request);
             }
         }
-
 
         // when receiving members from the cluster... if a member is gone,
         // we need to remove it from the queue, no need to ever try to connect

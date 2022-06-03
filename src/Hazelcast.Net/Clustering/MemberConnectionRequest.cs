@@ -50,7 +50,11 @@ namespace Hazelcast.Clustering
         {
             // trigger before completing
             // (completing can unlock a suspend wait)
-            if (!success) Failed?.Invoke(this, default);
+            if (!success)
+            {
+                Failed?.Invoke(this, default);
+                Failed = null;
+            }
 
             lock (_mutex)
             {
