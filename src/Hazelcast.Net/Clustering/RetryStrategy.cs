@@ -92,7 +92,14 @@ namespace Hazelcast.Clustering
         /// </summary>
         internal int GetDelay(int elapsed)
         {
-            var delay = (int)(_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
+            // java:
+            // long actualSleepTime = (long) (currentBackoffMillis +currentBackoffMillis * jitter * (2.0 * random.nextDouble() - 1.0));
+            //
+            // delay is _currentBackOffMilliseconds + _currentBackOffMilliseconds * jitter * random
+            // where random is between -1 and +1 and _jitter is between 0 and 1
+
+            var rand = 2.0 * RandomProvider.NextDouble() - 1.0; // -1 to +1
+            var delay = (int)(_currentBackOffMilliseconds * (1 + _jitter * rand));
             if (_timeoutMilliseconds >= 0) delay = Math.Min(delay, Math.Max(0, (int)(_timeoutMilliseconds - elapsed)));
             return delay;
         }

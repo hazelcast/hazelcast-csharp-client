@@ -55,10 +55,17 @@ namespace Hazelcast.Tests.Clustering
             Assert.That(retry0.GetDelay(1_000), Is.EqualTo(1_000));
 
             var retry1 = new RetryStrategy("test", 1_000, 30_000, 1, 60_000, 1, new NullLoggerFactory());
-            const int count = 10;
-            var total = 0;
-            for (var i = 0; i < count; i++) total += retry1.GetDelay(1_000);
-            Assert.That(total, Is.LessThan(1_000 * count));
+            const int count = 100;
+            var min = int.MaxValue;
+            var max = int.MinValue;
+            for (var i = 0; i < count; i++)
+            {
+                var delay = retry1.GetDelay(1_000);
+                if (min > delay) min = delay;
+                if (max < delay) max = delay;
+            }
+            Assert.That(min, Is.LessThan(1_000)); // some values were lower than initial
+            Assert.That(max, Is.GreaterThan(1_000)); // some values were greater than initial
         }
 
         [TestCase(1_000, 1, 1_000)]
