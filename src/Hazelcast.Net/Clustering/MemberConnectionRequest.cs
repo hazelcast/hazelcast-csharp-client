@@ -33,6 +33,8 @@ namespace Hazelcast.Clustering
 
         public MemberInfo Member { get; }
 
+        public DateTime CreateDate { get; } = DateTime.UtcNow;
+
         public event EventHandler Failed;
 
         public bool Cancelled { get; private set; }
@@ -48,7 +50,11 @@ namespace Hazelcast.Clustering
         {
             // trigger before completing
             // (completing can unlock a suspend wait)
-            if (!success) Failed?.Invoke(this, default);
+            if (!success)
+            {
+                Failed?.Invoke(this, default);
+                Failed = null;
+            }
 
             lock (_mutex)
             {
