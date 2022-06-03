@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -176,6 +177,55 @@ namespace Hazelcast.Tests.Clustering
 
             // ok, but nothing will happen since the queue has been disposed
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:10")));
+        }
+
+        [Test]
+        public async Task TestDelayedQueue()
+        {
+            static MemberInfo MemberInfo(NetworkAddress address)
+            {
+                return new MemberInfo(Guid.NewGuid(), address, new MemberVersion(0, 0, 0), false, new Dictionary<string, string>());
+            }
+
+            var queue = new MemberConnectionQueue(new NullLoggerFactory());
+            var memberCount = new Dictionary<Guid, int>();
+
+            queue.ConnectionFailed += (_, request) =>
+            {
+                queue.AddAgain(request);
+            };
+
+            // background task that pretend to connect members
+            var dequeuedRequests = 0;
+            async Task ConnectMembers(MemberConnectionQueue memberConnectionQueue, CancellationToken cancellationToken)
+            {
+                await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
+                {
+                    dequeuedRequests++;
+                    if (!memberCount.TryGetValue(request.Member.Id, out var count)) count = 0;
+                    memberCount[request.Member.Id] = count + 1;
+                    request.Complete(count == 2);
+                }
+            }
+
+            var cancellation = new CancellationTokenSource();
+            var connecting = ConnectMembers(queue, cancellation.Token);
+
+            // -- connects
+
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:1")));
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:2")));
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(dequeuedRequests, Is.EqualTo(6));
+            }, 30_000, 100);
+
+            cancellation.Cancel();
+            await connecting.CfAwaitCanceled();
+
+            Assert.That(queue.RequestsCount, Is.EqualTo(0));
+            Assert.That(queue.DelayedRequestsCount, Is.EqualTo(0));
         }
     }
 }
