@@ -28,6 +28,7 @@ namespace Hazelcast.Clustering
     internal class MemberConnectionQueue : IAsyncEnumerable<MemberConnectionRequest>, IAsyncDisposable
     {
         private readonly AsyncQueue<MemberConnectionRequest> _requests = new AsyncQueue<MemberConnectionRequest>();
+        private readonly HashSet<MemberConnectionRequest> _delayed = new HashSet<MemberConnectionRequest>();
         private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
 
         private readonly SemaphoreSlim _resume = new SemaphoreSlim(0); // blocks the queue when it is suspended
@@ -53,7 +54,7 @@ namespace Hazelcast.Clustering
             HConsole.Configure(x => x.Configure<MemberConnectionQueue>().SetPrefix("MBRQ"));
         }
 
-        public event EventHandler<MemberInfo> ConnectionFailed;
+        public event EventHandler<MemberConnectionRequest> ConnectionFailed;
 
         /// <summary>
         /// Suspends the queue.
@@ -92,8 +93,12 @@ namespace Hazelcast.Clustering
             {
                 if (_disposed) return; // nothing to resume - but no need to throw about it
                 if (!_suspended) throw new InvalidOperationException("Not suspended.");
-                _logger.IfDebug()?.LogDebug($"{(drain?"Drain and resume":"Resume")} the members connection queue.");
-                if (drain) _requests.ForEach(request => request.Cancel());
+                _logger.IfDebug()?.LogDebug("{DrainState} the members connection queue.", (drain ? "Drain and resume" : "Resume"));
+                if (drain)
+                {
+                    _requests.ForEach(request => request.Cancel());
+                    foreach (var request in _delayed) request.Cancel();
+                }
                 _suspended = false;
                 _resume.Release();
             }
@@ -121,6 +126,42 @@ namespace Hazelcast.Clustering
             }
         }
 
+        /// <summary>
+        /// Adds a request again.
+        /// </summary>
+        /// <param name="request">The request.</param>
+        public void AddAgain(MemberConnectionRequest request)
+        {
+            if (_disposed || request.Cancelled) return; // no need to add - no need to throw about it
+
+            _delayed.Add(request); // so it can be cancelled
+
+            Task.Run(async () =>
+            {
+                // for now, delay every failed request for 1s before queuing it again
+                // that is, more or less, what Java does (Java process all members every 1s)
+                // later on, that delay could depend on each request & have a wait strategy
+
+                await Task.Delay(1000, _cancel.Token).CfAwait(); 
+
+                lock (_mutex)
+                {
+                    _delayed.Remove(request);
+                    if (_disposed || request.Cancelled) return; // again
+
+                    if (!_requests.TryWrite(request))
+                    {
+                        // that should not happen, but log to be sure
+                        _logger.IfWarning()?.LogWarning("Failed to add again member ({MemberId}).", request.Member.Id.ToShortString());
+                    }
+                    else
+                    {
+                        _logger.IfDebug()?.LogDebug("Added again member {MemberId}", request.Member.Id.ToShortString());
+                    }
+                }
+            }).CfAwaitNoThrow(); // don't leak unobserved exceptions
+        }
+
         // when receiving members from the cluster... if a member is gone,
         // we need to remove it from the queue, no need to ever try to connect
         // to it again - so it remains in the _members async queue, but we
@@ -135,10 +176,16 @@ namespace Hazelcast.Clustering
             // cancel all corresponding requests - see notes in AsyncQueue, this is best-effort,
             // a member that we want to remove *may* end up being enumerated, and we're going to
             // to to connect to it, and either fail, or drop the connection - accepted tradeoff
-            lock (_mutex) _requests.ForEach(m =>
-            {
-                if (m.Member.Id == memberId) m.Cancel();
-            });
+            lock (_mutex) {
+                _requests.ForEach(m =>
+                {
+                    if (m.Member.Id == memberId) m.Cancel();
+                });
+                foreach (var request in _delayed)
+                {
+                    if (request.Member.Id == memberId) request.Cancel();
+                }
+            }
         }
 
         /// <inheritdoc />
@@ -198,7 +245,7 @@ namespace Hazelcast.Clustering
                             {
                                 var request = _queueRequestsEnumerator.Current;
                                 if (request.Member == null || request.Cancelled) break; // that request is to be skipped
-                                request.Failed += (r, _) => _queue.ConnectionFailed?.Invoke(_queue, ((MemberConnectionRequest)r).Member);
+                                request.Failed += (r, _) => _queue.ConnectionFailed?.Invoke(_queue, (MemberConnectionRequest)r);
                                 _queue._request = request;
                                 return true;
                             }
