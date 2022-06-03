@@ -33,6 +33,8 @@ namespace Hazelcast.Clustering
 
         public MemberInfo Member { get; }
 
+        public DateTime CreateDate { get; } = DateTime.UtcNow;
+
         public event EventHandler Failed;
 
         public bool Cancelled { get; private set; }
