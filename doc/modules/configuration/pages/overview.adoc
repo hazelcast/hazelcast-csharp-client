@@ -7,6 +7,8 @@ Configuration follows the https://docs.microsoft.com/en-us/aspnet/core/fundament
 var options = new HazelcastOptions();
 ----
 
+WARNING: If you want to use the failover (blue-green) feature, you need to start the client as explained in xref:configuration:blue-green.adoc[Configuring for Failover].
+
 For anything more realistic though, different approaches are available, as detailed below.
 
 This overview section does not describe the options themselves; they are fully documented in the following other sections of the Configuration chapter.

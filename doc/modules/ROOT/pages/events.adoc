@@ -103,6 +103,7 @@ An {apiDocBaseUrl}/Hazelcast.IHazelcastClient.html[IHazelcastClient] instance go
 * {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Started[Started]: the client has started, and is now trying to connect to a first member (transition state)
 * {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected[Connected]: the client is connected to at least one member (operational state)
 * {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Disconnected[Disconnected]: the client has disconnected, due to its last member leaving the cluster, or a network error. Depending on its configuration it will either try to connect again (and transition back to {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected[Connected] if successful) or fail and transition to {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown[Shutdown] (transition state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_ClusterChanged[ClusterChanged]: the client switched the cluster, and connected. `Connected` state will be still reached after `ClusterChanged`. It occurs only if failover happens.
 * {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_ShuttingDown[ShuttingDown]: the client has been disposed, i.e., properly requested to shut down, and is shutting down (transition state)
 * {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown[Shutdown]: the client has shut down (final state)
 

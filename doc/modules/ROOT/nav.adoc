@@ -6,6 +6,7 @@
 ** xref:configuration:connections.adoc[Network and Cluster Connections]
 ** xref:configuration:security.adoc[Security]
 ** xref:configuration:failures.adoc[Handling Failures]
+** xref:configuration:blue-green.adoc[]
 ** xref:configuration:monitoring.adoc[Monitoring]
 ** xref:configuration:logging.adoc[Logging]
 ** xref:configuration:sys-props.adoc[]

@@ -45,3 +45,27 @@ You can use TLS/SSL to secure the connection between the clients and members. Pl
 Hazelcast Cloud Discovery enables clients to discover the cluster IP addresses through the Hazelcast Orchestrator. It is enabled by assigning a discovery token to the `hazelcast.networking.cloud.discoveryToken` configuration option.
 
 To be able to connect to the provided IP addresses, you will need to use secure TLS/SSL connection between the client and members. Therefore, you should set an SSL configuration as described in the xref:security.adoc[TLS/SSL] section.
+
+== Failover (Blue/Green Deployment)
+
+.NET client allows you to set failover (backup) clusters. To use a backup cluster, you should:
+
+* configure it under `hazelcast-failover` in `appsettings.json` or via `HazelcastFailoverOptionsBuilder`
+* start the client with failover factory methods under `HazelcastClientFactory`.
+
+The client uses the first client configuration listed under `hazelcast-failover` or in `HazelcastFailoverOptionsBuilder` by default. Alternative clients can only
+change network and authentication options. In case of a connection failure, first, the client retries to connect to the current cluster.
+If the connection fails, the client tries to connect to the next cluster. Another case is that the client is blacklisted
+from the cluster - in this case the client performs failover without retrying.
+
+The client tries alternative clusters until `TryCount` is exhausted. The cluster list given under `hazelcast-failover` or in `HazelcastFailoverOptionsBuilder`
+is visited in a circular way, such as `clients[0]` -> `clients[1]` ->  `clients[0]` -> `clients[0]` and so on. When one of the clusters is connected,
+`TryCount` is reset. After the connection is established, the client state becomes `ClusterChanged` and then `Connected`.
+
+NOTE: `SmartRouting` option cannot be different between given the client configurations. The client uses the `clients[0].Networking.SmartRouting`
+option for all the clusters, and it cannot be overwritten by alternative client configurations.
+
+NOTE: The failover may occur during the very first connection to the cluster. Whenever a client cannot connect on the `Started` state, failover may also happen.
+
+See xref:configuration:blue-green.adoc[Failover] for details and configuration examples.
+
