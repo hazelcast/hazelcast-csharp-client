@@ -146,6 +146,7 @@ namespace Hazelcast.Clustering
         {
             if (_disposed || request.Cancelled) return; // no need to add - no need to throw about it
 
+            request.Reset();
             _delayed.TryWrite(request);
         }
 
@@ -155,9 +156,10 @@ namespace Hazelcast.Clustering
 
             await foreach (var request in _delayed.WithCancellation(_cancel.Token))
             {
-                var elapsed = DateTime.UtcNow - request.CreateDate;
-                var delay = minDelay - (int)elapsed.TotalMilliseconds;
+                var delay = minDelay - (int)request.Elapsed.TotalMilliseconds;
+                _logger.IfDebug()?.LogDebug("Request for member {Member} delayed {Delay}ms", request.Member.Id.ToShortString(), delay > 0 ? delay : 0);
                 if (delay > 0) await Task.Delay(delay, _cancel.Token).CfAwait();
+                _logger.IfDebug()?.LogDebug("Request for member {Member} queued for retry", request.Member.Id.ToShortString());
                 _requests.TryWrite(request);
             }
         }
