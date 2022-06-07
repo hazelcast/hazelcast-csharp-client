@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -213,6 +214,7 @@ namespace Hazelcast.Tests.Clustering
 
             // -- connects
 
+            var stopwatch = Stopwatch.StartNew();
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:1")));
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:2")));
 
@@ -221,8 +223,15 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(dequeuedRequests, Is.EqualTo(6));
             }, 30_000, 100);
 
+            var elapsed = stopwatch.Elapsed;
+
             cancellation.Cancel();
             await connecting.CfAwaitCanceled();
+
+            // each member retried twice = twice the 1s delay = 2s
+            // we should not have completed faster than that, even so the code runs fully in-memory
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2))); 
+            Console.WriteLine($"Elapsed: {elapsed}");
 
             Assert.That(queue.RequestsCount, Is.EqualTo(0));
             Assert.That(queue.DelayedRequestsCount, Is.EqualTo(0));
