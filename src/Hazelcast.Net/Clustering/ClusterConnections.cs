@@ -287,7 +287,7 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         private async ValueTask OnConnectionClosed(MemberConnection connection)
         {
-            _logger.IfDebug()?.LogDebug($"Connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()} at {connection.Address} closed.");
+            _logger.If(LogLevel.Information)?.LogInformation("Connection {ConnectionId} to member {MemberId} at {Address} closed.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
             TaskCompletionSource<object> connectCompletion;
             lock (_mutex)
