@@ -1,0 +1,29 @@
+= SELECT
+
+== Synopsis
+
+[source,sql]
+----
+SELECT [ * | expression [ [ AS ] expression_alias ] [, ...] ]
+FROM table_name [ [ AS ] table_alias ]
+[WHERE condition]
+----
+
+== Description 
+
+The `SELECT` query retrieves rows from a table. A row is a sequence of expressions defined after the `SELECT` keyword. Expressions may have optional aliases.
+
+`table_name` refers to a single `IHMap` data structure. A table may have an optional alias.
+
+An optional `WHERE` clause defines a condition, that is any expression that evaluates to a result of type boolean. Any row that doesn’t satisfy the condition is eliminated from the result.
+
+== Sorting
+
+You can use the standard SQL `ORDER BY`, `LIMIT`, and `OFFSET` clauses to sort and limit the result set. In order to do so, you need server configuration. See xref:hazelcast:sql:select.adoc#sort[Sort and Limit Results] in Hazelcast Platform documentation for more information.
+
+== Unsupported Features
+
+The following features are not supported and are planned for future releases:
+
+* set operators (`UNION`, `INTERSECT`, `MINUS`)
+* subqueries (`SELECT … FROM table WHERE x = (SELECT …)`)

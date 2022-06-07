@@ -1,0 +1,49 @@
+= Casting
+
+You may need to use casting when sending parameters for certain types. In general, you should try to send a parameter that has the same data type as the related column.
+
+== How to Cast
+
+Casting syntax: `CAST(? AS TYPE)`
+
+Example casting:
+
+[source,sql]
+----
+SELECT * FROM someMap WHERE this = CAST(? AS INTEGER)
+----
+
+== Casting Between Types
+
+When comparing a column with a parameter, your parameter must be of a compatible type. You can cast string to every SQL type.
+
+== Implicit Casting Example
+
+In the example below, `Age` column is of type `INTEGER`. We pass parameters as shorts (`TINYINT`) and they are automatically casted to `INTEGER` for comparison.
+
+[source,csharp]
+----
+await using var result = client.Sql.ExecuteQuery(
+    $"SELECT Name FROM {map.Name} WHERE Age > ? AND Age < ?",
+    (short)20, (short)30
+);
+----
+
+== Explicit Casting Example
+
+In the example below, `Age` column is of type `INTEGER`. We pass parameters as strings (`VARCHAR`) and cast them to `INTEGER` for comparison.
+
+[source,csharp]
+----
+await using var result = client.Sql.ExecuteQuery(
+    $"SELECT Name FROM {map.Name} WHERE Age > CAST(? AS INTEGER) AND Age < CAST(? AS INTEGER)",
+    "20", "30"
+);
+----
+
+== Important Notes About Comparison and Casting
+
+* In case of comparison operators (`=`, `<`, `<>`, etc.), if one side is `?`, it's assumed to be exactly the other side's type, except that `TINYINT`, `SMALLINT`, `INTEGER` are all converted to `BIGINT`. Note that reverse is not valid as it may lead to value loss.
+* String parameters can be cast to any type. The cast operation may fail though.
+* To send a `DECIMAL` type, use `Hazelcast.Sql.HBigDecimal` or an explicit `CAST` from string or other number type.
+* To send date and time related types, use the corresponding `Hazelcast.Sql.H*` type or a string with an explicit `CAST`.
