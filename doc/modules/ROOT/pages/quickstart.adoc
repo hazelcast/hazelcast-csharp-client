@@ -9,17 +9,34 @@ such as distributed maps, queues, topics and more. All, with enterprise level se
 
 {description}
 
+In this tutorial, you will complete the following steps:
+
+. Install Hazelcast .NET client
+. Start a Hazelcast cluster with single server
+. Connect the client to the cluster
+. Create and manipulate a Hazelcast map
+. Run an SQL query on the map
+
 == Before You Begin
 
 To complete this tutorial, you need the following:
 
-* The Hazelcast .NET client is distributed as a NuGet package which targets .NET Standard versions 2.0 and 2.1.
-It can therefore be used in any application targeting .NET versions that support these .NET Standard versions:
-** https://dotnet.microsoft.com/en-us/download/dotnet-framework[.NET Framework] 4.6.2 and newer, on Windows
-** .NET Core https://dotnet.microsoft.com/en-us/download/dotnet/2.1[2.1] and https://dotnet.microsoft.com/en-us/download/dotnet/3.1[3.1], on Windows, Linux and MacOS
-* https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell?view=powershell-7.2[PowerShell] shell and scripting language.
+[cols="1a,1a"]
+|===
+|Prerequisites|Useful resources
 
-The upcoming .NET 5 version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.
+|.NET Framework and Core
+|Hazelcast .NET client is distributed as a NuGet package which targets .NET Standard versions 2.0 and 2.1.
+It can therefore be used in any application targeting .NET versions that support these .NET Standard versions:
++
+* https://dotnet.microsoft.com/en-us/download/dotnet-framework[.NET Framework] 4.6.2 and newer, on Windows
+* .NET Core https://dotnet.microsoft.com/en-us/download/dotnet/2.1[2.1] and https://dotnet.microsoft.com/en-us/download/dotnet/3.1[3.1], on Windows, Linux and MacOS
+
+|Docker
+|https://docs.docker.com/get-docker/[Get Docker]
+|===
+
+WARNING: The upcoming .NET 5 version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.
 
 == Step 1. Installation
 
@@ -75,31 +92,41 @@ application config files with the appropriate binding redirects. The following r
 
 == Step 2. Start a Hazelcast Cluster
 
-Start a cluster with the default settings using either of the following ways:
-
-* xref:cloud:getting-started.adoc[Hazelcast Cloud]
-* xref:hazelcast:getting-started:quickstart.adoc[Hazelcast CLI]
-* xref:hazelcast:getting-started:get-started-docker.adoc[Docker]
-* xref:hazelcast:getting-started:get-started-binary.adoc[Binary distributions]
-
-When you done, you will have a Hazelcast with a single server on your local machine (if you've used CLI, Docker or binary distributions).
-
-If you want to use Hazelcast Cloud, follow xref:cloud:net-client.adoc[these instructions].
-
-Alternatively, the Hazelcast .NET client https://github.com/hazelcast/hazelcast-csharp-client[repository] on GitHub provides a
-Powershell script which can be used to download and run a Hazelcast test server. For instance, the following downloads and starts a server version {server-full-version}:
-
-[source,shell,subs="attributes+"]
-----
-PS> ./hz.ps1 run-server -server {server-full-version}
-----
-
 Let's use Docker for this tutorial by executing the following command on a terminal:
 
 [source,shell,subs="attributes+"]
 ----
 docker run -it --rm -p 5701:5701 hazelcast/hazelcast:{server-full-version}
 ----
+
+This command starts a single-server Hazelcast cluster with default settings on your local machine.
+You should see the server information in the terminal logs similar to the following:
+
+[source,shell]
+----
+Members {size:1, ver:1} [
+	Member [172.17.0.2]:5701 - 603ec325-41ff-413a-8538-896972ba28c2 this
+]
+----
+
+[NOTE]
+====
+As an alternative to Docker, you can also start a Hazelcast cluster using either of the following ways:
+
+* xref:cloud:getting-started.adoc[Hazelcast Cloud]
+* xref:hazelcast:getting-started:quickstart.adoc[Hazelcast CLI]
+* xref:hazelcast:getting-started:get-started-binary.adoc[Binary distributions]
+
+If you want to use Hazelcast Cloud, follow xref:cloud:net-client.adoc[these instructions].
+
+Alternatively, the Hazelcast .NET client https://github.com/hazelcast/hazelcast-csharp-client[repository] on GitHub provides a
+https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell?view=powershell-7.2[PowerShell script] which can be used to download and run a Hazelcast test server. For instance, the following downloads and starts a server version {server-full-version}:
+
+[source,shell,subs="attributes+"]
+----
+PS> ./hz.ps1 run-server -server {server-full-version}
+----
+====
 
 == Step 3. Connect to the Cluster
 
@@ -111,20 +138,20 @@ Connect your client to the cluster with this single line:
 await using var client = await HazelcastClientFactory.StartNewClientAsync();
 ----
 
-This is enough to connect to the cluster you've created in Step 2 with default settings. When you run it, you will see the client is connected to the cluster.
+This is enough to connect to the cluster you've created in Step 2 with default settings. When you run it, you will see the client is connected to the cluster:
 
 [source,shell,subs="attributes+"]
 ----
 info: Hazelcast.Clustering.Heartbeat[0]
       Heartbeat with 5000ms period and 60000ms timeout
 info: Hazelcast.Clustering.ClusterConnections[0]
-      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 9d158e6 from 127.0.0.1:54260 to member c347caf at 127.0.0.1:5701 of cluster 'dev' (9d4d52e) running version 5.1-SNAPSHOT.
+      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 9d158e6 from 127.0.0.1:54260 to member c347caf at 127.0.0.1:5701 of cluster 'dev' (9d4d52e) running version {server-full-version}.
 info: Hazelcast.Clustering.ClusterMembers[0]
       Members [1] {
           Id=c347caf Internal=10.5.0.2:5701* Public=<none> Adding
       }
 info: Hazelcast.Clustering.ClusterConnections[0]
-      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 7b73a18 from 10.5.0.2:54261 to member c347caf at 10.5.0.2:5701 of cluster 'dev' (9d4d52e) running version 5.1-SNAPSHOT.
+      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 7b73a18 from 10.5.0.2:54261 to member c347caf at 10.5.0.2:5701 of cluster 'dev' (9d4d52e) running version {server-full-version}.
 ----
 
 You can also build the `HazelcastOptions` factory with options and start the client to connect to the cluster with the provided options.
@@ -152,7 +179,7 @@ See the xref:configuration:connections.adoc[configuration] for more options avai
 
 Let's manipulate a distributed map on a cluster using the client.
 
-Save the following file as `it.js` and run it using `node it.js`.
+Start a client with the following code.
 
 [source,csharp]
 ----
@@ -162,41 +189,35 @@ await map.SetAsync("Alice", "IT"));
 await map.SetAsync("Bob", "IT"));
 await map.SetAsync("Clark", "IT"));
 
-console.log('Added IT personnel. Logging all known personnel');
-const allPersonnel = await personnelMap.entrySet();
-allPersonnel.forEach(function (person) {
-    console.log(`${person[0]} is in ${person[1]} department`);
-});
+Console.WriteLine("Added IT personnel. Logging all known personnel");
+Console.WriteLine(??? List the staff like "Alice is in IT department" ???);
 ----
 
 You will see the following output.
 
 [source,plain]
 ----
-???
 Added IT personnel. Logging all known personnel
 Alice is in IT department
 Clark is in IT department
 Bob is in IT department
-???
 ----
 
 The example puts all the IT personnel into a cluster-wide `personnel-map` and then prints all the known personnel.
 
-Now, create a `sales.js` file as shown below and run it using `node sales.js`.
+Start another client with the following code.
 
-[source,javascript]
+[source,csharp]
 ----
-const client = await Client.newHazelcastClient();
-const personnelMap = await client.getMap('personnelMap');
-await personnelMap.put('Denise', 'Sales');
-await personnelMap.put('Erwing', 'Sales');
-await personnelMap.put('Faith', 'Sales');
-console.log('Added Sales personnel. Logging all known personnel');
-const allPersonnel = await personnelMap.entrySet();
-allPersonnel.forEach(function (person) {
-    console.log(`${person[0]} is in ${person[1]} department`);
-});
+await using var map = await client.GetMapAsync<string, int>("personnel-map");
+
+await map.SetAsync("Denise", "Sales"));
+await map.SetAsync("Erwing", "Sales"));
+await map.SetAsync("Faith", "Sales"));
+
+
+Console.WriteLine("Added Sales personnel. Logging all known personnel");
+Console.WriteLine(??? List the staff like "Denise is in Sales department" ???);
 ----
 
 You will see the following output.
@@ -212,75 +233,34 @@ Clark is in IT department
 Bob is in IT department
 ----
 
-The `sales.js` code adds only the sales employees, but you get the list all known employees
+The second client adds only the sales employees to the map, but you get the list of all known employees
 including the ones in IT. That is because `personnelMap` lives in the cluster and no matter which client you use,
 you can access the whole map.
 
 == Step 5. Work with SQL
 
-You can query the entries of a map in your cluster using SQL from your Node.js app.
+You can query the entries of a map in your cluster using SQL from your .NET app.
 
-Create a map called `employees` that contains values of type `Employee`.
+Let's query the people who work in the IT department, using the map you created in Step 4 above.
 
-[source,javascript]
+[source,csharp]
 ----
-class Employee {
-    constructor(name, age) {
-        this.name = name;
-        this.age = age;
-        this.factoryId = 1;
-        this.classId = 2;
-    }
-    readPortable(reader) {
-        this.name = reader.readString('name');
-        this.age = reader.readInt('age');
-    }
-    writePortable(writer) {
-        writer.writeString('name', this.name);
-        writer.writeInt('age', this.age);
-    }
-}
-const employees = await client.getMap('employees');
-await employees.set(1, new Employee('John Doe', 33));
-await employees.set(2, new Employee('Jane Doe', 29));
-----
+???
 
-Before starting to query data, you must create a mapping for the `employees` map.
-The `CREATE MAPPING` SQL statement is used for this; you can refer to xref:sql:create-mapping.adoc[here] for its details.
-For the `Employee` class above, the mapping statement is shown below. It is enough to create the mapping once per map.
+??? <1>
 
-[source,javascript]
-----
-await client.getSql().execute(`
-    CREATE MAPPING IF NOT EXISTS employees (
-        __key DOUBLE,
-        name VARCHAR,
-        age INT
-    )
-    TYPE IMap
-    OPTIONS (
-      'keyFormat' = 'double',
-      'valueFormat' = 'portable',
-      'valuePortableFactoryId' = '1',
-      'valuePortableClassId' = '2'
-    )
-`);
-----
+??? Query ???
 
-The following code prints names of the employees whose age is less than 30:
-
-[source,javascript]
+??? <2>
 ----
-const sqlResult = await client.getSql().execute('SELECT name FROM employees WHERE age < 30');
-for await (const row of sqlResult) {
-    console.log(row.name); // Jane Doe
-}
-----
+<1> Before starting to query data, you must create a mapping for the `personnel` map.
+The `CREATE MAPPING` SQL statement is used for this; you can refer to xref:hazelcast:sql:create-mapping.adoc[here] for its details.
+It is enough to create the mapping once per map.
+<2> Prints the names of employees working in IT.
 
-See the full https://github.com/hazelcast/hazelcast-nodejs-client/blob/master/code_samples/sql-basic-usage.js[sample code] for a basic SQL usage.
-See xref:nodejs-samples.adoc[here] for more SQL usages by the Node.js client.
-See xref:sql:sql-overview[here] to learn Hazelcast's SQL feature in detail.
+See the https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs[sample codes] for basic SQL usages.
+See xref:sql:overview.adoc[here] to learn Hazelcast's SQL feature in detail.
 
 == Next Steps
 
-See xref:nodejs-conf.adoc[here] on how to configure and fine-tune your client.
+See xref:configuration:overview.adoc[here] on how to configure and fine-tune your client.
