@@ -70,6 +70,7 @@ application config files with the appropriate binding redirects. The following r
   </dependentAssembly>
 </assemblyBinding>
 ----
+====
 
 == Step 2. Start a Hazelcast Cluster
 
