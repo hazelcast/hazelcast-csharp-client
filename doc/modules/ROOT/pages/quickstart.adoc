@@ -30,7 +30,7 @@ You can install it like any other NuGet package:
 ==== 
 NuGet Package Manager:: 
 + 
--- 
+--
 [source,shell]
 ----
 PM> Install-Package Hazelcast.NET
@@ -71,6 +71,7 @@ application config files with the appropriate binding redirects. The following r
 </assemblyBinding>
 ----
 ====
+
 
 == Step 2. Start a Hazelcast Cluster
 
@@ -160,7 +161,6 @@ await using var map = await client.GetMapAsync<string, int>("personnel-map");
 await map.SetAsync("Alice", "IT"));
 await map.SetAsync("Bob", "IT"));
 await map.SetAsync("Clark", "IT"));
-
 
 console.log('Added IT personnel. Logging all known personnel');
 const allPersonnel = await personnelMap.entrySet();
