@@ -13,6 +13,7 @@ such as distributed maps, queues, topics and more. All, with enterprise level se
 
 To complete this tutorial, you need the following:
 
+* macOS, Linux, or Windows
 * The Hazelcast .NET client is distributed as a NuGet package which targets .NET Standard versions 2.0 and 2.1.
 It can therefore be used in any application targeting .NET versions that support these .NET Standard versions:
 ** https://dotnet.microsoft.com/en-us/download/dotnet-framework[.NET Framework] 4.6.2 and newer, on Windows
@@ -48,13 +49,15 @@ Package Reference::
 +
 [source,csharp,subs="attributes+"]
 ----
-<PackageReference Include="Hazelcast.NET" Version="{client-full-version}" /> <1>
-----
-<1> Some binding redirects are currently required. Although we try hard to align all our dependencies,
+<PackageReference Include="Hazelcast.NET" Version="{client-full-version}" />
+
+NOTE: Some binding redirects are currently required. Although we try hard to align all our dependencies,
 there are some inconsistencies even within Microsoft's own packages that it is not possible to avoid redirects entirely.
 You can enable `<AutoGenerateBindingRedirects>` in your project file, and Visual Studio should populate your
-application config files with the appropriate binding redirects. The following redirects should be sufficient at the moment:
+application config files with the appropriate binding redirects.
 +
+The following redirects should be sufficient at the moment:
+
 [source,xml]
 ----
 <assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
@@ -70,6 +73,8 @@ application config files with the appropriate binding redirects. The following r
   </dependentAssembly>
 </assemblyBinding>
 ----
+----
+====
 
 == Step 2. Start a Hazelcast Cluster
 
