@@ -16,6 +16,7 @@ In this tutorial, you will complete the following steps:
 . Connect the client to the cluster
 . Create and manipulate a Hazelcast map
 . Run an SQL query on the map
+. Monitor the client on Hazelcast Management Center
 
 == Before You Begin
 
@@ -96,11 +97,11 @@ Let's use Docker for this tutorial by executing the following command on a termi
 
 [source,shell,subs="attributes+"]
 ----
-docker run -it --rm -p 5701:5701 hazelcast/hazelcast:{server-full-version}
+docker run -it --rm hazelcast/hazelcast:{server-full-version}
 ----
 
 This command starts a single-server Hazelcast cluster with default settings on your local machine.
-You should see the server information in the terminal logs similar to the following:
+You should see the server information in the terminal logs similar to the following (note the IP address and port to be used in a later step):
 
 [source,shell]
 ----
@@ -245,7 +246,7 @@ Let's query the people who work in the IT department, using the map you created 
 
 [source,csharp]
 ----
-???
+??? Code to be added ???
 
 ??? <1>
 
@@ -260,6 +261,28 @@ It is enough to create the mapping once per map.
 
 See the https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs[sample codes] for basic SQL usages.
 See xref:sql:overview.adoc[here] to learn Hazelcast's SQL feature in detail.
+
+== Step 6. Monitor with Management Center
+
+Management Center is a user interface for managing and monitoring Hazelcast clusters.
+
+In this step, you start a local instance of Management Center and use it to view the cluster and clients you've created in this tutorial.
+
+. Start Management Center.
++
+[source,shell,subs="attributes+"]
+----
+docker run \
+    -p 8080:8080 hazelcast/management-center:{server-full-version}
+----
+. In a web browser, go to localhost:8080 and enable "dev" mode.
+. Enter `dev` as the cluster name and IP address/port of the server you've started in Step 2.
+. Click *View Cluster* and go to *Clients*. You should see that three clients are connected to your cluster member: Management Center and your .NET clients.
+. Go to *Storage* > *Maps*.
++
+You should see that you have a map called `personnel-map` with six entries (keys and values). You'll also see the total amount of memory that those entries are taking up in your cluster.
+
+??? Screenshots to be added ???
 
 == Next Steps
 
