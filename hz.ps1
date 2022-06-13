@@ -982,7 +982,7 @@ function require-dotnet ( $full ) {
     require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $full $allowPrerelease
     require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $full $allowPrerelease
 
-    if ($result.validSdk -and $frameworks.Contains("net5.0")) {
+    if ($full -and $result.validSdk -and $frameworks.Contains("net5.0")) {
         # we found 5.0 and 5.0 is required and ...
         $v = $result.sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
         if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
