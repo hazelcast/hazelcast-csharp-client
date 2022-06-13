@@ -59,5 +59,7 @@ jobs:
       shell: pwsh
       run: |
         ./hz.ps1 -noRestore -localRestore update-doc-version
+        if ($LASTEXITCODE) { throw "error" }
         ./hz.ps1 -noRestore -localRestore trigger-release -yolo
+        if ($LASTEXITCODE) { throw "error" }
         git push
