@@ -60,6 +60,6 @@ jobs:
       run: |
         ./hz.ps1 -noRestore -localRestore update-doc-version
         if ($LASTEXITCODE) { throw "error" }
+        git push
         ./hz.ps1 -noRestore -localRestore trigger-release -yolo
         if ($LASTEXITCODE) { throw "error" }
-        git push
