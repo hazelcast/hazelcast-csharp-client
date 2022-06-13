@@ -901,7 +901,7 @@ function get-dotnet-sdk ( $sdks, $v, $preview ) {
     else { return $sdk.ToString() }
 }
 
-function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framework, $name, $allowPrerelease ) {
+function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framework, $name, $required, $allowPrerelease ) {
 
     $release = get-dotnet-sdk $sdks $search $false
     $preview = get-dotnet-sdk $sdks $search $true
@@ -917,7 +917,7 @@ function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framewo
         else {
             # have nothing usable, is an issue only if required
             $missing = $frameworks.Contains($framework)
-            if ($missing) { 
+            if ($missing -and $required) { 
                 Write-Output "  ERR: this script requires the Microsoft .NET $name SDK." 
                 $result.validSdks = $false
                 $result.validSdk = $false
@@ -978,9 +978,9 @@ function require-dotnet ( $full ) {
     # frameworks for the test project, as determined by determine-target-frameworks.
 
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
-    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $allowPrerelease
-    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $allowPrerelease
-    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $allowPrerelease
+    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $full $allowPrerelease
+    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $full $allowPrerelease
+    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $full $allowPrerelease
 
     if ($result.validSdk -and $frameworks.Contains("net5.0")) {
         # we found 5.0 and 5.0 is required and ...
@@ -991,7 +991,7 @@ function require-dotnet ( $full ) {
         }
     }
 
-    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $allowPrerelease
+    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
 
     # report
     Write-Output $result.sdkInfos
