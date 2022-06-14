@@ -90,7 +90,7 @@ namespace Hazelcast.Examples.SoakTests
 
             public int EntryCount { get; set; } = 10_000;
 
-            public string MemoryMonitorPeriod { get; set; } = "5m";
+            public string MemoryMonitorPeriod { get; set; } = "5s";
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace Hazelcast.Examples.SoakTests
             logger.LogInformation("Hazelcast .NET soak tests");
 
             var duration = ParseDurationOrGetDefault(soakOptions.Duration, TimeSpan.FromMinutes(1));
-            var memoryPeriod = ParseDurationOrGetDefault(soakOptions.MemoryMonitorPeriod, TimeSpan.FromMinutes(5));
+            var memoryPeriod = ParseDurationOrGetDefault(soakOptions.MemoryMonitorPeriod, TimeSpan.FromSeconds(5));
 
             // report
             logger.LogInformation($"Start {nameof(Soak1)} with {soakOptions.ThreadCount} threads, duration {duration.TotalHours,0:f4}h");
@@ -155,7 +155,7 @@ namespace Hazelcast.Examples.SoakTests
 
             // report
             logger.LogInformation("Connected");
-            logger.LogInformation($"{nameof(Soak1)} is running, will end in duration {duration.TotalHours,0:f4}h");
+            logger.LogInformation($"{nameof(Soak1)} is running, will end in duration {duration}");
             logger.LogInformation("Or, press Ctrl-C to abort");
 
             // wait for threads
@@ -172,24 +172,28 @@ namespace Hazelcast.Examples.SoakTests
             logger.LogInformation("Stopped");
 
             // report
-            var sb = new StringBuilder();
-            sb.AppendLine("|  id |      operation count |     op/sec |");
-            sb.AppendLine("|-----|----------------------|------------|");
             for (var i = 0; i < soakOptions.ThreadCount; i++)
             {
-                sb.AppendLine($"| {i,3:D} | {_reports[i],20:D} | {_reports[i] / (long)duration.TotalSeconds,10:D} |");
+                logger.LogInformation($"Thread {i,3:D} = {_reports[i]} ops @ {_reports[i] / (long)duration.TotalSeconds} ops/s");
             }
 
-            sb.AppendLine();
-            sb.AppendLine("=== Some metrics about client operations ===");
-            sb.AppendLine($"Max Memory Usage (bytes): {_maxMemoryUsage}");
-            sb.AppendLine($"Min Memory Usage (bytes): {_minMemoryUsage}");
-            sb.AppendLine($"# of Disconnections: {_disconnectedCount}");
-
-            logger.LogInformation(sb.ToString());
+            logger.LogInformation($"Min Memory Usage: {FormatMemorySize(_minMemoryUsage)}");
+            logger.LogInformation($"Max Memory Usage: {FormatMemorySize(_maxMemoryUsage)}");
+            logger.LogInformation($"# of Disconnects: {_disconnectedCount}");
 
             // say hello
             logger.LogInformation($"Ended {nameof(Soak1)}");
+        }
+
+        private static string FormatMemorySize(long value)
+        {
+            if (value < 4096) return $"{value}B";
+            value /= 1024;
+            if (value < 4096) return $"{value}KB";
+            value /= 1024;
+            if (value < 4096) return $"{value}MB";
+            value /= 1024;
+            return $"{value}GB";
         }
 
         private static TimeSpan ParseDurationOrGetDefault(string duration, TimeSpan defaultValue)
@@ -212,15 +216,27 @@ namespace Hazelcast.Examples.SoakTests
 
         private static async Task MonitorMemoryUsage(TimeSpan period, ILogger logger, CancellationToken token)
         {
-            await Task.Delay(period, token);
-            logger.LogInformation("Reading Memory Usage.");
-            _currentProcess.Refresh();
+            while (!token.IsCancellationRequested)
+            {
+                _currentProcess.Refresh();
 
-            if (_maxMemoryUsage < _currentProcess.PrivateMemorySize64)
-                _maxMemoryUsage = _currentProcess.PrivateMemorySize64;
+                var size = _currentProcess.PrivateMemorySize64;
 
-            if (_minMemoryUsage > _currentProcess.PrivateMemorySize64)
-                _minMemoryUsage = _currentProcess.PrivateMemorySize64;
+                if (size > 0)
+                {
+                    _maxMemoryUsage = Math.Max(_maxMemoryUsage, size);
+                    _minMemoryUsage = Math.Min(_minMemoryUsage, size);
+                }
+
+                try
+                {
+                    await Task.Delay(period, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
         }
 
         private static async Task RunTask(IHazelcastClient client, CancellationToken token, int id, int entryCount, ILogger logger)

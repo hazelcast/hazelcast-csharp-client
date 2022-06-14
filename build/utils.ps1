@@ -408,7 +408,7 @@ function Get-TopologicalSort {
 }
 
 function Get-HazelcastRemote () {
-    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client.git' | select -first 1
+    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client[\. ]' | select -first 1
     if ($remote -eq $null) { return $null }
     $remote = $remote.ToString().Split()[0]
     return $remote

@@ -21,6 +21,7 @@
 ## [AtomicLong](distributed-objects/atomiclong.md)
 ## [AtomicRef](distributed-objects/atomicref.md)
 ## [FlakeIdGenerator](distributed-objects/flakeidgenerator.md)
+## [FencedLock](distributed-objects/fencedlock.md)
 # [Distributed Computing](distributedComputing.md)
 # [Distributed Query](distributedQuery.md)
 # [CP SubSystem](cpsubsystem.md)
