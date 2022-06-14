@@ -1,7 +1,9 @@
 module.exports = /*async*/ ({github, context, core}) => {
    
     const restapi = github.rest
-    var dryrun = context.payload.inputs.dryrun
+
+    // undefined when invoked from build-release, not trigger-release + not used
+    //var dryrun = context.payload.inputs.dryrun
 
     function firstOrDefault(items, predicate) {
         for (const item of items) {
