@@ -96,10 +96,17 @@ namespace Hazelcast.Tests.Serialization.Objects
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((KitchenSinkPortable) obj);
+            return Equals((KitchenSinkPortable)obj);
         }
-
-        public static KitchenSinkPortable Generate()
+             
+        /// <summary>
+        /// Generates a portable object with data. Also used to size strings in the string arrays.        
+        /// n(where 0<n<=len(randomstring)) length of string array will be like["x", "xx", "xxx", ....., "xxx..xxx"].         
+        /// It will allow to test deseriazliser with various size of strings.
+        /// </summary>
+        /// <param name="arraySize">arraySize">Size of for array type fields</param>
+        /// <returns></returns>
+        public static KitchenSinkPortable Generate(int arraySize = 5)
         {
             return new KitchenSinkPortable
             {
@@ -107,20 +114,20 @@ namespace Hazelcast.Tests.Serialization.Objects
                 BoolArray = TestUtils.RandomArray(TestUtils.RandomBool),
                 Byte = TestUtils.RandomByte(),
                 ByteArray = TestUtils.RandomBytes(),
-                Char = (char) Random.Next(),
+                Char = (char)Random.Next(),
                 Double = TestUtils.RandomDouble(),
-                DoubleArray = TestUtils.RandomArray(TestUtils.RandomDouble),
-                CharArray = TestUtils.RandomArray(TestUtils.RandomChar),
+                DoubleArray = TestUtils.RandomArray(TestUtils.RandomDouble, arraySize),
+                CharArray = TestUtils.RandomArray(TestUtils.RandomChar, arraySize),
                 Float = TestUtils.RandomFloat(),
-                FloatArray = TestUtils.RandomArray(TestUtils.RandomFloat),
+                FloatArray = TestUtils.RandomArray(TestUtils.RandomFloat, arraySize),
                 Int = TestUtils.RandomInt(),
-                IntArray = TestUtils.RandomArray(TestUtils.RandomInt),
+                IntArray = TestUtils.RandomArray(TestUtils.RandomInt, arraySize),
                 Long = TestUtils.RandomLong(),
-                LongArray = TestUtils.RandomArray(TestUtils.RandomLong),
+                LongArray = TestUtils.RandomArray(TestUtils.RandomLong, arraySize),
                 Short = TestUtils.RandomShort(),
-                ShortArray = TestUtils.RandomArray(TestUtils.RandomShort),
+                ShortArray = TestUtils.RandomArray(TestUtils.RandomShort, arraySize),
                 String = TestUtils.RandomString(),
-                StringArray = TestUtils.RandomArray(TestUtils.RandomString)
+                StringArray = TestUtils.RandomArray(TestUtils.RandomStringWithLength, arraySize)
             };
         }
 

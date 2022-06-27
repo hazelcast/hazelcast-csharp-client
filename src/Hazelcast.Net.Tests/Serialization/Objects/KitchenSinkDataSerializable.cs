@@ -115,39 +115,39 @@ namespace Hazelcast.Tests.Serialization.Objects
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
-            return Equals((KitchenSinkDataSerializable) obj);
+            return Equals((KitchenSinkDataSerializable)obj);
         }
 
 
-        public static KitchenSinkDataSerializable Generate()
+        public static KitchenSinkDataSerializable Generate(int arraySize)
         {
             var truncatedDateTime = DateTime.Now;
             // truncate datetime to milliseconds
             truncatedDateTime =
-                new DateTime(truncatedDateTime.Ticks - (truncatedDateTime.Ticks%TimeSpan.TicksPerMillisecond));
+                new DateTime(truncatedDateTime.Ticks - (truncatedDateTime.Ticks % TimeSpan.TicksPerMillisecond));
 
             return new KitchenSinkDataSerializable
             {
                 Bool = TestUtils.RandomBool(),
-                BoolArray = TestUtils.RandomArray(TestUtils.RandomBool),
+                BoolArray = TestUtils.RandomArray(TestUtils.RandomBool, arraySize),
                 Byte = TestUtils.RandomByte(),
                 ByteArray = TestUtils.RandomBytes(),
                 Char = TestUtils.RandomChar(),
                 Double = TestUtils.RandomDouble(),
-                DoubleArray = TestUtils.RandomArray(TestUtils.RandomDouble),
+                DoubleArray = TestUtils.RandomArray(TestUtils.RandomDouble, arraySize),
                 Chars = TestUtils.RandomString(),
-                CharArray = TestUtils.RandomArray(TestUtils.RandomChar),
+                CharArray = TestUtils.RandomArray(TestUtils.RandomChar, arraySize),
                 DateTime = truncatedDateTime,
                 Float = TestUtils.RandomFloat(),
-                FloatArray = TestUtils.RandomArray(TestUtils.RandomFloat),
+                FloatArray = TestUtils.RandomArray(TestUtils.RandomFloat, arraySize),
                 Int = TestUtils.RandomInt(),
-                IntArray = TestUtils.RandomArray(TestUtils.RandomInt),
+                IntArray = TestUtils.RandomArray(TestUtils.RandomInt, arraySize),
                 Long = TestUtils.RandomLong(),
-                LongArray = TestUtils.RandomArray(TestUtils.RandomLong),
+                LongArray = TestUtils.RandomArray(TestUtils.RandomLong, arraySize),
                 Short = TestUtils.RandomShort(),
-                ShortArray = TestUtils.RandomArray(TestUtils.RandomShort),
+                ShortArray = TestUtils.RandomArray(TestUtils.RandomShort, arraySize),
                 String = TestUtils.RandomString(),
-                StringArray = TestUtils.RandomArray(TestUtils.RandomString)
+                StringArray = TestUtils.RandomArray(TestUtils.RandomString, arraySize)
             };
         }
 

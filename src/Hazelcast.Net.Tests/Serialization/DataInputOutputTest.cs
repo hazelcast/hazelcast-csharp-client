@@ -23,20 +23,32 @@ namespace Hazelcast.Tests.Serialization
 {
     internal class DataInputOutputTest
     {
-        private static readonly Endianness[] Endiannesses =
+        private static readonly object[] DataCases =
         {
-            Endianness.BigEndian,
-            Endianness.LittleEndian,
+            new object[]{Endianness.BigEndian, 0 },
+            new object[]{Endianness.BigEndian, 1 },
+            new object[]{Endianness.BigEndian, 2 },
+            new object[]{Endianness.BigEndian, 3 },
+            new object[]{Endianness.BigEndian, 4 },
+            new object[]{Endianness.BigEndian, 10 },
+
+            new object[]{Endianness.LittleEndian, 0 },
+            new object[]{Endianness.LittleEndian, 1 },
+            new object[]{Endianness.LittleEndian, 2 },
+            new object[]{Endianness.LittleEndian, 3 },
+            new object[]{Endianness.LittleEndian, 4 },
+            new object[]{Endianness.LittleEndian, 10 }
+            
             //Endianness.NativeOrder()
         };
 
-        [TestCaseSource(nameof(Endiannesses))]
-        public virtual void TestDataInputOutputWithPortable(Endianness endianness)
+        [TestCaseSource(nameof(DataCases))]
+        public virtual void TestDataInputOutputWithPortable(Endianness endianness, int arraySize)
         {
-            var portable = KitchenSinkPortable.Generate();
+            var portable = KitchenSinkPortable.Generate(arraySize);
 
             var config = new SerializationOptions();
-            config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
+            config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof(KitchenSinkPortableFactory));
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
                 .SetEndianness(endianness).Build();
@@ -51,13 +63,13 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(portable, readObject);
         }
 
-        [TestCaseSource(nameof(Endiannesses))]
-        public virtual void TestInputOutputWithPortableReader(Endianness endianness)
+        [TestCaseSource(nameof(DataCases))]
+        public virtual void TestInputOutputWithPortableReader(Endianness endianness, int arraySize)
         {
-            var portable = KitchenSinkPortable.Generate();
+            var portable = KitchenSinkPortable.Generate(arraySize);
 
             var config = new SerializationOptions();
-            config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof (KitchenSinkPortableFactory));
+            config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof(KitchenSinkPortableFactory));
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
                 .SetEndianness(endianness).Build();
@@ -71,11 +83,11 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(portable, actual);
         }
 
-        [TestCaseSource(nameof(Endiannesses))]
-        public virtual void TestReadWrite(Endianness endianness)
+        [TestCaseSource(nameof(DataCases))]
+        public virtual void TestReadWrite(Endianness endianness, int arraySize)
         {
-            var obj = KitchenSinkDataSerializable.Generate();
-            obj.Serializable = KitchenSinkDataSerializable.Generate();
+            var obj = KitchenSinkDataSerializable.Generate(arraySize);
+            obj.Serializable = KitchenSinkDataSerializable.Generate(arraySize);
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                 .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
@@ -106,9 +118,9 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-		public void TestNullValue_When_ValueType()
-		{
-			Assert.Throws<SerializationException>(() =>
+        public void TestNullValue_When_ValueType()
+        {
+            Assert.Throws<SerializationException>(() =>
         {
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
                .Build();
@@ -118,7 +130,7 @@ namespace Hazelcast.Tests.Serialization
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             ss.ReadObject<int>(input);
-			});
+        });
         }
 
         [Test]
