@@ -21,10 +21,15 @@ namespace Hazelcast.Testing
     {
         public static T[] RandomArray<T>(Func<T> randFunc, int size = 0)
         {
+            return RandomArray<T>(p => randFunc(), size);
+        }
+
+        public static T[] RandomArray<T>(Func<int, T> randFunc, int size = 0)
+        {
             var array = new T[size == 0 ? RandomProvider.Random.Next(5) + 1 : size];
             for (var i = 0; i < array.Length; i++)
             {
-                array[i] = randFunc();
+                array[i] = randFunc(i);
             }
             return array;
         }
@@ -36,7 +41,7 @@ namespace Hazelcast.Testing
 
         public static byte RandomByte()
         {
-            return (byte) RandomProvider.Random.Next();
+            return (byte)RandomProvider.Random.Next();
         }
 
         public static byte[] RandomBytes()
@@ -48,7 +53,7 @@ namespace Hazelcast.Testing
 
         public static char RandomChar()
         {
-            return (char) RandomProvider.Random.Next(0x1000); // but avoid surrogate pairs!
+            return (char)RandomProvider.Random.Next(0x1000); // but avoid surrogate pairs!
         }
 
         public static double RandomDouble()
@@ -58,7 +63,7 @@ namespace Hazelcast.Testing
 
         public static float RandomFloat()
         {
-            return (float) RandomProvider.Random.NextDouble();
+            return (float)RandomProvider.Random.NextDouble();
         }
 
         public static int RandomInt()
@@ -75,12 +80,17 @@ namespace Hazelcast.Testing
 
         public static short RandomShort()
         {
-            return (short) RandomProvider.Random.Next();
+            return (short)RandomProvider.Random.Next();
         }
 
         public static string RandomString()
         {
             return Guid.NewGuid().ToString();
+        }
+
+        public static string RandomStringWithLength(int length)
+        {
+            return RandomString().Substring(0, length);
         }
     }
 }
