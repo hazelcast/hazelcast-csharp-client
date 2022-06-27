@@ -90,7 +90,8 @@ namespace Hazelcast.Testing
 
         public static string RandomStringWithLength(int length)
         {
-            return RandomString().Substring(0, length);
+            var str = RandomString();
+            return str.Substring(0, length < str.Length ? length : str.Length);
         }
     }
 }

@@ -255,9 +255,6 @@ namespace Hazelcast.Serialization
             if (length == BytesExtensions.SizeOfNullArray) return null;
             if (length <= 0) return Array.Empty<string>();
 
-            //A UTF8 string is at least 1 byte.
-            CheckAvailable(Position, length * BytesExtensions.SizeOfByte);
-
             var values = new string[length];
             for (var i = 0; i < length; i++)
             {

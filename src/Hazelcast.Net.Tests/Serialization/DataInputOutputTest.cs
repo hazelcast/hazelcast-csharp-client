@@ -23,7 +23,7 @@ namespace Hazelcast.Tests.Serialization
 {
     internal class DataInputOutputTest
     {
-        private static readonly object[] Endiannesses =
+        private static readonly object[] DataCases =
         {
             new object[]{Endianness.BigEndian, 0 },
             new object[]{Endianness.BigEndian, 1 },
@@ -42,7 +42,7 @@ namespace Hazelcast.Tests.Serialization
             //Endianness.NativeOrder()
         };
 
-        [TestCaseSource(nameof(Endiannesses))]
+        [TestCaseSource(nameof(DataCases))]
         public virtual void TestDataInputOutputWithPortable(Endianness endianness, int arraySize)
         {
             var portable = KitchenSinkPortable.Generate(arraySize);
@@ -63,7 +63,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(portable, readObject);
         }
 
-        [TestCaseSource(nameof(Endiannesses))]
+        [TestCaseSource(nameof(DataCases))]
         public virtual void TestInputOutputWithPortableReader(Endianness endianness, int arraySize)
         {
             var portable = KitchenSinkPortable.Generate(arraySize);
@@ -83,7 +83,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.AreEqual(portable, actual);
         }
 
-        [TestCaseSource(nameof(Endiannesses))]
+        [TestCaseSource(nameof(DataCases))]
         public virtual void TestReadWrite(Endianness endianness, int arraySize)
         {
             var obj = KitchenSinkDataSerializable.Generate(arraySize);
