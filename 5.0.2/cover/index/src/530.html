@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\FrameExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Messaging
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the &lt;see cref=&quot;Frame&quot;/&gt; class.
+    /// &lt;/summary&gt;
+    internal static class FrameExtensions
+    {
+        /// &lt;summary&gt;
+        /// Reads the message type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;returns&gt;The message type.&lt;/returns&gt;
+        public static int ReadMessageType(this Frame frame)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.MessageType, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Writes the message type.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The message type.&lt;/param&gt;
+        public static void WriteMessageType(this Frame frame, int type)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.MessageType, type, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Reads the correlation id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;returns&gt;The correlation id.&lt;/returns&gt;
+        public static long ReadCorrelationId(this Frame frame)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.CorrelationId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Writes the correlation id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;param name=&quot;correlationId&quot;&gt;The correlation id.&lt;/param&gt;
+        public static void WriteCorrelationId(this Frame frame, long correlationId)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.CorrelationId, correlationId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Reads the partition id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;returns&gt;The partition id.&lt;/returns&gt;
+        public static int ReadPartitionId(this Frame frame)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadInt(FrameFields.Offset.PartitionId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Writes the partition id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;param name=&quot;partionId&quot;&gt;The partition id.&lt;/param&gt;
+        public static void WritePartitionId(this Frame frame, int partionId)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteInt(FrameFields.Offset.PartitionId, partionId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Reads the fragment id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;returns&gt;The fragment id.&lt;/returns&gt;
+        public static long ReadFragmentId(this Frame frame)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.ReadLong(FrameFields.Offset.FragmentId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Writes the fragment id.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;frame&quot;&gt;The frame.&lt;/param&gt;
+        /// &lt;param name=&quot;fragmentId&quot;&gt;The fragment id.&lt;/param&gt;
+        public static void WriteFragmentId(this Frame frame, long fragmentId)
+            =&gt; (frame ?? throw new ArgumentNullException(nameof(frame))).Bytes.WriteLong(FrameFields.Offset.FragmentId, fragmentId, Endianness.LittleEndian);
+
+        /// &lt;summary&gt;
+        /// Takes the current frame and moves to the next frame.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The current frame, or null if the end of the list has been reached.&lt;/returns&gt;
+        public static Frame Take(this IEnumerator&lt;Frame&gt; frames)
+        {
+            if (frames == null) throw new ArgumentNullException(nameof(frames));
+
+            // if current is null maybe we haven&#39;t started yet - start
+            // (if it&#39;s null because we&#39;ve reached the end, nothing happens)
+            if (frames.Current == null) frames.MoveNext();
+
+            // capture and return the current frame, move to next
+            var frame = frames.Current;
+            frames.MoveNext();
+            return frame;
+        }
+
+        /// &lt;summary&gt;
+        /// Skips the current frame if it is a &quot;null frame&quot;.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public static bool SkipNull(this IEnumerator&lt;Frame&gt; frames)
+        {
+            if (frames == null) throw new ArgumentNullException(nameof(frames));
+
+            var isNull = frames.Current != null &amp;&amp; frames.Current.IsNull;
+            if (isNull) frames.Take();
+            return isNull;
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether the current frame is an &quot;end of structure&quot; frame.
+        /// &lt;/summary&gt;
+        public static bool AtStructEnd(this IEnumerator&lt;Frame&gt; frames)
+            =&gt; (frames ?? throw new ArgumentNullException(nameof(frames))).Current != null &amp;&amp; frames.Current.IsEndStruct;
+
+        /// &lt;summary&gt;
+        /// Advances the iterator by skipping all frames until the end of a structure.
+        /// &lt;/summary&gt;
+        public static void SkipToStructEnd(this IEnumerator&lt;Frame&gt; frames)
+        {
+            // We are starting from 1 because of the BeginFrame we read
+            // in the beginning of the Decode method
+            var numberOfExpectedEndFrames = 1;
+
+            while (numberOfExpectedEndFrames != 0)
+            {
+                var frame = frames.Take();
+                if (frame == null)
+                    throw new InvalidOperationException(&quot;Reached end of message.&quot;);
+
+                if (frame.IsEndStruct)
+                {
+                    numberOfExpectedEndFrames--;
+                }
+                else if (frame.IsBeginStruct)
+                {
+                    numberOfExpectedEndFrames++;
+                }
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,16,32,144,1],[40,16,40,151,1],[48,16,48,147,1],[56,16,56,163,1],[64,16,64,144,1],[72,16,72,156,1],[80,16,80,144,1],[88,16,88,157,1],[96,13,96,32,1],[96,33,96,81,1],[100,13,100,40,1],[100,41,100,59,1],[103,13,103,40,1],[104,13,104,31,1],[105,13,105,26,1],[114,13,114,32,1],[114,33,114,81,1],[116,13,116,74,1],[117,13,117,24,1],[117,25,117,39,1],[118,13,118,27,1],[125,16,125,121,1],[134,13,134,47,1],[136,13,136,51,1],[138,17,138,43,1],[139,17,139,35,1],[140,21,140,84,1],[142,17,142,39,1],[144,21,144,49,1],[146,22,146,46,1],[148,21,148,49,1],[151,9,151,10,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\EventHandlersBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections;
+using System.Collections.Generic;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides a base class for classes containing event handlers.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TEventHandler&quot;&gt;The type of the event handlers.&lt;/typeparam&gt;
+    public abstract class EventHandlersBase&lt;TEventHandler&gt; : IEnumerable&lt;TEventHandler&gt;
+    {
+        private readonly List&lt;TEventHandler&gt; _handlers = new List&lt;TEventHandler&gt;();
+
+        // note: adding and removing handlers is not thread-safe
+        // - adding happens when subscribing, which is not multi-threaded
+        // - removing happens when unsubscribing, and a subscription should be unsubscribed
+        //   only once, and once at a time, so it should not require thread-safety
+
+        /// &lt;summary&gt;
+        /// Adds a handler.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        protected void Add(TEventHandler handler)
+            =&gt; _handlers.Add(handler);
+
+        /// &lt;inheritdoc /&gt;
+        public IEnumerator&lt;TEventHandler&gt; GetEnumerator()
+            =&gt; _handlers.GetEnumerator();
+
+        /// &lt;inheritdoc /&gt;
+        IEnumerator IEnumerable.GetEnumerator()
+            =&gt; GetEnumerator();
+
+        /// &lt;summary&gt;
+        /// Removes a handler.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler to remove.&lt;/param&gt;
+        public void Remove(TEventHandler handler)
+            =&gt; _handlers.Remove(handler);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,9,26,84,1],[38,16,38,38,1],[42,16,42,41,1],[46,16,46,31,1],[53,16,53,41,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\ClientVersion.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Reflection;
+using System;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents the version of this client.
+    /// &lt;/summary&gt;
+    internal static class ClientVersion
+    {
+        private static string _clientVersion;
+        private static string _clientVersionPure;
+
+        /// &lt;summary&gt;
+        /// (for tests only)
+        /// Gets the version of this assembly.
+        /// Outside of testes, prefer the &lt;see cref=&quot;Version&quot;/&gt; property.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;informationalVersionAttribute&quot;&gt;The &lt;see cref=&quot;AssemblyInformationalVersionAttribute&quot;/&gt; for this assembly.&lt;/param&gt;
+        /// &lt;param name=&quot;versionAttribute&quot;&gt;The &lt;see cref=&quot;AssemblyVersionAttribute&quot;/&gt; for this assembly.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        internal static string GetVersion(AssemblyInformationalVersionAttribute informationalVersionAttribute, AssemblyVersionAttribute versionAttribute)
+        {
+            if (informationalVersionAttribute != null)
+            {
+                // AssemblyInformationalVersion attribute should contain a SemVer-compliant version.
+                // the version is assumed to be compliant (not checked).
+                var version = informationalVersionAttribute.InformationalVersion;
+                // just make sure that the git SHA, if present, is shortened to 6 chars
+                var pos = version.IndexOf(&#39;+&#39;, StringComparison.OrdinalIgnoreCase);
+                if (pos &gt; 0 &amp;&amp; version.Length &gt; pos + 7)
+                    version = version[..(pos + 7)];
+                return version;
+            }
+            else
+            {
+                // AssemblyVersion attribute should exist and contain a major.minor.patch version.
+                // the version is assumed to be major.minor.patch (not checked).
+                // if the attribute does not exist, go with &quot;0.0.0&quot;.
+                var version = versionAttribute?.Version;
+                return string.IsNullOrWhiteSpace(version) ? &quot;0.0.0&quot; : version;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// (for tests only)
+        /// Gets the major.minor version of a SemVer-compliant version.
+        /// Outside of tests, prefer the &lt;see cref=&quot;MajorMinorVersion&quot;/&gt; property.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;version&quot;&gt;The SemVer-compliant version.&lt;/param&gt;
+        /// &lt;returns&gt;The &quot;pure&quot; version corresponding to the specified &lt;paramref name=&quot;version&quot;/&gt;.&lt;/returns&gt;
+        internal static string GetMajorMinorVersion(string version)
+        {
+            var pos0 = version.IndexOf(&#39;.&#39;);
+            var pos1 = version.IndexOf(&#39;.&#39;, pos0 + 1);
+            if (pos1 &gt;= 0)
+            {
+                // two dots = major.minor.whatever
+                // take everything until the second &#39;.&#39; = major.minor
+                version = version[..pos1];
+            }
+            else
+            {
+                // one single dot = major.minor[+whatever]
+                // remove the +whatever part if any
+                var pos = version.IndexOf(&#39;+&#39;);
+                if (pos &gt;= 0) version = version[..pos];
+            }
+            return version;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the version of this assembly.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Returns the informational, SemVer compliant version ie it can be 5.1.2-preview.0+ab16ec43.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal static string Version
+        {
+            get
+            {
+                if (_clientVersion != null) return _clientVersion;
+
+                var type = typeof (ClientVersion);
+                var assembly = type.Assembly;
+
+                return _clientVersion = GetVersion(
+                    assembly.GetCustomAttribute&lt;AssemblyInformationalVersionAttribute&gt;(),
+                    assembly.GetCustomAttribute&lt;AssemblyVersionAttribute&gt;());
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the major.minor version of this assembly.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Returns the pure version, ie major.minor.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal static string MajorMinorVersion =&gt; _clientVersionPure ??= GetMajorMinorVersion(Version);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,13,38,55,1],[42,17,42,82,1],[44,17,44,84,1],[45,17,45,57,1],[46,21,46,52,1],[47,17,47,32,1],[54,17,54,57,1],[55,17,55,79,1],[68,13,68,45,1],[69,13,69,55,1],[70,13,70,27,1],[74,17,74,43,1],[80,17,80,48,0],[81,17,81,30,0],[81,31,81,56,0],[83,13,83,28,1],[96,17,96,44,1],[96,45,96,67,1],[98,17,98,51,1],[99,17,99,46,1],[101,17,103,78,1],[113,53,113,105,1]]);
+    </script>
+  </body>
+</html>

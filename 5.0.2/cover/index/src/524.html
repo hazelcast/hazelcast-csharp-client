@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\ClientMessageConnection.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Buffers;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Networking;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Messaging
+{
+    /// &lt;summary&gt;
+    /// Represents a message connection.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;A message connection wraps a socket connection and provides a
+    /// message-level communication channel.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class ClientMessageConnection : IAsyncDisposable
+    {
+        private readonly Dictionary&lt;long, ClientMessage&gt; _messages = new Dictionary&lt;long, ClientMessage&gt;();
+        private readonly SocketConnectionBase _connection;
+        private readonly IHSemaphore _writer;
+        private readonly ILogger _logger;
+
+        private Action&lt;ClientMessageConnection, ClientMessage&gt; _onReceiveMessage;
+        private int _bytesLength = -1;
+        private Frame _currentFrame;
+        private bool _finalFrame;
+        private ClientMessage _currentMessage;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientMessageConnection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The underlying &lt;see cref=&quot;SocketConnectionBase&quot;/&gt;.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public ClientMessageConnection(SocketConnectionBase connection, ILoggerFactory loggerFactory)
+            : this(connection, new HSemaphore(1, 1), loggerFactory)
+        { }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientMessageConnection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;connection&quot;&gt;The underlying &lt;see cref=&quot;SocketConnectionBase&quot;/&gt;.&lt;/param&gt;
+        /// &lt;param name=&quot;writerSemaphore&quot;&gt;A writer-controlling semaphore.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        internal ClientMessageConnection(SocketConnectionBase connection, IHSemaphore writerSemaphore, ILoggerFactory loggerFactory)
+        {
+            _connection = connection ?? throw new ArgumentNullException(nameof(connection));
+            _connection.OnReceiveMessageBytes = ReceiveMessageBytesAsync;
+
+            _logger = loggerFactory?.CreateLogger&lt;ClientMessageConnection&gt;() ??
+                      throw new ArgumentNullException(nameof(loggerFactory));
+
+            // TODO: threading control here could be an option
+            // (in case threading control is performed elsewhere)
+            _writer = writerSemaphore;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that handles messages.
+        /// &lt;/summary&gt;
+        public Action&lt;ClientMessageConnection, ClientMessage&gt; OnReceiveMessage
+        {
+            get =&gt; _onReceiveMessage;
+            set
+            {
+                if (_connection.IsActive)
+                    throw new InvalidOperationException(&quot;Cannot set the property once the connection is active.&quot;);
+                _onReceiveMessage = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Gets or sets a function that runs when sending.
+        /// &lt;/summary&gt;
+        internal Action OnSending { get; set; }
+
+        private bool ReceiveMessageBytesAsync(SocketConnectionBase connection, IBufferReference&lt;ReadOnlySequence&lt;byte&gt;&gt; bufferReference)
+        {
+            var bytes = bufferReference.Buffer;
+            HConsole.WriteLine(this, 2, $&quot;Received {bytes.Length} bytes&quot;);
+
+            if (_bytesLength &lt; 0)
+            {
+                if (bytes.Length &lt; FrameFields.SizeOf.LengthAndFlags)
+                    return false;
+
+                var frameLength = Frame.ReadLength(ref bytes);
+                var flags = Frame.ReadFlags(ref bytes);
+                _bytesLength = frameLength - FrameFields.SizeOf.LengthAndFlags;
+
+                // TODO: refactor byte[] allocations in frames
+                var frameBytes = _bytesLength == 0
+                    ? Array.Empty&lt;byte&gt;()
+                    : new byte[_bytesLength];
+
+                // create a frame
+                // preserve the isFinal status, as adding the frame to a message messes it
+                _currentFrame = new Frame(frameBytes, flags);
+                _finalFrame = _currentFrame.IsFinal;
+
+                if (_currentMessage == null)
+                {
+                    HConsole.WriteLine(this, 2, $&quot;Add {_currentFrame} to new fragment&quot;);
+                    _currentMessage = new ClientMessage(_currentFrame);
+                }
+                else
+                {
+                    HConsole.WriteLine(this, 2, $&quot;Add {_currentFrame} to current fragment&quot;);
+                    _currentMessage.Append(_currentFrame);
+                }
+            }
+
+            // update the reference
+            bufferReference.Buffer = bytes;
+
+            // TODO: consider buffering here
+            // at the moment we are buffering in the pipe, but we have already
+            // created the byte array, so ... might be nicer to copy now
+            if (bytes.Length &lt; _bytesLength)
+            {
+                // update the reference, exit
+                bufferReference.Buffer = bytes;
+                return false;
+            }
+
+            // else, fill, and update the reference
+            bytes.Fill(_currentFrame.Bytes);
+            bufferReference.Buffer = bytes;
+
+            _bytesLength = -1;
+            HConsole.WriteLine(this, 2, $&quot;Frame is complete&quot;);
+
+            // we now have a fully assembled message
+            // don&#39;t test _currentFrame.IsFinal, adding the frame to a message has messed it
+            if (!_finalFrame) return true;
+
+            HConsole.WriteLine(this, 2, &quot;Frame is final&quot;);
+            var message = _currentMessage;
+            _currentMessage = null;
+            HConsole.WriteLine(this, 2, &quot;Handle fragment&quot;);
+            ReceiveFragmentAsync(message);
+
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Receives a fragment.
+        /// &lt;/summary&gt;
+        internal void ReceiveFragmentAsync(ClientMessage fragment)
+        {
+            if (fragment.Flags.HasAll(ClientMessageFlags.Unfragmented))
+            {
+                HConsole.WriteLine(this, &quot;Handle message&quot;);
+
+                try
+                {
+                    _onReceiveMessage(this, fragment);
+                }
+                catch (Exception e)
+                {
+                    // TODO: instrumentation
+                    _logger.LogError(e, &quot;Failed to handle an incoming message.&quot;);
+                    HConsole.WriteLine(this, &quot;ERROR\n&quot; + e);
+                }
+
+                return;
+            }
+
+            // handle a fragmented message
+            // TODO: can leak unfinished messages?
+
+            var fragmentId = fragment.FragmentId;
+
+            if (fragment.Flags.HasAll(ClientMessageFlags.BeginFragment))
+            {
+                // new message
+                if (_messages.TryGetValue(fragmentId, out _))
+                {
+                    // receiving a duplicate fragment begin, ignoring
+                    return;
+                }
+
+                // start accumulating
+                _messages[fragmentId] = new ClientMessage().AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+            }
+            else if (fragment.Flags.HasAll(ClientMessageFlags.EndFragment))
+            {
+                // completed message
+                if (!_messages.TryGetValue(fragmentId, out var message))
+                {
+                    // receiving a fragment end for an unknown message, ignoring
+                    return;
+                }
+
+                // end
+                message.AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+                _messages.Remove(fragmentId);
+
+                // handle the message
+                HConsole.WriteLine(this, &quot;Handle message&quot;);
+
+                try
+                {
+                    _onReceiveMessage(this, message);
+                }
+                catch (Exception e)
+                {
+                    // TODO: instrumentation
+                    _logger.LogError(e, &quot;Failed to handle an incoming message.&quot;);
+                    HConsole.WriteLine(this, &quot;ERROR\n&quot; + e);
+                }
+            }
+            else
+            {
+                // continuing
+                if (!_messages.TryGetValue(fragmentId, out var message))
+                {
+                    // receiving a fragment for an unknown message, ignoring
+                    return;
+                }
+
+                // continue accumulating
+                message.AppendFragment(fragment.FirstFrame.Next, fragment.LastFrame);
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Sends a message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the message has been sent.&lt;/returns&gt;
+        public async ValueTask&lt;bool&gt; SendAsync(ClientMessage message, CancellationToken cancellationToken = default)
+        {
+            // serialize the message into bytes,
+            // and then pass those bytes to the socket connection
+
+            if (message == null) throw new ArgumentNullException(nameof(message));
+            if (message.FirstFrame == null) throw new ArgumentException(&quot;Message has no frames.&quot;, nameof(message));
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // send message, serialize sending via semaphore
+            // throws OperationCanceledException if canceled (and semaphore is not acquired)
+            if (_writer != null)
+            {
+                try
+                {
+                    await _writer.WaitAsync(cancellationToken).CfAwait();
+                }
+                catch (ObjectDisposedException)
+                {
+                    // _writer can be non-null but disposed
+                    return false;
+                }
+                catch (Exception e) when (!(e is OperationCanceledException))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    throw;
+                }
+            }
+
+            try
+            {
+                HConsole.WriteLine(this, &quot;Send message&quot;);
+
+                // for tests purposes - do *not* rely on this
+                OnSending?.Invoke();
+
+                // last chance - after this line, we will send the full message
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var sentFrames = await SendFramesAsync(message).CfAwait();
+                if (!sentFrames) return false;
+
+                await _connection.FlushAsync().CfAwait(); // make sure the message goes out
+            }
+            finally
+            {
+                _writer?.Release();
+            }
+
+            return true;
+        }
+
+        private async ValueTask&lt;bool&gt; SendFramesAsync(ClientMessage message)
+        {
+            byte[] buffer = null;
+            var length = 0;
+
+            const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
+
+            // the default array pool allocates buckets of arrays of sizes:
+            //   int maxSize = 16 &lt;&lt; binIndex;
+            // so 0 =&gt; 16 bytes, 1 =&gt; 32 bytes, 2 =&gt; 64 bytes etc. and therefore
+            // the most efficient limit should be 16, 32, 64... ie 2^n
+            // best size could probably only be picked via benchmarking?
+            // trade-off between in-memory copy vs network traffic
+            const int minLength = 1024;
+
+            var frame = message.FirstFrame;
+
+            do
+            {
+                if (frame.Length &gt; minLength)
+                {
+                    // frame wont fit in buffer at all
+                    // flush buffer
+                    if (length &gt; 0)
+                    {
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
+                        if (!sent) break;
+                        length = 0;
+                    }
+
+                    // send this frame only
+                    HConsole.WriteLine(this, 2, $&quot;Send frame ({frame.Length} bytes)&quot;);
+                    var sentFrame = await SendFrameAsync(frame).CfAwait();
+                    if (!sentFrame) break;
+                }
+                else
+                {
+                    // going to use a buffer
+                    buffer ??= ArrayPool&lt;byte&gt;.Shared.Rent(minLength);
+
+                    // if it won&#39;t fit in the buffer, flush the buffer
+                    if (length + frame.Length &gt; buffer.Length)
+                    {
+                        var sent = await _connection.SendAsync(buffer, length).CfAwait();
+                        if (!sent) break;
+                        length = 0;
+                    }
+
+                    // copy frame to buffer
+                    HConsole.WriteLine(this, 2, $&quot;Send frame ({frame.Length} bytes)&quot;);
+                    frame.WriteLengthAndFlags(buffer, length);
+                    if (frame.Length &gt; sizeofHeader)
+                        frame.Bytes.CopyTo(buffer, length + sizeofHeader);
+                    length += frame.Length;
+                }
+
+                frame = frame.Next;
+            } while (frame != null);
+
+            var allSent = frame == null;
+            if (allSent &amp;&amp; length &gt; 0)
+                allSent &amp;= await _connection.SendAsync(buffer, length).CfAwait();
+
+            if (buffer != null)
+                ArrayPool&lt;byte&gt;.Shared.Return(buffer);
+
+            return allSent;
+        }
+
+        // this is only for large frames
+        private async ValueTask&lt;bool&gt; SendFrameAsync(Frame frame)
+        {
+            const int sizeofHeader = FrameFields.SizeOf.LengthAndFlags;
+
+            var header = ArrayPool&lt;byte&gt;.Shared.Rent(sizeofHeader);
+            frame.WriteLengthAndFlags(header);
+
+            var sentHeader = await _connection.SendAsync(header, sizeofHeader).CfAwait();
+            ArrayPool&lt;byte&gt;.Shared.Return(header);
+
+            if (!sentHeader) return false;
+            //if (frame.Length &lt;= sizeofHeader) return true;
+
+            return await _connection.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait();
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            await _connection.DisposeAsync().CfAwait(); // does not throw
+            _writer.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,9,35,108,1],[41,9,41,39,1],[52,15,52,68,1],[53,11,53,12,1],[62,9,62,133,1],[64,13,64,93,1],[65,13,65,74,1],[67,13,68,78,1],[72,13,72,39,1],[73,9,73,10,1],[80,20,80,37,1],[83,17,83,42,1],[84,21,84,115,1],[85,17,85,93,1],[86,13,86,14,1],[93,37,93,41,1],[93,42,93,46,1],[97,13,97,48,1],[100,13,100,34,1],[102,17,102,70,1],[103,21,103,34,1],[105,17,105,63,1],[106,17,106,56,1],[107,17,107,80,1],[110,17,112,46,1],[116,17,116,62,1],[117,17,117,53,1],[119,17,119,45,1],[122,21,122,72,1],[127,21,127,59,1],[132,13,132,44,1],[137,13,137,45,1],[140,17,140,48,1],[141,17,141,30,1],[145,13,145,45,1],[146,13,146,44,1],[148,13,148,31,1],[153,13,153,30,1],[153,31,153,43,1],[156,13,156,43,1],[157,13,157,36,1],[159,13,159,43,1],[161,13,161,25,1],[170,13,170,72,1],[176,21,176,55,1],[177,17,177,18,1],[178,17,178,36,1],[181,21,181,82,1],[183,17,183,18,1],[185,17,185,24,1],[191,13,191,50,1],[193,13,193,73,1],[196,17,196,62,1],[199,21,199,28,1],[203,17,203,122,1],[205,18,205,76,1],[208,17,208,73,1],[211,21,211,28,1],[215,17,215,86,1],[216,17,216,46,1],[223,21,223,54,1],[224,17,224,18,1],[225,17,225,36,1],[228,21,228,82,1],[230,17,230,18,1],[235,17,235,73,1],[238,21,238,28,1],[242,17,242,86,1],[244,9,244,10,1],[257,13,257,33,1],[257,34,257,83,1],[258,13,258,44,1],[258,45,258,116,1],[260,13,260,62,1],[264,13,264,33,1],[268,21,268,74,1],[269,17,269,18,1],[270,17,270,48,1],[273,21,273,34,1],[275,37,275,78,1],[277,21,277,70,1],[278,21,278,27,1],[287,17,287,37,1],[290,17,290,66,1],[292,17,292,75,1],[293,17,293,33,1],[293,34,293,47,1],[295,17,295,58,1],[296,13,296,14,1],[299,17,299,36,1],[302,13,302,25,1],[303,9,303,10,1],[307,13,307,34,1],[308,13,308,28,1],[320,13,320,44,1],[324,17,324,46,1],[328,21,328,36,1],[330,25,330,90,1],[331,25,331,35,1],[332,25,332,36,1],[337,21,337,75,1],[338,21,338,36,1],[338,37,338,43,1],[343,21,343,71,1],[346,21,346,63,1],[348,25,348,90,1],[349,25,349,35,1],[350,25,350,36,1],[355,21,355,63,1],[356,21,356,53,1],[357,25,357,75,1],[358,21,358,44,1],[361,17,361,36,1],[362,15,362,37,1],[364,13,364,41,1],[365,13,365,39,1],[366,17,366,82,1],[368,13,368,32,1],[369,17,369,55,1],[371,13,371,28,1],[372,9,372,10,1],[379,13,379,68,1],[380,13,380,47,1],[382,13,382,90,1],[383,13,383,51,1],[385,13,385,29,1],[385,30,385,43,1],[388,13,388,91,1],[389,9,389,10,1],[396,13,396,56,1],[397,13,397,31,1],[398,9,398,10,1]]);
+    </script>
+  </body>
+</html>

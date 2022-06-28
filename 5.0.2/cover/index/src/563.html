@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEntryEventArgsBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Models;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represents event data for map entry events.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TKey&quot;&gt;The type of the keys.&lt;/typeparam&gt;
+    public abstract class MapEntryEventArgsBase&lt;TKey&gt; : EventArgsBase
+    {
+        private readonly Lazy&lt;TKey&gt; _key;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;MapEntryEventArgsBase{TKey}&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;member&quot;&gt;The member.&lt;/param&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;state&quot;&gt;A state object.&lt;/param&gt;
+        protected MapEntryEventArgsBase(MemberInfo member, Lazy&lt;TKey&gt; key, object state)
+            : base(state)
+        {
+            Member = member;
+            _key = key;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the member that originated the event.
+        /// &lt;/summary&gt;
+        public MemberInfo Member { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the key.
+        /// &lt;/summary&gt;
+        public TKey Key =&gt; _key == null ? default : _key.Value;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,15,35,26,1],[37,13,37,29,1],[38,13,38,24,1],[39,9,39,10,1],[44,36,44,40,0],[49,28,49,63,1]]);
+    </script>
+  </body>
+</html>

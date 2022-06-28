@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\Invocation.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.IO;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Messaging;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
+
+namespace Hazelcast.Clustering
+{
+    /// &lt;summary&gt;
+    /// Represents an ongoing server invocation.
+    /// &lt;/summary&gt;
+    internal class Invocation
+    {
+        private readonly MessagingOptions _messagingOptions;
+
+        private TaskCompletionSource&lt;ClientMessage&gt; _completionSource;
+        private int _attemptsCount; // number of times this invocation has been attempted
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Invocation&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;requestMessage&quot;&gt;The request message.&lt;/param&gt;
+        /// &lt;param name=&quot;messagingOptions&quot;&gt;Messaging options.&lt;/param&gt;
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions)
+        {
+            RequestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
+            _messagingOptions = messagingOptions ?? throw new ArgumentNullException(nameof(messagingOptions));
+            CorrelationId = requestMessage.CorrelationId;
+            InitializeNewCompletionSource();
+            _attemptsCount = 1;
+            StartTime = Clock.Milliseconds;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Invocation&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;requestMessage&quot;&gt;The request message.&lt;/param&gt;
+        /// &lt;param name=&quot;messagingOptions&quot;&gt;Messaging options.&lt;/param&gt;
+        /// &lt;param name=&quot;targetClientConnection&quot;&gt;An optional client connection, that the invocation is bound to.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When an invocation is bound to a client, it will only be sent to that client,
+        /// and it cannot and will not be retried if the client dies.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, MemberConnection targetClientConnection)
+            : this(requestMessage, messagingOptions)
+        {
+            TargetClientConnection = targetClientConnection ?? throw new ArgumentNullException(nameof(targetClientConnection));
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Invocation&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;requestMessage&quot;&gt;The request message.&lt;/param&gt;
+        /// &lt;param name=&quot;messagingOptions&quot;&gt;Messaging options.&lt;/param&gt;
+        /// &lt;param name=&quot;partitionId&quot;&gt;The identifier of the target partition.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If the target partition cannot be mapped to an available member, another random member will be used.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, int partitionId)
+            : this(requestMessage, messagingOptions)
+        {
+            if (partitionId &lt; 0) throw new ArgumentException(&quot;Must be a positive integer.&quot;, nameof(partitionId));
+            TargetPartitionId = partitionId;
+        }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;Invocation&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;requestMessage&quot;&gt;The request message.&lt;/param&gt;
+        /// &lt;param name=&quot;messagingOptions&quot;&gt;Messaging options.&lt;/param&gt;
+        /// &lt;param name=&quot;targetMemberId&quot;&gt;The identifier of the target member.&lt;/param&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If the target member is not available, another random member will be used.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Invocation(ClientMessage requestMessage, MessagingOptions messagingOptions, Guid targetMemberId)
+            : this(requestMessage, messagingOptions)
+        {
+            if (targetMemberId == default) throw new ArgumentException(&quot;Must be a non-default Guid.&quot;, nameof(targetMemberId));
+            TargetMemberId = targetMemberId;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the request message.
+        /// &lt;/summary&gt;
+        public ClientMessage RequestMessage { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the target client connection, if any, otherwise &lt;c&gt;null&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        public MemberConnection TargetClientConnection { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the target partition, if any, otherwise &lt;c&gt;-1&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        public int TargetPartitionId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the target member, if any, otherwise &lt;c&gt;default(Guid)&lt;/c&gt;.
+        /// &lt;/summary&gt;
+        public Guid TargetMemberId { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the correlation identifier.
+        /// &lt;/summary&gt;
+        public long CorrelationId { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the completion task.
+        /// &lt;/summary&gt;
+        public Task&lt;ClientMessage&gt; Task =&gt; _completionSource.Task;
+
+        /// &lt;summary&gt;
+        /// Gets the start time.
+        /// &lt;/summary&gt;
+        public long StartTime { get; }
+
+        /// &lt;summary&gt;
+        /// Attempts to transition the task to the TaskStatus.Canceled state.
+        /// &lt;/summary&gt;
+        public void TrySetCanceled()
+        {
+            _completionSource.TrySetCanceled();
+        }
+
+        /// &lt;summary&gt;
+        /// Attempts to transition the task to the &lt;see cref=&quot;TaskStatus.RanToCompletion&quot;/&gt; state.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;result&quot;&gt;The response message.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the operation was successful; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This operation will return false if the task has already been completed,
+        /// faulted or canceled. This method also returns false if the task has been disposed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool TrySetResult(ClientMessage result)
+        {
+            return _completionSource.TrySetResult(result);
+        }
+
+        /// &lt;summary&gt;
+        /// Attempts to transition the task to the &lt;see cref=&quot;TaskStatus.Faulted&quot;/&gt; state.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;The exception.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the operation was successful; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This operation will return false if the task has already been completed,
+        /// faulted or canceled. This method also returns false if the task has been disposed.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool TrySetException(Exception exception)
+        {
+            return _completionSource.TrySetException(exception);
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether an invocation should be retried after an exception was thrown.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;exception&quot;&gt;The exception.&lt;/param&gt;
+        /// &lt;param name=&quot;retryUnsafeOperations&quot;&gt;Whether to retry on &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt;.&lt;/param&gt;
+        /// &lt;param name=&quot;retryOnClientReconnecting&quot;&gt;Whether to retry on &lt;see cref=&quot;ClientOfflineException&quot;/&gt;.&lt;/param&gt;
+        /// &lt;returns&gt;true if the invocation should be retried; otherwise false.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;If it is determined that the invocation should be retried, it does not necessarily
+        /// mean that it can be retried, and that will be determined by &lt;see cref=&quot;WaitRetryAsync&quot;/&gt;.&lt;/para&gt;
+        /// &lt;para&gt;If the underlying socket connection is disconnected while the invocation is running, an
+        /// &lt;see cref=&quot;TargetDisconnectedException&quot;/&gt; is thrown. If &lt;paramref name=&quot;retryUnsafeOperations&quot;/&gt;
+        /// is true, the invocation can be retried, on another connection. Otherwise, the invocation fails
+        /// immediately.&lt;/para&gt;
+        /// &lt;para&gt;If the client goes offline while the invocation is running, and &lt;see cref=&quot;ClientOfflineException&quot;/&gt;
+        /// exception is thrown. If the client has shutdown, there is no chance it can come back online, and the
+        /// invocation fails immediately. On the other hand, if the client is still active and trying to reconnect,
+        /// and &lt;paramref name=&quot;retryOnClientReconnecting&quot;/&gt;, the invocation can be retried. Otherwise, the invocation
+        /// fails immediately.&lt;/para&gt;
+        /// &lt;para&gt;Note that in all cases, the invocation is retried only until its timeout is reached, and then
+        /// it fails.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public bool IsRetryable(Exception exception, bool retryUnsafeOperations, bool retryOnClientReconnecting)
+        {
+            switch (exception)
+            {
+                // a remote exception sent by the server, which explicitly indicates that
+                // the invocation can be retried, so we always retry it
+                case RemoteException { Retryable: true }:
+                    return true; // always
+
+                // messaging would not even invoke this method if the client was not active anymore, but
+                // better be sure - and then, this exception can only be thrown if no connection was found,
+                // so we did *not* even talk to the cluster = safe to retry
+                case ClientOfflineException clientOfflineException when clientOfflineException.State.IsActiveState():
+                    return TargetClientConnection == null &amp;&amp; // not bound to a connection
+                           retryOnClientReconnecting; // is retryable
+
+                // these are .NET exceptions and really, anything could have happened, so retry only if ok
+                case IOException _:
+                case SocketException _:
+
+                // target disconnected protocol error is not automatically retryable, because we need to
+                // perform more checks on the client and message - the request need to be retryable (for
+                // instance read-only) or unsafe operations need to be explicitly allowed to retry
+                case RemoteException { Error: RemoteError.TargetDisconnected }:
+                case TargetUnreachableException _:
+                    return TargetClientConnection == null &amp;&amp; // not bound to a connection
+                           (RequestMessage.IsRetryable || retryUnsafeOperations); // is retryable
+
+                default:
+                    return false;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether to retry the invocation with a new correlation identifier.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;correlationIdProvider&quot;&gt;A correlation identifier provider.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        public ValueTask WaitRetryAsync(Func&lt;long&gt; correlationIdProvider, CancellationToken cancellationToken = default)
+        {
+            if (correlationIdProvider == null) throw new ArgumentNullException(nameof(correlationIdProvider));
+
+            // fast fail on cancel
+            cancellationToken.ThrowIfCancellationRequested();
+
+            // fast fail on timeout
+            var elapsedMilliseconds = (int) (Clock.Milliseconds - StartTime);
+            if (elapsedMilliseconds &gt; _messagingOptions.RetryTimeoutSeconds * 1000)
+                throw new TaskTimeoutException($&quot;Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).&quot;);
+
+            _attemptsCount += 1;
+
+            // we are going to return true, either immediately or after a delay, prepare
+            RequestMessage.CorrelationId = CorrelationId = correlationIdProvider();
+
+            // fast retry (no delay) the first attempts
+            if (_attemptsCount &lt;= _messagingOptions.MaxFastInvocationCount)
+            {
+                InitializeNewCompletionSource();
+                return default;
+            }
+
+            return WaitRetryAsync2(elapsedMilliseconds, cancellationToken);
+        }
+
+        private async ValueTask WaitRetryAsync2(int elapsedMilliseconds, CancellationToken cancellationToken)
+        {
+            // otherwise, slow retry (delay)
+
+            // implement some rudimentary increasing delay based on the number of attempts
+            // will be 1, 2, 4, 8, 16 etc milliseconds but never less that invocationRetryDelayMilliseconds
+            // TODO: this is the original v4 implementation, can we do better (use an IRetryStrategy)?
+            var delayMilliseconds = Math.Max(1 &lt;&lt; (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
+
+            // but no more than the remaining milliseconds before timeout (if any)
+            var remainingMilliseconds = _messagingOptions.RetryTimeoutSeconds * 1000 - elapsedMilliseconds;
+            if (remainingMilliseconds &lt;= 0)
+                throw new TaskTimeoutException($&quot;Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).&quot;);
+            delayMilliseconds = Math.Min(delayMilliseconds, remainingMilliseconds);
+
+            await System.Threading.Tasks.Task.Delay(delayMilliseconds, cancellationToken).CfAwait(); // throws if cancelled
+
+            InitializeNewCompletionSource();
+        }
+
+        private void InitializeNewCompletionSource()
+        {
+            // set options to RunContinuationsAsynchronously so that when the response message
+            // is received and we set the result of the completion source, the code waiting on
+            // the response runs asynchronously on a new task while the networking code proceeds
+            // with messages
+            _completionSource = new TaskCompletionSource&lt;ClientMessage&gt;(TaskCreationOptions.RunContinuationsAsynchronously);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[43,9,43,91,1],[45,13,45,104,1],[46,13,46,111,1],[47,13,47,58,1],[48,13,48,45,1],[49,13,49,32,1],[50,13,50,44,1],[51,9,51,10,1],[64,15,64,53,1],[66,13,66,128,1],[67,9,67,10,1],[79,15,79,53,1],[81,13,81,33,1],[81,34,81,114,0],[82,13,82,45,1],[83,9,83,10,1],[95,15,95,53,1],[97,13,97,43,1],[97,44,97,127,0],[98,13,98,45,1],[99,9,99,10,1],[104,47,104,51,1],[109,58,109,62,1],[114,40,114,44,1],[119,38,119,42,1],[124,37,124,41,1],[124,42,124,54,1],[129,44,129,66,1],[134,33,134,37,1],[141,13,141,48,1],[142,9,142,10,1],[155,13,155,59,1],[169,13,169,65,1],[196,13,196,31,1],[201,21,201,33,1],[206,68,206,117,1],[207,21,208,54,1],[219,21,220,82,0],[223,21,223,34,1],[234,13,234,47,1],[234,48,234,111,0],[237,13,237,62,1],[240,13,240,78,1],[241,13,241,84,1],[242,17,242,133,1],[244,13,244,33,1],[247,13,247,84,1],[250,13,250,76,1],[252,17,252,49,1],[253,17,253,32,1],[256,13,256,76,1],[266,13,266,157,1],[269,13,269,108,1],[270,13,270,44,1],[271,17,271,133,0],[272,13,272,84,1],[274,13,274,101,1],[276,13,276,45,1],[277,9,277,10,1],[285,13,285,125,1],[286,9,286,10,1]]);
+    </script>
+  </body>
+</html>

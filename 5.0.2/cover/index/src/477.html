@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\HDns.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Net;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Provides simple domain name resolution functionality.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;This class is just a wrapper around &lt;see cref=&quot;Dns&quot;/&gt; with entry
+    /// points that allow for altering its behavior for tests (exclusively).&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal static class HDns
+    {
+        private static IDns _implementation = new SystemNetDns();
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Overrides the default static implementation with a temporary alternate implementation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;dns&quot;&gt;The alternate &lt;see cref=&quot;IDns&quot;/&gt; implementation.&lt;/param&gt;
+        /// &lt;returns&gt;An object that must be disposed in order to restore the original static implementation.&lt;/returns&gt;
+        internal static IDisposable Override(IDns dns)
+        {
+            var od = new OverrideDisposable();
+            _implementation = dns;
+            return od;
+        }
+
+        private class OverrideDisposable : IDisposable
+        {
+            private readonly IDns _captured;
+
+            public OverrideDisposable()
+            {
+                _captured = _implementation;
+            }
+
+            public void Dispose()
+            {
+                _implementation = _captured;
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the host name of the local computer.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        public static string GetHostName() =&gt; _implementation.GetHostName();
+
+        /// &lt;summary&gt;
+        /// Gets the DNS host entry for a host.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostNameOrAddress&quot;&gt;The host name or IP address.&lt;/param&gt;
+        /// &lt;returns&gt;The DNS host entry for the specified host.&lt;/returns&gt;
+        public static IPHostEntry GetHostEntry(string hostNameOrAddress) =&gt; _implementation.GetHostEntry(hostNameOrAddress);
+
+        /// &lt;summary&gt;
+        /// Gets the DNS host entry for an IP address.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;address&quot;&gt;The IP address.&lt;/param&gt;
+        /// &lt;returns&gt;The DNS host entry for the specified IP address.&lt;/returns&gt;
+        public static IPHostEntry GetHostEntry(IPAddress address) =&gt; _implementation.GetHostEntry(address);
+
+        /// &lt;summary&gt;
+        /// Returns the IP addresses for a host.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;hostNameOrAddress&quot;&gt;The host name or IP address to resolve.&lt;/param&gt;
+        /// &lt;returns&gt;The IP addresses for the specified host.&lt;/returns&gt;
+        public static IPAddress[] GetHostAddresses(string hostNameOrAddress) =&gt; _implementation.GetHostAddresses(hostNameOrAddress);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,9,29,66,1],[39,13,39,47,1],[40,13,40,35,1],[41,13,41,23,1],[48,13,48,40,1],[50,17,50,45,1],[51,13,51,14,1],[55,17,55,45,1],[56,13,56,14,1],[63,47,63,76,1],[70,77,70,124,1],[77,70,77,107,1],[84,81,84,132,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\IndexConfigExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Text.RegularExpressions;
+using Hazelcast.Models;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the &lt;see cref=&quot;IndexOptions&quot;/&gt; class.
+    /// &lt;/summary&gt;
+    internal static class IndexConfigExtensions
+    {
+        // TODO: document, explain, refactor
+
+        /** Maximum number of attributes allowed in the index. */
+        private const int MaxAttributes = 255;
+
+        /** Regex to stripe away &quot;this.&quot; prefix. */
+        private static readonly Regex ThisPattern = new Regex(&quot;^this\\.&quot;);
+
+        public static IndexOptions ValidateAndNormalize(this IndexOptions options, string mapName)
+        {
+            if (options == null) throw new ArgumentNullException(nameof(options));
+
+            // Validate attributes.
+            var originalAttributeNames = options.Attributes;
+            if (originalAttributeNames.Count == 0)
+            {
+                throw new ArgumentException($&quot;Index must have at least one attribute: {options}&quot;);
+            }
+            if (originalAttributeNames.Count &gt; MaxAttributes)
+            {
+                throw new ArgumentException($&quot;Index cannot have more than {MaxAttributes}  attributes: {options}&quot;);
+            }
+            var normalizedAttributeNames = new List&lt;string&gt;(originalAttributeNames.Count);
+            foreach (var originalAttributeName in originalAttributeNames)
+            {
+                var attributeName = originalAttributeName.Trim();
+                ValidateAttribute(options, attributeName);
+                var normalizedAttributeName = CanonicalizeAttribute(attributeName);
+                var existingIdx = normalizedAttributeNames.IndexOf(normalizedAttributeName);
+                if (existingIdx != -1)
+                {
+                    var duplicateOriginalAttributeName = originalAttributeNames[existingIdx];
+
+                    if (duplicateOriginalAttributeName == attributeName)
+                    {
+                        throw new ArgumentException($&quot;Duplicate attribute name [attributeName={attributeName}, indexConfig={options} ]&quot;);
+                    }
+                    throw new ArgumentException(
+                        $&quot;Duplicate attribute names [attributeName1={duplicateOriginalAttributeName}, attributeName2={attributeName}, indexConfig={options}]&quot;);
+                }
+                normalizedAttributeNames.Add(normalizedAttributeName);
+            }
+            // Construct final index.
+            var name = options.Name;
+            if (name != null &amp;&amp; name.Trim().Length == 0)
+            {
+                name = null;
+            }
+            return BuildNormalizedConfig(mapName, options.Type, name, normalizedAttributeNames);
+        }
+
+        private static IndexOptions BuildNormalizedConfig(string mapName, IndexType indexType, string indexName,
+            List&lt;string&gt; normalizedAttributeNames)
+        {
+            var newConfig = new IndexOptions { Type = indexType };
+
+            var nameBuilder = indexName == null ? new StringBuilder(mapName + &quot;_&quot; + GetIndexTypeName(indexType)) : null;
+
+            foreach (var normalizedAttributeName in normalizedAttributeNames)
+            {
+                newConfig.AddAttribute(normalizedAttributeName);
+                nameBuilder?.Append(&#39;_&#39;).Append(normalizedAttributeName);
+            }
+            if (nameBuilder != null)
+                indexName = nameBuilder.ToString();
+            {
+            }
+            newConfig.Name = indexName;
+            return newConfig;
+        }
+
+        private static void ValidateAttribute(IndexOptions options, string attributeName)
+        {
+            if (string.IsNullOrEmpty(attributeName) || attributeName.Trim().EndsWith(&quot;.&quot;, StringComparison.Ordinal))
+                throw new ArgumentException($&quot;Invalid attribute &#39;{attributeName}&#39; in index configuration &#39;{options.Name}&#39;. &quot; +
+                                            &quot;Attributes must not be null nor empty, nor end with a dot.&quot;);
+        }
+
+        private static string CanonicalizeAttribute(string attribute)
+        {
+            return ThisPattern.Replace(attribute, &quot;&quot;);
+        }
+
+        private static string GetIndexTypeName(IndexType indexType)
+        {
+            return indexType switch
+            {
+                IndexType.Sorted =&gt; &quot;sorted&quot;,
+                IndexType.Hashed =&gt; &quot;hash&quot;,
+                _ =&gt; throw new ArgumentException($&quot;Unsupported index type: {indexType}&quot;)
+            };
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,75,1],[38,13,38,33,1],[38,34,38,83,0],[41,13,41,61,1],[42,13,42,51,1],[44,17,44,99,0],[46,13,46,62,1],[48,17,48,116,0],[50,13,50,91,1],[51,22,51,47,1],[51,48,51,50,1],[51,51,51,73,1],[53,17,53,66,1],[54,17,54,59,1],[55,17,55,84,1],[56,17,56,93,1],[57,17,57,39,1],[59,21,59,94,0],[61,21,61,73,0],[63,25,63,138,0],[65,21,66,160,0],[68,17,68,71,1],[71,13,71,37,1],[72,13,72,57,1],[74,17,74,29,0],[76,13,76,97,1],[82,13,82,67,1],[84,13,84,121,1],[86,22,86,49,1],[86,50,86,52,1],[86,53,86,77,1],[88,17,88,65,1],[89,17,89,74,1],[91,13,91,37,1],[92,17,92,52,1],[95,13,95,40,1],[96,13,96,30,1],[101,13,101,117,1],[102,17,103,107,0],[104,9,104,10,1],[108,13,108,55,1],[113,13,115,37,1],[115,37,115,45,1],[115,45,116,37,1],[116,37,116,43,0],[116,43,117,22,1],[117,22,117,89,0],[117,89,118,15,1]]);
+    </script>
+  </body>
+</html>

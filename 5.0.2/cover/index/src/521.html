@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\MetricsPublisher.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Messaging;
+using Hazelcast.NearCaching;
+using Hazelcast.Protocol.Codecs;
+using Ionic.Zlib;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Metrics
+{
+    // the metric publishing service
+    internal class MetricsPublisher : IAsyncDisposable
+    {
+        private readonly Cluster _cluster;
+        private readonly MetricsOptions _options;
+        private readonly ILogger _logger;
+        private readonly List&lt;IMetricSource&gt; _metricSources = new List&lt;IMetricSource&gt;();
+        private readonly List&lt;IMetricAsyncSource&gt; _metricAsyncSources = new List&lt;IMetricAsyncSource&gt;();
+
+        private readonly CancellationTokenSource _cancel;
+        private readonly Task _publishing;
+
+        public MetricsPublisher(Cluster cluster, MetricsOptions options, ILoggerFactory loggerFactory)
+        {
+            _cluster = cluster;
+            _options = options;
+            _logger = loggerFactory.CreateLogger&lt;MetricsPublisher&gt;();
+
+            // start the task
+            _cancel = new CancellationTokenSource();
+            _publishing = PublishAsync(_cancel.Token);
+
+            _logger.LogDebug($&quot;Publishing metrics every {_options.PeriodSeconds}s&quot;);
+        }
+
+        public void AddSource(IMetricSource source)
+            =&gt; _metricSources.Add(source);
+
+        public void AddSource(IMetricAsyncSource source)
+            =&gt; _metricAsyncSources.Add(source);
+
+        private async Task PublishAsync(CancellationToken cancellationToken)
+        {
+            var delay = TimeSpan.FromSeconds(_options.PeriodSeconds);
+
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(delay, cancellationToken).CfAwait();
+
+                try
+                {
+                    await SendMetricsAsync(cancellationToken).CfAwait();
+                }
+                catch (Exception e)
+                {
+                    // should never happen as SendMetricsAsync should not throw - but better be safe
+                    _logger.LogError(e, &quot;Caught exception in MetricsPublished.&quot;);
+                }
+            }
+        }
+
+
+        private async Task SendMetricsAsync(CancellationToken cancellationToken)
+        {
+            // the Java client gets these from a random connection
+            // we try to be more consistent and always pick the oldest active connection
+            var connection = _cluster.Members.GetOldestConnection();
+            if (connection == null)
+            {
+                _logger.LogDebug(&quot;Cannot send metrics, client is not connected.&quot;);
+                return;
+            }
+
+            var timestamp = Clock.Milliseconds;
+            var metrics = new List&lt;Metric&gt; { ClientMetricSource.MetricDescriptors.LastStatisticsCollectionTime.WithValue(timestamp) };
+
+            foreach (var metricSource in _metricSources)
+                metrics.AddRange(metricSource.PublishMetrics());
+
+            foreach (var metricSource in _metricAsyncSources)
+                await foreach (var metric in metricSource.PublishMetrics())
+                    metrics.Add(metric);
+
+            // TODO add NearCache manager as a metric source! - except, then, the source can be async!
+            //await foreach (var nearCache in _nearCaches)
+            //    metrics.AddRange(nearCache.Statistics.PublishMetrics());
+
+            if (cancellationToken.IsCancellationRequested) return; // last chance to cancel
+
+            try
+            {
+                // create the binary representation of metrics
+                byte[] bytes;
+                using (var compressor = new MetricsCompressor())
+                {
+                    foreach (var metric in metrics) compressor.Append(metric);
+                    bytes = compressor.GetBytesAndReset(); // TODO: consider re-using the compressor
+                }
+
+                if (cancellationToken.IsCancellationRequested) return;
+
+                // create the text representation of metrics
+                var text = metrics.Serialize();
+
+                if (cancellationToken.IsCancellationRequested) return;
+
+                // non-cancelable
+                _logger.LogDebug(&quot;Send stats:\n        &quot; + text.Replace(&quot;,&quot;, &quot;,\n        &quot;, StringComparison.OrdinalIgnoreCase));
+                await SendMetricsAsync(timestamp, text, bytes).CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, &quot;Failed to send metrics.&quot;);
+            }
+        }
+
+        private async Task SendMetricsAsync(long timestamp, string attributes, byte[] metrics)
+        {
+            if (!_cluster.IsConnected) // last chance to avoid an exception
+            {
+                _logger.LogDebug(&quot;Cannot send metrics, client is not connected.&quot;);
+                return;
+            }
+
+            _logger.LogDebug($&quot;Send metrics ({metrics.Length} items).&quot;);
+
+            var requestMessage = ClientStatisticsCodec.EncodeRequest(timestamp, attributes, metrics);
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage).CfAwait();
+            var _ = ClientStatisticsCodec.DecodeResponse(responseMessage);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            _cancel.Cancel();
+            await _publishing.CfAwaitCanceled();
+            _cancel.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[36,9,36,89,0],[37,9,37,104,0],[42,9,42,103,0],[44,13,44,32,0],[45,13,45,32,0],[46,13,46,70,0],[49,13,49,53,0],[50,13,50,55,0],[52,13,52,85,0],[53,9,53,10,0],[56,16,56,42,0],[59,16,59,47,0],[63,13,63,70,0],[65,13,65,63,0],[67,17,67,70,0],[71,21,71,73,0],[72,17,72,18,0],[73,17,73,36,0],[76,21,76,82,0],[77,17,77,18,0],[79,9,79,10,0],[86,13,86,69,0],[87,13,87,36,0],[89,17,89,83,0],[90,17,90,24,0],[93,13,93,48,0],[94,13,94,135,0],[96,22,96,38,0],[96,39,96,41,0],[96,42,96,56,0],[97,17,97,65,0],[99,22,99,38,0],[99,39,99,41,0],[99,42,99,61,0],[100,32,100,42,0],[100,43,100,45,0],[100,46,100,75,0],[101,21,101,41,0],[107,13,107,59,0],[107,60,107,67,0],[113,24,113,64,0],[115,30,115,40,0],[115,41,115,43,0],[115,44,115,51,0],[115,53,115,79,0],[116,21,116,59,0],[117,17,117,18,0],[119,17,119,63,0],[119,64,119,71,0],[122,17,122,48,0],[124,17,124,63,0],[124,64,124,71,0],[127,17,127,130,0],[128,17,128,74,0],[129,13,129,14,0],[130,13,130,32,0],[132,17,132,64,0],[133,13,133,14,0],[134,9,134,10,0],[138,13,138,39,0],[140,17,140,83,0],[141,17,141,24,0],[144,13,144,73,0],[146,13,146,102,0],[147,13,147,96,0],[148,13,148,75,0],[149,9,149,10,0],[154,13,154,30,0],[155,13,155,49,0],[156,13,156,31,0],[157,9,157,10,0]]);
+    </script>
+  </body>
+</html>

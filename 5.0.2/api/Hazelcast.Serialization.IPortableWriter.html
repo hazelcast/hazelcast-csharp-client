@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IPortableWriter Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IPortableWriter Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.0.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.Serialization.IPortableWriter">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_Serialization_IPortableWriter" data-uid="Hazelcast.Serialization.IPortableWriter" class="text-break">IPortableWriter Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.Serialization.html">Hazelcast.Serialization</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Provides a mean of writing portable fields to a binary in form of primitives, arrays of  primitives , nested portable fields and array of portable fields.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IPortableWriter</code></pre>
+  </div>
+  <h5 id="Hazelcast_Serialization_IPortableWriter_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Provides a mean of writing portable fields to a binary in form of primitives, arrays of  primitives , nested portable fields and array of portable fields.</p>
+</div>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_GetRawDataOutput" data-uid="Hazelcast.Serialization.IPortableWriter.GetRawDataOutput" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.GetRawDataOutput.html#Hazelcast_Serialization_IPortableWriter_GetRawDataOutput">GetRawDataOutput()</a>
+        </td>
+        <td class="markdown level1 summary"><p>After writing portable fields, one can write remaining fields in old fashioned way consecutively at the end
+of stream.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteBoolean_System_String_System_Boolean_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteBoolean(System.String,System.Boolean)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteBoolean.html#Hazelcast_Serialization_IPortableWriter_WriteBoolean_System_String_System_Boolean_">WriteBoolean(String, Boolean)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive boolean.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteBooleanArray_System_String_System_Boolean___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteBooleanArray(System.String,System.Boolean[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteBooleanArray.html#Hazelcast_Serialization_IPortableWriter_WriteBooleanArray_System_String_System_Boolean___">WriteBooleanArray(String, Boolean[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive boolean-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteByte_System_String_System_Byte_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteByte(System.String,System.Byte)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteByte.html#Hazelcast_Serialization_IPortableWriter_WriteByte_System_String_System_Byte_">WriteByte(String, Byte)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive byte.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteByteArray_System_String_System_Byte___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteByteArray(System.String,System.Byte[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteByteArray.html#Hazelcast_Serialization_IPortableWriter_WriteByteArray_System_String_System_Byte___">WriteByteArray(String, Byte[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive byte-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteChar_System_String_System_Char_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteChar(System.String,System.Char)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteChar.html#Hazelcast_Serialization_IPortableWriter_WriteChar_System_String_System_Char_">WriteChar(String, Char)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive char.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteCharArray_System_String_System_Char___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteCharArray(System.String,System.Char[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteCharArray.html#Hazelcast_Serialization_IPortableWriter_WriteCharArray_System_String_System_Char___">WriteCharArray(String, Char[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive char-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteDouble_System_String_System_Double_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteDouble(System.String,System.Double)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteDouble.html#Hazelcast_Serialization_IPortableWriter_WriteDouble_System_String_System_Double_">WriteDouble(String, Double)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive double.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteDoubleArray_System_String_System_Double___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteDoubleArray(System.String,System.Double[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteDoubleArray.html#Hazelcast_Serialization_IPortableWriter_WriteDoubleArray_System_String_System_Double___">WriteDoubleArray(String, Double[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive double array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteFloat_System_String_System_Single_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteFloat(System.String,System.Single)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteFloat.html#Hazelcast_Serialization_IPortableWriter_WriteFloat_System_String_System_Single_">WriteFloat(String, Single)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive float.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteFloatArray_System_String_System_Single___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteFloatArray(System.String,System.Single[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteFloatArray.html#Hazelcast_Serialization_IPortableWriter_WriteFloatArray_System_String_System_Single___">WriteFloatArray(String, Single[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive float array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteInt_System_String_System_Int32_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteInt(System.String,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteInt.html#Hazelcast_Serialization_IPortableWriter_WriteInt_System_String_System_Int32_">WriteInt(String, Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive int.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteIntArray_System_String_System_Int32___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteIntArray(System.String,System.Int32[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteIntArray.html#Hazelcast_Serialization_IPortableWriter_WriteIntArray_System_String_System_Int32___">WriteIntArray(String, Int32[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive int-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteLong_System_String_System_Int64_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteLong(System.String,System.Int64)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteLong.html#Hazelcast_Serialization_IPortableWriter_WriteLong_System_String_System_Int64_">WriteLong(String, Int64)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive long.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteLongArray_System_String_System_Int64___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteLongArray(System.String,System.Int64[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteLongArray.html#Hazelcast_Serialization_IPortableWriter_WriteLongArray_System_String_System_Int64___">WriteLongArray(String, Int64[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive long-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteNullPortable_System_String_System_Int32_System_Int32_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteNullPortable(System.String,System.Int32,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteNullPortable.html#Hazelcast_Serialization_IPortableWriter_WriteNullPortable_System_String_System_Int32_System_Int32_">WriteNullPortable(String, Int32, Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>To write a null portable value, user needs to provide class and factoryIds of related class.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WritePortable_System_String_Hazelcast_Serialization_IPortable_" data-uid="Hazelcast.Serialization.IPortableWriter.WritePortable(System.String,Hazelcast.Serialization.IPortable)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WritePortable.html#Hazelcast_Serialization_IPortableWriter_WritePortable_System_String_Hazelcast_Serialization_IPortable_">WritePortable(String, IPortable)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a Portable.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WritePortableArray__1_System_String___0___" data-uid="Hazelcast.Serialization.IPortableWriter.WritePortableArray``1(System.String,``0[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WritePortableArray.html#Hazelcast_Serialization_IPortableWriter_WritePortableArray__1_System_String___0___">WritePortableArray&lt;TPortable&gt;(String, TPortable[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a an array of Portables.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteShort_System_String_System_Int16_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteShort(System.String,System.Int16)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteShort.html#Hazelcast_Serialization_IPortableWriter_WriteShort_System_String_System_Int16_">WriteShort(String, Int16)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive short.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteShortArray_System_String_System_Int16___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteShortArray(System.String,System.Int16[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteShortArray.html#Hazelcast_Serialization_IPortableWriter_WriteShortArray_System_String_System_Int16___">WriteShortArray(String, Int16[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive short-array.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteString_System_String_System_String_" data-uid="Hazelcast.Serialization.IPortableWriter.WriteString(System.String,System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteString.html#Hazelcast_Serialization_IPortableWriter_WriteString_System_String_System_String_">WriteString(String, String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes an UTF string.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_Serialization_IPortableWriter_WriteStringArray_System_String_System_String___" data-uid="Hazelcast.Serialization.IPortableWriter.WriteStringArray(System.String,System.String[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.Serialization.IPortableWriter.WriteStringArray.html#Hazelcast_Serialization_IPortableWriter_WriteStringArray_System_String_System_String___">WriteStringArray(String, String[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Writes a primitive string-array.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

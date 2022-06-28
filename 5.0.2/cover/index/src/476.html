@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\ConnectAddressResolver.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Resolves connect addresses for members by determining whether to use internal or public addresses.
+    /// &lt;/summary&gt;
+    internal class ConnectAddressResolver
+    {
+        private readonly NetworkingOptions _options;
+        private readonly ILogger _logger;
+
+        public ConnectAddressResolver(NetworkingOptions options, ILoggerFactory loggerFactory)
+        {
+            _options = options;
+            _logger = loggerFactory.CreateLogger&lt;ConnectAddressResolver&gt;();
+        }
+
+        /// &lt;summary&gt;
+        /// Determines whether to use public addresses.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;members&quot;&gt;A collection of members.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if public addresses must be used; otherwise &lt;c&gt;false&lt;/c&gt;, indicating that internal addresses can be used.&lt;/returns&gt;
+        public async Task&lt;bool&gt; DetermineUsePublicAddresses(IReadOnlyCollection&lt;MemberInfo&gt; members)
+        {
+            // if the user has specified its intention, respect it, otherwise try to decide
+            // automatically whether to use private or public addresses by trying to reach
+            // a few members
+
+            if (_options.UsePublicAddresses is {} usePublicAddresses)
+            {
+                _logger.LogDebug(usePublicAddresses
+                    ? &quot;NetworkingOptions.UsePublicAddresses is true, use public addresses.&quot;
+                    : &quot;NetworkingOptions.UsePublicAddresses is false, use internal addresses.&quot;);
+                return usePublicAddresses;
+            }
+
+            _logger.LogDebug(&quot;NetworkingOptions.UsePublicAddresses is not set, decide by ourselves.&quot;);
+
+            // if ssl is enabled, then the client uses internal addresses
+            if (_options.Ssl.Enabled)
+            {
+                _logger.LogDebug(&quot;Ssl is enabled, use internal addresses.&quot;);
+                return false;
+            }
+
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                var text = new StringBuilder();
+                text.Append(&quot;Members [&quot;);
+                text.Append(members.Count);
+                text.Append(&quot;] {&quot;);
+                text.AppendLine();
+                foreach (var member in members)
+                {
+                    text.Append(&quot;    &quot;);
+                    text.Append(member.ToShortString(false));
+                    text.AppendLine();
+                    foreach (var entry in member.AddressMap)
+                    {
+                        text.Append(&quot;        &quot;);
+                        text.Append(entry.Key);
+                        text.Append(&quot;: &quot;);
+                        text.Append(entry.Value);
+                        text.AppendLine();
+                    }
+                }
+                text.Append(&#39;}&#39;);
+                _logger.LogDebug(text.ToString());
+            }
+
+            // if at least one member has its internal address that matches options, assume we can use internal addresses
+            if (DetermineAnyMemberInternalAddressMatchesOptions(members))
+            {
+                _logger.LogDebug(&quot;At least one member&#39;s internal address matches options, assume that the client can use internal addresses.&quot;);
+                return false;
+            }
+
+            // if one member does not have a public address, then the client has to use internal addresses
+            if (members.Any(x =&gt; x.PublicAddress is null))
+            {
+                _logger.LogDebug(&quot;At least one member does not have a public address, use internal addresses.&quot;);
+                return false;
+            }
+
+            // else try to reach addresses to figure out which ones to use
+            return await DeterminePublicAddressesAreRequired(members).CfAwait();
+        }
+
+        // determines whether at least one member has its internal address specified in options,
+        // which would mean that the client can reach the configured addresses and we can use
+        // internal addresses
+        private bool DetermineAnyMemberInternalAddressMatchesOptions(IReadOnlyCollection&lt;MemberInfo&gt; members)
+        {
+            // both NodeJS and Java code plainly ignore ports and only focus on the host name
+
+            var optionHosts = _options.Addresses
+                .Select(x =&gt; NetworkAddress.TryParse(x, out var a) ? a : null)
+                .Where(x =&gt; x != null)
+                .Select(x =&gt; x.HostName);
+
+            var memberHosts = members.Select(x =&gt; x.Address.HostName);
+
+            return memberHosts.Intersect(optionHosts).Any();
+        }
+
+        // determines whether using public addresses is required
+        // by testing a subset of all members
+        private Task&lt;bool&gt; DeterminePublicAddressesAreRequired(IReadOnlyCollection&lt;MemberInfo&gt; members)
+            =&gt; DeterminePublicAddressesAreRequired(members.Shuffle(), _options.AddressResolver_SampleSize);
+
+        // determines whether using public addresses is required
+        private async Task&lt;bool&gt; DeterminePublicAddressesAreRequired(IReadOnlyCollection&lt;MemberInfo&gt; members, int sampleCount)
+        {
+            var count = 0;
+            var requirePublic = false;
+
+            foreach (var member in members)
+            {
+                // we failed to find a member that can be reached at its internal address, but enough members can
+                // be reached at their public addresses, so assume public addresses are required for all
+                if (count++ == sampleCount &amp;&amp; requirePublic)
+                {
+                    _logger.LogDebug(&quot;At least {Count} members only respond on their public address, the client has to use public addresses.&quot;, sampleCount);
+                    return true;
+                }
+
+                var canReachInternal = await member.Address.TryReachAsync(_options.AddressResolver_InternalAddressTryReachTimeout).CfAwait();
+
+                // if one member can be reached at its internal address then assume internal addresses are ok for all
+                if (canReachInternal)
+                {
+                    _logger.LogDebug(&quot;Member {Member} responds on its internal address, assume that the client can use internal addresses.&quot;, member.ToShortString(false));
+                    return false;
+                }
+
+                var canReachPublic = await member.PublicAddress.TryReachAsync(_options.AddressResolver_PublicAddressTryReachTimeout).CfAwait();
+
+                // if the member cannot be reached at its internal address but can be reached at its public address,
+                // this would indicate that the client has to use public addresses, but we are going to try a few
+                // more members just to be sure - maybe the failure to reach the internal address was a glitch and
+                // another member will make it
+                if (canReachPublic)
+                {
+                    _logger.LogDebug(&quot;Member {Member} does not respond on its internal address, responds on its public address.&quot;, member.ToShortString(false));
+                    requirePublic = true;
+                }
+
+                // otherwise, the client cannot be reached at all - both NodeJS and Java immediately return false,
+                // but really - this could very well be a glitch and we should probably try a few more members
+            }
+
+            // we failed to find a member that can be reached at its internal address, but members can be reached at
+            // their public addresses, so assume public addresses are required for all
+            if (requirePublic)
+            {
+                _logger.LogDebug(&quot;Members can only be reached at their public address, the client has to use public addresses.&quot;);
+                return true;
+            }
+
+            // otherwise, we tested all members and could not reach any or them, neither on internal nor on public address,
+            // and this is a sad situation indeed - we&#39;re going to go with internal addresses but... something is wrong
+            _logger.LogDebug(&quot;Could not connect to any member. Assume the client can use internal addresses.&quot;);
+            return false;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,9,33,95,1],[35,13,35,32,1],[36,13,36,76,1],[37,9,37,10,1],[50,13,50,70,1],[52,17,54,97,1],[55,17,55,43,1],[58,13,58,103,1],[61,13,61,38,1],[63,17,63,77,1],[64,17,64,30,1],[67,13,67,51,1],[69,17,69,48,1],[70,17,70,42,1],[71,17,71,44,1],[72,17,72,36,1],[73,17,73,35,1],[74,26,74,36,1],[74,37,74,39,1],[74,40,74,47,1],[76,21,76,41,1],[77,21,77,62,1],[78,21,78,39,1],[79,30,79,39,1],[79,40,79,42,1],[79,43,79,60,1],[81,25,81,49,1],[82,25,82,48,1],[83,25,83,43,1],[84,25,84,50,1],[85,25,85,43,1],[88,17,88,34,1],[89,17,89,51,1],[93,13,93,74,1],[95,17,95,144,1],[96,17,96,30,1],[100,13,100,59,1],[100,34,100,57,1],[102,17,102,113,1],[103,17,103,30,1],[107,13,107,81,0],[108,9,108,10,1],[117,13,118,30,1],[118,30,118,78,1],[118,78,119,29,1],[119,29,119,38,1],[119,38,120,30,1],[120,30,120,40,1],[120,40,120,42,1],[122,13,122,51,1],[122,51,122,69,1],[122,69,122,71,1],[124,13,124,61,1],[130,16,130,107,0],[135,13,135,27,0],[136,13,136,39,0],[138,22,138,32,0],[138,33,138,35,0],[138,36,138,43,0],[142,17,142,61,0],[144,21,144,157,0],[145,21,145,33,0],[148,17,148,142,0],[151,17,151,38,0],[153,21,153,171,0],[154,21,154,34,0],[157,17,157,144,0],[163,17,163,36,0],[165,21,165,160,0],[166,21,166,42,0],[171,13,171,14,0],[175,13,175,31,0],[177,17,177,130,0],[178,17,178,29,0],[183,13,183,112,0],[184,13,184,26,0],[185,9,185,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SocketConnectionBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Buffers;
+using System.IO;
+using System.IO.Pipelines;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents a socket connection.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The socket connection handle message bytes, and manages the network socket.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal abstract partial class SocketConnectionBase : IAsyncDisposable
+    {
+        private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
+
+        private Func&lt;SocketConnectionBase, IBufferReference&lt;ReadOnlySequence&lt;byte&gt;&gt;, bool&gt; _onReceiveMessageBytes;
+        private Func&lt;SocketConnectionBase, ReadOnlySequence&lt;byte&gt;, ValueTask&gt; _onReceivePrefixBytes;
+        private Func&lt;SocketConnectionBase, ValueTask&gt; _onShutdown;
+        private Task _pipeWriting, _pipeReading, _pipeWritingThenShutdown, _pipeReadingThenShutdown;
+        private Socket _socket;
+        private Stream _stream;
+        private Pipe _pipe;
+        private int _isActive;
+        private int _isShutdown;
+        private int _prefixLength;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;SocketConnectionBase&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The unique identifier of the connection.&lt;/param&gt;
+        /// &lt;param name=&quot;prefixLength&quot;&gt;An optional prefix length.&lt;/param&gt;
+        protected SocketConnectionBase(Guid id, int prefixLength = 0)
+        {
+            Id = id;
+
+            _prefixLength = prefixLength;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier of the socket.
+        /// &lt;/summary&gt;
+        public Guid Id { get; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that handles message bytes.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The function must process the content of the bytes sequence before it completes.
+        /// The memory associated with the sequence is not guaranteed to remain available after the
+        /// function has returned.&lt;/para&gt;
+        /// &lt;para&gt;The function must be set before the connection is established.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Func&lt;SocketConnectionBase, IBufferReference&lt;ReadOnlySequence&lt;byte&gt;&gt;, bool&gt; OnReceiveMessageBytes
+        {
+            get =&gt; _onReceiveMessageBytes;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException(&quot;Cannot set the property once the connection is active.&quot;);
+
+                _onReceiveMessageBytes = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that handles prefix bytes.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The function must process the content of the bytes sequence before it completes.
+        /// The memory associated with the sequence is not guaranteed to remain available after the
+        /// function has returned.&lt;/para&gt;
+        /// &lt;para&gt;The function must be set before the connection is established.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Func&lt;SocketConnectionBase, ReadOnlySequence&lt;byte&gt;, ValueTask&gt; OnReceivePrefixBytes
+        {
+            get =&gt; _onReceivePrefixBytes;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException(&quot;Cannot set the property once the connection is active.&quot;);
+
+                _onReceivePrefixBytes = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Specifies that the connection should expect prefix bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;prefixLength&quot;&gt;The prefix length.&lt;/param&gt;
+        /// &lt;param name=&quot;onReceivePrefixBytes&quot;&gt;The function that handles prefix bytes.&lt;/param&gt;
+        public void ExpectPrefixBytes(int prefixLength, Func&lt;SocketConnectionBase, ReadOnlySequence&lt;byte&gt;, ValueTask&gt; onReceivePrefixBytes)
+        {
+            _prefixLength = prefixLength;
+            _onReceivePrefixBytes = onReceivePrefixBytes;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the function that handle shutdowns.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The function must be set before the connection is established.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public Func&lt;SocketConnectionBase, ValueTask&gt; OnShutdown
+        {
+            get =&gt; _onShutdown;
+            set
+            {
+                if (_isActive == 1)
+                    throw new InvalidOperationException(&quot;Cannot set the property once the connection is active.&quot;);
+
+                _onShutdown = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Gets a value indicating whether the connection is active.
+        /// &lt;/summary&gt;
+        public bool IsActive =&gt; _isActive == 1;
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when the connection was created.
+        /// &lt;/summary&gt;
+        public DateTime CreateTime { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when bytes were last written by the connection.
+        /// &lt;/summary&gt;
+        public DateTime LastWriteTime { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the date and time when bytes were last read by the connection.
+        /// &lt;/summary&gt;
+        public DateTime LastReadTime { get; private set; }
+
+        /// &lt;summary&gt;
+        /// Gets the remote endpoint of the connection.
+        /// &lt;/summary&gt;
+        public IPEndPoint RemoteEndPoint =&gt; _socket?.RemoteEndPoint as IPEndPoint;
+
+        /// &lt;summary&gt;
+        /// Gets the local endpoint of the connection.
+        /// &lt;/summary&gt;
+        public IPEndPoint LocalEndPoint =&gt; _socket?.LocalEndPoint as IPEndPoint;
+
+        /// &lt;summary&gt;
+        /// Gets the pipe - for unit tests exclusively.
+        /// &lt;/summary&gt;
+        // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
+        protected Pipe Pipe =&gt; _pipe;
+
+        /// &lt;summary&gt;
+        /// (protected for tests only) Gets the stream read cancellation token source.
+        /// &lt;/summary&gt;
+        // ReSharper disable once InconsistentNaming
+        protected CancellationTokenSource StreamReadCancellationTokenSource =&gt; _streamReadCancellationTokenSource;
+
+        /// &lt;summary&gt;
+        /// Ensures that the socket can open the pipe.
+        /// &lt;/summary&gt;
+        protected void EnsureCanOpenPipe()
+        {
+            // _onShutdown is not mandatory, but validate _onReceiveMessageBytes
+            if (_onReceiveMessageBytes == null)
+                throw new InvalidOperationException(&quot;Missing message bytes handler.&quot;);
+            if (_prefixLength &gt; 0 &amp;&amp; _onReceivePrefixBytes == null)
+                throw new InvalidOperationException(&quot;Missing prefix bytes handler.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Opens the pipe.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The &lt;see cref=&quot;OnReceiveMessageBytes&quot;/&gt; function must be set before this function is invoked.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        protected void OpenPipe(Socket socket, Stream stream)
+        {
+            _socket = socket ?? throw new ArgumentNullException(nameof(socket));
+            _stream = stream ?? throw new ArgumentNullException(nameof(stream));
+
+            EnsureCanOpenPipe();
+
+            Interlocked.Exchange(ref _isActive, 1);
+
+            CreateTime = DateTime.Now;
+
+            // wire the pipe
+            _pipe = new Pipe();
+            _pipeWriting = WritePipeAsync(_stream, _pipe.Writer);
+            _pipeWritingThenShutdown = _pipeWriting.ContinueWith(ShutdownInternal, TaskScheduler.Current);
+            _pipeReading = ReadPipeAsync(_pipe.Reader);
+            _pipeReadingThenShutdown = _pipeReading.ContinueWith(ShutdownInternal, TaskScheduler.Current);
+        }
+
+        /// &lt;summary&gt;
+        /// Shuts the connection down after a task has completed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;task&quot;&gt;The completed task.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the connection is down.&lt;/returns&gt;
+        private async ValueTask ShutdownInternal(Task task)
+        {
+            // only once
+            if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) == 1)
+                return;
+
+            HConsole.WriteLine(this, &quot;Bringing connection down&quot;);
+
+            Interlocked.Exchange(ref _isActive, 0);
+
+            // ensure the pipe writing task aborts
+            _streamReadCancellationTokenSource.Cancel();
+
+            // ensure everything is down by awaiting the other task
+            var otherTask = task == _pipeReading ? _pipeWriting : _pipeReading;
+            if (otherTask != null) await otherTask.CfAwait();
+
+            // kill socket and stream
+            try
+            {
+                _stream.Close();
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Close();
+            }
+            catch { /* ignore */ }
+
+            HConsole.WriteLine(this, &quot;Connection is down&quot;);
+
+            // notify
+            await _onShutdown.AwaitEach(this).CfAwaitNoThrow();
+        }
+
+        /// &lt;summary&gt;
+        /// Sends bytes.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;bytes&quot;&gt;The bytes to send.&lt;/param&gt;
+        /// &lt;param name=&quot;length&quot;&gt;The number of bytes to send.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the message bytes have been sent.&lt;/returns&gt;
+        // virtual for tests
+        public virtual async ValueTask&lt;bool&gt; SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+        {
+            if (_isActive == 0)
+                return false;
+
+            // send bytes
+            try
+            {
+                await _stream.WriteAsync(bytes, 0, length, cancellationToken).CfAwait();
+                LastWriteTime = DateTime.Now;
+            }
+            catch (Exception e)
+            {
+                // on error, shutdown and report
+                HConsole.WriteLine(this, &quot;SendAsync:ERROR&quot;);
+                HConsole.WriteLine(this, e);
+                try { _streamReadCancellationTokenSource.Cancel(); } catch { /* nothing */ } // can be disposed already
+                return false;
+            }
+
+            HConsole.WriteLine(this, 2, $&quot;Sent {length} bytes&quot; + HConsole.Lines(this, 1 , bytes.Dump(length)));
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Flushes the connection.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A task that will complete when the connection is flushed.&lt;/returns&gt;
+        // virtual for tests
+        public virtual async ValueTask FlushAsync()
+        {
+            await _stream.FlushAsync().CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Reads from network, and writes to the pipe.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;stream&quot;&gt;The &lt;see cref=&quot;Stream&quot;/&gt; to read from.&lt;/param&gt;
+        /// &lt;param name=&quot;writer&quot;&gt;The &lt;see cref=&quot;PipeWriter&quot;/&gt; to write to.&lt;/param&gt;
+        /// &lt;returns&gt;A task representing the write loop, that completes when the stream
+        /// is closed, or when an error occurs.&lt;/returns&gt;
+        protected async Task WritePipeAsync(Stream stream, PipeWriter writer)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (writer == null) throw new ArgumentNullException(nameof(writer));
+
+            const int minimumBufferSize = 512;
+
+            while (true)
+            {
+                // allocate at least 512 bytes from the PipeWriter
+                var memory = writer.GetMemory(minimumBufferSize);
+                int bytesRead;
+                try
+                {
+                    HConsole.WriteLine(this, 2, &quot;Pipe writer waiting for data&quot;);
+                    bytesRead = await stream.ReadAsync(memory, _streamReadCancellationTokenSource.Token).CfAwait();
+
+                    if (bytesRead == 0)
+                    {
+                        HConsole.WriteLine(this, 2, &quot;Pipe writer received no data&quot;);
+                        break;
+                    }
+
+                    LastReadTime = DateTime.Now;
+                }
+                catch (OperationCanceledException)
+                {
+                    // expected - just break
+                    HConsole.WriteLine(this, 2, &quot;Pipe writer has been cancelled&quot;);
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    // on error, shutdown and break, this will complete the reader
+                    HConsole.WriteLine(this, &quot;Pipe writer:ERROR&quot;);
+                    HConsole.WriteLine(this, ex);
+                    break;
+                }
+
+                // tell the PipeWriter how much was read from the network
+                HConsole.WriteLine(this, 2, $&quot;Pipe writer received {bytesRead} bytes&quot;);
+                writer.Advance(bytesRead);
+
+                // make the data available to the PipeReader
+                var result = await writer.FlushAsync().CfAwait();
+
+                if (result.IsCompleted)
+                {
+                    HConsole.WriteLine(this, &quot;Pipe is completed (in writer)&quot;);
+                    break;
+                }
+            }
+
+            // tell the PipeReader that there&#39;s no more data coming
+            HConsole.WriteLine(this, &quot;Pipe writer completing&quot;);
+            await writer.CompleteAsync().CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Reads from the pipe, and processes data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;reader&quot;&gt;The &lt;see cref=&quot;PipeReader&quot;/&gt; to read from.&lt;/param&gt;
+        /// &lt;returns&gt;A task representing the read loop, that completes when an empty message
+        /// is received, or when there is no more data coming (writer completed).&lt;/returns&gt;
+        protected async Task ReadPipeAsync(PipeReader reader)
+        {
+            if (reader == null) throw new ArgumentNullException(nameof(reader));
+
+            // loop reading data from the pipe
+            var state = new ReadPipeState { Reader = reader };
+            while (await ReadPipeLoop0(state).CfAwait()) { }
+
+            // exception?
+            if (state.Failed)
+            {
+                if (state.Exception != null)
+                {
+                    // TODO what shall we do with the exception?
+                    HConsole.WriteLine(this, &quot;ERROR &quot; + state.Exception.SourceException);
+                }
+            }
+
+            // mark the PipeReader as complete
+            HConsole.WriteLine(this, &quot;Pipe reader completing&quot;);
+            await reader.CompleteAsync().CfAwait();
+        }
+
+        /// &lt;summary&gt;
+        /// Reads from the pipe, and processes data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The reading state.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when data has been read and processed,
+        /// and represents whether to continue reading.&lt;/returns&gt;
+        private async ValueTask&lt;bool&gt; ReadPipeLoop0(ReadPipeState state)
+        {
+            // await data from the pipe
+            HConsole.WriteLine(this, 2, &quot;Pipe reader awaits data from the pipe&quot;);
+            var result = await state.Reader.ReadAsync().CfAwait();
+            state.Buffer = result.Buffer;
+
+            // no data means it&#39;s over
+            if (state.Buffer.Length == 0)
+            {
+                HConsole.WriteLine(this, 2, &quot;Pipe reader received no data&quot;);
+                return false;
+            }
+
+            HConsole.WriteLine(this, 2, $&quot;Pipe reader received data, buffer size is {state.Buffer.Length} bytes&quot;);
+
+            // process data
+            while (await ReadPipeLoop1(state).CfAwait()) { }
+
+            // tell the PipeReader how much of the buffer we have consumed
+            state.Reader.AdvanceTo(state.Buffer.Start, state.Buffer.End);
+
+            // shutdown on crash
+            if (state.Failed)
+                return false;
+
+            // stop reading if there&#39;s no more data coming
+            if (result.IsCompleted)
+            {
+                HConsole.WriteLine(this, &quot;Pipe is completed (in reader)&quot;);
+                return false;
+            }
+
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// Processes data from the pipe.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;state&quot;&gt;The reading state.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when data has been processed,
+        /// and represents whether to continue processing.&lt;/returns&gt;
+        private async ValueTask&lt;bool&gt; ReadPipeLoop1(ReadPipeState state)
+        {
+            HConsole.WriteLine(this, 2, &quot;Pipe reader processes data&quot; + HConsole.Lines(this, 1, state.Buffer.Dump()));
+
+            if (_prefixLength &gt; 0)
+            {
+                if (state.Buffer.Length &lt; _prefixLength)
+                {
+                    HConsole.WriteLine(this, 2, &quot;Pipe reader has not enough data&quot;);
+                    return false;
+                }
+
+                // we have a prefix, handle lit
+                try
+                {
+                    HConsole.WriteLine(this, 2, &quot;Pipe reader received prefix&quot;);
+                    await _onReceivePrefixBytes(this, state.Buffer.Slice(0, _prefixLength)).CfAwait();
+                    state.Buffer = state.Buffer.Slice(_prefixLength);
+                    _prefixLength = 0;
+                }
+                catch (Exception e)
+                {
+                    // error while processing, report and shutdown
+                    HConsole.WriteLine(this, &quot;Pipe reader encountered an exception while handling the prefix (shutdown)&quot;);
+                    HConsole.WriteLine(this, e);
+                    state.CaptureExceptionAndFail(e);
+                    return false;
+                }
+
+                HConsole.WriteLine(this, 2, &quot;Pipe reader processes data&quot;);
+            }
+
+            HConsole.WriteLine(this, 2, &quot;Handle message bytes&quot; + HConsole.Lines(this, 1, state.Buffer.Dump()));
+            try
+            {
+                // handle the bytes (and slice the buffer accordingly)
+                return _onReceiveMessageBytes(this, state);
+            }
+            catch (Exception e)
+            {
+                // error while processing, report
+                HConsole.WriteLine(this, &quot;Pipe reader encountered an exception while handling message bytes&quot;);
+                HConsole.WriteLine(this, e);
+                state.CaptureExceptionAndFail(e);
+                return false;
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            // note: DisposeAsync should not throw (CA1065)
+
+            if (Interlocked.CompareExchange(ref _isActive, 0, 1) == 0)
+                return;
+
+            // requests that the pipe stops processing - which will trigger
+            // ShutdownInternal which will close the socket etc
+            HConsole.WriteLine(this, &quot;Cancel pipe&quot;);
+            _streamReadCancellationTokenSource.Cancel();
+
+            // wait for everything to be down
+            await Task.WhenAll(_pipeWritingThenShutdown, _pipeReadingThenShutdown).CfAwait();
+            HConsole.WriteLine(this, &quot;Pipe is down&quot;);
+
+            // dispose, ignore exceptions
+            try
+            {
+                _stream.Close();
+                _stream.Dispose();
+            }
+            catch { /* ignore */ }
+
+            try
+            {
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Dispose();
+            }
+            catch { /* ignore */ }
+
+            // ok to dispose again
+            _streamReadCancellationTokenSource.Dispose();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[35,9,35,117,1],[53,9,53,70,1],[55,13,55,21,1],[57,13,57,42,1],[58,9,58,10,1],[63,26,63,30,1],[76,20,76,42,1],[79,17,79,36,1],[80,21,80,115,1],[82,17,82,98,1],[83,13,83,14,1],[97,20,97,41,1],[100,17,100,36,1],[101,21,101,115,1],[103,17,103,97,1],[104,13,104,14,1],[114,13,114,42,1],[115,13,115,58,1],[116,9,116,10,1],[126,20,126,31,1],[129,17,129,36,1],[130,21,130,115,1],[132,17,132,87,1],[133,13,133,14,1],[139,33,139,47,1],[144,38,144,42,1],[144,43,144,55,1],[149,41,149,45,1],[149,46,149,58,1],[154,40,154,44,1],[154,45,154,57,1],[159,45,159,82,1],[164,44,164,80,1],[170,32,170,37,1],[176,80,176,114,1],[184,13,184,48,1],[185,17,185,87,1],[186,13,186,68,1],[187,17,187,86,1],[188,9,188,10,1],[198,13,198,81,1],[199,13,199,81,1],[201,13,201,33,1],[203,13,203,52,1],[205,13,205,39,1],[208,13,208,32,1],[209,13,209,66,1],[210,13,210,107,1],[211,13,211,56,1],[212,13,212,107,1],[213,9,213,10,1],[223,13,223,73,1],[224,17,224,24,1],[228,13,228,52,1],[231,13,231,57,1],[234,13,234,80,1],[235,13,235,35,1],[235,36,235,62,1],[240,17,240,33,1],[241,17,241,55,1],[242,17,242,33,1],[243,13,243,14,1],[244,13,244,18,1],[244,34,244,35,1],[249,13,249,64,1],[250,9,250,10,1],[262,13,262,32,1],[263,17,263,30,1],[268,17,268,89,1],[269,17,269,46,1],[270,13,270,14,1],[271,13,271,32,1],[276,23,276,67,1],[276,68,276,69,1],[276,70,276,75,0],[276,92,276,93,0],[277,17,277,30,1],[281,13,281,25,1],[282,9,282,10,1],[291,13,291,50,1],[292,9,292,10,1],[303,13,303,32,1],[303,33,303,81,1],[304,13,304,32,1],[304,33,304,81,1],[311,17,311,66,1],[316,21,316,116,1],[318,21,318,40,1],[321,25,321,31,1],[324,21,324,49,1],[325,17,325,18,1],[326,17,326,51,1],[330,21,330,27,1],[332,17,332,37,1],[337,21,337,27,1],[342,17,342,43,1],[345,17,345,66,1],[347,17,347,40,1],[356,13,356,52,1],[357,9,357,10,1],[367,13,367,32,1],[367,33,367,81,1],[370,13,370,63,1],[371,13,371,57,1],[374,13,374,30,1],[376,17,376,45,1],[385,13,385,52,1],[386,9,386,10,1],[398,13,398,67,1],[399,13,399,42,1],[402,13,402,42,1],[405,17,405,30,1],[411,13,411,57,1],[414,13,414,74,1],[417,13,417,30,1],[418,17,418,30,1],[421,13,421,36,1],[424,17,424,30,0],[427,13,427,25,1],[428,9,428,10,1],[440,13,440,35,1],[442,17,442,57,1],[445,21,445,34,1],[452,21,452,103,1],[453,21,453,70,1],[454,21,454,39,1],[455,17,455,18,1],[456,17,456,36,1],[461,21,461,54,1],[462,21,462,34,1],[472,17,472,60,1],[474,13,474,32,1],[479,17,479,50,1],[480,17,480,30,1],[482,9,482,10,1],[489,13,489,71,1],[490,17,490,24,1],[495,13,495,57,1],[498,13,498,94,1],[504,17,504,33,1],[505,17,505,35,1],[506,13,506,14,1],[507,13,507,18,1],[507,34,507,35,1],[511,17,511,55,1],[512,17,512,35,1],[513,13,513,14,1],[514,13,514,18,1],[514,34,514,35,1],[517,13,517,58,1],[518,9,518,10,1]]);
+    </script>
+  </body>
+</html>

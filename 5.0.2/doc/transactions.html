@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Transactions | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Transactions | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.0.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="transactions">Transactions</h1>
+
+<p>The Hazelcast .NET client supports transaction-aware versions of:</p>
+<ul>
+<li>Lists: <a class="xref" href="../api/Hazelcast.DistributedObjects.IHTxList-1.html">IHTxList&lt;TItem&gt;</a></li>
+<li>Sets: <a class="xref" href="../api/Hazelcast.DistributedObjects.IHTxSet-1.html">IHTxSet&lt;TItem&gt;</a></li>
+<li>Queues: <a class="xref" href="../api/Hazelcast.DistributedObjects.IHTxQueue-1.html">IHTxQueue&lt;TItem&gt;</a></li>
+<li>Maps: <a class="xref" href="../api/Hazelcast.DistributedObjects.IHTxMap-2.html">IHTxMap&lt;TKey, TValue&gt;</a></li>
+<li>Multi-maps: <a class="xref" href="../api/Hazelcast.DistributedObjects.IHTxMultiMap-2.html">IHTxMultiMap&lt;TKey, TValue&gt;</a></li>
+</ul>
+<p>This page documents the .NET client-side aspects of transactions. See the <a href="https://docs.hazelcast.com/hazelcast/latest/transactions/creating-a-transaction-interface.html">Transactions</a> section of the Reference Manual for more details.</p>
+<h2 id="transaction-management">Transaction Management</h2>
+<p>A transaction is started through the client, which then returns an <a class="xref" href="../api/Hazelcast.Transactions.ITransactionContext.html">ITransactionContext</a> instance. Transactions by default follow the Microsoft&#39;s transaction pattern: they must be disposed, and commit or roll back depending on whether they have been completed.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">await using (var transaction = await client.BeginTransactionAsync())
+{
+    // ... do transaction work ...
+    transaction.Complete();
+}
+</code></pre><p>Here, the transaction will commit when <code>transaction</code> is disposed, because it has been completed. Had it not been completed, it would have rolled back. Note that the explicit pattern is also supported, although less recommended:</p>
+<pre><code class="lang-csharp">var transaction = await client.BeginTransactionAsync();
+// ... do transaction work ...
+await transactionContext.CommitAsync();  // commmit, or...
+await transactionContext.DisposeAsync(); // roll back
+await transaction.DisposeAsync();
+</code></pre><h2 id="transaction-aware-objects">Transaction-aware Objects</h2>
+<p>Transaction-aware objects are obtained from the transaction context.</p>
+<p>For example:</p>
+<pre><code class="lang-csharp">await using (var transaction = await client.BeginTransactionAsync())
+{
+    var queue = await transaction.GetQueueAsync&lt;string&gt;(&quot;my-queue&quot;);
+    var map = await transaction.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;);
+    var set = await transaction.GetSetAsync&lt;string&gt;(&quot;my-set&quot;);
+
+    try
+    {
+        var o = await queue.PollAsync();
+        // process the object...
+        await map.PutAsync(&quot;1&quot;, &quot;value-1&quot;);
+        await set.AddAsync(&quot;value&quot;);
+        // do more things...
+
+        transaction.Complete();
+    }
+    catch
+    {
+        // report the error
+        // don&#39;t Complete = transaction will roll back automatically
+    }
+}
+</code></pre><p>In this example, either all operations are executed, or none.</p>
+<h2 id="transaction-options">Transaction Options</h2>
+<p>Transactions can be configured via <a class="xref" href="../api/Hazelcast.Transactions.TransactionOptions.html">TransactionOptions</a> that can be passed to the <a class="xref" href="../api/Hazelcast.IHazelcastClient.BeginTransactionAsync.html#Hazelcast_IHazelcastClient_BeginTransactionAsync_Hazelcast_Transactions_TransactionOptions_">BeginTransactionAsync(TransactionOptions)</a> method. These options are:</p>
+<ul>
+<li><a class="xref" href="../api/Hazelcast.Transactions.TransactionOptions.Durability.html#Hazelcast_Transactions_TransactionOptions_Durability">Durability</a> specifies the durability of the transaction (see below)</li>
+<li><a class="xref" href="../api/Hazelcast.Transactions.TransactionOptions.Timeout.html#Hazelcast_Transactions_TransactionOptions_Timeout">Timeout</a> specifies the timeout of the transaction</li>
+<li><a class="xref" href="../api/Hazelcast.Transactions.TransactionOptions.Type.html#Hazelcast_Transactions_TransactionOptions_Type">Type</a> can be either <code>TwoPhase</code> (by default) or <code>OnePhase</code>, See the <a href="https://docs.hazelcast.com/hazelcast/5.0-beta-1/transactions/creating-a-transaction-interface.html">Reference Manual</a> for details</li>
+</ul>
+<p>The <em>durability</em> of a transaction is the number of members in the cluster that can take over if a member fails during a transaction commit or rollback. This value only has meaning when the <a class="xref" href="../api/Hazelcast.Transactions.TransactionOptions.Type.html#Hazelcast_Transactions_TransactionOptions_Type">Type</a> is <code>TwoPhase</code>.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>
