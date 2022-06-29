@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\ClientMetricSource.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Metrics
+{
+    // the source of metrics for the client
+    internal class ClientMetricSource : IMetricSource
+    {
+        private readonly Cluster _cluster;
+        private readonly ILogger _logger;
+
+        public ClientMetricSource(Cluster cluster, ILoggerFactory loggerFactory)
+        {
+            _cluster = cluster;
+            _logger = loggerFactory.CreateLogger&lt;ClientMetricSource&gt;();
+        }
+
+        public static class MetricDescriptors
+        {
+            public static readonly MetricDescriptor&lt;long&gt; LastStatisticsCollectionTime = MetricDescriptor.Create&lt;long&gt;(&quot;lastStatisticsCollectionTime&quot;);
+            public static readonly MetricDescriptor&lt;bool&gt; Enterprise = MetricDescriptor.Create&lt;bool&gt;(&quot;enterprise&quot;);
+            public static readonly MetricDescriptor&lt;string&gt; ClientType = MetricDescriptor.Create&lt;string&gt;(&quot;clientType&quot;);
+            public static readonly MetricDescriptor&lt;string&gt; ClientVersion = MetricDescriptor.Create&lt;string&gt;(&quot;clientVersion&quot;);
+            public static readonly MetricDescriptor&lt;string&gt; ClientName = MetricDescriptor.Create&lt;string&gt;(&quot;clientName&quot;);
+            public static readonly MetricDescriptor&lt;long&gt; ClusterConnectionTimestamp = MetricDescriptor.Create&lt;long&gt;(&quot;clusterConnectionTimestamp&quot;);
+            public static readonly MetricDescriptor&lt;string&gt; ClientAddress = MetricDescriptor.Create&lt;string&gt;(&quot;clientAddress&quot;);
+
+            public static class Credentials
+            {
+                public static readonly MetricDescriptor&lt;string&gt; Principal = MetricDescriptor.Create&lt;string&gt;(&quot;credentials&quot;, &quot;principal&quot;);
+            }
+
+            // ReSharper disable once InconsistentNaming
+            public static class OS
+            {
+                public static readonly MetricDescriptor&lt;long&gt; CommittedVirtualMemorySize = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;committedVirtualMemorySize&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; FreePhysicalMemorySize = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;freePhysicalMemorySize&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; FreeSwapSpaceSize = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;freeSwapSpaceSize&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; MaxFileDescriptorCount = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;maxFileDescriptorCount&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; OpenFileDescriptorCount = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;openFileDescriptorCount&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; ProcessCpuTime = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;processCpuTime&quot;);
+                public static readonly MetricDescriptor&lt;double&gt; SystemLoadAverage = MetricDescriptor.Create&lt;double&gt;(&quot;os&quot;, &quot;systemLoadAverage&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; TotalPhysicalMemorySize = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;totalPhysicalMemorySize&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; TotalSwapSpaceSize = MetricDescriptor.Create&lt;long&gt;(&quot;os&quot;, &quot;totalSwapSpaceSize&quot;);
+            }
+
+            public static class Runtime
+            {
+                public static readonly MetricDescriptor&lt;int&gt; AvailableProcessors = MetricDescriptor.Create&lt;int&gt;(&quot;runtime&quot;, &quot;availableProcessors&quot;, MetricUnit.Count);
+                public static readonly MetricDescriptor&lt;long&gt; FreeMemory = MetricDescriptor.Create&lt;long&gt;(&quot;runtime&quot;, &quot;freeMemory&quot;, MetricUnit.Bytes);
+                public static readonly MetricDescriptor&lt;long&gt; MaxMemory = MetricDescriptor.Create&lt;long&gt;(&quot;runtime&quot;, &quot;maxMemory&quot;, MetricUnit.Bytes);
+                public static readonly MetricDescriptor&lt;long&gt; TotalMemory = MetricDescriptor.Create&lt;long&gt;(&quot;runtime&quot;, &quot;totalMemory&quot;, MetricUnit.Bytes);
+                public static readonly MetricDescriptor&lt;long&gt; Uptime = MetricDescriptor.Create&lt;long&gt;(&quot;runtime&quot;, &quot;uptime&quot;);
+                public static readonly MetricDescriptor&lt;long&gt; UsedMemory = MetricDescriptor.Create&lt;long&gt;(&quot;runtime&quot;, &quot;usedMemory&quot;, MetricUnit.Bytes);
+            }
+        }
+
+        public IEnumerable&lt;Metric&gt; PublishMetrics()
+        {
+            // the Java client gets these from a random connection
+            // we try to be more consistent and always pick the oldest active connection
+            var connection = _cluster.Members.GetOldestConnection();
+            if (connection == null)
+            {
+                _logger.IfDebug()?.LogDebug(&quot;Cannot send metrics, client is not connected.&quot;);
+                yield break;
+            }
+
+            // MUST align with https://github.com/hazelcast/hazelcast/blob/master/hazelcast/src/main/java/com/hazelcast/internal/nio/ConnectionType.java
+            const string clientType = &quot;CSP&quot;;
+
+            yield return MetricDescriptors.Enterprise.WithValue(false);
+            yield return MetricDescriptors.ClientType.WithValue(clientType);
+            yield return MetricDescriptors.ClientVersion.WithValue(ClientVersion.MajorMinorVersion);
+            yield return MetricDescriptors.ClientName.WithValue(_cluster.ClientName);
+            yield return MetricDescriptors.ClusterConnectionTimestamp.WithValue(Clock.ToEpoch(connection.ConnectTime.UtcDateTime)); // TODO: ToEpoch supports DateTimeOffset
+            yield return MetricDescriptors.ClientAddress.WithValue(connection.LocalEndPoint.Address.ToString());
+
+            yield return MetricDescriptors.Credentials.Principal.WithValue(connection.Principal);
+
+            yield return MetricDescriptors.OS.CommittedVirtualMemorySize.WithValue(Process.GetCurrentProcess().VirtualMemorySize64);
+            yield return MetricDescriptors.OS.FreePhysicalMemorySize.WithoutValue();
+            yield return MetricDescriptors.OS.FreeSwapSpaceSize.WithoutValue();
+            yield return MetricDescriptors.OS.MaxFileDescriptorCount.WithoutValue();
+            yield return MetricDescriptors.OS.OpenFileDescriptorCount.WithValue(Process.GetCurrentProcess().HandleCount);
+            yield return MetricDescriptors.OS.ProcessCpuTime.WithValue((long)Process.GetCurrentProcess().TotalProcessorTime.TotalMilliseconds * 1000000);
+            yield return MetricDescriptors.OS.SystemLoadAverage.WithoutValue();
+            yield return MetricDescriptors.OS.TotalPhysicalMemorySize.WithoutValue();
+            yield return MetricDescriptors.OS.TotalSwapSpaceSize.WithoutValue();
+
+            yield return MetricDescriptors.Runtime.AvailableProcessors.WithValue(Environment.ProcessorCount);
+            yield return MetricDescriptors.Runtime.FreeMemory.WithoutValue();
+            yield return MetricDescriptors.Runtime.MaxMemory.WithValue(Process.GetCurrentProcess().MaxWorkingSet.ToInt64());
+            yield return MetricDescriptors.Runtime.TotalMemory.WithValue(Process.GetCurrentProcess().WorkingSet64);
+            yield return MetricDescriptors.Runtime.Uptime.WithValue((long)(DateTime.Now - Process.GetCurrentProcess().StartTime).TotalMilliseconds);
+            yield return MetricDescriptors.Runtime.UsedMemory.WithValue(Process.GetCurrentProcess().WorkingSet64);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,81,0],[32,13,32,32,0],[33,13,33,72,0],[34,9,34,10,0],[38,13,38,152,0],[39,13,39,116,0],[40,13,40,120,0],[41,13,41,126,0],[42,13,42,120,0],[43,13,43,148,0],[44,13,44,126,0],[48,17,48,137,0],[54,17,54,158,0],[55,17,55,150,0],[56,17,56,140,0],[57,17,57,150,0],[58,17,58,152,0],[59,17,59,134,0],[60,17,60,144,0],[61,17,61,152,0],[62,17,62,142,0],[67,17,67,165,0],[68,17,68,149,0],[69,17,69,147,0],[70,17,70,151,0],[71,17,71,123,0],[72,17,72,149,0],[80,13,80,69,0],[81,13,81,36,0],[83,17,83,94,0],[84,17,84,29,0],[90,13,90,72,0],[91,13,91,77,0],[92,13,92,101,0],[93,13,93,86,0],[94,13,94,132,0],[95,13,95,113,0],[97,13,97,98,0],[99,13,99,133,0],[100,13,100,85,0],[101,13,101,80,0],[102,13,102,85,0],[103,13,103,122,0],[104,13,104,154,0],[105,13,105,80,0],[106,13,106,86,0],[107,13,107,81,0],[109,13,109,110,0],[110,13,110,78,0],[111,13,111,125,0],[112,13,112,116,0],[113,13,113,149,0],[114,13,114,115,0],[115,9,115,10,0]]);
+    </script>
+  </body>
+</html>

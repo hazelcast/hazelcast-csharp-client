@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\DistributedObjectFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Clustering;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
+using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represents a factory that creates &lt;see cref=&quot;IDistributedObject&quot;/&gt; instances.
+    /// &lt;/summary&gt;
+    internal class DistributedObjectFactory : IAsyncDisposable
+    {
+        private readonly ConcurrentAsyncDictionary&lt;DistributedObjectInfo, DistributedObjectBase&gt; _objects
+            = new ConcurrentAsyncDictionary&lt;DistributedObjectInfo, DistributedObjectBase&gt;();
+
+        private readonly Cluster _cluster;
+        private readonly SerializationService _serializationService;
+        private readonly ILoggerFactory _loggerFactory;
+        private readonly ILogger _logger;
+
+        private volatile int _disposed;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;DistributedObjectFactory&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cluster&quot;&gt;A cluster.&lt;/param&gt;
+        /// &lt;param name=&quot;serializationService&quot;&gt;A serialization service.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        public DistributedObjectFactory(Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        {
+            _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
+            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            _logger = loggerFactory.CreateLogger&lt;DistributedObjectFactory&gt;();
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or creates a distributed object.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the distributed object.&lt;/typeparam&gt;
+        /// &lt;typeparam name=&quot;TImpl&quot;&gt;The type of the implementation.&lt;/typeparam&gt;
+        /// &lt;param name=&quot;serviceName&quot;&gt;The unique name of the service.&lt;/param&gt;
+        /// &lt;param name=&quot;name&quot;&gt;The unique name of the object.&lt;/param&gt;
+        /// &lt;param name=&quot;remote&quot;&gt;Whether to create the object remotely too.&lt;/param&gt;
+        /// &lt;param name=&quot;factory&quot;&gt;The object factory.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;The distributed object.&lt;/returns&gt;
+        public async Task&lt;T&gt; GetOrCreateAsync&lt;T, TImpl&gt;(
+            string serviceName, string name, bool remote,
+            Func&lt;string, DistributedObjectFactory, Cluster, SerializationService, ILoggerFactory, TImpl&gt; factory,
+            CancellationToken cancellationToken = default)
+            where TImpl : DistributedObjectBase, T
+        {
+            if (_disposed == 1) throw new ObjectDisposedException(&quot;DistributedObjectFactory&quot;);
+
+            var info = new DistributedObjectInfo(serviceName, name);
+
+            async ValueTask&lt;DistributedObjectBase&gt; CreateAsync(DistributedObjectInfo info2, CancellationToken token)
+            {
+                var x = factory(name, this, _cluster, _serializationService, _loggerFactory);
+                x.ObjectDisposed = OnObjectDisposed; // this is why is has to be DistributedObjectBase
+
+                // initialize the object
+                if (remote)
+                {
+                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(x.Name, x.ServiceName);
+                    _ = await _cluster.Messaging.SendAsync(requestMessage, token).CfAwait();
+                }
+
+                x.OnInitialized();
+                _logger.IfDebug()?.LogDebug(&quot;Initialized ({Object}) distributed object.&quot;, info2);
+                return x;
+            }
+
+            // try to get the object - thanks to the concurrent dictionary there will be only 1 task
+            // and if several concurrent requests are made, they will all await that same task
+
+            var o = await _objects.GetOrAddAsync(info, CreateAsync, cancellationToken).CfAwait();
+
+            // race condition: maybe the factory has been disposed and is already disposing
+            // objects and will ignore this new object even though it has been added to the
+            // dictionary, so take care of it ourselves
+            if (_disposed == 1)
+            {
+                await o.DisposeAsync().CfAwait();
+                throw new ObjectDisposedException(&quot;DistributedObjectFactory&quot;);
+            }
+
+            // if the object is a T then we can return it
+            if (o is T t) return t;
+
+            // otherwise, the client was already used to retrieve an object with the specified service
+            // name and object name, but a different type, for instance IHList&lt;int&gt; vs IHList&lt;string&gt;,
+            // and we just cannot support this = throw
+
+            throw new HazelcastException($&quot;A distributed object with the specified service name ({serviceName}) &quot; +
+                                         $&quot;and object name ({name}) exists but of type {o.GetType().ToCsString()}, &quot; +
+                                         $&quot;instead of {typeof(T).ToCsString()}.&quot;);
+        }
+
+        /// &lt;summary&gt;
+        /// Creates all known &lt;see cref=&quot;IDistributedObject&quot;/&gt; on a cluster.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;A task that will complete when the state has been sent.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is used when connecting to a new cluster.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public async ValueTask CreateAllAsync(MemberConnection connection)
+        {
+            await foreach (var (key, _) in _objects)
+            {
+                // if the connection goes down, stop
+                if (!connection.Active) return;
+
+                try
+                {
+                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
+                    await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
+                }
+                catch (Exception e)
+                {
+                    _logger.LogError(e, $&quot;Failed to create ({key}) distributed object on new cluster.&quot;);
+                }
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Deals with an object being disposed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o&quot;&gt;The object.&lt;/param&gt;
+        private void OnObjectDisposed(DistributedObjectBase o)
+        {
+            // simply disposing the distributed object removes it from the list
+            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
+            _objects.TryRemove(info);
+        }
+
+        /// &lt;summary&gt;
+        /// Destroys a distributed object.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;o&quot;&gt;The distributed object.&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        public async ValueTask DestroyAsync(IDistributedObject o, CancellationToken cancellationToken = default)
+        {
+            // try to get the object - and then, dispose it
+
+            var info = new DistributedObjectInfo(o.ServiceName, o.Name);
+            var attempt = await _objects.TryGetAndRemoveAsync(info).CfAwait();
+            if (attempt)
+                await TryDispose(attempt.Value).CfAwait();
+
+            var ob = (DistributedObjectBase) o; // we *know* all our objects inherit from the base object
+            await ob.DestroyingAsync().CfAwait();
+            await DestroyAsync(o.ServiceName, o.Name, cancellationToken).CfAwait();
+        }
+
+        // internal for tests only
+        internal async ValueTask DestroyAsync(string serviceName, string name, CancellationToken cancellationToken = default)
+        {
+            // regardless of whether the object was known locally, destroy on server
+            var clientMessage = ClientDestroyProxyCodec.EncodeRequest(name, serviceName);
+            var responseMessage = await _cluster.Messaging.SendAsync(clientMessage, cancellationToken).CfAwait();
+            _ = ClientDestroyProxyCodec.DecodeResponse(responseMessage);
+        }
+
+        /// &lt;summary&gt;
+        /// Handles a connection to a new cluster.
+        /// &lt;/summary&gt;
+#pragma warning disable IDE0060 // Remove unused parameters
+#pragma warning disable CA1801 // Review unused parameters
+        // unused parameters are required, this is an event handler
+        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+#pragma warning restore CA1801
+#pragma warning restore IDE0060
+        {
+            if (!isNewCluster) return default;
+
+            // when connecting to a new cluster, re-create the distributed objects there
+            // this *may* take, but we cannot really use a new cluster before everything
+            // has been set up correctly (so we cannot really run this in a background task).
+            //
+            // if this is a new cluster, then this is a &quot;first&quot; connection and there are
+            // no other connections yet. we should be able to run CreateAllAsync on the
+            // connection, else something is wrong - CreateAllAsync stops if the connection
+            // becomes non-active (and does not throw)
+
+            return CreateAllAsync(connection);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public async ValueTask DisposeAsync()
+        {
+            if (Interlocked.CompareExchange(ref _disposed, 1, 0) == 1)
+                return;
+
+            // there is a potential race-cond here, if an item is added to _objects after
+            // we enumerate (capture) values, but it is taken care of in GetOrCreateAsync
+
+            await foreach (var (_, value) in _objects)
+            {
+                await TryDispose(value).CfAwait();
+            }
+        }
+
+        private async ValueTask TryDispose(IDistributedObject o)
+        {
+            try
+            {
+                await o.DisposeAsync().CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.IfWarning()?.LogWarning(e, &quot;Failed to dispose ({O}) distributed object.&quot;, o);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,35,93,1],[50,9,50,130,1],[52,13,52,84,1],[53,13,53,123,1],[54,13,54,102,1],[56,13,56,78,1],[57,9,57,10,1],[76,13,76,32,1],[76,33,76,95,0],[78,13,78,69,1],[82,17,82,94,1],[83,17,83,53,1],[86,17,86,28,1],[88,21,88,102,1],[89,21,89,93,1],[92,17,92,35,1],[93,17,93,98,1],[94,17,94,26,1],[95,13,95,14,1],[100,13,100,98,1],[105,13,105,32,1],[107,17,107,50,0],[108,17,108,79,0],[112,13,112,26,1],[112,27,112,36,1],[118,13,120,83,0],[121,9,121,10,1],[132,28,132,40,1],[132,41,132,43,1],[132,44,132,52,1],[135,17,135,40,1],[139,21,139,106,1],[140,21,140,102,1],[141,17,141,18,1],[142,17,142,36,0],[144,21,144,105,0],[145,17,145,18,0],[146,13,146,14,1],[147,9,147,10,1],[156,13,156,73,1],[157,13,157,38,1],[158,9,158,10,1],[169,13,169,73,1],[170,13,170,79,1],[171,13,171,25,1],[172,17,172,59,1],[174,13,174,48,1],[175,13,175,50,1],[176,13,176,84,1],[177,9,177,10,1],[183,13,183,90,1],[184,13,184,114,1],[185,13,185,73,1],[186,9,186,10,1],[198,13,198,31,1],[198,32,198,47,1],[209,13,209,47,1],[215,13,215,71,1],[216,17,216,24,0],[221,28,221,42,1],[221,43,221,45,1],[221,46,221,54,1],[223,17,223,51,1],[225,9,225,10,1],[231,17,231,50,1],[232,13,232,14,1],[233,13,233,32,0],[235,17,235,102,0],[236,13,236,14,0],[237,9,237,10,1]]);
+    </script>
+  </body>
+</html>

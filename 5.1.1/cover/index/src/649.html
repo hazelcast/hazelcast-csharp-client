@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\CP\CPSessionManager.Heartbeat.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Protocol;
+using Hazelcast.Protocol.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.CP
+{
+    /// &lt;summary&gt;
+    /// Implements Heartbeat side of CP Session
+    /// &lt;/summary&gt;
+    internal partial class CPSessionManager
+    {
+        private readonly CancellationTokenSource _cancel; // initialized in ctor
+
+        private Task _heartbeating = Task.CompletedTask;
+
+        private int _heartbeatState;
+
+        /// &lt;summary&gt;
+        /// Schedules the session heartbeat requests. It does not require to check state of the heartbeat
+        /// &lt;para&gt;Use only the method to run heartbeat.&lt;/para&gt;
+        /// &lt;/summary&gt;
+        internal void ScheduleHeartbeat(TimeSpan period)
+        {
+            if (_disposed == 0 &amp;&amp; Interlocked.CompareExchange(ref _heartbeatState, 1, 0) == 0)
+            {
+                _heartbeating = BeatAsync(period, _cancel.Token);
+            }
+        }
+
+        private async Task BeatAsync(TimeSpan period, CancellationToken cancellationToken)
+        {
+            while (!cancellationToken.IsCancellationRequested)
+            {
+                await Task.Delay(period, cancellationToken).CfAwait();
+
+                if (cancellationToken.IsCancellationRequested) break;
+
+                await RunAllAsync(cancellationToken).CfAwait();
+            }
+        }
+
+        /// &lt;summary&gt;
+        /// Runs for all sessions
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        private async Task RunAllAsync(CancellationToken cancellationToken)
+        {
+            _logger.LogDebug(&quot;Run CP Session Heartbeat&quot;);
+
+            if (_sessions.IsEmpty) return;
+
+            IEnumerable&lt;(CPGroupId, CPSession)&gt; sessions;
+            lock (_mutex) sessions = _sessions.Select(p =&gt; (p.Key, p.Value));
+
+            await sessions.ParallelForEachAsync((p, cancellationToken) =&gt;
+            {
+                if (!p.Item2.IsInUse) return default;
+                return RunAsync(p.Item1, p.Item2, cancellationToken);
+
+            }, cancellationToken).CfAwait();
+
+        }
+
+        /// &lt;summary&gt;
+        /// Runs for a given session
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;groupId&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;sessionState&quot;&gt;&lt;/param&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;&lt;/param&gt;        
+        private async Task RunAsync(CPGroupId groupId, CPSession sessionState, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await RequestSessionHeartbeat(groupId, sessionState.Id).CfAwait();
+            }
+            catch (Exception e)
+            {
+                if (e is RemoteException { Error: RemoteError.SessionExpiredException } ||
+                    e is RemoteException { Error: RemoteError.CpGroupDestroyedException })
+                {
+                    InvalidateSession(groupId, sessionState.Id);
+                }
+
+                _logger.LogWarning(e, &quot;CP Session Heartbeat has thrown an exception, but will continue.&quot;);
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,9,34,57,1],[44,13,44,95,1],[46,17,46,66,1],[48,9,48,10,1],[52,13,52,63,1],[54,17,54,71,1],[56,17,56,63,1],[58,17,58,64,1],[60,9,60,10,0],[69,13,69,58,1],[71,13,71,35,1],[71,36,71,43,0],[74,13,74,26,1],[74,27,74,60,1],[74,60,74,76,1],[74,76,74,78,1],[76,13,78,17,1],[78,17,78,38,1],[78,38,78,39,1],[78,39,78,54,1],[78,54,79,17,1],[79,17,79,70,1],[79,70,81,45,1],[83,9,83,10,1],[95,17,95,83,1],[96,13,96,14,1],[97,13,97,32,1],[99,17,100,91,1],[102,21,102,65,1],[105,17,105,107,1],[106,13,106,14,1],[107,9,107,10,1]]);
+    </script>
+  </body>
+</html>

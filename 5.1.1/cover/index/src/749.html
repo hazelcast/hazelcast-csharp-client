@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Clustering\MemberConnectionRequest.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Models;
+
+namespace Hazelcast.Clustering
+{
+    internal class MemberConnectionRequest
+    {
+        private readonly object _mutex = new object();
+        private TaskCompletionSource&lt;object&gt; _completionSource;
+        private DateTime _requestDate;
+
+        public MemberConnectionRequest(MemberInfo member)
+        {
+            Member = member;
+            Reset();
+        }
+
+        public MemberInfo Member { get; }
+
+        public TimeSpan Elapsed =&gt; DateTime.UtcNow - _requestDate;
+
+        public event EventHandler Failed;
+
+        public bool Cancelled { get; private set; }
+
+        public bool Completed { get; private set; }
+
+        public void Cancel()
+        {
+            Cancelled = true;
+        }
+
+        public void Complete(bool success)
+        {
+            // trigger before completing
+            // (completing can unlock a suspend wait)
+            if (!success)
+            {
+                Failed?.Invoke(this, default);
+            }
+
+            lock (_mutex)
+            {
+                Completed = true;
+                _completionSource?.TrySetResult(null);
+            }
+        }
+
+        public ValueTask Completion
+        {
+            get
+            {
+                lock (_mutex)
+                {
+                    if (Completed) return default;
+                    _completionSource = new TaskCompletionSource&lt;object&gt;();
+                }
+                return new ValueTask(_completionSource.Task);
+            }
+        }
+
+        public void Reset()
+        {
+            Cancelled = false;
+            Completed = false;
+            Failed = null;
+            _completionSource = null;
+            _requestDate = DateTime.UtcNow;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public override string ToString()
+        {
+            return $&quot;(MemberConnectionRequest Member = {Member}, Cancelled = {Cancelled}, Completed = {Completed})&quot;;
+        }
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[23,9,23,55,1],[27,9,27,58,1],[29,13,29,29,1],[30,13,30,21,1],[31,9,31,10,1],[33,36,33,40,1],[35,36,35,66,1],[39,33,39,37,1],[39,38,39,50,1],[41,33,41,37,1],[41,38,41,50,1],[45,13,45,30,1],[46,9,46,10,1],[52,13,52,26,1],[54,17,54,47,1],[57,13,57,26,1],[59,17,59,34,1],[60,17,60,55,1],[61,13,61,14,1],[62,9,62,10,1],[68,17,68,30,1],[70,21,70,35,1],[70,36,70,51,1],[71,21,71,76,1],[72,17,72,18,1],[73,17,73,62,1],[74,13,74,14,1],[79,13,79,31,1],[80,13,80,31,1],[81,13,81,27,1],[82,13,82,38,1],[83,13,83,44,1],[84,9,84,10,1],[89,13,89,117,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Canceling | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Canceling | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="canceling">Canceling</h1>
+
+<p>Some of Hazelcast .NET client operations support cancellation via a <code>CancellationToken</code>. This section details what actually happens when that token is cancelled.</p>
+<h2 id="default-operations">Default Operations</h2>
+<p>When a <code>CancellationToken</code> is passed to a method that triggers a server-side operation, the token is ultimately passed to the internal method which sends the request message to the server. At that point:</p>
+<ul>
+<li>If the token is cancelled before the request has been sent, the request is not sent</li>
+<li>If the token is cancelled while retrying to send a request, the retry is aborted</li>
+</ul>
+<p>Otherwise, the request message is sent as a whole non-cancellable operation, and the client then waits for a response message from the server. It the token is cancelled during this wait, the wait is aborted and the response message will be ignored when it is received. </p>
+<div class="WARNING"><h5>Warning</h5><p>Note however that, since the request message <em>has</em> been sent, the resulting server state is unspecified: the operation <em>may</em> have been executed and is <em>not</em> rolled back.</p>
+</div>
+<h2 id="sql-operations">Sql Operations</h2>
+<p>This section details cancellation behaviors specific to SQL. Refer to the  <a href="sql.html">SQL documentation</a> for more general information on SQL.</p>
+<h3 id="sql-queries">Sql Queries</h3>
+<p>Sql queries (see <a class="xref" href="../api/Hazelcast.Sql.ISqlService.html">ISqlService</a> <code>ExecuteQueryAsync</code> method) fetch the first page of rows, and return an enumerable <a class="xref" href="../api/Hazelcast.Sql.ISqlQueryResult.html">ISqlQueryResult</a> object representing an open <em>server-side</em> query. This query remains open and running on the server, in order to provide more pages of rows.</p>
+<p>The <code>CancellationToken</code> which is passed to <code>ExecuteQueryAsync</code>, if any, works just as with any other server operation as far as fetching the first page of rows is concerned (see above). In addition, it is also passed to the <code>ISqlQueryResult</code>.</p>
+<div class="NOTE"><h5>Note</h5><p>If the operation is cancelled before the <code>ISqlQueryResult</code> is returned, the SQL service tries its best to notify the server that the query should be closed.</p>
+</div>
+<p>The <code>ISqlQueryResult</code> is <code>IAsyncEnumerable&lt;SqlRow&gt;</code>. This means that one can either:</p>
+<ul>
+<li>Invoke its <code>GetAyncEnumerator(CancellationToken enumerationToken)</code> method</li>
+<li>Enumerate it with <code>async foreach</code>, with  <code>.WithCancellation(CancellationToken enumerationToken)</code></li>
+</ul>
+<p>In both cases, the enumeration ends up being controlled by a <code>CancellationToken</code> which is either <code>token</code> (from <code>ExecuteQueryAsync</code>), <code>enumerationToken</code>, or a combination of both. If <code>token</code> or <code>enumerationToken</code> is canceled, the enumeration is canceled and throws an <code>OperationCancelledException</code>.</p>
+<p>It is important to understand that the <code>ISqlQueryResult</code> represents a server-side query which needs to be closed in order to release server resources. This is achieved by async-disposing the <code>ISqlQueryResult</code> (which is <code>IAsyncEnumerable</code>).</p>
+<p>If the result is enumerated with <code>await foreach</code>, the pattern guarantees that the enumerator will be disposed when exiting. This will, in turn, dispose the result. Should the enumeration be cancelled and abort with an exception, the result would therefore safely be disposed.</p>
+<p>With other patterns, it is important to ensure that, in the event of a cancellation, the result is always disposed. This can be achieved by wrapping the <code>ISqlQueryResult</code> in a <code>using</code> block:</p>
+<pre><code class="lang-csharp">await using var result = await client.Sql.ExecuteQueryAsync(...);
+</code></pre><h3 id="sql-commands">Sql Commands</h3>
+<p>Sql commands (see <a class="xref" href="../api/Hazelcast.Sql.ISqlService.html">ISqlService</a> <code>ExecuteCommandAsync</code> method) do not have a special result type, as they only return the number of affected rows, and therefore the <code>CancellationToken</code> works just as with any other server operation.</p>
+<div class="WARNING"><h5>Warning</h5><p>Because Sql commands can have side-effect on the server, and cancellation may happen before or after the request message has been sent to the server, it is important to understand that cancellation concerns the client-side async method call only, and that the command may or may not execute on the server.</p>
+</div>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

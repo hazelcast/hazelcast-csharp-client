@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Projection\ProjectionDataSerializerHook.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Projection
+{
+    /// &lt;summary&gt;
+    /// Provides an &lt;see cref=&quot;IDataSerializableFactory&quot;/&gt; for projections.
+    /// &lt;/summary&gt;
+    internal class ProjectionDataSerializerHook : IDataSerializerHook
+    {
+        public const int FactoryIdConst = FactoryIds.ProjectionDsFactoryId;
+        public const int SingleAttribute = 0;
+        public const int MultiAttribute = 1;
+
+        private const int Len = MultiAttribute + 1;
+
+        /// &lt;inheritdoc /&gt;
+        public IDataSerializableFactory CreateFactory()
+        {
+            var constructors = new Func&lt;IIdentifiedDataSerializable&gt;[Len];
+            constructors[SingleAttribute] = () =&gt; new SingleAttributeProjection();
+
+            return new ArrayDataSerializableFactory(constructors);
+        }
+
+        /// &lt;inheritdoc /&gt;
+        public int FactoryId =&gt; FactoryIdConst;
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[34,13,34,75,1],[35,13,35,51,1],[35,51,35,82,1],[35,82,35,83,1],[37,13,37,67,1],[41,33,41,47,1]]);
+    </script>
+  </body>
+</html>

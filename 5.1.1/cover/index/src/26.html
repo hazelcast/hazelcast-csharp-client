@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptionsBuilderBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Configuration;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Exceptions;
+using Microsoft.Extensions.Configuration;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Provides a base class for both &lt;see cref=&quot;HazelcastOptionsBuilder&quot;/&gt; and &lt;see cref=&quot;HazelcastFailoverOptionsBuilder&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TOptions&quot;&gt;&lt;/typeparam&gt;
+    /// &lt;typeparam name=&quot;TBuilder&quot;&gt;&lt;/typeparam&gt;
+    public abstract class HazelcastOptionsBuilderBase&lt;TOptions, TBuilder&gt;
+        where TOptions : HazelcastOptionsBase, new()
+    {
+        private string[] _args;
+        private IDictionary&lt;string, string&gt; _switchMappings;
+        private Dictionary&lt;string, string&gt; _defaults;
+        private Dictionary&lt;string, string&gt; _keyValues;
+        private string _optionsFilePath;
+        private string _optionsFileName;
+        private string _environmentName;
+        private string _altKey;
+        private List&lt;Action&lt;IConfiguration, TOptions&gt;&gt; _configureActions;
+        private List&lt;Action&lt;TOptions&gt;&gt; _preConfigureActions;
+        private List&lt;Action&lt;IConfigurationBuilder&gt;&gt; _setups;
+
+        /// &lt;summary&gt;
+        /// Gets this instance as &lt;typeparamref name=&quot;TBuilder&quot;/&gt;.
+        /// &lt;/summary&gt;
+        protected abstract TBuilder ThisBuilder { get; }
+
+        /// &lt;summary&gt;
+        /// Sets the command-line arguments to use when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;args&quot;&gt;The command-line arguments.&lt;/param&gt;
+        /// &lt;param name=&quot;switchMappings&quot;&gt;Optional command-line switch mappings.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder With(string[] args, IDictionary&lt;string, string&gt; switchMappings = null)
+        {
+            _args = args ?? throw new ArgumentNullException(nameof(args));
+            _switchMappings = switchMappings;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a default key/value pair to use when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder WithDefault(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+            // assuming value can be null or empty
+
+            _defaults ??= new Dictionary&lt;string, string&gt;();
+            _defaults[key] = value;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a key/value pair to use when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key.&lt;/param&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder With(string key, string value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+            // assuming value can be null or empty
+
+            _keyValues ??= new Dictionary&lt;string, string&gt;();
+            _keyValues[key] = value;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Sets the path (without filename) to the options files to read when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;filePath&quot;&gt;The file path.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, when not provided, the options file is searched in the
+        /// default .NET configuration location, which usually is where the application resides.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TBuilder WithFilePath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(filePath));
+
+            _optionsFilePath = filePath;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Sets the name (without path, with extension) of the options file to read when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;fileName&quot;&gt;The name of the file.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, when not provided, the name is &quot;hazelcast&quot;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TBuilder WithFileName(string fileName)
+        {
+            if (string.IsNullOrWhiteSpace(fileName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(fileName));
+
+            _optionsFileName = fileName;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Sets the environment name to use when building the options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;environmentName&quot;&gt;The environment name.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;By default, when not provided, the name is determined the standard .NET way,
+        /// i.e. from the &lt;c&gt;DOTNET_ENVIRONMENT&lt;/c&gt; and &lt;c&gt;ASPNETCORE_ENVIRONMENT&lt;/c&gt; variables and,
+        /// if not specified, defaults to &quot;Production&quot;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TBuilder WithEnvironment(string environmentName)
+        {
+            if (string.IsNullOrWhiteSpace(environmentName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(environmentName));
+
+            _environmentName = environmentName;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Sets the alternate key for options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The alternate key.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder WithAltKey(string key)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+
+            _altKey = key;
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;typeparamref name=&quot;TOptions&quot;/&gt; configuration delegate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;The delegate.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder With(Action&lt;IConfiguration, TOptions&gt; configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            _configureActions ??= new List&lt;Action&lt;IConfiguration, TOptions&gt;&gt;();
+            _configureActions.Add(configure);
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;typeparamref name=&quot;TOptions&quot;/&gt; default configuration delegate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;The delegate.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder WithDefault(Action&lt;TOptions&gt; configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            _preConfigureActions ??= new List&lt;Action&lt;TOptions&gt;&gt;();
+            _preConfigureActions.Add(configure);
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;typeparamref name=&quot;TOptions&quot;/&gt; configuration delegate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;The delegate.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder With(Action&lt;TOptions&gt; configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+            return With((_, o) =&gt; configure(o));
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; configuration delegate.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;The delegate.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder ConfigureBuilder(Action&lt;IConfigurationBuilder&gt; configure)
+        {
+            if (configure == null) throw new ArgumentNullException(nameof(configure));
+
+            _setups ??= new List&lt;Action&lt;IConfigurationBuilder&gt;&gt;();
+            _setups.Add(configure);
+            return ThisBuilder;
+        }
+
+        /// &lt;summary&gt;
+        /// Binds an additional options instance.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;key&quot;&gt;The key for the instance.&lt;/param&gt;
+        /// &lt;param name=&quot;instance&quot;&gt;The instance.&lt;/param&gt;
+        /// &lt;returns&gt;This options builder.&lt;/returns&gt;
+        public TBuilder Bind(string key, object instance)
+            =&gt; With((configuration, _) =&gt; configuration.HzBind(key, instance));
+
+        private void PreConfigure(TOptions options)
+        {
+            if (_preConfigureActions == null) return;
+
+            foreach (var preConfigure in _preConfigureActions)
+                preConfigure(options);
+        }
+
+        private void Configure(IConfiguration configuration, TOptions options)
+        {
+            if (_configureActions == null) return;
+
+            foreach (var configure in _configureActions)
+                configure(configuration, options);
+        }
+
+        private void Setup(IConfigurationBuilder builder)
+        {
+            builder.AddHazelcastAndDefaults(_args, _switchMappings, _defaults, _keyValues, _optionsFilePath, _optionsFileName, _environmentName);
+
+            if (_setups == null) return;
+
+            foreach (var setup in _setups)
+                setup(builder);
+        }
+
+        /// &lt;summary&gt;
+        /// Builds the options.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public TOptions Build()
+        {
+            return Build(Setup, PreConfigure, Configure, _altKey);
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Builds Hazelcast options.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;setup&quot;&gt;An &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; setup delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;preConfigure&quot;&gt;An &lt;typeparamref name=&quot;TOptions&quot;/&gt; pre-configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;Optional &lt;typeparamref name=&quot;TOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;returns&gt;Hazelcast options.&lt;/returns&gt;
+        internal static TOptions Build(Action&lt;IConfigurationBuilder&gt; setup, Action&lt;TOptions&gt; preConfigure = null, Action&lt;IConfiguration, TOptions&gt; configure = null)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            var builder = new ConfigurationBuilder();
+            setup(builder);
+            var configuration = builder.Build();
+
+            return Build(configuration, preConfigure, configure);
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Builds Hazelcast options, using an alternate key.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;setup&quot;&gt;An &lt;see cref=&quot;IConfigurationBuilder&quot;/&gt; setup delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;preConfigure&quot;&gt;A &lt;typeparamref name=&quot;TOptions&quot;/&gt; pre-configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;configure&quot;&gt;A &lt;typeparamref name=&quot;TOptions&quot;/&gt; configuration delegate.&lt;/param&gt;
+        /// &lt;param name=&quot;altKey&quot;&gt;An alternate key.&lt;/param&gt;
+        /// &lt;returns&gt;Hazelcast options.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;This is used in tests only and not meant to be public. If &lt;paramref name=&quot;altKey&quot;/&gt; is not
+        /// &lt;c&gt;null&lt;/c&gt;, options starting with that key will bind after those starting with &quot;hazelcast&quot; and
+        /// override them. This allows one json file to contain several configuration sets, which is
+        /// convenient for instance when using the &quot;user secrets&quot; during tests.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        internal static TOptions Build(Action&lt;IConfigurationBuilder&gt; setup, Action&lt;TOptions&gt; preConfigure, Action&lt;IConfiguration, TOptions&gt; configure, string altKey)
+        {
+            if (setup == null) throw new ArgumentNullException(nameof(setup));
+
+            var builder = new ConfigurationBuilder();
+            setup(builder);
+            var configuration = builder.Build();
+
+            return Build(configuration, preConfigure, configure, altKey);
+        }
+
+        // builds options, no alternate keys
+        private static TOptions Build(IConfiguration configuration, Action&lt;TOptions&gt; preConfigure, Action&lt;IConfiguration, TOptions&gt; configure = null)
+            =&gt; Build(configuration, preConfigure, configure, null);
+
+        // builds options, optionally binding alternate keys
+        private static TOptions Build(IConfiguration configuration, Action&lt;TOptions&gt; preConfigure, Action&lt;IConfiguration, TOptions&gt; configure, string altKey)
+        {
+            // must HzBind here and not simply Bind because we use our custom
+            // binder which handles more situations such as ignoring and/or
+            // renaming properties
+
+            var options = new TOptions();
+
+            preConfigure?.Invoke(options);
+
+            var sectionName = options.SectionName;
+
+            configuration.HzBind(sectionName, options);
+
+            if (altKey != null &amp;&amp; altKey != sectionName)
+                configuration.HzBind(altKey, options);
+
+            configure?.Invoke(configuration, options);
+            return options;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[57,13,57,75,0],[58,13,58,46,0],[59,13,59,32,0],[70,13,70,48,0],[70,49,70,121,0],[73,13,73,60,0],[74,13,74,36,0],[75,13,75,32,0],[86,13,86,48,1],[86,49,86,121,0],[89,13,89,61,1],[90,13,90,37,1],[91,13,91,32,1],[105,13,105,53,0],[105,54,105,131,0],[107,13,107,41,0],[108,13,108,32,0],[121,13,121,53,0],[121,54,121,131,0],[123,13,123,41,0],[124,13,124,32,0],[139,13,139,60,0],[139,61,139,145,0],[141,13,141,48,0],[142,13,142,32,0],[152,13,152,48,1],[152,49,152,121,0],[154,13,154,27,1],[155,13,155,32,1],[165,13,165,35,1],[165,36,165,87,0],[167,13,167,80,1],[168,13,168,46,1],[169,13,169,32,1],[179,13,179,35,0],[179,36,179,87,0],[180,13,180,67,0],[181,13,181,49,0],[182,13,182,32,0],[192,13,192,35,1],[192,36,192,87,0],[193,13,193,35,1],[193,35,193,47,1],[193,47,193,49,1],[203,13,203,35,1],[203,36,203,87,0],[205,13,205,67,1],[206,13,206,36,1],[207,13,207,32,1],[217,16,217,43,0],[217,43,217,78,0],[217,78,217,79,0],[221,13,221,46,1],[221,47,221,54,1],[223,22,223,38,0],[223,39,223,41,0],[223,42,223,62,0],[224,17,224,39,0],[225,9,225,10,0],[229,13,229,43,1],[229,44,229,51,1],[231,22,231,35,1],[231,36,231,38,1],[231,39,231,56,1],[232,17,232,51,1],[233,9,233,10,1],[237,13,237,146,1],[239,13,239,33,1],[239,34,239,41,1],[241,22,241,31,1],[241,32,241,34,1],[241,35,241,42,1],[242,17,242,32,1],[243,9,243,10,1],[251,13,251,67,1],[263,13,263,31,1],[263,32,263,79,1],[265,13,265,54,0],[266,13,266,28,0],[267,13,267,49,0],[269,13,269,66,0],[288,13,288,31,1],[288,32,288,79,1],[290,13,290,54,1],[291,13,291,28,1],[292,13,292,49,1],[294,13,294,74,1],[299,16,299,67,0],[308,13,308,42,1],[310,13,310,43,1],[312,13,312,51,1],[314,13,314,56,1],[316,13,316,57,1],[317,17,317,55,1],[319,13,319,55,1],[320,13,320,28,1]]);
+    </script>
+  </body>
+</html>

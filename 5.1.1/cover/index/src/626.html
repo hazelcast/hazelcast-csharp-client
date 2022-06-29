@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\Impl\HMapWithCache.Removing.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Query;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.DistributedObjects.Impl
+{
+    internal partial class HMapWithCache&lt;TKey, TValue&gt; // Removing
+    {
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;bool&gt; TryRemoveAsync(IData keyData, TimeSpan timeToWait, CancellationToken cancellationToken)
+        {
+            var removed = await base.TryRemoveAsync(keyData, timeToWait, cancellationToken).CfAwait();
+            if (removed) _cache.Remove(keyData);
+            return removed;
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;TValue&gt; GetAndRemoveAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
+            }
+            finally
+            {
+                _cache.Remove(keyData);
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task&lt;bool&gt; RemoveAsync(IData keyData, IData valueData, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return await base.RemoveAsync(keyData, valueData, cancellationToken).CfAwait();
+            }
+            finally
+            {
+                _cache.Remove(keyData);
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override Task RemoveAsync(IPredicate predicate, CancellationToken cancellationToken)
+        {
+            try
+            {
+                return base.RemoveAsync(predicate, cancellationToken);
+            }
+            finally
+            {
+                // not exactly pretty, but we cannot run the predicate locally
+                _cache.Clear();
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task RemoveAsync(IData keyData, CancellationToken cancellationToken)
+        {
+            try
+            {
+                await base.GetAndRemoveAsync(keyData, cancellationToken).CfAwait();
+            }
+            finally
+            {
+                _cache.Remove(keyData);
+            }
+        }
+
+        /// &lt;inheritdoc /&gt;
+        protected override async Task ClearAsync(CancellationToken cancellationToken)
+        {
+            await base.ClearAsync(cancellationToken)
+                .ContinueWith(_ =&gt; _cache.Clear(), default, default, TaskScheduler.Current)
+                .CfAwait();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[29,13,29,103,0],[30,13,30,25,0],[30,26,30,49,0],[31,13,31,28,0],[32,9,32,10,0],[39,17,39,91,0],[43,17,43,40,0],[45,9,45,10,0],[52,17,52,96,0],[56,17,56,40,0],[58,9,58,10,0],[65,17,65,71,1],[70,17,70,32,1],[71,13,71,14,1],[72,9,72,10,1],[79,17,79,84,1],[80,13,80,14,1],[83,17,83,40,1],[85,9,85,10,1],[90,13,92,28,1],[91,36,91,50,1],[93,9,93,10,1]]);
+    </script>
+  </body>
+</html>

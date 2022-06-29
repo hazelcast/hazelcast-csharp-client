@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IHRingBuffer&lt;TItem&gt; Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IHRingBuffer&lt;TItem&gt; Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_DistributedObjects_IHRingBuffer_1" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1" class="text-break">IHRingBuffer&lt;TItem&gt; Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>A Ringbuffer is a data-structure where the content is stored in a ring like structure.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IHRingBuffer&lt;TItem&gt; : IDistributedObject, IAsyncDisposable</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#system-iasyncdisposable-disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TItem</span></td>
+        <td></td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Hazelcast_DistributedObjects_IHRingBuffer_1_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>A Ringbuffer is a data-structure where the content is stored in a ring like structure. A ringbuffer has a capacity so it
+won&apos;t grow beyond that capacity and endanger the stability of the system. If that capacity is exceeded, than the oldest
+item in the ringbuffer is overwritten.
+The ringbuffer has 2 always incrementing sequences:
+<ol>
+<li>
+tailSequence: this is the side where the youngest item is found. So the tail is the side of the ringbuffer where
+items are added to.
+</li>
+<li>
+headSequence: this is the side where the oldest items are found. So the head is the side where items gets
+discarded.
+</li>
+</ol>
+The items in the ringbuffer can be found by a sequence that is in between (inclusive) the head and tail sequence.
+If data is read from a ringbuffer with a sequence that is smaller than the headSequence, it means that the data
+is not available anymore and a
+<see cref="!:StaleSequenceException"></see>
+is thrown.
+A Ringbuffer currently is not a distributed data-structure. So all data is stored in a single partition; comparable to the
+IQueue implementation. But we&apos;ll provide an option to partition the data in the near future.
+A Ringbuffer can be used in a similar way as a queue, but one of the key differences is that a queue.take is destructive,
+meaning that only 1 thread is able to take an item. A ringbuffer.read is not destructive, so you can have multiple threads
+reading the same item multiple times.
+The Ringbuffer is the backing data-structure for the reliable
+<a class="xref" href="Hazelcast.DistributedObjects.IHTopic-1.html">IHTopic&lt;T&gt;</a>
+implementation.</p>
+</div>
+  </div>
+  <h3 id="properties">Properties
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_MaxBatchSize" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.MaxBatchSize" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.MaxBatchSize.html#Hazelcast_DistributedObjects_IHRingBuffer_1_MaxBatchSize">MaxBatchSize</a>
+        </td>
+        <td class="markdown level1 summary"></td>
+      </tr>
+    </tbody>
+  </table>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_AddAllAsync_System_Collections_Generic_ICollection__0__Hazelcast_DistributedObjects_OverflowPolicy_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.AddAllAsync(System.Collections.Generic.ICollection{`0},Hazelcast.DistributedObjects.OverflowPolicy)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.AddAllAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_AddAllAsync_System_Collections_Generic_ICollection__0__Hazelcast_DistributedObjects_OverflowPolicy_">AddAllAsync(ICollection&lt;TItem&gt;, OverflowPolicy)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds all the items of a collection to the tail of the Ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__0_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.AddAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.AddAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__0_">AddAsync(TItem)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an item to the tail of the Ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__0_Hazelcast_DistributedObjects_OverflowPolicy_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.AddAsync(`0,Hazelcast.DistributedObjects.OverflowPolicy)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.AddAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_AddAsync__0_Hazelcast_DistributedObjects_OverflowPolicy_">AddAsync(TItem, OverflowPolicy)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Asynchronously writes an item with a configurable
+<a class="xref" href="Hazelcast.DistributedObjects.OverflowPolicy.html">OverflowPolicy</a>
+.
+If there is space in the ringbuffer, the call will return the sequence of the written item.
+If there is no space, it depends on the overflow policy what happens:
+<ol>
+<li>
+<a class="xref" href="Hazelcast.DistributedObjects.OverflowPolicy.html#Hazelcast_DistributedObjects_OverflowPolicy_Overwrite">Overwrite</a>
+: we just overwrite the oldest item in the ringbuffer and we violate
+the ttl</li>
+<li>
+<a class="xref" href="Hazelcast.DistributedObjects.OverflowPolicy.html#Hazelcast_DistributedObjects_OverflowPolicy_Fail">Fail</a>
+: we return -1 </li>
+</ol>
+The reason that FAIL exist is to give the opportunity to obey the ttl. If blocking behavior is required,
+this can be implemented using retrying in combination with a exponential backoff. Example:</p>
+<pre><code>int sleepMs = 100;
+for (; ; ) {
+long result = ringbuffer.AddAsync(item, OverflowPolicy.Fail).Result;
+if (result != -1) {
+break;
+}
+Thread.Sleep(sleepMs);
+sleepMs = Math.Min(5000, sleepMs * 2);
+}</code></pre>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetCapacityAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetCapacityAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetCapacityAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetCapacityAsync">GetCapacityAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the capacity of this Ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetHeadSequenceAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetHeadSequenceAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetHeadSequenceAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetHeadSequenceAsync">GetHeadSequenceAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the sequence of the head.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetRemainingCapacityAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetRemainingCapacityAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetRemainingCapacityAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetRemainingCapacityAsync">GetRemainingCapacityAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the remaining capacity of the ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetSizeAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetSizeAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetSizeAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetSizeAsync">GetSizeAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns number of items in the ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_GetTailSequenceAsync" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.GetTailSequenceAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.GetTailSequenceAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_GetTailSequenceAsync">GetTailSequenceAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Returns the sequence of the tail.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_ReadManyAsync_System_Int64_System_Int32_System_Int32_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.ReadManyAsync(System.Int64,System.Int32,System.Int32)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.ReadManyAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_ReadManyAsync_System_Int64_System_Int32_System_Int32_">ReadManyAsync(Int64, Int32, Int32)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads a batch of items from the Ringbuffer.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHRingBuffer_1_ReadOneAsync_System_Int64_" data-uid="Hazelcast.DistributedObjects.IHRingBuffer`1.ReadOneAsync(System.Int64)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHRingBuffer-1.ReadOneAsync.html#Hazelcast_DistributedObjects_IHRingBuffer_1_ReadOneAsync_System_Int64_">ReadOneAsync(Int64)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Reads one item from the Ringbuffer.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

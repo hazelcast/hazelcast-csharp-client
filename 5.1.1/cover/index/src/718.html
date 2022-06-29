@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Configuration\HazelcastCommandLineConfigurationProvider.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.CommandLine;
+
+namespace Hazelcast.Configuration
+{
+    /// &lt;summary&gt;
+    /// A command line based Hazelcast &lt;see cref=&quot;ConfigurationProvider&quot;/&gt;.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;Adds support for hazelcast.x.y arguments that do not respect the standard hazelcast:x:y pattern.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class HazelcastCommandLineConfigurationProvider : CommandLineConfigurationProvider
+    {
+        private static readonly string HazelcastAndKeyDelimiter = HazelcastOptions.SectionNameConstant + ConfigurationPath.KeyDelimiter;
+        private const string HazelcastAndDot = HazelcastOptions.SectionNameConstant + &quot;.&quot;;
+        private const string SlashHazelcastAndDot = &quot;/&quot; + HazelcastAndDot;
+        private const string DashHazelcastAndDot = &quot;--&quot; + HazelcastAndDot;
+
+        private static readonly string FailoverAndKeyDelimiter = HazelcastFailoverOptions.SectionNameConstant + ConfigurationPath.KeyDelimiter;
+        private const string FailoverAndDot = HazelcastFailoverOptions.SectionNameConstant + &quot;.&quot;;
+        private const string SlashFailoverAndDot = &quot;/&quot; + FailoverAndDot;
+        private const string DashFailoverAndDot = &quot;--&quot; + FailoverAndDot;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;HazelcastCommandLineConfigurationProvider&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public HazelcastCommandLineConfigurationProvider(HazelcastCommandLineConfigurationSource source)
+            : base(FilterArgs(source.Args, source.SwitchMappings), source.SwitchMappings)
+        { }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Filters arguments.
+        /// &lt;/summary&gt;
+        internal static IEnumerable&lt;string&gt; FilterArgs(IEnumerable&lt;string&gt; args, IDictionary&lt;string, string&gt; switchMappings)
+        {
+            using var enumerator = args.GetEnumerator();
+            while (enumerator.MoveNext())
+            {
+                var arg = enumerator.Current;
+                if (string.IsNullOrWhiteSpace(arg)) continue;
+
+                int pos;
+
+                if (switchMappings != null &amp;&amp; arg.StartsWith(&quot;-&quot;, StringComparison.Ordinal))
+                {
+                    string argk, argv;
+                    if ((pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                    {
+                        argk = arg[..pos];
+                        argv = arg[(pos + 1)..];
+                    }
+                    else
+                    {
+                        argk = arg;
+                        argv = null;
+                    }
+
+                    argk = argk.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                    if (switchMappings.TryGetValue(argk, out var argm) &amp;&amp; 
+                        (argm.StartsWith(HazelcastAndKeyDelimiter, StringComparison.Ordinal) ||
+                         argm.StartsWith(FailoverAndKeyDelimiter, StringComparison.Ordinal)))
+                    {
+                        // yield the key
+                        yield return &quot;--&quot; + argm;
+
+                        // yield the value
+                        if (argv != null) yield return argv;
+                        else if (enumerator.MoveNext()) yield return enumerator.Current;
+                        continue; // next!
+                    }
+                }
+
+                if (arg.StartsWith(SlashHazelcastAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(DashHazelcastAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(SlashFailoverAndDot, StringComparison.Ordinal) ||
+                    arg.StartsWith(DashFailoverAndDot, StringComparison.Ordinal))
+                {
+                    if ((pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                    {
+                        // yield the key
+                        yield return arg[..pos].Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                        // yield the value
+                        yield return arg[(pos + 1)..];
+                    }
+                    else
+                    {
+                        // yield the key
+                        yield return arg.Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                        // yield the value
+                        if (enumerator.MoveNext()) yield return enumerator.Current;
+                    }
+                }
+                else if ((arg.StartsWith(HazelcastAndDot, StringComparison.Ordinal) || 
+                          arg.StartsWith(FailoverAndDot, StringComparison.Ordinal)) &amp;&amp;
+                         (pos = arg.IndexOf(&#39;=&#39;, StringComparison.Ordinal)) &gt; 0)
+                {
+                    // yield the key
+                    yield return &quot;--&quot; + arg[..pos].Replace(&quot;.&quot;, ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
+
+                    // yield the value
+                    yield return arg[(pos + 1)..];
+                }
+
+                // else ignore that arg (handled by the default command line provider)
+            }
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,9,30,137,0],[35,9,35,144,0],[44,15,44,90,1],[45,11,45,12,1],[53,13,53,57,1],[54,13,54,42,1],[56,17,56,46,1],[57,17,57,52,1],[61,17,61,93,1],[64,21,64,80,0],[66,25,66,43,0],[67,25,67,49,0],[71,25,71,36,0],[72,25,72,37,0],[75,21,75,104,0],[77,21,79,94,0],[82,25,82,50,0],[85,25,85,42,0],[85,43,85,61,0],[86,30,86,56,0],[86,57,86,89,0],[87,25,87,34,0],[89,17,89,18,0],[91,17,94,82,1],[96,21,96,80,1],[99,25,99,120,1],[102,25,102,55,1],[107,25,107,113,1],[110,25,110,51,1],[110,52,110,84,1],[113,22,115,81,1],[118,21,118,123,1],[121,21,121,51,1],[125,13,125,14,1],[126,9,126,10,1]]);
+    </script>
+  </body>
+</html>

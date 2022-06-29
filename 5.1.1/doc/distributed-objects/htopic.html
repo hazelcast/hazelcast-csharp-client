@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>HTopic | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="HTopic | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../../images/favicon.ico">
+    <link rel="stylesheet" href="../../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../../styles/docfx.css">
+    <link rel="stylesheet" href="../../../styles/main.css">
+    <meta property="docfx:navrel" content="../../toc.html">
+    <meta property="docfx:tocrel" content="../toc.html">
+    
+    <meta property="docfx:rel" content="../../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../../index.html">
+                <img id="logo" src="../../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="htopic">HTopic</h1>
+
+<p>A <code>HTopic</code> topic is a distributed topic corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/topic.html">List</a>.</p>
+<p>The topic behavior can be configured on the server: see the general <a href="https://docs.hazelcast.com/imdg/latest/data-structures/optic.html">List documentation</a> for complete details about topics.</p>
+<h2 id="defining-topics">Defining Topics</h2>
+<p>Topics are fully identified by their type and unique name, regardless of the types specified for topic messages. In other words, an <code>HTopic&lt;string&gt;</code> and an <code>HTopic&lt;int&gt;</code> named with the same name are backed by the <em>same</em> cluster structure. Obviously, refering to a topic with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.</p>
+<p>The messages type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (see the <a href="../serialization.html">Serialization</a> documentation). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.</p>
+<h2 id="creating--destroying-topics">Creating &amp; Destroying Topics</h2>
+<p>A topic is obtained from the Hazelcast .NET Client, and is created on-demand: if a topic with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:</p>
+<pre><code class="lang-csharp">var optic = await client.GetTopicAsync&lt;string&gt;(&quot;my-topic&quot;);
+</code></pre><p>Topics should be disposed after usage, in order to release their resources. Note that this only releases <em>client-side</em> resources, but the actual data remain available on the cluster for further usage. In order to wipe the topic and its data entirely from the cluster, it needs to be destroyed:</p>
+<pre><code class="lang-csharp">await topic.DestroyAsync();
+</code></pre><h2 id="using-topics">Using Topics</h2>
+<p>The <code>HTopic</code> structure is completely documented in the associated <a class="xref" href="../../api/Hazelcast.DistributedObjects.IHTopic-1.html">IHTopic&lt;T&gt;</a> reference documentation. It provides a method to publish messages:</p>
+<ul>
+<li><code>PublishAsync(message)</code> publishes a message</li>
+</ul>
+<p>The <code>HTopic</code> structure exposes events (see events <a href="../events.html">general documentation</a>) at topic level. A complete list of events is provided in the <a class="xref" href="../../api/Hazelcast.DistributedObjects.CollectionItemEventHandlers-1.html">CollectionItemEventHandlers&lt;T&gt;</a> documentation. The following example illustrates how to subscribe, and unsubscribe, to topic events:</p>
+<pre><code class="lang-csharp">var id = await topic.SubscribeAsync(events =&gt; events
+    .Message((sender, args) =&gt; {
+        logger.LogInformation($&quot;Got message {args.Payload} at {args.PublishTime}.&quot;)
+    }));
+
+// ...
+
+await topic.UnsubscribeAsync(id);
+</code></pre><p>Note that the handler methods passed to e.g. <code>Message</code> can be asynchronous, too.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../../styles/main.js"></script>
+  </body>
+</html>

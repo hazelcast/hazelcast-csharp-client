@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>IHMap&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="IHMap&lt;TKey, TValue&gt; Interface
+   | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHMap`2">
+  
+  <div class="hz-class-header">
+  <h1 id="Hazelcast_DistributedObjects_IHMap_2" data-uid="Hazelcast.DistributedObjects.IHMap`2" class="text-break">IHMap&lt;TKey, TValue&gt; Interface
+  </h1>
+  <h6>Namespace: <a class="xref" href="Hazelcast.DistributedObjects.html">Hazelcast.DistributedObjects</a></h6>
+  <h6>Assembly: Hazelcast.Net.dll</h6>
+  <div class="markdown level0 summary"><p>Represents a distributed map.</p>
+</div>
+  <div class="markdown level0 conceptual"></div>
+  <div class="codewrapper">
+    <pre><code class="lang-csharp hljs">public interface IHMap&lt;TKey, TValue&gt; : IHMapBase&lt;TKey, TValue&gt;, IDistributedObject, IAsyncDisposable, IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;, IKeyLockable&lt;TKey&gt;</code></pre>
+  </div>
+  <div class="inheritedMembers">
+    <h5>Inherited Members</h5>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.GetAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_GetAsync__0_">IHMapBase&lt;TKey, TValue&gt;.GetAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_GetKeysAsync">IHMapBase&lt;TKey, TValue&gt;.GetKeysAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_GetValuesAsync">IHMapBase&lt;TKey, TValue&gt;.GetValuesAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.GetEntriesAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_GetEntriesAsync">IHMapBase&lt;TKey, TValue&gt;.GetEntriesAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.GetSizeAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_GetSizeAsync">IHMapBase&lt;TKey, TValue&gt;.GetSizeAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.IsEmptyAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_IsEmptyAsync">IHMapBase&lt;TKey, TValue&gt;.IsEmptyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.ContainsKeyAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_ContainsKeyAsync__0_">IHMapBase&lt;TKey, TValue&gt;.ContainsKeyAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.ContainsValueAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_ContainsValueAsync__1_">IHMapBase&lt;TKey, TValue&gt;.ContainsValueAsync(TValue)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.PutAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_PutAsync__0__1_">IHMapBase&lt;TKey, TValue&gt;.PutAsync(TKey, TValue)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.PutAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_PutAsync__0__1_System_TimeSpan_">IHMapBase&lt;TKey, TValue&gt;.PutAsync(TKey, TValue, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.SetAllAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_SetAllAsync_System_Collections_Generic_IDictionary__0__1__">IHMapBase&lt;TKey, TValue&gt;.SetAllAsync(IDictionary&lt;TKey, TValue&gt;)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.ClearAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_ClearAsync">IHMapBase&lt;TKey, TValue&gt;.ClearAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IHMapBase-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHMapBase_2_RemoveAsync__0_">IHMapBase&lt;TKey, TValue&gt;.RemoveAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.ServiceName.html#Hazelcast_DistributedObjects_IDistributedObject_ServiceName">IDistributedObject.ServiceName</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.Name.html#Hazelcast_DistributedObjects_IDistributedObject_Name">IDistributedObject.Name</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.html#Hazelcast_DistributedObjects_IDistributedObject_PartitionKey">IDistributedObject.PartitionKey</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync.html#Hazelcast_DistributedObjects_IDistributedObject_DestroyAsync">IDistributedObject.DestroyAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.iasyncdisposable.disposeasync#system-iasyncdisposable-disposeasync">IAsyncDisposable.DisposeAsync()</a>
+    </div>
+    <div>
+      <a class="xref" href="https://docs.microsoft.com/dotnet/api/system.collections.generic.iasyncenumerable-1.getasyncenumerator#system-collections-generic-iasyncenumerable-1-getasyncenumerator(system-threading-cancellationtoken)">IAsyncEnumerable&lt;KeyValuePair&lt;TKey, TValue&gt;&gt;.GetAsyncEnumerator(CancellationToken)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.LockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_">IKeyLockable&lt;TKey&gt;.LockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.LockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_LockAsync__0_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.LockAsync(TKey, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.TryLockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_System_TimeSpan_">IKeyLockable&lt;TKey&gt;.TryLockAsync(TKey, TimeSpan, TimeSpan)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.IsLockedAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_IsLockedAsync__0_">IKeyLockable&lt;TKey&gt;.IsLockedAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.UnlockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_UnlockAsync__0_">IKeyLockable&lt;TKey&gt;.UnlockAsync(TKey)</a>
+    </div>
+    <div>
+      <a class="xref" href="Hazelcast.DistributedObjects.IKeyLockable-1.ForceUnlockAsync.html#Hazelcast_DistributedObjects_IKeyLockable_1_ForceUnlockAsync__0_">IKeyLockable&lt;TKey&gt;.ForceUnlockAsync(TKey)</a>
+    </div>
+  </div>
+  <h5 class="typeParameters">Type Parameters</h5>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TKey</span></td>
+        <td><p>The type of the keys.</p>
+</td>
+      </tr>
+      <tr>
+        <td class="hz-one-third"><span class="parametername">TValue</span></td>
+        <td><p>The type of the values.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+  <h5 id="Hazelcast_DistributedObjects_IHMap_2_remarks"><strong>Remarks</strong></h5>
+  <div class="markdown level0 remarks"><p>Keys are identified by their own hash code and equality.</p>
+<p>Methods return clones of the original keys and values. Modifying these clones does not change
+the actual keys and values in the map. One should put the modified entries back, to make
+changes visible to all nodes.</p>
+</div>
+  </div>
+  <h3 id="methods">Methods
+  </h3>
+  <table class="table table-bordered table-striped table-condensed">
+    <tbody>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_AddIndexAsync_Hazelcast_Models_IndexOptions_" data-uid="Hazelcast.DistributedObjects.IHMap`2.AddIndexAsync(Hazelcast.Models.IndexOptions)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.AddIndexAsync.html#Hazelcast_DistributedObjects_IHMap_2_AddIndexAsync_Hazelcast_Models_IndexOptions_">AddIndexAsync(IndexOptions)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an index to this dictionary for the specified entries so that queries can run faster.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_AddIndexAsync_Hazelcast_Models_IndexType_System_String___" data-uid="Hazelcast.DistributedObjects.IHMap`2.AddIndexAsync(Hazelcast.Models.IndexType,System.String[])" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.AddIndexAsync.html#Hazelcast_DistributedObjects_IHMap_2_AddIndexAsync_Hazelcast_Models_IndexType_System_String___">AddIndexAsync(IndexType, String[])</a>
+        </td>
+        <td class="markdown level1 summary"><p>Convenient method to add an index to this dictionary with the given type and attributes.
+Attributes are indexed in ascending order.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_AddInterceptorAsync_Hazelcast_DistributedObjects_IMapInterceptor_" data-uid="Hazelcast.DistributedObjects.IHMap`2.AddInterceptorAsync(Hazelcast.DistributedObjects.IMapInterceptor)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.AddInterceptorAsync.html#Hazelcast_DistributedObjects_IHMap_2_AddInterceptorAsync_Hazelcast_DistributedObjects_IMapInterceptor_">AddInterceptorAsync(IMapInterceptor)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an interceptor on the server side.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_AggregateAsync__1_Hazelcast_Aggregation_IAggregator___0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.AggregateAsync``1(Hazelcast.Aggregation.IAggregator{``0})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.AggregateAsync.html#Hazelcast_DistributedObjects_IHMap_2_AggregateAsync__1_Hazelcast_Aggregation_IAggregator___0__">AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Aggregates values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_AggregateAsync__1_Hazelcast_Aggregation_IAggregator___0__Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.AggregateAsync``1(Hazelcast.Aggregation.IAggregator{``0},Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.AggregateAsync.html#Hazelcast_DistributedObjects_IHMap_2_AggregateAsync__1_Hazelcast_Aggregation_IAggregator___0__Hazelcast_Query_IPredicate_">AggregateAsync&lt;TResult&gt;(IAggregator&lt;TResult&gt;, IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Aggregates values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_DeleteAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMap`2.DeleteAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.DeleteAsync.html#Hazelcast_DistributedObjects_IHMap_2_DeleteAsync__0_">DeleteAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_EvictAllAsync" data-uid="Hazelcast.DistributedObjects.IHMap`2.EvictAllAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.EvictAllAsync.html#Hazelcast_DistributedObjects_IHMap_2_EvictAllAsync">EvictAllAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Evicts all entries but the locked entries from the cache.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_EvictAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMap`2.EvictAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.EvictAsync.html#Hazelcast_DistributedObjects_IHMap_2_EvictAsync__0_">EvictAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Evicts the specified key from the map.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ExecuteAsync.html#Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Processes all entries.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ExecuteAsync.html#Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0_">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Processes an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ExecuteAsync.html#Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Query_IPredicate_">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Process entries.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},System.Collections.Generic.IEnumerable{`0})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ExecuteAsync.html#Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0__">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IEnumerable&lt;TKey&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Processes entries.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_FlushAsync" data-uid="Hazelcast.DistributedObjects.IHMap`2.FlushAsync" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.FlushAsync.html#Hazelcast_DistributedObjects_IHMap_2_FlushAsync">FlushAsync()</a>
+        </td>
+        <td class="markdown level1 summary"><p>Flushes the <code>MapStore</code> on server, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_GetAllAsync_System_Collections_Generic_ICollection__0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.GetAllAsync(System.Collections.Generic.ICollection{`0})" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.GetAllAsync.html#Hazelcast_DistributedObjects_IHMap_2_GetAllAsync_System_Collections_Generic_ICollection__0__">GetAllAsync(ICollection&lt;TKey&gt;)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets all entries for keys.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_GetEntriesAsync_Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.GetEntriesAsync(Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.GetEntriesAsync.html#Hazelcast_DistributedObjects_IHMap_2_GetEntriesAsync_Hazelcast_Query_IPredicate_">GetEntriesAsync(IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Queries the map based on the specified predicate and returns a readonly dictionary of the matching entries.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_GetEntryViewAsync__0_" data-uid="Hazelcast.DistributedObjects.IHMap`2.GetEntryViewAsync(`0)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.GetEntryViewAsync.html#Hazelcast_DistributedObjects_IHMap_2_GetEntryViewAsync__0_">GetEntryViewAsync(TKey)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Gets an entry with statistics for a key, or <code>null</code> if the map does not contain an entry with this key.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_GetKeysAsync_Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.GetKeysAsync(Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.GetKeysAsync.html#Hazelcast_DistributedObjects_IHMap_2_GetKeysAsync_Hazelcast_Query_IPredicate_">GetKeysAsync(IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Queries the map based on the specified predicate and returns matching keys.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_GetValuesAsync_Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.GetValuesAsync(Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.GetValuesAsync.html#Hazelcast_DistributedObjects_IHMap_2_GetValuesAsync_Hazelcast_Query_IPredicate_">GetValuesAsync(IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Queries the map based on the specified predicate and returns a readonly collection of the values of matching entries.
+Gets values for entries matching a predicate.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_LoadAllAsync_System_Boolean_" data-uid="Hazelcast.DistributedObjects.IHMap`2.LoadAllAsync(System.Boolean)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.LoadAllAsync.html#Hazelcast_DistributedObjects_IHMap_2_LoadAllAsync_System_Boolean_">LoadAllAsync(Boolean)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Loads all keys into the store.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_LoadAllAsync_System_Collections_Generic_ICollection__0__System_Boolean_" data-uid="Hazelcast.DistributedObjects.IHMap`2.LoadAllAsync(System.Collections.Generic.ICollection{`0},System.Boolean)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.LoadAllAsync.html#Hazelcast_DistributedObjects_IHMap_2_LoadAllAsync_System_Collections_Generic_ICollection__0__System_Boolean_">LoadAllAsync(ICollection&lt;TKey&gt;, Boolean)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Loads the given keys into the store.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ProjectAsync__1_Hazelcast_Projection_IProjection_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ProjectAsync``1(Hazelcast.Projection.IProjection)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ProjectAsync.html#Hazelcast_DistributedObjects_IHMap_2_ProjectAsync__1_Hazelcast_Projection_IProjection_">ProjectAsync&lt;TResult&gt;(IProjection)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Projects values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ProjectAsync__1_Hazelcast_Projection_IProjection_Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ProjectAsync``1(Hazelcast.Projection.IProjection,Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ProjectAsync.html#Hazelcast_DistributedObjects_IHMap_2_ProjectAsync__1_Hazelcast_Projection_IProjection_Hazelcast_Query_IPredicate_">ProjectAsync&lt;TResult&gt;(IProjection, IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Projects values.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutAsync__0__1_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutAsync(`0,`1,System.TimeSpan,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutAsync__0__1_System_TimeSpan_System_TimeSpan_">PutAsync(TKey, TValue, TimeSpan, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry, and returns the previous value, if any.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutIfAbsentAsync(`0,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutIfAbsentAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_">PutIfAbsentAsync(TKey, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an entry if no entry with the key already exists.
+Returns the new value, or the existing value if the entry already exists.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutIfAbsentAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutIfAbsentAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan_">PutIfAbsentAsync(TKey, TValue, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an entry with a time-to-live if no entry with the key already exists.
+Returns the new value, or the existing value if the entry already exists.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutIfAbsentAsync(`0,`1,System.TimeSpan,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutIfAbsentAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan_System_TimeSpan_">PutIfAbsentAsync(TKey, TValue, TimeSpan, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Adds an entry with a time-to-live and a max-idle if no entry with the key already exists.
+Returns the new value, or the existing value if the entry already exists.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutTransientAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_">PutTransientAsync(TKey, TValue, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry without calling the <code>MapStore</code> on the server side, if defined.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync(`0,`1,System.TimeSpan,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.PutTransientAsync.html#Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync__0__1_System_TimeSpan_System_TimeSpan_">PutTransientAsync(TKey, TValue, TimeSpan, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry without calling the <code>MapStore</code> on the server side, if defined.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_RemoveAllAsync_Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.RemoveAllAsync(Hazelcast.Query.IPredicate)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.RemoveAllAsync.html#Hazelcast_DistributedObjects_IHMap_2_RemoveAllAsync_Hazelcast_Query_IPredicate_">RemoveAllAsync(IPredicate)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes all entries which match with the supplied predicate.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_RemoveAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMap`2.RemoveAsync(`0,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.RemoveAsync.html#Hazelcast_DistributedObjects_IHMap_2_RemoveAsync__0__1_">RemoveAsync(TKey, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_RemoveInterceptorAsync_System_String_" data-uid="Hazelcast.DistributedObjects.IHMap`2.RemoveInterceptorAsync(System.String)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.RemoveInterceptorAsync.html#Hazelcast_DistributedObjects_IHMap_2_RemoveInterceptorAsync_System_String_">RemoveInterceptorAsync(String)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Removes the interceptor that identified by id.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ReplaceAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ReplaceAsync(`0,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ReplaceAsync.html#Hazelcast_DistributedObjects_IHMap_2_ReplaceAsync__0__1_">ReplaceAsync(TKey, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Updates an entry if it exists.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_ReplaceAsync__0__1__1_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ReplaceAsync(`0,`1,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.ReplaceAsync.html#Hazelcast_DistributedObjects_IHMap_2_ReplaceAsync__0__1__1_">ReplaceAsync(TKey, TValue, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Updates an entry if it exists, and its value is equal to <code data-dev-comment-type="paramref" class="paramref">comparisonValue</code>.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SetAsync(`0,`1)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SetAsync.html#Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_">SetAsync(TKey, TValue)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SetAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SetAsync.html#Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_System_TimeSpan_">SetAsync(TKey, TValue, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_System_TimeSpan_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SetAsync(`0,`1,System.TimeSpan,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SetAsync.html#Hazelcast_DistributedObjects_IHMap_2_SetAsync__0__1_System_TimeSpan_System_TimeSpan_">SetAsync(TKey, TValue, TimeSpan, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Sets (adds or updates) an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1____0_Hazelcast_Query_IPredicate_System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MapEventHandlers{`0,`1}},`0,Hazelcast.Query.IPredicate,System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1____0_Hazelcast_Query_IPredicate_System_Boolean_System_Object_">SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, IPredicate, Boolean, Object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1____0_System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MapEventHandlers{`0,`1}},`0,System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1____0_System_Boolean_System_Object_">SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;, TKey, Boolean, Object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1___Hazelcast_Query_IPredicate_System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MapEventHandlers{`0,`1}},Hazelcast.Query.IPredicate,System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1___Hazelcast_Query_IPredicate_System_Boolean_System_Object_">SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;, IPredicate, Boolean, Object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1___System_Boolean_System_Object_" data-uid="Hazelcast.DistributedObjects.IHMap`2.SubscribeAsync(System.Action{Hazelcast.DistributedObjects.MapEventHandlers{`0,`1}},System.Boolean,System.Object)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.SubscribeAsync.html#Hazelcast_DistributedObjects_IHMap_2_SubscribeAsync_System_Action_Hazelcast_DistributedObjects_MapEventHandlers__0__1___System_Boolean_System_Object_">SubscribeAsync(Action&lt;MapEventHandlers&lt;TKey, TValue&gt;&gt;, Boolean, Object)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Subscribes to events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_TryPutAsync__0__1_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.TryPutAsync(`0,`1,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.TryPutAsync.html#Hazelcast_DistributedObjects_IHMap_2_TryPutAsync__0__1_System_TimeSpan_">TryPutAsync(TKey, TValue, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries to set (add or update) an entry.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_TryRemoveAsync__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.TryRemoveAsync(`0,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.TryRemoveAsync.html#Hazelcast_DistributedObjects_IHMap_2_TryRemoveAsync__0_System_TimeSpan_">TryRemoveAsync(TKey, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Tries to remove the entry with the given key from this map
+within the specified time to wait value.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_UnsubscribeAsync_System_Guid_" data-uid="Hazelcast.DistributedObjects.IHMap`2.UnsubscribeAsync(System.Guid)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.UnsubscribeAsync.html#Hazelcast_DistributedObjects_IHMap_2_UnsubscribeAsync_System_Guid_">UnsubscribeAsync(Guid)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Unsubscribe from events.</p>
+</td>
+      </tr>
+      <tr>
+        <td id="Hazelcast_DistributedObjects_IHMap_2_UpdateTimeToLive__0_System_TimeSpan_" data-uid="Hazelcast.DistributedObjects.IHMap`2.UpdateTimeToLive(`0,System.TimeSpan)" class="hz-one-third">
+          <a class="xref" href="Hazelcast.DistributedObjects.IHMap-2.UpdateTimeToLive.html#Hazelcast_DistributedObjects_IHMap_2_UpdateTimeToLive__0_System_TimeSpan_">UpdateTimeToLive(TKey, TimeSpan)</a>
+        </td>
+        <td class="markdown level1 summary"><p>Updates the time-to-live of an entry.</p>
+</td>
+      </tr>
+    </tbody>
+  </table>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\MapEventHandlers.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represents distributed map event handlers.
+    /// &lt;/summary&gt;
+    public sealed class MapEventHandlers&lt;TKey, TValue&gt; : EventHandlersBase&lt;IMapEventHandlerBase&gt;
+    {
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when the map is cleared.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; Cleared(Action&lt;IHMap&lt;TKey, TValue&gt;, MapClearedEventArgs&gt; handler)
+        {
+            Add(new MapClearedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when the map is cleared.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; Cleared(Func&lt;IHMap&lt;TKey, TValue&gt;, MapClearedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new MapClearedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when the map is evicted.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; Evicted(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEvictedEventArgs&gt; handler)
+        {
+            Add(new MapEvictedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when the map is evicted.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; Evicted(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEvictedEventArgs, ValueTask&gt; handler)
+        {
+            Add(new MapEvictedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is updated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is updated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryUpdated(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryUpdatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryUpdatedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is removed.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryRemoved(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryRemovedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryRemovedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is added.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryAdded(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryAddedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryAddedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is evicted.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryEvicted(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryEvictedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryEvictedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is evicted.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryEvicted(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryEvictedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryEvictedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is expired.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryExpired(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryExpiredEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryExpiredEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is expired.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryExpired(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryExpiredEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryExpiredEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is invalidated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryInvalidated(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryInvalidatedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is invalidated.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryInvalidated(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryInvalidatedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryInvalidatedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is loaded.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryLoaded(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryLoadedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryLoadedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is loaded.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryLoaded(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryLoadedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryLoadedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is merged.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Action&lt;IHMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;&gt; handler)
+        {
+            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler.AsAsync()));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds an handler which runs when a map entry is merged.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;handler&quot;&gt;The handler.&lt;/param&gt;
+        /// &lt;returns&gt;The handlers.&lt;/returns&gt;
+        public MapEventHandlers&lt;TKey, TValue&gt; EntryMerged(Func&lt;IHMap&lt;TKey, TValue&gt;, MapEntryMergedEventArgs&lt;TKey, TValue&gt;, ValueTask&gt; handler)
+        {
+            Add(new MapEntryMergedEventHandler&lt;TKey, TValue, IHMap&lt;TKey, TValue&gt;&gt;(handler));
+            return this;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,99,1],[34,13,34,25,1],[44,13,44,89,0],[45,13,45,25,0],[55,13,55,99,1],[56,13,56,25,1],[66,13,66,89,0],[67,13,67,25,0],[77,13,77,104,1],[78,13,78,25,1],[88,13,88,94,0],[89,13,89,25,0],[99,13,99,104,1],[100,13,100,25,1],[110,13,110,94,0],[111,13,111,25,0],[121,13,121,102,1],[122,13,122,25,1],[132,13,132,92,1],[133,13,133,25,1],[143,13,143,104,1],[144,13,144,25,1],[154,13,154,94,0],[155,13,155,25,0],[165,13,165,104,1],[166,13,166,25,1],[176,13,176,94,0],[177,13,177,25,0],[187,13,187,108,0],[188,13,188,25,0],[198,13,198,98,0],[199,13,199,25,0],[209,13,209,103,0],[210,13,210,25,0],[220,13,220,93,0],[221,13,221,25,0],[231,13,231,103,0],[232,13,232,25,0],[242,13,242,93,0],[243,13,243,25,0]]);
+    </script>
+  </body>
+</html>

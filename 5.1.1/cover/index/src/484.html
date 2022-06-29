@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\ClientSocketConnection.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.IO;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents a client socket connection.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;The client socket connection connects to the server, handle message
+    /// bytes, and manages the network socket. It is used by the client connection.&lt;/para&gt;
+    /// &lt;/remarks&gt;
+    internal class ClientSocketConnection : SocketConnectionBase
+    {
+        private readonly IPEndPoint _endpoint;
+        private readonly NetworkingOptions _options;
+        private readonly SslOptions _sslOptions;
+        private readonly ILoggerFactory _loggerFactory;
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;ClientSocketConnection&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;id&quot;&gt;The unique identifier of the connection.&lt;/param&gt;
+        /// &lt;param name=&quot;endpoint&quot;&gt;The socket endpoint.&lt;/param&gt;
+        /// &lt;param name=&quot;options&quot;&gt;Networking options.&lt;/param&gt;
+        /// &lt;param name=&quot;sslOptions&quot;&gt;SSL options.&lt;/param&gt;
+        /// &lt;param name=&quot;loggerFactory&quot;&gt;A logger factory.&lt;/param&gt;
+        /// &lt;param name=&quot;prefixLength&quot;&gt;An optional prefix length.&lt;/param&gt;
+        public ClientSocketConnection(Guid id, IPEndPoint endpoint, NetworkingOptions options, SslOptions sslOptions, ILoggerFactory loggerFactory, int prefixLength = 0)
+            : base(id, prefixLength)
+        {
+            _endpoint = endpoint ?? throw new ArgumentNullException(nameof(endpoint));
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _sslOptions = sslOptions ?? throw new ArgumentNullException(nameof(sslOptions));
+            _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+            HConsole.Configure(x =&gt; x.Configure(this).SetIndent(16).SetPrefix($&quot;CLT.CONN [{id.ToShortString()}]&quot;));
+        }
+
+        /// &lt;summary&gt;
+        /// Connect to the server.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;cancellationToken&quot;&gt;A cancellation token.&lt;/param&gt;
+        /// &lt;returns&gt;A task that will complete when the connection has been established.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The connection can only be established after its &lt;see cref=&quot;SocketConnectionBase.OnReceiveMessageBytes&quot;/&gt; handler
+        /// has been set. If the handler has not been set, an exception is thrown.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public async ValueTask ConnectAsync(CancellationToken cancellationToken)
+        {
+            HConsole.WriteLine(this, &quot;Open&quot;);
+
+            EnsureCanOpenPipe();
+
+            // create the socket
+            var socket = new Socket(_endpoint.Address.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+            socket.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.KeepAlive, _options.Socket.KeepAlive);
+            socket.NoDelay = _options.Socket.TcpNoDelay;
+            socket.ReceiveBufferSize = socket.SendBufferSize = _options.Socket.BufferSizeKiB * 1024;
+
+            socket.LingerState = _options.Socket.LingerSeconds &gt; 0
+                ? new LingerOption(true, _options.Socket.LingerSeconds)
+                : new LingerOption(false, 1);
+
+            // connect to server
+            HConsole.WriteLine(this, $&quot;Connect to server at {_endpoint}&quot;);
+            await socket.ConnectAsync(_endpoint, _options.ConnectionTimeoutMilliseconds, cancellationToken).CfAwait();
+            HConsole.WriteLine(this, &quot;Connected to server&quot;);
+
+            // use a stream, because we may use SSL and require an SslStream
+#pragma warning disable CA2000 // Dispose objects before losing scope - transferred to OpenPipe
+            Stream stream = new NetworkStream(socket, false);
+#pragma warning restore CA2000
+            if (_sslOptions.Enabled)
+            {
+                stream = await new SslLayer(_sslOptions, _loggerFactory).GetStreamAsync(stream).CfAwait();
+            }
+
+            // wire the pipe
+            OpenPipe(socket, stream);
+
+            if (IsActive) HConsole.WriteLine(this, &quot;Opened&quot;);
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[50,15,50,37,1],[52,13,52,87,1],[53,13,53,84,1],[54,13,54,93,1],[55,13,55,102,1],[58,9,58,10,1],[73,13,73,33,1],[76,13,76,107,1],[77,13,77,117,1],[78,13,78,57,1],[79,13,79,101,1],[81,13,83,46,1],[87,13,87,119,1],[92,13,92,62,1],[94,13,94,37,1],[96,17,96,107,1],[100,13,100,38,1],[102,13,102,26,1],[103,9,103,10,1]]);
+    </script>
+  </body>
+</html>

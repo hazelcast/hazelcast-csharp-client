@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Exceptions\TargetUnreachableException.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Runtime.Serialization;
+
+namespace Hazelcast.Exceptions
+{
+    /// &lt;summary&gt;
+    /// Represents the exception that is thrown when the target of an invocation is not reachable.
+    /// &lt;/summary&gt;
+    [Serializable]
+    public class TargetUnreachableException : HazelcastException
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public TargetUnreachableException()
+            : base(ExceptionMessages.TargetUnreachableException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a specified error message.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        public TargetUnreachableException(string message)
+            : base(message)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a reference to
+        /// the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public TargetUnreachableException(Exception innerException)
+            : base(ExceptionMessages.TargetUnreachableException, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with a specified error message
+        /// and a reference to the inner exception that is the cause of this exception.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;message&quot;&gt;The message that describes the error.&lt;/param&gt;
+        /// &lt;param name=&quot;innerException&quot;&gt;The exception that is the cause of the current exception, or a null
+        /// reference if no inner exception is specified.&lt;/param&gt;
+        public TargetUnreachableException(string message, Exception innerException)
+            : base(message, innerException)
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;TargetUnreachableException&quot;/&gt; class with serialized data.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;info&quot;&gt;The &lt;see cref=&quot;SerializationInfo&quot;/&gt; that holds the serialized object data
+        /// about the exception being thrown.&lt;/param&gt;
+        /// &lt;param name=&quot;context&quot;&gt;The &lt;see cref=&quot;StreamingContext&quot;/&gt; that contains contextual information
+        /// about the source or destination.&lt;/param&gt;
+        protected TargetUnreachableException(SerializationInfo info, StreamingContext context)
+            : base(info, context)
+        { }
+
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[30,15,30,65,0],[31,11,31,12,0],[38,15,38,28,1],[39,11,39,12,1],[48,15,48,81,0],[49,11,49,12,0],[59,15,59,44,1],[60,11,60,12,1],[70,15,70,34,1],[71,11,71,12,1]]);
+    </script>
+  </body>
+</html>

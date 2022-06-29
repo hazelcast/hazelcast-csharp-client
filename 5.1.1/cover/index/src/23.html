@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptions.Subscribers.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Collections.Generic;
+using Hazelcast.Configuration.Binding;
+using Hazelcast.Core;
+
+namespace Hazelcast
+{
+    public partial class HazelcastOptions // Subscribers
+    {
+        /// &lt;summary&gt;
+        /// Gets the list of subscribers.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;The subscribers.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Subscribers can be added to the configuration programmatically via the &lt;see cref=&quot;AddSubscriber(IHazelcastClientEventSubscriber)&quot; /&gt;
+        /// method or any of its overloads. A subscriber is a class that implements &lt;see cref=&quot;IHazelcastClientEventSubscriber&quot;/&gt; and subscribes
+        /// the client to events as soon as the client is connected.&lt;/para&gt;
+        /// &lt;para&gt;In a configuration file, they are defined as an array of injected types, for instance:
+        /// &lt;code&gt;&quot;subscribers&quot;: [
+        ///   {
+        ///     &quot;typeName&quot;: &quot;My.Subscriber, My.Dll&quot;
+        ///   },
+        ///   {
+        ///     &quot;typeName&quot;: &quot;My.OtherSubscriber, My.dll&quot;,
+        ///     &quot;args&quot;:
+        ///     {
+        ///       &quot;foo&quot;: 33
+        ///     }
+        ///   }
+        /// ]&lt;/code&gt;
+        /// where &lt;c&gt;typeName&lt;/c&gt; is the name of the type, and &lt;c&gt;args&lt;/c&gt; is an optional dictionary
+        /// of arguments for the type constructor.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        [BinderIgnore]
+        public IList&lt;IHazelcastClientEventSubscriber&gt; Subscribers { get; }
+
+        // used for configuration binding
+        [BinderName(&quot;subscribers&quot;)]
+        [BinderIgnore(false)]
+#pragma warning disable IDE0052 // Remove unread private members
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
+        private CollectionBinder&lt;InjectionOptions&gt; SubscribersBinder { get; }
+#pragma warning restore IDE0052 // Remove unread private members
+
+        /// &lt;summary&gt;
+        /// Adds a subscriber.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;events&quot;&gt;An action defining event handlers.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HazelcastOptions AddSubscriber(Action&lt;HazelcastClientEventHandlers&gt; events)
+        {
+            Subscribers.Add(new HazelcastClientEventSubscriber(events));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a subscriber.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;subscriber&quot;&gt;The subscriber.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HazelcastOptions AddSubscriber(IHazelcastClientEventSubscriber subscriber)
+        {
+            Subscribers.Add(new HazelcastClientEventSubscriber(subscriber));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a subscriber.
+        /// &lt;/summary&gt;
+        /// &lt;typeparam name=&quot;T&quot;&gt;The type of the subscriber.&lt;/typeparam&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HazelcastOptions AddSubscriber&lt;T&gt;()
+            where T : IHazelcastClientEventSubscriber
+        {
+            Subscribers.Add(new HazelcastClientEventSubscriber(typeof(T)));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a subscriber.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;type&quot;&gt;The type of the subscriber.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HazelcastOptions AddSubscriber(Type type)
+        {
+            Subscribers.Add(new HazelcastClientEventSubscriber(type));
+            return this;
+        }
+
+        /// &lt;summary&gt;
+        /// Adds a subscriber.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;typename&quot;&gt;The name of the type of the subscriber.&lt;/param&gt;
+        /// &lt;returns&gt;The options.&lt;/returns&gt;
+        public HazelcastOptions AddSubscriber(string typename)
+        {
+            Subscribers.Add(new HazelcastClientEventSubscriber(typename));
+            return this;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[49,69,49,73,1],[56,72,56,76,1],[66,13,66,73,1],[67,13,67,25,1],[77,13,77,77,1],[78,13,78,25,1],[89,13,89,76,1],[90,13,90,25,1],[100,13,100,71,1],[101,13,101,25,1],[111,13,111,75,1],[112,13,112,25,1]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Sql\SqlColumnMetadata.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Sql
+{
+    /// &lt;summary&gt;
+    /// SQL column metadata.
+    /// &lt;/summary&gt;
+    public class SqlColumnMetadata
+    {
+        /// &lt;summary&gt;
+        /// Column name.
+        /// &lt;/summary&gt;
+        public string Name { get; }
+
+        /// &lt;summary&gt;
+        /// Column type.
+        /// &lt;/summary&gt;
+        public SqlColumnType Type { get; }
+
+        /// &lt;summary&gt;
+        /// Column nullability. If true, the column values can be null.
+        /// &lt;/summary&gt;
+        public bool IsNullable { get; }
+
+        public SqlColumnMetadata(string name, SqlColumnType type, bool isNullable)
+        {
+            if (string.IsNullOrEmpty(name))
+                throw new ArgumentNullException(nameof(name));
+
+            Name = name;
+            Type = type;
+            IsNullable = isNullable;
+        }
+
+        public override string ToString() =&gt; $&quot;{Name} {Type}&quot;;
+    }
+}
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,30,27,34,1],[32,37,32,41,0],[37,34,37,38,0],[39,9,39,83,1],[41,13,41,44,1],[42,17,42,63,0],[44,13,44,25,1],[45,13,45,25,1],[46,13,46,37,1],[47,9,47,10,1],[49,46,49,62,0]]);
+    </script>
+  </body>
+</html>

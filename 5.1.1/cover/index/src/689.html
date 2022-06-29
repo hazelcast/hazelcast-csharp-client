@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\Int32Extensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Runtime.CompilerServices;
+using System.Threading;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods for the &lt;see cref=&quot;int&quot;/&gt; value type.
+    /// &lt;/summary&gt;
+    internal static class Int32Extensions
+    {
+        /// &lt;summary&gt;
+        /// Compares the value to zero and, if equal, replaces with one.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value to compare and replace.&lt;/param&gt;
+        /// &lt;returns&gt;&lt;c&gt;true&lt;/c&gt; if the value was replaced; otherwise &lt;c&gt;false&lt;/c&gt;.&lt;/returns&gt;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool InterlockedZeroToOne(this ref int value)
+        {
+            return Interlocked.CompareExchange(ref value, 1, 0) == 0;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,70,1]]);
+    </script>
+  </body>
+</html>

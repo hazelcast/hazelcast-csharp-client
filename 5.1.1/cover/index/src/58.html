@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Serialization\EmptyObjectDataOutput.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using Hazelcast.Core;
+
+namespace Hazelcast.Serialization
+{
+    /// &lt;summary&gt;
+    /// Empty implementation of &lt;see cref=&quot;IObjectDataOutput&quot;/&gt; used by &lt;see cref=&quot;ClassDefinitionWriter&quot;/&gt; to
+    /// create a class definition by calling the WritePortable of the Portable instance.
+    /// &lt;/summary&gt;
+    internal sealed class EmptyObjectDataOutput : IObjectDataOutput
+    {
+        public Endianness Endianness =&gt; Endianness.BigEndian;
+        public void WriteBoolean(bool v) { }
+
+        public void WriteByte(byte b) { }
+
+        public void WriteSByte(sbyte b) { }
+
+        public void WriteChar(char v) { }
+
+        public void WriteShort(short v) { }
+
+        public void WriteUShort(ushort v) { }
+
+        public void WriteInt(int v) { }
+
+        public void WriteLong(long v) { }
+
+        public void WriteFloat(float v) { }
+
+        public void WriteDouble(double v) { }
+
+        public void WriteString(string s) { }
+
+        public void WriteChars(string s) { }
+
+        public void WriteBytes(string s) { }
+
+        public void WriteBooleanArray(bool[] booleans) { }
+
+        public void WriteByteArray(byte[] bytes) { }
+
+        public void WriteCharArray(char[] chars) { }
+
+        public void WriteShortArray(short[] values) { }
+
+        public void WriteIntArray(int[] ints) { }
+
+        public void WriteLongArray(long[] longs) { }
+
+        public void WriteFloatArray(float[] values) { }
+
+        public void WriteDoubleArray(double[] values) { }
+
+        public void WriteStringArray(string[] values) { }
+
+        public void WriteObject(object value) { }
+
+        public void Write(byte[] b) { }
+
+        public void Write(byte[] b, int off, int len) { }
+
+        public byte[] ToByteArray(int padding = 0) =&gt; Array.Empty&lt;byte&gt;();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[26,41,26,61,0],[27,44,27,45,0],[29,41,29,42,0],[31,43,31,44,0],[33,41,33,42,0],[35,43,35,44,0],[37,45,37,46,0],[39,39,39,40,1],[41,41,41,42,0],[43,43,43,44,0],[45,45,45,46,0],[47,45,47,46,1],[49,44,49,45,0],[51,44,51,45,0],[53,58,53,59,0],[55,52,55,53,0],[57,52,57,53,0],[59,55,59,56,0],[61,49,61,50,0],[63,52,63,53,0],[65,55,65,56,0],[67,57,67,58,0],[69,57,69,58,0],[71,49,71,50,1],[73,39,73,40,0],[75,57,75,58,0],[77,55,77,74,0]]);
+    </script>
+  </body>
+</html>

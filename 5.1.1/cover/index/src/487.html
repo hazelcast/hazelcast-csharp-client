@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\CloudOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast.Networking
+{
+    /// &lt;summary&gt;
+    /// Represents the Hazelcast Cloud options.
+    /// &lt;/summary&gt;
+    public class CloudOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CloudOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public CloudOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;CloudOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        private CloudOptions(CloudOptions other)
+        {
+            DiscoveryToken = other.DiscoveryToken;
+            Url = other.Url;
+        }
+
+        /// &lt;summary&gt;
+        /// Whether Hazelcast Cloud is enabled.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;This property is read-only and is set automatically when &lt;see cref=&quot;DiscoveryToken&quot;/&gt; is not null nor empty.&lt;/remarks&gt;
+        public bool Enabled =&gt; !string.IsNullOrWhiteSpace(DiscoveryToken);
+
+        /// &lt;summary&gt;
+        /// Gets or sets the discovery token of the cluster.
+        /// &lt;/summary&gt;
+        public string DiscoveryToken { get; set; }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the cloud url base.
+        /// &lt;/summary&gt;
+        public Uri Url { get; set; } = new Uri(&quot;https://coordinator.hazelcast.cloud&quot;);
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal CloudOptions Clone() =&gt; new CloudOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[27,9,27,30,1],[28,11,28,12,1],[33,9,33,49,1],[35,13,35,51,1],[36,13,36,29,1],[37,9,37,10,1],[43,32,43,74,1],[48,40,48,44,1],[48,45,48,49,1],[53,26,53,30,1],[53,31,53,35,1],[53,40,53,86,1],[53,40,53,86,1],[58,42,58,64,1]]);
+    </script>
+  </body>
+</html>

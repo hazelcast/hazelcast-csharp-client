@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Core\LockContext.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+namespace Hazelcast.Core
+{
+    /// &lt;summary&gt;
+    /// Represents a lock context.
+    /// &lt;/summary&gt;
+    /// &lt;remarks&gt;
+    /// &lt;para&gt;In .NET, the &lt;c&gt;lock&lt;/c&gt; statement is thread-bound i.e. the underlying &lt;see cref=&quot;Monitor&quot;/&gt;
+    /// is entered by the thread, and can be entered by only one thread at a time, and must be exited by
+    /// that same thread. However, in an async flow, a &lt;see cref=&quot;Task&quot;/&gt; can be executed by different
+    /// threads (each time &lt;c&gt;await&lt;/c&gt; is used, the &lt;see cref=&quot;Task&quot;/&gt; can resume execution on any
+    /// available thread). For this reason, the &lt;c&gt;lock&lt;/c&gt; statement is *not* supported in async flows
+    /// (the compiler raises an error) and explicitly implementing the pattern with an underlying
+    /// &lt;see cref=&quot;Monitor&quot;/&gt; cannot work, as we cannot guarantee that all code between entering and exiting
+    /// the monitor executes on the same thread.&lt;/para&gt;
+    /// &lt;para&gt;The Hazelcast cluster locks (could be Map locks or FencedLock locks) are owned by a &quot;context&quot;
+    /// which is represented by a &lt;c&gt;long&lt;/c&gt; (64-bits integer) identifier. At codec level, this identifier
+    /// is passed by the client to the cluster, for all operations that involve locks. In other words,
+    /// locks in the Hazelcast cluster are context-bound and that context is represented by a &lt;c&gt;long&lt;/c&gt;
+    /// identifier.&lt;/para&gt;
+    /// &lt;para&gt;The Java client uses the Java thread unique identifier as the context identifier for the
+    /// purpose of locks. This has the benefit of being transparent, i.e. all operations naturally &quot;know&quot;
+    /// the context identifier in which they are operating. The drawback is that, just as with the
+    /// &lt;c&gt;lock&lt;/c&gt; statement, this cannot be supported by .NET async flows.&lt;/para&gt;
+    /// &lt;para&gt;The &lt;see cref=&quot;LockContext&quot;/&gt; class provides an explicit representation of such a context,
+    /// that can be passed to every context-dependent methods (such as locking a fenced lock) to indicate
+    /// that they operate within that given context. Each instance of the class is assigned a unique
+    /// &lt;c&gt;long&lt;/c&gt; identifier produced by an atomic sequence, which is used as a context (or &quot;thread&quot;)
+    /// identifier at codec and cluster level, for all locking purposes.
+    /// &lt;/para&gt;
+    /// &lt;/remarks&gt;
+    public sealed class LockContext
+    {
+        // the sequence of unique identifiers for contexts
+        private static ISequence&lt;long&gt; _idSequence = new Int64Sequence();
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;LockContext&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public LockContext()
+        {
+            // assign the unique identifier using the sequence
+            Id = _idSequence.GetNext();
+        }
+
+        // TODO: would this be a good idea? and then what about identifier collisions?
+        //public static LockContext FromAsyncContext() =&gt; new LockContext(AsyncContext.Current.Id);
+
+        /// &lt;summary&gt;
+        /// Gets the unique identifier for of this context.
+        /// &lt;/summary&gt;
+        public long Id { get; }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only) Resets the sequence of unique identifiers.
+        /// &lt;/summary&gt;
+        internal static void ResetSequence()
+        {
+            _idSequence = new Int64Sequence();
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[52,9,52,74,1],[57,9,57,29,1],[60,13,60,40,1],[61,9,61,10,1],[69,26,69,30,1],[76,13,76,47,0],[77,9,77,10,0]]);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\DistributedObjects\FlakeIdGeneratorOptions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.Threading;
+
+namespace Hazelcast.DistributedObjects
+{
+    /// &lt;summary&gt;
+    /// Represents options for &lt;see cref=&quot;IFlakeIdGenerator&quot;/&gt;.
+    /// &lt;/summary&gt;
+    public class FlakeIdGeneratorOptions
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;FlakeIdGeneratorOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        public FlakeIdGeneratorOptions()
+        { }
+
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;FlakeIdGeneratorOptions&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;other&quot;&gt;Instance to copy option values from.&lt;/param&gt;
+        private FlakeIdGeneratorOptions(FlakeIdGeneratorOptions other)
+        {
+            PrefetchCount = other.PrefetchCount;
+            PrefetchValidityPeriod = other.PrefetchValidityPeriod;
+        }
+
+        /// &lt;summary&gt;
+        /// Gets or sets the number of identifiers in a pre-fetch batch.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;Allowed values are between &lt;c&gt;1&lt;/c&gt; and &lt;c&gt;100000&lt;/c&gt; inclusive, default value is &lt;c&gt;100&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;para&gt;When an identifier is initially requested, an entire batch of identifiers is fetched from the cluster,
+        /// and this option configures the number of identifiers in such a batch.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public int PrefetchCount { get; set; } = 100;
+
+        /// &lt;summary&gt;
+        /// Gets or sets the validity period of identifier batches.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;When an identifier is initially requested, an entire batch of identifier is fetched from the cluster.
+        /// This option configures how long these identifiers can be used, before the batch is dropped and a new
+        /// batch is fetched.&lt;/para&gt;
+        /// &lt;para&gt;Fetched identifiers contain a timestamp component which ensures rough global ordering of identifiers.
+        /// If an identifier is used a long time after it was fetched, the chances it is highly out-of-order increase. Set
+        /// this option according your usage pattern. If you do not care about ordering, set this option to
+        /// &lt;see cref=&quot;Timeout.InfiniteTimeSpan&quot; /&gt; to achieve infinite validity.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public TimeSpan PrefetchValidityPeriod { get; set; } = TimeSpan.FromMinutes(10);
+
+        /// &lt;summary&gt;
+        /// Clones the options.
+        /// &lt;/summary&gt;
+        internal FlakeIdGeneratorOptions Clone() =&gt; new FlakeIdGeneratorOptions(this);
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[28,9,28,41,1],[29,11,29,12,1],[35,9,35,71,1],[37,13,37,49,1],[38,13,38,67,1],[39,9,39,10,1],[49,36,49,40,1],[49,41,49,45,1],[49,50,49,53,1],[49,50,49,53,1],[63,50,63,54,1],[63,55,63,59,1],[63,64,63,88,1],[63,64,63,88,1],[68,53,68,86,1]]);
+    </script>
+  </body>
+</html>

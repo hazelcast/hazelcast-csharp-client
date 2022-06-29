@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+  
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>Distributed Objects | Hazelcast .NET Documentation </title>
+    <meta name="viewport" content="width=device-width">
+    <meta name="title" content="Distributed Objects | Hazelcast .NET Documentation ">
+    <meta name="generator" content="docfx 2.58.0.0">
+    
+    <link rel="shortcut icon" href="../../images/favicon.ico">
+    <link rel="stylesheet" href="../../styles/docfx.vendor.css">
+    <link rel="stylesheet" href="../../styles/docfx.css">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <meta property="docfx:navrel" content="../toc.html">
+    <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+        
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+              
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+                
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.1.1</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+        
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+        
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="distributed-objects">Distributed Objects</h1>
+
+<p>Distributed objects are managed by an Hazelcast cluster, and accessed via the Hazelcast .NET client. Currently, the client supports the following distributed objects:</p>
+<ul>
+<li><a href="distributed-objects/hmap.html">HMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/map.html">Map</a></li>
+<li><a href="distributed-objects/hmap.html">HMultiMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/multimap.html">MultiMap</a></li>
+<li><a href="distributed-objects/hmap.html">HReplicatedMap</a> - a distributed key/value store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/replicated-map.html">ReplicatedMap</a></li>
+<li><a href="distributed-objects/hlist.html">HList</a> - a distributed list store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/list.html">List</a></li>
+<li><a href="distributed-objects/hqueue.html">HQueue</a> - a distributed queue store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/queue.html">Queue</a></li>
+<li><a href="distributed-objects/hringbuffer.html">HRingBuffer</a> - a distributed ring-buffer corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/ringbuffer.html">Map</a></li>
+<li><a href="distributed-objects/hset.html">HSet</a> - a distributed set store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/set.html">Set</a></li>
+<li><a href="distributed-objects/htopic.html">HTopic</a> - a distributed message-publishing store corresponding to a cluster-side <a href="https://docs.hazelcast.com/imdg/latest/data-structures/topic.html">Topic</a></li>
+</ul>
+<p>Distributed objects are obtained from the Hazelcast .NET Client and are fully identified by their unique name. If an object of the specified type and with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;);
+</code></pre><p>Distributed objects should be disposed when not used, in order to release their resources. Note that this only releases <em>client-side</em> resources, but the actual data remain available on the cluster for further usage.</p>
+<p>In order to wipe a distributed object entirely from the cluster, the object needs to be destroyed:</p>
+<pre><code class="lang-csharp">await map.DestroyAsync();
+</code></pre><h2 id="transactions">Transactions</h2>
+<p>In a transaction context, <em>transactional</em> versions of some distributed objects can be retrieved:</p>
+<ul>
+<li><code>HTxList</code> - a transactional version of an <code>HList</code> object</li>
+<li><code>HTxMap</code> - a transactional version of an <code>HMap</code> object</li>
+<li><code>HTxMultiMap</code> - a transactional version of an <code>HMultiMap</code> object</li>
+<li><code>HTxQueue</code> - a transactional version of an <code>HQueue</code> object</li>
+<li><code>HTxSet</code> - a transactional version of an <code>HSet</code> object</li>
+</ul>
+<p>For instance:</p>
+<pre><code class="lang-csharp">using (var tx = await client.BeginTransactionAsync())
+{
+    using (var txmap = await tx.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;))
+    {
+        // ...    
+    }
+
+    tx.Complete();
+}
+</code></pre><p>Transactional objects expose a subset of the methods of the original object, which are performed in a transactional way and are either commited (if the transaction is completed) or rolled back. Refer to the <a href="transactions.html">Transactions</a> page for more details.</p>
+<h2 id="object-names-and-types">Object Names and Types</h2>
+<p>The name of a distributed object is unique accross its type: there can only be one <code>HMap</code> object named <code>&quot;my_map&quot;</code>, but there can also be an <code>HList</code> object named <code>&quot;my-map&quot;</code>.</p>
+<p>&quot;Type&quot;, here, means the <em>generic definition</em> of the type, e.g. <code>HMap&lt;,&gt;</code> or <code>HList&lt;&gt;</code> and <em>not</em> the complete type (e.g. <code>HList&lt;string&gt;</code>).</p>
+<p>This means that there is, in reality, one unique <code>HMap&lt;,&gt;</code> object named <code>&quot;my-map&quot;</code>, and that <code>client.GetMapAsync&lt;string, string&gt;(&quot;my-map&quot;)</code> would refer to the exact same object as <code>client.GetMap&lt;int, int&gt;(&quot;my-map&quot;)</code>. The consequences of refering to an object with different types are not specified: it <em>may</em> work if types can be implicitly casted, and will <em>not</em> work if they cannot. This is not recommended.</p>
+</article>
+          </div>
+          
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+            
+          </div>
+        </div>
+      </footer>
+    </div>
+    
+    <script type="text/javascript" src="../../styles/docfx.vendor.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

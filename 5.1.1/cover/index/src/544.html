@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Messaging\FrameFlagsExtensions.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+namespace Hazelcast.Messaging
+{
+    /// &lt;summary&gt;
+    /// Provides extension methods to the &lt;see cref=&quot;FrameFlags&quot;/&gt; enumeration.
+    /// &lt;/summary&gt;
+    internal static class FrameFlagsExtensions
+    {
+        /// &lt;summary&gt;
+        /// Converts the value of a &lt;see cref=&quot;FrameFlags&quot;/&gt; instance to its equivalent string representation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A better string representation of the value that what &lt;see cref=&quot;FrameFlags.ToString()&quot;/&gt; would return.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The same field holds both &lt;see cref=&quot;FrameFlags&quot;/&gt; and &lt;see cref=&quot;ClientMessageFlags&quot;/&gt;, this
+        /// method returns a better string representation by dealing with both enumerations at once.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static string ToBetterString(this FrameFlags value)
+        {
+            var frameFlags = value &amp; FrameFlags.AllFlags;
+            var messageFlags = (ClientMessageFlags) value &amp; ClientMessageFlags.AllFlags;
+
+            var s1 = frameFlags &gt; 0 ? frameFlags.ToString() : null;
+            var s2 = messageFlags &gt; 0 ? messageFlags.ToString() : null;
+
+            return s1 == null &amp;&amp; s2 == null
+                ? &quot;Default&quot;
+                : s1 + (s1 == null || s2 == null ? &quot;&quot; : &quot;, &quot;) + s2;
+        }
+
+        /// &lt;summary&gt;
+        /// Converts the value of a &lt;see cref=&quot;ClientMessageFlags&quot;/&gt; instance to its equivalent string representation.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;value&quot;&gt;The value.&lt;/param&gt;
+        /// &lt;returns&gt;A better string representation of the value that what &lt;see cref=&quot;ClientMessageFlags.ToString()&quot;/&gt; would return.&lt;/returns&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;The same field holds both &lt;see cref=&quot;FrameFlags&quot;/&gt; and &lt;see cref=&quot;ClientMessageFlags&quot;/&gt;, this
+        /// method returns a better string representation by dealing with both enumerations at once.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        public static string ToBetterString(this ClientMessageFlags value)
+            =&gt; ((FrameFlags) value).ToBetterString();
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[33,13,33,58,1],[34,13,34,89,1],[36,13,36,68,1],[37,13,37,72,1],[39,13,41,68,1],[54,16,54,53,1]]);
+    </script>
+  </body>
+</html>

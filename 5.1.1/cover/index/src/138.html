@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Security\UsernamePasswordCredentialsFactory.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Collections.Generic;
+using Hazelcast.Core;
+
+namespace Hazelcast.Security
+{
+    /// &lt;summary&gt;
+    /// Provides an implementation of &lt;see cref=&quot;ICredentialsFactory&quot;/&gt; that returns a static username+password &lt;see cref=&quot;ICredentials&quot;/&gt;.
+    /// &lt;/summary&gt;
+    internal class UsernamePasswordCredentialsFactory : StaticCredentialsFactory
+    {
+        /// &lt;summary&gt;
+        /// Initializes a new instance of the &lt;see cref=&quot;UsernamePasswordCredentialsFactory&quot;/&gt; class.
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;username&quot;&gt;A username.&lt;/param&gt;
+        /// &lt;param name=&quot;password&quot;&gt;A password.&lt;/param&gt;
+        public UsernamePasswordCredentialsFactory(string username, string password)
+            : base(new UsernamePasswordCredentials { Name = username, Password = password })
+        { }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[31,15,31,93,1],[32,11,32,12,1]]);
+    </script>
+  </body>
+</html>

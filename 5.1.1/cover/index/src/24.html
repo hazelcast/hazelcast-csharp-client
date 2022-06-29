@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\HazelcastOptionsBase.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+
+namespace Hazelcast
+{
+    /// &lt;summary&gt;
+    /// Provides a base class for both &lt;see cref=&quot;HazelcastOptions&quot;/&gt; and &lt;see cref=&quot;HazelcastFailoverOptions&quot;/&gt;.
+    /// &lt;/summary&gt;
+    public abstract class HazelcastOptionsBase
+    {
+        /// &lt;summary&gt;
+        /// Gets the configuration section name.
+        /// &lt;/summary&gt;
+        internal abstract string SectionName { get; }
+
+        /// &lt;summary&gt;
+        /// Gets the &lt;see cref=&quot;IServiceProvider&quot;/&gt;.
+        /// &lt;/summary&gt;
+        /// &lt;remarks&gt;
+        /// &lt;para&gt;In dependency-injection scenario the service provider may be available,
+        /// so that service factories can return injected services. In non-dependency-injection
+        /// scenario, this returns &lt;c&gt;null&lt;/c&gt;.&lt;/para&gt;
+        /// &lt;/remarks&gt;
+        /// &lt;returns&gt;The service provider.&lt;/returns&gt;
+        public IServiceProvider ServiceProvider { get; internal set; }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[38,51,38,55,1],[38,56,38,69,1]]);
+    </script>
+  </body>
+</html>

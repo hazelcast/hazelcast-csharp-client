@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Metrics\Metric`TValue.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System.Globalization;
+
+namespace Hazelcast.Metrics
+{
+    // a metric with its value
+    internal class Metric&lt;TValue&gt; : Metric
+    {
+        public TValue Value { get; set; }
+
+        public override string StringValue
+        {
+            get
+            {
+                // beware! it is important to serialize values in the Java-expected way!
+#pragma warning disable CA1308 // Normalize strings to uppercase - well, no
+                return Value switch
+                {
+                    double d =&gt; d.ToString(CultureInfo.InvariantCulture),
+                    null     =&gt; &quot;&quot;,
+                    bool b   =&gt; b.ToString().ToLowerInvariant(),
+                    _        =&gt; Value.ToString()
+                };
+#pragma warning restore CA1308
+            }
+        }
+
+        public override string ToString()
+        {
+            return $&quot;{Descriptor} = ({typeof (TValue).Name}) {StringValue}&quot;;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[22,31,22,35,0],[22,36,22,40,0],[30,17,32,33,0],[32,33,32,73,0],[32,73,33,33,0],[33,33,33,35,0],[33,35,34,33,0],[34,33,34,64,0],[34,64,35,33,0],[35,33,35,49,0],[35,49,36,19,0],[43,13,43,77,0]]);
+    </script>
+  </body>
+</html>

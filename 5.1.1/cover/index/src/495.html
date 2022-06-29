@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+    <title>D:\a\hazelcast-csharp-client\hazelcast-csharp-client\src\Hazelcast.Net\Networking\SslLayer.cs</title>
+    <script type="text/javascript" src="../js/dotcover.sourceview.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/dotcover.report.css" />
+  </head>
+  <body>
+    <pre id="content" class="source-code">
+// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an &quot;AS IS&quot; BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using System;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Net.Security;
+using System.Reflection;
+using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Exceptions;
+using Microsoft.Extensions.Logging;
+
+namespace Hazelcast.Networking
+{
+    internal class SslLayer
+    {
+        private static readonly bool IsSslProtocolsNoneSupported = DetermineSslProtocolsNoneSupport();
+
+        private readonly SslOptions _options;
+        private readonly ILogger _logger;
+
+        static SslLayer()
+        {
+            HConsole.Configure(consoleOptions =&gt; consoleOptions.Configure&lt;SslLayer&gt;().SetPrefix(&quot;SSL&quot;));
+        }
+
+        private static bool DetermineSslProtocolsNoneSupport()
+        {
+            // see source code for System.Net.Security.SslState, this is how the SslState determines
+            // whether SslProtocols.None is accepted, and throws if it is not supported - we need this
+            // because it is supported with framework 4.7+ but not 4.6.2.
+            //
+            // https://referencesource.microsoft.com/#System/net/System/Net/SecureProtocols/_SslState.cs,5d0d274f6285d5dd
+
+            var p = typeof(ServicePointManager).GetProperty(&quot;DisableSystemDefaultTlsVersions&quot;, BindingFlags.Static | BindingFlags.NonPublic);
+            return p == null || !(bool)p.GetValue(null);
+        }
+
+        public SslLayer(SslOptions options, ILoggerFactory loggerFactory)
+        {
+            _options = options ?? throw new ArgumentNullException(nameof(options));
+            _logger = loggerFactory?.CreateLogger&lt;SslLayer&gt;() ?? throw new ArgumentNullException(nameof(loggerFactory));
+        }
+
+        public async ValueTask&lt;Stream&gt; GetStreamAsync(Stream stream)
+        {
+            if (stream == null) throw new ArgumentNullException(nameof(stream));
+
+            if (!_options.Enabled) return stream;
+
+            var sslStream = new SslStream(stream, false, ValidateCertificate, null);
+
+            var clientCertificates = GetClientCertificatesOrDefault();
+
+            // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
+            // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
+            // options.CertificateName *must* be set to the server certificate name.
+
+            var targetHost = _options.CertificateName ?? &quot;&quot;;
+            _logger.LogDebug(&quot;TargetHost: {TargetHost}&quot;, targetHost);
+
+            // _options.Protocol is &#39;None&#39; by default
+            //
+            // as per https://docs.microsoft.com/en-us/dotnet/framework/network-programming/tls
+            //
+            //  &quot;We recommend that you do not specify the TLS version. Configure your code to let the OS decide on the TLS
+            //  version. When your app lets the OS choose the TLS version, it automatically takes advantage of new protocols
+            //  added in the future, such as TLS 1.3 + the OS blocks protocols that are discovered not to be secure.&quot;
+            //
+            //  &quot;SslStream, using .NET Framework 4.7 and later versions, defaults to the OS choosing the best security
+            //  protocol and version. To get the default OS best choice, if possible, don&#39;t use the method overloads of
+            //  SslStream that take an explicit SslProtocols parameter. Otherwise, pass SslProtocols.None.&quot;
+            //
+            // AuthenticateAsClientAsync:
+            //
+            //  &quot;Starting with .NET Framework 4.7, this method authenticates using None, which allows the operating system
+            //  to choose the best protocol to use, and to block protocols that are not secure. In .NET Framework 4.6 (and
+            //  .NET Framework 4.5 with the latest security patches installed), the allowed TLS/SSL protocols versions are
+            //  1.2, 1.1, and 1.0 (unless you disable strong cryptography by editing the Windows Registry).&quot;
+
+            var protocol = _options.Protocol;
+            if (!IsSslProtocolsNoneSupported &amp;&amp; protocol == SslProtocols.None)
+            {
+                _logger.LogInformation(&quot;Configured protocol &#39;None&#39; is not supported, falling back to &#39;Tls12&#39;.&quot;);
+#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values
+                protocol = SslProtocols.Tls12;
+#pragma warning restore CA5398
+            }
+
+            try
+            {
+                await sslStream.AuthenticateAsClientAsync(targetHost, clientCertificates, protocol, _options.CheckCertificateRevocation).CfAwait();
+            }
+            catch (Exception e)
+            {
+                throw new ConnectionException(&quot;Failed to establish an SSL connection (see inner exception).&quot;, e);
+            }
+
+            _logger.LogInformation($&quot;Established SSL connection, protocol {sslStream.SslProtocol}, {(sslStream.IsEncrypted ? &quot;&quot; : &quot;not &quot;)}encrypted, {(sslStream.IsMutuallyAuthenticated ? &quot;&quot; : &quot;not &quot;)}mutually authenticated&quot;);
+
+            return sslStream;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Gets the client certificate, or a default certificate.
+        /// &lt;/summary&gt;
+        internal X509Certificate2Collection GetClientCertificatesOrDefault()
+        {
+            if (_options.CertificatePath == null)
+                return null;
+
+            var clientCertificates = new X509Certificate2Collection();
+            try
+            {
+                clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, X509KeyStorageFlags.DefaultKeySet);
+            }
+            catch (Exception e)
+            {
+                _logger.IfWarning()?.LogWarning(e, &quot;Failed to load client certificate at \&quot;{CertificatePath}\&quot;.&quot;, _options.CertificatePath);
+                throw;
+            }
+
+            return clientCertificates;
+        }
+
+        /// &lt;summary&gt;
+        /// (internal for tests only)
+        /// Validates a certificate.
+        /// &lt;/summary&gt;
+        internal bool ValidateCertificate(object sender, X509Certificate cert, X509Chain chain, SslPolicyErrors policyErrors)
+        {
+            if (policyErrors == SslPolicyErrors.None)
+                return true;
+
+            var validation = true;
+
+            if (policyErrors.HasFlag(SslPolicyErrors.RemoteCertificateChainErrors))
+            {
+                if (_options.ValidateCertificateChain)
+                {
+                    _logger.IfWarning()?.LogWarning(&quot;SSL certificate error: {PolicyErrors} (chain status: {StatusInformations}).&quot;, policyErrors, string.Join(&quot;, &quot;, chain.ChainStatus.Select(x =&gt; x.StatusInformation)));
+                    validation = false;
+                }
+                else
+                {
+                    _logger.LogInformation(&quot;SSL certificate errors (chain validation) ignored by client configuration.&quot;);
+                }
+            }
+
+            if (policyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNameMismatch))
+            {
+                if (_options.ValidateCertificateName)
+                {
+                    var name = &quot;&quot;;
+                    try
+                    {
+                        name = $&quot; (cert name: &#39;{cert.Subject}&#39;)&quot;;
+                    }
+                    catch { /* bah */ }
+                    _logger.IfWarning()?.LogWarning(&quot;SSL certificate error: {PolicyErrors}{Name}.&quot;, policyErrors, name);
+                    validation = false;
+                }
+                else
+                {
+                    _logger.LogInformation(&quot;SSL certificate errors (name validation) ignored by client configuration.&quot;);
+                }
+            }
+
+            if (policyErrors.HasFlag(SslPolicyErrors.RemoteCertificateNotAvailable))
+            {
+                _logger.IfWarning()?.LogWarning(&quot;SSL certificate error: {PolicyErrors}.&quot;, policyErrors);
+                validation = false;
+            }
+
+            return validation;
+        }
+    }
+}
+
+    </pre>
+    <script type="text/javascript">
+      highlightRanges([[32,9,32,103,1],[40,9,40,10,1],[50,13,50,142,1],[51,13,51,57,1],[54,9,54,74,1],[56,13,56,84,1],[57,13,57,121,1],[58,9,58,10,1],[62,13,62,32,1],[62,33,62,81,1],[64,13,64,35,1],[64,36,64,50,1],[66,13,66,85,1],[68,13,68,71,1],[74,13,74,61,1],[75,13,75,70,1],[96,13,96,46,1],[97,13,97,79,1],[99,17,99,113,0],[101,17,101,47,0],[107,17,107,148,1],[108,13,108,14,1],[109,13,109,32,1],[111,17,111,114,1],[114,13,114,226,1],[116,13,116,30,1],[117,9,117,10,1],[125,13,125,50,1],[126,17,126,29,1],[128,13,128,71,1],[131,17,131,134,1],[132,13,132,14,1],[133,13,133,32,1],[135,17,135,141,1],[136,17,136,23,1],[139,13,139,39,1],[148,13,148,54,1],[149,17,149,29,1],[151,13,151,35,1],[153,13,153,84,1],[155,17,155,55,1],[157,21,157,194,1],[157,194,157,213,1],[157,213,157,217,1],[158,21,158,40,1],[162,21,162,122,1],[166,13,166,85,1],[168,17,168,54,1],[170,21,170,35,1],[173,25,173,66,1],[174,21,174,22,1],[175,21,175,26,1],[175,39,175,40,1],[176,21,176,121,1],[177,21,177,40,1],[181,21,181,121,1],[185,13,185,85,1],[187,17,187,105,1],[188,17,188,36,1],[191,13,191,31,1]]);
+    </script>
+  </body>
+</html>
