@@ -90,7 +90,7 @@
       "output": {
         ".html": {
           "relative_path": "5.0.2/doc/configuration/options.html",
-          "hash": "kKHqVH8kQaV5yQTtTyoChQHKFtvT1zNPhWmDW5HNQrw="
+          "hash": "5eh7ElqVaacLpJSEBuQRQUc///E9znSvvbo7SRJy/Xk="
         }
       },
       "is_incremental": false,
@@ -1591,18 +1591,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.yml",
       "output": {
         ".html": {
-          "relative_path": "5.0.2/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastFile.html",
-          "hash": "Iai9m6FrNNosP3fKUmKFb8JXYor313RwzKY9CmyzpG0="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.0.2/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastEnvironmentVariables.html",
           "hash": "RPhvRCKAd+vXhZvT9P6DRNlj9fwnOfcjdofP6cbZh00="
         }
@@ -1665,6 +1653,18 @@
         ".html": {
           "relative_path": "5.0.2/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.html",
           "hash": "9pyRnE0Zf/x1BBT4inZloVKsaJgIBowVik4VlyNTQ3E="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.0.2/api/Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastFile.html",
+          "hash": "Iai9m6FrNNosP3fKUmKFb8JXYor313RwzKY9CmyzpG0="
         }
       },
       "is_incremental": false,
