@@ -1,4 +1,4 @@
-# utilities for hz.ps1
+﻿# utilities for hz.ps1
 
 # die - PowerShell display of errors is a pain
 function Die ( $message ) {
@@ -68,13 +68,12 @@ function Validate-Platform {
     if ($isMacOS) { $platform = "macOS" }
 
     $script:platform = $platform
-    $script:isWindows2 = ($isWindows -or $platform -eq "windows") # cannot modify the built-in flag
 }
 
 # write usage
 function Write-Usage ( $params, $actions ) {
     Write-Output ""
-    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>] [<commargs>] [--% <rawargs>]"
+    Write-Output "usage hz.[ps1|sh] [<options>] [<commands>] [<commargs>] [--- <rawargs>]"
     Write-Output ""
     Write-Output "  <options>    arguments for commands (see available options below)."
     Write-Output "  <commands>   CSV list of commands (see available commands below) to be executed by the script."
@@ -89,12 +88,18 @@ function Write-Usage ( $params, $actions ) {
     $actions | `
         foreach-object {
             $action = $_
-            $name = "    $($action.name)"
-            $infos = $action.desc
-            if ($action.note -ne $null) {
-                $infos = "$infos`n$($action.note)"
+            if (-not $action.internal) {
+                $name = "    $($action.name)"
+                $infos = $action.desc
+                if ($action.alias -ne $null) {
+                    $alias = [string]::Join(", ", ($action.alias.Replace(" ", "").Split(',')))
+                    $infos = "$infos (alias: $alias)"
+                }
+                if ($action.note -ne $null) {
+                    $infos = "$infos`n$($action.note)"
+                }
+                @{ name = $name; infos = $infos }
             }
-            @{ name = $name; infos = $infos }
         } |`
         foreach-object { new-object PSObject -property $_ } | `
         format-table -autosize -property name,infos -hideTableHeaders -wrap
@@ -103,7 +108,7 @@ function Write-Usage ( $params, $actions ) {
     Write-Output "  Options:"
 
     $params | `
-        foreach-object { 
+        foreach-object {
             $param = $_
             $name = "    -$($param.name)"
             if ($param.parm -ne $null) {
@@ -112,7 +117,7 @@ function Write-Usage ( $params, $actions ) {
             $infos = $param.desc
             if ($param.alias -ne $null) {
                 $alias = [string]::Join(", ", ($param.alias.Replace(" ", "").Split(',') | foreach-object { "-$_" }))
-                $infos = "$infos (alias: $alias)" 
+                $infos = "$infos (alias: $alias)"
             }
             if ($param.note -ne $null) {
                 $infos = "$infos`n$($param.note)"
@@ -123,84 +128,83 @@ function Write-Usage ( $params, $actions ) {
         format-table -autosize -property name,infos -hideTableHeaders -wrap
 }
 
+function Get-Action ( $actions, $name ) {
+    return $actions | where-object { $_.name -eq $name } | select-object -first 1
+}
+
 # parse commangs
 function Parse-Commands ( $commands, $actions ) {
 
-    # create do
-    $do = new-object Collections.Specialized.OrderedDictionary
-    $actions | foreach-object {
-        $do[$_.name] = $false
-    }
-
-    # create actions hashtable
-    $actionx = @{}
-    $actions | foreach-object {
-        $action = $_
-        $actionx[$action.name] = $action
-        if ($action.alias -is [string]) {
-            $action.alias.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | foreach-object {
-                $alias = $_.Trim()
-                $actionx[$alias] = $action
-            }
-        }
-    }
-
     # default?
     if ($commands.Count -eq 0) {
-        $do[$actions[0].name] = $true
-        return $do
+        $actions[0].run = $true
+        return
     }
 
     $uniq = $null
     $count = 0
+    $err = $null
+
+    $actions | foreach-object { $_.run = $false }
+
+    $actionx = @{}
+    $actions | foreach-object {
+        $a = $_
+        $actionx[$a.name] = $a
+        if ($a.alias -is [string]) {
+          $a.alias.Split(',', [StringSplitOptions]::RemoveEmptyEntries) | foreach-object {
+            $actionx[$_.Trim()] = $a
+          }
+        }
+    }
 
     # else handle Commands
     $commands | foreach-object {
 
-        if ($do -is [string]) { return }
+        if ($err -is [string]) { return }
 
-        $command = $actionx[$_]
-        if ($command -eq $null) {
-            $do = "unknown command `'$_`'"
+        $action = $actionx[$_]
+        if ($action -eq $null) {
+            $err = "unknown command `'$_`'"
             return
         }
 
-        if ($command.uniq) {
+        if ($action.uniq) {
 
-            if ($count -ne 0) { 
+            if ($count -ne 0) {
 
-                $do = "Command '$($command.name)' cannot be mixed with other commands." 
+                $err = "Command '$($action.name)' cannot be mixed with other commands."
                 return
             }
-            $uniq = $command.name
+            $uniq = $action.name
         }
-        elseif ($uniq -ne $null) { 
-        
-            $do = "Command '$uniq' cannot be mixed with other commands."
+        elseif ($uniq -ne $null) {
+
+            $err = "Command '$uniq' cannot be mixed with other commands."
             return
         }
 
-        $do[$command.name] = $true
+        $action.run = $true
         $count += 1
     }
 
-    return $do
+    return $err
 }
 
 # parse arguments: (args, params) -> options
 # because pwsh args are bonkers
 function Parse-Args ( $argx, $params ) {
-  
+
   # create default options
-  $options = @{} 
+  $options = @{}
   $params | foreach-object {
     $options[$_.name] = $_.default
   }
 
-  # add default commands and commargs  
+  # add default commands and commargs
   $options.commands = [string[]] @()
   $options.commargs = [object[]] @()
-  
+
   # create params hashtable
   $paramx = @{}
   $params | foreach-object {
@@ -220,12 +224,12 @@ function Parse-Args ( $argx, $params ) {
 
   # handle arguments
   $argx | foreach-object {
-    
+
     # if $options is an error string, skip all
     if ($options -is [string]) { return }
-    
+
     $arg = $_
-    
+
     # value of a valid param
     if ($param -ne $null) {
       if (-not ($arg -is $param.type)) {
@@ -240,10 +244,11 @@ function Parse-Args ( $argx, $params ) {
       $param = $null
       return # continue foreach-object
     }
-    
+
     # enter raw block?
-    # must use pwsh's own --% syntax
-    if ($arg -eq "--%") {
+    # when invoking ./hz.ps1 from pwsh, use --- to isolate commargs else we think they are hz.ps1 params
+    # when invoking ./hs.sh from bash, use --- for the same reason, and it's converted to --% (pwsh's own thing)
+    if ($arg -eq "--%" -or $arg -eq "---") {
       $justRaw = $true
       $canBeCommand = $false
       return # continue foreach-object
@@ -251,7 +256,7 @@ function Parse-Args ( $argx, $params ) {
 
     # -xxx in non-raw block, should be a valid parameter
     if (-not $justRaw -and $arg -is [string] -and $arg.StartsWith('-')) {
-      $param = $paramx[$arg]    
+      $param = $paramx[$arg]
       if ($param -eq $null) {
         $options = "unknown parameter `'$arg`'"
         return # continue foreach-object
@@ -267,12 +272,12 @@ function Parse-Args ( $argx, $params ) {
       }
       return # continue foreach-object
     }
-    
+
     # array can be commands
     if ($arg -is [array]) {
       if ($canBeCommand -and $options.commands.Count -eq 0) {
         $arg | foreach-object {
-          
+
           # if $options is an error string, skip all
           if ($options -is [string]) { return }
 
@@ -308,7 +313,7 @@ function Parse-Args ( $argx, $params ) {
       $comma = $_.EndsWith(',')
       return # continue foreach-object
     }
-    
+
     # just commargs
     # will not rebuild arrays there as pwsh would do
     $options.commargs += $arg
@@ -365,7 +370,7 @@ function Get-TopologicalSort {
 
       # Take this time to convert them to a HashSet for faster operation
       $currentDestinationNodes = New-Object -TypeName System.Collections.Generic.HashSet[object] -ArgumentList (,[object[]] $currentDestinationNodes )
-      [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)        
+      [void] $fasterEdgeList.Add($currentNode, $currentDestinationNodes)
   }
 
   # Now let's reconcile by adding empty dependencies for source nodes they didn't tell us about
@@ -378,7 +383,7 @@ function Get-TopologicalSort {
 
   $currentEdgeList = $fasterEdgeList
 
-  while($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {        
+  while($setOfAllNodesWithNoIncomingEdges.Count -gt 0) {
       $currentNode = $setOfAllNodesWithNoIncomingEdges.Dequeue()
       [void] $currentEdgeList.Remove($currentNode)
       [void] $topologicallySortedElements.Add($currentNode)
@@ -390,7 +395,7 @@ function Get-TopologicalSort {
 
               if($currentNodeDestinations.Count -eq 0) {
                   [void] $setOfAllNodesWithNoIncomingEdges.Enqueue($currentEdgeSourceNode)
-              }                
+              }
           }
       }
   }
@@ -403,7 +408,7 @@ function Get-TopologicalSort {
 }
 
 function Get-HazelcastRemote () {
-    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client.git' | select -first 1
+    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client[\. ]' | select -first 1
     if ($remote -eq $null) { return $null }
     $remote = $remote.ToString().Split()[0]
     return $remote
@@ -415,21 +420,24 @@ function invoke-web-request($url, $dest) {
         $args.OutFile = $dest
         $args.PassThru = $true
     }
-    
+
     $pp = $progressPreference
     $progressPreference = 'SilentlyContinue'
 
     if (PowerShell-IsAtLeast("7.0.0")) {
         $args.SkipHttpErrorCheck = $true
     }
-    
+
+    # on repository.hazelcast.com the default user-agent (mozilla) returns html content
+    $args.UserAgent = "hz"
+
     try {
         $r = invoke-webRequest @args
-        if ($null -ne $r) { 
+        if ($null -ne $r) {
             if ($r.StatusCode -ne 200) {
                 Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
             }
-            return $r 
+            return $r
         }
         return @{ StatusCode = 999; StatusDescription = "Error" }
     }
@@ -449,4 +457,34 @@ function get-commarg ( $name ) {
         }
     }
     return $commarg
+}
+
+function get-project-name ( $path ) {
+    $p = $path.LastIndexOf('\')
+    $n = $path.SubString($p+1)
+    $n = $n.SubString(0, $n.Length - '.csproj'.Length)
+    return $n;
+}
+
+function read-file ( $filename ) {
+    $text = get-content -raw -path $filename
+    $text = $text.Replace("`r", "").TrimEnd("`n")
+    return $text
+}
+
+function write-file ( $filename, $text ) {
+    $text = $text.Replace("`n", [Environment]::Newline)
+    set-content -noNewLine -encoding utf8 $filename $text
+}
+
+function test-command
+{
+    param ($command)
+
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = "stop"
+
+    try { if (Get-Command $command) { $true } }
+    catch { $false }
+    finally { $ErrorActionPreference=$oldPreference }
 }

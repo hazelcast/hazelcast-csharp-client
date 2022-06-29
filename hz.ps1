@@ -21,15 +21,46 @@
 # (and, GitHub actions tend to end up running with 'Stop' by default)
 $ErrorActionPreference='Continue'
 
+# prepare directories
+$scriptRoot = "$PSScriptRoot"
+$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
+$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
+$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
+
 # include utils
-. ./build/utils.ps1
+. "$buildDir\utils.ps1"
 
 # ensure we have the right platform
 Validate-Platform
 
+# pwsh handling of args is... interesting
+$clargs = [Environment]::GetCommandLineArgs()
+$script = [IO.Path]::GetFileName($PSCommandPath)  # this is always going to be 'script.ps1'
+$clarg0 = [IO.Path]::GetFileName($clargs[0])      # this is always going to be the pwsh exe/dll
+$clarg1 = $null
+if ($clargs.Count -gt 1) {
+    $clarg1 = [IO.Path]::GetFileName($clargs[1])  # this is going to be either 'script.ps1' or the first arg
+}
+if ($script -eq $clarg1) {
+    # the pwsh exe/dll running the script (e.g. launched from bash, cmd...)
+    $ignore, $ignore, $argx = $clargs
+}
+else {
+    # the script running within pwsh (e.g. script launched from the pwsh prompt)
+    $argx = $args
+    # still, unquoted -- is stripped by pwsh no matter what
+    # and, --foo:bar is OK but -foo:bar is still processed by pwsh
+    # need to use pwsh --% escape
+}
+
 # say hello
-Write-Output "Hazelcast .NET Command Line"
-Write-Output "PowerShell $powershellVersion on $platform"
+$quiet = $true
+$argx | foreach-object { if ($_ -ne "completion-commands") { $quiet = $false } }
+if (-not $quiet) {
+    Write-Output "Hazelcast .NET Command Line"
+    Write-Output "PowerShell $powershellVersion on $platform"
+}
 
 # PowerShell args can *also* be a pain - because 'pwsh' loves to pre-handle
 # args when run directly but not when run from a scrip, etc - so we have our
@@ -51,22 +82,22 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "4.0-SNAPSHOT"  # -SNAPSHOT to avoid obsolete certs in JARs
+    @{ name = "server";          type = [string];  default = "5.1-SNAPSHOT"; alias="server-version";
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
     },
     @{ name = "framework";       type = [string];  default = $null;       alias = "f"
        parm = "<version>";
-       desc = "the framework to build (default is all)";
+       desc = "the framework to run tests for (default is all)";
        note = "The framework <version> must match a valid .NET target framework moniker, e.g. net462 or netcoreapp3.1. Check the project files (.csproj) for supported versions."
     },
-    @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"      
+    @{ name = "configuration";   type = [string];  default = "Release";   alias = "c"
        parm = "<config>";
        desc = "the build configuration";
        note = "Configuration is 'Release' by default but can be forced to be 'Debug'."
     },
-    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf";
+    @{ name = "testFilter";      type = [string];  default = $null;       alias = "tf,test-filter";
        parm = "<filter>";
        desc = "a test filter (default is all tests)";
        note = "The test <filter> can be used to filter the tests to run, it must respect the NUnit test selection language, which is detailed at: https://docs.nunit.org/articles/nunit/running-tests/Test-Selection-Language.html. Example: -tf `"test == /Hazelcast.Tests.NearCache.NearCacheRecoversFromDistortionsTest/`""
@@ -76,7 +107,7 @@ $params = @(
        desc = "a simplified test filter";
        note = "The simplified test <pattern> filter is equivalent to the full `"name =~ /<pattern>/`" filter."
     },
-    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf";
+    @{ name = "coverageFilter";  type = [string];  default = $null;       alias = "cf,coverage-filter";
        parm = "<filter>";
        desc = "a test coverage filter (default is all)";
        note = "The coverage <filter> can be used to filter the tests to cover, it must respect the dotCover language, which is detailed at: https://www.jetbrains.com/help/dotcover/Running_Coverage_Analysis_from_the_Command_LIne.html#filters."
@@ -88,15 +119,15 @@ $params = @(
     @{ name = "cover";           type = [switch];  default = $false;
        desc = "whether to run test coverage during tests"
     },
-    @{ name = "version";         type = [string];  default = $null;  
+    @{ name = "version";         type = [string];  default = $null;
        parm = "<version>";
        desc = "the version to build, set, tag, etc.";
        note = "The <version> must be a valid SemVer version such as 3.2.1 or 6.7.8-preview.2. If no value is specified then the version is obtained from src/Directory.Build.props."
     },
-    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr";
+    @{ name = "noRestore";       type = [switch];  default = $false;      alias = "nr,no-restore";
        desc = "do not restore global NuGet packages"
     },
-    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr";
+    @{ name = "localRestore";    type = [switch];  default = $false;      alias = "lr,local-restore";
        desc = "restore all NuGet packages locally"
     },
     @{ name = "constants";       type = [string];  default = $null;
@@ -105,34 +136,49 @@ $params = @(
     },
     @{ name = "classpath";       type = [string];  default = $null;       alias = "cp";
        parm = "<classpath>";
-       desc = "define an additional classpath"; 
+       desc = "define an additional classpath";
        info = "The classpath is appended to the default remote controller or server classpath." },
     @{ name = "reproducible";    type = [switch];  default = $false;      alias = "repro";
        desc = "build reproducible assemblies" },
-    @{ name = "serverConfig";    type = [string];  default = $null;
+    @{ name = "serverConfig";    type = [string];  default = $null;       alias = "server-config";
        parm = "<path>";
-       desc = "the server configuration xml file"
+       desc = "the full path to the server configuration xml file"
     },
-    @{ name = "accept-risks";    type = [switch];  default = $false; 
-       desc = "accepts risks associated with certain commands";
-       note = "Commands such as trigger-release or publish-docs will not run unless this param is set. This is a safety to prevent triggering them by accident."
+    @{ name = "verbose-tests";   type = [switch];  default = $false;
+       desc = "verbose tests results with errors"
+    },
+    @{ name = "yolo";            type = [switch]; default = $false;
+       desc = "confirms excution of sensitive actions"
     }
 )
 
 # first one is the default one
 # order is important as they will run in the specified order
 $actions = @(
-    @{ name = "help"; 
+    # keep 'help' in the first position!
+    @{ name = "help";
        desc = "display this help"
+    },
+    @{ name = "completion-initialize";
+       desc = "initialize command tab-completion";
+       internal = $true
+    },
+    @{ name = "completion-commands";
+       desc = "list commands for tab-completion";
+       internal = $true
+    },
+    @{ name = "noop";
+       desc = "no operation";
+       internal = $true
     },
     @{ name = "clean";
        desc = "cleans the solution"
     },
-    @{ name = "set-version"; 
+    @{ name = "set-version";
        desc = "sets the version";
        note = "Updates the version in src/Directory.Build.props with the specified version."
     },
-    @{ name = "verify-version"; 
+    @{ name = "verify-version";
        desc = "verifies the version";
        note = "Ensures that the version in src/Directory.Build.prop matches the -version option."
     },
@@ -140,92 +186,118 @@ $actions = @(
        desc = "tags a release";
        note = "Create a vX.Y.Z tag corresponding to the version in src/Directory.Build.Props, or the version specified via the -version option."
     },
-    @{ name = "trigger-release";
-       desc = "triggers a release (BEWARE!)";
-       note = "Creates the vX.Y.Z tag corresponding to the version in src/Directory.Build.Props if required, and pushes the tag."
+    @{ name = "build";
+       desc = "builds the solution";
+       need = @( "git", "dotnet-complete", "build-proj", "can-sign" )
     },
-    @{ name = "build"; 
-       desc = "builds the solution"
-    },
-    @{ name = "test"; 
-       desc = "runs the tests"
+    @{ name = "test";
+       desc = "runs the tests";
+       need = @( "git", "dotnet-complete", "java", "server-files", "build-proj", "enterprise-key", "certs" )
     },
     @{ name = "build-docs";
        desc = "builds the documentation";
-       note = "Building the documentation is not supported on non-Windows platforms as DocFX requires .NET Framework."
+       note = "Building the documentation is not supported on non-Windows platforms as DocFX requires .NET Framework.";
+       need = @( "git", "build-proj", "docfx" )
     },
-    @{ name = "git-docs"; 
+    @{ name = "git-docs";
        desc = "prepares the documentation release Git commit";
        note = "The commit still needs to be pushed to GitHub pages."
     },
-    @{ name = "publish-docs";
-       desc = "pushes the documentation releast Git commit to GitHub";
-       note = "The commits needs to be prepared with git-doc."
-    },
-    @{ name = "pack-nuget"; 
-       desc = "packs the NuGet packages"
-    },
-    @{ name = "push-nuget"; 
-       desc = "pushes the NuGet packages to NuGet";
-       note = "Pushing the NuGet packages requires a NuGet API key, which must be supplied via the NUGET_API_KEY environment variable."
+    @{ name = "pack-nuget";
+       desc = "packs the NuGet packages";
+       need = @( "dotnet-minimal" )
     },
     @{ name = "serve-docs";
-       uniq = $true;
-       desc = "serves the documentation"
+       desc = "serves the documentation";
+       need = @( "build-proj", "docfx" )
     },
     @{ name = "run-remote-controller"; alias = "rc";
        uniq = $true;
-       desc = "runs the remote controller for tests"
+       desc = "runs the remote controller for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "enterprise-key" )
     },
-    @{ name = "run-server"; 
+    @{ name = "start-remote-controller";
        uniq = $true;
-       desc = "runs a server for tests"
+       desc = "starts the remote controller for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "enterprise-key" )
+    },
+    @{ name = "stop-remote-controller";
+       uniq = $true;
+       desc = "stops the remote controller";
+    },
+    @{ name = "run-server";
+       uniq = $true;
+       desc = "runs a server for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "enterprise-key" )
+    },
+    @{ name = "get-server";
+       uniq = $true;
+       desc = "gets a server for tests";
+       note = "This command downloads the required JARs and configuration file.";
+       need = @( "java", "server-files", "enterprise-key" )
     },
     @{ name = "generate-codecs";
        uniq = $true;
-       desc = "generates the codec source files"
+       desc = "generates the codec source files";
+       need = @( "git", "python" )
     },
     @{ name = "run-example"; alias = "ex";
        uniq = $true;
        desc = "runs an example";
        note = "The example name must be passed as first command arg e.g. ./hz.ps1 run-example Logging. Extra raw parameters can be passed to the example."
+    },
+    @{ name = "publish-examples";
+       desc = "publishes examples";
+       note = "Publishes examples into temp/examples";
+       need = @( "dotnet-complete" )
+    },
+    @{ name = "cover-to-docs";
+       desc = "copy test coverage to documentation";
+       note = "Documentation and test coverage must exist."
+    },
+    @{ name = "update-doc-version";
+       desc = "updates versions in doc version.md";
+       note = "The resulting commit still needs to be pushed."
+    },
+    @{ name = "generate-certs";
+       desc = "generates the test certificates";
+       need = @( "certs-tools" )
+    },
+    @{ name = "install-root-ca";
+       desc = "(experimental) installs the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
+    },
+    @{ name = "remove-root-ca";
+       desc = "(experimental) removes the ROOT CA test certificate";
+       note = "Requires priviledges. Not supported."
     }
-
-    # failed-tests?!
 )
 
-# pwsh handling of args is... interesting
-$clargs = [Environment]::GetCommandLineArgs()
-$script = [IO.Path]::GetFileName($PSCommandPath)  # this is always going to be 'script.ps1'
-$clarg0 = [IO.Path]::GetFileName($clargs[0])      # this is always going to be the pwsh exe/dll
-$clarg1 = $null
-if ($clargs.Count -gt 1) {
-    $clarg1 = [IO.Path]::GetFileName($clargs[1])  # this is going to be either 'script.ps1' or the first arg
-}
-if ($script -eq $clarg1) {
-    # the pwsh exe/dll running the script (e.g. launched from bash, cmd...)
-    $ignore, $ignore, $argx = [Environment]::GetCommandLineArgs()
-}
-else {
-    # the script running within pwsh (e.g. script launched from the pwsh prompt)
-    $argx = $args
-    # still, unquoted -- is stripped by pwsh no matter what
-    # and, --foo:bar is OK but -foo:bar is still processed by pwsh
-    # need to use pwsh --% escape
-}
+# include devops
+$devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
+if (test-path $devops_actions) { . $devops_actions }
 
 # process args
 $options = Parse-Args $argx $params
 if ($options -is [string]) {
     Die "$options - use 'help' to list valid parameters"
 }
-$do = Parse-Commands $options.commands $actions
-if ($do -is [string]) {
-    Die "$do - use 'help' to list valid commands"
+$err = Parse-Commands $options.commands $actions
+if ($err -is [string]) {
+    Die "$err - use 'help' to list valid commands"
 }
 
-if ($do.'help') {
+if ((get-action $actions help).run) {
     Write-Usage $params $actions
+    exit 0
+}
+
+if ((get-action $actions completion-commands).run) {
+    $out = ($actions | foreach-object { $_.name } | where-object { -not $_.internal } )
+    [string]::Join(" ", $out)
     exit 0
 }
 
@@ -251,7 +323,7 @@ $versionSuffix = ""
 if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 
     if (-not ($options.version -match '^(\d+\.\d+\.\d+)(?:\-([a-z0-9\.\-]*))?$')) {
-        Die "Version `"$options.version`" is not a valid SemVer version"
+        Die "Version `"$($options.version)`" is not a valid SemVer version"
     }
 
     $versionPrefix = $Matches.1
@@ -265,9 +337,9 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 }
 
 # set versions and configure
-# FIXME RENAME THESE
-$hzVersion = $options.server
-$hzRCVersion = "0.7-SNAPSHOT" # use appropriate version
+$serverVersion = $options.server # use specified value by default
+$isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
+$hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
 # determine java code repositories for tests
@@ -276,7 +348,7 @@ $mvnEntSnapshotRepo = "https://repository.hazelcast.com/snapshot"
 $mvnOssReleaseRepo = "https://repo1.maven.org/maven2"
 $mvnEntReleaseRepo = "https://repository.hazelcast.com/release"
 
-if ($options.server.Contains("SNAPSHOT")) {
+if ($isSnapshot) {
 
     $mvnOssRepo = $mvnOssSnapshotRepo
     $mvnEntRepo = $mvnEntSnapshotRepo
@@ -287,22 +359,12 @@ if ($options.server.Contains("SNAPSHOT")) {
     $mvnEntRepo = $mvnEntReleaseRepo
 }
 
-# prepare directories
-$scriptRoot = "$PSScriptRoot" # expected to be ./build/
-$slnRoot = [System.IO.Path]::GetFullPath("$scriptRoot")
-
-$srcDir = [System.IO.Path]::GetFullPath("$slnRoot/src")
-$tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
+# more directories
 $outDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/output")
 $docDir = [System.IO.Path]::GetFullPath("$slnRoot/doc")
-$buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
+$libDir = [System.IO.Path]::GetFullPath("$slnRoot/temp/lib")
 
 if ($isWindows) { $userHome = $env:USERPROFILE } else { $userHome = $env:HOME }
-
-if ([string]::IsNullOrWhiteSpace($options.serverConfig)) {
-
-    $options.serverConfig = "$buildDir/hazelcast-$hzVersion.xml"
-}
 
 # nuget packages
 $nugetPackages = "$userHome/.nuget"
@@ -347,17 +409,44 @@ else {
     $docMessage = "Version $($options.version) documentation"
 }
 
-# determine framework(s)
-$frameworks = @( "net462", "netcoreapp2.1", "netcoreapp3.1" )
-if (-not $isWindows2) {
-    $frameworks = @( "netcoreapp2.1", "netcoreapp3.1" )
-}
-if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
-    $framework = $options.framework.ToLower()
-    if (-not $frameworks.Contains($framework)) {
-        Die "Framework '$framework' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
+function determine-target-frameworks {
+    $csproj = [xml] (get-content "$srcDir/Hazelcast.Net.Tests/Hazelcast.Net.Tests.csproj")
+    $csproj.Project.PropertyGroup | foreach-object {
+        if ($_.Condition -ne $null -and $_.Condition.Contains("Windows_NT")) {
+            if ($_.Condition.Contains("==")) {
+                $targetsOnWindows = $_.TargetFrameworks
+            }
+            if ($_.Condition.Contains("!=")) {
+                $targetsOnLinux = $_.TargetFrameworks
+            }
+        }
     }
-    $frameworks = @( $framework )
+    if ($isWindows) {
+        $frameworks = $targetsOnWindows
+    }
+    else {
+        $frameworks = $targetsOnLinux
+    }
+    $frameworks = $frameworks.Split(";", [StringSplitOptions]::RemoveEmptyEntries)
+    for ($i = 0; $i -lt $framework.Length; $i++) {
+        $frameworks[$i] = $frameworks[$i].Trim()
+    }
+    return $frameworks
+}
+
+# determine framework(s) - for running tests
+# we always need to build *all* frameworks because e.g. some projects need to be built
+# for netstandard in order to run on .NET Core - so one single framework cannot do it
+$frameworks = determine-target-frameworks
+$testFrameworks = $frameworks
+if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
+    $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
+    foreach ($fwk in $fwks) {
+        if (-not $frameworks.Contains($fwk)) {
+            Die "Framework '$fwk' is not supported on platform '$platform', supported frameworks are: $([System.String]::Join(", ", $frameworks))."
+        }
+    }
+    $testFrameworks = $fwks
 }
 
 # ensure we have the enterprise key for testing
@@ -385,15 +474,6 @@ function ensure-enterprise-key {
     $script:enterpriseKey = $enterpriseKey
 }
 
-# ensure we have the nuget api key for pushing
-function ensure-nuget-api-key {
-
-    $nugetApiKey = $env:NUGET_API_KEY
-    if ($do.'push-nuget' -and [System.String]::IsNullOrWhiteSpace($nugetApiKey)) {
-        Die "Pushing to NuGet requires a NuGet API key in NUGET_API_KEY environment variable."
-    }
-}
-
 # finds latest version of a NuGet package in the NuGet cache
 function findLatestVersion($path) {
     if ([System.IO.Directory]::Exists($path)) {
@@ -416,7 +496,7 @@ function findLatestVersion($path) {
 # ensures that a command exists in the path
 function ensure-command($command) {
     $r = get-command $command 2>&1
-    if ($nul -eq $r.Name) {
+    if ($null -eq $r.Name) {
         Die "Command '$command' is missing."
     }
     else {
@@ -424,48 +504,106 @@ function ensure-command($command) {
     }
 }
 
-# ensure that $script:serverVersion does not contain a -SNAPSHOT version,
-# or contains a valid -SNAPSHOT version, by updating the version if necessary,
-# e.g. '4.0-SNAPSHOT' may become '4.0.4-SNAPSHOT'
-function ensure-server-version {
-    
-    $version = $script:hzVersion
-
-    if (-not ($version.EndsWith("-SNAPSHOT"))) {
-        Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
-        return;
+function get-master-server-version ( $result ) {
+    Write-Output "Determine master server version from GitHub"
+    $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/pom.xml"
+    Write-Output "GET $url"
+    $response = invoke-web-request $url
+    if ($response.StatusCode -ne 200) {
+        Die "Error: could not download POM file from GitHub ($($response.StatusCode))"
     }
-        
+    $pom = [xml] $response.Content
+    if ($pom.project -eq $null -or $pom.project.version -eq $null) {
+        Die "Error: got invalid POM file from GitHub (could not find version)"
+    }
+    $version = $pom.project.version
+    if ([string]::IsNullOrWhiteSpace($version)) {
+        Die "Error: got invalid POM file from GitHub (could not find version)"
+    }
+    if (-not $version.EndsWith("-SNAPSHOT")) {
+        $version += "-SNAPSHOT"
+    }
+    $result.version = $version
+}
+
+# $options.server contains the specified server version, which can be 5.0, 5.0.1,
+# 5.0-SNAPSHOT, 5.0.1-SNAPSHOT, master, or anything really - and it may match an
+# actual server version, but also be master, or 4.0-SNAPSHOT that would be n/a on
+# Maven, because for some reason we don't keep .0-SNAPSHOT on Maven, but Maven
+# would advertise the 4.0.x-SNAPSHOT instead - so here we are going to figure out
+# if, from the specified $options.server, we can derive a $script:serverVersion
+# that is an available, actual server version.
+# or, $options.serverActual
+function determine-server-version {
+
+    $version = $options.server
+
+    # set the actual server version
+    # this will be updated below if required
+    $script:serverVersion = $version
+
+    if (-not $isSnapshot) {
+        Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
+        return
+    }
+
+    if ($version -eq "master") {
+        Write-Output "Server: version is $version, determine actual version from GitHub"
+        $r = @{}
+        get-master-server-version $r
+        $version = $r.version
+        Write-Output "Server: determined version $version from GitHub"
+        $script:serverVersion = $version
+    }
+
     $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$version/maven-metadata.xml"
+    Write-Output "GET $url"
     $response = invoke-web-request $url
     if ($response.StatusCode -eq 200) {
         Write-Output "Server: found version $version on Maven, using this version"
-        return;
+        return
     }
-    
-    Write-Output "Server: could not find $version on Maven"
-    
+
+    Write-Output "Server: could not find version $version on Maven ($($response.StatusCode))"
+
     $url2 = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/maven-metadata.xml"
+    Write-Output "GET $url2"
     $response2 = invoke-web-request $url2
     if ($response2.StatusCode -ne 200) {
-        Die "Error: could not download metadata from Maven"
+        Die "Error: could not download metadata from Maven ($($response2.StatusCode))"
     }
-    
+
     $metadata = [xml] $response2.Content
+
+    $version0 = $version
     $version = $version.SubString(0, $version.Length - "-SNAPSHOT".Length)
     $nodes = $metadata.SelectNodes("//version [starts-with(., '$version')]")
-    
+
     if ($nodes.Count -lt 1) {
         Die "Server: could not find a version starting with '$version' on Maven"
     }
-    
-    $version2 = $nodes[0].innerText
-    
-    Write-Output "Server: found version $version2 on Maven, using this version"
-    $script:hzVersion = $version2
 
-    # set server version (to filter tests)
-    $env:HAZELCAST_SERVER_VERSION=$version2.TrimEnd("-SNAPSHOT")
+    foreach ($node in $nodes | sort-object -descending -property innerText) {
+        $nodeVersion = $node.innerText
+        if ($nodeVersion -eq $version0) {  # we 404ed on that one already (why is it listed?!)
+            Write-Output "Server: skip listed version $nodeVersion"
+            continue
+        }
+        Write-Output "Server: try listed version $nodeVersion"
+        $url = "$mvnOssSnapshotRepo/com/hazelcast/hazelcast/$nodeVersion/maven-metadata.xml"
+        Write-Output "Maven: $url"
+        $response = invoke-web-request $url
+        if ($response.StatusCode -eq 200) {
+            Write-Output "Server: found version $nodeVersion on Maven, using this version"
+            $script:serverVersion = $nodeVersion
+            return;
+        }
+        else {
+            Write-Output "Server: could not find version $nodeVersion on Maven ($($response.StatusCode))"
+        }
+    }
+
+    Die "Server: could not find a version."
 }
 
 # get a Maven artifact
@@ -478,7 +616,13 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
             Die "Failed to download $url ($($response.StatusCode))"
         }
 
-        $metadata = [xml] $response.Content
+        try {
+            $metadata = [xml] $response.Content
+        }
+        catch {
+            Die "Invalid metadata content at $url."
+        }
+
         $xpath = "//snapshotVersion [extension='jar'"
         if (![System.String]::IsNullOrWhiteSpace($classifier)) {
             $xpath += " and classifier='$classifier'"
@@ -487,7 +631,11 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
             $xpath += " and not(classifier)"
         }
         $xpath += "]"
-        $jarVersion = "-" + $metadata.SelectNodes($xpath)[0].value
+        $node = $metadata.SelectNodes($xpath)[0]
+        if ($node -eq $null) {
+            Die "Incomplete metadata at $url."
+        }
+        $jarVersion = "-" + $node.value
     }
     else {
         $jarVersion = "-" + $jversion
@@ -508,7 +656,7 @@ function download-maven-artifact ( $repoUrl, $group, $artifact, $jversion, $clas
 # add the jar to the $script:options.classpath
 function ensure-jar ( $jar, $repo, $artifact ) {
 
-    if(Test-Path "$tmpDir/lib/$jar") {
+    if(Test-Path "$libDir/$jar") {
 
         Write-Output "Detected $jar"
     } else {
@@ -524,89 +672,336 @@ function ensure-jar ( $jar, $repo, $artifact ) {
             $cls = "tests"
         }
 
-        download-maven-artifact $repo $group $art $ver $cls "$tmpDir/lib/$jar"
+        download-maven-artifact $repo $group $art $ver $cls "$libDir/$jar"
     }
     $s = ";"
-    if (-not $isWindows2) { $s = ":" }
+    if (-not $isWindows) { $s = ":" }
     $classpath = $script:options.classpath
     if (-not [System.String]::IsNullOrWhiteSpace($classpath)) { $classpath += $s }
-    $classpath += "$tmpDir/lib/$jar"
+    $classpath += "$libDir/$jar"
+    # Be sure to quote the path to escape from white space
+    # where you call the $script:options.classpath
+    # ex: $quotedClassPath = '"{0}"' -f $script:options.classpath
     $script:options.classpath = $classpath
 }
 
-# ensures we have all jars required for the remote controller and the server,
-# by downloading them if needed, and add them to the $script:options.classpath
-function ensure-jars {
-
-    Write-Output "Prepare server/rc..."
-    if (-not (test-path "$tmpDir/lib")) { mkdir "$tmpDir/lib" >$null }
-
-    # ensure we have the remote controller + hazelcast test jar
-    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
-    ensure-jar "hazelcast-${hzVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}:jar:tests"
+function verify-server-files {
+    if (-not (test-path "$libDir")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-remote-controller-${hzRCVersion}.jar")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-${serverVersion}-tests.jar")) { return $false }
 
     if ($options.enterprise) {
 
-        # ensure we have the hazelcast enterprise server + test jar
-        ensure-jar "hazelcast-enterprise-${hzVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}"
-        ensure-jar "hazelcast-enterprise-${hzVersion}-tests.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${hzVersion}:jar:tests"
-    } else {
+        # ensure we have the hazelcast enterprise server
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-enterprise-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+
+        # ensure we have the hazelcast enterprise test jar
+        if (-not (test-path "$libDir/hazelcast-enterprise-${serverVersion}-tests.jar")) { return $false }
+    }
+    else {
 
         # ensure we have the hazelcast server jar
-        ensure-jar "hazelcast-${hzVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${hzVersion}"
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            if (-not (test-path "$libDir/hazelcast-all-${serverVersion}.jar")) { return $false }
+        }
+        else {
+            if (-not (test-path "$libDir/hazelcast-${serverVersion}.jar")) { return $false }
+            if (-not (test-path "$libDir/hazelcast-sql-${serverVersion}.jar")) { return $false }
+        }
+    }
+
+    # specified file not found
+    if (-not [string]::IsNullOrWhiteSpace($options.serverConfig) -and -not (test-path $options.serverConfig)) { return $false }
+
+    # defaults?
+    if (-not (test-path "$libDir\hazelcast-$($options.server).xml") -or
+        -not (test-path "$libDir\hazelcast-$serverVersion.xml")) { return $false }
+
+    # all clear
+    return $true
+}
+
+# ensures we have all jars & config required for the remote controller and the server,
+# by downloading them if needed, and add them to the $script:options.classpath
+function ensure-server-files {
+
+    Write-Output "Prepare server/rc..."
+    if (-not (test-path "$libDir")) { mkdir "$libDir" >$null }
+
+    # if we don't have all server files for the specified version,
+    # we're going to try and download things below, but beforehand
+    # let's determine which server version we *really* want
+    if (-not (verify-server-files)) { determine-server-version }
+
+    # ensure we have the remote controller + hazelcast test jar
+    ensure-jar "hazelcast-remote-controller-${hzRCVersion}.jar" $mvnOssSnapshotRepo "com.hazelcast:hazelcast-remote-controller:${hzRCVersion}"
+    ensure-jar "hazelcast-${serverVersion}-tests.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}:jar:tests"
+
+    if ($options.enterprise) {
+
+        # ensure we have the hazelcast enterprise server
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            ensure-jar "hazelcast-enterprise-all-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise-all:${serverVersion}"
+        }
+        else {
+            ensure-jar "hazelcast-enterprise-${serverVersion}.jar" $mvnEntRepo "com.hazelcast:hazelcast-enterprise:${serverVersion}"
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+        }
+    }
+    else {
+
+        # ensure we have the hazelcast server jar
+        if (${serverVersion} -lt "5.0") { # FIXME version comparison
+            ensure-jar "hazelcast-all-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-all:${serverVersion}"
+        }
+        else {
+            ensure-jar "hazelcast-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast:${serverVersion}"
+            ensure-jar "hazelcast-sql-${serverVersion}.jar" $mvnOssRepo "com.hazelcast:hazelcast-sql:${serverVersion}"
+        }
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($options.serverConfig)) {
+        # config was specified, it must exist
+        if  (test-path $options.serverConfig) {
+            Write-Output "Detected $($options.serverConfig)"
+        }
+        else {
+            Die "Configuration file $($options.serverConfig) is missing."
+        }
+    }
+    elseif (test-path "$libDir\hazelcast-$($options.server).xml") {
+        # config was not specified, try with exact specified server version
+        Write-Output "Detected hazelcast-$($options.server).xml"
+        $options.serverConfig = "$libDir\hazelcast-$($options.server).xml"
+    }
+    elseif (test-path "$libDir\hazelcast-$serverVersion.xml") {
+        # config was not specified, try with detected server version
+        Write-Output "Detected hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
+    }
+    else {
+        # no config found, try to download
+
+        Write-Output "Downloading hazelcast-default.xml -> hazelcast-$serverVersion.xml..."
+        $found = $false
+        $v = $serverVersion.TrimEnd("-SNAPSHOT")
+
+        # special master case
+        if ($options.server -eq "master") {
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+            if ($response.StatusCode -ne 200) {
+                if (test-path $dest) { rm $dest }
+                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
+            }
+            Write-Output "Found hazelcast-default.xml from branch master"
+            $found = $true
+        }
+
+        if (-not $found) {
+            # try tag eg 'v4.2.1' or 'v4.3'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from tag v$v"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from tag v$v"
+                $found = $true
+            }
+        }
+
+        if (-not $found) {
+            $p0 = $v.IndexOf('.')
+            $p1 = $v.LastIndexOf('.')
+            if ($p0 -ne $p1) {
+                $v = $v.SubString(0, $p1) # 4.2.1 -> 4.2 but 4.3 remains 4.3
+            }
+
+            # try branch eg '4.2.z' or '4.3.z'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v.z/hazelcast/src/main/resources/hazelcast-default.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v.z"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from branch $v.z"
+                $found = $true
+            }
+        }
+
+        if (-not $found) {
+            # try branch eg '4.3' because '5.0' exists but not '5.0.z'
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $response = invoke-web-request $url $dest
+
+            if ($response.StatusCode -ne 200) {
+                Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
+                if (test-path $dest) { rm $dest }
+            }
+            else {
+                Write-Output "Found hazelcast-default.xml from branch $v"
+                $found = $true
+            }
+        }
+
+        if (-not $found) {
+            # are we the master branch version?
+            $r = @{}
+            get-master-server-version $r
+            if ($r.version -eq $serverVersion) {
+                Write-Output "Master branch is $($r.version), matches."
+                $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/master/hazelcast/src/main/resources/hazelcast-default.xml"
+                $dest = "$libDir/hazelcast-$serverVersion.xml"
+                $response = invoke-web-request $url $dest
+                if ($response.StatusCode -ne 200) {
+                    if (test-path $dest) { rm $dest }
+                    Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
+                }
+                Write-Output "Found hazelcast-default.xml from branch master"
+                $found = $true
+            }
+            else {
+                Write-Output "Master branch is $($r.version), does not match $serverVersion."
+            }
+        }
+
+        if (-not $found) {
+            Die "Running out of options... failed to download hazelcast-default.xml."
+        }
+
+        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
     }
 }
 
 # gets a dotnet sdk for a particular version
-function get-dotnet-sdk ( $sdks, $v ) {
+function get-dotnet-sdk ( $sdks, $v, $preview ) {
 
     # trust dotnet to return the sdks ordered by version, so last is the highest version
-    # exclude versions containing "-" ie anything pre-release FIXME why?
+    # exclude versions containing "-" ie anything pre-release (TODO: why?)
     $sdk = $sdks `
         | Select-String -pattern "^$v" `
         | Foreach-Object { $_.ToString().Split(' ')[0] } `
-        | Select-String -notMatch -pattern "-" `
+        | Where-Object { ($preview -and $_.Contains('-')) -or (-not $preview -and -not $_.Contains('-')) } `
         | Select-Object -last 1
 
-    if ($null -eq $sdk) { return "n/a" } 
+    if ($null -eq $sdk) { return "n/a" }
     else { return $sdk.ToString() }
+}
+
+function require-dotnet-version ( $result, $sdks, $search, $frameworks, $framework, $name, $required, $allowPrerelease ) {
+
+    $release = get-dotnet-sdk $sdks $search $false
+    $preview = get-dotnet-sdk $sdks $search $true
+
+    $result.validSdk = $true
+
+    if ("n/a" -eq $release) {
+        if ($allowPrerelease -and "n/a" -ne $preview) {
+            # only have preview, and preview is allowed = will use preview
+            $result.ok = $true
+            $result.sdkInfo = $preview
+        }
+        else {
+            # have nothing usable, is an issue only if required
+            $missing = $frameworks.Contains($framework)
+            if ($missing -and $required) { 
+                Write-Output "  ERR: this script requires the Microsoft .NET $name SDK." 
+                $result.validSdks = $false
+                $result.validSdk = $false
+            }
+            $result.sdkInfo = "${search}:n/a"
+        }
+    } 
+    else {
+        if ("n/a" -eq $preview) {
+            # only have release = will use release
+            $result.sdkInfo = $release
+        }
+        elseif ($allowPrerelease) {
+            # have both, and preview is allowed = will use preview
+            $result.sdkInfo = $preview
+        }
+        else {
+            # have both, and preview is not allowed = will use release
+            $result.sdkInfo = "$release ($preview)"
+        }
+    }
+
+    $result.sdkInfos += " $($result.sdkInfo)"
 }
 
 function require-dotnet ( $full ) {
 
-    ensure-command "dotnet"
+    if ($script:ensuredDotnet) { return }
 
+    # note: beware of x86 vs x64 versions of dotnet
+    ensure-command "dotnet"
     $dotnetVersion = (&dotnet --version)
+    $validDotnet = $true
+    if ([string]::IsNullOrWhiteSpace($dotnetVersion)) {
+        $dotnetVersion = "<none>"
+        $validDotnet = $false
+    }
     Write-Output "  Version $dotnetVersion"
 
+    $allowPrerelease = $true
+    if (test-path "$slnRoot/global.json") {
+        $json = (get-content "$slnRoot/global.json" -raw) | convertFrom-json
+        if ($json.sdk -ne $null -and $json.sdk.allowPrerelease -ne $null) {
+            $allowPrerelease = $json.sdk.allowPrerelease
+        }
+    }
+
+    if ($allowPrerelease) {
+        Write-Output "  (global.json is missing, or allows pre-release versions)"
+    }
+    else {
+        Write-Output "  (global.json exists and does not allow pre-release versions)"
+    }
+
     $sdks = (&dotnet --list-sdks)
-    
-    $v21 = get-dotnet-sdk $sdks "2.1"
-    if ($full -and $null -eq $v21) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 2.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 2.1.x"
+
+    # validate that we have the required SDKs based upon the complete list of
+    # frameworks for the test project, as determined by determine-target-frameworks.
+
+    $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
+    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $full $allowPrerelease
+    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $full $allowPrerelease
+    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $full $allowPrerelease
+
+    if ($full -and $result.validSdk -and $frameworks.Contains("net5.0")) {
+        # we found 5.0 and 5.0 is required and ...
+        $v = $result.sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
+        if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
+            Write-Output "  ERR: this script requires a Microsoft .NET 5.0.200+ SDK."
+            $result.validSdks = $false
+        }
     }
-    $v31 = get-dotnet-sdk $sdks "3.1"
-    if ($full -and $null -eq $v31) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 3.1.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 3.1.x"
+
+    require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
+
+    # report
+    Write-Output $result.sdkInfos
+
+    if (-not $validDotnet) {
+        Die "Could not determine dotnet version."
     }
-    $v50 = get-dotnet-sdk $sdks "5.0"
-    if ($null -eq $v50) {
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.x SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.x"
+    if (-not $result.validSdks) {
+        Die "Could not find all required SDKs (download from: https://dotnet.microsoft.com/download/dotnet-core)."
     }
-    if ($v50 -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
-        Write-Output ""
-        Write-Output "This script requires Microsoft .NET Core 5.0.200+ SDK, which can be downloaded at: https://dotnet.microsoft.com/download/dotnet-core"
-        Die "Could not find dotnet SDK version 5.0.200+"
-    }
-    $v60 = get-dotnet-sdk $sdks "6.0" # 6.0 is not required
-    
-    Write-Output "  SDKs 2.1:$v21, 3.1:$v31, 5.0:$v50, 6.0:$v60"
 
     $script:ensuredDotnet = $true
 }
@@ -692,6 +1087,68 @@ function ensure-build-proj {
     }
 }
 
+# ensure we have openssl and keytool for certs
+function ensure-certs-tools {
+    ensure-command "openssl"
+    ensure-command "keytool"
+}
+
+function clean-dir ( $dir ) {
+    if (test-path $dir) {
+        Write-Output "  $dir"
+        remove-item $dir -force -recurse
+    }
+}
+
+# ensure we have the test certificates, or create them
+function ensure-certs {
+    if ($options.enterprise) {
+        if (test-path "$tmpDir/certs") {
+            Write-Output "Detected $tmpDir/certs directory"
+        }
+        else {
+            Write-Output "Missing $tmpDir/certs directory, generating"
+            hz-generate-certs
+            hz-install-root-ca
+        }
+    }
+}
+
+# generate the test certificates
+function hz-generate-certs {
+    . "$buildDir/certs.ps1"
+    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
+    if ($CERTSEXITCODE) {
+        Die "Failed to generate test certificates."
+    }
+    Write-Output ""
+}
+
+# install the root-ca certificate
+function hz-install-root-ca {
+    . "$buildDir/certs.ps1"
+    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to install the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
+# remove the root-ca certificate
+function hz-remove-root-ca {
+    . "$buildDir/certs.ps1"
+    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    if ($CERTSEXITCODE) {
+        Die "Failed to remove the ROOT CA certificate."
+    }
+    Write-Output ""
+}
+
+# noop
+function hz-noop {
+    # nothing
+}
+
 # cleans the solution
 function hz-clean {
 
@@ -703,17 +1160,12 @@ function hz-clean {
         remove-item $_.fullname -Force -Recurse
     }
 
-    # clears output
-    if (test-path $outDir) {
-        Write-Output "  $outDir"
-        remove-item $outDir -force -recurse
-    }
+    # clears output, publish
+    clean-dir $outDir
+    clean-dir "$tmpdir/publish"
 
     # clears tests (results, cover...)
-    if (test-path "$tmpDir\tests") {
-        Write-Output "  $tmpDir\tests"
-        remove-item "$tmpDir\tests" -force -recurse
-    }
+    clean-dir "$tmpDir\tests"
 
     # clears logs (server, rc...)
     if (test-path "$tmpDir") {
@@ -724,18 +1176,13 @@ function hz-clean {
     }
 
     # clears docs
-    if (test-path "$tmpDir\docfx.out") {
-        Write-Output "  $tmpDir\docfx.out"
-        remove-item "$tmpDir\docfx.out" -force -recurse
-    }
-    if (test-path "$docDir\templates\hz\Plugins") {
-        Write-Output "  $docDir\templates\hz\Plugins"
-        remove-item "$docDir\templates\hz\Plugins" -force -recurse
-    }
-    if (test-path "$tmpDir\gh-pages") {
-        Write-Output "  $tmpDir\gh-pages"
-        remove-item "$tmpDir\gh-pages" -force -recurse
-    }
+    clean-dir "$tmpDir\docfx.out"
+    clean-dir "$docDir\templates\hz\Plugins"
+    clean-dir "$tmpDir\gh-pages"
+    clean-dir "$tmpDir\gh-pages-patches"
+
+    # clean ndepend
+    clean-dir "$tmpDir\ndepend.out"
 
     Write-Output ""
 }
@@ -760,13 +1207,13 @@ function ensure-java {
 
     if ($javaVersionString.StartsWith("openjdk ")) {
 
-        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)`"") {
+        if ($javaVersionString -match "\`"([0-9]+\.[0-9]+\.[0-9]+)(\.[0-9]+)?([_-][0-9-_]+)?`"") {
 
             $javaVersion = $matches[1]
         }
         else {
 
-            Die "Fail to parse Java version."
+            Die "Fail to parse Java version '$javaVersionString'."
         }
     }
     else {
@@ -795,7 +1242,67 @@ function ensure-java {
             `
             "--add-opens",   "java.base/java.io=ALL-UNNAMED" `
         )
+
+        # "Scripting is currently unsupported for Java 15 and newer. These versions
+        #  of Java do not come with a JavaScript engine, which is necessary for this
+        #  feature to work."
+        $pos = $javaVersion.IndexOf('.')
+        $javaMajor = $javaVersion.SubString(0, $pos)
+        if (-not ($javaVersion -lt "12") ) {
+            Die "Java version >11 not supported (JavaScript scripting not supported)"
+        }
 	}
+}
+
+# update latest version in docs files - when actually releasing
+# so this can be for a pre-release but it's got to be for actual release
+function hz-update-doc-version {
+
+    if ([string]::IsNullOrWhiteSpace($versionSuffix)) {
+
+        write-output "Update Doc Version"
+        $v = $versionPrefix
+
+        # non-preview versions go into xrefmap because we'll link to them as <curdoc>
+        $vd = $versionPrefix -replace "\.", "-"
+        $filename = "$docDir/xrefmap.yml"
+        $text = read-file $filename
+        if (-not $text.Contains("- uid: doc-index-$vd")) {
+            $text += "`n- uid: doc-index-$vd"
+            $text += "`n  name: $v"
+            $text += "`n  href: $v/doc/index.html"
+            $text += "`n- uid: api-index-$vd"
+            $text += "`n  href: $v/api/index.html"
+            $text += "`n"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # non-preview versions become <curdoc>, and <curdoc> is pushed to <prevdoc>
+        # for preview versions, they'll show as <devdoc>
+        # FIXME: where is <devdoc> handled? how are these placeholders handled?
+        $filename = "$docDir/versions.md"
+        $text = read-file $filename
+        if (-not ($text -match "<curdoc>(.*)</curdoc>")) {
+            Die "Could not find <curdoc> section in versions.md."
+        }
+        $curdoc = $matches[1]
+        if (-not $curdoc.StartsWith("$v ")) {
+            $text = $text -replace "<prevdoc/>", "<prevdoc/>`n* $curdoc"
+            $text = $text -replace "<curdoc>.*</curdoc>", "<curdoc>$v [general documentation](xref:doc-index-$vd) and [API reference](xref:api-index-$vd)</curdoc>"
+        }
+        write-file $filename $text
+        git add $filename
+
+        # it is important that latest-version does NOT end with a newline
+        write-file "$docDir/latest-version" $options.version
+        git add "$docDir/latest-version"
+
+        git commit -m "Documentation latest version $($options.version)" >$null 2>&1
+    }
+    else {
+        write-output "skip Update Doc Version (suffix='$versionSuffix')"
+    }
 }
 
 # sets the version
@@ -852,31 +1359,8 @@ function hz-tag-release {
         }
         # create an empty commit to isolate the tag (helps with GitHub Actions)
         git commit --allow-empty --message "Tag v$($options.version)" >$null 2>&1
-        git tag "v$($options.version)" >$null 2>&1
+        git tag "v$($options.version)" "release/$($options.version)" >$null 2>&1
     }
-}
-
-# triggers the release
-function hz-trigger-release {
-
-    if (-not $options.'accept-risks') {
-        Die "Cannot trigger a release if you do not accept the risks (see -accept-risks option)."
-    }
-
-    Write-Output "Version: trigger v$($options.version) release"
-
-    $remote = Get-HazelcastRemote
-    if ($remote -eq $null) {
-        Die "Failed to get Hazelcast remote"
-    }
-
-    git rev-parse "refs/tags/v$($options.version)" >$null 2>&1
-    if ($LASTEXITCODE -ne 0) {
-        hz-tag-release
-    }
-
-    Write-Output "Version: push tag v$($options.version)"
-    git push --tags $remote refs/tags/v$($options.version) >$null 2>&1
 }
 
 # generates the codecs
@@ -913,39 +1397,48 @@ function hz-build {
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
     Write-Output "  Define         : $($options.constants)"
-    Write-Output "  Framework      : $([System.String]::Join(", ", $frameworks))"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
-    
-    Write-Output "Resolve projects dependencies..."
+    Write-Output ""
+
+    Write-Output "Resolve projects..."
     $projs = Get-ChildItem -path $srcDir -recurse -depth 1 -include *.csproj
     $t = @{}
     $sc = [System.IO.Path]::DirectorySeparatorChar
     $projs | Foreach-Object {
         $proj = $_
-        
-        # exclude
-        if (!$isWindows2 -and $proj.BaseName -eq "Hazelcast.Net.DocAsCode") { return } # continue
-        
-        $x = [xml] (Get-Content $proj); 
-        $n = $x.SelectNodes("//ProjectReference/@Include");
+
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
+
+        # exclude
+        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows) {
+            Write-Output "  $(get-project-name $k) -> (excluded) "
+            return  # continue
+        }
+
+        $x = [xml] (Get-Content $proj);
+        $n = $x.SelectNodes("//ProjectReference/@Include");
         if ($t[$k] -eq $null) { $t[$k] = @() }
 
-        $n | Foreach-Object {
-            $dep = $_.Value
-            $d = $dep.SubString("../".Length).Replace("\", $sc).Replace("/", $sc)
-            Write-Output "  $k -> $d"
-            $t[$k] += $d
+        if ($n.Count -eq 0) {
+            Write-Output "  $(get-project-name $k) -> (no dependencies)"
+        }
+        else {
+            $n | Foreach-Object {
+                $dep = $_.Value
+                $d = $dep.SubString("../".Length).Replace("\", $sc).Replace("/", $sc)
+                Write-Output "  $(get-project-name $k) -> $(get-project-name $d)"
+                $t[$k] += $d
+            }
         }
     }
-    
+
     Write-Output ""
     Write-Output "Order projects..."
     $projs = Get-TopologicalSort $t
     $projs | Foreach-Object {
-       Write-Output "  $_ "
+       Write-Output "  $(get-project-name $_) "
     }
 
     Write-Output ""
@@ -953,7 +1446,6 @@ function hz-build {
     $buildArgs = @(
         "-c", $options.configuration,
         "--packages", $nugetPackages
-        # "-f", "$framework"
     )
 
     if ($options.reproducible) {
@@ -975,12 +1467,12 @@ function hz-build {
         $buildArgs += "-p:VersionPrefix=$versionPrefix"
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
-    
+
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build "$srcDir\$_" $buildArgs"
+        Write-Output "> dotnet build $srcDir\$_ $buildArgs"
         dotnet build "$srcDir\$_" $buildArgs
-        
+
         # if it failed, we can stop here
         if ($LASTEXITCODE) {
             Die "Build failed, aborting."
@@ -1031,7 +1523,9 @@ function hz-build-docs-on-windows {
 
     # prepare docfx.json
     get-content "$docDir/_docfx.json" |
-        foreach-object { $_ -replace "__DEST__", $docDstDir } |
+        foreach-object {
+            $_ -replace "__DEST__", $docDstDir `
+               -replace "__VERSION__", $options.version } |
         set-content "$docDir/docfx.json"
 
     # build
@@ -1049,16 +1543,13 @@ function hz-build-docs-on-windows {
         $devwarnMessage = "<div id=`"devwarn`">This page documents a development version of the Hazelcast .NET client. " +
                           "Its content is not final and remains subject to changes.</div>"
         $devwarnClass = "devwarn"
-        $devdoc_doc = "<li>development / in-progress version <a href=`"dev/doc/index.html`">$version</a></li>"
-        $devdoc_api = "<li>development / in-progress version <a href=`"dev/api/index.html`">$version</a></li>"
     }
     else {
         $devwarnMessage = ""
         $devwarnClass = ""
-        $devdoc_doc = ""
-        $devdoc_api = ""
     }
 
+    # set or clear the DEVWARN header in documentation files
     get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
         foreach-object {
             $text = get-content -path $_
@@ -1068,14 +1559,31 @@ function hz-build-docs-on-windows {
             set-content -path $_ -value $text
         }
 
-    get-childitem -path "$tmpDir/docfx.out" -filter "*-index.html" |
+    # change the TOC link - probably can be done directly in DocFX but meh
+    get-childitem -recurse -path "$tmpDir/docfx.out/$docDstDir" -filter *.html |
         foreach-object {
             $text = get-content -path $_
             $text = $text `
-              -replace "<li><!--DEVDOC_DOC--></li>", $devdoc_doc `
-              -replace "<li><!--DEVDOC_API--></li>", $devdoc_api
+                -replace "(?s-m)\<meta property=`"docfx:navrel`" content=`"../(.*)toc.html`"\>", "<meta property=`"docfx:navrel`" content=`"`${1}toc.html`">"
             set-content -path $_ -value $text
         }
+
+    # add link to public development documentation, if version has a suffix
+    $path = "$tmpDir/docfx.out/versions.html"
+    $text = get-content -path $path
+    $repl = "n/a"
+    if (-not [System.String]::IsNullOrWhiteSpace($versionSuffix))
+    {
+        $repl = "$($options.version)`${1}"
+    }
+    $text = $text -replace '(?s-m)\<devdoc\>\$version(.*)\</devdoc\>', $repl # s-m enables single-line, disables multi-lines
+    $text = $text -replace '\<p\>\<prevdoc\>\</prevdoc\>\</p\>', '' # remove the <prevdoc> placeholder
+    $text = $text -replace '\</?curdoc\>', '' # remove the <curdoc> placeholder
+    set-content -path $path -value $text
+
+    $text = get-content "$tmpDir/docfx.out/404.html"
+    $text = $text -replace "<head>", "<head>`n    <base href=`"/hazelcast-csharp-client/`">"
+    set-content -path "$tmpDir/docfx.out/404.html" -value $text
 }
 
 # builds the documentation
@@ -1086,6 +1594,63 @@ function hz-build-docs {
     }
     else {
         Write-Output "Docs: building is not supported on non-Windows platforms"
+    }
+}
+
+# copy test coverage to doc
+function hz-cover-to-docs-on-windows {
+
+    $docs = "$tmpDir/docfx.out"
+    $versiondocs = "$docs/$docDstDir"
+    $coverdocs = "$versiondocs/cover"
+    $f = $frameworks[-1]
+    $coveragePath = "$tmpDir/tests/cover"
+
+    Write-Output ""
+    Write-Output "Copy tests coverage to documentation"
+    Write-Output "  Source         : $coveragePath/cover-$f"
+    Write-Output "  Documentation  : $coverdocs"
+
+    if (-not (test-path $docs)) { Die "Could not find $docs. Maybe you should build the docs first?" }
+    if (-not (test-path "$coveragePath/cover-$f")) { Die "Could not find $coveragePath/cover-$f. Maybe you should run tests with coverage first?" }
+    if (-not (test-path $versiondocs)) { mkdir $versiondocs >$null 2>&1 }
+
+    if (test-path $coverdocs) { remove-item -recurse -force $coverdocs }
+    mkdir $coverdocs >$null 2>&1
+    mkdir "$coverdocs/index" >$null 2>&1
+
+    copy-item "$coveragePath/cover-$f.html" "$coverdocs/index.html"
+    copy-item -recurse "$coveragePath/cover-$f/*" "$coverdocs/index/"
+    add-content "$coverdocs/index/css/dotcover.report.css" "`n`npre.source-code { font-family:Menlo,Monaco,Consolas,`"Courier New`",monospace; font-size:12px; }"
+    $index1 = get-content "$docDir/templates/hz/cover-index.html"
+    $index2 = [string]::Join(' ', (get-content "$coverdocs/index.html"))
+    if (-not ($index2 -match '(?s-m)<script type="text/javascript">(.*)</script>')) {
+        Die "panic: no cover data"
+    }
+    $data = $Matches.1
+    $index1 = $index1.Replace("/*DOTCOVER_DATA*/", $data);
+    set-content -path "$coverdocs/index.html" -value $index1
+}
+
+# copy test coverage to doc
+# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
+function hz-cover-to-docs {
+    if ($isWindows) {
+        hz-cover-to-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
+    }
+}
+
+# copy test coverage to doc
+# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
+function hz-cover-to-docs {
+    if ($isWindows) {
+        hz-cover-to-docs-on-windows
+    }
+    else {
+        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
     }
 }
 
@@ -1135,6 +1700,14 @@ function hz-git-docs-on-windows {
     cp "$docs/*.yml" "$pages"
 
     &git -C "$pages" add -A
+
+    # create the symlink for latest docs
+    # note: one can show the symlink with 'git show gh-pages:latest'
+    # note: it is important that latest-version does NOT end with a newline
+    # note: bash would read the file then do $(echo -n "$lv" | git hash-object -w --stdin) BUT pwsh CANNOT echo -n
+    $lh = &git hash-object -w "$docDir/latest-version"
+    &git -C "$pages" update-index --add --cacheinfo 120000 $lh "latest"
+
     &git -C "$pages" commit -m "$docMessage"
 
     Write-Output "Doc release is ready, but NOT pushed."
@@ -1152,30 +1725,6 @@ function hz-git-docs {
     }
 }
 
-# publishes the documentation (on Windows)
-function hz-publish-docs-on-windows {
-
-    Write-Output "Release Documentation"
-    Write-Output "  Source         : $tmpdir/docfx.out"
-    Write-Output "  Pages repo     : $tmpdir/gh-pages"
-
-    git -C $tmpdir/gh-pages push origin gh-pages
-}
-
-# pushes the documentation
-# but only on Windows
-function hz-publish-docs {
-    if ($isWindows) {
-        if (-not $options.'accept-risks') {
-            Die "Cannot publish docs if you do not accept the risks (see -accept-risks option)."
-        }
-        hz-publish-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: publishing is not supported on non-Windows platforms"
-    }
-}
-
 # gets extra arguments for Java for Kerberos
 function get-java-kerberos-args() {
     return @(
@@ -1190,14 +1739,19 @@ function get-java-kerberos-args() {
 function start-remote-controller() {
 
     if (-not (test-path "$tmpDir/rc")) { mkdir "$tmpDir/rc" >$null }
+    if (test-path "$tmpDir/rc/pid") {
+        Die "Error: cannot start remote controller, pid file found in $tmpDir/rc"
+    }
 
     Write-Output "Starting Remote Controller..."
     Write-Output "ClassPath: $($script:options.classpath)"
 
+    $quotedClassPath = '"{0}"' -f $script:options.classpath
+
     # start the remote controller
     $args = @(
         "-Dhazelcast.enterprise.license.key=$script:enterpriseKey",
-        "-cp", "$($script:options.classpath)",
+        "-cp", $quotedClassPath,
         "com.hazelcast.remotecontroller.Main"
     )
 
@@ -1207,19 +1761,21 @@ function start-remote-controller() {
     #$args = $args + get-java-kerberos-args
 
     $script:remoteController = Start-Process -FilePath $java -ArgumentList $args `
-        -RedirectStandardOutput "$tmpDir/rc/stdout-$hzVersion.log" `
-        -RedirectStandardError "$tmpDir/rc/stderr-$hzVersion.log" `
+        -RedirectStandardOutput "$tmpDir/rc/stdout-$serverVersion.log" `
+        -RedirectStandardError "$tmpDir/rc/stderr-$serverVersion.log" `
         -PassThru
     Start-Sleep -Seconds 4
 
     if ($script:remoteController.HasExited) {
         Write-Output "stderr:"
-        Write-Output $(get-content "$tmpDir/rc/stderr-$hzVersion.log")
+        Write-Output $(get-content "$tmpDir/rc/stderr-$serverVersion.log")
         Write-Output ""
         Die "Remote controller has exited immediately."
 	}
     else {
-        Write-Output "Started remote controller with pid=$($script:remoteController.Id)"
+        set-content "$tmpDir/rc/pid" $script:remoteController.Id
+        set-content "$tmpDir/rc/version" $serverVersion
+        Write-Output "Started remote controller for version $serverVersion with pid=$($script:remoteController.Id)"
     }
 }
 
@@ -1243,11 +1799,14 @@ function start-server() {
         $mainClass = "com.hazelcast.core.server.start-server" # 3.x
     }
 
+    $quotedClassPath = '"{0}"' -f $script:options.classpath
+    $quotedConfig = '"{0}"' -f $options.serverConfig
+
     # start the server
     $args = @(
         "-Dhazelcast.enterprise.license.key=$enterpriseKey",
-        "-cp", $script:options.classpath,
-        "-Dhazelcast.config=$($options.serverConfig)",
+        "-cp", $quotedClassPath,
+        "-Dhazelcast.config=$quotedConfig",
         "-server", "-Xms2g", "-Xmx2g", "-Dhazelcast.multicast.group=224.206.1.1", "-Djava.net.preferIPv4Stack=true",
         "$mainClass"
     )
@@ -1258,8 +1817,8 @@ function start-server() {
     #$args = $args + get-java-kerberos-args
 
     $script:serverProcess = Start-Process -FilePath $java -ArgumentList $args `
-        -RedirectStandardOutput "$tmpDir/server/stdout-$hzVersion.log" `
-        -RedirectStandardError "$tmpDir/server/stderr-$hzVersion.log" `
+        -RedirectStandardOutput "$tmpDir/server/stdout-$serverVersion.log" `
+        -RedirectStandardError "$tmpDir/server/stderr-$serverVersion.log" `
         -PassThru
     Start-Sleep -Seconds 4
 
@@ -1271,6 +1830,11 @@ function start-server() {
     }
 }
 
+# tests the remote controller
+function test-remote-controller() {
+    return test-path "$tmpDir/rc/pid"
+}
+
 # stops the remote controller
 function stop-remote-controller() {
 
@@ -1279,10 +1843,34 @@ function stop-remote-controller() {
     if ($script:remoteController -and $script:remoteController.Id -and -not $script:remoteController.HasExited) {
         Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
         $script:remoteController.Kill($true) # entire tree
+        rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
 	}
     else {
         Write-Output "Remote controller is not running."
 	}
+}
+
+# kills a process tree
+function kill-tree ([int] $ppid) {
+    get-cimInstance Win32_Process | `
+        where-object { $_.ParentProcessId -eq $ppid } | `
+        foreach-object { kill-tree $_.ProcessId }
+    stop-process -force -id $ppid
+}
+
+# kills the remote controller
+function kill-remote-controller() {
+    if (-not (test-path "$tmpDir/rc/pid")) {
+        Write-Output "Remote controller is not running."
+    }
+    else {
+        $rcpid = get-content "$tmpDir/rc/pid"
+        kill-tree $rcpid
+        rm "$tmpDir/rc/pid"
+        rm "$tmpDir/rc/version"
+        Write-Output "Remote controller process $pid has been killed"
+    }
 }
 
 # stops the server
@@ -1337,7 +1925,7 @@ function run-tests ( $f ) {
     if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=`"$($options.testFilter.Replace("<FRAMEWORK>", $f))`"" }
 
     if ($options.cover) {
-        $coveragePath = "$tmpDir/tests/cover/cover-$f"
+        $coveragePath = "$tmpDir/tests/cover"
         if (!(test-path $coveragePath)) {
             mkdir $coveragePath > $null
         }
@@ -1345,10 +1933,12 @@ function run-tests ( $f ) {
         $dotCoverArgs = @(
             "--dotCoverFilters=$($options.coverageFilter)",
             "--dotCoverAttributeFilters=System.Diagnostics.CodeAnalysis.ExcludeFromCodeCoverageAttribute",
-            "--dotCoverOutput=$coveragePath/index.html",
-            "--dotCoverReportType=HTML",
-            "--dotCoverLogFile=$tmpDir/tests/cover/cover-$f.log",
-            "--dotCoverSourcesSearchPaths=$srcDir"
+            "--dotCoverLogFile=$coveragePath/cover-$f.log", # log
+            "--dotCoverSourcesSearchPaths=$srcDir", # reference sources in HTML output
+
+            # generate HTML (to publish on docs), JSON (to parse results for GitHub), DetailedXML (for codecov)
+            "--dotCoverReportType=HTML,JSON,DetailedXML", # HTML|XML|JSON|... https://www.jetbrains.com/help/dotcover/dotCover__Console_Runner_Commands.html#cover-dotnet
+            "--dotCoverOutput=$coveragePath/cover-$f.html;$coveragePath/cover-$f.json;$coveragePath/cover-$f.xml"
         )
 
         $testArgs = @( "test" )
@@ -1417,26 +2007,33 @@ function hz-test {
     Write-Output "  Test Name      : $testName"
     Write-Output "  Results        : $tmpDir/tests/results"
 
-    if ($do.'test' -and $options.cover) {
+    if ($options.cover) {
         Write-Output ""
         Write-Output "Tests Coverage"
         Write-Output "  Filter         : $($options.coverageFilter)"
         Write-Output "  Reports & logs : $tmpDir/tests/cover"
-    }   
-
+    }
 
     # run tests
     $script:testResults = @()
 
     rm "$tmpDir\tests\results\results-*" >$null 2>&1
 
+    $ownsrc = $false
     try {
 
-        start-remote-controller
+        if (!(test-remote-controller)) {
+            start-remote-controller
+            $ownsrc = $true # we own it and need to stop it
+        }
+        $v = get-content "$tmpDir/rc/version"
+        if ($v -ne $serverVersion) {
+            Die "Remote controller runs server version $v not $serverVersion."
+        }
 
         Write-Output ""
         Write-Output "Run tests..."
-        foreach ($framework in $frameworks) {
+        foreach ($framework in $testFrameworks) {
             Write-Output ""
             Write-Output "Run tests for $framework..."
             run-tests $framework
@@ -1444,11 +2041,26 @@ function hz-test {
     }
     finally {
 
-        stop-remote-controller
+        if ($ownsrc) {
+            stop-remote-controller
+        }
     }
 
     Write-Output ""
     Write-Output "Summary:"
+
+    $v = ""
+    foreach ($testResult in $script:testResults) {
+        if ($v -eq "" -and (test-path $testResult)) {
+            get-content $testResult | foreach-object {
+                if ($_ -match '\[\[\[DetectedServerVersion:(?<version>[^\]]*)\]\]\]') {
+                    $v = $Matches.version
+                }
+            }
+        }
+    }
+
+    Write-Output "  $("server version".PadRight(16)) :  $v"
 
     foreach ($testResult in $script:testResults) {
 
@@ -1474,7 +2086,7 @@ function hz-test {
 
                 foreach ($testCase in $run.SelectNodes("//test-case [@result='Failed']")) {
                     Write-Output "    $($testCase.fullname.TrimStart('Hazelcast.Net.')) failed"
-                    if ($doFailedTests) {
+                    if ($options.'verbose-tests') {
                         Write-Output $testCase.failure.message.innerText
                         Write-Output $testCase.failure."stack-trace".innerText
                         Write-Output ""
@@ -1489,7 +2101,7 @@ function hz-test {
                 "  $($fwk.PadRight(16)) :  FAILED (no test report)."
         }
     }
-    
+
     if (!$testsSuccess) {
 
         Die "Some tests have failed"
@@ -1500,7 +2112,7 @@ function hz-test {
 function hz-run-remote-controller {
 
     Write-Output "Remote Controller"
-    Write-Output "  Server version : $hzVersion"
+    Write-Output "  Server version : $serverVersion"
     Write-Output "  RC Version     : $hzRCVersion"
     Write-Output "  Enterprise     : $($options.enterprise)"
     Write-Output "  Logging to     : $tmpDir/rc"
@@ -1519,11 +2131,42 @@ function hz-run-remote-controller {
     }
 }
 
+# starts the remote controller
+function hz-start-remote-controller {
+
+    Write-Output "Remote Controller"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  RC Version     : $hzRCVersion"
+    Write-Output "  Enterprise     : $($options.enterprise)"
+    Write-Output "  Logging to     : $tmpDir/rc"
+
+    start-remote-controller
+
+    Write-Output ""
+    Write-Output "Remote controller is running..."
+}
+
+# stops the remote Controller
+function hz-stop-remote-controller {
+    kill-remote-controller
+}
+
+# gets the Server
+function hz-get-server {
+
+    Write-Output "Server"
+    Write-Output "  Server version : $serverVersion"
+    Write-Output "  Enterprise     : $($options.enterprise)"
+    Write-Output "  Configuration  : $($options.serverConfig)"
+
+    # nothing to do
+}
+
 # runs the server
 function hz-run-server {
 
     Write-Output "Server"
-    Write-Output "  Server version : $hzVersion"
+    Write-Output "  Server version : $serverVersion"
     Write-Output "  Enterprise     : $($options.enterprise)"
     Write-Output "  Configuration  : $($options.serverConfig)"
     Write-Output "  Logging to     : $tmpDir/server"
@@ -1606,25 +2249,9 @@ function hz-pack-nuget {
 
     nuget-pack("Hazelcast.Net")
     nuget-pack("Hazelcast.Net.Win32")
+    nuget-pack("Hazelcast.Net.DependencyInjection")
 
     Get-ChildItem "$tmpDir\output" | Foreach-Object { Write-Output "  $_" }
-}
-
-# pushes packages to NuGet
-function hz-push-nuget {
-
-    if (-not $testsSuccess) {
-
-        Die "Cannot push NuGet packages if tests are not successful."
-    }
-
-    Write-Output "Push NuGet packages..."
-
-    Write-Output "FROM: $tmpDir/output/"
-    ls "$tmpDir/output/"
-
-    &dotnet nuget push "$tmpDir/output/Hazelcast.Net.$($options.version).nupkg" --api-key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
-    &dotnet nuget push "$tmpDir/output/Hazelcast.Net.Win32.$($options.version).nupkg" --api-key $nugetApiKey --source "https://api.nuget.org/v3/index.json"
 }
 
 # verifies that the version in Directory.Build.props is the specified version
@@ -1640,7 +2267,9 @@ function hz-verify-version {
 function hz-run-example {
 
     if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
-    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx.exe"
+    $ext = ""
+    if ($isWindows) { $ext = ".exe" }
+    $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
     if (-not (test-path $hx)) {
         Die "Could not find the examples executable. Did you build the solution?"
     }
@@ -1648,6 +2277,56 @@ function hz-run-example {
         Die "oops"
     }
     &$hx $options.commargs
+}
+
+# publish examples
+function hz-publish-examples {
+
+        Write-Output ""
+        Write-Output "Publish examples..."
+
+        if (test-path "$tmpDir/examples") {
+            remove-item "$tmpDir/examples" -Force -Recurse
+        }
+
+        mkdir "$tmpDir/examples" >$null 2>&1
+
+        foreach ($framework in $frameworks) {
+            Write-Output ""
+            Write-Output "Publish examples for $framework..."
+            $publishArgs = @(
+                "$srcDir/Hazelcast.Net.Examples",
+                "-c", "$($options.configuration)",
+                "-f", "$framework",
+                "-o", "$tmpDir/examples/examples-$framework",
+                "--no-restore", "--no-build", "--packages", $nugetPackages
+            )
+            dotnet publish $publishArgs
+            compress-archive -path "$tmpDir/examples/examples-$framework/" -destinationPath "$tmpDir/examples/examples-$framework.zip"
+        }
+}
+
+# install completion
+function hz-completion-initialize {
+    $scriptblock = {
+        # see https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/register-argumentcompleter
+        # we should compare against $wordToComplete not $commandName ?!
+        param($commandName,$parameterName,$wordToComplete,$commandAst,$fakeBoundParameters)
+        $allCommands = (./hz.ps1 completion-commands).Split(' ')
+        $commands0 = @()
+        $commands1 = @()
+        $allCommands | foreach-object {
+          if ($_.StartsWith($commandName)) {
+            $commands0 += $_
+          }
+          elseif ($_.Contains($commandName)) {
+            $commands1 += $_
+          }
+        }
+        return $commands0 + $commands1
+    }
+
+    register-argumentCompleter -CommandName hz -ScriptBlock $scriptBlock
 }
 
 # ########
@@ -1660,44 +2339,31 @@ $javaFix = @()
 $testsSuccess = $true
 $ensuredDotnet = $false
 
-# define needs
+# define needs - ordered!
 $needs = new-object Collections.Specialized.OrderedDictionary
+function register-needs { $args | foreach-object { $script:needs[$_] = $false } }
+register-needs git
+register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
+register-needs java server-version server-files # ensure server files *after* server version!
+register-needs enterprise-key nuget-api-key
+register-needs build-proj can-sign docfx
+register-needs certs
 
-function register-needs { 
+# gather needs from actions
+$actions | foreach-object {
 
-    $args | foreach-object { $script:needs[$_] = $false } 
-}
+    $action = $_
+    if (-not $action.run) { return }
 
-function need {
-
-    $args | foreach-object {      
-        if ($script:needs[$_] -eq $null) {
-            Die "Panic: unknown need $_"
+    if ($action.need -ne $null) {
+        $action.need | foreach-object {
+            $needs[$_] = $true
         }
-        $script:needs[$_] = $true
     }
 }
 
-# register ordered needs
-register-needs git 
-register-needs dotnet-complete dotnet-minimal # order is important, if we need both ensure we have complete
-register-needs build-proj can-sign docfx
-register-needs java server-version jars # ensure jars *after* server version!
-register-needs enterprise-key nuget-api-key
-
-# define with actions + pretty sure some are missing
-if ($do.'build') { need git dotnet-complete build-proj can-sign }
-if ($do.'test') { need git dotnet-complete java jars server-version build-proj enterprise-key }
-if ($do.'pack-nuget') { need dotnet-minimal }
-if ($do.'push-nuget') { need dotnet-minimal nuget-api-key }
-if ($do.'run-remote-controller') { need java jars server-version enterprise-key }
-if ($do.'run-server') { need java jars server-version enterprise-key }
-if ($do.'build-docs') { need git build-proj docfx }
-if ($do.'publish-docs') { need git }
-if ($do.'serve-docs') { need build-proj docfx }
-if ($do.'generate-codecs') { need git python }
-
-# ensure needs are satisfied
+# ensure needs are satisfied (in order)
+Write-Output ""
 $needs.Keys | foreach-object {
 
     $f = $_
@@ -1716,11 +2382,16 @@ Write-Output ""
 $s = ""
 if ($isNewVersion) { $s += " (new, was $currentVersion)" }
 Write-Output "Client version $($options.version)$s"
+Write-Output ""
+Write-Output "Target frameworks"
+Write-Output "  $([string]::Join(", ", $frameworks))"
+
 
 # this goes first
-if ($do.'clean') {
-    hz-clean 
-    $do.'clean' = $false
+$clean = get-action $actions clean
+if ($clean.run) {
+    hz-clean
+    $clean.run = $false
 }
 
 # then always prepare directories
@@ -1728,19 +2399,18 @@ if (-not (test-path $tmpDir)) { mkdir $tmpDir >$null }
 if (-not (test-path $outDir)) { mkdir $outDir >$null }
 
 # do actions
-$do.Keys | foreach-object {
+$actions | foreach-object {
 
-    $f = $_
-    if (-not $do[$f]) { return }
+    $action = $_
+    if (-not $action.run) { return }
 
-    get-command "hz-$f" >$null 2>&1
-    if (-not $?) {
+    $f = "hz-$($action.name)"
+    get-command $f >$null 2>&1
 
-        Die "Panic: function 'hz-$f' not found"
-    }
+    if (-not $?) { Die "Panic: function '$f' not found" }
 
     Write-Output ""
-    &"hz-$f"
+    &$f
 }
 
 Write-Output ""
