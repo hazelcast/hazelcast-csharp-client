@@ -174,7 +174,7 @@ namespace Hazelcast.Networking
                         name = $" (cert name: '{cert.Subject}')";
                     }
                     catch { /* bah */ }
-                    _logger.IfWarning()?.LogWarning("SSL certificate error: {PolicyErrors}{Name}.", policyErrors, name);
+                    _logger.LogWarning("SSL certificate error: {PolicyErrors}{Name}.", policyErrors, name);
                     validation = false;
                 }
                 else
