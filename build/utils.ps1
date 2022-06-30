@@ -1,4 +1,4 @@
-# utilities for hz.ps1
+﻿# utilities for hz.ps1
 
 # die - PowerShell display of errors is a pain
 function Die ( $message ) {
@@ -408,7 +408,7 @@ function Get-TopologicalSort {
 }
 
 function Get-HazelcastRemote () {
-    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client.git' | select -first 1
+    $remote = git remote -v | select-string 'https://github.com/hazelcast/hazelcast-csharp-client[\. ]' | select -first 1
     if ($remote -eq $null) { return $null }
     $remote = $remote.ToString().Split()[0]
     return $remote
@@ -475,4 +475,16 @@ function read-file ( $filename ) {
 function write-file ( $filename, $text ) {
     $text = $text.Replace("`n", [Environment]::Newline)
     set-content -noNewLine -encoding utf8 $filename $text
+}
+
+function test-command
+{
+    param ($command)
+
+    $oldPreference = $ErrorActionPreference
+    $ErrorActionPreference = "stop"
+
+    try { if (Get-Command $command) { $true } }
+    catch { $false }
+    finally { $ErrorActionPreference=$oldPreference }
 }

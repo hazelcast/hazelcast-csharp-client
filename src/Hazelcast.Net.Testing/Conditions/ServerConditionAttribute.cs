@@ -65,24 +65,23 @@ namespace Hazelcast.Testing.Conditions
             if (test.RunState == RunState.NotRunnable)
                 return;
 
-            var methodInfo = test.Method;
-            var fixtureInfo = test.TypeInfo;
-
-            NuGetVersion serverVersion = null;
-
-            if (methodInfo != null)
-                serverVersion = methodInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
-            if (serverVersion == null && fixtureInfo != null)
-                serverVersion = fixtureInfo.GetCustomAttributes<ServerVersionAttribute>(true).FirstOrDefault()?.Version;
-            if (serverVersion == null)
+            // get the version
+            NuGetVersion serverVersion;
+            try
             {
-                var assemblyServerVersion = fixtureInfo?.Assembly.GetCustomAttributes<ServerVersionAttribute>().FirstOrDefault()?.Version;
-                serverVersion = ServerVersion.GetVersion(assemblyServerVersion);
+                serverVersion = ServerVersion.GetVersion(test);
+            }
+            catch
+            {
+                test.MakeInvalid("Cannot connect to the Remote Controller to get the server version (is it running?)");
+                return;
             }
 
+            // test the range
             if (_range.Satisfies(serverVersion))
                 return;
 
+            // ignore the test if out-of-range
             test.RunState = RunState.Ignored;
             var reason = $"Server version {serverVersion} outside range {_range}.";
             test.Properties.Set(PropertyNames.SkipReason, reason);

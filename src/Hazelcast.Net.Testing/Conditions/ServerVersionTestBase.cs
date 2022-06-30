@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Linq;
 using NuGet.Versioning;
 using NUnit.Framework;
 
@@ -24,35 +23,10 @@ namespace Hazelcast.Testing.Conditions
     /// </summary>
     public abstract class ServerVersionTestBase
     {
-        private TestContext _fixtureContext;
-
-        /// <summary>
-        /// Sets the fixture up.
-        /// </summary>
-        [OneTimeSetUp]
-        public void OneTimeSetUpBase()
-        {
-            _fixtureContext = TestContext.CurrentContext;
-        }
-
         /// <summary>
         /// Gets the server version.
         /// </summary>
-        protected NuGetVersion ServerVersion
-        {
-            get
-            {
-                var testProperties = TestContext.CurrentContext.Test.Properties[ServerVersionAttribute.PropertyName];
-                var version = testProperties?.FirstOrDefault() as NuGetVersion;
-                if (version != null) return version;
-
-                var fixtureProperties = _fixtureContext.Test.Properties[ServerVersionAttribute.PropertyName];
-                version = fixtureProperties?.FirstOrDefault() as NuGetVersion;
-                if (version != null) return version;
-
-                return Conditions.ServerVersion.GetVersion();
-            }
-        }
+        protected NuGetVersion ServerVersion => Conditions.ServerVersion.GetVersion(TestContext.CurrentContext);
 
         /// <summary>
         /// Executes some test code if the server version is within a specific range.

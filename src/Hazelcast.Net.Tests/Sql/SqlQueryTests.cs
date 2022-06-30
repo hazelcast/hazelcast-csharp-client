@@ -15,11 +15,13 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Sql;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlQueryTests : SqlTestBase
     {
         protected override bool EnableJet => true;

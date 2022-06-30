@@ -14,10 +14,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Testing.Remote;
+using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
@@ -214,5 +216,18 @@ namespace Hazelcast.Testing
         /// <returns>Whether the member was properly resumed.</returns>
         public static Task<bool> ResumeMemberAsync(this IRemoteControllerClient rc, Cluster cluster, Member member)
             => rc.ResumeMemberAsync(cluster.Id, member.Uuid);
+        
+        /// <summary>
+        /// Detects the version of the server on the cluster.
+        /// </summary>
+        /// <param name="rc">The remote controller.</param>
+        /// <returns>The detected server version.</returns>
+        public static async Task<NuGetVersion> DetectServerVersionAsync(this IRemoteControllerClient rc)
+        {
+            const string script = "result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;";
+            var response = await rc.ExecuteOnControllerAsync(null, script, Lang.JAVASCRIPT).CfAwait();
+            var result = response.Result;
+            return result == null ? default : NuGetVersion.Parse(Encoding.UTF8.GetString(result));
+        }
     }
 }

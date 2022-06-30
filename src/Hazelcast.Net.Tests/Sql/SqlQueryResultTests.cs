@@ -20,10 +20,12 @@ using Hazelcast.Sql;
 using Hazelcast.Core;
 using Hazelcast.Testing;
 using NUnit.Framework;
+using Hazelcast.Testing.Conditions;
 
 namespace Hazelcast.Tests.Sql
 {
     [TestFixture]
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlQueryResultTests : SqlTestBase
     {
         // Needed to create long-running query
