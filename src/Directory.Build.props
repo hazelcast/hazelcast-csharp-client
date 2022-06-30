@@ -64,9 +64,9 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>5.0.1</AssemblyVersion>
-    <FileVersion>5.0.1</FileVersion>
-    <VersionPrefix>5.0.1</VersionPrefix>
+    <AssemblyVersion>5.0.2</AssemblyVersion>
+    <FileVersion>5.0.2</FileVersion>
+    <VersionPrefix>5.0.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <Authors>Hazelcast, Inc.</Authors>
