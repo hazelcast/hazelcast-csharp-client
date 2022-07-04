@@ -66,6 +66,16 @@ namespace Hazelcast.Models
             Day = (byte)dateTime.Day;
         }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDate"/> struct.
+        /// </summary>
+        /// <param name="dateOnly">The date.</param>
+        public HLocalDate(DateOnly dateOnly)
+            : this(dateOnly.Year, (byte) dateOnly.Month, (byte) dateOnly.Day)
+        { }
+#endif
+
         /// <summary>
         /// Gets the largest possible value of the year value.
         /// </summary>
@@ -125,14 +135,13 @@ namespace Hazelcast.Models
             return true;
         }
 
-        // TODO uncomment when adding .NET 6 support
-        /*
+#if NET6_0_OR_GREATER
         /// <summary>
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
         /// </summary>
         /// <returns>The <see cref="DateOnly"/> representation of this instance.</returns>
-        public DateOnly ToDateOnly() => new DateOnly(...);
-        
+        public DateOnly ToDateOnly() => new DateOnly(Year, Month, Day);
+
         /// <summary>
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
         /// A return value indicates whether the operation succeeded.
@@ -140,9 +149,18 @@ namespace Hazelcast.Models
         /// <param name="dateOnly">When this method returns, contains the <see cref="DateOnly"/> equivalent
         /// to the value represented by this instance, if the conversion succeeded, or the default value if the conversion failed.</param>
         /// <returns><c>true</c> if the value represented by this instance was converted successfully; otherwise <c>false</c>.</returns>
-        public bool TryToDateOnly(out DateOnly dateOnly) { ... }
-        */
-        
+        public bool TryToDateOnly(out DateOnly dateOnly)
+        {
+            dateOnly = default;
+
+            if (Year < 1 || Year > 9999)
+                return false;
+
+            dateOnly = ToDateOnly();
+            return true;
+        }
+#endif
+
         /// <summary>
         /// Implements the <see cref="HLocalDate"/> to <see cref="DateTime"/> conversion.
         /// </summary>
@@ -153,8 +171,7 @@ namespace Hazelcast.Models
         /// </summary>
         public static explicit operator HLocalDate(DateTime dateTime) => new HLocalDate(dateTime);
 
-        // TODO uncomment when adding .NET 6 support
-        /*
+#if NET6_0_OR_GREATER
         /// <summary>
         /// Implements the <see cref="HLocalDate"/> to <see cref="DateOnly"/> conversion.
         /// </summary>
@@ -164,7 +181,7 @@ namespace Hazelcast.Models
         /// Implements the <see cref="DateOnly"/> to <see cref="HLocalDate"/> conversion.
         /// </summary>
         public static explicit operator HLocalDate(DateOnly dateOnly) => new HLocalDate(dateOnly);
-        */
+#endif
         
         /// <inheritdoc />
         public override string ToString() => $"{Year:D4}-{Month:D2}-{Day:D2}";

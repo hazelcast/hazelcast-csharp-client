@@ -126,6 +126,20 @@ namespace Hazelcast.Models
         /// Gets the nanosecond value.
         /// </summary>
         public int Nanosecond => Time.Nanosecond;
+
+        /// <summary>
+        /// Offsets the value of this <see cref="HLocalDateTime"/> as an <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <returns>The <see cref="HOffsetDateTime"/>.</returns>
+        internal HOffsetDateTime Offset(TimeSpan offset) => new HOffsetDateTime(this, offset);
+
+        /// <summary>
+        /// Offsets the value of this <see cref="HLocalDateTime"/> as an <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        /// <param name="offsetSeconds">The offset.</param>
+        /// <returns>The <see cref="HOffsetDateTime"/>.</returns>
+        internal HOffsetDateTime Offset(int offsetSeconds = 0) => new HOffsetDateTime(this, offsetSeconds);
         
         /// <summary>
         /// Converts the value of this <see cref="HLocalDateTime"/> to its <see cref="DateTime"/> equivalent.

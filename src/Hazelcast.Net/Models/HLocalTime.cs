@@ -80,6 +80,15 @@ namespace Hazelcast.Models
             : this((byte) timeSpan.Hours, (byte) timeSpan.Minutes, (byte) timeSpan.Seconds, timeSpan.Milliseconds * 1000)
         { }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalTime"/> struct.
+        /// </summary>
+        /// <param name="timeOnly">The time.</param>
+        public HLocalTime(TimeOnly timeOnly)
+            : this((byte) timeOnly.Hour, (byte) timeOnly.Minute, (byte) timeOnly.Second, timeOnly.Millisecond * 1000)
+        { }
+#endif
 
         /// <summary>
         /// Gets the smallest possible value of a <see cref="HLocalTime"/>.
@@ -127,11 +136,10 @@ namespace Hazelcast.Models
         /// <returns>The <see cref="TimeSpan"/> representation of this instance.</returns>
         public TimeSpan ToTimeSpan() => new TimeSpan(0, Hour, Minute, Second, Nanosecond / 1000);
 
-        // TODO uncomment when adding .NET 6 support
-        /*
-        public TimeOnly ToTimeOnly() => throw new NotImplementedException();
-        */
-        
+#if NET6_0_OR_GREATER
+        public TimeOnly ToTimeOnly() => new TimeOnly(Hour, Minute, Second, Nanosecond / 1000);
+#endif
+
         /// <summary>
         /// Implements the <see cref="HLocalTime"/> to <see cref="TimeSpan"/> conversion.
         /// </summary>
@@ -147,8 +155,7 @@ namespace Hazelcast.Models
         /// </summary>
         public static explicit operator HLocalTime(DateTime dateTime) => new HLocalTime(dateTime);
 
-        // TODO uncomment when adding .NET 6 support
-        /*
+#if NET6_0_OR_GREATER
         /// <summary>
         /// Implements the <see cref="HLocalTime"/> to <see cref="TimeOnly"/> conversion.
         /// </summary>
@@ -158,8 +165,8 @@ namespace Hazelcast.Models
         /// Implements the <see cref="TimeOnly"/> to <see cref="HLocalTime"/> conversion.
         /// </summary>
         public static explicit operator HLocalTime(TimeOnly timeOnly) => new HLocalTime(timeOnly);
-        */
-        
+#endif
+
         /// <inheritdoc />
         public override string ToString() => Nanosecond == 0
             ? $"{Hour:D2}:{Minute:D2}:{Second:D2}"
