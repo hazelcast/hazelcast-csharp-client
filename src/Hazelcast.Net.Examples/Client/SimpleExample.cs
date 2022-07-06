@@ -60,7 +60,7 @@ namespace Hazelcast.Examples.Client
             // build options
             var options = new HazelcastOptionsBuilder()
                 .With(args)
-                .WithConsoleLogger()
+                .WithConsoleLogger(LogLevel.Debug)
                 .Build();
 
             // create a logger, a client factory and a client
