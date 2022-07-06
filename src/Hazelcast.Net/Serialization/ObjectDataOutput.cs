@@ -98,12 +98,14 @@ namespace Hazelcast.Serialization
 
         internal void EnsureAvailable(int count)
         {
+            // TODO - input/output should work with memory and span and not copy arrays
+
             if (_buffer != null)
             {
                 if (_buffer.Length - Position >= count) return;
                 var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + count);
                 var newBuffer = new byte[newCap];
-                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, Position);
+                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _buffer.Length);
                 _buffer = newBuffer;
             }
             else
