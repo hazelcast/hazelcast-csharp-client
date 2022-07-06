@@ -22,13 +22,13 @@ namespace Hazelcast.Serialization
     internal partial class ObjectDataInput : IObjectDataInput, IDisposable
     {
         private byte[] _buffer;
-        private readonly SerializationService _serializationService;
+        private readonly IReadObjectsFromObjectDataInput _objectsReader;
         private int _length;
 
-        public ObjectDataInput(byte[] buffer, SerializationService serializationService, Endianness endianness, int offset = 0)
+        public ObjectDataInput(byte[] buffer, IReadObjectsFromObjectDataInput objectsReaderWriter, Endianness endianness, int offset = 0)
         {
             _buffer = buffer;
-            _serializationService = serializationService;
+            _objectsReader = objectsReaderWriter;
             Endianness = endianness;
             _length = buffer?.Length ?? 0;
             Debug.Assert(offset >= 0 && offset <= _length, "Wrong offset value for input");
@@ -38,7 +38,7 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Initializes the buffer.
         /// </summary>
-        /// <param name="data">The buffer data.</param>
+        /// <param name="buffer">The buffer data.</param>
         /// <param name="offset">The buffer data offset.</param>
         public void Initialize(byte[] buffer, int offset)
         {

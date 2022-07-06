@@ -275,7 +275,7 @@ namespace Hazelcast.Serialization
             return values;
         }
 
-        public T ReadObject<T>() => _serializationService.ReadObject<T>(this);
+        public T ReadObject<T>() => _objectsReader.Read<T>(this);
 
         public int Read(byte[] bytes)
         {
