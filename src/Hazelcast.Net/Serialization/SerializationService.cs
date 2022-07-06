@@ -23,7 +23,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    internal sealed partial class SerializationService : IDisposable
+    internal sealed partial class SerializationService : IDisposable, IReadObjectsFromObjectDataInput, IWriteObjectsToObjectDataOutput
     {
         public const byte SerializerVersion = 1;
         private const int ConstantSerializersCount = SerializationConstants.ConstantSerializersArraySize;

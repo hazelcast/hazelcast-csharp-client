@@ -50,7 +50,7 @@ namespace Hazelcast.Serialization
                 WriteObject(output, obj, true);
                 return new HeapData(output.ToByteArray());
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
@@ -82,7 +82,7 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
         public object ToObject(object dataObj)
         {
-            if (!(dataObj is IData data)) return dataObj;
+            if (dataObj is not IData data) return dataObj;
 
             var input = GetDataInput(data);
             try
@@ -91,7 +91,7 @@ namespace Hazelcast.Serialization
                 var serializer = LookupSerializer(typeId);
                 return serializer.Read(input);
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
@@ -130,7 +130,7 @@ namespace Hazelcast.Serialization
 
                 serializer.Write(output, obj);
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
@@ -160,17 +160,42 @@ namespace Hazelcast.Serialization
                 var obj = serializer.Read(input);
                 return CastObject<T>(obj, true);
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
         }
 
-        public void Write(IObjectDataOutput output, object obj)
-            => WriteObject(output.MustBe<ObjectDataOutput>(), obj, false);
+        // same but 
+        private object ReadObject(ObjectDataInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
 
-        public T Read<T>(IObjectDataInput input)
-            => ReadObject<T>(input.MustBe<ObjectDataInput>());
+            try
+            {
+                var typeId = input.ReadInt();
+                var serializer = LookupSerializer(typeId);
+
+                var obj = serializer.Read(input);
+                return obj;
+            }
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
+            {
+                throw new SerializationException(e);
+            }
+        }
+
+        /// <inheritdoc />
+        void IWriteObjectsToObjectDataOutput.Write(IObjectDataOutput output, object obj)
+            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, false);
+
+        /// <inheritdoc />
+        T IReadObjectsFromObjectDataInput.Read<T>(IObjectDataInput input)
+            => ReadObject<T>(input.MustBe<ObjectDataInput>(nameof(input)));
+
+        /// <inheritdoc />
+        object IReadObjectsFromObjectDataInput.Read(IObjectDataInput input, Type type)
+            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)));
         
         public static T CastObject<T>(object obj, bool enforceNullable)
         {
@@ -184,10 +209,8 @@ namespace Hazelcast.Serialization
             return obj switch
             {
                 T t => t,
-
                 null when !enforceNullable || typeof(T).IsNullable() => default,
                 null => throw new SerializationException($"Cannot cast deserialized null value to value type {typeof(T)}."),
-
                 _ => throw new InvalidCastException($"Cannot cast deserialized object of type {obj.GetType()} to type {typeof(T)}.")
             };
         }

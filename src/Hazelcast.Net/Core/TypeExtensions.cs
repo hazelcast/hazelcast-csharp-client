@@ -80,6 +80,27 @@ namespace Hazelcast.Core
         }
 
         /// <summary>
+        /// Determines whether this type is a <see cref="Nullable{T}"/> type.
+        /// </summary>
+        /// <param name="type">This type.</param>
+        /// <param name="underlyingType">The underlying type, if the type is nullable.</param>
+        /// <returns><c>true</c> if this type is a <see cref="Nullable{T}"/> type; otherwise <c>false</c>.</returns>
+        /// <exception cref="ArgumentNullException">This <paramref name="type"/> is <c>null</c>.</exception>
+        public static bool IsNullableOfT(this Type type, out Type underlyingType)
+        {
+            if (type == null) throw new ArgumentNullException(nameof(type));
+
+            if (type.IsGenericType && type.GetGenericTypeDefinition() == typeof (Nullable<>))
+            {
+                underlyingType = type.GetGenericArguments()[0];
+                return true;
+            }
+
+            underlyingType = null;
+            return false;
+        }
+
+        /// <summary>
         /// Determines whether this type is nullable, i.e. when it supports <c>null</c> value.
         /// </summary>
         /// <param name="type">This type.</param>
@@ -162,10 +183,10 @@ namespace Hazelcast.Core
             { "System.Decimal", "decimal" }
         };
 
-        public static T MustBe<T>(this object obj)
+        public static T MustBe<T>(this object obj, string name = null)
         {
             if (obj is T t) return t;
-            throw new ArgumentException($"Object is not of type {typeof(T)}.", nameof(obj));
+            throw new ArgumentException($"Argument '{name ?? nameof(obj)}' is not of type {typeof(T)}.", name ?? nameof(obj));
         }
     }
 }
