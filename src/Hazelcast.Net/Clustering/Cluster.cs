@@ -40,7 +40,7 @@ namespace Hazelcast.Clustering
         /// <param name="serializationServiceFactory">The serialization service factory.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         // FIXME the point of IClusterOptions was to avoid passing HazelcastOptions here so we need to rethink it all
-        public Cluster(HazelcastOptions options, Func<ClusterMessaging, SerializationService> serializationServiceFactory, ILoggerFactory loggerFactory)
+        public Cluster(IClusterOptions options, Func<ClusterMessaging, SerializationService> serializationServiceFactory, ILoggerFactory loggerFactory)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             if (serializationServiceFactory == null) throw new ArgumentNullException(nameof(serializationServiceFactory));
@@ -52,7 +52,8 @@ namespace Hazelcast.Clustering
 
             var clusterName = string.IsNullOrWhiteSpace(options.ClusterName) ? "dev" : options.ClusterName;
 
-            State = new ClusterState(options, clusterName, clientName, new Partitioner(), loggerFactory);
+            // FIXME get rid of this cast
+            State = new ClusterState((HazelcastOptions)options, clusterName, clientName, new Partitioner(), loggerFactory);
             State.ShutdownRequested += () =>
             {
                 // yes, we are starting a fire-and-forget task

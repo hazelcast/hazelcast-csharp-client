@@ -34,7 +34,7 @@ namespace Hazelcast.Clustering
     {
         private const int SqlConnectionRandomAttempts = 10;
 
-        private readonly object _mutex = new object();
+        private readonly object _mutex = new();
         private readonly ClusterState _clusterState;
         private readonly ILogger _logger;
         private readonly ILoadBalancer _loadBalancer;
@@ -52,7 +52,7 @@ namespace Hazelcast.Clustering
 
         // member id -> connection
         // not concurrent, always managed through the mutex
-        private readonly Dictionary<Guid, MemberConnection> _connections = new Dictionary<Guid, MemberConnection>();
+        private readonly Dictionary<Guid, MemberConnection> _connections = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMembers"/> class.
