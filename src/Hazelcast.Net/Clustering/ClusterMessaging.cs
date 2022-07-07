@@ -43,7 +43,9 @@ namespace Hazelcast.Clustering
 
             HConsole.Configure(x => x.Configure<ClusterMessaging>().SetPrefix("MSGING"));
         }
-        
+
+        #region Events
+
         /// <summary>
         /// Gets or set an action that will be executed before sending a message. 
         /// </summary>
@@ -56,7 +58,9 @@ namespace Hazelcast.Clustering
                 _sendingMessage = value;
             }
         }
-        
+
+        #endregion
+
         /// <summary>
         /// Sends a message to a random member.
         /// </summary>
