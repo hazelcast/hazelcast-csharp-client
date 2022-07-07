@@ -1757,6 +1757,9 @@ function start-remote-controller() {
 
     $args = $args + $javaFix
 
+    # set server version (to filter tests)
+    $env:HAZELCAST_SERVER_VERSION=$serverVersion.TrimEnd("-SNAPSHOT")
+
     # uncomment to test Kerberos (but don't commit)
     #$args = $args + get-java-kerberos-args
 
