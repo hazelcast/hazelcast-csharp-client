@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -24,6 +23,10 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
+#if NETSTANDARD2_0
+using System.Collections.Generic;
+#endif
+
 namespace Hazelcast.DistributedObjects
 {
     /// <summary>
@@ -31,14 +34,15 @@ namespace Hazelcast.DistributedObjects
     /// </summary>
     internal class DistributedObjectFactory : IAsyncDisposable
     {
-        private readonly ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase> _objects
-            = new ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase>();
+        private readonly ConcurrentAsyncDictionary<DistributedObjectInfo, DistributedObjectBase> _objects = new();
 
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
         private readonly ILoggerFactory _loggerFactory;
         private readonly ILogger _logger;
+        private readonly SemaphoreSlim _createAllMutex = new(1, 1);
 
+        private bool _isNewCluster;
         private volatile int _disposed;
 
         /// <summary>
@@ -191,22 +195,47 @@ namespace Hazelcast.DistributedObjects
 #pragma warning disable IDE0060 // Remove unused parameters
 #pragma warning disable CA1801 // Review unused parameters
         // unused parameters are required, this is an event handler
-        public ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
+        public async ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster)
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
         {
-            if (!isNewCluster) return default;
-
-            // when connecting to a new cluster, re-create the distributed objects there
-            // this *may* take, but we cannot really use a new cluster before everything
+            // when connecting to a new cluster, re-create the distributed objects there.
+            // this *may* take time, but we cannot really use a new cluster before everything
             // has been set up correctly (so we cannot really run this in a background task).
             //
             // if this is a new cluster, then this is a "first" connection and there are
             // no other connections yet. we should be able to run CreateAllAsync on the
             // connection, else something is wrong - CreateAllAsync stops if the connection
             // becomes non-active (and does not throw)
+            
+            // defensive coding - in case something's wrong with the rest of our code and we
+            // happen to end up here multiple concurrent times, prevent weird things from happening.
+            await _createAllMutex.WaitAsync().CfAwait();
+            try
+            {
+                // if this connection is a new cluster, or we previously registered a new cluster
+                // but failed to complete CreateAllAsync (and then, this connection may not be a
+                // new cluster yet we still need to CreateAllAsync), run CreateAllAsync.
+                _isNewCluster |= isNewCluster;
+                if (_isNewCluster) await CreateAllAsync(connection).CfAwait();
+                _isNewCluster = false;
+            }
+            finally
+            {
+                _createAllMutex.Release();
+            }
 
-            return CreateAllAsync(connection);
+            // Java:
+            // TcpClientConnectionManager.onAuthenticated
+            //  if 1st connection, and clusterId changed, executor.execute(() => initializeClientOnCluster(id))
+            //
+            // TcpClientConnectionManager.initializeClientOnCluster
+            //  client.sendStateToCluster()
+            //    HazelcastClientInstanceImpl.sendStateToCluster
+            //      schemaService.sendAllSchemas()
+            //      proxyManager.createDistributedObjectsOnCluster()
+            //  and *then* triggers the CLIENT_CONNECTED
+            //  so, wait for sendStateToCluster before reporting that the client is connected
         }
 
         /// <inheritdoc />
