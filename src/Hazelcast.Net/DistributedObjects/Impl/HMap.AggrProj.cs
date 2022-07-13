@@ -39,7 +39,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapAggregateCodec.EncodeRequest(Name, aggregatorData);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapAggregateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TResult>(response);
+            return await ToObjectAsync<TResult>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -53,7 +53,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapAggregateWithPredicateCodec.EncodeRequest(Name, aggregatorData, predicateData);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapAggregateWithPredicateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TResult>(response);
+            return await ToObjectAsync<TResult>(response).CfAwait();
         }
 
         /// <inheritdoc />

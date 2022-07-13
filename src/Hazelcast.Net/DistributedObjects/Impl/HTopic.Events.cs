@@ -57,7 +57,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var member = Cluster.Members.GetMember(memberId);
 
             // that one is not lazy...
-            var item = ToObject<T>(itemData);
+            var item = await ToObjectAsync<T>(itemData).CfAwait();
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var handler in sstate.Handlers)
