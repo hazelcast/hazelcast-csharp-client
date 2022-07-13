@@ -436,7 +436,7 @@ namespace Hazelcast.Serialization.Compact
         /// <returns></returns>
         /// <exception cref="ConfigurationException">No reflection serializer has been configured.</exception>
         internal CompactSerializerAdapter ReflectionSerializerAdapter
-            => _reflectionSerializerAdapter ??= CompactSerializerAdapter.Create(ReflectionSerializer ?? throw new ConfigurationException("Missing a serializer.")); 
+            => _reflectionSerializerAdapter ??= CompactSerializerAdapter.Create(ReflectionSerializer ??= new ReflectionSerializer()); 
 
         /// <summary>
         /// Gets the default type name used by compact serialization for a type.
