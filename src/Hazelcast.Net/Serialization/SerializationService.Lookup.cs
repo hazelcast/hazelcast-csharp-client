@@ -84,7 +84,8 @@ namespace Hazelcast.Serialization
                              LookupConstantSerializer(typeOfObj) ??
                              LookupCustomSerializer(typeOfObj) ??
                              LookupSerializableSerializer(typeOfObj) ??
-                             LookupGlobalSerializer(typeOfObj);
+                             LookupGlobalSerializer(typeOfObj) ??
+                             LookupCompactSerializer(typeOfObj);
 
             if (serializer != null) return serializer;
 
@@ -94,6 +95,9 @@ namespace Hazelcast.Serialization
         private ISerializerAdapter LookupKnownSerializer(Type type)
         {
             // fast path for some known serializers
+
+            if (_compactSerializer.HasRegistrationForType(type))
+                return _compactSerializerAdapter;
 
             if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
                 return _dataSerializerAdapter;
@@ -160,6 +164,16 @@ namespace Hazelcast.Serialization
 
             // register so we find it faster next time
             if (serializer != null) _ = TryRegisterCustomSerializer(serializer, type);
+
+            return serializer;
+        }
+
+        private ISerializerAdapter LookupCompactSerializer(Type type)
+        {
+            var serializer = _compactSerializerAdapter;
+
+            // register so we find it faster next time
+            if (serializer != null) _ = TryRegisterConstantSerializer(serializer, type);
 
             return serializer;
         }

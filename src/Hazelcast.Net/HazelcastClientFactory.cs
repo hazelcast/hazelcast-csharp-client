@@ -25,6 +25,7 @@ using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Projection;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Compact;
 using Hazelcast.Serialization.ConstantSerializers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -289,12 +290,10 @@ namespace Hazelcast
         // (internal for tests only) creates the default serialization service
         internal static SerializationService CreateSerializationService(SerializationOptions options, IClusterMessaging messaging, ILoggerFactory loggerFactory)
         {
-            // TODO: refactor serialization service entirely
-            // there should not be a 'builder'
-            // it's all configuration or service
             return new SerializationServiceBuilder(options, loggerFactory)
 
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
+                .SetCompactSchemas(new Schemas(messaging))
 
                 // add hooks that construct and provide IIdentifiedDataSerialization factories for more
                 // built-in types such as predicates, aggregators or projections.
@@ -302,8 +301,12 @@ namespace Hazelcast
                 .AddHook<AggregatorDataSerializerHook>()
                 .AddHook<ProjectionDataSerializerHook>()
 
+                // add a hook that constructs and provides the compact IIdentifiedDataSerialization factory
+                // because some basic compact functionality such as schema distribution don't use compact
+                // serialization themselves.
+                .AddHook<CompactSerializationHook>()
+
                 // define serializers for a range of primitive types (int, lists...)
-                // why there is 'default' vs 'constant' is a mystery - they should be merged
                 .AddDefinitions(new ConstantSerializerDefinitions())
 
                 // and build
