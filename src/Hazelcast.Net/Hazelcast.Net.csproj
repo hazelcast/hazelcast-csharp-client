@@ -29,7 +29,7 @@
     <PackageTags>hazelcast cache imdg big-data in-memory datagrid clustering scalabilty distributed caching</PackageTags>
     <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <PackageIcon>nuget-logo.png</PackageIcon>
-    <PackageReadmeFile>readme.md</PackageReadmeFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(ASSEMBLY_SIGNING)'=='true'">
@@ -182,7 +182,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
-    <None Include="..\..\readme.md" Pack="true" PackagePath="\"/>
+    <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
 </Project>
