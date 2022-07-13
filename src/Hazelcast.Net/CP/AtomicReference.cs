@@ -57,7 +57,7 @@ namespace Hazelcast.CP
             var requestMessage = AtomicRefGetCodec.EncodeRequest(CPGroupId, Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = AtomicRefGetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject(response);
+            return await ToObjectAsync(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -74,7 +74,7 @@ namespace Hazelcast.CP
             var requestMessage = AtomicRefSetCodec.EncodeRequest(CPGroupId, Name, ToData(value), returnOldValue: true);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage).CfAwait();
             var response = AtomicRefSetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject(response);
+            return await ToObjectAsync(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -112,6 +112,12 @@ namespace Hazelcast.CP
         }
 
         protected IData ToData(T value) => SerializationService.ToData(value);
-        protected T ToObject(IData data) => SerializationService.ToObject<T>(data);
+
+        protected ValueTask<T> ToObjectAsync(IData valueData)
+        {
+            return SerializationService.TryToObject<T>(valueData, out var obj, out var state)
+                ? new ValueTask<T>(obj)
+                : SerializationService.ToObjectAsync<T>(valueData, state);
+        }
     }
 }

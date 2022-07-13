@@ -33,8 +33,22 @@ namespace Hazelcast.DistributedObjects.Impl
         public Task<TValue> GetAsync(TKey key)
             => GetAsync(key, CancellationToken.None);
 
-        private async Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
-            => await GetAsync(ToSafeData(key), cancellationToken).CfAwait();
+        // FIXME - about async state machines (low priority)
+        // - we need to do something about HZ_OPTIMIZE_ASYNC which is ugly really
+        // - see AsyncStateMachineVsCallback benchmark which could indicate that for most IClusterMessaging
+        //   methods where we await a response and then parse it, it could be more efficient to pass
+        //   a callback and avoid 1 level of state machine
+
+        private
+#if !HZ_OPTIMIZE_ASYNC
+        async
+#endif
+        Task<TValue> GetAsync(TKey key, CancellationToken cancellationToken)
+            =>
+#if !HZ_OPTIMIZE_ASYNC
+                await
+#endif
+                    GetAsync(ToSafeData(key), cancellationToken).CfAwait();
 
         /// <summary>
         /// Gets the value for a key, or null if the map does not contain an entry with this key.
@@ -44,9 +58,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <returns>The value for the specified key.</returns>
         protected virtual async Task<TValue> GetAsync(IData keyData, CancellationToken cancellationToken)
         {
-            // TODO: avoid boxing when ToObject-ing the value
             var valueData = await GetDataAsync(keyData, cancellationToken).CfAwait();
-            return ToObject<TValue>(valueData);
+            return await ToObjectAsync<TValue>(valueData).CfAwait();
         }
 
         /// <summary>
@@ -135,6 +148,13 @@ namespace Hazelcast.DistributedObjects.Impl
                 result.Add(response);
             }
 
+            // prepare lazy de-serialization
+            foreach (var entry in result.Entries.Values)
+            {
+                await SerializationService.EnsureCanDeserialize(entry.KeyData).CfAwait();
+                await SerializationService.EnsureCanDeserialize(entry.ValueData).CfAwait();
+            }
+
             return result;
         }
 
@@ -154,8 +174,8 @@ namespace Hazelcast.DistributedObjects.Impl
 
             return new MapEntryStats<TKey, TValue>
             {
-                Key = ToObject<TKey>(response.Key),
-                Value = ToObject<TValue>(response.Value),
+                Key = await ToObjectAsync<TKey>(response.Key).CfAwait(),
+                Value = await ToObjectAsync<TValue>(response.Value).CfAwait(),
                 Cost = response.Cost,
                 CreationTime = response.CreationTime,
                 ExpirationTime = response.ExpirationTime,
@@ -264,6 +284,10 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapValuesCodec.DecodeResponse(responseMessage).Response;
+
+            // prepare lazy deserialization
+            foreach (var data in response) await SerializationService.EnsureCanDeserialize(data).CfAwait();
+
             return new ReadOnlyLazyList<TValue>(response, SerializationService);
         }
 

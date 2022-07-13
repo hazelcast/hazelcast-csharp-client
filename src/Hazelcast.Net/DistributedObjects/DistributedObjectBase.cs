@@ -222,10 +222,14 @@ namespace Hazelcast.DistributedObjects
         /// Deserializes an <see cref="IData"/> serialized instance into an object.
         /// </summary>
         /// <typeparam name="TObject">The type of the object.</typeparam>
-        /// <param name="data">The <see cref="IData"/> serialized instance.</param>
+        /// <param name="valueData">The <see cref="IData"/> serialized instance.</param>
         /// <returns>The deserialized object.</returns>
-        protected virtual TObject ToObject<TObject>(IData data)
-            => SerializationService.ToObject<TObject>(data);
+        protected ValueTask<TObject> ToObjectAsync<TObject>(IData valueData)
+        {
+            return SerializationService.TryToObject<TObject>(valueData, out var obj, out var state)
+                ? new ValueTask<TObject>(obj)
+                : SerializationService.ToObjectAsync<TObject>(valueData, state);
+        }
 
         /// <summary>
         /// Creates a lazy argument.
@@ -233,10 +237,15 @@ namespace Hazelcast.DistributedObjects
         /// <typeparam name="TArg">The type of the argument.</typeparam>
         /// <param name="source">The source value.</param>
         /// <returns>The lazy argument.</returns>
-        protected Lazy<TArg> LazyArg<TArg>(IData source)
-            => source == null
-                ? null
-                : new Lazy<TArg>(() => ToObject<TArg>(source));
+        /// <remarks>
+        /// <para></para>
+        /// </remarks>
+        protected async ValueTask<Lazy<TArg>> CreateLazyArgAsync<TArg>(IData source)
+        {
+            if (source == null) return default;
+            await SerializationService.EnsureCanDeserialize(source).CfAwait();
+            return new Lazy<TArg>(() => SerializationService.ToObject<TArg>(source));
+        }
 
         /// <summary>
         /// Represents subscription state data.
