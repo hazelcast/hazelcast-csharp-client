@@ -17,8 +17,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
@@ -159,6 +162,24 @@ namespace Hazelcast.Serialization
 #pragma warning restore CA1822 // Mark members as static
 
         public Endianness Endianness { get; }
+
+        /// <summary>
+        /// Ensures that the serialization service can deserialize data.
+        /// </summary>
+        /// <param name="data">Data to deserialize.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask EnsureCanDeserialize(IData data)
+        {
+            // the only serializer that needs attention for now is compact
+
+            // and, we don't support embedded schemas
+            var typeId = data.TypeId;
+            if (typeId == SerializationConstants.ConstantTypeCompactWithSchema)
+                throw new NotSupportedException();
+            if (typeId == SerializationConstants.ConstantTypeCompact)
+                throw new NotSupportedException("We don't have a compact serializer for now.");
+            return default;
+        }
 
         /// <summary>
         /// Creates an <see cref="ISerializerAdapter"/> for an <see cref="ISerializer"/>.

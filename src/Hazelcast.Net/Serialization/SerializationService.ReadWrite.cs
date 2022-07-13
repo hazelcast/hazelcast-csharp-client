@@ -13,8 +13,11 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
@@ -86,6 +89,29 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
+        /// Tries to deserialize an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <typeparam name="T">The expected type of the object.</typeparam>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="obj">The object, if deserialization succeeded; otherwise <c>default</c>.</param>
+        /// <param name="state">The serialization service state, when returning <c>false</c>.</param>
+        /// <returns><c>true</c> if the <see cref="IData"/> blob was successfully deserialized; <c>false</c>
+        /// if the serialization service was not in a state that allowed deserialization but deserialization
+        /// can be asynchronously retried using <see cref="ToObjectAsync{T}"/>.</returns>
+        /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
+        /// <exception cref="InvalidCastException">Failed to case deserialized object to type <typeparamref name="T"/>.</exception>
+        public bool TryToObject<T>(object dataObj, out T obj, out ToObjectState state)
+        {
+            if (!TryToObject(dataObj, out var oobj, out state))
+            {
+                obj = default;
+                return false;
+            }
+            obj = CastObject<T>(oobj, false);
+            return true;
+        }
+
+        /// <summary>
         /// Deserializes an <see cref="IData"/> blob to an object.
         /// </summary>
         /// <param name="dataObj">The <see cref="IData"/> blob.</param>
@@ -110,6 +136,81 @@ namespace Hazelcast.Serialization
             {
                 ReturnDataInput(input);
             }
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="obj">The object, if deserialization succeeded; otherwise <c>default</c>.</param>
+        /// <param name="state">The serialization service state, when returning <c>false</c>.</param>
+        /// <returns><c>true</c> if the <see cref="IData"/> blob was successfully deserialized; <c>false</c>
+        /// if the serialization service was not in a state that allowed deserialization but deserialization
+        /// can be asynchronously retried using <see cref="ToObjectAsync"/>.</returns>
+        /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
+        public bool TryToObject(object dataObj, out object obj, out ToObjectState state)
+        {
+            if (!(dataObj is IData data))
+            {
+                obj = dataObj;
+                state = default;
+                return true;
+            }
+
+            var input = GetDataInput(data);
+            try
+            {
+                var typeId = data.TypeId;
+                var serializer = LookupSerializer(typeId);
+                
+                // TODO: consider doing this via polymorphism
+                // i.e. have ISerializerAdapter implement TryRead(...)
+                if (serializer is CompactSerializationSerializerAdapter compact)
+                {
+                    var r = compact.TryRead(input, out obj, out state);
+                    return r;
+                }
+                else
+                {
+                    obj = serializer.Read(input);
+                    state = default;
+                    return true;
+                }
+            }
+            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            {
+                throw new SerializationException(e);
+            }
+            finally
+            {
+                ReturnDataInput(input);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <typeparam name="T">The expected type of the object.</typeparam>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="state">The initial serialization service state.</param>
+        /// <returns>The object.</returns>
+        public async ValueTask<T> ToObjectAsync<T>(object dataObj, ToObjectState state)
+        {
+            var obj = await ToObjectAsync(dataObj, state).CfAwait();
+            return CastObject<T>(obj, false);
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="state">The initial serialization service state.</param>
+        /// <returns>The object.</returns>
+        /// <exception cref="UnknownCompactSchemaException">Deserialization requires a schema which could not be fetched from cluster.</exception>
+        /// <exception cref="HazelcastException">Internal error.</exception>
+        public async ValueTask<object> ToObjectAsync(object dataObj, ToObjectState state)
+        {
+            throw new NotSupportedException("We don't have a compact serializer for now.");
         }
 
         /// <summary>
