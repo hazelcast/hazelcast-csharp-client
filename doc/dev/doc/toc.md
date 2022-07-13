@@ -30,6 +30,7 @@
 # [Logging](logging.md)
 # [Locking](locking.md)
 # [Monitoring](monitoring.md)
+# [Failover (Blue/Green)](failover.md)
 # [Events](events.md)
 # [Data Affinity](data-affinity.md)
 # [Transactions](transactions.md)
