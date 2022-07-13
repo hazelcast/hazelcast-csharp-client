@@ -263,21 +263,5 @@ namespace Hazelcast.Tests.Cloud
 
             return info;
         }
-
-        public static HazelcastOptionsBuilder WithHConsoleLogger(this HazelcastOptionsBuilder builder)
-        {
-            return builder
-                .With("Logging:LogLevel:Default", "None")
-                .With("Logging:LogLevel:System", "None")
-                .With("Logging:LogLevel:Microsoft", "None")
-                .With((configuration, options) =>
-                {
-                    // configure logging factory and add the console provider
-                    options.LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
-                        loggingBuilder
-                            .AddConfiguration(configuration.GetSection("logging"))
-                            .AddHConsole());
-                });
-        }
     }
 }

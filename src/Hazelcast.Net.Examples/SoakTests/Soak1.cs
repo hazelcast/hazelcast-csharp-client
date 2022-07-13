@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,7 +69,18 @@ namespace Hazelcast.Examples.SoakTests
     // ReSharper disable once UnusedMember.Global
     public class Soak1
     {
+        /// <summary>
+        /// Operation counts by thread id
+        /// </summary>
         private static int[] _reports;
+
+        private static long _maxMemoryUsage = long.MinValue;
+
+        private static long _minMemoryUsage = long.MaxValue;
+
+        private static long _disconnectedCount;
+
+        private static readonly Process _currentProcess = Process.GetCurrentProcess();
 
         private class SoakOptions
         {
@@ -77,6 +89,8 @@ namespace Hazelcast.Examples.SoakTests
             public string Duration { get; set; } = "1m";
 
             public int EntryCount { get; set; } = 10_000;
+
+            public string MemoryMonitorPeriod { get; set; } = "5m";
         }
 
         /// <summary>
@@ -100,24 +114,24 @@ namespace Hazelcast.Examples.SoakTests
             // say hello
             logger.LogInformation("Hazelcast .NET soak tests");
 
-            // get duration
-            var duration = TimeSpan.FromMinutes(1); // default to 1 minute
-            if (soakOptions.Duration.EndsWith("h"))
-                duration = TimeSpan.FromHours(int.Parse(soakOptions.Duration.TrimEnd('h')));
-            else if (soakOptions.Duration.EndsWith("m"))
-                duration = TimeSpan.FromMinutes(int.Parse(soakOptions.Duration.TrimEnd('m')));
-            else if (soakOptions.Duration.EndsWith("s"))
-                duration = TimeSpan.FromSeconds(int.Parse(soakOptions.Duration.TrimEnd('s')));
-
+            var duration = ParseDurationOrGetDefault(soakOptions.Duration, TimeSpan.FromMinutes(1));
+            var memoryPeriod = ParseDurationOrGetDefault(soakOptions.MemoryMonitorPeriod, TimeSpan.FromMinutes(5));
 
             // report
-            logger.LogInformation($"Start {nameof(Soak1)} with {soakOptions.ThreadCount} threads, duration {duration:G}");
+            logger.LogInformation($"Start {nameof(Soak1)} with {soakOptions.ThreadCount} threads, duration {duration.TotalHours,0:f4}h");
             logger.LogInformation("Connecting");
 
             var cancellation = new CancellationTokenSource(duration);
 
             // create an Hazelcast client and connect to a server running on localhost
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options, cancellation.Token).ConfigureAwait(false);
+
+            //Register for events
+            await client.SubscribeAsync(events => events.StateChanged((sender, args) =>
+            {
+                if (args.State == ClientState.Disconnected)
+                    Interlocked.Increment(ref _disconnectedCount);
+            }));
 
             // register hook for Ctrl-C on console
             Console.CancelKeyPress += (_, a) =>
@@ -137,9 +151,11 @@ namespace Hazelcast.Examples.SoakTests
                 tasks.Add(task);
             }
 
+            tasks.Add(MonitorMemoryUsage(memoryPeriod, logger, token));
+
             // report
             logger.LogInformation("Connected");
-            logger.LogInformation($"{nameof(Soak1)} is running, will end in {soakOptions.Duration:G}");
+            logger.LogInformation($"{nameof(Soak1)} is running, will end in duration {duration.TotalHours,0:f4}h");
             logger.LogInformation("Or, press Ctrl-C to abort");
 
             // wait for threads
@@ -157,17 +173,54 @@ namespace Hazelcast.Examples.SoakTests
 
             // report
             var sb = new StringBuilder();
-            sb.AppendLine("|  id |                count |");
-            sb.AppendLine("|-----|----------------------|");
+            sb.AppendLine("|  id |      operation count |     op/sec |");
+            sb.AppendLine("|-----|----------------------|------------|");
             for (var i = 0; i < soakOptions.ThreadCount; i++)
             {
-                sb.AppendLine($"| {i,3:D} | {_reports[i],20:D} |");
+                sb.AppendLine($"| {i,3:D} | {_reports[i],20:D} | {_reports[i] / (long)duration.TotalSeconds,10:D} |");
             }
+
+            sb.AppendLine();
+            sb.AppendLine("=== Some metrics about client operations ===");
+            sb.AppendLine($"Max Memory Usage (bytes): {_maxMemoryUsage}");
+            sb.AppendLine($"Min Memory Usage (bytes): {_minMemoryUsage}");
+            sb.AppendLine($"# of Disconnections: {_disconnectedCount}");
 
             logger.LogInformation(sb.ToString());
 
             // say hello
             logger.LogInformation($"Ended {nameof(Soak1)}");
+        }
+
+        private static TimeSpan ParseDurationOrGetDefault(string duration, TimeSpan defaultValue)
+        {
+            // get duration
+            var parsedDuration = defaultValue;
+            if (duration.EndsWith("h"))
+                parsedDuration = TimeSpan.FromHours(int.Parse(duration.TrimEnd('h')));
+            else if (duration.EndsWith("m"))
+                parsedDuration = TimeSpan.FromMinutes(int.Parse(duration.TrimEnd('m')));
+            else if (duration.EndsWith("s"))
+                parsedDuration = TimeSpan.FromSeconds(int.Parse(duration.TrimEnd('s')));
+            else
+            {
+                if (TimeSpan.TryParse(duration, out var parsedTimeSpan))
+                    parsedDuration = parsedTimeSpan;
+            }
+            return parsedDuration;
+        }
+
+        private static async Task MonitorMemoryUsage(TimeSpan period, ILogger logger, CancellationToken token)
+        {
+            await Task.Delay(period, token);
+            logger.LogInformation("Reading Memory Usage.");
+            _currentProcess.Refresh();
+
+            if (_maxMemoryUsage < _currentProcess.PrivateMemorySize64)
+                _maxMemoryUsage = _currentProcess.PrivateMemorySize64;
+
+            if (_minMemoryUsage > _currentProcess.PrivateMemorySize64)
+                _minMemoryUsage = _currentProcess.PrivateMemorySize64;
         }
 
         private static async Task RunTask(IHazelcastClient client, CancellationToken token, int id, int entryCount, ILogger logger)
@@ -215,6 +268,10 @@ namespace Hazelcast.Examples.SoakTests
                     }
 
                     _reports[id] += 1;
+
+                    if (_reports[id] % 10_000 == 0)
+                        logger.LogInformation($"Thread: {id}, Operation Completed: {_reports[id]}");
+
                 }
                 catch (Exception ex)
                 {

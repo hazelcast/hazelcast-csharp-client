@@ -215,23 +215,44 @@ namespace Hazelcast.Clustering
 
         private void LogDiffs(MemberTable table, Dictionary<MemberInfo, int> diff)
         {
+            var countOfUnchanged = 0;
             var msg = new StringBuilder();
             msg.Append("Members [");
             msg.Append(table.Count);
             msg.AppendLine("] {");
-            foreach (var member in table.Members)
+            foreach (var (m,d) in  diff)
             {
                 msg.Append("    ");
-                msg.Append(member.Address);
+                msg.Append(m.Address);
                 msg.Append(" - ");
-                msg.Append(member.Id);
-                if (diff.TryGetValue(member, out var d) && d == 2)
-                    msg.Append(" - new");
+                msg.Append(m.Id);
+                string status;
+                switch (d)
+                {
+                    case 1:
+                        status = "Removing";
+                        break;
+                    case 2:
+                        status = "Adding";
+                        break;
+                    case 3:
+                        status = "Unchanged";
+                        countOfUnchanged++;
+                        break;
+                    default:
+                        status = "";
+                        break;
+                }
+
+                msg.Append(' ');
+                msg.Append(status);
                 msg.AppendLine();
             }
             msg.Append('}');
 
-            _logger.LogInformation(msg.ToString());
+            //Print only if there is a change
+            if (countOfUnchanged != diff.Count)
+                _logger.LogInformation(msg.ToString());
         }
 
         /// <summary>

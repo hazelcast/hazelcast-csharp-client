@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
@@ -26,13 +27,13 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class RetryStrategy : IRetryStrategy
     {
-        private readonly int _initialBackOffMilliseconds;
-        private readonly int _maxBackOffMilliseconds;
         private readonly double _multiplier;
         private readonly long _timeoutMilliseconds;
         private readonly double _jitter;
         private readonly string _action;
         private readonly ILogger _logger;
+        private readonly int _initialBackoffMilliseconds;
+        private readonly int _maxBackoffMilliseconds;
 
         private int _currentBackOffMilliseconds;
         private int _attempts;
@@ -70,14 +71,41 @@ namespace Hazelcast.Clustering
 #pragma warning disable CA1308 // Normalize strings to uppercase - not normalizing, just lower-casing for display
             _action = action.ToLowerInvariant();
 #pragma warning restore CA1308
-            _initialBackOffMilliseconds = initialBackOffMilliseconds;
-            _maxBackOffMilliseconds = maxBackOffMilliseconds;
+
+            _initialBackoffMilliseconds = initialBackOffMilliseconds;
+            _maxBackoffMilliseconds = maxBackOffMilliseconds;
             _multiplier = multiplier;
             _timeoutMilliseconds = timeoutMilliseconds;
             _jitter = jitter;
+
             _logger = loggerFactory?.CreateLogger<RetryStrategy>() ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             Restart();
+        }
+
+        /// <summary>
+        /// (internal for tests only) Gets the delay.
+        /// </summary>
+        internal int GetDelay(int elapsed)
+        {
+            // java:
+            // long actualSleepTime = (long) (currentBackoffMillis +currentBackoffMillis * jitter * (2.0 * random.nextDouble() - 1.0));
+            //
+            // delay is _currentBackOffMilliseconds + _currentBackOffMilliseconds * jitter * random
+            // where random is between -1 and +1 and _jitter is between 0 and 1
+
+            var rand = 2.0 * RandomProvider.NextDouble() - 1.0; // -1 to +1
+            var delay = (int)(_currentBackOffMilliseconds * (1 + _jitter * rand));
+            if (_timeoutMilliseconds >= 0) delay = Math.Min(delay, Math.Max(0, (int)(_timeoutMilliseconds - elapsed)));
+            return delay;
+        }
+
+        /// <summary>
+        /// (internal for tests only) Gets the new back-off.
+        /// </summary>
+        internal int GetNewBackoff()
+        {
+            return (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackoffMilliseconds);
         }
 
         /// <inheritdoc />
@@ -96,8 +124,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            var delay = (int) (_currentBackOffMilliseconds * (1 - _jitter * (1 - RandomProvider.NextDouble())));
-            delay = Math.Min(delay, Math.Max(0, (int) (_timeoutMilliseconds - elapsed)));
+            var delay = GetDelay(elapsed);
 
             _logger.LogDebug($"Unable to {_action} after {_attempts} attempts and {elapsed}ms, will retry in {delay}ms");
 
@@ -116,7 +143,7 @@ namespace Hazelcast.Clustering
                 return false;
             }
 
-            _currentBackOffMilliseconds = (int) Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
+            _currentBackOffMilliseconds = GetNewBackoff();
             return true;
         }
 
@@ -124,7 +151,7 @@ namespace Hazelcast.Clustering
         public void Restart()
         {
             _attempts = 0;
-            _currentBackOffMilliseconds = Math.Min(_maxBackOffMilliseconds, _initialBackOffMilliseconds);
+            _currentBackOffMilliseconds = Math.Min(_maxBackoffMilliseconds, _initialBackoffMilliseconds);
             _begin = DateTime.UtcNow;
         }
     }

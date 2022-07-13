@@ -67,7 +67,12 @@ namespace Hazelcast.Networking
 
             var clientCertificates = GetClientCertificatesOrDefault();
 
-            var targetHost = _options.CertificateName ?? ""; // TODO: uh?!
+            // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
+            // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
+            // options.CertificateName *must* be set to the server certificate name.
+
+            var targetHost = _options.CertificateName ?? "";
+            _logger.LogDebug("TargetHost: {TargetHost}", targetHost);
 
             // _options.Protocol is 'None' by default
             //
@@ -163,7 +168,13 @@ namespace Hazelcast.Networking
             {
                 if (_options.ValidateCertificateName)
                 {
-                    _logger.LogWarning($"SSL certificate error: {policyErrors}.");
+                    var name = "";
+                    try
+                    {
+                        name = $" (cert name: '{cert.Subject}')";
+                    }
+                    catch { /* bah */ }
+                    _logger.LogWarning("SSL certificate error: {PolicyErrors}{Name}.", policyErrors, name);
                     validation = false;
                 }
                 else
