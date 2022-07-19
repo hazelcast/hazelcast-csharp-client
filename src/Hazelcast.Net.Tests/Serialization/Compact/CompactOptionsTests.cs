@@ -289,6 +289,38 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.Throws<ArgumentNullException>(() => options.AddType(null));
         }
 
+        [Test]
+        public void AddAssemblySerializers_Exceptions()
+        {
+            var options = new CompactOptions();
+
+            // throws on null
+            Assert.Throws<ArgumentNullException>(() => options.AddAssemblySerializers(null));
+
+            // throws on anything that cannot be constructed into a ICompactSerializer
+            // we don't want to add a bogus attribute to the test assembly, so we create a dedicated assembly on the fly
+
+            var assemblyName = new AssemblyName("dynamic");
+            var assemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(assemblyName, AssemblyBuilderAccess.Run);
+            var moduleName = assemblyName.Name;
+            if (moduleName == null) throw new Exception("panic: null module name.");
+            var moduleBuilder = assemblyBuilder.DefineDynamicModule(moduleName);
+
+            // define a type in order to get the assembly (?)
+            var typeBuilder = moduleBuilder.DefineType("Duh", TypeAttributes.Public);
+            var type = typeBuilder.CreateType();
+            if (type == null) throw new Exception("panic: null type.");
+            var assembly = type.Assembly;
+
+            // add an attribute to declare the serializer - which cannot be constructed
+            // note that it *has* to be a valid ICompactSerializer<T> else the attribute ctor throws
+            var attributeConstructor = typeof (CompactSerializerAttribute).GetConstructor(new[] { typeof (Type) });
+            var attributeBuilder = new CustomAttributeBuilder(attributeConstructor, new object[] { typeof(BogusCtorCompactSerializer) });
+            assemblyBuilder.SetCustomAttribute(attributeBuilder);
+
+            Assert.Throws<ArgumentException>(() => options.AddAssemblySerializers(assembly));
+        }
+
         public class BogusCtorCompactSerializer : ICompactSerializer<object>
         {
             // prevents Activator.CreateInstance from working
