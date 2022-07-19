@@ -135,7 +135,20 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(returned.Id, Is.EqualTo(schema.Id));
         }
 
-        private async Task AssertCanPublishAndFetchSchema(Schemas schemas, Schema schema)
+        [Test]
+        public async Task ClientCanPublishAndFetchSchemas()
+        {
+            var schemas = (Schemas) ((HazelcastClient)Client).SerializationService.CompactSerializer.Schemas;
+
+            var schema = new Schema($"sometype{_ids.GetNext()}", new[]
+            {
+                new SchemaField("somefield", FieldKind.String)
+            });
+
+            await AssertCanPublishAndFetchSchema(schemas, schema);
+        }
+
+        private async Task AssertCanPublishAndFetchSchema(Schemas schemas, Schema schema, bool succeeds = true)
         {
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False); // it's not there
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Null); // and not on the cluster either
@@ -146,17 +159,16 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schemas.TryGet(schema.Id, out _), Is.True); // it's there
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Not.Null); // so returned immediately
 
-            Assert.That(await schemas.FetchAsync(schema.Id), Is.Null); // still not on the cluster
-            await schemas.PublishAsync();
-            Assert.That(await schemas.FetchAsync(schema.Id), Is.Not.Null); // now on the cluster
+            // GetOrFetchAsync returned from memory but FetchAsync wants to talk to the cluster,
+            // which means that first we'll check for unpublished schemas an publish them - always.
+            // and thus, FetchAsync immediately succeeds
+            Assert.That(await schemas.FetchAsync(schema.Id), succeeds ? Is.Not.Null : Is.Null);
         }
 
         [Test]
         public async Task NoReservedKeyword()
         {
-            // create a schema cache (don't use the client's one)
-            var messaging = Client.GetMessaging();
-            var schemas = new Schemas(messaging);
+            var schemas = (Schemas)((HazelcastClient)Client).SerializationService.CompactSerializer.Schemas;
 
             var schema = SchemaBuilder
                 .For($"thing{_ids.GetNext()}")
