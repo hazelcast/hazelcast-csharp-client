@@ -446,9 +446,12 @@ namespace Hazelcast.Clustering
             {
                 // propagate the cancellationToken to the invocation
 #if !NETSTANDARD2_0
-                await
-#endif
+                // CancellationTokenRegistration is IAsyncDisposable
+                await using var reg = cancellationToken.Register(invocation.TrySetCanceled).ConfigureAwait(false);
+#else
+                // CancellationTokenRegistration is IDisposable
                 using var reg = cancellationToken.Register(invocation.TrySetCanceled);
+#endif
 
                 var response = await invocation.Task.CfAwait();
                 HConsole.WriteLine(this, "Received response");
