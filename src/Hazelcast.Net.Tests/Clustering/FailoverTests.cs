@@ -603,9 +603,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
             membersA = await StartMembersAsync(RcClusterPrimary, 1);
 
-            Assert.AreEqual(RcClusterPrimary.Id, client.ClusterName);
-
-            await AssertClusterA(map, RcClusterPrimary.Id);
+            await AssertClusterA(map, client.ClusterName);
 
             Assert.AreEqual(ClientState.Connected, client.State);
             Assert.True(isLastStateConnected);
