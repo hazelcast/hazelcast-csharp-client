@@ -16,10 +16,14 @@
 
 using System;
 using System.Threading;
+using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
+    internal interface IReadWriteObjectsFromIObjectDataInputOutput : IReadObjectsFromObjectDataInput, IWriteObjectsToObjectDataOutput
+    { }
+
     internal interface IThing
     {
         string? Name { get; set; }
@@ -65,41 +69,123 @@ namespace Hazelcast.Tests.Serialization.Compact
     {
         public IThing? Thing { get; set; }
 
-        public class ThingWrapperSerializer : ICompactSerializer<ThingWrapper>
+        public class ThingWrapperSerializer : CompactSerializerBase<ThingWrapper>
         {
-            public string TypeName => "thing-wrapper";
+            public override string TypeName => "thing-wrapper";
 
-            public ThingWrapper Read(ICompactReader reader) => throw new NotImplementedException();
+            public override ThingWrapper Read(ICompactReader reader)
+            {
+                return new ThingWrapper { Thing = reader.ReadCompact<IThing>("thing") };
+            }
 
-            public void Write(ICompactWriter writer, ThingWrapper value) => throw new NotImplementedException();
+            public override void Write(ICompactWriter writer, ThingWrapper value)
+            {
+                writer.WriteCompact("thing", value.Thing);
+            }
         }
     }
 
-    internal class ThingInterfaceCompactSerializer : ICompactSerializer<IThing>
+    internal static class ThingCompactSerializer
     {
-        public string TypeName => "i-thing";
+        private static int _readCount;
+        private static int _writeCount;
 
-        public IThing Read(ICompactReader reader) => throw new NotImplementedException();
+        public static void Reset()
+        {
+            _readCount = _writeCount = 0;
+        }
 
-        public void Write(ICompactWriter writer, IThing value) => throw new NotImplementedException();
+        public static void CountRead() => Interlocked.Increment(ref _readCount);
+
+        public static void CountWrite() => Interlocked.Increment(ref _writeCount);
+
+        public static int ReadCount => _readCount;
+
+        public static int WriteCount => _writeCount;
     }
 
-    internal class ThingCompactSerializer<T> : ICompactSerializer<T>
+    internal class ThingInterfaceCompactSerializer : CompactSerializerBase<IThing>
+    {
+        public override string TypeName => "i-thing";
+
+        public override void Write(ICompactWriter writer, IThing value)
+        {
+            writer.WriteString("_type", value.GetType().Name);
+            writer.WriteString("name", value.Name);
+            writer.WriteInt32("value", value.Value);
+        }
+
+        public override IThing Read(ICompactReader reader)
+        {
+            var t = reader.ReadString("_type");
+            if (t == nameof(Thing))
+                return new Thing { Name = reader.ReadString("name"), Value = reader.ReadInt32("value") };
+            if (t == nameof(DifferentThing))
+                return new DifferentThing { Name = reader.ReadString("name"), Value = reader.ReadInt32("value") };
+            throw new NotSupportedException();
+        }
+    }
+
+    internal class ThingCompactSerializer<T> : CompactSerializerBase<T>
         where T : IThing, new()
     {
         public ThingCompactSerializer()
             : this("thing")
         { }
 
-        public ThingCompactSerializer(string typename)
+        public ThingCompactSerializer(string typeName)
         {
-            TypeName = typename;
+            TypeName = typeName;
         }
 
-        public string TypeName { get; }
+        public override string TypeName { get; }
 
-        public T Read(ICompactReader reader) => throw new NotImplementedException();
+        public override T Read(ICompactReader reader)
+        {
+            ThingCompactSerializer.CountRead();
+            return new T
+            {
+                Name = reader.ReadString(Thing.FieldNames.Name),
+                Value = reader.ReadInt32(Thing.FieldNames.Value)
+            };
+        }
 
-        public void Write(ICompactWriter writer, T value) => throw new NotImplementedException();
+        public override void Write(ICompactWriter writer, T obj)
+        {
+            ThingCompactSerializer.CountWrite();
+            writer.WriteString(Thing.FieldNames.Name, obj.Name);
+            writer.WriteInt32(Thing.FieldNames.Value, obj.Value);
+        }
+    }
+
+    internal class CountingReflectionSerializer : ReflectionSerializer
+    {
+        private static int _readCount;
+        private static int _writeCount;
+
+        public static void Reset()
+        {
+            _readCount = _writeCount = 0;
+        }
+
+        public static void CountRead() => Interlocked.Increment(ref _readCount);
+
+        public static void CountWrite() => Interlocked.Increment(ref _writeCount);
+
+        public static int ReadCount => _readCount;
+
+        public static int WriteCount => _writeCount;
+
+        public override object Read(ICompactReader reader)
+        {
+            CountRead();
+            return base.Read(reader);
+        }
+
+        public override void Write(ICompactWriter writer, object obj)
+        {
+            CountWrite();
+            base.Write(writer, obj);
+        }
     }
 }
