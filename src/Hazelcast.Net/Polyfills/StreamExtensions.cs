@@ -96,7 +96,7 @@ namespace System.IO
                     throw new TaskCanceledException();
                 }
 
-                var result = await reading.ConfigureAwait(false);
+                var result = await reading.CfAwait();
 
                 // copy the rented array
                 if (rentedBytes) new Span<byte>(bytes, 0, result).CopyTo(memory.Span);
@@ -105,7 +105,7 @@ namespace System.IO
             }
             finally
             {
-                reg.Dispose(); // don't leak the registration
+                await reg.DisposeAsync().CfAwait(); // don't leak the registration
                 if (rentedBytes) ArrayPool<byte>.Shared.Return(bytes); // return the rented array
             }
         }
