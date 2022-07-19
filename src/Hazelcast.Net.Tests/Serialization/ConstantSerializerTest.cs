@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Serialization
 
         private SerializationService CreateSerializationService(Endianness endianness, bool enableClrSerialization)
         {
-            var options = new SerializationOptions();
+            var options = new SerializationOptions { EnableClrSerialization = enableClrSerialization };
 
             return new SerializationServiceBuilder(options, new NullLoggerFactory())
                 .SetEndianness(endianness)
