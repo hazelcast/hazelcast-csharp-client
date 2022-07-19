@@ -89,7 +89,7 @@ namespace Hazelcast.Serialization
             _options = options;
             Endianness = endianness;
             _globalPartitioningStrategy = partitioningStrategy;
-            _enableClrSerialization = true;
+            _enableClrSerialization = options.EnableClrSerialization;
             _initialOutputBufferSize = initialOutputBufferSize;
 
             _logger = loggerFactory.CreateLogger<SerializationService>();
