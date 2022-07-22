@@ -296,7 +296,15 @@ namespace Hazelcast.Messaging
             }
             finally
             {
-                _writer?.Release();
+                if (_writer != null)
+                {
+                    try
+                    {
+                        _writer.Release();
+                    }
+                    catch (ObjectDisposedException) // _writer can be non-null but disposed
+                    { }
+                }
             }
 
             return true;
