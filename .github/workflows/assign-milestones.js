@@ -78,6 +78,10 @@ module.exports = async ({github, context, core}) => {
     //const card = cardResponse.data
     //console.log(card)
 
+    if (!context.payload.project_card.content_url) {
+        return;
+    }
+
     //const [ itemType, itemNumber ] = last2(card.content_url)
     const [ itemType, itemNumber ] = last2(context.payload.project_card.content_url)
     const isIssue = itemType == 'issues'
