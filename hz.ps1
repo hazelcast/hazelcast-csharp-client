@@ -2343,17 +2343,14 @@ function hz-cleanup-code {
     # make sure we have the JetBrains tool
     &dotnet tool restore
     # run the JetBrains tool
-    &dotnet jb cleanupcode Hazelcast.Net.sln --profile="Cleanup C# Header and Using" --include="src/Hazelcast.Net/*"
+    &dotnet jb cleanupcode Hazelcast.Net.sln --profile="Cleanup C# Header and Using"
 
     Write-Output ""
     Write-Output "Clean C# code - whitespaces, tabs and new-lines"
 
     $files = get-childitem -recurse -file -path "$srcDir\*" -include "*.cs" | ? { `
         $_.FullName -inotmatch '\\obj\\' -and `
-        $_.FullName -inotmatch '\\bin\\' -and `
-        $_.FullName -inotmatch '\\src\\ExpectedObjects\\' -and `
-        $_.FullName -inotmatch '\\src\\Hazelcast.Net\\Protocol\\Codecs\\' -and `
-        $_.FullName -inotmatch '\\src\\Hazelcast.Net\\Protocol\\CustomCodecs\\' `
+        $_.FullName -inotmatch '\\bin\\' `
     }
 
     $nl = [Environment]::NewLine
