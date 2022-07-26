@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -74,7 +74,7 @@ namespace Hazelcast.Configuration
 
                     argk = argk.Replace(".", ConfigurationPath.KeyDelimiter, StringComparison.Ordinal);
 
-                    if (switchMappings.TryGetValue(argk, out var argm) && 
+                    if (switchMappings.TryGetValue(argk, out var argm) &&
                         (argm.StartsWith(HazelcastAndKeyDelimiter, StringComparison.Ordinal) ||
                          argm.StartsWith(FailoverAndKeyDelimiter, StringComparison.Ordinal)))
                     {
@@ -110,7 +110,7 @@ namespace Hazelcast.Configuration
                         if (enumerator.MoveNext()) yield return enumerator.Current;
                     }
                 }
-                else if ((arg.StartsWith(HazelcastAndDot, StringComparison.Ordinal) || 
+                else if ((arg.StartsWith(HazelcastAndDot, StringComparison.Ordinal) ||
                           arg.StartsWith(FailoverAndDot, StringComparison.Ordinal)) &&
                          (pos = arg.IndexOf('=', StringComparison.Ordinal)) > 0)
                 {

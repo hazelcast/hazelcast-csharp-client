@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,50 +65,50 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddDataSerializableFactoryClassWithDuplicateId()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
         {
             var config = new SerializationOptions();
             config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
             config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
+        {
+            Assert.Throws<ServiceFactoryException>(() =>
         {
             var config = new SerializationOptions();
             config.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWitDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddDataSerializableFactoryWitDuplicateId()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
         {
             var config = new SerializationOptions();
             config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).
                 AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddDataSerializableFactoryWithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationOptions();
             config.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
         public void TestAddPortableFactory()
@@ -141,33 +141,33 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-		public void TestAddPortableFactoryWhichDoesNotImplementPortableFactory()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddPortableFactoryWhichDoesNotImplementPortableFactory()
+        {
+            Assert.Throws<ServiceFactoryException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(1, typeof (SerializableFactory));
 
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddPortableFactoryWithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(-1, typeof (KitchenSinkPortableFactory));
 
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddPortableFactoryWithDuplicateId()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(1, new KitchenSinkPortableFactory());
@@ -175,36 +175,36 @@ namespace Hazelcast.Tests.Serialization
 
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithNoEmptyConstructor()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddPortableFactoryWithNoEmptyConstructor()
+        {
+            Assert.Throws<ServiceFactoryException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(1, typeof (PortableFactory));
 
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactory2WithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddPortableFactory2WithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(-1, new KitchenSinkPortableFactory());
 
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactory2WithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddPortableFactory2WithDuplicateId()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
         {
             var config = new SerializationOptions();
             config.AddPortableFactory(1, new KitchenSinkPortableFactory());
@@ -212,7 +212,7 @@ namespace Hazelcast.Tests.Serialization
             var service = new SerializationServiceBuilder(new NullLoggerFactory()).AddPortableFactory(1,
                 new KitchenSinkPortableFactory()).SetConfig(config).Build();
         });
-		}
+        }
 
         public void TestHazelcastInstanceAware()
         {

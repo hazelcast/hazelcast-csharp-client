@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -292,8 +292,8 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task TestAggregate_NullPredicate()
-		{
+        public async Task TestAggregate_NullPredicate()
+        {
             var dictionary = await Client.GetMapAsync<string, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
@@ -301,7 +301,7 @@ namespace Hazelcast.Tests.Remote
             {
                 await dictionary.AggregateAsync(Aggregators.LongSum("id"), null);
             });
-		}
+        }
 
         //Projection tests
         [Test]
@@ -332,8 +332,8 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task Test_NullProjection()
-		{
+        public async Task Test_NullProjection()
+        {
             var dictionary = await Client.GetMapAsync<string, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
@@ -341,11 +341,11 @@ namespace Hazelcast.Tests.Remote
             {
                 await dictionary.ProjectAsync<long>(null);
             });
-		}
+        }
 
         [Test]
-		public async Task TestProjection_NullPredicate()
-		{
+        public async Task TestProjection_NullPredicate()
+        {
             var dictionary = await Client.GetMapAsync<string, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
@@ -353,11 +353,11 @@ namespace Hazelcast.Tests.Remote
             {
                 await dictionary.ProjectAsync<long>(new SingleAttributeProjection("id"), null);
             });
-		}
+        }
 
         [Test]
-		public async Task Test_NullPredicateAndProjection()
-		{
+        public async Task Test_NullPredicateAndProjection()
+        {
             var dictionary = await Client.GetMapAsync<string, int>(CreateUniqueName());
             await using var _ = DestroyAndDispose(dictionary);
 
@@ -365,6 +365,6 @@ namespace Hazelcast.Tests.Remote
             {
                 await dictionary.ProjectAsync<long>(null, null);
             });
-		}
+        }
     }
 }

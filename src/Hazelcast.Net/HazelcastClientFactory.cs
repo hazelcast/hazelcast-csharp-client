@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -314,7 +314,7 @@ namespace Hazelcast
 
             void QuickLogDebug(HazelcastOptions o, string message)
             {
-                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));               
+                var logger = o.LoggerFactory.Service.CreateLogger(typeof(HazelcastClientFactory));
                 logger.LogDebug(message);
             }
 
@@ -325,7 +325,7 @@ namespace Hazelcast
             }
             else
             {
-                var opt = ((HazelcastFailoverOptions)hazelcastOptions);                
+                var opt = ((HazelcastFailoverOptions)hazelcastOptions);
 
                 if (!opt.Clients.Any())
                     throw new ConfigurationException("If Failover is enabled, then clusters should be provided.");
@@ -334,11 +334,11 @@ namespace Hazelcast
                 {
                     opt.Clients[0].Networking.ConnectionTimeoutMilliseconds = 120_000;
                     QuickLogDebug(opt.Clients[0], "Options: Clusters[0].Networking.ConnectionTimeoutMilliseconds is infinite => set it to 120sec.");
-                }                    
+                }
                 
                 opt.Enabled = true;
                 options = opt.Clients[0].Clone();
-                options.FailoverOptions = opt.Clone();//safe,no cyclic clone                 
+                options.FailoverOptions = opt.Clone();//safe,no cyclic clone
             }
 
             if (options.Networking.Cloud.Enabled)

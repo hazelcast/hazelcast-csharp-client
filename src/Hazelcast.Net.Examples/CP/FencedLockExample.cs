@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -51,13 +51,13 @@ namespace Hazelcast.Examples.CP
             // cannot lock for context2
             if (await lockA.TryLockAsync(context2)) throw new Exception("Should be false?");
 
-            // release the lock once (count becomes 1 = still locked) 
+            // release the lock once (count becomes 1 = still locked)
             await lockA.UnlockAsync(context1);
 
             // cannot lock for context2
             if (await lockA.TryLockAsync(context2)) throw new Exception("Should be false?");
 
-            // release the lock again (count becomes 0 = unlocked) 
+            // release the lock again (count becomes 0 = unlocked)
             await lockA.UnlockAsync(context1);
 
             // now can lock for context2

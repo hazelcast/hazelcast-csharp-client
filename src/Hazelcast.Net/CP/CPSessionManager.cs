@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,10 +33,10 @@ namespace Hazelcast.CP
         /// <summary>
         /// SemaphoreSlim is used altough java client uses ReaderWriterLockSlim
         /// <para>
-        /// Reason: "ReaderWriterLockSlim has managed thread affinity; that is, each Thread object must make its 
+        /// Reason: "ReaderWriterLockSlim has managed thread affinity; that is, each Thread object must make its
         /// own method calls to enter and exit lock modes. No thread can change the mode of another thread."
         /// </para>
-        /// <seealso  href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim?view=net-6.0#remarks"/> 
+        /// <seealso  href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim?view=net-6.0#remarks"/>
         /// </summary>
         private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
         private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();

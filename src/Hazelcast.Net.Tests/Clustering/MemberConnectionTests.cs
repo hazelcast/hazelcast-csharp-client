@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -163,9 +163,9 @@ namespace Hazelcast.Tests.Clustering
             await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
             await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
             
-            loggerMock.Verify(m => 
+            loggerMock.Verify(m =>
                     m.Log<It.IsAnyType>(LogLevel.Information,
-                        0, 
+                        0,
                         It.IsAny<It.IsAnyType>(),
                         null,
                         It.IsAny<Func<It.IsAnyType, Exception, string>>()),

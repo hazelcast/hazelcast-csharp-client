@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -134,9 +134,9 @@ namespace Hazelcast.Serialization
         void WriteLongArray(string fieldName, long[] longs);
 
         /// <summary>To write a null portable value, user needs to provide class and factoryIds of related class.
-        /// 	</summary>
+        ///     </summary>
         /// <remarks>To write a null portable value, user needs to provide class and factoryIds of related class.
-        /// 	</remarks>
+        ///     </remarks>
         /// <param name="fieldName">name of the field</param>
         /// <param name="factoryId">factory id of related portable class</param>
         /// <param name="classId">class id of related portable class</param>
