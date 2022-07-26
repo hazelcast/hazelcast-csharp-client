@@ -30,9 +30,10 @@ namespace Hazelcast.CP
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
-        //internal for testing
+        private readonly ConcurrentDictionary<string, IFencedLock> _fencedLocks = new ConcurrentDictionary<string, IFencedLock>();
+
+        // ReSharper disable once InconsistentNaming - internal for tests
         internal readonly CPSessionManager _cpSubsystemSession;
-        private readonly ConcurrentDictionary<string, CPDistributedObjectBase> _cpObjectsByName = new ConcurrentDictionary<string, CPDistributedObjectBase>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CPSubsystem"/> class.
@@ -67,7 +68,7 @@ namespace Hazelcast.CP
         /// <inheritdoc />
         public async Task<IAtomicLong> GetAtomicLongAsync(string name)
         {
-            var (groupName, objectName) = ParseName(name);
+            var (groupName, objectName, _) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicLong(objectName, groupId, _cluster);
@@ -75,7 +76,7 @@ namespace Hazelcast.CP
 
         public async Task<IAtomicReference<T>> GetAtomicReferenceAsync<T>(string name)
         {
-            var (groupName, objectName) = ParseName(name);
+            var (groupName, objectName, _) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
             return new AtomicReference<T>(objectName, groupId, _cluster, _serializationService);
@@ -83,22 +84,46 @@ namespace Hazelcast.CP
 
         public async Task<IFencedLock> GetLockAsync(string name)
         {
-            var (groupName, objectName) = ParseName(name);
+            var (groupName, objectName, fullName) = ParseName(name);
             var groupId = await GetGroupIdAsync(groupName).CfAwait();
 
-            if (_cpObjectsByName.TryGetValue(objectName, out var cpObject) && cpObject is IFencedLock fencedLock)
+            // note: make sure to use the fully qualified fullName as a dictionary key
+
+            // the code we use is an exact match of the Java code
+            // TODO: think about simplifying with the commented code below
+            // TODO: make sure there is no race condition here
+            /*
+            while (true)
             {
-                if (cpObject.GroupId.Equals(groupId))
-                    return (IFencedLock)cpObject;
-                else
-                    _cpObjectsByName.TryRemove(objectName, out _);
+                var fencedLock = _fencedLocks.GetOrAdd(key, _ => new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession));
+                if (fencedLock.GroupId.Equals(groupId))
+                    return fencedLock;
+
+                _fencedLocks.TryRemove(key, out _);
+                groupId = await GetGroupIdAsync(groupName).CfAwait();
             }
+            */
 
-            var newFencedLock = new FencedLock(objectName, groupId, _cluster, _cpSubsystemSession);
-            
-            var mostRecentLock = (FencedLock) _cpObjectsByName.GetOrAdd(objectName, newFencedLock);
+            while (true)
+            {
+                if (_fencedLocks.TryGetValue(fullName, out var fencedLock))
+                {
+                    // if the group ID matches, fine, else we are going to replace the lock
+                    if (fencedLock.GroupId.Equals(groupId))
+                        return fencedLock;
+                    _fencedLocks.TryRemove(fullName, out _);
+                }
 
-            return mostRecentLock;
+                // add a new fenced lock - there is a race condition, so another task may add one,
+                // and we need to verify that the group ID of the lock we get is correct (in case
+                // we don't add but just get the one that was added by the other task) - if it does
+                // not match then refresh the group ID and return - we want to be consistent
+                fencedLock = _fencedLocks.GetOrAdd(fullName, _ => new FencedLock(fullName, objectName, groupId, _cluster, _cpSubsystemSession));
+                if (fencedLock.GroupId.Equals(groupId))
+                    return fencedLock;
+
+                groupId = await GetGroupIdAsync(groupName).CfAwait();
+            }
         }
 
         // see: ClientRaftProxyFactory.java
@@ -116,7 +141,8 @@ namespace Hazelcast.CP
         internal const string DefaultGroupName = "default";
         internal const string MetaDataGroupName = "METADATA";
 
-        public static (string groupName, string objectName) ParseName(string name)
+        // name should be 'objectName' or 'objectName@groupName'
+        public static (string groupName, string objectName, string fullName) ParseName(string name)
         {
             if (string.IsNullOrWhiteSpace(name)) throw new ArgumentException(ExceptionMessages.NullOrEmpty);
 
@@ -149,14 +175,13 @@ namespace Hazelcast.CP
             if (objectName.Length == 0)
                 throw new ArgumentException("Object name cannot be empty string.", nameof(name));
 
-            return (groupName, objectName);
+            var fullName = objectName + '@' + groupName;
+
+            return (groupName, objectName, fullName);
         }
 
         public async ValueTask DisposeAsync()
         {
-            foreach (var item in _cpObjectsByName.Values)
-                await item.DestroyAsync().CfAwaitNoThrow();
-
             await _cpSubsystemSession.DisposeAsync().CfAwaitNoThrow();
         }
     }

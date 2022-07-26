@@ -27,16 +27,16 @@ namespace Hazelcast.Clustering
 {
     internal class Heartbeat : IAsyncDisposable
     {
-        private readonly TimeSpan _period;
-        private readonly TimeSpan _timeout;
+        private TimeSpan _period;
+        private TimeSpan _timeout;
 
         private readonly TerminateConnections _terminateConnections;
         private readonly ClusterState _clusterState;
         private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
-        private readonly CancellationTokenSource _cancel;
-        private readonly Task _heartbeating;
+        private CancellationTokenSource _cancel;
+        private Task _heartbeating;
 
         private readonly HashSet<MemberConnection> _connections = new HashSet<MemberConnection>();
         private readonly object _mutex = new object();
@@ -51,16 +51,40 @@ namespace Hazelcast.Clustering
             if (options == null) throw new ArgumentNullException(nameof(options));
 
             _logger = clusterState.LoggerFactory.CreateLogger<Heartbeat>();
-            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
-            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
-
+            
             if (options.PeriodMilliseconds < 0)
             {
                 _logger.LogInformation("Heartbeat is disabled (period < 0)");
                 return;
             }
 
-            // sanity checks
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
+
+            InitializeDuration(options);
+        }
+
+        private void InitializeDuration(HeartbeatOptions options)
+        {
+            HConsole.WriteLine(this, "Initialize durations...");
+
+            // stop heartbeat during exchanging. 
+            if (_active == 1 && _heartbeating != null)
+            {
+                // _heartbeating won't throw and we cannot await in sync method
+                _cancel.Cancel();
+                _cancel.Dispose();
+            }
+
+            if (options.PeriodMilliseconds < 0)
+            {
+                _logger.LogInformation("Heartbeat is disabled (period < 0)");
+                _active = 0;
+                return;
+            }
+
+            _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
+            _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
+
             if (_timeout <= _period)
             {
                 var timeout = TimeSpan.FromMilliseconds(2 * _period.TotalMilliseconds);
@@ -70,8 +94,6 @@ namespace Hazelcast.Clustering
             }
 
             _logger.LogInformation("Heartbeat with {Period}ms period and {Timeout}ms timeout", (int)_period.TotalMilliseconds, (int)_timeout.TotalMilliseconds);
-
-            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
 
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);
@@ -122,14 +144,26 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "Stopped.");
         }
 
+        /// <summary>
+        /// Heartbeats periodically. Doesn't throw.
+        /// </summary>
+        /// <param name="cancellationToken"><see cref="CancellationToken"/> to be able to cancel.</param>
+        /// <returns>awaitable <see cref="Task"/></returns>
         private async Task BeatAsync(CancellationToken cancellationToken)
         {
-            while (!cancellationToken.IsCancellationRequested)
+            try
             {
-                await Task.Delay(_period, cancellationToken).CfAwait();
-                if (cancellationToken.IsCancellationRequested) break;
-                HConsole.WriteLine(this, $"Run with period={_period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}, timeout={_timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}");
-                await RunAsync(cancellationToken).CfAwait();
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(_period, cancellationToken).CfAwait();
+                    if (cancellationToken.IsCancellationRequested) break;
+                    HConsole.WriteLine(this, $"Run with period={_period.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}, timeout={_timeout.ToString("hh\\:mm\\:ss", CultureInfo.InvariantCulture)}");
+                    await RunAsync(cancellationToken).CfAwait();
+                }
+            }
+            catch (Exception)
+            {
+                //Exception observed
             }
         }
 

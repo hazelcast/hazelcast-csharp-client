@@ -77,21 +77,61 @@ namespace Hazelcast.Clustering
                 // initialize the queue of members to connect
                 // and the handler to re-queue members that have failed, *if* they are still members
                 _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
-                _memberConnectionQueue.ConnectionFailed += (_, member) =>
+                _memberConnectionQueue.ConnectionFailed += (_, request) =>
                 {
                     lock (_mutex)
                     {
-                        if (_members.ContainsMember(member.Id))
-                            _memberConnectionQueue.Add(member);
+                        if (_members.ContainsMember(request.Member.Id))
+                            _memberConnectionQueue.AddAgain(request);
                     }
                 };
             }
         }
 
         // NOTES
-        // we cannot have two connections to the same member ID at the same time, but a member IP may change,
-        // so having a connection to a member ID does not mean that the member is connected, and we may have
-        // to switch a member's connection over to a new IP
+        //
+        // - we cannot have two connections to the same member ID at the same time, the AddConnection
+        //   method makes sure that a second connection to the same member ID is either rejected, or
+        //   replaces the existing one (depending on conditions).
+        //
+        // - a member can be associated with 3 addresses:
+        //  - the address that we connected to
+        //  - the address that was reported by the member when we connected to it
+        //  - the address that was associated with the member in the members list
+        //
+        // we have always ignored the second address (as Java does) - we used to ignore the third
+        // address too (as Java does) BUT this means that if we connect to a cluster via a load-
+        // balancer, as is proposed in some k8s examples, traffic keeps going through the load-
+        // balancer - and this is not ideal - so we implemented the following logic:
+        //
+        // - each member exposes a ConnectAddress which derives from the members list, and is the
+        //   address that we assume the member wants us to connect to
+        // - when we connect to a member at an address, and then later on receive a member list
+        //   proposing a *different* address for the member, we terminate the original connection,
+        //   triggering the reconnection mechanism to the member's ConnectAddress
+        //
+        // however, this breaks non-smart routing, as the reconnection mechanism does NOT activate
+        // when routing is not smart : when the original connection is terminated, the client remains
+        // disconnected.
+        //
+        // a general discussion is needed as to which address to use for members, in all clients.
+        // however, in the short term, we need to fix non-smart routing, with two possible choices:
+        // - run the reconnection mechanism for non-smart routing
+        // - make the address-switching logic optional & disabled for non-smart routing
+        //
+        // the first option may have unintended consequences, whereas the second "just" brings back
+        // the old logic for non-smart routing -> we choose the second option and implement a
+        // switch feature in MatchMemberAddress
+
+        // see notes above, determines whether to match members addresses
+        // - we want to match for smart routing
+        // - and also for Cloud?
+        private bool MatchMemberAddress
+            => _clusterState.Options.Networking.SmartRouting || _clusterState.Options.Networking.Cloud.Enabled;
+
+        // see notes above, if matching then addresses must match, else anything matches
+        private bool IsMemberAddress(MemberInfo member, NetworkAddress address)
+            => !MatchMemberAddress || member.ConnectAddress == address;
 
         // determines whether a member is connected.
         private bool IsMemberConnected(MemberInfo member)
@@ -108,8 +148,8 @@ namespace Hazelcast.Clustering
         }
 
         private bool HasConnectionForMemberLocked(MemberInfo member)
-            => _connections.TryGetValue(member.Id, out var connection) &&
-               connection.Address == member.ConnectAddress;
+            => _connections.TryGetValue(member.Id, out var connection) && 
+               IsMemberAddress(member, connection.Address);
 
         // determines whether we have a connection for a member
         private bool HasConnectionForMember(MemberInfo member)
@@ -144,7 +184,7 @@ namespace Hazelcast.Clustering
 
                 if (contains)
                 {
-                    if (existingConnection.Address != connection.Address)
+                    if (MatchMemberAddress && existingConnection.Address != connection.Address)
                     {
                         _terminateConnections.Add(existingConnection);
                     }
@@ -170,14 +210,26 @@ namespace Hazelcast.Clustering
                 }
 
                 // if this is a true member connection
-                if (_members.TryGetMember(connection.MemberId, out var member) && member.ConnectAddress == connection.Address)
+                if (_members.TryGetMember(connection.MemberId, out var member) && IsMemberAddress(member, connection.Address))
                 {
                     // if this is the first connection to an actual member, change state & trigger event
                     if (!_connected)
                     {
                         // change Started | Disconnected -> Connected, ignore otherwise, it could be ShuttingDown or Shutdown
                         _logger.IfDebug()?.LogDebug("Added connection {ConnectionId} to member {MemberId} at {Address}, now connected.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+
+                        if (_clusterState.Failover.IsChangingCluster)
+                        {
+                            // Started | Disconnected -> connected BUT changing cluster, trigger ClusterChanged then Connected
+                            _clusterState.ChangeState(ClientState.ClusterChanged, ClientState.Started, ClientState.Disconnected);
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.ClusterChanged);
+                        }
+                        else
+                        {
+                            // Started | Disconnected -> connected NOT changing cluster, directly trigger Connected
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        }
+
                         _connected = true;
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
@@ -222,6 +274,7 @@ namespace Hazelcast.Clustering
                 if (!disconnecting)
                 {
                     _logger.IfDebug()?.LogDebug($"Removed connection {connection.Id.ToShortString()} to member {connection.MemberId.ToShortString()}, remain {(_connected ? "" : "dis")}connected.");
+
                     // if we are connected,
                     // and the disconnected member is still a member, queue it for reconnection
                     if (_connected && _members.TryGetMember(connection.MemberId, out var member))
@@ -262,7 +315,8 @@ namespace Hazelcast.Clustering
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
                         _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
                         drain = true;
@@ -449,7 +503,7 @@ namespace Hazelcast.Clustering
                 List<MemberConnection> toRemove = null;
                 foreach (var c in _connections.Values)
                 {
-                    if (!d.TryGetValue(c.MemberId, out var m) || m.ConnectAddress != c.Address)
+                    if (!d.TryGetValue(c.MemberId, out var m) || !IsMemberAddress(m, c.Address))
                         (toRemove ??= new List<MemberConnection>()).Add(c);
                 }
 
@@ -472,7 +526,19 @@ namespace Hazelcast.Clustering
                         // if we were not connected and now one member happens to be connected then we are now connected
                         // we hold the mutex so nothing bad can happen
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, now connected.", removed.Count, added.Count, members.Count);
-                        _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+
+                        if (_clusterState.Failover.IsChangingCluster)
+                        {
+                            // Started | Disconnected -> connected BUT changing cluster, trigger ClusterChanged then Connected
+                            _clusterState.ChangeState(ClientState.ClusterChanged, ClientState.Started, ClientState.Disconnected);
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.ClusterChanged);
+                        }
+                        else
+                        {
+                            // Started | Disconnected -> connected NOT changing cluster, directly trigger Connected
+                            _clusterState.ChangeState(ClientState.Connected, ClientState.Started, ClientState.Disconnected);
+                        }
+
                         _connected = true;
                     }
                     else
@@ -513,7 +579,8 @@ namespace Hazelcast.Clustering
                     {
                         // no more connected member, we are now disconnected
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
+                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
                         _connected = false;
                         disconnected = true;
                     }
@@ -770,7 +837,9 @@ namespace Hazelcast.Clustering
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            await _memberConnectionQueue.DisposeAsync().CfAwait();
+            // no connection queue is assigned in unisocket mode
+            if (_memberConnectionQueue != null)
+                await _memberConnectionQueue.DisposeAsync().CfAwait();
         }
     }
 }

@@ -24,7 +24,7 @@ namespace Hazelcast.Configuration
         /// <inheritdoc />
         public IConfigurationProvider Build(IConfigurationBuilder builder)
         {
-            return new HazelcastEnvironmentVariablesConfigurationProvider();
+            return new HazelcastEnvironmentVariablesConfigurationProvider(this);
         }
     }
 }

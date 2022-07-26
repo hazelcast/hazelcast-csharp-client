@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -176,6 +178,63 @@ namespace Hazelcast.Tests.Clustering
 
             // ok, but nothing will happen since the queue has been disposed
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:10")));
+        }
+
+        [Test]
+        public async Task TestDelayedQueue()
+        {
+            static MemberInfo MemberInfo(NetworkAddress address)
+            {
+                return new MemberInfo(Guid.NewGuid(), address, new MemberVersion(0, 0, 0), false, new Dictionary<string, string>());
+            }
+
+            var queue = new MemberConnectionQueue(new NullLoggerFactory());
+            var memberCount = new Dictionary<Guid, int>();
+
+            queue.ConnectionFailed += (_, request) =>
+            {
+                queue.AddAgain(request);
+            };
+
+            // background task that pretend to connect members
+            var dequeuedRequests = 0;
+            async Task ConnectMembers(MemberConnectionQueue memberConnectionQueue, CancellationToken cancellationToken)
+            {
+                await foreach (var request in memberConnectionQueue.WithCancellation(cancellationToken))
+                {
+                    dequeuedRequests++;
+                    if (!memberCount.TryGetValue(request.Member.Id, out var count)) count = 0;
+                    memberCount[request.Member.Id] = count + 1;
+                    request.Complete(count == 2);
+                }
+            }
+
+            var cancellation = new CancellationTokenSource();
+            var connecting = ConnectMembers(queue, cancellation.Token);
+
+            // -- connects
+
+            var stopwatch = Stopwatch.StartNew();
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:1")));
+            queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:2")));
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(dequeuedRequests, Is.EqualTo(6));
+            }, 30_000, 100);
+
+            var elapsed = stopwatch.Elapsed;
+
+            cancellation.Cancel();
+            await connecting.CfAwaitCanceled();
+
+            // each member retried twice = twice the 1s delay = 2s
+            // we should not have completed faster than that, even so the code runs fully in-memory
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2))); 
+            Console.WriteLine($"Elapsed: {elapsed}");
+
+            Assert.That(queue.RequestsCount, Is.EqualTo(0));
+            Assert.That(queue.DelayedRequestsCount, Is.EqualTo(0));
         }
     }
 }

@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<hazelcast xmlns="http://www.hazelcast.com/schema/config"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://www.hazelcast.com/schema/config
+           http://www.hazelcast.com/schema/config/hazelcast-config-4.0.xsd">
+
+  <properties>
+    <property name="hazelcast.map.invalidation.batch.enabled">false</property>
+    <property name="hazelcast.cache.invalidation.batch.size">10</property>
+    <property name="hazelcast.partition.count">271</property>
+  </properties>
+
+
+  <network>
+    <port auto-increment="true" port-count="100">5701</port>
+    <outbound-ports>
+      <!--
+            Allowed port range when connecting to other nodes.
+            0 or * means use system provided port.
+            -->
+      <ports>0</ports>
+    </outbound-ports>
+    <join>
+      <multicast enabled="true">
+        <multicast-group>224.7.7.7</multicast-group>
+        <multicast-port>54327</multicast-port>
+      </multicast>
+      <tcp-ip enabled="false">
+        <interface>127.0.0.1</interface>
+      </tcp-ip>
+    </join>
+    <public-address>127.0.0.1</public-address>
+    <ssl enabled="false"/>
+    <socket-interceptor enabled="false"/>
+  </network>
+  <serialization>
+    <data-serializable-factories>
+      <data-serializable-factory factory-id="66">
+        com.hazelcast.client.test.IdentifiedFactory
+      </data-serializable-factory>
+    </data-serializable-factories>
+  </serialization>
+
+  <cp-subsystem>
+    <base-dir>/custom-cp-dir</base-dir>
+    <cp-member-count>3</cp-member-count>
+    <group-size>3</group-size>
+
+    <!-- 
+    Duration for a CP session to be kept alive after the last received heartbeat. A CP 
+    session is closed if no session heartbeat is received during this duration. Session
+    TTL must be decided wisely. If a very low value is set, a CP session can be closed
+    prematurely if its owner Hazelcast instance temporarily loses connectivity to CP 
+    Subsystem because of a network partition or a GC pause. In such an occasion, all 
+    CP resources of this Hazelcast instance, such as FencedLock or ISemaphore, are 
+    released. On the other hand, if a very large value is set, CP resources can remain
+    assigned to an actually crashed Hazelcast instance for too long and liveliness 
+    problems can occur.
+    Must be greater than session-heartbeat-interval-seconds, and smaller than or equal
+    to missing-cp-member-auto-removal-seconds.
+    Default value is 300 seconds.
+    
+    Duration between last heartbeat sent by client, and session expiration.
+    -->
+    <session-time-to-live-seconds>90</session-time-to-live-seconds>
+
+    <!--
+    Interval for the periodically-committed CP session heartbeats.
+    Must be smaller than session-time-to-live-seconds.
+    Default value is 5 seconds.
+
+    Value is sent back to the client and used by the client as the heartbeat period.
+    -->
+    <session-heartbeat-interval-seconds>5</session-heartbeat-interval-seconds>
+
+    <!--
+    Duration to wait before automatically removing a missing CP member from CP Subsystem.
+
+    Must be greater than or equal to session-time-to-live-seconds.
+    Default value is 14400 seconds (4 hours).
+    -->
+    <missing-cp-member-auto-removal-seconds>14400</missing-cp-member-auto-removal-seconds>
+
+    <locks>
+      <fenced-lock>
+        <name>lock</name>
+        <lock-acquire-limit>0</lock-acquire-limit>
+      </fenced-lock>
+      <fenced-lock>
+        <name>limited-reentrant-lock</name>
+        <lock-acquire-limit>10</lock-acquire-limit>
+      </fenced-lock>
+      <fenced-lock>
+        <name>non-reentrant-lock</name>
+        <lock-acquire-limit>1</lock-acquire-limit>
+      </fenced-lock>
+    </locks>
+  </cp-subsystem>
+
+  <queue name="ClientQueueTest*">
+    <!--
+            Maximum size of the queue. When a JVM's local queue size reaches the maximum,
+            all put/offer operations will get blocked until the queue size
+            of the JVM goes down below the maximum.
+            Any integer between 0 and Integer.MAX_VALUE. 0 means
+            Integer.MAX_VALUE. Default is 0.
+        -->
+    <max-size>6</max-size>
+  </queue>
+  <ringbuffer name="ClientRingbufferTest*">
+    <capacity>10</capacity>
+  </ringbuffer>
+  <ringbuffer name="ClientRingbufferTestWithTTL*">
+    <capacity>10</capacity>
+    <time-to-live-seconds>180</time-to-live-seconds>
+  </ringbuffer>
+
+</hazelcast>

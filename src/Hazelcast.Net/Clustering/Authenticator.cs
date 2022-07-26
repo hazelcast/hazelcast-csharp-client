@@ -146,7 +146,7 @@ namespace Hazelcast.Clustering
                     => null, // could want to retry
 
                 AuthenticationStatus.NotAllowedInCluster
-                    => throw new AuthenticationException("Client is not allowed in cluster."),
+                    => throw new ClientNotAllowedInClusterException("Client is not allowed in cluster."),
 
                 AuthenticationStatus.SerializationVersionMismatch
                     => throw new AuthenticationException("Serialization mismatch."),

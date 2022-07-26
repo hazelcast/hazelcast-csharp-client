@@ -36,7 +36,7 @@ namespace Hazelcast.Networking
     /// </remarks>
     internal class AddressProvider
     {
-        private readonly IAddressProviderSource _source;
+        private IAddressProviderSource _source;
         private readonly ILogger _logger;
 
         // maps internal addresses to public addresses
@@ -91,6 +91,18 @@ namespace Hazelcast.Networking
         /// </summary>
         /// <returns>All addresses.</returns>
         public IEnumerable<NetworkAddress> GetAddresses() => EnsureMap(true).Map.Values;
+
+        /// <summary>
+        /// Gets <see cref="IAddressProviderSource"/>
+        /// </summary>
+        public IAddressProviderSource AddressProviderSource
+        {
+            get => _source;
+            internal set { 
+                _source = value;
+                EnsureMap(true);
+            }
+        }
 
         /// <summary>
         /// Maps an internal address to a public address.

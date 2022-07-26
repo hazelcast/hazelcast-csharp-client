@@ -32,17 +32,17 @@ namespace Hazelcast.Clustering
         private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
         private readonly object _mutex = new object();
         private readonly StateChangeQueue _stateChangeQueue;
-
+        private readonly Failover _failover;
         private Action _shutdownRequested;
         private volatile bool _readonlyProperties;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterState"/> class.
         /// </summary>
-        public ClusterState(IClusterOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
+        public ClusterState(HazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
-            ClusterName = clusterName;
+            ClusterName = clusterName;//TODO:should remove? given name can be overrided ex: dev
             ClientName = clientName;
             Partitioner = partitioner;
             LoggerFactory = loggerFactory;
@@ -51,8 +51,19 @@ namespace Hazelcast.Clustering
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
-            HConsole.Configure(x=> x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
+            _failover = new Failover(this, options);
+
+            StateChanged += _failover.OnClusterStateChanged;
+
+            _failover.ClusterChanged += cluster =>
+            {
+                AddressProvider.AddressProviderSource = AddressProvider.GetSource(cluster.Networking, loggerFactory);
+                ClusterName = cluster.ClusterName;
+            };
+
+            HConsole.Configure(x => x.Configure<ClusterState>().SetPrefix("CLUST.STATE"));
         }
+
 
         #region Events
 
@@ -64,7 +75,6 @@ namespace Hazelcast.Clustering
             get => _stateChangeQueue.StateChanged;
             set
             {
-                ThrowIfPropertiesAreReadOnly();
                 _stateChangeQueue.StateChanged = value ?? throw new ArgumentNullException(nameof(value));
             }
         }
@@ -119,7 +129,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the name of the cluster server.
         /// </summary>
-        public string ClusterName { get; }
+        public string ClusterName { get; private set; }
 
         #endregion
 
@@ -275,7 +285,9 @@ namespace Hazelcast.Clustering
                 if (ClientState == ClientState.Connected) return new ValueTask<bool>(true);
 
                 // never going to be connected
-                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
+                if (ClientState != ClientState.Started &&
+                    ClientState != ClientState.ClusterChanged &&
+                    ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
             }
 
             return WaitForConnectedAsync2(cancellationToken);
@@ -292,7 +304,8 @@ namespace Hazelcast.Clustering
                 if (ClientState == ClientState.Connected) return true;
 
                 // never going to be connected
-                if (ClientState != ClientState.Started && ClientState != ClientState.Disconnected) return false;
+                if (ClientState != ClientState.Started &&
+                    ClientState != ClientState.Disconnected) return false;
 
                 // must wait
                 wait = new TaskCompletionSource<ClientState>();
@@ -300,7 +313,9 @@ namespace Hazelcast.Clustering
                 _stateChangeQueue.StateChanged += x =>
                 {
                     // either connected, or never going to be connected
-                    if (x != ClientState.Started && x != ClientState.Disconnected)
+                    if (x != ClientState.Started &&
+                        x != ClientState.ClusterChanged &&
+                        x != ClientState.Disconnected)
                         wait.TrySetResult(x);
 
                     // keep waiting
@@ -309,7 +324,7 @@ namespace Hazelcast.Clustering
             }
 
             ClientState state;
-            try { state  = await wait.Task.CfAwait(); } catch {  state = 0; }
+            try { state = await wait.Task.CfAwait(); } catch { state = 0; }
 
             reg.Dispose();
 
@@ -364,7 +379,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Gets the options.
         /// </summary>
-        public IClusterOptions Options { get; }
+        public HazelcastOptions Options { get; }
 
         /// <summary>
         /// Whether smart routing is enabled.
@@ -372,9 +387,19 @@ namespace Hazelcast.Clustering
         public bool IsSmartRouting => Options.Networking.SmartRouting;
 
         /// <summary>
+        /// Gets Failover service.
+        /// </summary>
+        public Failover Failover => _failover;
+
+        /// <summary>
         /// Gets the address provider.
         /// </summary>
         public AddressProvider AddressProvider { get; }
+
+        /// <summary>
+        /// Gets <see cref="ClusterOptions"/> of current cluster
+        /// </summary>
+        public HazelcastOptions CurrentClusterOptions => _failover.CurrentClusterOptions;
 
         /// <summary>
         /// Gets the partitioner.

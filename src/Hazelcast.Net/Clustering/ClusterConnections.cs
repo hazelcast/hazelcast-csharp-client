@@ -36,9 +36,9 @@ namespace Hazelcast.Clustering
 
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
-        private readonly Authenticator _authenticator;
         private readonly IRetryStrategy _connectRetryStrategy;
         private readonly ILogger _logger;
+
 
         // member id -> connection
         // TODO: consider we are duplicating this with members?
@@ -47,6 +47,7 @@ namespace Hazelcast.Clustering
         // connection -> completion
         private readonly ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>> _completions = new ConcurrentDictionary<MemberConnection, TaskCompletionSource<object>>();
 
+        private Authenticator _authenticator;
         private Action<MemberConnection> _connectionCreated;
         private Func<MemberConnection, bool, bool, bool, ValueTask> _connectionOpened;
         private Func<MemberConnection, ValueTask> _connectionClosed;
@@ -73,6 +74,12 @@ namespace Hazelcast.Clustering
                 _connectMembers = ConnectMembers(_cancel.Token);
 
             _clusterState.StateChanged += OnStateChanged;
+
+            //Cluster changed, renew options if necessary.
+            _clusterState.Failover.ClusterChanged += options =>
+            {
+               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+            };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
         }
@@ -135,6 +142,7 @@ namespace Hazelcast.Clustering
                         exception = null;
                         details = "failed (socket timeout)";
                     }
+                    //ClientNotAllowedInClusterException is reported here.
                     else if (exception != null)
                         details = $"failed ({exception.GetType()}: {exception.Message})";
                     _logger.IfWarning()?.LogWarning(exception, "Could not connect to member {MemberId} at {ConnectAddress}: {Details}.", member.Id.ToShortString(), member.ConnectAddress, details);
@@ -267,10 +275,10 @@ namespace Hazelcast.Clustering
                     });
             }
 
-            if (reconnect)
+            if (reconnect || _clusterState.Failover.Enabled)
             {
                 // reconnect via a background task
-                // operations will either retry until timeout, or fail
+                // operations will either retry until timeout, failover(if enabled) or fail
                 _reconnect = BackgroundTask.Run(ReconnectAsync);
             }
             else
@@ -287,7 +295,7 @@ namespace Hazelcast.Clustering
         /// <param name="connection">The connection.</param>
         private async ValueTask OnConnectionClosed(MemberConnection connection)
         {
-            _logger.IfDebug()?.LogDebug("Connection {ConnectionId} to member {MemberId} at {Address} closed.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+            _logger.If(LogLevel.Information)?.LogInformation("Connection {ConnectionId} to member {MemberId} at {Address} closed.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
             TaskCompletionSource<object> connectCompletion;
             lock (_mutex)
@@ -330,6 +338,15 @@ namespace Hazelcast.Clustering
 
         #endregion
 
+        #region Properties
+
+        /// <summary>
+        /// Gets the number of open connections to members.
+        /// </summary>
+        public int Count => _connections.Count;
+
+        #endregion
+
         /// <summary>
         /// Connects to the cluster.
         /// </summary>
@@ -347,35 +364,61 @@ namespace Hazelcast.Clustering
             if (!await _clusterState.ChangeStateAndWait(ClientState.Started, ClientState.Starting).CfAwait())
                 throw new ConnectionException("Failed to connect (aborted).");
 
-            try
+            bool tryNextCluster;
+            do
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                HConsole.WriteLine(this, $"{_clusterState.ClientName} connecting");
+                tryNextCluster = false;
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    HConsole.WriteLine(this, $"{_clusterState.ClientName} connecting");
 
-                // establishes the first connection, throws if it fails
-                await ConnectFirstAsync(cancellationToken).CfAwait();
+                    // establishes the first connection, throws if it fails
+                    await ConnectFirstAsync(cancellationToken).CfAwait();
 
-                // once the first connection is established, we should use it to subscribe
-                // to the cluster views event, and then we should receive a members view,
-                // which in turn should change the state to Connected - unless something
-                // goes wrong
-                // TODO: consider *not* waiting for this and running directly on the member we're connected to?
-                var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+                    // once the first connection is established, we should use it to subscribe
+                    // to the cluster views event, and then we should receive a members view,
+                    // which in turn should change the state to Connected - unless something
+                    // goes wrong
+                    // TODO: consider *not* waiting for this and running directly on the member we're connected to?
+                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
 
-                HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
+                    HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
 
-                if (!connected)
-                    throw new ConnectionException("Failed to connect.");
+                    if (!connected)
+                        throw new ConnectionException("Failed to connect.");
 
-                // we have been connected (rejoice) - of course, nothing guarantees that it
-                // will last, but then OnConnectionClosed will deal with it
-            }
-            catch
-            {
-                // we *have* retried and failed, shutdown & throw
-                _clusterState.RequestShutdown();
-                throw;
-            }
+                    // we have been connected (rejoice) - of course, nothing guarantees that it
+                    // will last, but then OnConnectionClosed will deal with it
+                }
+                catch (Exception e) // could be ClientNotAllowedInClusterException
+                {
+                    // we *have* retried and failed
+                    if (_clusterState.Failover.Enabled)
+                    {
+                        // try to failover to next cluster
+                        if (_clusterState.Failover.TryNextCluster())
+                        {
+                            // ok to try the next cluster!
+                            tryNextCluster = true;
+                            _logger.LogWarning(e, "Failed to connect to cluster, trying next cluster.");
+                        }
+                        else
+                        {
+                            // this is hopeless, shutdown and throw (but log some details)
+                            _clusterState.RequestShutdown();
+                            _logger.LogWarning("Failed to connect to cluster, and exhausted failover options.");
+                            throw;
+                        }
+                    }
+                    else
+                    {
+                        // this is hopeless, shutdown and throw
+                        _clusterState.RequestShutdown();
+                        throw;
+                    }
+                }
+            } while (tryNextCluster);
         }
 
         /// <summary>
@@ -385,36 +428,61 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when reconnected.</returns>
         private async Task ReconnectAsync(CancellationToken cancellationToken)
         {
-            try
+            bool tryNextCluster;
+            do
             {
-                // establishes the first connection, throws if it fails
-                await ConnectFirstAsync(cancellationToken).CfAwait();
-
-                // once the first connection is established, we should use it to subscribe
-                // to the cluster views event, and then we should receive a members view,
-                // which in turn should change the state to Connected - unless something
-                // goes wrong
-                var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
-
-                if (!connected)
+                tryNextCluster = false;
+                try
                 {
-                    // we are a background task and cannot throw!
-                    _logger.LogError("Failed to reconnect.");
-                }
-                else
-                {
-                    _logger.IfDebug()?.LogDebug("Reconnected");
-                }
+                    // establishes the first connection, throws if it fails
+                    await ConnectFirstAsync(cancellationToken).CfAwait();
 
-                // we have been reconnected (rejoice) - of course, nothing guarantees that it
-                // will last, but then OnConnectionClosed will deal with it
-            }
-            catch (Exception e)
-            {
-                // we *have* retried and failed, shutdown, and log (we are a background task!)
-                _clusterState.RequestShutdown();
-                _logger.LogError(e, "Failed to reconnect.");
-            }
+                    // once the first connection is established, we should use it to subscribe
+                    // to the cluster views event, and then we should receive a members view,
+                    // which in turn should change the state to Connected - unless something
+                    // goes wrong
+                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+
+                    if (!connected)
+                    {
+                        // we are a background task and cannot throw!
+                        _logger.LogError("Failed to reconnect.");
+                    }
+                    else
+                    {                        
+                        _logger.IfDebug()?.LogDebug("Reconnected");
+                    }
+
+                    // we have been reconnected (rejoice) - of course, nothing guarantees that it
+                    // will last, but then OnConnectionClosed will deal with it
+                }
+                catch (Exception e) // could be ClientNotAllowedInClusterException
+                {
+                    // we *have* retried and failed
+                    if (_clusterState.Failover.Enabled)
+                    {
+                        // try to failover to next cluster
+                        if (_clusterState.Failover.TryNextCluster())
+                        {
+                            // ok to try the next cluster!
+                            tryNextCluster = true;
+                            _logger.LogWarning(e, "Failed to connect to cluster, failover to next cluster.");
+                        }
+                        else
+                        {
+                            // this is hopeless, shutdown, and log (we are a background task!)
+                            _clusterState.RequestShutdown();
+                            _logger.LogError(e, "Failed to connect to cluster, and exhausted failover options.");
+                        }
+                    }
+                    else
+                    {
+                        // this is hopeless, shutdown, and log (we are a background task!)
+                        _clusterState.RequestShutdown();
+                        _logger.LogError(e, "Failed to reconnect.");
+                    }
+                }
+            } while (tryNextCluster);
 
             // in any case, remove ourselves
             _reconnect = null;
@@ -512,6 +580,13 @@ namespace Hazelcast.Clustering
                             {
                                 _logger.LogWarning($"Failed to connect to address {address} (socket timeout).");
                             }
+                            else if (attempt.Exception is ClientNotAllowedInClusterException)
+                            {
+                                isExceptionThrown = true;
+                                _logger.IfWarning()?.LogWarning("Failed to connect to cluster since client is not allowed. " +
+                                                                $"Exception:{nameof(ClientNotAllowedInClusterException)}, Message:{attempt.Exception.Message}");
+                                throw attempt.Exception; //no chance, give up
+                            }
                             else
                             {
                                 isExceptionThrown = true;
@@ -525,6 +600,11 @@ namespace Hazelcast.Clustering
                         }
                     }
                 }
+                catch (ClientNotAllowedInClusterException)
+                {
+                    // Cluster doesn't allow us, give up. If failover is possible it will take care of situation.
+                    break;
+                }
                 catch (Exception e)
                 {
                     // the GetClusterAddresses() enumerator itself can throw, if a configured
@@ -536,6 +616,9 @@ namespace Hazelcast.Clustering
 
                     // TODO: it's the actual DNS that should retry!
                 }
+
+                // TODO: some errors should not be retried!
+                // for instance, an invalid SSL cert will not become magically valid
 
                 try
                 {
@@ -700,7 +783,7 @@ namespace Hazelcast.Clustering
             // directly connect to the specified address (internal/public determination happened beforehand)
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.Options.Networking, _clusterState.Options.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.CurrentClusterOptions.Networking, _clusterState.CurrentClusterOptions.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
             {
                 Closed = OnConnectionClosed
             };
@@ -717,6 +800,16 @@ namespace Hazelcast.Clustering
             // connect to the server (may throw and that is ok here)
             var result = await connection.ConnectAsync(_clusterState, cancellationToken).CfAwait();
 
+            // if we are running a failover client but the cluster we just connected to does not support failover
+            // then the client is not allowed in that cluster - in this case, terminate the connection and throw
+            if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)
+            {
+                await connection.DisposeAsync().CfAwait();
+                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " + 
+                    "(client is configured with failover but cluster does not support failover. " + 
+                    "Failover is an Hazelcast Enterprise feature.).");
+            }
+
             // report
             _logger.LogInformation("Authenticated client '{ClientName}' ({ClientId}) running version {ClientVersion}" +
                                    " on connection {ConnectionId} from {LocalAddress}" +
@@ -728,15 +821,10 @@ namespace Hazelcast.Clustering
                 _clusterState.ClusterName, result.ClusterId.ToShortString(), result.ServerVersion);
 
             // notify partitioner
-            try
-            {
-                _clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount);
-            }
-            catch (Exception e)
+            if (!_clusterState.Partitioner.SetOrVerifyPartitionCount(result.PartitionCount))
             {
                 await connection.DisposeAsync().CfAwait(); // does not throw
-                throw new ConnectionException("Failed to open a connection because " +
-                                              "the partitions count announced by the member is invalid.", e);
+                throw new ClientNotAllowedInClusterException($"Received partition count value {result.PartitionCount} but expected {_clusterState.Partitioner.Count}.");
             }
 
             if (cancellationToken.IsCancellationRequested) await ThrowCanceled(connection).CfAwait();

@@ -15,6 +15,7 @@
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Testing
@@ -29,7 +30,16 @@ namespace Hazelcast.Testing
         {
             // create remote client and cluster
             RcClient = await ConnectToRemoteControllerAsync().CfAwait();
-            RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
+            try
+            {
+                RcCluster = await RcClient.CreateClusterAsync(RcClusterConfiguration).CfAwait();
+            }
+            catch (ServerException e)
+            {
+                // Thrift exceptions are weird and need to be "fixed"
+                e.FixMessage();
+                throw;
+            }
         }
 
         [OneTimeTearDown]
@@ -56,12 +66,12 @@ namespace Hazelcast.Testing
         /// <summary>
         /// Gets the remote cluster configuration.
         /// </summary>
-        protected virtual string RcClusterConfiguration => Remote.Resources.hazelcast;
+        protected virtual string RcClusterConfiguration => Resources.hazelcast;
 
         /// <summary>
         /// Gets the remote controller client.
         /// </summary>
-        protected Remote.IRemoteControllerClient RcClient { get; private set; }
+        protected IRemoteControllerClient RcClient { get; private set; }
 
         /// <summary>
         /// Gets the remote controller cluster.

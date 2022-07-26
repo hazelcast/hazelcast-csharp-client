@@ -20,9 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
-using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
-using static Hazelcast.Core.TaskCoreExtensions;
 
 namespace Hazelcast.CP
 {
@@ -57,6 +55,7 @@ namespace Hazelcast.CP
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _logger = _cluster.State.LoggerFactory.CreateLogger<CPSessionManager>();
             _cancel = new CancellationTokenSource();
+            _heartbeating = Task.CompletedTask;
             HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("CP.SESSION"));
         }
 

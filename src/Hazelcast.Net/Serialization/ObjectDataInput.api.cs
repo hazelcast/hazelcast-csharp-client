@@ -43,7 +43,7 @@ namespace Hazelcast.Serialization
             CheckAvailable(Position, BytesExtensions.SizeOfByte);
             var value = _buffer.ReadSByte(Position);
             Position += BytesExtensions.SizeOfByte;
-            return (sbyte) value;
+            return (sbyte)value;
         }
 
         public char ReadChar()
@@ -254,8 +254,6 @@ namespace Hazelcast.Serialization
             var length = ReadInt();
             if (length == BytesExtensions.SizeOfNullArray) return null;
             if (length <= 0) return Array.Empty<string>();
-
-            CheckAvailable(Position, length * BytesExtensions.SizeOfDouble);
 
             var values = new string[length];
             for (var i = 0; i < length; i++)

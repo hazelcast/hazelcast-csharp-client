@@ -35,6 +35,11 @@ namespace Hazelcast.Core
         private bool _completed;
 
         /// <summary>
+        /// (internals for tests only) Gets the count of items in the queue.
+        /// </summary>
+        internal int Count => _items.Count;
+
+        /// <summary>
         /// Tries to write an item to the queue.
         /// </summary>
         /// <param name="item">The item.</param>

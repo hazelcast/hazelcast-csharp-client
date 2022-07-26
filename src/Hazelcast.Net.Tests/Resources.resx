@@ -118,23 +118,11 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <assembly alias="System.Windows.Forms" name="System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-  <data name="Cert_Client1" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Certificates\client1.pfx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
-  <data name="Cert_Client2" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Certificates\client2.pfx;System.Byte[], mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-  </data>
   <data name="Cluster_Default" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\default.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
   <data name="Cluster_Kerberos" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\kerberos.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
-  </data>
-  <data name="Cluster_MA_Optional" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Cluster\ma-optional.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
-  <data name="Cluster_MA_Required" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Cluster\ma-required.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="Cluster_NearCache" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\nearcache.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
@@ -142,14 +130,14 @@
   <data name="Cluster_Ssl" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Cluster\ssl.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
-  <data name="Cluster_Ssl_Signed" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>Resources\Cluster\ssl-signed.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
-  </data>
   <data name="Empty" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\Empty.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="EmptyWithComments" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\EmptyWithComments.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
+  </data>
+  <data name="HazelcastFailoverOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Options\HazelcastFailoverOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
   <data name="HazelcastOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\HazelcastOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>

@@ -30,7 +30,7 @@ namespace Hazelcast.Testing.Configuration
         /// <param name="key">The key.</param>
         /// <param name="optional">Whether secrets are optional.</param>
         /// <returns>This options builder.</returns>
-        public static HazelcastOptionsBuilder WithUserSecrets(this HazelcastOptionsBuilder builder, Assembly assembly, string key = HazelcastOptions.Hazelcast, bool optional = true)
+        public static HazelcastOptionsBuilder WithUserSecrets(this HazelcastOptionsBuilder builder, Assembly assembly, string key = HazelcastOptions.SectionNameConstant, bool optional = true)
         {
             return builder
                 .WithAltKey(key)

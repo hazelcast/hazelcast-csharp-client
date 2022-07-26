@@ -11,3 +11,4 @@ The CP SubSystem is a component of a Hazelcast cluster that builds a strongly co
 Currently, the C# client CP SubSystem implements the following services:
 * [AtomicLong](distributed-objects/atomiclong.md)
 * [AtomicRef](distributed-objects/atomicref.md)
+* [FencedLock](distributed-objects/fencedlock.md)

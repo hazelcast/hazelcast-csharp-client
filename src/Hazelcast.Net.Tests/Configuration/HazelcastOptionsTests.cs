@@ -39,8 +39,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build((Action<IConfigurationBuilder>) null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptions.Build(null, null, null, "key"));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build(null, null, null, "key"));
         }
 
         [Test]
@@ -64,7 +64,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.AreEqual("dev", options.ClusterName);
         }
@@ -81,7 +81,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.AreEqual("dev", options.ClusterName);
         }
@@ -95,7 +95,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             return options;
         }
@@ -122,9 +122,6 @@ namespace Hazelcast.Tests.Configuration
 
             var loadBalancer = options.LoadBalancer.Service;
             Assert.IsInstanceOf<RandomLoadBalancer>(loadBalancer);
-
-            var clusterOptions = (IClusterOptions) options;
-            Assert.AreEqual(1000, clusterOptions.WaitForConnectionMilliseconds);
         }
 
         [Test]
@@ -229,7 +226,7 @@ namespace Hazelcast.Tests.Configuration
             var credentialsFactory = options.CredentialsFactory.Service;
             Assert.IsInstanceOf<TestCredentialsFactory>(credentialsFactory);
 
-            var testCredentialsFactory = (TestCredentialsFactory) credentialsFactory;
+            var testCredentialsFactory = (TestCredentialsFactory)credentialsFactory;
             Assert.AreEqual("arg", testCredentialsFactory.Arg1);
             Assert.AreEqual(1000, testCredentialsFactory.Arg2);
         }
@@ -327,7 +324,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -347,7 +344,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RoundRobinLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -367,7 +364,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
 
             Assert.IsInstanceOf<RandomLoadBalancer>(options.LoadBalancer.Service);
         }
@@ -452,15 +449,15 @@ namespace Hazelcast.Tests.Configuration
 
             options.AddSubscriber(new TestSubscriber());
             options.AddSubscriber("TestSubscriber");
-            options.AddSubscriber(typeof (TestSubscriber));
+            options.AddSubscriber(typeof(TestSubscriber));
             options.AddSubscriber<TestSubscriber>();
             options.AddSubscriber(x => x.StateChanged((sender, args) => { }));
 
             Assert.That(options.Subscribers.Count, Is.EqualTo(5));
 
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type) null));
-            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string) null));
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber) null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type)null));
+            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string)null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber)null));
         }
 
         public class TestSubscriber : IHazelcastClientEventSubscriber
@@ -547,6 +544,7 @@ namespace Hazelcast.Tests.Configuration
 
             // TODO: whatever keys?
         }
+     
 
         public class TestPortableFactory : IPortableFactory
         {
@@ -615,7 +613,7 @@ namespace Hazelcast.Tests.Configuration
             var configuration = builder.Build();
 
             var options = new HazelcastOptions();
-            configuration.HzBind(HazelcastOptions.Hazelcast, options);
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
             configuration.HzBind("alt", options);
 
             Assert.AreEqual("altClient", options.ClientName);
@@ -630,7 +628,7 @@ namespace Hazelcast.Tests.Configuration
             stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
-            options = HazelcastOptions.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
+            options = HazelcastOptionsBuilder.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
                 null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);
@@ -640,5 +638,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
         }
+
+  
     }
 }

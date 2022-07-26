@@ -40,7 +40,12 @@ namespace Hazelcast.Examples
                     options.LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
                         loggingBuilder
                             .AddConfiguration(configuration.GetSection("logging"))
-                            .AddConsole());
+                            // https://docs.microsoft.com/en-us/dotnet/core/extensions/console-log-formatter
+                            .AddSimpleConsole(o =>
+                            {
+                                o.SingleLine = true;
+                                o.TimestampFormat = "hh:mm:ss.fff ";
+                            }));
                 });
         }
     }
