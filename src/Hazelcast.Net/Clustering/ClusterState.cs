@@ -326,7 +326,7 @@ namespace Hazelcast.Clustering
             ClientState state;
             try { state = await wait.Task.CfAwait(); } catch { state = 0; }
 
-            reg.Dispose();
+            await reg.DisposeAsync().CfAwait();
 
             return state == ClientState.Connected;
         }
@@ -355,7 +355,7 @@ namespace Hazelcast.Clustering
             if (!IsActive) throw new ClientOfflineException(innerException, ClientState);
         }
 
-        #endregion
+#endregion
 
         public Exception ThrowClientOfflineException()
         {

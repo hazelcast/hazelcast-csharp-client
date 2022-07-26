@@ -130,7 +130,7 @@ namespace Hazelcast.DistributedObjects.Impl
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var task in tasks)
             {
-                var responseMessage = task.Result; // safe: we know the task has completed
+                var responseMessage = await task.CfAwait();
                 var response = MapGetAllCodec.DecodeResponse(responseMessage).Response;
                 result.Add(response);
             }

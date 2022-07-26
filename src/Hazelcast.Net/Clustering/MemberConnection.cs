@@ -442,13 +442,12 @@ namespace Hazelcast.Clustering
             // now wait for the response
             HConsole.WriteLine(this, "Wait for response...");
 
+            CancellationTokenRegistration reg = default;
+
             try
             {
                 // propagate the cancellationToken to the invocation
-#if !NETSTANDARD2_0
-                await
-#endif
-                using var reg = cancellationToken.Register(invocation.TrySetCanceled);
+                reg = cancellationToken.Register(invocation.TrySetCanceled);
 
                 var response = await invocation.Task.CfAwait();
                 HConsole.WriteLine(this, "Received response");
@@ -459,6 +458,10 @@ namespace Hazelcast.Clustering
                 HConsole.WriteLine(this, $"Failed ({e})");
                 _invocations.TryRemove(invocation.CorrelationId, out _);
                 throw;
+            }
+            finally
+            {
+                await reg.DisposeAsync().CfAwait();
             }
         }
 
