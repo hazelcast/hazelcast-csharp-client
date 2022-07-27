@@ -54,14 +54,6 @@ else {
     # need to use pwsh --% escape
 }
 
-# say hello
-$quiet = $true
-$argx | foreach-object { if ($_ -ne "completion-commands") { $quiet = $false } }
-if (-not $quiet) {
-    Write-Output "Hazelcast .NET Command Line"
-    Write-Output "PowerShell $powershellVersion on $platform"
-}
-
 # PowerShell args can *also* be a pain - because 'pwsh' loves to pre-handle
 # args when run directly but not when run from a scrip, etc - so we have our
 # own way of dealing with args
@@ -157,15 +149,16 @@ $params = @(
 $actions = @(
     # keep 'help' in the first position!
     @{ name = "help";
-       desc = "display this help"
+       desc = "display this help";
+       uniq = $true; outputs = $true
     },
     @{ name = "completion-initialize";
        desc = "initialize command tab-completion";
-       internal = $true
+       internal = $true; uniq = $true
     },
     @{ name = "completion-commands";
        desc = "list commands for tab-completion";
-       internal = $true
+       internal = $true; uniq = $true; outputs = $true
     },
     @{ name = "noop";
        desc = "no operation";
@@ -276,12 +269,22 @@ $actions = @(
     },
     @{ name = "cleanup-code";
        desc = "cleans the code"
+    },
+    @{ name = "getfwks-json";
+       desc = "get frameworks";
+       internal = $true; uniq = $true; outputs = $true
     }
 )
 
 # include devops
 $devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
 if (test-path $devops_actions) { . $devops_actions }
+
+# prepare
+function say-hello {
+    Write-Output "Hazelcast .NET Command Line"
+    Write-Output "PowerShell $powershellVersion on $platform"
+}
 
 # process args
 $options = Parse-Args $argx $params
@@ -293,16 +296,15 @@ if ($err -is [string]) {
     Die "$err - use 'help' to list valid commands"
 }
 
-if ((get-action $actions help).run) {
-    Write-Usage $params $actions
-    exit 0
-}
+# get ready
+$quiet = $false
+$actions | foreach-object {
 
-if ((get-action $actions completion-commands).run) {
-    $out = ($actions | foreach-object { $_.name } | where-object { -not $_.internal } )
-    [string]::Join(" ", $out)
-    exit 0
+    $action = $_
+    if (-not $action.run) { return }
+    if ($action.outputs) { $quiet = $true }
 }
+if (-not $quiet) { say-hello }
 
 # process defined constants
 # see https://github.com/dotnet/sdk/issues/9562
@@ -424,23 +426,23 @@ function determine-target-frameworks {
             }
         }
     }
-    if ($isWindows) {
-        $frameworks = $targetsOnWindows
-    }
-    else {
-        $frameworks = $targetsOnLinux
-    }
-    $frameworks = $frameworks.Split(";", [StringSplitOptions]::RemoveEmptyEntries)
-    for ($i = 0; $i -lt $framework.Length; $i++) {
-        $frameworks[$i] = $frameworks[$i].Trim()
-    }
-    return $frameworks
+
+    $targetsOnWindows = $targetsOnWindows.Split(";", [StringSplitOptions]::RemoveEmptyEntries)
+    $targetsOnLinux = $targetsOnLinux.Split(";", [StringSplitOptions]::RemoveEmptyEntries)
+
+    for ($i = 0; $i -lt $targetsOnWindows.Length; $i++) { $targetsOnWindows[$i] = $targetsOnWindows[$i].Trim() }
+    for ($i = 0; $i -lt $targetsOnLinux.Length; $i++) { $targetsOnLinux[$i] = $targetsOnLinux[$i].Trim() }
+
+    if ($isWindows) { $frameworks = $targetsOnWindows }
+    else { $frameworks = $targetsOnLinux }
+
+    return $frameworks, $targetsOnWindows, $targetsOnLinux
 }
 
 # determine framework(s) - for running tests
 # we always need to build *all* frameworks because e.g. some projects need to be built
 # for netstandard in order to run on .NET Core - so one single framework cannot do it
-$frameworks = determine-target-frameworks
+$frameworks, $windowsFrameworks, $linuxFrameworks = determine-target-frameworks
 $testFrameworks = $frameworks
 if (-not [System.String]::IsNullOrWhiteSpace($options.framework)) {
     $fwks = $options.framework.ToLower().Split(",", [StringSplitOptions]::RemoveEmptyEntries)
@@ -2392,6 +2394,25 @@ function hz-cleanup-code {
     Write-Output "Cleaned $fixedCount out of $totalCount files."
 }
 
+function hz-help {
+    say-hello
+    Write-Usage $params $actions
+}
+
+function hz-completion-commands {
+    $out = ($actions | foreach-object { $_.name } | where-object { -not $_.internal } )
+    [string]::Join(" ", $out)
+}
+
+function hz-getfwks-json {
+    #$platform = $options.commargs[0]
+    #if ($platform -eq "linux") { $fwks = $linuxFrameworks }
+    #elseif ($platform -eq "windows") { $fwks = $windowsFrameworks }
+    #else { Die "err: Invalid platform '$platform'" }
+
+    ConvertTo-Json -InputObject $frameworks -Compress
+}
+
 # ########
 # ########
 # ########
@@ -2426,7 +2447,7 @@ $actions | foreach-object {
 }
 
 # ensure needs are satisfied (in order)
-Write-Output ""
+if (-not $quiet) { Write-Output "" }
 $needs.Keys | foreach-object {
 
     $f = $_
@@ -2434,21 +2455,21 @@ $needs.Keys | foreach-object {
 
     get-command "ensure-$f" >$null 2>&1
     if (-not $?) {
-
         Die "Panic: function 'ensure-$f' not found"
     }
 
     &"ensure-$f"
 }
 
-Write-Output ""
-$s = ""
-if ($isNewVersion) { $s += " (new, was $currentVersion)" }
-Write-Output "Client version $($options.version)$s"
-Write-Output ""
-Write-Output "Target frameworks"
-Write-Output "  $([string]::Join(", ", $frameworks))"
-
+if (-not $quiet) { 
+    Write-Output ""
+    $s = ""
+    if ($isNewVersion) { $s += " (new, was $currentVersion)" }
+    Write-Output "Client version $($options.version)$s"
+    Write-Output ""
+    Write-Output "Target frameworks"
+    Write-Output "  $([string]::Join(", ", $frameworks))"
+}
 
 # this goes first
 $clean = get-action $actions clean
@@ -2472,11 +2493,13 @@ $actions | foreach-object {
 
     if (-not $?) { Die "Panic: function '$f' not found" }
 
-    Write-Output ""
+    if (-not $quiet) { Write-Output "" }
     &$f
 }
 
-Write-Output ""
-Write-Output "Done."
+if (-not $quiet) { 
+    Write-Output ""
+    Write-Output "Done."
+}    
 
 # eof

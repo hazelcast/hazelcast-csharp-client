@@ -1,0 +1,116 @@
+#
+# Workflow: Build PR
+#
+
+name: Build PR
+on: 
+  workflow_call:
+    inputs:
+      os:
+        required: true
+        type: string
+      fwks:
+        required: true
+        type: string
+
+jobs:
+
+  # build and test pr
+  build:
+
+    name: ${{ matrix.fwk }}
+    runs-on: ${{ inputs.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        fwk: ${{ fromJson(inputs.fwks) }}
+
+    steps:
+
+      # Install Linux utilities
+      - name: Install utilities (Linux only)
+        if: inputs.os == 'ubuntu-latest'
+        shell: bash
+        run: |
+          sudo apt-get update
+          # ubuntu-latest does not have proper git installed so we have to install it
+          sudo apt-get install --yes --no-install-recommends \
+            git
+          # we need various misc stuff
+          sudo apt-get install --yes --no-install-recommends \
+            wget \
+            curl \
+            apt-transport-https \
+            software-properties-common
+          # we need pwsh
+          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
+          sudo dpkg -i packages-microsoft-prod.deb
+          rm packages-microsoft-prod.deb
+          sudo apt-get update
+          sudo add-apt-repository universe
+          sudo apt-get install -y powershell
+
+      # Install .NET
+      - name: Install .NET
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+
+      # Install Java
+      - name: Install JDK
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '11'
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # including all submodules, we are going to need them
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: true
+
+      # build
+      - name: Build
+        id: build
+        shell: pwsh
+        run: ./hz.ps1 -localRestore build #,docs,pubdocs
+
+      # test (with coverage)
+      # -enterprise only if the key is available, we do not share it outside of the HZ org
+      # (which means that we do NOT run enterprise tests on PRs from external repositories)
+      - name: Test
+        id: test
+        env:
+          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+        shell: pwsh
+        run: |
+          $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
+          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
+          ./hz.ps1 @a
+
+      # test results & coverage: we cannot report here as this workflow doesn't have
+      # the required permissions nor tokens to write back to our resources (since it runs
+      # on a PR) - so we upload everything as artifacts, and the report-pr workflow will
+      # take care of reporting.
+
+      # upload test results artifact
+      - name: Upload test results artifact
+        if: (success() || failure()) && steps.build.conclusion == 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
+          path: './temp/tests/results/*.trx'
+
+      # upload test coverage artifact
+      - name: Upload test coverage artifact
+        if: steps.test.conclusion == 'success'
+        uses: actions/upload-artifact@v2
+        with:
+          name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
+          path: './temp/tests/cover/' # entire directory
