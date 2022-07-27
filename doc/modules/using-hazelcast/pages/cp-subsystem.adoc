@@ -10,3 +10,4 @@ Currently, the .NET client CP SubSystem implements the following services:
 
 * xref:using-hazelcast:primitives.adoc#atomiclong[AtomicLong]
 * xref:using-hazelcast:primitives.adoc#atomicreference[AtomicRef]
+* xref:using-hazelcast:primitives.adoc#FencedLock[FencedLock]
