@@ -7,37 +7,35 @@ on: pull_request
 
 jobs:
 
-  # build and test the PR
-  build-pr:
+  # get frameworks
+  get-fwks:
 
-    name: Build PR (${{ matrix.os }})
+    name: Get Frameworks / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
 
-    if: github.repository == 'hazelcast/hazelcast-csharp-client'
-
     strategy:
-      fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
+    outputs:
+      # beware! this cannot be dynamic = must match the OS matrix
+      fwks-ubuntu-latest: ${{ steps.getfwks.outputs.fwks-ubuntu-latest }}
+      fwks-windows-latest: ${{ steps.getfwks.outputs.fwks-windows-latest }}
+
     steps:
 
-      # Install Linux utilities
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # no need for submodules here
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # install powershell
       - name: Install utilities (Linux only)
         if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
           wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
           sudo dpkg -i packages-microsoft-prod.deb
           rm packages-microsoft-prod.deb
@@ -45,65 +43,41 @@ jobs:
           sudo add-apt-repository universe
           sudo apt-get install -y powershell
 
-      # Install .NET
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: |
-            3.1.x
-            5.0.x
-            6.0.x
-
-      # Install Java
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
-
-      # checkout the hazelcast/hazelcast-csharp-client repository
-      # including all submodules, we are going to need them
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
-
-      # build
-      - name: Build
-        id: build
-        shell: pwsh
-        run: ./hz.ps1 -localRestore build #,docs,pubdocs
-
-      # test (with coverage)
-      # -enterprise only if the key is available, we do not share it outside of the HZ org
-      - name: Test
-        id: test
-        env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-        shell: pwsh
+      # get frameworks
+      - name: Get Frameworks
+        id: get-fwks
+        shell: bash
         run: |
-          $a = @( "test", "-noRestore", "-localRestore", "-cover" )
-          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
-          ./hz.ps1 @a
+          echo "::set-output name=fwks-${{ matrix.os }}::$(pwsh ./hz.ps1 getfwks-json)"
 
-      # test results & coverage: we cannot report here as this workflow doesn't have
-      # the required permissions nor tokens to write back to our resources (since it runs
-      # on a PR) - so we upload everything as artifacts, and the report-pr workflow will
-      # take care of reporting
+  # build & test
+  build-test:
+    name: Build&Test / ${{ matrix.os }}
+    needs: get-fwks
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    uses: ./.github/workflows/build-pr-on.yml
+    secrets: inherit
+    with:
+      os: ${{ matrix.os }}
+      fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
 
-      # upload test results artifact
-      - name: Upload test results artifact
-        if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Results (${{ matrix.os }})
-          path: './temp/tests/results/*.trx'
-
-      # upload test coverage artifact
-      - name: Upload test coverage artifact
-        if: steps.test.conclusion == 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Coverage (${{ matrix.os }})
-          path: './temp/tests/cover/' # entire directory
+  # report build & test result
+  # -> GitHub is configured to require the 'Build&Test Result' check
+  report:
+    name: Build&Test Result
+    runs-on: ubuntu-latest
+    needs: build-test
+    steps:
+    - name: report
+      shell: bash
+      run: |
+        if [ "${{ needs.build-test.conclusion }}" == "success" ]; then
+          echo "All Build&Test checks completed successfully."
+        else
+          echo "At least one Build&Test check has failed."
+          echo "::error::At least one Build&Test check has failed."
+        fi
+      
