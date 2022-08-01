@@ -34,9 +34,7 @@ namespace Hazelcast.Clustering
         private readonly double _jitter;
         private readonly string _action;
         private readonly ILogger _logger;
-
-        private readonly int _initialBackoffMilliseconds;
-        private readonly int _maxBackoffMilliseconds;
+        
         private int _currentBackOffMilliseconds;
         private int _attempts;
         private DateTime _begin;
@@ -75,9 +73,9 @@ namespace Hazelcast.Clustering
 #pragma warning restore CA1308
 
             if (initialBackOffMilliseconds < 0) throw new ConfigurationException("Initial back-off must be greater than or equal to zero.");
-            _initialBackoffMilliseconds = initialBackOffMilliseconds;
+            _initialBackOffMilliseconds = initialBackOffMilliseconds;
             if (maxBackOffMilliseconds < 0) throw new ConfigurationException("Maximum back-off must be greater than or equal to zero.");
-            _maxBackoffMilliseconds = maxBackOffMilliseconds;
+            _maxBackOffMilliseconds = maxBackOffMilliseconds;
             if (multiplier <= 0) throw new ConfigurationException("Multiplier must be greater than zero.");
             _multiplier = multiplier;
             _timeoutMilliseconds = timeoutMilliseconds;
@@ -111,7 +109,7 @@ namespace Hazelcast.Clustering
         /// </summary>
         internal int GetNewBackoff()
         {
-            return (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackoffMilliseconds);
+            return (int)Math.Min(_currentBackOffMilliseconds * _multiplier, _maxBackOffMilliseconds);
         }
 
         /// <inheritdoc />
