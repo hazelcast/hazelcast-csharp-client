@@ -512,14 +512,21 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
             await KillMembersAsync(RcClusterPrimary, membersA);
 
-            //Failover to B and fail due to different partition count            
+            //Failover to B and fail due to different partition count
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.AreEqual(ClientState.Disconnected, client.State);                
+            }, 60_000, 500);            
 
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
             membersA = await StartMembersAsync(RcClusterPrimary, 1);
 
-            var val = await map.GetAsync(KeyA);
-
-            Assert.AreEqual(ClientState.Connected, client.State);
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.AreEqual(ClientState.Connected, client.State);
+            }, 60_000, 500);
+                        
+            await AssertClusterA(map, client.ClusterName);
             Assert.True(isLastStateConnected);
         }
 
@@ -586,7 +593,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.AreEqual(ClientState.Disconnected, client.State);
 
-            }, 500, 10_000);
+            }, 10_000, 500);
 
             //Now, we know that cluster B is live but not connected
             //since client will retry the cluster A before do failover.             

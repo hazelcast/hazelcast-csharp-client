@@ -236,7 +236,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(member2.Host, client.Members.First().Member.Address.Host);
                 Assert.AreEqual(member2.Port, client.Members.First().Member.Address.Port);
 
-            }, 20_000, 500);
+            }, 60_000, 500);
             //Java test here also toys with partitions to verify that data migrates between members - irrrelevant to us
             //details: https://github.com/hazelcast/hazelcast-csharp-client/pull/614
             await map.PutAsync(1, 2);
