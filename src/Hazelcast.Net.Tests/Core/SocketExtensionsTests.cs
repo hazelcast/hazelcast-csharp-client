@@ -35,7 +35,7 @@ namespace Hazelcast.Tests.Core
 
             Assert.ThrowsAsync<ArgumentNullException>(async () =>
             {
-                await ((Socket) null).ConnectAsync(endpoint, -1);
+                await ((Socket)null).ConnectAsync(endpoint, -1);
             });
         }
 
@@ -145,14 +145,16 @@ namespace Hazelcast.Tests.Core
 
             var i = 0;
             const int count = 5;
+            var message = "";
             while (i++ < count)
             {
                 try
                 {
                     await socket.ConnectAsync(endpoint, -1, new CancellationToken(true));
                 }
-                catch (OperationCanceledException)
+                catch (OperationCanceledException e)
                 {
+                    message = e.Message;
                     break;
                 }
 
@@ -162,7 +164,7 @@ namespace Hazelcast.Tests.Core
 
             // fail
             if (i == count)
-                Assert.Throws<OperationCanceledException>(() => { });
+                Assert.Throws<OperationCanceledException>(() => { }, message);
 
             //Assert.ThrowsAsync<OperationCanceledException>(async () =>
             //{

@@ -73,7 +73,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(addresses.Count, Is.EqualTo(2));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:1")));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:2")));
-            }, 2000, 200);
+            }, 3000, 200);
 
 
             // -- can suspend while waiting
@@ -91,7 +91,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(3));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:3")));
-            }, 2000, 200);
+            }, 3000, 200);
 
 
             // -- suspending waits for the current connection
@@ -126,7 +126,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(5));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:5")));
-            }, 2000, 200);
+            }, 3000, 200);
 
 
             // -- can drain empty
