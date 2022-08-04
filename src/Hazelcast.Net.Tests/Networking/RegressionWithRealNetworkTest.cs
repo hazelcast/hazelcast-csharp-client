@@ -131,7 +131,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(ClientState.Connected, client.State);
             }, 10_000, 500);
 
-            TestOperationsContinueWhenClientDisconnected
+            
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
 
             #region TearDown
