@@ -62,7 +62,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncConnectionRefused1()
         {
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11001");
 
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
 
@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncConnectionRefused2()
         {
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11002");
 
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
 
@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncConnectionRefused3()
         {
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
+            var endpoint = IPEndPointEx.Parse("127.0.0.1:11003");
 
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);

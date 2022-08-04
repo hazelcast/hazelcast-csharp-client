@@ -131,7 +131,7 @@ namespace Hazelcast.Tests.Networking
                 Assert.AreEqual(ClientState.Connected, client.State);
             }, 10_000, 500);
 
-
+            TestOperationsContinueWhenClientDisconnected
             Assert.AreEqual(1, clientImp.Cluster.Connections.Count);
 
             #region TearDown
@@ -152,7 +152,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, "localhost", "127.0.0.1")]
         [TestCase(false, "127.0.0.1", "localhost")]
         [TestCase(false, "localhost", "localhost")]
-        public async Task TestListenersAfterClientDisconnected(bool smartRouting, string memberAddress, string clientAddress)
+        public async Task TestListenersAfterClientDisconnectedTestOperationsContinueWhenClientDisconnectedv(bool smartRouting, string memberAddress, string clientAddress)
         {
             #region SetUp
             using var _ = HConsoleForTest();
@@ -201,8 +201,8 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        [TestCase(true, ReconnectMode.ReconnectAsync)]
         [TestCase(true, ReconnectMode.ReconnectSync)]
+        [TestCase(true, ReconnectMode.ReconnectAsync)]        
         [TestCase(false, ReconnectMode.ReconnectAsync)]
         [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestOperationsContinueWhenClientDisconnected(bool smartRouting, ReconnectMode reconnectMode)
