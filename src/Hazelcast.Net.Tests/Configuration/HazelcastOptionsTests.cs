@@ -39,7 +39,8 @@ namespace Hazelcast.Tests.Configuration
         [Test]
         public void BuildExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>) null));
+            Assert.Throws<ArgumentNullException>(() =>
+                HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>)null));
             Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build(null, null, null, "key"));
         }
 
@@ -310,6 +311,26 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
+        public void LoadBalancingOptionsNull()
+        {
+            const string json = @"{ ""hazelcast"": {
+""loadBalancer"" : {
+    ""typeName"": "" ""
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+
+            Assert.Throws<ConfigurationException>(() =>
+                configuration.HzBind(HazelcastOptions.SectionNameConstant, options));
+        }
+
+        [Test]
         public void LoadBalancingOptions1()
         {
             const string json = @"{ ""hazelcast"": {
@@ -370,6 +391,29 @@ namespace Hazelcast.Tests.Configuration
         }
 
         [Test]
+        public void LoadBalancingOptions4()
+        {
+            const string json = @"{ ""hazelcast"": {
+""loadBalancer"" : {
+    ""typeName"": ""STATIC"",
+    ""args"":{
+        ""memberId"":""bc512f2d-7448-43d4-be77-8e8d9a54a67c""
+    }
+}
+}}";
+            var stream = new MemoryStream(Encoding.UTF8.GetBytes(json));
+
+            var builder = new ConfigurationBuilder();
+            builder.AddJsonStream(stream);
+            var configuration = builder.Build();
+
+            var options = new HazelcastOptions();
+            configuration.HzBind(HazelcastOptions.SectionNameConstant, options);
+
+            Assert.IsInstanceOf<StaticLoadBalancer>(options.LoadBalancer.Service);
+        }
+
+        [Test]
         public void Clone()
         {
             var options = ReadResource(Resources.HazelcastOptions);
@@ -420,14 +464,14 @@ namespace Hazelcast.Tests.Configuration
                 var oValue = property.GetValue(obj);
                 var eValue = property.GetValue(expected);
 
-                if (type == typeof (string)) // string is enumerable, must test first
+                if (type == typeof(string)) // string is enumerable, must test first
                 {
                     Assert.That(oValue, Is.EqualTo(eValue), $"{type}::{property.Name}");
                 }
-                else if (property.PropertyType.GetInterfaces().Contains(typeof (System.Collections.IEnumerable)))
+                else if (property.PropertyType.GetInterfaces().Contains(typeof(System.Collections.IEnumerable)))
                 {
-                    var oValues = ((System.Collections.IEnumerable) oValue).Cast<object>().ToList();
-                    var eValues = ((System.Collections.IEnumerable) eValue).Cast<object>().ToList();
+                    var oValues = ((System.Collections.IEnumerable)oValue).Cast<object>().ToList();
+                    var eValues = ((System.Collections.IEnumerable)eValue).Cast<object>().ToList();
                     Assert.That(oValues.Count, Is.EqualTo(eValues.Count), $"{type}::{property.Name}");
                     for (var i = 0; i < oValues.Count; i++) AssertSameOptions(oValues[i], eValues[i]);
                 }
@@ -469,6 +513,7 @@ namespace Hazelcast.Tests.Configuration
                 Ctored = true;
             }
         }
+
         public class TestCredentialsFactory : ICredentialsFactory
         {
             public TestCredentialsFactory(string arg1, int arg2)
@@ -544,7 +589,7 @@ namespace Hazelcast.Tests.Configuration
 
             // TODO: whatever keys?
         }
-     
+
 
         public class TestPortableFactory : IPortableFactory
         {
@@ -638,7 +683,5 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.1"));
             Assert.That(options.Networking.Addresses, Does.Contain("127.0.0.2"));
         }
-
-  
     }
 }
