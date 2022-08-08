@@ -28,8 +28,8 @@ namespace Hazelcast.Tests.Remote
     public class ClientTxnTest : SingleMemberClientRemoteTestBase
     {
         [Test]
-		public async Task TestNegativeDurability()
-		{
+        public async Task TestNegativeDurability()
+        {
             await AssertEx.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
                 await Client.BeginTransactionAsync(new TransactionOptions
@@ -37,7 +37,15 @@ namespace Hazelcast.Tests.Remote
                     Durability = -1
                 });
             });
-		}
+        }
+
+        [Test]
+        public void TestPositiveDurability()
+        {
+            var opt = new TransactionOptions();
+            opt.Durability = 1;
+            Assert.AreEqual(1, opt.Durability);
+        }
 
         // TODO: negative timeout is OK and means infinite?
         /*
@@ -66,7 +74,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task InvalidToCommitTwice()
+        public async Task InvalidToCommitTwice()
         {
             await using var context = await Client.BeginTransactionAsync();
 
@@ -76,11 +84,11 @@ namespace Hazelcast.Tests.Remote
             {
                 await context.CommitAsync();
             });
-		}
+        }
 
         [Test]
-		public async Task TransactionTimesOut()
-		{
+        public async Task TransactionTimesOut()
+        {
             await using var context = await Client.BeginTransactionAsync(new TransactionOptions
             {
                 Timeout = TimeSpan.FromMilliseconds(100)

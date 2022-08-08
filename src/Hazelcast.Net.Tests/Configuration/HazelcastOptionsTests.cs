@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -36,6 +37,8 @@ namespace Hazelcast.Tests.Configuration
     [TestFixture]
     public class HazelcastOptionsTests
     {
+        private static string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/HazelcastOptions.json"));
+
         [Test]
         public void BuildExceptions()
         {
@@ -51,6 +54,59 @@ namespace Hazelcast.Tests.Configuration
             var serviceProvider = services.BuildServiceProvider();
             var options = new HazelcastOptions { ServiceProvider = serviceProvider };
             Assert.That(options.ServiceProvider, Is.SameAs(serviceProvider));
+        }
+
+        [Test]
+        public void BuildOptionsWithDefault()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var options = hzBuilder
+                .WithDefault("hazelcast.labels.0", "label1")
+                .Build();
+
+            Assert.True(options.Labels.Contains("label1"));
+        }
+
+        [Test]
+        public void BuildOptionsWithFileName()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var options = hzBuilder
+                .WithFileName(_optionsPath)
+                .Build();
+            Assert.True(options.Labels.Contains("label_1"));
+        }
+
+        [Test]
+        public void BuildOptionsWithFilePath()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var options = hzBuilder
+                .WithFilePath(_optionsPath)
+                .Build();
+            Assert.True(options.Labels.Contains("label41"));
+        }
+
+        [Test]
+        public void BuildOptionsWithEnviorment()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var options = hzBuilder
+                .WithEnvironment("Testing")
+                .WithFilePath(_optionsPath)
+                .Build();
+            Assert.True(options.Labels.Contains("label42"));
+        }
+
+        [Test]
+        public void BuildOptionsWithArgs()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var options = hzBuilder
+                .With(new string[] { "hazelcast.labels.0=label0" })
+                .Build();
+
+            Assert.True(options.Labels.Contains("label0"));
         }
 
         [Test]
@@ -533,6 +589,11 @@ namespace Hazelcast.Tests.Configuration
 
             public void Dispose()
             { }
+        }
+
+        public class DummyBinder
+        {
+            public int Count { get; set; }
         }
 
         [Test]
