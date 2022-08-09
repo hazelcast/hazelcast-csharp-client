@@ -37,7 +37,7 @@ namespace Hazelcast.Tests.Configuration
     [TestFixture]
     public class HazelcastOptionsTests
     {
-        private static string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/HazelcastOptions.json"));
+        private static string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/"));
 
         [Test]
         public void BuildExceptions()
@@ -72,7 +72,7 @@ namespace Hazelcast.Tests.Configuration
         {
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
-                .WithFileName(_optionsPath)
+                .WithFileName(_optionsPath+"/HazelcastOptions.json")
                 .Build();
             Assert.True(options.Labels.Contains("label_1"));
         }
