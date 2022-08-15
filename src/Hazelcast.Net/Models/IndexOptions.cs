@@ -38,7 +38,7 @@ namespace Hazelcast.Models
         /// Initializes a new instance of the <see cref="IndexOptions"/> class.
         /// </summary>
         public IndexOptions()
-        {}
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="IndexOptions"/> class.
@@ -66,7 +66,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets or sets the bitmap index options.
         /// </summary>
-        public BitmapIndexOptions BitmapIndexOptions{ get; set; } = new BitmapIndexOptions();
+        public BitmapIndexOptions BitmapIndexOptions { get; set; } = new BitmapIndexOptions();
 
         /// <summary>
         /// Adds an indexed attribute.
@@ -87,10 +87,12 @@ namespace Hazelcast.Models
         /// <returns>This instance for chaining.</returns>
         public IndexOptions AddAttributes(params string[] attributes)
         {
+#pragma warning disable CA1062 // Validate arguments of public methods
             foreach (var attribute in attributes)
             {
                 ValidateAttribute(this, attribute);
             }
+#pragma warning restore CA1062 // Validate arguments of public methods
             foreach (var attribute in attributes)
             {
                 Attributes.Add(attribute);

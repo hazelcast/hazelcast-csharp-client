@@ -163,8 +163,9 @@ namespace Hazelcast.CP
 
             if (groupName.Length == 0)
                 throw new ArgumentException("CP group name cannot be an empty string.", nameof(name));
-
+#pragma warning disable CA1847 //Use string.Contains(char) instead
             if (groupName.Contains("@", StringComparison.OrdinalIgnoreCase))
+#pragma warning restore CA1847
                 throw new ArgumentException("CP group name must be specified at most once.", nameof(name));
 
             if (groupName.Equals(MetaDataGroupName, StringComparison.OrdinalIgnoreCase))

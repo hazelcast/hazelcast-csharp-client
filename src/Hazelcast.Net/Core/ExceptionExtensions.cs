@@ -49,23 +49,23 @@ namespace Hazelcast.Core
             exception = (TException) ExceptionDispatchInfo.SetCurrentStackTrace(exception);
 #else
             var stackTraceString = new StackTrace(fNeedFileInfo: true).ToString();
-            var pos = stackTraceString.IndexOf('\n');
+            var pos = stackTraceString.IndexOf('\n', StringComparison.OrdinalIgnoreCase);
             if (pos > 0) stackTraceString = stackTraceString.Substring(pos + 1);
             SetStackTraceField(exception, stackTraceString);
 #endif
             return exception;
         }
-
+        #pragma warning disable CA1823
         // compiles a dynamic method that sets the Exception._stackTraceString internal field via reflection
         private static readonly Action<Exception, string> SetStackTraceField = new Func<Action<Exception, string>>(() =>
         {
             var target = Expression.Parameter(typeof(Exception));
-            var stackTraceString = Expression.Parameter(typeof (string));
+            var stackTraceString = Expression.Parameter(typeof(string));
             var stackTraceStringField = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
             var assign = Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
             return Expression.Lambda<Action<Exception, string>>(assign, target, stackTraceString).Compile();
         })();
-
+        #pragma warning restore CA1823
         /// <summary>
         /// Captures an exception.
         /// </summary>

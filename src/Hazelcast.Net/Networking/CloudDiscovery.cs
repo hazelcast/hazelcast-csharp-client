@@ -68,8 +68,12 @@ namespace Hazelcast.Networking
 
             try
             {
-                // TODO: is this the best way to do an http request?
+                // TODO: Make it async and consider to use HttpClientFactory
+#pragma warning disable SYSLIB0014
+#pragma warning disable SYSLIB0000
                 var httpWebRequest = (HttpWebRequest) WebRequest.Create(_endpointUrl);
+#pragma warning restore SYSLIB0000
+#pragma warning restore SYSLIB0014
                 httpWebRequest.Method = WebRequestMethods.Http.Get;
                 httpWebRequest.Timeout = _connectionTimeoutMilliseconds;
                 httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;
@@ -105,7 +109,7 @@ namespace Hazelcast.Networking
             {
                 _logger.LogWarning(e, "Hazelcast cloud discovery failed.");
             }
-            return null;
+            return null;            
         }
 
         [ExcludeFromCodeCoverage] // not testing the web connection

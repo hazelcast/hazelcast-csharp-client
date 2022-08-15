@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
             //Cluster changed, renew options if necessary.
             _clusterState.Failover.ClusterChanged += options =>
             {
-               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
             };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
@@ -449,7 +449,7 @@ namespace Hazelcast.Clustering
                         _logger.LogError("Failed to reconnect.");
                     }
                     else
-                    {                        
+                    {
                         _logger.IfDebug()?.LogDebug("Reconnected");
                     }
 
@@ -590,7 +590,9 @@ namespace Hazelcast.Clustering
                             else
                             {
                                 isExceptionThrown = true;
-                                _logger.LogError(attempt.Exception, "Failed to connect to address {address}.", address.ToString());
+#pragma warning disable CA1727
+                                _logger.LogError(attempt.Exception, message: "Failed to connect to address {address}.", address.ToString());
+#pragma warning restore CA1727
 
                             }
                         }
@@ -805,8 +807,8 @@ namespace Hazelcast.Clustering
             if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)
             {
                 await connection.DisposeAsync().CfAwait();
-                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " + 
-                    "(client is configured with failover but cluster does not support failover. " + 
+                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " +
+                    "(client is configured with failover but cluster does not support failover. " +
                     "Failover is an Hazelcast Enterprise feature.).");
             }
 

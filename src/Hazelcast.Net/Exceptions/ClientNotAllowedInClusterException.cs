@@ -74,7 +74,9 @@ namespace Hazelcast.Exceptions
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
+#pragma warning disable CA2229 // Implement serialization constructors
         private ClientNotAllowedInClusterException(SerializationInfo info, StreamingContext context) : base(info, context)
+#pragma warning restore CA2229 // Implement serialization constructors
         {
         }
     }

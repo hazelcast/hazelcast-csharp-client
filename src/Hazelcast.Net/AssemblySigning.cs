@@ -56,7 +56,9 @@ namespace Hazelcast
                 bytes[i] = byte.Parse(key.Substring(i * 2, 2), NumberStyles.AllowHexSpecifier);
 #pragma warning restore CA1305 // Specify IFormatProvider
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms - well, that's what PublicKeyToken uses
+#pragma warning disable SYSLIB0021 //Derived cryptographic types are obsolete. Use the Create method on the base type instead.
             using var csp = new SHA1CryptoServiceProvider();
+#pragma warning restore SYSLIB0021
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
             var hash = csp.ComputeHash(bytes);
             var text = new StringBuilder();
