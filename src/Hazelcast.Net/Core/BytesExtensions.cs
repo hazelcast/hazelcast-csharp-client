@@ -30,34 +30,19 @@ namespace Hazelcast.Core
         public const int SizeOfNullArray = -1;
 
         /// <summary>
-        /// Gets the size of a <see cref="byte"/> value in arrays or sequences of bytes.
+        /// Gets the size of a <see cref="byte"/> or <see cref="sbyte"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfByte = 1;
 
         /// <summary>
-        /// Gets the size of a <see cref="sbyte"/> value in arrays or sequences of bytes.
-        /// </summary>
-        public const int SizeOfUnsignedByte = 1;
-
-        /// <summary>
-        /// Gets the size of a <see cref="short"/> value in arrays or sequences of bytes.
+        /// Gets the size of a <see cref="short"/> or <see cref="ushort"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfShort = 2;
 
         /// <summary>
-        /// Gets the size of an <see cref="ushort"/> value in arrays or sequences of bytes.
-        /// </summary>
-        public const int SizeOfUnsignedShort = 2;
-
-        /// <summary>
-        /// Gets the size of an <see cref="int"/> value in arrays or sequences of bytes.
+        /// Gets the size of an <see cref="int"/> or <see cref="uint"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfInt = 4;
-
-        /// <summary>
-        /// Gets the size of an <see cref="uint"/> value in arrays or sequences of bytes.
-        /// </summary>
-        public const int SizeOfUnsignedInt = 4;
 
         /// <summary>
         /// Gets the size of a <see cref="float"/> value in arrays or sequences of bytes.
@@ -65,14 +50,9 @@ namespace Hazelcast.Core
         public const int SizeOfFloat = 4;
 
         /// <summary>
-        /// Gets the size of a <see cref="long"/> value in arrays or sequences of bytes.
+        /// Gets the size of a <see cref="long"/> or <see cref="ulong"/> value in arrays or sequences of bytes.
         /// </summary>
         public const int SizeOfLong = 8;
-
-        /// <summary>
-        /// Gets the size of an <see cref="ulong"/> value in arrays or sequences of bytes.
-        /// </summary>
-        public const int SizeOfUnsignedLong = 8;
 
         /// <summary>
         /// Gets the size of a <see cref="double"/> value in arrays or sequences of bytes.

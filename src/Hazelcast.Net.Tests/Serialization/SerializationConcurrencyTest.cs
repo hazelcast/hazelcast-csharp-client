@@ -16,6 +16,8 @@ using System;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -36,6 +38,8 @@ namespace Hazelcast.Tests.Serialization
             });
 
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
                 .AddPortableFactory(FactoryId, portableFactory)
                 .AddDataSerializableFactory(FactoryId, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
                 {

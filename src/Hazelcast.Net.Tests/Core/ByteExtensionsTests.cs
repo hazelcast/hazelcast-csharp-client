@@ -29,6 +29,33 @@ namespace Hazelcast.Tests.Core
         // endianness is, by default, unspecified and then falls back to big endian
 
         [Test]
+        public void WriteBits()
+        {
+            var bytes = new byte[8];
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_1111_1111, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_1111_1111, 0b_1111_1111);
+            AssertBytes(bytes, 0, 0, 0b_1111_1111, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_1111_1111, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_1111_1111);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(4, 0b_0000_0110, 0b_0000_0010);
+            AssertBytes(bytes, 0, 0, 0, 0, 0b_0000_0010, 0, 0, 0);
+
+            bytes.WriteBits(4, 0b_0000_0100, 0b_0000_0110);
+            AssertBytes(bytes, 0, 0, 0, 0, 0b_0000_0100, 0, 0, 0);
+        }
+
+        [Test]
         public void WriteByte()
         {
             var bytes = new byte[8];

@@ -49,6 +49,12 @@ namespace Hazelcast.Serialization
 
         internal int Position { get; set; }
 
+        public void MoveTo(int position)
+        {
+            CheckAvailable(position, 0);
+            Position = position;
+        }
+
         //test only
         internal byte[] Buffer => _buffer;
 

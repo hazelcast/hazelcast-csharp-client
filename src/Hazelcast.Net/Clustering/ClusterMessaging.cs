@@ -25,7 +25,7 @@ namespace Hazelcast.Clustering
     /// <summary>
     /// Provides the messaging services of a cluster.
     /// </summary>
-    internal class ClusterMessaging
+    internal class ClusterMessaging : IClusterMessaging
     {
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;

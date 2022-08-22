@@ -18,6 +18,8 @@ using System.Linq;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -29,7 +31,10 @@ namespace Hazelcast.Tests.Protocol
         [Test]
         public void AnchorDataListHolderTest()
         {
-            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory()).Build();
+            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
+                .Build();
 
             var holder = GetAnchorDataListHolder(serializationService, out var pageList, out var dataList);
 
@@ -65,6 +70,8 @@ namespace Hazelcast.Tests.Protocol
         public void PagingPredicateHolderTest()
         {
             var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
                 .AddHook<PredicateDataSerializerHook>()
                 .Build();
 

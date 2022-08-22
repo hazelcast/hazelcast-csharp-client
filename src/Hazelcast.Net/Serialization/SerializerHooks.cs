@@ -20,7 +20,7 @@ using Hazelcast.Core;
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Represents a collection of <see cref="ISerializerHook{T}"/> types.
+    /// Represents a collection of <see cref="IDataSerializerHook"/> types.
     /// </summary>
     internal sealed class SerializerHooks
     {
@@ -46,6 +46,6 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the hooks.
         /// </summary>
-        public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => ServiceFactory.CreateInstance<IDataSerializerHook>(x, null));
+        public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => ServiceFactory.CreateInstance<IDataSerializerHook>(x));
     }
 }

@@ -46,11 +46,24 @@ namespace Hazelcast.Core
         /// <remarks>
         /// <para>If one entry of the delegate throws, execution stops and the remaining entries are ignored.</para>
         /// </remarks>
-        public static async ValueTask AwaitEach(this Func<ValueTask> function)
+        public static ValueTask AwaitEach(this Func<ValueTask> function)
         {
-            if (function != null)
+            if (function == null) return default;
+            
+            // optimize for the (most common) case where there is only 1 handler
+            // and then this method can synchronously return the unique ValueTask,
+            // only enter an async state machine if there are more than 1 handler
+            
+            // TODO: implement this optimization for all AwaitEach overloads
+
+            var functions = function.GetInvocationList();
+            return functions.Length == 1
+                ? ((Func<ValueTask>) functions[0])()
+                : AwaitEachAsync(functions);
+
+            static async ValueTask AwaitEachAsync(Delegate[] delegates)
             {
-                foreach (var d in function.GetInvocationList())
+                foreach (var d in delegates)
                 {
                     await ((Func<ValueTask>) d)().CfAwait();
                 }

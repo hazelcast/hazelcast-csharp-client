@@ -19,6 +19,8 @@ using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
 using Hazelcast.Testing.Predicates;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -34,7 +36,9 @@ namespace Hazelcast.Tests.Query
         public void SetUp()
         {
             _serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
-                .AddHook<PredicateDataSerializerHook>() // not pretty in tests, eh?
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
+                .AddHook<PredicateDataSerializerHook>()
                 .Build();
         }
 
