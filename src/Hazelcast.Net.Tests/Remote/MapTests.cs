@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Serialization.Objects;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Remote

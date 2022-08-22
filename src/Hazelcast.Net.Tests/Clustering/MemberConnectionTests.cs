@@ -75,7 +75,8 @@ namespace Hazelcast.Tests.Clustering
             };
             await server.StartAsync();
 
-            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var messaging = Mock.Of<IClusterMessaging>();
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             ISequence<long> correlationIdSequence = new Int64Sequence();
@@ -224,7 +225,8 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             var loggerFactory = NullLoggerFactory.Instance;
-            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var messaging = Mock.Of<IClusterMessaging>();
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);

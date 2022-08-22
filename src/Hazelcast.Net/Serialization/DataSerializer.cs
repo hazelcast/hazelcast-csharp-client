@@ -19,15 +19,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
 {
-    /// <summary>
-    ///     This class is the default serializer for all types that are serialized using Hazelcast
-    ///     internal methods.
-    /// </summary>
-    /// <remarks>
-    ///     This class is the default serializer for all types that are serialized using Hazelcast
-    ///     internal methods.
-    ///     If the way the DataSerializer serializes values is changed the extract method needs to be changed too!
-    /// </remarks>
+    /// <summary>Implements identified data serialization.</summary>
     internal sealed class DataSerializer : IStreamSerializer<IIdentifiedDataSerializable>
     {
         private readonly ILogger _logger;
@@ -35,29 +27,25 @@ namespace Hazelcast.Serialization
         private readonly IDictionary<int, IDataSerializableFactory> _factories =
             new Dictionary<int, IDataSerializableFactory>();
 
-        internal DataSerializer(SerializerHooks hooks, IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories, ILoggerFactory loggerFactory )
+        internal DataSerializer(IEnumerable<IDataSerializerHook> hooks, IEnumerable<KeyValuePair<int, IDataSerializableFactory>> dataSerializableFactories, ILoggerFactory loggerFactory )
         {
             _logger = loggerFactory.CreateLogger<DataSerializer>();
 
-            RegisterHooks(hooks);
+            if (hooks != null)
+            {
+                foreach (var hook in hooks)
+                    Register(hook.FactoryId, hook.CreateFactory());
+            }
+
             if (dataSerializableFactories != null)
             {
-                foreach (var entry in dataSerializableFactories)
-                {
-                    Register(entry.Key, entry.Value);
-                }
+                foreach (var (factoryId, factory) in dataSerializableFactories)
+                    Register(factoryId, factory);
             }
-        }
-
-        private void RegisterHooks(SerializerHooks hooks)
-        {
-            foreach (var hook in hooks.Hooks)
-                RegisterHook(hook);
         }
 
         public int TypeId => SerializationConstants.ConstantTypeDataSerializable;
 
-        /// <exception cref="System.IO.IOException"></exception>
         public IIdentifiedDataSerializable Read(IObjectDataInput input)
         {
             var factoryId = 0;
@@ -66,30 +54,28 @@ namespace Hazelcast.Serialization
             {
                 var identified = input.ReadBoolean();
                 if (!identified)
-                    throw new SerializationException("Non-identified DataSerializable is not supported by .NET client. " +
-                                                              "Please use IIdentifiedDataSerializable instead.");
+                    throw new SerializationException("Non-identified IDataSerializable is not supported by the .NET client, " +
+                                                              "use IIdentifiedDataSerializable instead.");
 
                 factoryId = input.ReadInt();
                 if (!_factories.TryGetValue(factoryId, out var factory))
-                    throw new SerializationException($"No DataSerializerFactory registered with id: {factoryId}.");
+                    throw new SerializationException($"No IDataSerializerFactory registered with factory-id {factoryId}.");
 
                 id = input.ReadInt();
                 var serializable = factory.Create(id);
                 if (serializable == null)
-                    throw new SerializationException($"{factory} (factoryId: {factoryId}) failed to create an instance for id: {id}.");
+                    throw new SerializationException($"IDataSerializerFactory factory {factory} with factory-id {factoryId} failed " +
+                                                     $" to create an instance of type-id {id}.");
 
                 serializable.ReadData(input);
                 return serializable;
             }
-            catch (IOException) { throw; }
-            catch (SerializationException) { throw; }
-            catch (Exception e)
+            catch (Exception e) when (!(e is IOException || e is SerializationException))
             {
-                throw new SerializationException($"Failed to read DataSerializable with factoryId: {factoryId}, id: {id} ({e.GetType()}: {e.Message}).", e);
+                throw new SerializationException($"Failed to read IIdentifiedDataSerializable with factory-id {factoryId} and type-id {id} ({e.GetType()}: {e.Message}).", e);
             }
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
         public void Write(IObjectDataOutput output, IIdentifiedDataSerializable obj)
         {
             output.WriteBoolean(true); // identified flag
@@ -103,30 +89,23 @@ namespace Hazelcast.Serialization
             _factories.Clear();
         }
 
-        private void RegisterHook(IDataSerializerHook hook)
-        {
-            Register(hook.FactoryId, hook.CreateFactory());
-        }
-
         private void Register(int factoryId, IDataSerializableFactory factory)
         {
-            _factories.TryGetValue(factoryId, out var current);
-            if (current != null)
+            if (!_factories.TryGetValue(factoryId, out var current))
             {
-                if (current.Equals(factory))
-                {
-                    _logger.LogWarning("DataSerializableFactory[" + factoryId + "] is already registered! Skipping " +
-                                   factory);
-                }
-                else
-                {
-                    throw new ArgumentException("DataSerializableFactory[" + factoryId + "] is already registered! " +
-                                                current + " -> " + factory);
-                }
+                _factories.Add(factoryId, factory);
+                return;
+            }
+
+            if (current.Equals(factory))
+            {
+                _logger.LogWarning("Trying to register IDataSerializableFactory {Factory} with factory-id {FactoryId} " +
+                                   "multiple times, skipping.", factory, factoryId);
             }
             else
             {
-                _factories.Add(factoryId, factory);
+                throw new ArgumentException($"Cannot register IDataSerializableFactory {factory} with factory-id {factoryId} " +
+                                            $"because factory {current} is already registered for that factory-id.");
             }
         }
     }

@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Serialization
         [SetUp]
         public virtual void Setup()
         {
-            _serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+            _serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
                 .AddDefinitions(new ConstantSerializerDefinitions())
                 .AddDefinitions(new DefaultSerializerDefinitions())
                 .Build();

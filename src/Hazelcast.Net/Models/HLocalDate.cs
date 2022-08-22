@@ -12,42 +12,35 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable  enable
+
 using System;
 using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
     /// <summary>
-    /// Represents Hazelcast SQL <c>DATE</c> type corresponding to <c>java.time.LocalDate</c> in Java.
+    /// Represents an Hazelcast <c>DATE</c> primitive type value.
     /// </summary>
+    /// <remarks>
+    /// <para>The <c>DATE</c> primitive type consists in a day, month and year, with
+    /// year being comprised between <see cref="MinYear"/> and <see cref="MaxYear"/>
+    /// inclusive.</para>
+    /// </remarks>
     public readonly struct HLocalDate : IEquatable<HLocalDate>
     {
         private static readonly Regex ParseRegex = new Regex(
             @"^(?'year'-?\d+)-(?'month'\d+)-(?'day'\d+)$",
             RegexOptions.Compiled | RegexOptions.ExplicitCapture
         );
-
-        public const int MaxYear = 999_999_999;
-        public const int MinYear = -999_999_999;
-
-        public static readonly HLocalDate Max = new HLocalDate(MinYear, 12, 31);
-        public static readonly HLocalDate Min = new HLocalDate(MaxYear, 1, 1);
-
+        
         /// <summary>
-        /// Year value. Ranges between <see cref="MinYear"/> and <see cref="MaxYear"/> inclusive.
+        /// Initializes a new instance of the <see cref="HLocalDate"/> struct.
         /// </summary>
-        public int Year { get; }
-
-        /// <summary>
-        /// Month value. Ranges between 1 and 12 inclusive.
-        /// </summary>
-        public byte Month { get; }
-
-        /// <summary>
-        /// Day value. Ranges between 1 and max number of days in given <see cref="Year"/> and <see cref="Month"/> inclusive.
-        /// </summary>
-        public byte Day { get; }
-
+        /// <param name="year">The year value.</param>
+        /// <param name="month">The month value.</param>
+        /// <param name="day">The day value.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="year"/>, <paramref name="month"/> and/or <paramref name="day"/> are out-of-range.</exception>
         public HLocalDate(int year, byte month, byte day)
         {
             if (year < MinYear || year > MaxYear)
@@ -62,6 +55,10 @@ namespace Hazelcast.Models
             Day = day;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDate"/> struct.
+        /// </summary>
+        /// <param name="dateTime">The date.</param>
         public HLocalDate(DateTime dateTime)
         {
             Year = dateTime.Year;
@@ -69,8 +66,64 @@ namespace Hazelcast.Models
             Day = (byte)dateTime.Day;
         }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDate"/> struct.
+        /// </summary>
+        /// <param name="dateOnly">The date.</param>
+        public HLocalDate(DateOnly dateOnly)
+            : this(dateOnly.Year, (byte) dateOnly.Month, (byte) dateOnly.Day)
+        { }
+#endif
+
+        /// <summary>
+        /// Gets the largest possible value of the year value.
+        /// </summary>
+        public const int MaxYear = 999_999_999;
+        
+        /// <summary>
+        /// Gets the smallest possible value of the year value.
+        /// </summary>
+        public const int MinYear = -999_999_999;
+
+        /// <summary>
+        /// Gets the largest possible value of a <see cref="HLocalDate"/>.
+        /// </summary>
+        public static readonly HLocalDate Max = new HLocalDate(MinYear, 12, 31);
+        
+        /// <summary>
+        /// Gets the smallest possible value of a <see cref="HLocalDate"/>.
+        /// </summary>
+        public static readonly HLocalDate Min = new HLocalDate(MaxYear, 1, 1);
+
+        /// <summary>
+        /// Gets the year value.
+        /// </summary>
+        public int Year { get; }
+
+        /// <summary>
+        /// Gets the month value.
+        /// </summary>
+        public byte Month { get; }
+
+        /// <summary>
+        /// Gets the day value.
+        /// </summary>
+        public byte Day { get; }
+        
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateTime"/> equivalent.
+        /// </summary>
+        /// <returns>The <see cref="DateTime"/> representation of this instance.</returns>
         public DateTime ToDateTime() => new DateTime(Year, Month, Day, 0, 0, 0, DateTimeKind.Local);
 
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateTime"/> equivalent.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="dateTime">When this method returns, contains the <see cref="DateTime"/> equivalent
+        /// to the value represented by this instance, if the conversion succeeded, or the default value if the conversion failed.</param>
+        /// <returns><c>true</c> if the value represented by this instance was converted successfully; otherwise <c>false</c>.</returns>
         public bool TryToDateTime(out DateTime dateTime)
         {
             dateTime = default;
@@ -82,11 +135,65 @@ namespace Hazelcast.Models
             return true;
         }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
+        /// </summary>
+        /// <returns>The <see cref="DateOnly"/> representation of this instance.</returns>
+        public DateOnly ToDateOnly() => new DateOnly(Year, Month, Day);
+
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="dateOnly">When this method returns, contains the <see cref="DateOnly"/> equivalent
+        /// to the value represented by this instance, if the conversion succeeded, or the default value if the conversion failed.</param>
+        /// <returns><c>true</c> if the value represented by this instance was converted successfully; otherwise <c>false</c>.</returns>
+        public bool TryToDateOnly(out DateOnly dateOnly)
+        {
+            dateOnly = default;
+
+            if (Year < 1 || Year > 9999)
+                return false;
+
+            dateOnly = ToDateOnly();
+            return true;
+        }
+#endif
+
+        /// <summary>
+        /// Implements the <see cref="HLocalDate"/> to <see cref="DateTime"/> conversion.
+        /// </summary>
         public static explicit operator DateTime(HLocalDate localDate) => localDate.ToDateTime();
+        
+        /// <summary>
+        /// Implements the <see cref="DateTime"/> to <see cref="HLocalDate"/> conversion.
+        /// </summary>
         public static explicit operator HLocalDate(DateTime dateTime) => new HLocalDate(dateTime);
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Implements the <see cref="HLocalDate"/> to <see cref="DateOnly"/> conversion.
+        /// </summary>
+        public static explicit operator DateOnly(HLocalDate localDate) => localDate.ToDateOnly();
+        
+        /// <summary>
+        /// Implements the <see cref="DateOnly"/> to <see cref="HLocalDate"/> conversion.
+        /// </summary>
+        public static explicit operator HLocalDate(DateOnly dateOnly) => new HLocalDate(dateOnly);
+#endif
+        
+        /// <inheritdoc />
         public override string ToString() => $"{Year:D4}-{Month:D2}-{Day:D2}";
 
+        /// <summary>
+        /// Converts the string representation of a date to its <see cref="HLocalDate"/> representation.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="s">A string containing a date to convert.</param>
+        /// <param name="localDate">When this method returns, contains the <see cref="HLocalDate"/> equivalent of
+        /// the date in <paramref name="s"/>, if the conversion succeeded, or zero if the conversion failed.</param>
+        /// <returns><c>true</c> if <paramref name="s"/> was converted successfully; otherwise, <c>false</c>.</returns>
         public static bool TryParse(string s, out HLocalDate localDate)
         {
             localDate = default;
@@ -105,6 +212,12 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Converts the string representation of a date to its <see cref="HLocalDate"/> representation.
+        /// </summary>
+        /// <param name="s">A string containing a date to convert.</param>
+        /// <returns>A <see cref="HLocalDate"/> equivalent to the date contained in <paramref name="s"/>.</returns>
+        /// <exception cref="FormatException">The <paramref name="s"/> string cannot be parsed.</exception>
         public static HLocalDate Parse(string s)
         {
             return TryParse(s, out var localDate)
@@ -114,32 +227,22 @@ namespace Hazelcast.Models
 
         #region Equality members
 
+        /// <inheritdoc />
         public bool Equals(HLocalDate other)
-        {
-            return Year == other.Year && Month == other.Month && Day == other.Day;
-        }
+            => Year == other.Year && Month == other.Month && Day == other.Day;
 
-        public override bool Equals(object obj)
-        {
-            return obj is HLocalDate other && Equals(other);
-        }
+        /// <inheritdoc />
+        public override bool Equals(object? obj) => obj is HLocalDate other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Year, Month, Day);
-        }
+        /// <inheritdoc />
+        public override int GetHashCode() => HashCode.Combine(Year, Month, Day);
 
-        public static bool operator ==(HLocalDate left, HLocalDate right)
-        {
-            return left.Equals(right);
-        }
+        /// <summary>Implements the == operator.</summary>
+        public static bool operator ==(HLocalDate left, HLocalDate right) => left.Equals(right);
 
-        public static bool operator !=(HLocalDate left, HLocalDate right)
-        {
-            return !left.Equals(right);
-        }
+        /// <summary>Implements the != operator.</summary>
+        public static bool operator !=(HLocalDate left, HLocalDate right) => !left.Equals(right);
 
         #endregion
-
     }
 }

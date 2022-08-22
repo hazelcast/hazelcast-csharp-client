@@ -21,6 +21,20 @@ namespace Hazelcast.Core
     internal static partial class BytesExtensions // Write to byte[]
     {
         /// <summary>
+        /// Writes a bits value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="bits">The bits to write.</param>
+        /// <param name="mask">The mask for selecting which bits to write.</param>
+        public static void WriteBits(this byte[] bytes, int position, byte bits, byte mask)
+        {
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfByte);
+            bytes[position] &= (byte) (bits | ~mask); // clear
+            bytes[position] |= (byte) (bits & mask); // set
+        }
+
+        /// <summary>
         /// Writes a <see cref="byte"/> value to an array of bytes.
         /// </summary>
         /// <param name="bytes">The array of bytes to write to.</param>
@@ -32,9 +46,15 @@ namespace Hazelcast.Core
             bytes[position] = value;
         }
 
+        /// <summary>
+        /// Writes a <see cref="sbyte"/> value to an array of bytes.
+        /// </summary>
+        /// <param name="bytes">The array of bytes to write to.</param>
+        /// <param name="position">The position in the array where the value should be written.</param>
+        /// <param name="value">The value to write.</param>
         public static void WriteSbyte(this byte[] bytes, int position, sbyte value)
         {
-            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedByte);
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfByte);
             bytes[position] = (byte) value;
         }
 
@@ -57,7 +77,7 @@ namespace Hazelcast.Core
         /// <param name="endianness">The endianness.</param>
         public static void WriteUShort(this byte[] bytes, int position, ushort value, Endianness endianness)
         {
-            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedShort);
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfShort);
             unchecked
             {
                 if (endianness.IsBigEndian())

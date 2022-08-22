@@ -26,12 +26,12 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestAddDataSerializableFactory()
         {
-            var service1 = new SerializationServiceBuilder(new NullLoggerFactory()).Build();
+            var service1 = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory()).Build();
             var data = service1.ToData(new DataSerializableBasicType());
 
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
 
             var obj = service.ToObject<object>(data);
 
@@ -41,12 +41,12 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestAddDataSerializableFactoryClass()
         {
-            var service1 = new SerializationServiceBuilder(new NullLoggerFactory()).Build();
+            var service1 = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory()).Build();
             var data = service1.ToData(new DataSerializableBasicType());
 
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
 
             var obj = service.ToObject<object>(data);
 
@@ -58,9 +58,9 @@ namespace Hazelcast.Tests.Serialization
         {
             Assert.Throws<ArgumentException>(() =>
             {
-                var config = new SerializationOptions();
-                config.AddDataSerializableFactoryClass(-1, typeof(MyDataSerializableFactory));
-                var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+                var options = new SerializationOptions();
+                options.AddDataSerializableFactoryClass(-1, typeof(MyDataSerializableFactory));
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
             });
         }
 
@@ -69,10 +69,10 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<InvalidOperationException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            config.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+            options.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -81,9 +81,9 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<ServiceFactoryException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -92,10 +92,10 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<InvalidOperationException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).
-                AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory())
+                .AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
         });
 		}
 
@@ -104,22 +104,22 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var options = new SerializationOptions();
+            options.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
         [Test]
         public void TestAddPortableFactory()
         {
-            var service1 = new SerializationServiceBuilder(new NullLoggerFactory()).Build();
+            var service1 = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory()).Build();
             var data = service1.ToData(new KitchenSinkPortable());
 
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
+            var options = new SerializationOptions();
+            options.AddPortableFactory(1, new KitchenSinkPortableFactory());
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
 
             var obj = service.ToObject<object>(data);
             Assert.IsInstanceOf<KitchenSinkPortable>(obj);
@@ -128,13 +128,13 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestAddPortableFactory2()
         {
-            var service1 = new SerializationServiceBuilder(new NullLoggerFactory()).Build();
+            var service1 = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory()).Build();
             var data = service1.ToData(new KitchenSinkPortable());
 
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
+            var options = new SerializationOptions();
+            options.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
 
             var obj = service.ToObject<object>(data);
             Assert.IsInstanceOf<KitchenSinkPortable>(obj);
@@ -145,10 +145,10 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<ServiceFactoryException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, typeof (SerializableFactory));
+            var options = new SerializationOptions();
+            options.AddPortableFactory(1, typeof (SerializableFactory));
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -157,10 +157,10 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<ArgumentException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(-1, typeof (KitchenSinkPortableFactory));
+            var options = new SerializationOptions();
+            options.AddPortableFactory(-1, typeof (KitchenSinkPortableFactory));
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -169,11 +169,11 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<InvalidOperationException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
-            config.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
+            var options = new SerializationOptions();
+            options.AddPortableFactory(1, new KitchenSinkPortableFactory());
+            options.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -182,10 +182,10 @@ namespace Hazelcast.Tests.Serialization
 		{
 			Assert.Throws<ServiceFactoryException>(() =>
         {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, typeof (PortableFactory));
+            var options = new SerializationOptions();
+            options.AddPortableFactory(1, typeof (PortableFactory));
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
         });
 		}
 
@@ -193,25 +193,25 @@ namespace Hazelcast.Tests.Serialization
 		public void TestAddPortableFactory2WithBadId()
 		{
 			Assert.Throws<ArgumentException>(() =>
-        {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(-1, new KitchenSinkPortableFactory());
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(-1, new KitchenSinkPortableFactory());
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
-        });
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
 		}
 
         [Test]
 		public void TestAddPortableFactory2WithDuplicateId()
 		{
 			Assert.Throws<InvalidOperationException>(() =>
-        {
-            var config = new SerializationOptions();
-            config.AddPortableFactory(1, new KitchenSinkPortableFactory());
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(1, new KitchenSinkPortableFactory());
 
-            var service = new SerializationServiceBuilder(new NullLoggerFactory()).AddPortableFactory(1,
-                new KitchenSinkPortableFactory()).SetConfig(config).Build();
-        });
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).AddPortableFactory(1,
+                    new KitchenSinkPortableFactory()).Build();
+            });
 		}
 
         public void TestHazelcastInstanceAware()
