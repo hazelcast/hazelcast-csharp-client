@@ -24,12 +24,10 @@ using Hazelcast.Core;
 using Hazelcast.Metrics;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
-using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Configuration;
 using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
 using Ionic.Zlib;
-using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud

@@ -374,7 +374,7 @@ namespace Hazelcast
             var loggerFactory = options.LoggerFactory.Service ?? new NullLoggerFactory();
             var cluster = new Cluster(
                 options,
-                messaging => CreateSerializationService(options.Serialization, messaging, loggerFactory), 
+                messaging => CreateSerializationService(options.Serialization, messaging, loggerFactory),
                 loggerFactory
             );
             return new HazelcastClient(options, cluster, loggerFactory);

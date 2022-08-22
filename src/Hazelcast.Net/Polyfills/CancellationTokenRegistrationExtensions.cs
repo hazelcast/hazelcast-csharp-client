@@ -12,7 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
 #if !NET5_0_OR_GREATER
 using System.Threading.Tasks;
 #endif

@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Globalization;
 using System.Numerics;
-
-#nullable enable
 
 namespace Hazelcast.Models
 {

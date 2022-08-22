@@ -72,11 +72,11 @@ namespace Hazelcast.Serialization
             SerializationOptions options,
             Endianness endianness, int portableVersion,
             IDictionary<int, IDataSerializableFactory> dataSerializableFactories,
-            IDictionary<int, IPortableFactory> portableFactories, 
+            IDictionary<int, IPortableFactory> portableFactories,
             ICollection<IClassDefinition> portableClassDefinitions,
             SerializerHooks hooks,
             IEnumerable<ISerializerDefinitions> definitions,
-            bool validatePortableClassDefinitions, IPartitioningStrategy partitioningStrategy, 
+            bool validatePortableClassDefinitions, IPartitioningStrategy partitioningStrategy,
             int initialOutputBufferSize,
             ILoggerFactory loggerFactory)
         {
