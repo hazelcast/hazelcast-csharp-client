@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -65,50 +65,50 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddDataSerializableFactoryClassWithDuplicateId()
         {
-            var options = new SerializationOptions();
-            options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            options.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+                options.AddDataSerializableFactoryClass(1, typeof (MyDataSerializableFactory));
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddDataSerializableFactoryClassWithNoEmptyConstructor()
         {
-            var options = new SerializationOptions();
-            options.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+            Assert.Throws<ServiceFactoryException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddDataSerializableFactoryClass(1, typeof (SerializableFactory));
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWitDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddDataSerializableFactoryWitDuplicateId()
         {
-            var options = new SerializationOptions();
-            options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory())
-                .AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
-        });
-		}
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddDataSerializableFactory(1, new MyDataSerializableFactory());
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory())
+                    .AddDataSerializableFactory(1, new MyDataSerializableFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddDataSerializableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddDataSerializableFactoryWithBadId()
         {
-            var options = new SerializationOptions();
-            options.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddDataSerializableFactory(-1, new MyDataSerializableFactory());
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
         public void TestAddPortableFactory()
@@ -141,70 +141,70 @@ namespace Hazelcast.Tests.Serialization
         }
 
         [Test]
-		public void TestAddPortableFactoryWhichDoesNotImplementPortableFactory()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddPortableFactoryWhichDoesNotImplementPortableFactory()
         {
-            var options = new SerializationOptions();
-            options.AddPortableFactory(1, typeof (SerializableFactory));
+            Assert.Throws<ServiceFactoryException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(1, typeof (SerializableFactory));
 
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddPortableFactoryWithBadId()
         {
-            var options = new SerializationOptions();
-            options.AddPortableFactory(-1, typeof (KitchenSinkPortableFactory));
+            Assert.Throws<ArgumentException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(-1, typeof (KitchenSinkPortableFactory));
 
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddPortableFactoryWithDuplicateId()
         {
-            var options = new SerializationOptions();
-            options.AddPortableFactory(1, new KitchenSinkPortableFactory());
-            options.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
+            Assert.Throws<InvalidOperationException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(1, new KitchenSinkPortableFactory());
+                options.AddPortableFactory(1, typeof (KitchenSinkPortableFactory));
 
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddPortableFactoryWithNoEmptyConstructor()
-		{
-			Assert.Throws<ServiceFactoryException>(() =>
+        public void TestAddPortableFactoryWithNoEmptyConstructor()
         {
-            var options = new SerializationOptions();
-            options.AddPortableFactory(1, typeof (PortableFactory));
+            Assert.Throws<ServiceFactoryException>(() =>
+            {
+                var options = new SerializationOptions();
+                options.AddPortableFactory(1, typeof (PortableFactory));
 
-            var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
-        });
-		}
+                var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
+            });
+        }
 
         [Test]
-		public void TestAddPortableFactory2WithBadId()
-		{
-			Assert.Throws<ArgumentException>(() =>
+        public void TestAddPortableFactory2WithBadId()
+        {
+            Assert.Throws<ArgumentException>(() =>
             {
                 var options = new SerializationOptions();
                 options.AddPortableFactory(-1, new KitchenSinkPortableFactory());
 
                 var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
             });
-		}
+        }
 
         [Test]
-		public void TestAddPortableFactory2WithDuplicateId()
-		{
-			Assert.Throws<InvalidOperationException>(() =>
+        public void TestAddPortableFactory2WithDuplicateId()
+        {
+            Assert.Throws<InvalidOperationException>(() =>
             {
                 var options = new SerializationOptions();
                 options.AddPortableFactory(1, new KitchenSinkPortableFactory());
@@ -212,7 +212,7 @@ namespace Hazelcast.Tests.Serialization
                 var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).AddPortableFactory(1,
                     new KitchenSinkPortableFactory()).Build();
             });
-		}
+        }
 
         public void TestHazelcastInstanceAware()
         {

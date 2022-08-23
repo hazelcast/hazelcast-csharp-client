@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -131,13 +131,13 @@ namespace Hazelcast.Configuration
         /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
         /// specified, the environment name is <c>Production</c>.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddHazelcastAndDefaults(this IConfigurationBuilder configurationBuilder, 
+        public static IConfigurationBuilder AddHazelcastAndDefaults(this IConfigurationBuilder configurationBuilder,
             string[] args,
             IDictionary<string, string> switchMappings = null,
             IEnumerable<KeyValuePair<string, string>> defaults = null,
-            IEnumerable<KeyValuePair<string, string>> keyValues = null, 
-            string optionsFilePath = null, 
-            string optionsFileName = null, 
+            IEnumerable<KeyValuePair<string, string>> keyValues = null,
+            string optionsFilePath = null,
+            string optionsFileName = null,
             string environmentName = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));
@@ -190,13 +190,13 @@ namespace Hazelcast.Configuration
         /// the <c>DOTNET_ENVIRONMENT</c> and <c>ASPNETCORE_ENVIRONMENT</c> environment variables. If not
         /// specified, the environment name is <c>Production</c>.</para>
         /// </remarks>
-        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder, 
-            string[] args, 
+        public static IConfigurationBuilder AddHazelcast(this IConfigurationBuilder configurationBuilder,
+            string[] args,
             IDictionary<string, string> switchMappings = null,
             IEnumerable<KeyValuePair<string, string>> defaults = null,
-            IEnumerable < KeyValuePair<string, string>> keyValues = null, 
-            string optionsFilePath = null, 
-            string optionsFileName = null, 
+            IEnumerable < KeyValuePair<string, string>> keyValues = null,
+            string optionsFilePath = null,
+            string optionsFileName = null,
             string environmentName = null)
         {
             if (configurationBuilder == null) throw new ArgumentNullException(nameof(configurationBuilder));

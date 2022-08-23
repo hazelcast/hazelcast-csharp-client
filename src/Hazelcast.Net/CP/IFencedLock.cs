@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 using System;
 using System.Threading.Tasks;
-using Hazelcast.Exceptions;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 
 namespace Hazelcast.CP
 {
@@ -23,9 +23,9 @@ namespace Hazelcast.CP
     /// Represents a linearizable, distributed, reentrant implementation of the Java Lock.
     /// </summary>
     /// <remarks>
-    /// <para>The <see cref="IFencedLock"/> is CP with respect to the CAP principle. 
-    /// It works on top of the Raft consensus algorithm. It offers linearizability during crash-stop 
-    /// failures and network partitions. If a network partition occurs, it remains  available on at 
+    /// <para>The <see cref="IFencedLock"/> is CP with respect to the CAP principle.
+    /// It works on top of the Raft consensus algorithm. It offers linearizability during crash-stop
+    /// failures and network partitions. If a network partition occurs, it remains  available on at
     /// most one side of the partition.</para>
     /// <para>A <see cref="IFencedLock"/> works within the context of a <see cref="LockContext"/>.</para>
     /// </remarks>
@@ -50,7 +50,7 @@ namespace Hazelcast.CP
 
         /// <summary>
         /// Acquires the lock and returns the fencing token assigned to the specified <paramref name="lockContext"/>
-        /// context for this lock acquisition. 
+        /// context for this lock acquisition.
         /// </summary>
         /// <returns>The fencing token if the lock was acquired; otherwise <see cref="InvalidFence"/>.</returns>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
@@ -58,15 +58,15 @@ namespace Hazelcast.CP
         /// <para>If the lock is acquired in a reentrant way, the same fencing token is returned, or the
         /// <see cref="LockAsync"/> call can throw <see cref="LockAcquireLimitReachedException"/> if the
         /// lock acquisition limit is already reached.</para>
-        /// <para>Fencing tokens are monotonic numbers that are incremented each time the lock switches 
-        /// from the free state to the acquired state. They are simply used for ordering lock holders. 
-        /// A lock holder can pass its fencing to the shared resource to fence off previous lock holders. 
+        /// <para>Fencing tokens are monotonic numbers that are incremented each time the lock switches
+        /// from the free state to the acquired state. They are simply used for ordering lock holders.
+        /// A lock holder can pass its fencing to the shared resource to fence off previous lock holders.
         /// When this resource receives an operation, it can validate the fencing token in the operation.</para>
         /// </remarks>
         Task<long> LockAndGetFenceAsync(LockContext lockContext);
 
         /// <summary>
-        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context. 
+        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context.
         /// </summary>
         /// <param name="timeout">The maximum time to wait for the lock.</param>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
@@ -81,7 +81,7 @@ namespace Hazelcast.CP
         Task<bool> TryLockAsync(LockContext lockContext, TimeSpan timeout);
 
         /// <summary>
-        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context. 
+        /// Tries to acquire the lock for the specified <paramref name="lockContext"/> context.
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         /// <returns><c>true</c> if the lock was acquired; otherwise <c>false</c>.</returns>
@@ -95,7 +95,7 @@ namespace Hazelcast.CP
 
         /// <summary>
         /// Tries to acquire the lock and return the fencing token assigned to the specified <paramref name="lockContext"/>
-        /// context for this lock acquisition. 
+        /// context for this lock acquisition.
         /// </summary>
         /// <param name="timeout">The maximum time to wait for the lock.</param>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
@@ -110,7 +110,7 @@ namespace Hazelcast.CP
 
         /// <summary>
         /// Tries to acquire the lock and return the fencing token assigned to the specified <paramref name="lockContext"/>
-        /// context for this lock acquisition. 
+        /// context for this lock acquisition.
         /// </summary>
         /// <param name="lockContext">The <see cref="LockContext"/>.</param>
         /// <returns>The fencing token if the lock was acquired; otherwise <see cref="InvalidFence"/>.</returns>
