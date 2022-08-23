@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ namespace Hazelcast.CP
         private int _destroyed;
         public const long InvalidFence = 0;
 
-        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession) 
+        public FencedLock(string fullName, string objectName, CPGroupId groupId, Cluster cluster, CPSessionManager subsystemSession)
             : base(ServiceNames.FencedLock, objectName, groupId, cluster)
         {
             _fullName = fullName; // TODO: this should be a base class property
@@ -180,7 +180,7 @@ namespace Hazelcast.CP
         // we cannot put an exclusive lock around cluster-side operations - thus, we have to
         // leave with race conditions and try our best to mitigate them.
 
-        /// <inheritdoc/>  
+        /// <inheritdoc/>
         public async Task<long> GetFenceAsync(LockContext lockContext)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
@@ -217,7 +217,7 @@ namespace Hazelcast.CP
             throw new SynchronizationLockException($"Context {contextId} does not own lock {_fullName}.");
         }
 
-        /// <inheritdoc/>  
+        /// <inheritdoc/>
         public async Task<int> GetLockCountAsync(LockContext lockContext)
         {
             // the original Java code does some sanity-checking on this operation but
@@ -247,7 +247,7 @@ namespace Hazelcast.CP
             */
         }
 
-        /// <inheritdoc/>  
+        /// <inheritdoc/>
         public async Task<bool> IsLockedAsync(LockContext lockContext)
         {
             // the original Java code does some sanity-checking on this operation but
@@ -278,7 +278,7 @@ namespace Hazelcast.CP
             */
         }
 
-        /// <inheritdoc/>        
+        /// <inheritdoc/>
         public async Task<bool> IsLockedByContextAsync(LockContext lockContext)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
@@ -344,7 +344,7 @@ namespace Hazelcast.CP
             return lockedByCurrent;
         }
 
-        /// <inheritdoc/>        
+        /// <inheritdoc/>
         public async Task<long> LockAndGetFenceAsync(LockContext lockContext)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
@@ -391,19 +391,19 @@ namespace Hazelcast.CP
             }
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public Task LockAsync(LockContext lockContext)
         {
             return LockAndGetFenceAsync(lockContext);
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public Task<long> TryLockAndGetFenceAsync(LockContext lockContext)
         {
             return TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0));
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public async Task<long> TryLockAndGetFenceAsync(LockContext lockContext, TimeSpan timeout)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));
@@ -457,21 +457,21 @@ namespace Hazelcast.CP
             }
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public async Task<bool> TryLockAsync(LockContext lockContext, TimeSpan timeout)
         {
             var fence = await TryLockAndGetFenceAsync(lockContext, timeout).CfAwait();
             return fence != InvalidFence;
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public async Task<bool> TryLockAsync(LockContext lockContext)
         {
             var fence = await TryLockAndGetFenceAsync(lockContext, TimeSpan.FromMilliseconds(0)).CfAwait();
             return fence != InvalidFence;
         }
 
-        /// <inheritdoc/> 
+        /// <inheritdoc/>
         public async Task UnlockAsync(LockContext lockContext)
         {
             if (lockContext == null) throw new ArgumentNullException(nameof(lockContext));

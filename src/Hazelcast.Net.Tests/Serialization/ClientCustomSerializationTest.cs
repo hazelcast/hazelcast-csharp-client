@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Serialization
             };
 
             config.Serializers.Add(sc);
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var ss = new SerializationServiceBuilder(config, new NullLoggerFactory()).Build();
 
             var foo = new CustomSerializableType {Value = "fooooo"};
 
@@ -51,13 +51,15 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public void TestGlobalSerializer()
         {
-            var config = new SerializationOptions();
-            config.GlobalSerializer = new GlobalSerializerOptions
+            var options = new SerializationOptions
             {
-                Creator = () => (ISerializer) ServiceFactory.CreateInstance(typeof (GlobalSerializer).AssemblyQualifiedName)
+                GlobalSerializer = new GlobalSerializerOptions
+                {
+                    Creator = () => ServiceFactory.CreateInstance<ISerializer, GlobalSerializer>()
+                }
             };
 
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var ss = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
 
             var foo = new CustomSerializableType {Value = "fooooo"};
 
@@ -78,7 +80,7 @@ namespace Hazelcast.Tests.Serialization
                 OverrideClrSerialization = true
             };
 
-            var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config).Build();
+            var ss = new SerializationServiceBuilder(config, new NullLoggerFactory()).Build();
 
             var list = new List<string> {"foo", "bar"};
 

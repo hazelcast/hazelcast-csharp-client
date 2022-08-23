@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ namespace Hazelcast.Core
         // of timeout and/or cancellation token. Prior to .NET 5, none of these options are built-in.
         // Starting with .NET 5, cancellation token support token is built-in, but not timeout support.
         //
-        // Support for timeout + cancellation token 
+        // Support for timeout + cancellation token
 
         // our own extension, not provided by any framework
         public static Task ConnectAsync(this Socket socket, EndPoint endPoint, int timeoutMilliseconds)

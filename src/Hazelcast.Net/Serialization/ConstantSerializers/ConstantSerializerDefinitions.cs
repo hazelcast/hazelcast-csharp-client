@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,28 +21,28 @@ namespace Hazelcast.Serialization.ConstantSerializers
     {
         public void AddSerializers(SerializationService service)
         {
-            service.AddConstantSerializer<byte>(new ByteSerializer());
-            service.AddConstantSerializer<bool>(new BooleanSerializer());
-            service.AddConstantSerializer<char>(new CharSerializer());
-            service.AddConstantSerializer<short>(new ShortSerializer());
-            service.AddConstantSerializer<int>(new IntegerSerializer());
-            service.AddConstantSerializer<long>(new LongSerializer());
-            service.AddConstantSerializer<float>(new FloatSerializer());
-            service.AddConstantSerializer<double>(new DoubleSerializer());
-            service.AddConstantSerializer<string>(new StringSerializer());
+            service.RegisterConstantSerializer<byte>(new ByteSerializer());
+            service.RegisterConstantSerializer<bool>(new BooleanSerializer());
+            service.RegisterConstantSerializer<char>(new CharSerializer());
+            service.RegisterConstantSerializer<short>(new ShortSerializer());
+            service.RegisterConstantSerializer<int>(new IntegerSerializer());
+            service.RegisterConstantSerializer<long>(new LongSerializer());
+            service.RegisterConstantSerializer<float>(new FloatSerializer());
+            service.RegisterConstantSerializer<double>(new DoubleSerializer());
+            service.RegisterConstantSerializer<string>(new StringSerializer());
 
-            service.AddConstantSerializer<byte[]>(new ByteArraySerializer());
-            service.AddConstantSerializer<bool[]>(new BooleanArraySerializer());
-            service.AddConstantSerializer<char[]>(new CharArraySerializer());
-            service.AddConstantSerializer<short[]>(new ShortArraySerializer());
-            service.AddConstantSerializer<int[]>(new IntegerArraySerializer());
-            service.AddConstantSerializer<long[]>(new LongArraySerializer());
-            service.AddConstantSerializer<float[]>(new FloatArraySerializer());
-            service.AddConstantSerializer<double[]>(new DoubleArraySerializer());
-            service.AddConstantSerializer<string[]>(new StringArraySerializer());
+            service.RegisterConstantSerializer<byte[]>(new ByteArraySerializer());
+            service.RegisterConstantSerializer<bool[]>(new BooleanArraySerializer());
+            service.RegisterConstantSerializer<char[]>(new CharArraySerializer());
+            service.RegisterConstantSerializer<short[]>(new ShortArraySerializer());
+            service.RegisterConstantSerializer<int[]>(new IntegerArraySerializer());
+            service.RegisterConstantSerializer<long[]>(new LongArraySerializer());
+            service.RegisterConstantSerializer<float[]>(new FloatArraySerializer());
+            service.RegisterConstantSerializer<double[]>(new DoubleArraySerializer());
+            service.RegisterConstantSerializer<string[]>(new StringArraySerializer());
 
-            service.AddConstantSerializer<Guid>(new GuidSerializer());
-            service.AddConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
+            service.RegisterConstantSerializer<Guid>(new GuidSerializer());
+            service.RegisterConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
         }
     }
 }

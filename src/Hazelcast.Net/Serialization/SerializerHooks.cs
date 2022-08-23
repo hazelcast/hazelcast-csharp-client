@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ using Hazelcast.Core;
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// Represents a collection of <see cref="ISerializerHook{T}"/> types.
+    /// Represents a collection of <see cref="IDataSerializerHook"/> types.
     /// </summary>
     internal sealed class SerializerHooks
     {
@@ -46,6 +46,6 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Gets the hooks.
         /// </summary>
-        public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => ServiceFactory.CreateInstance<IDataSerializerHook>(x, null));
+        public IEnumerable<IDataSerializerHook> Hooks => _types.Select(x => ServiceFactory.CreateInstance<IDataSerializerHook>(x));
     }
 }

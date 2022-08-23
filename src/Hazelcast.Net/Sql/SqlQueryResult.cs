@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -144,7 +144,7 @@ namespace Hazelcast.Sql
 
                     var row = new SqlRow(columns, _result._metadata)
                     {
-                        // use lazy deserialization by assigning the service 
+                        // use lazy deserialization by assigning the service
                         SerializationService = _result._serializationService
                     };
                     _result._currentRow = row;

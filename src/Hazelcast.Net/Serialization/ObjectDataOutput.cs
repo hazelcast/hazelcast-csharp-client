@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -57,6 +57,13 @@ namespace Hazelcast.Serialization
             _position += BytesExtensions.SizeOfInt;
         }
 
+        public void WriteBits(byte bits, byte mask)
+        {
+            EnsureAvailable(BytesExtensions.SizeOfByte);
+            _buffer.WriteBits(_position, bits, mask);
+            _position += BytesExtensions.SizeOfByte;
+        }
+
         public void WriteZeroBytes(int count)
         {
             EnsureAvailable(count);
@@ -80,6 +87,13 @@ namespace Hazelcast.Serialization
         {
             Position = 0;
             _buffer = null;
+        }
+
+        public void MoveTo(int position, int count = 0)
+        {
+            Position = 0;
+            EnsureAvailable(position + count);
+            Position = position;
         }
 
         internal void EnsureAvailable(int count)

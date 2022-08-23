@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,19 +33,19 @@ namespace Hazelcast.Core
     public static class ServiceFactory
     {
         /// <summary>
-        /// Creates a new instance of type <typeparamref name="T"/>.
+        /// Creates a new instance of type <typeparamref name="TService"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the instance.</typeparam>
+        /// <typeparam name="TService">The type of the instance.</typeparam>
         /// <param name="stringArgs">Optional string named arguments for the constructor (can be null).</param>
         /// <param name="paramArgs">Parameter arguments for the constructor.</param>
-        /// <returns>A new instance of type <typeparamref name="T"/>.</returns>
+        /// <returns>A new instance of type <typeparamref name="TService"/>.</returns>
         /// <remarks>
         /// <para>This method relies on the Activator.CreateInstance or constructor
         /// invocation to create the new instance and is not optimized for performance.
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(IDictionary<string, string> stringArgs = null, params object[] paramArgs)
+        public static TService CreateInstance<TService>(IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
 #pragma warning disable CA1508 // Avoid dead conditional code
             // false-positive, https://github.com/dotnet/roslyn-analyzers/issues/3845
@@ -54,29 +54,49 @@ namespace Hazelcast.Core
 
             try
             {
-                return As<T>(CreateInstanceInternal(typeof(T), stringArgs, paramArgs));
+                return As<TService>(CreateInstanceInternal(typeof(TService), stringArgs, paramArgs));
             }
             catch (Exception e)
             {
-                throw new ServiceFactoryException($"Failed to create an instance of type {typeof(T)}.", e);
+                throw new ServiceFactoryException($"Failed to create an instance of type {typeof(TService)}.", e);
             }
         }
 
         /// <summary>
-        /// Creates a new instance of type <paramref name="type"/> as <typeparamref name="T"/>.
+        /// Creates a new instance of type <typeparamref name="TActual"/> as <typeparamref name="TService"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the returned instance.</typeparam>
-        /// <param name="type">The type of the created instance.</param>
+        /// <typeparam name="TService">The type of the returned instance.</typeparam>
+        /// <typeparam name="TActual">The type of the created instance.</typeparam>
         /// <param name="stringArgs">Optional string named arguments for the constructor (can be null).</param>
         /// <param name="paramArgs">Parameter arguments for the constructor.</param>
-        /// <returns>A new instance of type <paramref name="type"/> as <typeparamref name="T"/>.</returns>
+        /// <returns>A new instance of type <typeparamref name="TActual"/> as <typeparamref name="TService"/>.</returns>
         /// <remarks>
         /// <para>This method relies on the Activator.CreateInstance or constructor
         /// invocation to create the new instance and is not optimized for performance.
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
+        public static TService CreateInstance<TService, TActual>(IDictionary<string, string> stringArgs = null, params object[] paramArgs)
+            where TActual : TService
+        {
+            return CreateInstance<TService>(typeof (TActual), stringArgs, paramArgs);
+        }
+
+        /// <summary>
+        /// Creates a new instance of type <paramref name="type"/> as <typeparamref name="TService"/>.
+        /// </summary>
+        /// <typeparam name="TService">The type of the returned instance.</typeparam>
+        /// <param name="type">The type of the created instance.</param>
+        /// <param name="stringArgs">Optional string named arguments for the constructor (can be null).</param>
+        /// <param name="paramArgs">Parameter arguments for the constructor.</param>
+        /// <returns>A new instance of type <paramref name="type"/> as <typeparamref name="TService"/>.</returns>
+        /// <remarks>
+        /// <para>This method relies on the Activator.CreateInstance or constructor
+        /// invocation to create the new instance and is not optimized for performance.
+        /// It is fine to use it for e.g. creating singletons when the application starts,
+        /// but it should not be used for intensive creation of objects.</para>
+        /// </remarks>
+        public static TService CreateInstance<TService>(Type type, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 #pragma warning disable CA1508 // Avoid dead conditional code
@@ -86,29 +106,29 @@ namespace Hazelcast.Core
 
             try
             {
-                return As<T>(CreateInstanceInternal(type, stringArgs, paramArgs));
+                return As<TService>(CreateInstanceInternal(type, stringArgs, paramArgs));
             }
             catch (Exception e)
             {
-                throw new ServiceFactoryException($"Failed to create an instance of type {type} as {typeof(T)}.", e);
+                throw new ServiceFactoryException($"Failed to create an instance of type {type} as {typeof(TService)}.", e);
             }
         }
 
         /// <summary>
-        /// Creates a new instance of type <paramref name="typeName"/> as <typeparamref name="T"/>.
+        /// Creates a new instance of type <paramref name="typeName"/> as <typeparamref name="TService"/>.
         /// </summary>
-        /// <typeparam name="T">The type of the returned instance.</typeparam>
+        /// <typeparam name="TService">The type of the returned instance.</typeparam>
         /// <param name="typeName">The name of the type of the created instance.</param>
         /// <param name="stringArgs">Optional string named arguments for the constructor (can be null).</param>
         /// <param name="paramArgs">Parameter arguments for the constructor.</param>
-        /// <returns>A new instance of type <paramref name="typeName"/> as <typeparamref name="T"/>.</returns>
+        /// <returns>A new instance of type <paramref name="typeName"/> as <typeparamref name="TService"/>.</returns>
         /// <remarks>
         /// <para>This method relies on the Activator.CreateInstance or constructor
         /// invocation to create the new instance and is not optimized for performance.
         /// It is fine to use it for e.g. creating singletons when the application starts,
         /// but it should not be used for intensive creation of objects.</para>
         /// </remarks>
-        public static T CreateInstance<T>(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
+        public static TService CreateInstance<TService>(string typeName, IDictionary<string, string> stringArgs = null, params object[] paramArgs)
         {
             if (string.IsNullOrWhiteSpace(typeName)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(typeName));
 #pragma warning disable CA1508 // Avoid dead conditional code
@@ -118,11 +138,11 @@ namespace Hazelcast.Core
 
             try
             {
-                return As<T>(CreateInstanceInternal(typeName, stringArgs, paramArgs));
+                return As<TService>(CreateInstanceInternal(typeName, stringArgs, paramArgs));
             }
             catch (Exception e)
             {
-                throw new ServiceFactoryException($"Failed to create an instance of type {typeName} as {typeof(T)}.", e);
+                throw new ServiceFactoryException($"Failed to create an instance of type {typeName} as {typeof(TService)}.", e);
             }
         }
 

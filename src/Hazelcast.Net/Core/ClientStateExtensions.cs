@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ namespace Hazelcast.Core
         /// <returns><c>true</c> is this state is an active state; otherwise <c>false</c>.</returns>
         public static bool IsActiveState(this ClientState state) => state == ClientState.Starting ||
                                                                     state == ClientState.Started ||
-                                                                    state == ClientState.Connected ||                                                                    
+                                                                    state == ClientState.Connected ||
                                                                     state == ClientState.ClusterChanged ||
                                                                     state == ClientState.Disconnected;
     }
