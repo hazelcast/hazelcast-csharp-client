@@ -14,8 +14,10 @@
 
 using System;
 using System.Diagnostics;
+#if !NET6_0_OR_GREATER
 using System.Linq.Expressions;
 using System.Reflection;
+#endif
 using System.Runtime.ExceptionServices;
 
 namespace Hazelcast.Core
@@ -55,7 +57,7 @@ namespace Hazelcast.Core
 #endif
             return exception;
         }
-        #if !NET6_0_OR_GREATER
+#if !NET6_0_OR_GREATER
         // compiles a dynamic method that sets the Exception._stackTraceString internal field via reflection
         private static readonly Action<Exception, string> SetStackTraceField = new Func<Action<Exception, string>>(() =>
         {
@@ -65,7 +67,7 @@ namespace Hazelcast.Core
             var assign = Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
             return Expression.Lambda<Action<Exception, string>>(assign, target, stackTraceString).Compile();
         })();
-        #endif
+#endif
         /// <summary>
         /// Captures an exception.
         /// </summary>

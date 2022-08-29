@@ -111,7 +111,7 @@ namespace Hazelcast.Networking
             {
                 _logger.LogWarning(e, "Hazelcast cloud discovery failed.");
             }
-            return new Dictionary<NetworkAddress, NetworkAddress>();
+            return null;
         }
 
         [ExcludeFromCodeCoverage] // not testing the web connection

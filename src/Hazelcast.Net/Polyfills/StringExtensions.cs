@@ -36,6 +36,9 @@ namespace System
         public static bool Contains(this string s, char value)
             => s.Contains(value.ToString());
 
+        public static bool Contains(this string s, char c, StringComparison comparisonType)
+            => s.Contains(c.ToString(), comparisonType);
+
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
 #endif
