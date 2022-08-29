@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,8 +29,7 @@ namespace Hazelcast.Tests.Serialization
         private static readonly Endianness[] Endiannesses =
         {
             Endianness.BigEndian,
-            Endianness.LittleEndian,
-            //Endianness.NativeOrder()
+            Endianness.LittleEndian
         };
 
         internal static SerializationService CreateSerializationService(int version)
@@ -239,8 +238,7 @@ namespace Hazelcast.Tests.Serialization
                             SerializationTestsConstants.NAMED_PORTABLE, portableVersion)
                         .AddStringField("name").AddIntField("myint").Build());
 
-            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
-                .SetConfig(serializationConfig)
+            var serializationService = new SerializationServiceBuilder(serializationConfig, new NullLoggerFactory())
                 .AddDataSerializableFactory(SerializationTestsConstants.DATA_SERIALIZABLE_FACTORY_ID,
                     GetDataSerializableFactory())
                 .Build();
@@ -269,19 +267,19 @@ namespace Hazelcast.Tests.Serialization
 
             try
             {
-                new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(serializationConfig).Build();
+                new SerializationServiceBuilder(serializationConfig, new NullLoggerFactory()).Build();
                 Assert.Fail("Should throw SerializationException!");
             }
             catch (SerializationException)
             {
             }
 
-            new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(serializationConfig).SetCheckClassDefErrors(false).Build();
+            new SerializationServiceBuilder(serializationConfig, new NullLoggerFactory()).SetValidatePortableClassDefinitions(false).Build();
 
             // -- OR --
 
             serializationConfig.ValidateClassDefinitions = false;
-            new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(serializationConfig).Build();
+            new SerializationServiceBuilder(serializationConfig, new NullLoggerFactory()).Build();
         }
 
         [Test]
@@ -384,9 +382,9 @@ namespace Hazelcast.Tests.Serialization
             };
             config.Serializers.Add(sc);
             var serializationService =
-                new SerializationServiceBuilder(new NullLoggerFactory()).SetPortableVersion(1)
+                new SerializationServiceBuilder(config, new NullLoggerFactory()).SetPortableVersion(1)
                     .AddPortableFactory(SerializationTestsConstants.PORTABLE_FACTORY_ID, new TestPortableFactory())
-                    .SetConfig(config).Build();
+                    .Build();
 
             var foo = new CustomSerializableType {Value = "foo"};
 

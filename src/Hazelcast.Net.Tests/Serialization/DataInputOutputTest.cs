@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
 using System;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.ConstantSerializers;
+using Hazelcast.Serialization.DefaultSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -38,8 +40,6 @@ namespace Hazelcast.Tests.Serialization
             new object[]{Endianness.LittleEndian, 3 },
             new object[]{Endianness.LittleEndian, 4 },
             new object[]{Endianness.LittleEndian, 10 }
-            
-            //Endianness.NativeOrder()
         };
 
         [TestCaseSource(nameof(DataCases))]
@@ -50,7 +50,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof(KitchenSinkPortableFactory));
 
-            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(config, new NullLoggerFactory())
                 .SetEndianness(endianness).Build();
 
             IObjectDataOutput output = ss.CreateObjectDataOutput(1024);
@@ -71,7 +71,7 @@ namespace Hazelcast.Tests.Serialization
             var config = new SerializationOptions();
             config.AddPortableFactory(KitchenSinkPortableFactory.FactoryId, typeof(KitchenSinkPortableFactory));
 
-            using var ss = new SerializationServiceBuilder(new NullLoggerFactory()).SetConfig(config)
+            using var ss = new SerializationServiceBuilder(config, new NullLoggerFactory())
                 .SetEndianness(endianness).Build();
 
             var data = ss.ToData(portable);
@@ -90,6 +90,8 @@ namespace Hazelcast.Tests.Serialization
             obj.Serializable = KitchenSinkDataSerializable.Generate(arraySize);
 
             using var ss = new SerializationServiceBuilder(new NullLoggerFactory())
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
                 .AddDataSerializableFactory(1, new ArrayDataSerializableFactory(new Func<IIdentifiedDataSerializable>[]
                 {
                     () => new KitchenSinkDataSerializable(),
@@ -111,7 +113,7 @@ namespace Hazelcast.Tests.Serialization
                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, null);
+            ss.WriteObject(output, null, true);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             Assert.IsNull(ss.ReadObject<object>(input));
@@ -126,7 +128,7 @@ namespace Hazelcast.Tests.Serialization
                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, null);
+            ss.WriteObject(output, null, true);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             ss.ReadObject<int>(input);
@@ -137,11 +139,13 @@ namespace Hazelcast.Tests.Serialization
         public void TestNullValue_When_NullableType()
         {
             var ss = new SerializationServiceBuilder(new NullLoggerFactory())
-               .Build();
+                .AddDefinitions(new ConstantSerializerDefinitions()) // use constant serializers not CLR serialization
+                .AddDefinitions(new DefaultSerializerDefinitions()) // same
+                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, 1);
-            ss.WriteObject(output, null);
+            ss.WriteObject(output, 1, true);
+            ss.WriteObject(output, null, true);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             Assert.AreEqual(1, ss.ReadObject<int?>(input));

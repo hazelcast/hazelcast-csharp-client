@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -291,7 +291,7 @@ namespace Hazelcast.Tests.Serialization
 
         public virtual void TestReadForBOffLen_null_array()
         {
-            _input.Read(null, 0, 1);
+            _input.Read((byte[])null, 0, 1);
         }
 
         [Test]

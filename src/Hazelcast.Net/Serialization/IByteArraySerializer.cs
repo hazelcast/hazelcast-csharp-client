@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,24 +15,23 @@
 namespace Hazelcast.Serialization
 {
     /// <summary>
-    /// For sample usage custom serialization and other way of custom serialization
-    /// see
-    /// <see cref="IStreamSerializer{T}">IStreamSerializer&lt;T&gt;</see>
-    /// .
-    /// Note that read and write methods should be compatible
+    /// Defines a generic custom serializer that operates over byte arrays.
     /// </summary>
+    /// <typeparam name="T">The type of the serialized object.</typeparam>
     public interface IByteArraySerializer<T> : ISerializer
     {
-        /// <summary>Converts given byte array to object</summary>
-        /// <param name="buffer">that object will be read from</param>
-        /// <returns>deserialized object</returns>
-        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        /// <summary>
+        /// Reads an object.
+        /// </summary>
+        /// <param name="buffer">Input data.</param>
+        /// <returns>The object.</returns>
         T Read(byte[] buffer);
 
-        /// <summary>Converts given object to byte array</summary>
-        /// <param name="obj">that will be serialized</param>
-        /// <returns>byte array that object is serialized into</returns>
-        /// <exception cref="System.IO.IOException">System.IO.IOException</exception>
+        /// <summary>
+        /// Writes an object.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <returns>The serialized object.</returns>
         byte[] Write(T obj);
     }
 }

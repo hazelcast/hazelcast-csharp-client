@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -100,8 +100,8 @@ namespace Hazelcast.Tests.Serialization.Objects
         }
              
         /// <summary>
-        /// Generates a portable object with data. Also used to size strings in the string arrays.        
-        /// n(where 0<n<=len(randomstring)) length of string array will be like["x", "xx", "xxx", ....., "xxx..xxx"].         
+        /// Generates a portable object with data. Also used to size strings in the string arrays.
+        /// n(where 0<n<=len(randomstring)) length of string array will be like["x", "xx", "xxx", ....., "xxx..xxx"].
         /// It will allow to test deseriazliser with various size of strings.
         /// </summary>
         /// <param name="arraySize">arraySize">Size of for array type fields</param>

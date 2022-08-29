@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,20 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
-
 namespace Hazelcast.Serialization
 {
-    internal interface ISerializerAdapter : IDisposable
+    /// <summary>
+    /// Wraps an <see cref="ISerializer"/> and exposes it as a non-generic <see cref="IStreamSerializer"/>.
+    /// </summary>
+    internal interface ISerializerAdapter : IStreamSerializer
     {
+        /// <summary>
+        /// Gets the wrapped serializer.
+        /// </summary>
         ISerializer Serializer { get; }
-
-        int TypeId { get; }
-
-        /// <exception cref="System.IO.IOException"></exception>
-        object Read(IObjectDataInput @in);
-
-        /// <exception cref="System.IO.IOException"></exception>
-        void Write(IObjectDataOutput output, object obj);
     }
 }

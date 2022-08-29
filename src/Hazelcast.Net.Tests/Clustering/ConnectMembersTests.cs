@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -230,7 +229,7 @@ namespace Hazelcast.Tests.Clustering
 
             // each member retried twice = twice the 1s delay = 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
-            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2))); 
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
             Console.WriteLine($"Elapsed: {elapsed}");
 
             Assert.That(queue.RequestsCount, Is.EqualTo(0));

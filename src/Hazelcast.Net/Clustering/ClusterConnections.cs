@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast.Clustering
 {
@@ -534,7 +534,7 @@ namespace Hazelcast.Clustering
         /// <para>Tries all the candidate addresses until one works; tries again
         /// according to the configured retry strategy, and if nothing works,
         /// end up throwing an exception.</para>
-        /// </remarks>        
+        /// </remarks>
         private async Task ConnectFirstAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();

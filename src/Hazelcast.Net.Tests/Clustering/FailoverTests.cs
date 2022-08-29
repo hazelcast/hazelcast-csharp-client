@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,20 +13,20 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using NUnit.Framework;
-using Hazelcast.Exceptions;
-using Hazelcast.Configuration;
-using System.Linq;
 
 namespace Hazelcast.Tests.Clustering
 {
@@ -205,7 +205,7 @@ namespace Hazelcast.Tests.Clustering
                          {
                              o.ClusterName = RcClusterAlternative.Id;
                              o.Networking.Addresses.Add("127.0.0.1:5703");
-                             o.Networking.SmartRouting = smartRouting;// that doesn't override primary                                                  
+                             o.Networking.SmartRouting = smartRouting;// that doesn't override primary
                          })
                          .Build());
                  })
@@ -258,10 +258,10 @@ namespace Hazelcast.Tests.Clustering
                 0 Starting
                 1 Started
                 2 Connected
-                3 Disconnected                      
+                3 Disconnected
                 4 Switched
                 5 Connected
-                6 Disconnected      
+                6 Disconnected
                 7 Switched
                 8 Connected
              */
@@ -318,7 +318,7 @@ namespace Hazelcast.Tests.Clustering
                         {
                             o.ClusterName = RcClusterAlternative.Id;
                             o.Networking.Addresses.Add("127.0.0.1:5703");
-                            o.Networking.SmartRouting = smartRouting;// that doesn't override primary                                                
+                            o.Networking.SmartRouting = smartRouting;// that doesn't override primary
                         })
                         .Build());
                 })
@@ -371,10 +371,10 @@ namespace Hazelcast.Tests.Clustering
                 0 Starting
                 1 Started
                 2 Connected
-                3 Disconnected                      
+                3 Disconnected
                 4 Switched
                 5 Connected
-                6 Disconnected      
+                6 Disconnected
                 7 Switched
                 8 Connected
              */
@@ -512,7 +512,7 @@ namespace Hazelcast.Tests.Clustering
             HConsole.WriteLine(this, $"SHUTDOWN: Members of Cluster A :{RcClusterPrimary.Id}");
             await KillMembersAsync(RcClusterPrimary, membersA);
 
-            //Failover to B and fail due to different partition count            
+            //Failover to B and fail due to different partition count
 
             HConsole.WriteLine(this, $"START: Members of Cluster A :{RcClusterPrimary.Id}");
             membersA = await StartMembersAsync(RcClusterPrimary, 1);
@@ -589,7 +589,7 @@ namespace Hazelcast.Tests.Clustering
             }, 500, 10_000);
 
             //Now, we know that cluster B is live but not connected
-            //since client will retry the cluster A before do failover.             
+            //since client will retry the cluster A before do failover.
 
             Assert.AreEqual(RcClusterPrimary.Id, client.ClusterName);
             Assert.True(client.Members.Any(x=>
