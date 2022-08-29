@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -126,7 +126,8 @@ namespace Hazelcast.Tests.Serialization
         [Test]
         public virtual void TestWriteForNullByteArray()
         {
-            Assert.Throws<ArgumentNullException>(() => { _output.Write(null, 0, 1); });
+            Assert.Throws<ArgumentNullException>(() => { _output.Write((byte[]) null, 0, 1); });
+            Assert.Throws<ArgumentNullException>(() => { _output.Write((sbyte[])null, 0, 1); });
         }
 
         [Test]

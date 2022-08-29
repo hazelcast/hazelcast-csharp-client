@@ -1,4 +1,4 @@
-﻿// Copyright(c) 2008 - 2021, Hazelcast, Inc.All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,19 +13,17 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Runtime.Serialization;
-using System.Text;
 
 namespace Hazelcast.Exceptions
 {
     /// <summary>
-    /// Represents the exception that is thrown when 
+    /// Represents the exception that is thrown when
     /// <list type="">
     /// <item>Cluster partition counts are different between alternative clusters</item>
     /// <item>Cluster blacklisted the client</item>
     /// </list>
-    /// </summary>  
+    /// </summary>
     [Serializable]
     public class ClientNotAllowedInClusterException : HazelcastException
     {

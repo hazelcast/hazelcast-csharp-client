@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,19 +24,17 @@ using Hazelcast.Core;
 using Hazelcast.Metrics;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
-using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Configuration;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Testing.Remote;
 using Ionic.Zlib;
-using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud
 {
     [TestFixture]
     [Explicit("Has special requirements, see comments in code.")]
-    public class CloudTests
+    public class CloudTests : SingleMemberClientRemoteTestBase
     {
         // REQUIREMENTS
         //
@@ -438,7 +436,7 @@ namespace Hazelcast.Tests.Cloud
         [TestCase(2)]
         [TestCase(3)]
         [Timeout(30_000)]
-        public void MetricsDecompressorTests(int blobNo)
+        public async Task MetricsDecompressorTests(int blobNo)
         {
             var blobs = new[]
             {
@@ -467,105 +465,69 @@ namespace Hazelcast.Tests.Cloud
             var metrics = MetricsDecompressor.GetMetrics(bytes, true);
             foreach (var metric in metrics) Console.WriteLine(metric);
 
-            // consume in Java
-            var rc = JavaConsume(bytes);
-            Assert.That(rc, Is.Zero, "Java failed.");
+            // consume in Java - will throw if exit code is not zero
+            await JavaConsume(bytes);
         }
 
-        private int JavaConsume(byte[] bytes)
+        private async Task JavaConsume(byte[] bytes)
         {
-            // determine solution path
-            var assemblyLocation = GetType().Assembly.Location;
-            var solutionPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(assemblyLocation), "../../../../.."));
+            const string scriptTemplate = @"
+// import types
+var ArrayOfBytes = Java.type(""byte[]"")
+var MetricsCompressor = Java.type(""com.hazelcast.internal.metrics.impl.MetricsCompressor"")
+var MetricConsumer = Java.type(""com.hazelcast.internal.metrics.MetricConsumer"")
+var StringBuilder = Java.type(""java.lang.StringBuilder"")
 
-            // name a temp directory
-            var tempPath = Path.Combine(Path.GetTempPath(), $"hz-tests-{Guid.NewGuid():N}");
+// prepare bytes
+var bytes = new ArrayOfBytes($$COUNT$$)
+$$BYTES$$
 
-            var serverVersion = "5.0";  // TODO: need a better way of passing the server's version
+// consumer will append to the string builder
+var text = new StringBuilder()
+var TestConsumer = Java.extend(MetricConsumer, {
+    consumeLong: function(descriptor, value) {
+        text.append(""prefix   = "")
+        text.append(descriptor.prefix())
+        text.append(""\n"")
+        text.append(""disc.key = "")
+        text.append(descriptor.discriminator())
+        text.append(""\n"")
+        text.append(""disc.val = "")
+        text.append(descriptor.discriminatorValue())
+        text.append(""\n"")
+        text.append(""string   = "")
+        text.append(descriptor.metricString())
+        text.append(""\n"")
 
-            try
-            {
-                return JavaConsume(bytes, solutionPath, tempPath, serverVersion);
-            }
-            finally
-            {
-                // get rid of the temp directory
-                Directory.Delete(tempPath, true);
-            }
-        }
+        text.append(descriptor.metric())
+        text.append("" = "")
+        text.append(value)
+        text.append(""\n"")
+    },
+    consumeDouble: function(descriptor, value) {
+        text.append(descriptor.metric())
+        text.append("" = "")
+        text.append(value)
+        text.append(""\n"")
+    }
+})
+var consumer = new TestConsumer()
+MetricsCompressor.extractMetrics(bytes, consumer)
 
-        private int JavaConsume(byte[] bytes, string solutionPath, string tempPath, string serverVersion)
-        {
-            // create the temp directory and copy the source files
-            Directory.CreateDirectory(tempPath);
-            File.WriteAllText(Path.Combine(tempPath, "Program.java"), TestFiles.ReadAllText(this, "Java/CloudTests/Program.java"));
-            File.WriteAllText(Path.Combine(tempPath, "TestConsumer.java"), TestFiles.ReadAllText(this, "Java/Cloudtests/TestConsumer.java"));
+result = """" + text
+";
 
-            // validate that we have the server JAR
-            var version = ServerVersion.GetVersion(NuGetVersion.Parse(serverVersion));
-            Console.WriteLine($"Server Version: {version}");
-            var serverJarPath = Path.Combine(solutionPath, $"temp/lib/hazelcast-{version}.jar");
-            Assert.That(File.Exists(serverJarPath), Is.True, $"Could not find JAR file {serverJarPath}, try 'hz get-server -server {version}");
+            var script = scriptTemplate
+                .Replace("$$COUNT$$", bytes.Length.ToString())
+                .Replace("$$BYTES$$", string.Join("\n",
+                    bytes.Select((x, i) => $"bytes[{i}] = {bytes[i]}")));
 
-            // compile
-            Console.WriteLine("Compile...");
-            Assert.That(Directory.GetFiles(tempPath, "*.java").Any(), "Could not find source files.");
-
-            var p = Process.Start(new ProcessStartInfo(Path.Combine(JdkPath, "bin/javac.exe"), $"-cp {serverJarPath} {Path.Combine(tempPath, "*.java")}")
-                .WithRedirects(true, true, false));
-            Assert.That(p, Is.Not.Null);
-            p.WaitForExit();
-            Console.WriteLine($"Compilation exit code: {p.ExitCode}");
-            Console.WriteLine("Compilation stderr:");
-            Console.WriteLine(p.StandardError.ReadToEnd());
-            Console.WriteLine("Compilation stdout:");
-            Console.WriteLine(p.StandardOutput.ReadToEnd());
-            Assert.That(p.ExitCode, Is.Zero, "Java compilation failed.");
-
-            // execute
-            Console.WriteLine("Execute...");
-            var asyncReads = true; // syncReads can hang if output is too big?
-            p = new Process
-            {
-                StartInfo = new ProcessStartInfo(Path.Combine(JdkPath, "bin/java.exe"), $"-cp {serverJarPath};{tempPath} Program")
-                    .WithRedirects(true, true, true)
-            };
-
-            if (asyncReads)
-            {
-                p.OutputDataReceived += (sender, args) => { Console.WriteLine(args.Data); };
-                p.ErrorDataReceived += (sender, args) =>
-                {
-                    var color = Console.ForegroundColor;
-                    Console.ForegroundColor = ConsoleColor.DarkRed;
-                    Console.WriteLine("ERR: " + args.Data);
-                    Console.ForegroundColor = color;
-                };
-            }
-
-            p.Start();
-
-            if (asyncReads)
-            {
-                p.BeginOutputReadLine();
-                p.BeginErrorReadLine();
-            }
-
-            Console.WriteLine($"Writing {bytes.Length} bytes to java");
-            p.StandardInput.BaseStream.Write(bytes, 0, bytes.Length);
-            p.StandardInput.Close();
-            Console.WriteLine("Waiting for completion...");
-            p.WaitForExit();
-            Console.WriteLine($"Execution exit code: {p.ExitCode}");
-            if (!asyncReads)
-            {
-                Console.WriteLine("Execution stderr:");
-                Console.WriteLine(p.StandardError.ReadToEnd());
-                Console.WriteLine("Execution stdout:");
-                Console.WriteLine(p.StandardOutput.ReadToEnd());
-            }
-
-            return p.ExitCode;
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
+            Assert.That(response.Success, $"message: {response.Message}");
+            Assert.That(response.Result, Is.Not.Null);
+            var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length).Trim();
+            Console.WriteLine("JAVA OUTPUT:");
+            Console.WriteLine(resultString);
         }
 
         private IDisposable HConsoleForTest()
@@ -576,22 +538,5 @@ namespace Hazelcast.Tests.Cloud
                 .Configure().SetMinLevel().EnableTimeStamp(origin: DateTime.Now)
                 .Configure(this).SetMaxLevel().SetPrefix("TEST")
             );
-    }
-
-    public static class CloudTestsExtensions
-    {
-        public static ProcessStartInfo WithRedirects(this ProcessStartInfo info, bool redirectOutput, bool redirectError, bool redirectInput)
-        {
-            info.CreateNoWindow = true;
-            info.RedirectStandardOutput = redirectOutput;
-            info.RedirectStandardError = redirectError;
-            info.RedirectStandardInput = redirectInput;
-
-#if !NETCOREAPP
-            info.UseShellExecute = false;
-#endif
-
-            return info;
-        }
     }
 }

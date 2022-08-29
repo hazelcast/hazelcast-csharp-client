@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,12 +35,12 @@ namespace Hazelcast.Serialization
     /// <seealso cref="IClassDefinition">IClassDefinition</seealso>
     /// <seealso cref="IIdentifiedDataSerializable">IIdentifiedDataSerializable</seealso>
     /// <seealso cref="SerializationOptions">Hazelcast.Config.SerializationConfig
-    /// 	</seealso>
+    ///     </seealso>
     public interface IPortable
     {
         /// <summary>Returns class identifier for this portable class.</summary>
         /// <remarks>Returns class identifier for this portable class. Class id should be unique per PortableFactory.
-        /// 	</remarks>
+        ///     </remarks>
         /// <returns>class id</returns>
         int ClassId { get; }
 

@@ -60,10 +60,10 @@ namespace Hazelcast.Examples.Sql
                     $"'valuePortableClassId' = '1'" +
                 $")");
 
-            //creating/getting the map 
+            //creating/getting the map
             var map = await client.GetMapAsync<int, Employee>(mapName);
 
-            // Creating index via SQL 
+            // Creating index via SQL
             // Details: https://docs.hazelcast.com/hazelcast/latest/query/indexing-maps
             //await client.Sql.ExecuteCommandAsync($"CREATE INDEX IF NOT EXISTS employeeAge ON {mapName}(age); ");
 

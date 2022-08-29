@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable  enable
+
 using System;
 using System.Text.RegularExpressions;
 
 namespace Hazelcast.Models
 {
     /// <summary>
-    /// Represents Hazelcast SQL <c>TIME</c> type corresponding to <c>java.time.LocalTime</c> in Java.
+    /// Represents an Hazelcast <c>TIME</c> primitive type value.
     /// </summary>
+    /// <remarks>
+    /// <para>The <c>TIME</c> primitive type consists in hours, minutes, seconds
+    /// and nanoseconds, with nanosecond precision and one-day range.</para>
+    /// </remarks>
     public readonly struct HLocalTime : IEquatable<HLocalTime>
     {
         private static readonly Regex ParseRegex = new Regex(
@@ -27,31 +33,15 @@ namespace Hazelcast.Models
             RegexOptions.Compiled | RegexOptions.ExplicitCapture
         );
 
-        public static readonly HLocalTime Min = new HLocalTime(0, 0, 0, 0);
-        public static readonly HLocalTime Max = new HLocalTime(23, 59, 59, 999_999_999);
-        public static readonly HLocalTime Midnight = Min;
-        public static readonly HLocalTime Noon = new HLocalTime(12, 0, 0, 0);
-
         /// <summary>
-        /// Hour value. Ranges between 0 and 23 inclusive.
+        /// Initializes a new instance of the <see cref="HLocalTime"/> struct.
         /// </summary>
-        public byte Hour { get; }
-
-        /// <summary>
-        /// Minute value. Ranges between 0 and 59 inclusive.
-        /// </summary>
-        public byte Minute { get; }
-
-        /// <summary>
-        /// Second value. Ranges between 0 and 59 inclusive.
-        /// </summary>
-        public byte Second { get; }
-
-        /// <summary>
-        /// Nanosecond value. Ranges between 0 and 999999999 inclusive.
-        /// </summary>
-        public int Nanosecond { get; }
-
+        /// <param name="hour">The hour value.</param>
+        /// <param name="minute">The minute value.</param>
+        /// <param name="second">The second value.</param>
+        /// <param name="nanosecond">The nanosecond value.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="hour"/>, <paramref name="minute"/>, <paramref name="second"/>,
+        /// and/or <paramref name="nanosecond"/> is out of range.</exception>
         public HLocalTime(byte hour, byte minute, byte second, int nanosecond)
         {
             if (hour > 23)
@@ -69,32 +59,127 @@ namespace Hazelcast.Models
             Nanosecond = nanosecond;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalTime"/> struct.
+        /// </summary>
+        /// <param name="dateTime">The time.</param>
+        /// <remarks>
+        /// <para>The date part of the <paramref name="dateTime"/> is ignored.</para>
+        /// </remarks>
         public HLocalTime(DateTime dateTime)
-        {
-            Hour = (byte)dateTime.Hour;
-            Minute = (byte)dateTime.Minute;
-            Second = (byte)dateTime.Second;
-            Nanosecond = dateTime.Millisecond * 1000;
-        }
+            : this((byte) dateTime.Hour, (byte) dateTime.Minute, (byte) dateTime.Second, dateTime.Millisecond * 1000)
+        { }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalTime"/> struct.
+        /// </summary>
+        /// <param name="timeSpan">The time.</param>
+        /// <exception cref="ArgumentOutOfRangeException"><paramref name="timeSpan"/> is out of range.</exception>
 
         public HLocalTime(TimeSpan timeSpan)
-        {
-            Hour = (byte)timeSpan.Hours;
-            Minute = (byte)timeSpan.Minutes;
-            Second = (byte)timeSpan.Seconds;
-            Nanosecond = timeSpan.Milliseconds * 1000;
-        }
+            : this((byte) timeSpan.Hours, (byte) timeSpan.Minutes, (byte) timeSpan.Seconds, timeSpan.Milliseconds * 1000)
+        { }
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalTime"/> struct.
+        /// </summary>
+        /// <param name="timeOnly">The time.</param>
+        public HLocalTime(TimeOnly timeOnly)
+            : this((byte) timeOnly.Hour, (byte) timeOnly.Minute, (byte) timeOnly.Second, timeOnly.Millisecond * 1000)
+        { }
+#endif
+
+        /// <summary>
+        /// Gets the smallest possible value of a <see cref="HLocalTime"/>.
+        /// </summary>
+        public static readonly HLocalTime Min = new HLocalTime(0, 0, 0, 0);
+
+        /// <summary>
+        /// Gets the largest possible value of a <see cref="HLocalTime"/>.
+        /// </summary>
+        public static readonly HLocalTime Max = new HLocalTime(23, 59, 59, 999_999_999);
+        
+        /// <summary>
+        /// Gets a value that represents midnight, i.e. "00:00:00".
+        /// </summary>
+        public static readonly HLocalTime Midnight = Min;
+        
+        /// <summary>
+        /// Gets a value that represents noon, i.e. "12:00:00".
+        /// </summary>
+        public static readonly HLocalTime Noon = new HLocalTime(12, 0, 0, 0);
+
+        /// <summary>
+        /// Gets the hour value.
+        /// </summary>
+        public byte Hour { get; }
+
+        /// <summary>
+        /// Gets the minute value.
+        /// </summary>
+        public byte Minute { get; }
+
+        /// <summary>
+        /// Gets the second value.
+        /// </summary>
+        public byte Second { get; }
+
+        /// <summary>
+        /// Gets the nanosecond value.
+        /// </summary>
+        public int Nanosecond { get; }
+        
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalTime"/> to its <see cref="TimeSpan"/> equivalent.
+        /// </summary>
+        /// <returns>The <see cref="TimeSpan"/> representation of this instance.</returns>
         public TimeSpan ToTimeSpan() => new TimeSpan(0, Hour, Minute, Second, Nanosecond / 1000);
 
+#if NET6_0_OR_GREATER
+        public TimeOnly ToTimeOnly() => new TimeOnly(Hour, Minute, Second, Nanosecond / 1000);
+#endif
+
+        /// <summary>
+        /// Implements the <see cref="HLocalTime"/> to <see cref="TimeSpan"/> conversion.
+        /// </summary>
         public static explicit operator TimeSpan(HLocalTime localTime) => localTime.ToTimeSpan();
+        
+        /// <summary>
+        /// Implements the <see cref="TimeSpan"/> to <see cref="HLocalTime"/> conversion.
+        /// </summary>
         public static explicit operator HLocalTime(TimeSpan timeSpan) => new HLocalTime(timeSpan);
+        
+        /// <summary>
+        /// Implements the <see cref="DateTime"/> to <see cref="HLocalTime"/> conversion.
+        /// </summary>
         public static explicit operator HLocalTime(DateTime dateTime) => new HLocalTime(dateTime);
 
+#if NET6_0_OR_GREATER
+        /// <summary>
+        /// Implements the <see cref="HLocalTime"/> to <see cref="TimeOnly"/> conversion.
+        /// </summary>
+        public static explicit operator TimeOnly(HLocalTime localTime) => localTime.ToTimeOnly();
+
+        /// <summary>
+        /// Implements the <see cref="TimeOnly"/> to <see cref="HLocalTime"/> conversion.
+        /// </summary>
+        public static explicit operator HLocalTime(TimeOnly timeOnly) => new HLocalTime(timeOnly);
+#endif
+
+        /// <inheritdoc />
         public override string ToString() => Nanosecond == 0
             ? $"{Hour:D2}:{Minute:D2}:{Second:D2}"
             : $"{Hour:D2}:{Minute:D2}:{Second:D2}.{Nanosecond:D9}";
 
+        /// <summary>
+        /// Converts the string representation of a time to its <see cref="HLocalTime"/> representation.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="s">A string containing a time to convert.</param>
+        /// <param name="localTime">When this method returns, contains the <see cref="HLocalTime"/> equivalent of
+        /// the time in <paramref name="s"/>, if the conversion succeeded, or zero if the conversion failed.</param>
+        /// <returns><c>true</c> if <paramref name="s"/> was converted successfully; otherwise, <c>false</c>.</returns>
         public static bool TryParse(string s, out HLocalTime localTime)
         {
             localTime = default;
@@ -115,6 +200,12 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Converts the string representation of a time to its <see cref="HLocalTime"/> representation.
+        /// </summary>
+        /// <param name="s">A string containing a time to convert.</param>
+        /// <returns>A <see cref="HLocalTime"/> equivalent to the time contained in <paramref name="s"/>.</returns>
+        /// <exception cref="FormatException">The <paramref name="s"/> string cannot be parsed.</exception>
         public static HLocalTime Parse(string s)
         {
             return TryParse(s, out var localTime)
@@ -124,30 +215,21 @@ namespace Hazelcast.Models
 
         #region Equality members
 
+        /// <inheritdoc />
         public bool Equals(HLocalTime other)
-        {
-            return Hour == other.Hour && Minute == other.Minute && Second == other.Second && Nanosecond == other.Nanosecond;
-        }
+            =>  Hour == other.Hour && Minute == other.Minute && Second == other.Second && Nanosecond == other.Nanosecond;
 
-        public override bool Equals(object obj)
-        {
-            return obj is HLocalTime other && Equals(other);
-        }
+        /// <inheritdoc />
+        public override bool Equals(object? obj) => obj is HLocalTime other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Hour, Minute, Second, Nanosecond);
-        }
+        /// <inheritdoc />
+        public override int GetHashCode() => HashCode.Combine(Hour, Minute, Second, Nanosecond);
 
-        public static bool operator ==(HLocalTime left, HLocalTime right)
-        {
-            return left.Equals(right);
-        }
+        /// <summary>Implements the == operator.</summary>
+        public static bool operator ==(HLocalTime left, HLocalTime right) => left.Equals(right);
 
-        public static bool operator !=(HLocalTime left, HLocalTime right)
-        {
-            return !left.Equals(right);
-        }
+        /// <summary>Implements the != operator.</summary>
+        public static bool operator !=(HLocalTime left, HLocalTime right) => !left.Equals(right);
 
         #endregion
 

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,13 +31,14 @@ namespace Hazelcast.Tests.Serialization
         private static readonly Endianness[] Endiannesses =
         {
             Endianness.BigEndian,
-            Endianness.LittleEndian,
-            //Endianness.NativeOrder() // why test it, it's one of the other two?!
+            Endianness.LittleEndian
         };
 
-        private SerializationService CreateSerializationService(Endianness endianness)
+        private SerializationService CreateSerializationService(Endianness endianness, bool enableClrSerialization)
         {
-            return new SerializationServiceBuilder(new NullLoggerFactory())
+            var options = new SerializationOptions();
+
+            return new SerializationServiceBuilder(options, new NullLoggerFactory())
                 .SetEndianness(endianness)
                 .SetPortableVersion(1)
                 .AddDefinitions(new ConstantSerializerDefinitions())
@@ -45,15 +46,15 @@ namespace Hazelcast.Tests.Serialization
                 .Build();
         }
 
-        private void AssertSerialization<T>(T obj, Endianness order)
+        private void AssertSerialization<T>(T obj, Endianness order, bool enableClrSerialization = false)
         {
-            var ss = CreateSerializationService(order);
+            var ss = CreateSerializationService(order, enableClrSerialization);
             var data = ss.ToData(obj);
             var deserialized = ss.ToObject<T>(data);
             Assert.AreEqual(obj, deserialized);
 
             // test first time deserialization
-            var ss2 = CreateSerializationService(order);
+            var ss2 = CreateSerializationService(order, enableClrSerialization);
             Assert.AreEqual(obj, ss2.ToObject<T>(data));
         }
 
@@ -206,9 +207,9 @@ namespace Hazelcast.Tests.Serialization
         [Test, TestCaseSource(nameof(Endiannesses))]
         public void TestSerializable(Endianness order)
         {
-            var p = new SerializableClass {Age = TestUtils.RandomInt(), Name = TestUtils.RandomString()};
+            var p = new SerializableClass { Age = TestUtils.RandomInt(), Name = TestUtils.RandomString() };
 
-            AssertSerialization(p, order);
+            AssertSerialization(p, order, true);
         }
 
         [Test, TestCaseSource(nameof(Endiannesses))]
@@ -216,7 +217,7 @@ namespace Hazelcast.Tests.Serialization
         {
             var p = new List<string> { "a", "b", "c"};
 
-            AssertSerialization(p, order);
+            AssertSerialization(p, order, true);
         }
 
         [Test, TestCaseSource(nameof(Endiannesses))]

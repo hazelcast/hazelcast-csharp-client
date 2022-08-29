@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ namespace Hazelcast.Tests.Remote
     public class ClientTxnTest : SingleMemberClientRemoteTestBase
     {
         [Test]
-		public async Task TestNegativeDurability()
-		{
+        public async Task TestNegativeDurability()
+        {
             await AssertEx.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
                 await Client.BeginTransactionAsync(new TransactionOptions
@@ -37,12 +37,12 @@ namespace Hazelcast.Tests.Remote
                     Durability = -1
                 });
             });
-		}
+        }
 
         // TODO: negative timeout is OK and means infinite?
         /*
         [Test]
-		public async Task TestNegativeTimeout()
+        public async Task TestNegativeTimeout()
         {
             await AssertEx.ThrowsAsync<ArgumentOutOfRangeException>(async () =>
             {
@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Remote
                     Timeout = TimeSpan.FromMilliseconds(-1)
                 });
             });
-		}
+        }
         */
 
         [Test]
@@ -66,7 +66,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task InvalidToCommitTwice()
+        public async Task InvalidToCommitTwice()
         {
             await using var context = await Client.BeginTransactionAsync();
 
@@ -76,11 +76,11 @@ namespace Hazelcast.Tests.Remote
             {
                 await context.CommitAsync();
             });
-		}
+        }
 
         [Test]
-		public async Task TransactionTimesOut()
-		{
+        public async Task TransactionTimesOut()
+        {
             await using var context = await Client.BeginTransactionAsync(new TransactionOptions
             {
                 Timeout = TimeSpan.FromMilliseconds(100)

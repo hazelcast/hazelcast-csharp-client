@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ namespace Hazelcast.Tests.Core
         public void Nullable(Type type, bool isNullable)
         {
             if (isNullable)
-                Assert.That(type.IsNullableType());
+                Assert.That(type.IsNullableOfT());
             else
-                Assert.That(type.IsNullableType(), Is.False);
+                Assert.That(type.IsNullableOfT(), Is.False);
         }
 
         [TestCase(typeof(int), true, "int")]
@@ -48,7 +48,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public void ArgumentExceptions()
         {
-            Assert.Throws<ArgumentNullException>(() => ((Type) null).IsNullableType());
+            Assert.Throws<ArgumentNullException>(() => ((Type) null).IsNullableOfT());
             Assert.Throws<ArgumentNullException>(() => ((Type) null).ToCsString());
         }
 

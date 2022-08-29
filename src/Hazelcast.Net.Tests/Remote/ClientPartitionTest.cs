@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Hazelcast.DistributedObjects;
+using Hazelcast.Core;
 using Hazelcast.Partitioning;
 using Hazelcast.Testing;
 using NUnit.Framework;
@@ -25,19 +25,10 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ClientPartitionTest : SingleMemberClientRemoteTestBase
     {
-        private IHMap<object, object> _map;
-
         [SetUp]
         public async Task Setup()
         {
-            _map = await Client.GetMapAsync<object, object>(CreateUniqueName());
-            _ = await _map.GetAsync(new object());
-        }
-
-        [TearDown]
-        public async Task TearDown()
-        {
-            await _map.DisposeAsync();
+            await Client.TriggerPartitionTableAsync().CfAwait();
         }
 
         private static int GetPartitionOwnerCount(Partitioner partitioner)
