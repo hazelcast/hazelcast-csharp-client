@@ -315,8 +315,8 @@ namespace Hazelcast.Clustering
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
                         _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
-                        // ClusterChanged hold Connected state. It's just a transation.
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
+                        // ClusterChanged holds Connected state. It's just a transation. We don't expect ClusterChanged to Disconnected.
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
                         drain = true;

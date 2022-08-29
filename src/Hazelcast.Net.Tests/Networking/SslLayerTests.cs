@@ -58,7 +58,7 @@ namespace Hazelcast.Tests.Networking
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
             var sender = new object();
-#pragma warning disable SYSLIB0026
+#pragma warning disable SYSLIB0026 // X509Certificate empty constructor is obsolete BUT here we DO want to use it to create an empty cert
             var cert = new X509Certificate();
 
             var chain = new X509Chain();

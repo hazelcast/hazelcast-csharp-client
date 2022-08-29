@@ -68,10 +68,12 @@ namespace Hazelcast.Networking
 
             try
             {
-                // TODO: Make it async and consider to use HttpClientFactory
+                // TODO: It needs to be refactored. We cannot make it async now due to refactoring of
+                // the callers of the Scan. The caller chain should be all async. The method can be
+                // refactored as async and using HttpClient/HttpClientFactory.
 #pragma warning disable SYSLIB0014
 #pragma warning disable SYSLIB0000
-                var httpWebRequest = (HttpWebRequest) WebRequest.Create(_endpointUrl);
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(_endpointUrl);
 #pragma warning restore SYSLIB0000
 #pragma warning restore SYSLIB0014
                 httpWebRequest.Method = WebRequestMethods.Http.Get;
@@ -109,7 +111,7 @@ namespace Hazelcast.Networking
             {
                 _logger.LogWarning(e, "Hazelcast cloud discovery failed.");
             }
-            return null;            
+            return new Dictionary<NetworkAddress, NetworkAddress>();
         }
 
         [ExcludeFromCodeCoverage] // not testing the web connection

@@ -55,7 +55,7 @@ namespace Hazelcast.Core
 #endif
             return exception;
         }
-        #pragma warning disable CA1823
+        #if !NET6_0_OR_GREATER
         // compiles a dynamic method that sets the Exception._stackTraceString internal field via reflection
         private static readonly Action<Exception, string> SetStackTraceField = new Func<Action<Exception, string>>(() =>
         {
@@ -65,7 +65,7 @@ namespace Hazelcast.Core
             var assign = Expression.Assign(Expression.Field(target, stackTraceStringField), stackTraceString);
             return Expression.Lambda<Action<Exception, string>>(assign, target, stackTraceString).Compile();
         })();
-        #pragma warning restore CA1823
+        #endif
         /// <summary>
         /// Captures an exception.
         /// </summary>

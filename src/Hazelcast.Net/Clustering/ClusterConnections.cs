@@ -590,9 +590,8 @@ namespace Hazelcast.Clustering
                             else
                             {
                                 isExceptionThrown = true;
-#pragma warning disable CA1727
-                                _logger.LogError(attempt.Exception, message: "Failed to connect to address {address}.", address.ToString());
-#pragma warning restore CA1727
+
+                                _logger.LogError(attempt.Exception, message: "Failed to connect to address {Address}.", address.ToString());
 
                             }
                         }

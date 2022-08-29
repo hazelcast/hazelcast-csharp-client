@@ -87,12 +87,13 @@ namespace Hazelcast.Models
         /// <returns>This instance for chaining.</returns>
         public IndexOptions AddAttributes(params string[] attributes)
         {
-#pragma warning disable CA1062 // Validate arguments of public methods
+            if (attributes is null) throw new ArgumentNullException(nameof(attributes));
+
             foreach (var attribute in attributes)
             {
                 ValidateAttribute(this, attribute);
             }
-#pragma warning restore CA1062 // Validate arguments of public methods
+
             foreach (var attribute in attributes)
             {
                 Attributes.Add(attribute);
