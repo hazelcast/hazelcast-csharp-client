@@ -31,18 +31,27 @@ namespace Hazelcast.Testing
         /// </summary>
         protected virtual HazelcastOptions CreateHazelcastOptions()
         {
-            var options = HazelcastOptionsBuilder.Build(builder =>
-            {
-                builder.AddHazelcastAndDefaults(null);
-                builder.AddUserSecrets(GetType().Assembly, true);
-            }, null, null, ConfigurationSecretsKey);
+            return CreateHazelcastOptionsBuilder().Build();
+        }
 
-            options.Networking.Addresses.Clear();
-            options.Networking.Addresses.Add("127.0.0.1:5701");
-
-            options.LoggerFactory.Creator = () => LoggerFactory;
-
-            return options;
+        /// <summary>
+        /// Creates the Hazelcast options builder.
+        /// </summary>
+        protected virtual HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
+        {
+            return new HazelcastOptionsBuilder()
+                .ConfigureBuilder(builder =>
+                {
+                    builder.AddHazelcastAndDefaults(null);
+                    builder.AddUserSecrets(GetType().Assembly, true);
+                })
+                .WithAltKey(ConfigurationSecretsKey)
+                .With(options =>
+                {
+                    options.Networking.Addresses.Clear();
+                    options.Networking.Addresses.Add("127.0.0.1:5701");
+                    options.LoggerFactory.Creator = () => LoggerFactory;
+                });
         }
 
         /// <summary>
@@ -80,6 +89,19 @@ namespace Hazelcast.Testing
             configure(options);
             var client = await HazelcastClientFactory.StartNewClientAsync(options).CfAwait();
             return client;
+        }
+
+        /// <summary>
+        /// Creates a starting client.
+        /// </summary>
+        /// <returns>A client.</returns>
+        protected virtual HazelcastClientStart CreateStartingClientAsync(Action<HazelcastOptions> configure)
+        {
+            Logger.LogInformation("Create new client");
+
+            var options = CreateHazelcastOptions();
+            configure(options);
+            return HazelcastClientFactory.GetNewStartingClient(options);
         }
 
         /// <summary>
