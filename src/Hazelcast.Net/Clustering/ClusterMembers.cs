@@ -577,9 +577,8 @@ namespace Hazelcast.Clustering
                     if (!isAnyMemberConnected)
                     {
                         // no more connected member, we are now disconnected
-                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
-                        // ClusterChanged hold Connected state. It's just a transation.
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);                        
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
                         _connected = false;
                         disconnected = true;
                     }
