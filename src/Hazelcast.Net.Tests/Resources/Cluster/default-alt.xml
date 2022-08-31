@@ -7,12 +7,12 @@
   <properties>
     <property name="hazelcast.map.invalidation.batch.enabled">false</property>
     <property name="hazelcast.cache.invalidation.batch.size">10</property>
-    <property name="hazelcast.partition.count">277</property>
+    <property name="hazelcast.partition.count">271</property>
   </properties>
 
 
   <network>
-    <port auto-increment="true" port-count="100">5703</port>
+    <port auto-increment="true" port-count="100">5711</port>
     <outbound-ports>
       <!--
             Allowed port range when connecting to other nodes.
