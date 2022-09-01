@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
             //Cluster changed, renew options if necessary.
             _clusterState.Failover.ClusterChanged += options =>
             {
-               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
             };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
@@ -590,7 +590,8 @@ namespace Hazelcast.Clustering
                             else
                             {
                                 isExceptionThrown = true;
-                                _logger.LogError(attempt.Exception, "Failed to connect to address {address}.", address.ToString());
+
+                                _logger.LogError(attempt.Exception, message: "Failed to connect to address {Address}.", address.ToString());
 
                             }
                         }

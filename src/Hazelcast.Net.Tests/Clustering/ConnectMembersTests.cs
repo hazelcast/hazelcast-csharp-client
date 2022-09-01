@@ -72,7 +72,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(addresses.Count, Is.EqualTo(2));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:1")));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:2")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- can suspend while waiting
@@ -90,7 +90,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(3));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:3")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- suspending waits for the current connection
@@ -125,7 +125,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(5));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:5")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- can drain empty
@@ -173,7 +173,7 @@ namespace Hazelcast.Tests.Clustering
             // -- the end
 
             await queue.DisposeAsync();
-            await AssertEx.SucceedsEventually(() => Assert.That(connecting.IsCompleted), 2000, 200);
+            await AssertEx.SucceedsEventually(() => Assert.That(connecting.IsCompleted), 20_000, 500);
 
             // ok, but nothing will happen since the queue has been disposed
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:10")));
