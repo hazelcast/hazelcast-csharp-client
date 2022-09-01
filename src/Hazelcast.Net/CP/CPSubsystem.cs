@@ -164,7 +164,7 @@ namespace Hazelcast.CP
             if (groupName.Length == 0)
                 throw new ArgumentException("CP group name cannot be an empty string.", nameof(name));
 
-            if (groupName.Contains("@", StringComparison.OrdinalIgnoreCase))
+            if (groupName.Contains('@', StringComparison.OrdinalIgnoreCase))
                 throw new ArgumentException("CP group name must be specified at most once.", nameof(name));
 
             if (groupName.Equals(MetaDataGroupName, StringComparison.OrdinalIgnoreCase))

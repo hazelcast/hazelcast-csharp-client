@@ -167,7 +167,7 @@ namespace Hazelcast.Networking
                 // another member will make it
                 if (canReachPublic)
                 {
-                    _logger.IfDebug()?.LogDebug("Member {Member} does not respond on its internal address, responds on its public address.", member.Address, member.PublicAddress);
+                    _logger.IfDebug()?.LogDebug("Member {Member} does not respond on its internal address, responds on its public address {PublicAddress}.", member.Address, member.PublicAddress);
 
                     requirePublic = true;
                 }

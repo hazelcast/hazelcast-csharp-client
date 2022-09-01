@@ -25,7 +25,7 @@ namespace Hazelcast.Exceptions
     /// </list>
     /// </summary>
     [Serializable]
-    public class ClientNotAllowedInClusterException : HazelcastException
+    public sealed class ClientNotAllowedInClusterException : HazelcastException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientNotAllowedInClusterException"/> class.

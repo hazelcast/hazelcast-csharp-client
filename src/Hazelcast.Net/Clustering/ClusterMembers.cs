@@ -314,9 +314,8 @@ namespace Hazelcast.Clustering
 
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
-                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
-                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
+                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());                        
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
                         drain = true;
@@ -578,9 +577,8 @@ namespace Hazelcast.Clustering
                     if (!isAnyMemberConnected)
                     {
                         // no more connected member, we are now disconnected
-                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
-                        // FIXME ClusterChanged CANNOT go back to DISCONNECTED it WILL go to CONNECTED no matter what
-                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected, ClientState.ClusterChanged);
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);                        
+                        _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
                         _connected = false;
                         disconnected = true;
                     }
