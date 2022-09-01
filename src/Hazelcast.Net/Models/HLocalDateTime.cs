@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,75 +12,148 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable  enable
+
 using System;
 
 namespace Hazelcast.Models
 {
     /// <summary>
-    /// Represents Hazelcast SQL <c>TIMESTAMP</c> type corresponding to <c>java.time.LocalDateTime</c> in Java.
+    /// Represents an Hazelcast SQL <c>TIMESTAMP</c> primitive type value.
     /// </summary>
+    /// <remarks>
+    /// <para>The <c>TIMESTAMP</c> primitive type consists of a <c>DATE</c> <see cref="Date"/>
+    /// and a <c>TIME</c> <see cref="Time"/>.</para>
+    /// </remarks>
     public readonly struct HLocalDateTime : IEquatable<HLocalDateTime>
     {
-        public static readonly HLocalDateTime Min = new HLocalDateTime(HLocalDate.Min, HLocalTime.Min);
-        public static readonly HLocalDateTime Max = new HLocalDateTime(HLocalDate.Max, HLocalTime.Max);
-
         /// <summary>
-        /// Date part represented as <see cref="HLocalDate"/>.
+        /// Initializes a new instance of the <see cref="HLocalDateTime"/> struct.
         /// </summary>
-        public HLocalDate Date { get; }
-
-        /// <summary>
-        /// Time part represented as <see cref="HLocalTime"/>.
-        /// </summary>
-        public HLocalTime Time { get; }
-
-        /// <inheritdoc cref="HLocalDate.Year"/>
-        public int Year => Date.Year;
-
-        /// <inheritdoc cref="HLocalDate.Month"/>
-        public byte Month => Date.Month;
-
-        /// <inheritdoc cref="HLocalDate.Day"/>
-        public byte Day => Date.Day;
-
-        /// <inheritdoc cref="HLocalTime.Hour"/>
-        public byte Hour => Time.Hour;
-
-        /// <inheritdoc cref="HLocalTime.Minute"/>
-        public byte Minute => Time.Minute;
-
-        /// <inheritdoc cref="HLocalTime.Second"/>
-        public byte Second => Time.Second;
-
-        /// <inheritdoc cref="HLocalTime.Nanosecond"/>
-        public int Nanosecond => Time.Nanosecond;
-
+        /// <param name="date">The date value.</param>
+        /// <param name="time">The time value.</param>
         public HLocalDateTime(HLocalDate date, HLocalTime time)
         {
             Date = date;
             Time = time;
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDateTime"/> struct.
+        /// </summary>
+        /// <param name="year">The year value.</param>
+        /// <param name="month">The month value.</param>
+        /// <param name="day">The day value.</param>
+        /// <param name="hour">The hour value.</param>
+        /// <param name="minute">The minute value.</param>
+        /// <param name="second">The second value.</param>
+        /// <param name="nanosecond">The nanosecond value.</param>
         public HLocalDateTime(int year, byte month, byte day, byte hour, byte minute, byte second, int nanosecond)
         {
             Date = new HLocalDate(year, month, day);
             Time = new HLocalTime(hour, minute, second, nanosecond);
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDateTime"/> struct.
+        /// </summary>
+        /// <param name="year">The year value.</param>
+        /// <param name="month">The month value.</param>
+        /// <param name="day">The day value.</param>
         public HLocalDateTime(int year, byte month, byte day)
-        {
-            Date = new HLocalDate(year, month, day);
-            Time = default;
-        }
+            : this(new HLocalDate(year, month, day), default)
+        { }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HLocalDateTime"/> struct.
+        /// </summary>
+        /// <param name="dateTime">The date and time value.</param>
         public HLocalDateTime(DateTime dateTime)
-        {
-            Date = new HLocalDate(dateTime);
-            Time = new HLocalTime(dateTime);
-        }
+            : this(new HLocalDate(dateTime), new HLocalTime(dateTime))
+        { }
 
+        /// <summary>
+        /// Gets the smallest possible value of a <see cref="HLocalDateTime"/>.
+        /// </summary>
+        public static readonly HLocalDateTime Min = new HLocalDateTime(HLocalDate.Min, HLocalTime.Min);
+        
+        /// <summary>
+        /// Gets the largest possible value of a <see cref="HLocalDateTime"/>.
+        /// </summary>
+        public static readonly HLocalDateTime Max = new HLocalDateTime(HLocalDate.Max, HLocalTime.Max);
+
+        /// <summary>
+        /// Gets the date value.
+        /// </summary>
+        public HLocalDate Date { get; }
+
+        /// <summary>
+        /// Gets the time value.
+        /// </summary>
+        public HLocalTime Time { get; }
+
+        /// <summary>
+        /// Gets the year value.
+        /// </summary>
+        public int Year => Date.Year;
+
+        /// <summary>
+        /// Gets the month value.
+        /// </summary>
+        public byte Month => Date.Month;
+
+        /// <summary>
+        /// Gets the day value.
+        /// </summary>
+        public byte Day => Date.Day;
+
+        /// <summary>
+        /// Gets the hour value.
+        /// </summary>
+        public byte Hour => Time.Hour;
+
+        /// <summary>
+        /// Gets the minute value.
+        /// </summary>
+        public byte Minute => Time.Minute;
+
+        /// <summary>
+        /// Gets the second value.
+        /// </summary>
+        public byte Second => Time.Second;
+
+        /// <summary>
+        /// Gets the nanosecond value.
+        /// </summary>
+        public int Nanosecond => Time.Nanosecond;
+
+        /// <summary>
+        /// Offsets the value of this <see cref="HLocalDateTime"/> as an <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        /// <param name="offset">The offset.</param>
+        /// <returns>The <see cref="HOffsetDateTime"/>.</returns>
+        internal HOffsetDateTime Offset(TimeSpan offset) => new HOffsetDateTime(this, offset);
+
+        /// <summary>
+        /// Offsets the value of this <see cref="HLocalDateTime"/> as an <see cref="HOffsetDateTime"/>.
+        /// </summary>
+        /// <param name="offsetSeconds">The offset.</param>
+        /// <returns>The <see cref="HOffsetDateTime"/>.</returns>
+        internal HOffsetDateTime Offset(int offsetSeconds = 0) => new HOffsetDateTime(this, offsetSeconds);
+        
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDateTime"/> to its <see cref="DateTime"/> equivalent.
+        /// </summary>
+        /// <returns>The <see cref="DateTime"/> representation of this instance.</returns>
         public DateTime ToDateTime() => Date.ToDateTime() + Time.ToTimeSpan();
 
+        /// <summary>
+        /// Converts the value of this <see cref="HLocalDateTime"/> to its <see cref="DateTime"/> equivalent.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="dateTime">When this method returns, contains the <see cref="DateTime"/> equivalent
+        /// to the value represented by this instance, if the conversion succeeded, or the default value if the conversion failed.</param>
+        /// <returns><c>true</c> if the value represented by this instance was converted successfully; otherwise <c>false</c>.</returns>
         public bool TryToDateTime(out DateTime dateTime)
         {
             if (!Date.TryToDateTime(out dateTime))
@@ -90,15 +163,31 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Implements the <see cref="HLocalDateTime"/> to <see cref="DateTime"/> conversion.
+        /// </summary>
         public static explicit operator DateTime(HLocalDateTime localDateTime) => localDateTime.ToDateTime();
+        
+        /// <summary>
+        /// Implements the <see cref="DateTime"/> to <see cref="HLocalDateTime"/> conversion.
+        /// </summary>
         public static explicit operator HLocalDateTime(DateTime dateTime) => new HLocalDateTime(dateTime);
 
+        /// <inheritdoc />
         public override string ToString() => Date + "T" + Time;
 
-        public static bool TryParse(string s, out HLocalDateTime localDateTime)
+        /// <summary>
+        /// Converts the string representation of a date and time to its <see cref="HLocalDateTime"/> representation.
+        /// A return value indicates whether the operation succeeded.
+        /// </summary>
+        /// <param name="s">A string containing a date and time to convert.</param>
+        /// <param name="localDateTime">When this method returns, contains the <see cref="HLocalDateTime"/> equivalent of
+        /// the date and time in <paramref name="s"/>, if the conversion succeeded, or zero if the conversion failed.</param>
+        /// <returns><c>true</c> if <paramref name="s"/> was converted successfully; otherwise, <c>false</c>.</returns>
+        public static bool TryParse(string? s, out HLocalDateTime localDateTime)
         {
             localDateTime = default;
-            if (s == null) 
+            if (s == null)
                 return false;
 
             var parts = s.Split(new[] { 'T', 't' }, StringSplitOptions.RemoveEmptyEntries);
@@ -112,6 +201,12 @@ namespace Hazelcast.Models
             return true;
         }
 
+        /// <summary>
+        /// Converts the string representation of a date and time to its <see cref="HLocalDateTime"/> representation.
+        /// </summary>
+        /// <param name="s">A string containing a date and time to convert.</param>
+        /// <returns>A <see cref="HLocalDateTime"/> equivalent to the date and time time contained in <paramref name="s"/>.</returns>
+        /// <exception cref="FormatException">The <paramref name="s"/> string cannot be parsed.</exception>
         public static HLocalDateTime Parse(string s)
         {
             return TryParse(s, out var localDateTime)
@@ -121,32 +216,22 @@ namespace Hazelcast.Models
 
         #region Equality members
 
+        /// <inheritdoc />
         public bool Equals(HLocalDateTime other)
-        {
-            return Date.Equals(other.Date) && Time.Equals(other.Time);
-        }
+            => Date.Equals(other.Date) && Time.Equals(other.Time);
 
-        public override bool Equals(object obj)
-        {
-            return obj is HLocalDateTime other && Equals(other);
-        }
+        /// <inheritdoc />
+        public override bool Equals(object? obj) => obj is HLocalDateTime other && Equals(other);
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Date, Time);
-        }
+        /// <inheritdoc />
+        public override int GetHashCode() => HashCode.Combine(Date, Time);
 
-        public static bool operator ==(HLocalDateTime left, HLocalDateTime right)
-        {
-            return left.Equals(right);
-        }
+        /// <summary>Implements the == operator.</summary>
+        public static bool operator ==(HLocalDateTime left, HLocalDateTime right) => left.Equals(right);
 
-        public static bool operator !=(HLocalDateTime left, HLocalDateTime right)
-        {
-            return !left.Equals(right);
-        }
+        /// <summary>Implements the != operator.</summary>
+        public static bool operator !=(HLocalDateTime left, HLocalDateTime right) => !left.Equals(right);
 
         #endregion
-
     }
 }

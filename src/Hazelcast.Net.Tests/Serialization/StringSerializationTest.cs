@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Serialization
         [SetUp]
         public virtual void Setup()
         {
-            _serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
+            _serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
                 .AddDefinitions(new ConstantSerializerDefinitions())
                 .AddDefinitions(new DefaultSerializerDefinitions())
                 .Build();

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 using System;
 using System.IO;
 using System.Net.Security;
-using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
@@ -58,7 +57,9 @@ namespace Hazelcast.Tests.Networking
             var loggerFactory = LoggerFactory.Create(builder => builder.AddStringBuilder(text));
 
             var sender = new object();
+#pragma warning disable SYSLIB0026 // X509Certificate empty constructor is obsolete BUT here we DO want to use it to create an empty cert
             var cert = new X509Certificate();
+
             var chain = new X509Chain();
 
             var options = new SslOptions { ValidateCertificateChain = true };
@@ -106,6 +107,7 @@ namespace Hazelcast.Tests.Networking
             Console.WriteLine(text.ToString());
             Assert.That(text.ToString(), Does.Contain("certificate error: RemoteCertificateNotAvailable"));
             text.Clear();
+#pragma warning restore SYSLIB0026
         }
 
         [Test]

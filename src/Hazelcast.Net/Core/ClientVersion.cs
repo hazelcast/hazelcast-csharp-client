@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System.Reflection;
 using System;
+using System.Reflection;
 
 namespace Hazelcast.Core
 {
@@ -65,7 +65,7 @@ namespace Hazelcast.Core
         /// <returns>The "pure" version corresponding to the specified <paramref name="version"/>.</returns>
         internal static string GetMajorMinorVersion(string version)
         {
-            var pos0 = version.IndexOf('.');
+            var pos0 = version.IndexOf('.', StringComparison.OrdinalIgnoreCase);
             var pos1 = version.IndexOf('.', pos0 + 1);
             if (pos1 >= 0)
             {
@@ -77,7 +77,7 @@ namespace Hazelcast.Core
             {
                 // one single dot = major.minor[+whatever]
                 // remove the +whatever part if any
-                var pos = version.IndexOf('+');
+                var pos = version.IndexOf('+', StringComparison.OrdinalIgnoreCase);
                 if (pos >= 0) version = version[..pos];
             }
             return version;
@@ -95,7 +95,7 @@ namespace Hazelcast.Core
             {
                 if (_clientVersion != null) return _clientVersion;
 
-                var type = typeof (ClientVersion);
+                var type = typeof(ClientVersion);
                 var assembly = type.Assembly;
 
                 return _clientVersion = GetVersion(

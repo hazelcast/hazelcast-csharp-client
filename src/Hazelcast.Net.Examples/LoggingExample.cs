@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ namespace Hazelcast.Examples
     public class LoggingExample
     {
         // run this example with
-        // ./hz.ps1 run-example Logging 
+        // ./hz.ps1 run-example Logging
         // ./hz.ps1 run-example Logging --- --Logging:LogLevel:Hazelcast.Examples.LoggingExample.A=Debug
         //
         // note that options set with the With(...) method of the HazelcastOptionsBuilder take precedence

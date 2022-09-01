@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,10 +13,8 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -38,141 +36,42 @@ namespace Hazelcast.Tests.DotNet
         [TestCase(false)]
         public async Task CompletionSourceCompletesResultAsynchronously(bool completeAsync)
         {
-            var steps = new Steps();
-
-            var mainThreadId = steps.Add("main.start");
+            // purpose of this test is to show that a synchronous completion source will run the tasks
+            // continuation immediately on SetResult & an asynchronous completion source will fork the
+            // continuation.
 
             // create the task completion source - either sync or async
             var options = completeAsync ? TaskCreationOptions.RunContinuationsAsynchronously : TaskCreationOptions.None;
-            var taskCompletionSource = new TaskCompletionSource<int>(options);
+            var completion = new TaskCompletionSource<int>(options);
 
-            var taskThreadId = -1;
-            var resultSet = false;
-            var task = Task.Run(() =>
+            var stackTrace = "";
+
+            async Task GetResult()
             {
-                // this has started on another thread
-                taskThreadId = steps.Add("task.start");
+                await completion.Task.CfAwait();
 
-                // some delay - on the same thread
-                // we want some long-enough delay to ensure that we do not SetResult before awaiting the
-                // task completion source, thus forcing the await on that task to actually await synchronously
-                Thread.Sleep(2000);
-
-                // now set the result, thus unblocking the awaited task
-                // all of this happens on the same thread
-                Assert.That(steps.Add("task.complete"), Is.EqualTo(taskThreadId));
-                taskCompletionSource.SetResult(42);
-                resultSet = true;
-                Assert.That(steps.Add("task.continue"), Is.EqualTo(taskThreadId));
-
-                // some more delay - on the same thread
-                Thread.Sleep(500);
-                Assert.That(steps.Add("task.end"), Is.EqualTo(taskThreadId));
-            });
-
-            // going to wait on the task until it sets the taskCompletionSource result
-            Assert.That(steps.Add("main.wait"), Is.EqualTo(mainThreadId));
-            await taskCompletionSource.Task.CfAwait();
-
-            // resume after the task has completed
-            var resumedThreadId = steps.Add("main.resume");
-
-            // just to be sure: main and task run on different threads
-            Assert.That(taskThreadId, Is.Not.EqualTo(mainThreadId));
-
-            if (completeAsync)
-            {
-                // if the task completion source completed asynchronously, the the task kept running - we are a different thread
-                // which does not have to be mainThreadId since we awaited, but nevertheless - it is not taskThreadId either
-                Assert.That(resumedThreadId, Is.Not.EqualTo(taskThreadId));
-
-                // after some delay (on the same thread)
-                Thread.Sleep(500);
-                Assert.That(Thread.CurrentThread.ManagedThreadId, Is.EqualTo(resumedThreadId));
-
-                // the task has resumed
-                Assert.That(resultSet, Is.True);
-
-                // this is OK
-                task.GetAwaiter().GetResult(); // 'await' on this thread
-            }
-            else
-            {
-                // if the task completion source completed synchronously, then it's the task thread which is running this code
-                Assert.That(resumedThreadId, Is.EqualTo(taskThreadId));
-
-                // after some delay (on the same thread)
-                Thread.Sleep(500);
-                Assert.That(Thread.CurrentThread.ManagedThreadId, Is.EqualTo(taskThreadId));
-
-                // the task will not resume until *we* are done
-                Assert.That(resultSet, Is.False);
-
-                // this is NOT OK - hangs, since we are hanging on the task's thread
-                //task.GetAwaiter().GetResult(); // 'await' on this thread
-                Assert.That(task.Status, Is.EqualTo(TaskStatus.Running));
+                // capture the stack trace of the continuation
+                stackTrace = Environment.StackTrace;
             }
 
-            var threadId = Thread.CurrentThread.ManagedThreadId;
-
-            // some delay (on the same thread)
-            Thread.Sleep(200);
-            Assert.That(steps.Add("main.continue"), Is.EqualTo(threadId));
-
-            // some delay (on the same thread)
-            Thread.Sleep(200);
-            Assert.That(steps.Add("main.continue"), Is.EqualTo(threadId));
-
-            if (completeAsync)
+            async Task SetResult()
             {
-                // some delay (on the same thread)
-                Thread.Sleep(200);
-                Assert.That(steps.Add("main.end"), Is.EqualTo(threadId));
-            }
-            else
-            {
-                // we are still hanging on the task's thread so it cannot complete
-                Assert.That(task.Status, Is.EqualTo(TaskStatus.Running));
-
-                // release this thread
-                await Task.Yield();
-
-                // this is now OK
-                task.GetAwaiter().GetResult(); // 'await' on this thread
-
-                // can be on any thread
-                steps.Add("main.end");
+                await Task.Yield(); // ensure we go async
+                completion.SetResult(42);
             }
 
+            var getting = GetResult(); // wait for the result
+            while (getting.Status != TaskStatus.WaitingForActivation) await Task.Delay(100); // be sure it's waiting
+            await SetResult(); // set the result
+            await getting; // completes the wait for the result
 
-            // trace
-            Console.WriteLine(steps);
+            var isSync = stackTrace.Contains("System.Threading.Tasks.TaskCompletionSource`1.SetResult(TResult result)");
 
-            // what should be traced:
-            //
-            // synchronous:
-            // 00[22] main.start
-            // 01[22] main.wait
-            // 02[04] task.start
-            // 03[04] task.complete
-            // 04[04] main.resume    << main resumes and continues on task's thread
-            // 05[04] main.continue  << main is holding task's thread
-            // 06[04] main.continue
-            // 07[04] task.continue  << until it yields, and then the task resumes
-            // 08[04] task.end
-            // 09[10] main.end
-            //
-            // asynchronous:
-            // 00[22] main.start
-            // 01[22] main.wait
-            // 02[10] task.start
-            // 03[10] task.complete
-            // 04[10] task.continue  << task continues and ends on its own thread
-            // 05[06] main.resume    << main resumes and continues on another thread
-            // 06[10] task.end
-            // 07[06] main.continue
-            // 08[06] main.continue
-            // 09[06] main.end
+            // sync  -> the GetResult continuation executes async within the SetResult call
+            //          ie completion.SetResult() returns *only* after anything sync has run
+            // async -> the GetResult continuation executes async from the task scheduler
+            //          ie completion.SetResult() returns *immediately*
+            Assert.That(isSync, Is.Not.EqualTo(completeAsync));
         }
 
         [Test]
@@ -387,84 +286,6 @@ namespace Hazelcast.Tests.DotNet
                 var e = ae.InnerExceptions[0];
                 Assert.AreEqual(typeof (TaskCanceledException), e.GetType());
             }
-        }
-
-        private class Steps
-        {
-            private readonly ConcurrentQueue<Step> _steps = new ConcurrentQueue<Step>();
-
-            public int Add(string message)
-            {
-                var threadId = Thread.CurrentThread.ManagedThreadId;
-                _steps.Enqueue(new Step(message, threadId));
-                return threadId;
-            }
-
-            public int GetThreadId(string message)
-                => _steps.FirstOrDefault(x => x.Message == message)?.ManagedThreadId ?? 0;
-
-            public int GetIndex(string message)
-            {
-                var i = 0;
-                foreach (var x in _steps)
-                {
-                    if (x.Message == message) return i;
-                    i++;
-                }
-
-                return -1;
-            }
-
-            public void AssertSameThread(string step1, string step2)
-            {
-                var thread1 = GetThreadId(step1);
-                var thread2 = GetThreadId(step2);
-                Assert.That(thread1, Is.EqualTo(thread2), () => $"{step1} thread {thread1} != {step2} thread {thread2}");
-            }
-
-            public void AssertNotSameThread(string step1, string step2)
-            {
-                var thread1 = GetThreadId(step1);
-                var thread2 = GetThreadId(step2);
-                Assert.That(thread1, Is.Not.EqualTo(thread2), () => $"{step1} thread {thread1} == {step2} thread {thread2}");
-            }
-
-            public void AssertOrder(string step1, string step2)
-            {
-                var index1 = GetIndex(step1);
-                var index2 = GetIndex(step2);
-                Assert.That(index1, Is.LessThan(index2), () => $"{step1} at {index1} comes after {step2} at {index2}");
-            }
-
-            public override string ToString()
-            {
-                var text = new StringBuilder();
-                var i = 0;
-                foreach (var step in _steps)
-                {
-                    if (text.Length > 0) text.Append(Environment.NewLine);
-                    text.Append($"{i++:00} ");
-                    text.Append(step);
-                }
-
-                return text.ToString();
-            }
-        }
-
-        private class Step
-        {
-            public Step(string message, int threadId)
-            {
-                Message = message;
-                ManagedThreadId = threadId;
-            }
-
-            public int ManagedThreadId { get; }
-
-            public string Message { get; }
-
-            public override string ToString()
-                => $"[{ManagedThreadId:00}] {Message}";
         }
 
         [Test]

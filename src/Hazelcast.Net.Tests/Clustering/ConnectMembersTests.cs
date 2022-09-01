@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -73,7 +72,7 @@ namespace Hazelcast.Tests.Clustering
                 Assert.That(addresses.Count, Is.EqualTo(2));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:1")));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:2")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- can suspend while waiting
@@ -91,7 +90,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(3));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:3")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- suspending waits for the current connection
@@ -126,7 +125,7 @@ namespace Hazelcast.Tests.Clustering
             {
                 Assert.That(addresses.Count, Is.EqualTo(5));
                 Assert.That(addresses, Does.Contain(NetworkAddress.Parse("127.0.0.1:5")));
-            }, 2000, 200);
+            }, 20_000, 500);
 
 
             // -- can drain empty
@@ -174,7 +173,7 @@ namespace Hazelcast.Tests.Clustering
             // -- the end
 
             await queue.DisposeAsync();
-            await AssertEx.SucceedsEventually(() => Assert.That(connecting.IsCompleted), 2000, 200);
+            await AssertEx.SucceedsEventually(() => Assert.That(connecting.IsCompleted), 20_000, 500);
 
             // ok, but nothing will happen since the queue has been disposed
             queue.Add(MemberInfo(NetworkAddress.Parse("127.0.0.1:10")));
@@ -230,7 +229,7 @@ namespace Hazelcast.Tests.Clustering
 
             // each member retried twice = twice the 1s delay = 2s
             // we should not have completed faster than that, even so the code runs fully in-memory
-            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2))); 
+            Assert.That(elapsed, Is.GreaterThanOrEqualTo(TimeSpan.FromSeconds(2)));
             Console.WriteLine($"Elapsed: {elapsed}");
 
             Assert.That(queue.RequestsCount, Is.EqualTo(0));

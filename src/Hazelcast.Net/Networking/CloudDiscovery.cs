@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -68,8 +68,14 @@ namespace Hazelcast.Networking
 
             try
             {
-                // TODO: is this the best way to do an http request?
-                var httpWebRequest = (HttpWebRequest) WebRequest.Create(_endpointUrl);
+                // TODO: It needs to be refactored. We cannot make it async now due to refactoring of
+                // the callers of the Scan. The caller chain should be all async. The method can be
+                // refactored as async and using HttpClient/HttpClientFactory.
+#pragma warning disable SYSLIB0014
+#pragma warning disable SYSLIB0000
+                var httpWebRequest = (HttpWebRequest)WebRequest.Create(_endpointUrl);
+#pragma warning restore SYSLIB0000
+#pragma warning restore SYSLIB0014
                 httpWebRequest.Method = WebRequestMethods.Http.Get;
                 httpWebRequest.Timeout = _connectionTimeoutMilliseconds;
                 httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;

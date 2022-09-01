@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -83,8 +83,8 @@ namespace Hazelcast.Tests.Remote
 
         [Test]
         [Timeout(20_000)]
-		public async Task TestExcessiveMaxCount()
-		{
+        public async Task TestExcessiveMaxCount()
+        {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
@@ -92,12 +92,12 @@ namespace Hazelcast.Tests.Remote
             {
                 await rb.ReadManyAsync(0, 0, rb.MaxBatchSize + 1);
             });
-		}
+        }
 
         [Test]
         [Timeout(10_000)]
         public async Task TestExcessiveMinCount()
-		{
+        {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
@@ -124,8 +124,8 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task TestInvalidReadCount()
-		{
+        public async Task TestInvalidReadCount()
+        {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
@@ -133,11 +133,11 @@ namespace Hazelcast.Tests.Remote
             {
                 await rb.ReadManyAsync(0, 2, 1);
             });
-		}
+        }
 
         [Test]
-		public async Task TestInvalidSequence()
-		{
+        public async Task TestInvalidSequence()
+        {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
@@ -145,7 +145,7 @@ namespace Hazelcast.Tests.Remote
             {
                 await rb.ReadOneAsync(-1);
             });
-		}
+        }
 
         [Test]
         public async Task TestReadManyAsync()
@@ -204,8 +204,8 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-		public async Task TestStaleSequence()
-		{
+        public async Task TestStaleSequence()
+        {
             var rb = await Client.GetRingBufferAsync<string>(RingBufferNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(rb);
 
@@ -223,7 +223,7 @@ namespace Hazelcast.Tests.Remote
             {
                 Assert.That(e.Error, Is.EqualTo(RemoteError.StaleSequence));
             }
-		}
+        }
 
         [Test]
         public async Task TestTailSequence()
