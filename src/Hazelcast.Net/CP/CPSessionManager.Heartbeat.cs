@@ -96,8 +96,11 @@ namespace Hazelcast.CP
             }
             catch (Exception e)
             {
+        // FIXME refactor with C# 9
+#pragma warning disable CA1508
                 if (e is RemoteException { Error: RemoteError.SessionExpiredException } ||
                     e is RemoteException { Error: RemoteError.CpGroupDestroyedException })
+#pragma warning restore CA1508
                 {
                     InvalidateSession(groupId, sessionState.Id);
                 }
