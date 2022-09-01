@@ -5,11 +5,6 @@
     <RootNamespace>Hazelcast</RootNamespace>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <NeutralLanguage>en</NeutralLanguage>
-    <LangVersion>10.0</LangVersion>    
-  </PropertyGroup>
-
   <!--
     we used to use the Microsoft.CodeAnalysis.FxCopAnalyzers package, which has been deprecated in favour
     of .NET analyzers shipped with Visual Studio 2019. they are enabled by default for .NET 5 projects,
