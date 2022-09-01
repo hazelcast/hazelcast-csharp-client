@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Extensions.Logging;
@@ -27,8 +26,10 @@ namespace Hazelcast.Networking
     /// </summary>
     internal class ConfigurationAddressProviderSource : IAddressProviderSource
     {
-        private readonly NetworkingOptions _networkingOptions;
         private readonly IList<string> _addresses;
+        private readonly NetworkingOptions _networkingOptions;
+        private IReadOnlyCollection<NetworkAddress> _primaryAddresses;
+        private IReadOnlyCollection<NetworkAddress> _secondaryAddresses;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationAddressProviderSource"/> class.
@@ -37,9 +38,7 @@ namespace Hazelcast.Networking
         /// <param name="loggerFactory">A logger factory.</param>
         public ConfigurationAddressProviderSource(NetworkingOptions networkingOptions, ILoggerFactory loggerFactory)
         {
-            if (networkingOptions == null) throw new ArgumentNullException(nameof(networkingOptions));
-
-            _networkingOptions = networkingOptions;
+            _networkingOptions = networkingOptions ?? throw new ArgumentNullException(nameof(networkingOptions));
 
             var addresses = networkingOptions.Addresses;
             if (addresses.Count == 0) addresses = new List<string> { "localhost" };
@@ -47,10 +46,19 @@ namespace Hazelcast.Networking
         }
 
         /// <inheritdoc />
-        public IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap()
+        public (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(bool forceRefresh)
         {
-            var addresses = new Dictionary<NetworkAddress, NetworkAddress>();
-            foreach (var configurationAddressString in _addresses)
+            if (_primaryAddresses == null || forceRefresh)
+                (_primaryAddresses, _secondaryAddresses) = GetAddresses(_addresses);
+            return (_primaryAddresses, _secondaryAddresses);
+        }
+
+        private (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(IEnumerable<string> configurationAddressStrings)
+        {
+            var primary = new List<NetworkAddress>();
+            var secondary = new List<NetworkAddress>();
+
+            foreach (var configurationAddressString in configurationAddressStrings)
             {
                 if (!NetworkAddress.TryParse(configurationAddressString, out var configurationAddress))
                     throw new FormatException($"The string \"{configurationAddressString}\" does not represent a valid network address.");
@@ -65,29 +73,29 @@ namespace Hazelcast.Networking
                 // link-local - hosts on the link
                 // global - globally route-able addresses
 
-                IEnumerable<NetworkAddress> networkAddresses;
                 if (configurationAddress.IsIpV4 || configurationAddress.IsIpV6GlobalOrScoped)
                 {
                     // v4, or v6 global or has a scope = qualified, can return
-                    networkAddresses = ExpandPorts(configurationAddress);
+                    ExpandPorts(configurationAddress, primary, secondary);
                 }
                 else
                 {
                     // address is v6 site-local or link-local, and has no scopeId
                     // get localhost addresses
-                    networkAddresses = GetV6LocalAddresses()
-                        .SelectMany(x => ExpandPorts(configurationAddress, x));
+                    foreach (var address in GetV6LocalAddresses())
+                        ExpandPorts(configurationAddress, primary, secondary, address);
                 }
-
-                foreach (var networkAddress in networkAddresses)
-                    addresses.Add(networkAddress, networkAddress);
             }
 
-            return addresses;
+            return (primary, secondary);
         }
 
         /// <inheritdoc />
         public bool Maps => false;
+
+        /// <inheritdoc />
+        public bool TryMap(NetworkAddress address, bool forceRefreshMap, out NetworkAddress result, out bool freshMap)
+            => throw new NotSupportedException();
 
         /// <summary>
         /// Gets all scoped IP addresses corresponding to a non-scoped IP v6 local address.
@@ -111,6 +119,8 @@ namespace Hazelcast.Networking
         /// Expands the port of an address.
         /// </summary>
         /// <param name="address">The address.</param>
+        /// <param name="primary">Primary addresses.</param>
+        /// <param name="secondary">Secondary addresses.</param>
         /// <param name="ipAddress"></param>
         /// <returns>Addresses with ports.</returns>
         /// <remarks>
@@ -119,22 +129,25 @@ namespace Hazelcast.Networking
         /// different ports obtained through the <see cref="NetworkingOptions.DefaultPort"/> and
         /// <see cref="NetworkingOptions.PortRange"/> configuration options.</para>
         /// </remarks>
-        private IEnumerable<NetworkAddress> ExpandPorts(NetworkAddress address, IPAddress ipAddress = null)
+        private void ExpandPorts(NetworkAddress address, List<NetworkAddress> primary, List<NetworkAddress> secondary, IPAddress ipAddress = null)
         {
             if (address.Port > 0)
             {
                 // qualified with a port = can only be this address
-                yield return address;
+                primary.Add(address);
             }
             else
             {
                 // not qualified with a port = can be a port range
                 for (var port = _networkingOptions.DefaultPort;
-                    port < _networkingOptions.DefaultPort + _networkingOptions.PortRange;
-                    port++)
-                    yield return ipAddress == null
+                     port < _networkingOptions.DefaultPort + _networkingOptions.PortRange;
+                     port++)
+                {
+                    var addresses = port == _networkingOptions.DefaultPort ? primary : secondary;
+                    addresses.Add(ipAddress == null
                         ? new NetworkAddress(address, port)
-                        : new NetworkAddress(address.HostName, ipAddress, port);
+                        : new NetworkAddress(address.HostName, ipAddress, port));
+                }
             }
         }
     }
