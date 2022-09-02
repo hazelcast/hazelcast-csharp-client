@@ -31,26 +31,32 @@ namespace Hazelcast.Tests.Messaging
     public class ClientMessageConnectionTests
     {
         [Test]
-        public void ArgumentExceptions()
+        public async Task ArgumentExceptions()
         {
-            var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
-            var c = new ClientMessageConnection(s, new NullLoggerFactory());
+            var endpoint = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}").IPEndPoint;
+            await using var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             Assert.ThrowsAsync<ArgumentNullException>(async () => _ = await c.SendAsync(null));
         }
 
         [Test]
-        public async Task OnReceiveMessage()
+        public async Task OnReceiveMessage1()
         {
-            var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
-            var c = new ClientMessageConnection(s, new NullLoggerFactory()) { OnReceiveMessage = OnReceiveMessageNotImplemented };
+            var endpoint = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}").IPEndPoint;
+            await using var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var c = new ClientMessageConnection(s, new NullLoggerFactory()) { OnReceiveMessage = OnReceiveMessageNotImplemented };
 
             Assert.That(c.OnReceiveMessage, Is.Not.Null);
             Assert.Throws<NotImplementedException>(() => c.OnReceiveMessage(default, default));
+        }
 
-            c = new ClientMessageConnection(s, new NullLoggerFactory());
+        [Test]
+        public async Task OnReceiveMessage2()
+        {
+            var endpoint = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}").IPEndPoint;
+            await using var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             using var l = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
 
@@ -63,11 +69,11 @@ namespace Hazelcast.Tests.Messaging
             => throw new NotImplementedException();
 
         [Test]
-        public void HandleFragments()
+        public async Task HandleFragments()
         {
-            var endpoint = NetworkAddress.Parse("127.0.0.1:11000").IPEndPoint;
-            var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
-            var c = new ClientMessageConnection(s, new NullLoggerFactory());
+            var endpoint = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}").IPEndPoint;
+            await using var s = new ClientSocketConnection(Guid.NewGuid(), endpoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            await using var c = new ClientMessageConnection(s, new NullLoggerFactory());
 
             ClientMessage recvd = null;
 
@@ -148,7 +154,7 @@ namespace Hazelcast.Tests.Messaging
                 await c.SendAsync(new ClientMessage(new Frame(new byte[64])));
             }
 
-            var address = NetworkAddress.Parse("127.0.0.1:11000");
+            var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
             await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
             await server.StartAsync();
 

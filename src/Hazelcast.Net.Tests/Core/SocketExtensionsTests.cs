@@ -42,31 +42,19 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncSuccess()
         {
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), TestEndPointPort.GetNext());
             using var server = new SocketListener(endpoint, SocketListenerMode.AcceptOnce);
-
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
+
             await socket.ConnectAsync(endpoint, -1);
             // connected!
-
-            try
-            {
-                socket.Shutdown(SocketShutdown.Both);
-                socket.Close();
-                socket.Dispose();
-            }
-            catch { /* doesn't matter */ }
         }
 
         [Test]
         public async Task ConnectAsyncConnectionRefused1()
         {
-            // note: SocketListener will offset / randomize the port to avoid collisions
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), TestEndPointPort.GetNext());
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
-
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             await AssertEx.ThrowsAsync<SocketException>(async () =>
@@ -79,11 +67,8 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncConnectionRefused2()
         {
-            // note: SocketListener will offset / randomize the port to avoid collisions
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), TestEndPointPort.GetNext());
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
-
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
             await AssertEx.ThrowsAsync<SocketException>(async () =>
@@ -96,9 +81,7 @@ namespace Hazelcast.Tests.Core
         [Test]
         public async Task ConnectAsyncConnectionRefused3()
         {
-            // note: SocketListener will offset / randomize the port to avoid collisions
-            var endpoint = IPEndPointEx.Parse("127.0.0.1:11000");
-
+            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), TestEndPointPort.GetNext());
             using var server = new SocketListener(endpoint, SocketListenerMode.ConnectionRefused);
             using var socket = new Socket(endpoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
 
