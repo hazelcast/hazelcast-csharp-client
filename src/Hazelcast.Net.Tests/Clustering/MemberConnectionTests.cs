@@ -29,6 +29,7 @@ using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Accessors;
+using Hazelcast.Testing.Networking;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging;
@@ -60,7 +61,7 @@ namespace Hazelcast.Tests.Clustering
 
             var loggerFactory = new NullLoggerFactory();
 
-            var address = NetworkAddress.Parse("127.0.0.1:11000");
+            var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
 
             var state = new ServerState
             {
