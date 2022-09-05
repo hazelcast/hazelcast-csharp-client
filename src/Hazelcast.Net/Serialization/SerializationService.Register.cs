@@ -20,6 +20,13 @@ namespace Hazelcast.Serialization
     {
         #region RegisterConstantSerializer
 
+        private static void EnsureValidConstantSerializer(ISerializerAdapter adapter)
+        {
+            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+            if (adapter.TypeId > 0) throw new ArgumentException("Constant serializer type-id must be <=0.", nameof(adapter));
+            if (-adapter.TypeId >= ConstantSerializersCount) throw new ArgumentException($"Constant serializer type-id must be >-{ConstantSerializersCount}.", nameof(adapter));
+        }
+
         /// <summary>
         /// Registers a constant serializer (by type and negative type-id).
         /// </summary>
@@ -29,12 +36,10 @@ namespace Hazelcast.Serialization
         /// <exception cref="ArgumentException">The <paramref name="adapter"/> has a positive type-id.</exception>
         private void RegisterConstantSerializer(ISerializerAdapter adapter, Type type)
         {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-            if (adapter.TypeId > 0) throw new ArgumentException("Constant serializer type-id must be <=0.", nameof(adapter));
-            if (-adapter.TypeId >= ConstantSerializersCount) throw new ArgumentException($"Constant serializer type-id must be >-{ConstantSerializersCount}.", nameof(adapter));
+            EnsureValidConstantSerializer(adapter);
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            _ = _constantByType.TryAdd(type, adapter);
+            _constantByType.AddOrUpdate(type, adapter, (_, _) => adapter);
             _constantById[-adapter.TypeId] = adapter; // type-id key is >0 because _constantById is an array
         }
 
@@ -46,9 +51,7 @@ namespace Hazelcast.Serialization
         /// <exception cref="ArgumentException">The <paramref name="adapter"/> has a positive type-id.</exception>
         private void RegisterConstantSerializer(ISerializerAdapter adapter)
         {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
-            if (adapter.TypeId > 0) throw new ArgumentException("Constant serializer type-id must be <=0.", nameof(adapter));
-            if (-adapter.TypeId >= ConstantSerializersCount) throw new ArgumentException($"Constant serializer type-id must be >-{ConstantSerializersCount}.", nameof(adapter));
+            EnsureValidConstantSerializer(adapter);
 
             _constantById[-adapter.TypeId] = adapter; // type-id key is >0 because _constantById is an array
         }
@@ -74,10 +77,8 @@ namespace Hazelcast.Serialization
         /// <exception cref="InvalidOperationException">Another serializer is already registered for the type or type-id.</exception>
         private bool TryRegisterConstantSerializer(ISerializerAdapter adapter, Type type)
         {
-            if (adapter == null) throw new ArgumentNullException(nameof(adapter));
+            EnsureValidConstantSerializer(adapter);
             if (type == null) throw new ArgumentNullException(nameof(type));
-            if (adapter.TypeId > 0) throw new ArgumentException($"Custom serializer {adapter.Serializer} cannot have a positive type-id ({adapter.TypeId}).");
-            if (-adapter.TypeId >= ConstantSerializersCount) throw new ArgumentException($"Constant serializer type-id must be >-{ConstantSerializersCount}.", nameof(adapter));
 
             // it is OK to register a constant serializer for a new type,
             // but the id and serializer instance need to match exactly
@@ -110,8 +111,8 @@ namespace Hazelcast.Serialization
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
             if (type == null) throw new ArgumentNullException(nameof(type));
             if (adapter.TypeId <= 0) throw new ArgumentException($"Custom serializer {adapter.Serializer} cannot have a negative type-id ({adapter.TypeId}).");
-            if (_constantByType.ContainsKey(type))
-                throw new ArgumentException($"Custom serializer cannot be registered for constant type {type}.");
+
+            // note: this cannot override a constant type due to the type-id being positive
 
             var byType = _customByType.TryAdd(type, adapter);
             var byId = _customById.TryAdd(adapter.TypeId, adapter);
@@ -153,12 +154,13 @@ namespace Hazelcast.Serialization
         {
             if (adapter == null) throw new ArgumentNullException(nameof(adapter));
             if (adapter.TypeId <= 0) throw new ArgumentException($"Custom serializer {adapter.Serializer} cannot have a negative type-id ({adapter.TypeId}).");
+
             if (_customById.TryAdd(adapter.TypeId, adapter)) return true;
 
             var existing = _customById[adapter.TypeId];
             if (existing.Serializer.GetType() == adapter.Serializer.GetType()) return false;
 
-            throw new InvalidOperationException($"Serializer {existing.Serializer} has already been registered for type id {adapter.TypeId}.");
+            throw new InvalidOperationException($"Cannot register serializer {adapter.Serializer} for type-id {adapter.TypeId} because serializer {existing.Serializer} has already been registered for that type-id.");
         }
 
         /// <summary>

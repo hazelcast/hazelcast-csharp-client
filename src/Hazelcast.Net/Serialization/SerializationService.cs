@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization.Compact;
@@ -35,7 +36,7 @@ namespace Hazelcast.Serialization
         private static MethodInfo _createSerializerAdapter;
 
         private readonly SerializationOptions _options;
-        private readonly List<IDisposable> _disposables = new List<IDisposable>();
+        private readonly List<IDisposable> _disposables = new();
         private readonly ILogger _logger;
         private readonly IPartitioningStrategy _globalPartitioningStrategy;
         private readonly int _initialOutputBufferSize;
@@ -52,9 +53,9 @@ namespace Hazelcast.Serialization
         //   _customByType   : custom type      -> ISerializerAdapter
         //
         private readonly ISerializerAdapter[] _constantById = new ISerializerAdapter[ConstantSerializersCount];
-        private readonly ConcurrentDictionary<Type, ISerializerAdapter> _constantByType = new ConcurrentDictionary<Type, ISerializerAdapter>();
-        private readonly ConcurrentDictionary<int, ISerializerAdapter> _customById = new ConcurrentDictionary<int, ISerializerAdapter>();
-        private readonly ConcurrentDictionary<Type, ISerializerAdapter> _customByType = new ConcurrentDictionary<Type, ISerializerAdapter>();
+        private readonly ConcurrentDictionary<Type, ISerializerAdapter> _constantByType = new();
+        private readonly ConcurrentDictionary<int, ISerializerAdapter> _customById = new();
+        private readonly ConcurrentDictionary<Type, ISerializerAdapter> _customByType = new();
 
         // the adapters
 #pragma warning disable CA2213 // Disposable fields should be disposed - they are
@@ -141,6 +142,10 @@ namespace Hazelcast.Serialization
             // Mostly, this is going to register all the primitive constant serializers.
             foreach (var definition in definitions) definition.AddSerializers(this);
 
+            // It is illegal for compact to declare that it handles a type which in fact is a constant type, validate
+            // that the primitive constant serializers that we just added are not overriden by compact.
+            EnsureConstantNotOverridenWithCompact();
+
             // Registers the constant 'null serializer', which handles serialization of NULL references.
             _nullSerializerAdapter = CreateSerializerAdapter<object>(new NullSerializer());
             RegisterConstantSerializer(_nullSerializerAdapter);
@@ -174,6 +179,19 @@ namespace Hazelcast.Serialization
         public CompactSerializationSerializer CompactSerializer => _compactSerializer;
 
         public Endianness Endianness { get; }
+
+        private void EnsureConstantNotOverridenWithCompact()
+        {
+            foreach (var error in _constantByType.Keys
+                         .Select(x => (oops: _compactSerializer.TryGetSerializer(x, out var y), type: x, serializer: y))
+                         .Where(x => x.oops))
+            {
+                var serializer = error.serializer == null ? "the reflection serializer" : $"serializer {error.serializer}";
+                throw new ConfigurationException($"Cannot register {serializer} for type {error.type} " +
+                                                 "because this type is a constant type and SerializationOptions.AllowOverrideDefaultSerializers " +
+                                                 "is false. Set this property to true to enable overriding constant type serializers.");
+            }
+        }
 
         /// <summary>
         /// Gets the serialization service ready to send a message.

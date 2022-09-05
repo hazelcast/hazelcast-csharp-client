@@ -228,6 +228,10 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var sw = new SchemaBuilderWriter("thing");
             Assert.Throws<NotSupportedException>(() => sw.GetFieldKind("fieldname"));
+            sw.WriteBoolean("foo", false);
+            Assert.Throws<SerializationException>(() => sw.WriteBoolean("foo", false));
+            Assert.Throws<SerializationException>(() => sw.WriteInt8("foo", 0));
+            sw.WriteBoolean("FOO", false); // is case-sensitive
         }
 
         private static readonly (Type, object?)[] SerializeSource = 
