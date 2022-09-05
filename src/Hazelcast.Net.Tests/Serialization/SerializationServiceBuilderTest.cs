@@ -13,14 +13,60 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using Hazelcast.Configuration;
 using Hazelcast.Core;
+using Hazelcast.Partitioning.Strategies;
 using Hazelcast.Serialization;
+using Hazelcast.Serialization.Compact;
+using Hazelcast.Serialization.ConstantSerializers;
 using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization
 {
+    [TestFixture]
+    public class SerializationServiceTests
+    {
+        [Test]
+        public void CompactCannotOverrideConstantSerializer()
+        {
+            var options = new SerializationOptions();
+
+            options.Compact.AddSerializer(new CompactConstantSerializer());
+
+            Assert.Throws<ConfigurationException>(() =>
+                _ = new SerializationService(
+                    options,
+                    Endianness.BigEndian,
+                    0,
+                    new Dictionary<int, IDataSerializableFactory>(),
+                    new Dictionary<int, IPortableFactory>(),
+                    new List<IClassDefinition>(),
+                    new SerializerHooks(),
+                    new ISerializerDefinitions[] { new ConstantSerializerDefinitions() },
+                    false,
+                    new NullPartitioningStrategy(),
+                    1024,
+                    Mock.Of<ISchemas>(),
+                    new NullLoggerFactory()
+                )
+            );
+        }
+
+        private class CompactConstantSerializer : ICompactSerializer<bool>
+        {
+            public string TypeName => "bool";
+
+            public bool Read(ICompactReader reader) => throw new NotImplementedException();
+
+            public void Write(ICompactWriter writer, bool value) =>  throw new NotImplementedException();
+        }
+    }
+
+    [TestFixture]
     public class SerializationServiceBuilderTest
     {
         [Test]

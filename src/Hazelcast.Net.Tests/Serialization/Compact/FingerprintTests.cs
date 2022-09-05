@@ -29,11 +29,15 @@ namespace Hazelcast.Tests.Serialization.Compact
     public class FingerprintTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public void CanFingerprintNullString()
+        public void CannotFingerprintNullString()
         {
-            var fingerprint = RabinFingerprint.InitialValue;
-            fingerprint = RabinFingerprint.Fingerprint(fingerprint, (string)null);
-            Assert.That(fingerprint, Is.EqualTo(16130581598588476612L)); // yes - that magic number
+            Assert.Throws<ArgumentNullException>(() => RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, (string)null));
+        }
+
+        [Test]
+        public void CannotFingerprintNullBytes()
+        {
+            Assert.Throws<ArgumentNullException>(() => RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, (byte[])null));
         }
 
         [Test]
