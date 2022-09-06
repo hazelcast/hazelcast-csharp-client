@@ -21,9 +21,6 @@ namespace Hazelcast.Testing.Networking
 {
     public class SocketListener : IDisposable
     {
-        private const int PortRange = 10; // offset goes +0 to +9
-        private static int _portOffset;
-
         private Socket _listener;
         private Socket _socket;
 
@@ -33,13 +30,6 @@ namespace Hazelcast.Testing.Networking
 
         public SocketListener(IPEndPoint endpoint, SocketListenerMode mode)
         {
-            // offset port - shutting down a socket and releasing it takes time, so if we
-            // keep using the same port, the retry loop below always kicks and slows the
-            // tests
-
-            endpoint.Port += _portOffset;
-            if (++_portOffset == PortRange) _portOffset = 0;
-
             // note
             // listen backlog 0 is equivalent to 1, backlog -1 means "system queue size"
             //
