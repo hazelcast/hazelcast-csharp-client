@@ -37,6 +37,7 @@ using Hazelcast;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
 [assembly: InternalsVisibleTo("hb")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection")]
+[assembly: InternalsVisibleTo("Hazelcast.Net.Linq.Async")]
 
 // moq
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2")]

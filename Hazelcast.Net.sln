@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29806.167
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32421.90
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.Tests", "src\Hazelcast.Net.Tests\Hazelcast.Net.Tests.csproj", "{C28F0950-963B-4C2B-B6F3-EDE222FA7863}"
 EndProject
@@ -82,6 +82,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotcover-report", "dotcover
 		.github\actions\dotcover-report\README.md = .github\actions\dotcover-report\README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Linq.Async", "src\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj", "{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +126,10 @@ Global
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
