@@ -272,7 +272,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.Throws<ArgumentException>(() => options.AddSerializer(new BogusCompactSerializer()));
 
-            options.AddSerializer(new ThingCompactSerializer<Thing>());
+            options.AddSerializer((ICompactSerializer)new ThingCompactSerializer<Thing>());
         }
 
         private class BogusCompactSerializer : ICompactSerializer
