@@ -25,7 +25,9 @@ using Hazelcast.Testing;
 using Hazelcast.Tests.Serialization.Compact;
 using NUnit.Framework;
 
-[assembly:CompactSerializer(typeof(ThingCompactSerializer<Thing>))]
+// FIXME this should not be in this PR?!
+// but then we should NOT lose the code !!
+//[assembly:CompactSerializer(typeof(ThingCompactSerializer<Thing>))]
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
@@ -109,20 +111,20 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
         */
 
-        [Test]
-        public async Task AddAssemblySerializers()
-        {
-            var options = GetHazelcastOptions();
+        //[Test]
+        //public async Task AddAssemblySerializers()
+        //{
+        //    var options = GetHazelcastOptions();
 
-            // add the assembly's serializers, discovered via the [assembly:CompactSerializer(...)]
-            // attribute - in real life, the attribute will be generated along with the code for the
-            // serializer - the type name is provided by the serializer - the schema will derive from
-            // the serializer and will be published when first used
-            options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
+        //    // add the assembly's serializers, discovered via the [assembly:CompactSerializer(...)]
+        //    // attribute - in real life, the attribute will be generated along with the code for the
+        //    // serializer - the type name is provided by the serializer - the schema will derive from
+        //    // the serializer and will be published when first used
+        //    options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
 
-            // type name and field name obtained from the serializer
-            await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
-        }
+        //    // type name and field name obtained from the serializer
+        //    await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
+        //}
 
         [Test]
         public async Task AddSerializer()
