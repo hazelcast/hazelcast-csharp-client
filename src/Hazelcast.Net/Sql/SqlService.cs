@@ -61,6 +61,12 @@ namespace Hazelcast.Sql
         }
 
         /// <inheritdoc/>
+        public Task<ISqlQueryResult> ExecuteQueryAsync(string sql, SqlStatementOptions options = null, CancellationToken cancellationToken = default, params object[] parameters)
+        {
+            return ExecuteQueryAsync(sql, parameters, options, cancellationToken);
+        }
+
+        /// <inheritdoc/>
         public async Task<long> ExecuteCommandAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
             parameters ??= Array.Empty<object>();
@@ -71,6 +77,12 @@ namespace Hazelcast.Sql
             // and... in case token is cancelled, it's pretty much the same
 
             return await FetchUpdateCountAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+        }
+
+        /// <inheritdoc/>
+        public Task<long> ExecuteCommandAsync(string sql, SqlStatementOptions options = null, CancellationToken cancellationToken = default, params object[] parameters)
+        {
+            return ExecuteCommandAsync(sql, parameters, options, cancellationToken);
         }
 
         private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
