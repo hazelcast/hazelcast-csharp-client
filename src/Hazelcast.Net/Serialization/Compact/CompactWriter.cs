@@ -474,12 +474,20 @@ namespace Hazelcast.Serialization.Compact
             // in Java this constraint could probably be lifted without problems.
             if (value != null)
             {
-                var typeOfT = typeof(T);
-                var error = value.FirstOrDefault(x => x != null && x.GetType() != typeOfT);
-                if (error != null)
+                // typeof(T) would be Nullable<int> not int - same with GetElementType() - and then, 
+                // when processing each array element, it's going to be boxed to an object so either
+                // be null or int. and so, we need to unwrap the nullable for checks to be valid.
+                var elementType = value.GetType().GetElementType()!;
+                if (elementType.IsNullableOfT(out var underlyingType)) elementType = underlyingType;
+
+                foreach (var element in value)
+                {
+                    if (element == null || element.GetType() == elementType) continue;
+
                     throw new SerializationException("It is not allowed to serialize an array of Compact serializable "
-                                                         + $"objects containing different item types. A {typeOfT.Name}[] array "
-                                                         + $"cannot contain an object of type {error.GetType().Name}.");
+                                                     + $"objects containing different item types. A {value.GetType().ToCsString()} array "
+                                                     + $"cannot contain an object of type {element.GetType().ToCsString()}.");
+                }
             }
 
             WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
