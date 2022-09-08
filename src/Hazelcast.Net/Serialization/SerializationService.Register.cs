@@ -113,6 +113,10 @@ namespace Hazelcast.Serialization
             if (adapter.TypeId <= 0) throw new ArgumentException($"Custom serializer {adapter.Serializer} cannot have a negative type-id ({adapter.TypeId}).");
 
             // note: this cannot override a constant type due to the type-id being positive
+            // FIXME or?
+            #error
+            if (_constantByType.ContainsKey(type))
+                throw new ArgumentException($"Custom serializer cannot be registered for constant type {type}.");
 
             var byType = _customByType.TryAdd(type, adapter);
             var byId = _customById.TryAdd(adapter.TypeId, adapter);

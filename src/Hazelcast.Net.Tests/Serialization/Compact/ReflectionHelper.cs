@@ -137,6 +137,24 @@ namespace Hazelcast.Tests.Serialization.Compact
             ilgen.Emit(OpCodes.Callvirt, write);
             ilgen.Emit(OpCodes.Ret);
 
+            // FIXME??
+            /*
+            var read = typeof(CompactReaderExtensions).GetMethod($"Read{fieldKind}OrDefault");
+            if (fieldKind == FieldKind.Compact) read = read.MakeGenericMethod(propertyType);
+            var readBuilder = typeBuilder.DefineMethod("Read", MethodAttributes.Public | MethodAttributes.Virtual, objectType, new[] { typeof(ICompactReader) });
+            ilgen = readBuilder.GetILGenerator();
+            ilgen.Emit(OpCodes.Newobj, objectType.GetConstructor(Type.EmptyTypes));
+            ilgen.Emit(OpCodes.Dup);
+            ilgen.Emit(OpCodes.Ldarg_1);
+            ilgen.Emit(OpCodes.Ldarg_0);
+            ilgen.Emit(OpCodes.Call, getFieldName);
+            ilgen.Emit(OpCodes.Ldarg_0);
+            ilgen.Emit(OpCodes.Call, getDefaultValue);
+            ilgen.Emit(OpCodes.Call, read);
+            ilgen.Emit(OpCodes.Callvirt, property.SetMethod);
+            ilgen.Emit(OpCodes.Ret);
+            */
+            
             var type = typeBuilder.CreateType();
             if (type == null) throw new Exception("panic: null type.");
             return type;

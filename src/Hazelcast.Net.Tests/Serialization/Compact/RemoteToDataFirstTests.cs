@@ -111,6 +111,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
         */
 
+        // FIXME???
         //[Test]
         //public async Task AddAssemblySerializers()
         //{

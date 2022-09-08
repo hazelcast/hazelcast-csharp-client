@@ -28,6 +28,88 @@ namespace Hazelcast.Tests.Serialization.Compact
     [TestFixture]
     public class CompactReaderExtensionsTests
     {
+        private static readonly (FieldKind, Func<ICompactReader, string, bool>)[] HasFieldOfKindCases = 
+        {
+            // do NOT remove nor alter the <generated></generated> lines!
+            // <generated>
+
+            (FieldKind.Boolean, (x, y) => x.HasBoolean(y)),
+            (FieldKind.Int8, (x, y) => x.HasInt8(y)),
+            (FieldKind.Int16, (x, y) => x.HasInt16(y)),
+            (FieldKind.Int32, (x, y) => x.HasInt32(y)),
+            (FieldKind.Int64, (x, y) => x.HasInt64(y)),
+            (FieldKind.Float32, (x, y) => x.HasFloat32(y)),
+            (FieldKind.Float64, (x, y) => x.HasFloat64(y)),
+            (FieldKind.ArrayOfBoolean, (x, y) => x.HasArrayOfBoolean(y)),
+            (FieldKind.ArrayOfInt8, (x, y) => x.HasArrayOfInt8(y)),
+            (FieldKind.ArrayOfInt16, (x, y) => x.HasArrayOfInt16(y)),
+            (FieldKind.ArrayOfInt32, (x, y) => x.HasArrayOfInt32(y)),
+            (FieldKind.ArrayOfInt64, (x, y) => x.HasArrayOfInt64(y)),
+            (FieldKind.ArrayOfFloat32, (x, y) => x.HasArrayOfFloat32(y)),
+            (FieldKind.ArrayOfFloat64, (x, y) => x.HasArrayOfFloat64(y)),
+            (FieldKind.NullableBoolean, (x, y) => x.HasNullableBoolean(y)),
+            (FieldKind.NullableInt8, (x, y) => x.HasNullableInt8(y)),
+            (FieldKind.NullableInt16, (x, y) => x.HasNullableInt16(y)),
+            (FieldKind.NullableInt32, (x, y) => x.HasNullableInt32(y)),
+            (FieldKind.NullableInt64, (x, y) => x.HasNullableInt64(y)),
+            (FieldKind.NullableFloat32, (x, y) => x.HasNullableFloat32(y)),
+            (FieldKind.NullableFloat64, (x, y) => x.HasNullableFloat64(y)),
+            (FieldKind.Decimal, (x, y) => x.HasDecimal(y)),
+            (FieldKind.String, (x, y) => x.HasString(y)),
+            (FieldKind.Time, (x, y) => x.HasTime(y)),
+            (FieldKind.Date, (x, y) => x.HasDate(y)),
+            (FieldKind.TimeStamp, (x, y) => x.HasTimeStamp(y)),
+            (FieldKind.TimeStampWithTimeZone, (x, y) => x.HasTimeStampWithTimeZone(y)),
+            (FieldKind.Compact, (x, y) => x.HasCompact(y)),
+            (FieldKind.ArrayOfNullableBoolean, (x, y) => x.HasArrayOfNullableBoolean(y)),
+            (FieldKind.ArrayOfNullableInt8, (x, y) => x.HasArrayOfNullableInt8(y)),
+            (FieldKind.ArrayOfNullableInt16, (x, y) => x.HasArrayOfNullableInt16(y)),
+            (FieldKind.ArrayOfNullableInt32, (x, y) => x.HasArrayOfNullableInt32(y)),
+            (FieldKind.ArrayOfNullableInt64, (x, y) => x.HasArrayOfNullableInt64(y)),
+            (FieldKind.ArrayOfNullableFloat32, (x, y) => x.HasArrayOfNullableFloat32(y)),
+            (FieldKind.ArrayOfNullableFloat64, (x, y) => x.HasArrayOfNullableFloat64(y)),
+            (FieldKind.ArrayOfDecimal, (x, y) => x.HasArrayOfDecimal(y)),
+            (FieldKind.ArrayOfTime, (x, y) => x.HasArrayOfTime(y)),
+            (FieldKind.ArrayOfDate, (x, y) => x.HasArrayOfDate(y)),
+            (FieldKind.ArrayOfTimeStamp, (x, y) => x.HasArrayOfTimeStamp(y)),
+            (FieldKind.ArrayOfTimeStampWithTimeZone, (x, y) => x.HasArrayOfTimeStampWithTimeZone(y)),
+            (FieldKind.ArrayOfString, (x, y) => x.HasArrayOfString(y)),
+            (FieldKind.ArrayOfCompact, (x, y) => x.HasArrayOfCompact(y)),
+
+            // </generated>
+        };
+
+        [Test]
+        public void HasField()
+        {
+            var reader = Mock.Of<ICompactReader>();
+            Mock.Get(reader)
+                .Setup(x => x.GetFieldKind(It.IsAny<string>()))
+                .Returns<string>(x => x == "name" ? FieldKind.Int8 : FieldKind.NotAvailable)
+                .Verifiable();
+            Assert.That(reader.HasField("name"));
+            Assert.That(reader.HasField("name", FieldKind.Int8));
+            Assert.That(!reader.HasField("name", FieldKind.Int16));
+            Assert.That(!reader.HasField("duh"));
+            Mock.Get(reader).Verify(x => x.GetFieldKind(It.IsAny<string>()), Times.Exactly(4));
+
+            Assert.Throws<ArgumentNullException>(() => ((ICompactReader)null).HasField("name"));
+            Assert.Throws<ArgumentNullException>(() => ((ICompactReader)null).HasField("name", FieldKind.Boolean));
+        }
+
+        [TestCaseSource(nameof(HasFieldOfKindCases))]
+        public void HasFieldOfKind((FieldKind Kind, Func<ICompactReader, string, bool> HasFieldOfKind) testCase)
+        {
+            var reader = Mock.Of<ICompactReader>();
+            Mock.Get(reader)
+                .Setup(x => x.GetFieldKind(It.IsAny<string>()))
+                .Returns<string>(x => x == "name" ? testCase.Kind : FieldKind.NotAvailable)
+                .Verifiable();
+            Assert.That(testCase.HasFieldOfKind(reader, "name"));
+            Assert.That(!testCase.HasFieldOfKind(reader, "duh"));
+            Mock.Get(reader).VerifyAll();
+        }
+
         private static readonly (Type, FieldKind, object, object)[] ReadOrDefaultReflCases = 
         {
             // do NOT remove nor alter the <generated></generated> lines!
@@ -227,6 +309,103 @@ namespace Hazelcast.Tests.Serialization.Compact
             (typeof (Thing[]), FieldKind.ArrayOfCompact, new Thing[] { null }, new Thing[] { new Thing { Value = 2 } }),
             (typeof (Thing[]), FieldKind.ArrayOfCompact, new Thing[] { null }, new Thing[] { null }),
         };
+
+        [TestCaseSource(nameof(ReadOrDefaultReflCases))]
+        public void ReadOrDefault((Type PropertyType, FieldKind FieldKind, object PropertyValue, object DefaultValue) testCase)
+        {
+            var propertyType = testCase.PropertyType;
+            var fieldKind = testCase.FieldKind;
+            var propertyValue = testCase.PropertyValue;
+            var propertyDefaultValue = testCase.DefaultValue;
+
+            var objType = ReflectionHelper.CreateObjectType(propertyType);
+            var obj = Activator.CreateInstance(objType);
+            ReflectionHelper.SetPropertyValue(obj, "Value0", propertyValue);
+
+            // TODO: understand why the reflection helper serializer fails with compact
+            var objSerializerType = 
+                testCase.FieldKind == FieldKind.Compact ? typeof(CompactObjectSerializer<>).MakeGenericType(objType) :
+                testCase.FieldKind == FieldKind.ArrayOfCompact ? typeof(ArrayOfCompactObjectSerializer<>).MakeGenericType(objType) :
+                ReflectionHelper.CreateObjectSerializerType(objType, "Value0", fieldKind);
+
+            var objSerializer = Activator.CreateInstance(objSerializerType);
+            objSerializerType.GetProperty("DefaultValue").SetValue(objSerializer, propertyDefaultValue);
+            var fieldNameProperty = objSerializerType.GetProperty("FieldName");
+            fieldNameProperty.SetValue(objSerializer, "value");
+
+            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            if (testCase.FieldKind == FieldKind.Compact || testCase.FieldKind == FieldKind.ArrayOfCompact) MockReadWriteCompact(orw);
+
+            var schema = SchemaBuilder.For("obj").WithField("value", fieldKind).Build();
+            var output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            objSerializerType.GetMethod("Write").Invoke(objSerializer, new[] { writer, obj });
+            writer.Complete();
+            var input = new ObjectDataInput(output.ToByteArray(), orw, Endianness.BigEndian);
+            var reader = new CompactReader(orw, input, schema, objType);
+            var result = objSerializerType.GetMethod("Read").Invoke(objSerializer, new[] { reader });
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.InstanceOf(objType));
+            AssertValue(propertyValue, ReflectionHelper.GetPropertyValue(result, "Value0"));
+
+            output = new ObjectDataOutput(1024, orw, Endianness.BigEndian);
+            writer = new CompactWriter(orw, output, schema);
+            objSerializerType.GetMethod("Write").Invoke(objSerializer, new[] { writer, obj });
+            writer.Complete();
+            input = new ObjectDataInput(output.ToByteArray(), orw, Endianness.BigEndian);
+            reader = new CompactReader(orw, input, schema, objType);
+            fieldNameProperty.SetValue(objSerializer, "xxxx");
+            result = objSerializerType.GetMethod("Read").Invoke(objSerializer, new[] { reader });
+
+            Assert.That(result, Is.Not.Null);
+            Assert.That(result, Is.InstanceOf(objType));
+            AssertValue(propertyDefaultValue, ReflectionHelper.GetPropertyValue(result, "Value0"));
+        }
+
+        private class CompactObjectSerializer<T> : ICompactSerializer<T> where T : new()
+        {
+            public Thing DefaultValue { get; set; }
+
+            public string FieldName { get; set; }
+
+            public string TypeName => "thing";
+
+            public T Read(ICompactReader reader)
+            {
+                var x = new T();
+                typeof(T).GetProperty("Value0").SetValue(x, reader.ReadCompactOrDefault<Thing>(FieldName, DefaultValue));
+                return x;
+            }
+
+            public void Write(ICompactWriter writer, T value)
+            {
+                var x = (Thing) typeof(T).GetProperty("Value0").GetValue(value);
+                writer.WriteCompact<Thing>(FieldName, x);
+            }
+        }
+
+        private class ArrayOfCompactObjectSerializer<T> : ICompactSerializer<T> where T : new()
+        {
+            public Thing[] DefaultValue { get; set; }
+
+            public string FieldName { get; set; }
+
+            public string TypeName => "thing";
+
+            public T Read(ICompactReader reader)
+            {
+                var x = new T();
+                typeof(T).GetProperty("Value0").SetValue(x, reader.ReadArrayOfCompactOrDefault<Thing>(FieldName, DefaultValue));
+                return x;
+            }
+
+            public void Write(ICompactWriter writer, T value)
+            {
+                var x = (Thing[])typeof(T).GetProperty("Value0").GetValue(value);
+                writer.WriteArrayOfCompact<Thing>(FieldName, x);
+            }
+        }
 
         private static void MockReadWriteCompact(IReadWriteObjectsFromIObjectDataInputOutput orw)
         {
