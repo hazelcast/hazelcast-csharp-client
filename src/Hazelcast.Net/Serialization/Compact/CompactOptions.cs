@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -225,6 +226,42 @@ namespace Hazelcast.Serialization.Compact
             _serializedType.Add(serializedType);
             _serializedType_typeName[serializedType] = serializer.TypeName;
             _typeName_serializer[serializer.TypeName] = serializer;
+        }
+
+        // TODO: consider always scanning a type's assembly for serializers
+        // so if the serializer & type are in the same assembly, no config is required
+
+        /// <summary>
+        /// Adds serializers contained in an assembly.
+        /// </summary>
+        /// <param name="assembly">The assembly to add.</param>
+        /// <exception cref="ArgumentNullException"><paramref name="assembly"/> is <c>nul</c>.</exception>
+        /// <exception cref="ConfigurationException">The operation conflicts with information that were already provided.</exception>
+        /// <remarks>
+        /// <para>When an assembly is registered for compact serialization, the client scans the assembly for assembly-
+        /// level <see cref="CompactSerializerAttribute"/> and registers the serializer as specified by the attribute.</para>
+        /// </remarks>
+        public void AddAssemblySerializers(Assembly assembly)
+        {
+            if (assembly == null) throw new ArgumentNullException(nameof(assembly));
+
+            var attrs = assembly.GetCustomAttributes<CompactSerializerAttribute>();
+            foreach (var attr in attrs)
+            {
+                var serializerType = attr.SerializerType;
+                ICompactSerializer serializer;
+                try
+                {
+                    serializer = (ICompactSerializer) Activator.CreateInstance(serializerType);
+                }
+                catch (Exception e)
+                {
+                    throw new ArgumentException($"Cannot create an instance of type {serializerType} " +
+                                                     "declared as a compact serializer via a CompactSerializerAttribute " +
+                                                     $"in assembly {assembly.FullName}.", nameof(assembly), e);
+                }
+                AddSerializer(serializer);
+            }
         }
 
         // TODO: consider public SetTypeName
