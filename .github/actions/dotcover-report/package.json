@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "@actions/core": "^1.7.0",
+    "@actions/core": "^1.9.1",
     "@actions/github": "^5.0.1"
   },
   "name": "dotcover-report",

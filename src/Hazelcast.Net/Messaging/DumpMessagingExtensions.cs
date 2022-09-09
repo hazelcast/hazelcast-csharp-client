@@ -54,17 +54,20 @@ namespace Hazelcast.Messaging
                     : (message.MessageType & 1) > 0 ? "RESPONSE" : "REQUEST";
 
                 var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
-
+#pragma warning disable CA1305 // Specify IFormatProvider
                 text.AppendLine($"{prefix} [{message.CorrelationId}]");
                 text.Append($"TYPE 0x{message.MessageType:x} {name}");
+#pragma warning restore CA1305
             }
 
             if (prefix == "REQUEST")
             {
                 if (message.FirstFrame.Length >= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
                 {
+#pragma warning disable CA1305 // Specify IFormatProvider
                     text.AppendLine();
                     text.Append($"PARTID {message.PartitionId}");
+#pragma warning restore CA1305
                 }
             }
 

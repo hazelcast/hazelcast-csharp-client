@@ -62,7 +62,9 @@ namespace Hazelcast
             var text = new StringBuilder();
             for (var i = 0; i < 8; i++)
                 //token[i] = hash[^(i + 1)];
+#pragma warning disable CA1305 // Specify IFormatProvider
                 text.Append($"{hash[^(i + 1)]:x2}");
+#pragma warning restore CA1305
             return text.ToString();
         }
     }
