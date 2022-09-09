@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -383,7 +383,7 @@ namespace Hazelcast.Clustering
         /// <param name="invocation">The invocation.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <remarks>After first connection is established, <b>TargetDisconnectedException</b> may be thrown. If
-        // the connected member reports an IP address different from the configured one. In this case, connection 
+        // the connected member reports an IP address different from the configured one. In this case, connection
         // will be switched, and an exception will be thrown.</remarks>
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken = default)

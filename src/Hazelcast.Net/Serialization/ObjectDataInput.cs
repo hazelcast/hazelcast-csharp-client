@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -48,6 +48,12 @@ namespace Hazelcast.Serialization
         }
 
         internal int Position { get; set; }
+
+        public void MoveTo(int position)
+        {
+            CheckAvailable(position, 0);
+            Position = position;
+        }
 
         //test only
         internal byte[] Buffer => _buffer;

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Runtime.Serialization;
 using Hazelcast.Exceptions;
@@ -22,9 +24,8 @@ namespace Hazelcast.Serialization
     /// Represents an exception that is thrown when an error occurs while serializing or de-serializing objects.
     /// </summary>
     [Serializable]
-    public sealed class SerializationException : HazelcastException
+    public class SerializationException : HazelcastException
     {
-
         /// <summary>
         /// Initializes a new instance of the <see cref="SerializationException"/> class.
         /// </summary>
@@ -68,7 +69,7 @@ namespace Hazelcast.Serialization
         /// about the exception being thrown.</param>
         /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information
         /// about the source or destination.</param>
-        private SerializationException(SerializationInfo info, StreamingContext context)
+        protected SerializationException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         { }
     }

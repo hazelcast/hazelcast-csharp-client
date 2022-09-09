@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Accessors;
+using Hazelcast.Testing.Networking;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging;
@@ -60,7 +61,7 @@ namespace Hazelcast.Tests.Clustering
 
             var loggerFactory = new NullLoggerFactory();
 
-            var address = NetworkAddress.Parse("127.0.0.1:11000");
+            var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
 
             var state = new ServerState
             {
@@ -75,7 +76,8 @@ namespace Hazelcast.Tests.Clustering
             };
             await server.StartAsync();
 
-            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var messaging = Mock.Of<IClusterMessaging>();
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             ISequence<long> correlationIdSequence = new Int64Sequence();
@@ -163,9 +165,9 @@ namespace Hazelcast.Tests.Clustering
             await clusterMembers.SetMembersAsync(3, memberList);//will print since list new -> 2
             await clusterMembers.SetMembersAsync(3, memberList);//won't print since list steady
             
-            loggerMock.Verify(m => 
+            loggerMock.Verify(m =>
                     m.Log<It.IsAnyType>(LogLevel.Information,
-                        0, 
+                        0,
                         It.IsAny<It.IsAnyType>(),
                         null,
                         It.IsAny<Func<It.IsAnyType, Exception, string>>()),
@@ -224,7 +226,8 @@ namespace Hazelcast.Tests.Clustering
                 .Build();
 
             var loggerFactory = NullLoggerFactory.Instance;
-            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, loggerFactory);
+            var messaging = Mock.Of<IClusterMessaging>();
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
             var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
 
             var clusterState = new ClusterState(options, clusterName: "dev", clientName: "client", new Partitioner(), loggerFactory);

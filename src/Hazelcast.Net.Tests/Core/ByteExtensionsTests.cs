@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,33 @@ namespace Hazelcast.Tests.Core
     public class ByteExtensionsTests
     {
         // endianness is, by default, unspecified and then falls back to big endian
+
+        [Test]
+        public void WriteBits()
+        {
+            var bytes = new byte[8];
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_1111_1111, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_1111_1111, 0b_1111_1111);
+            AssertBytes(bytes, 0, 0, 0b_1111_1111, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_0000_0000);
+            AssertBytes(bytes, 0, 0, 0b_1111_1111, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(2, 0b_0000_0000, 0b_1111_1111);
+            AssertBytes(bytes, 0, 0, 0b_0000_0000, 0, 0, 0, 0, 0);
+
+            bytes.WriteBits(4, 0b_0000_0110, 0b_0000_0010);
+            AssertBytes(bytes, 0, 0, 0, 0, 0b_0000_0010, 0, 0, 0);
+
+            bytes.WriteBits(4, 0b_0000_0100, 0b_0000_0110);
+            AssertBytes(bytes, 0, 0, 0, 0, 0b_0000_0100, 0, 0, 0);
+        }
 
         [Test]
         public void WriteByte()

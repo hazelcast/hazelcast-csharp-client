@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,6 @@ using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
-using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast
 {
@@ -53,20 +52,19 @@ namespace Hazelcast
         /// </summary>
         /// <param name="options">The client configuration.</param>
         /// <param name="cluster">A cluster.</param>
-        /// <param name="serializationService">A serialization service.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HazelcastClient(HazelcastOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        public HazelcastClient(HazelcastOptions options, Cluster cluster, ILoggerFactory loggerFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
             Cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
-            SerializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+            SerializationService = Cluster.SerializationService;
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
             _logger = loggerFactory.CreateLogger<IHazelcastClient>();
 
-            _distributedOjects = new DistributedObjectFactory(Cluster, serializationService, loggerFactory);
-            _nearCacheManager = new NearCacheManager(cluster, serializationService, loggerFactory, options.NearCache);
-            CPSubsystem = new CPSubsystem(cluster, serializationService);
-            Sql = new SqlService(cluster, serializationService);
+            _distributedOjects = new DistributedObjectFactory(Cluster, SerializationService, loggerFactory);
+            _nearCacheManager = new NearCacheManager(cluster, SerializationService, loggerFactory, options.NearCache);
+            CPSubsystem = new CPSubsystem(cluster, SerializationService);
+            Sql = new SqlService(cluster, SerializationService);
 
             if (options.Metrics.Enabled)
             {

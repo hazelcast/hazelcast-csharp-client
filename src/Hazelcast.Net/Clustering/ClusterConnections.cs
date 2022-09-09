@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,12 +20,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast.Clustering
 {
@@ -78,7 +78,7 @@ namespace Hazelcast.Clustering
             //Cluster changed, renew options if necessary.
             _clusterState.Failover.ClusterChanged += options =>
             {
-               _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
+                _authenticator = new Authenticator(options.Authentication, serializationService, _clusterState.LoggerFactory);
             };
 
             HConsole.Configure(x => x.Configure<ClusterConnections>().SetPrefix("CCNX"));
@@ -449,7 +449,7 @@ namespace Hazelcast.Clustering
                         _logger.LogError("Failed to reconnect.");
                     }
                     else
-                    {                        
+                    {
                         _logger.IfDebug()?.LogDebug("Reconnected");
                     }
 
@@ -534,7 +534,7 @@ namespace Hazelcast.Clustering
         /// <para>Tries all the candidate addresses until one works; tries again
         /// according to the configured retry strategy, and if nothing works,
         /// end up throwing an exception.</para>
-        /// </remarks>        
+        /// </remarks>
         private async Task ConnectFirstAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
@@ -590,7 +590,8 @@ namespace Hazelcast.Clustering
                             else
                             {
                                 isExceptionThrown = true;
-                                _logger.LogError(attempt.Exception, "Failed to connect to address {address}.", address.ToString());
+
+                                _logger.LogError(attempt.Exception, message: "Failed to connect to address {Address}.", address.ToString());
 
                             }
                         }
@@ -805,8 +806,8 @@ namespace Hazelcast.Clustering
             if (_clusterState.Options.FailoverOptions.Enabled && !result.FailoverSupported)
             {
                 await connection.DisposeAsync().CfAwait();
-                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " + 
-                    "(client is configured with failover but cluster does not support failover. " + 
+                throw new ClientNotAllowedInClusterException("Client is not allowed in cluster " +
+                    "(client is configured with failover but cluster does not support failover. " +
                     "Failover is an Hazelcast Enterprise feature.).");
             }
 

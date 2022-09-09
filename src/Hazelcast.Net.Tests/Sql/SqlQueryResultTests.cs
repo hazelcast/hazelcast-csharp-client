@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,22 +13,18 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
-using Hazelcast.Sql;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Hazelcast.Testing;
-using Hazelcast.Testing.Remote;
-using Hazelcast.Tests.Networking;
+using Hazelcast.Testing.Conditions;
+using Hazelcast.Testing.TestData;
 using Hazelcast.Tests.TestObjects;
 using NUnit.Framework;
-using Hazelcast.Testing.Conditions;
-using System.Text.Json;
-using Hazelcast.DistributedObjects;
-using Hazelcast.Testing.TestData;
 
 namespace Hazelcast.Tests.Sql
 {
@@ -118,8 +114,13 @@ namespace Hazelcast.Tests.Sql
 
             await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                using var cancellationSource = new CancellationTokenSource(50);
-                await result.Take(5).ToListAsync(cancellationSource.Token);
+                using var cancellationSource = new CancellationTokenSource();
+                var count = 0;
+                await result.Take(5).Select(x =>
+                {
+                    if (count++ == 2) cancellationSource.Cancel();
+                    return x;
+                }).ToListAsync(cancellationSource.Token);
             });
         }
 

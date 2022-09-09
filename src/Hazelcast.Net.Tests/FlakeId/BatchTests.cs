@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Testing;
+using Hazelcast.Tests.FlakeId.BatchTests_;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.FlakeId
 {
-    using BatchTests_;
     namespace BatchTests_
     {
         internal static class BatchExtensions

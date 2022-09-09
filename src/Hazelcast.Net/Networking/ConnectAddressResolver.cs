@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -167,7 +167,7 @@ namespace Hazelcast.Networking
                 // another member will make it
                 if (canReachPublic)
                 {
-                    _logger.IfDebug()?.LogDebug("Member {Member} does not respond on its internal address, responds on its public address.", member.Address, member.PublicAddress);
+                    _logger.IfDebug()?.LogDebug("Member {Member} does not respond on its internal address, responds on its public address {PublicAddress}.", member.Address, member.PublicAddress);
 
                     requirePublic = true;
                 }

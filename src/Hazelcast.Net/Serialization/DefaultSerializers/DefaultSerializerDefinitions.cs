@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -26,29 +26,29 @@ namespace Hazelcast.Serialization.DefaultSerializers
         public void AddSerializers(SerializationService service)
         {
             //TODO: proper support for generic types
-            service.AddConstantSerializer<JavaClass>(new JavaClassSerializer());
-            service.AddConstantSerializer<DateTime>(new DateSerializer());
-            service.AddConstantSerializer<BigInteger>(new BigIntegerSerializer());
+            service.RegisterConstantSerializer<JavaClass>(new JavaClassSerializer());
+            service.RegisterConstantSerializer<DateTime>(new DateSerializer());
+            service.RegisterConstantSerializer<BigInteger>(new BigIntegerSerializer());
 
-            service.AddConstantSerializer<object[]>(new ArrayStreamSerializer());
+            service.RegisterConstantSerializer<object[]>(new ArrayStreamSerializer());
 
             //TODO map server side collection types.
-            service.AddConstantSerializer<List<object>>(new ListSerializer<object>());
-            service.AddConstantSerializer<LinkedList<object>>(new LinkedListSerializer<object>());
+            service.RegisterConstantSerializer<List<object>>(new ListSerializer<object>());
+            service.RegisterConstantSerializer<LinkedList<object>>(new LinkedListSerializer<object>());
 
-            service.AddConstantSerializer<Dictionary<object, object>>(new HashMapStreamSerializer());
-            service.AddConstantSerializer<ConcurrentDictionary<object, object>>(new ConcurrentHashMapStreamSerializer());
+            service.RegisterConstantSerializer<Dictionary<object, object>>(new HashMapStreamSerializer());
+            service.RegisterConstantSerializer<ConcurrentDictionary<object, object>>(new ConcurrentHashMapStreamSerializer());
 
-            service.AddConstantSerializer<HashSet<object>>(new HashSetStreamSerializer());
+            service.RegisterConstantSerializer<HashSet<object>>(new HashSetStreamSerializer());
 
-            service.AddConstantSerializer<HazelcastJsonValue>(new HazelcastJsonValueSerializer());
+            service.RegisterConstantSerializer<HazelcastJsonValue>(new HazelcastJsonValueSerializer());
 
-            service.AddConstantSerializer<HLocalDate>(new HLocalDateSerializer());
-            service.AddConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
-            service.AddConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
-            service.AddConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
+            service.RegisterConstantSerializer<HLocalDate>(new HLocalDateSerializer());
+            service.RegisterConstantSerializer<HLocalTime>(new HLocalTimeSerializer());
+            service.RegisterConstantSerializer<HLocalDateTime>(new HLocalDateTimeSerializer());
+            service.RegisterConstantSerializer<HOffsetDateTime>(new HOffsetDateTimeSerializer());
 
-            service.AddConstantSerializer<HBigDecimal>(new HBigDecimalSerializer());
+            service.RegisterConstantSerializer<HBigDecimal>(new HBigDecimalSerializer());
         }
     }
 }

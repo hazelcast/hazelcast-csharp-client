@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-
 #if DEBUG
 using System.Text;
 #else
@@ -55,17 +54,20 @@ namespace Hazelcast.Messaging
                     : (message.MessageType & 1) > 0 ? "RESPONSE" : "REQUEST";
 
                 var name = message.OperationName ?? MessageTypeConstants.GetMessageTypeName(message.MessageType);
-
+#pragma warning disable CA1305 // Specify IFormatProvider
                 text.AppendLine($"{prefix} [{message.CorrelationId}]");
                 text.Append($"TYPE 0x{message.MessageType:x} {name}");
+#pragma warning restore CA1305
             }
 
             if (prefix == "REQUEST")
             {
                 if (message.FirstFrame.Length >= FrameFields.SizeOf.LengthAndFlags + FrameFields.Offset.PartitionId + FrameFields.SizeOf.PartitionId)
                 {
+#pragma warning disable CA1305 // Specify IFormatProvider
                     text.AppendLine();
                     text.Append($"PARTID {message.PartitionId}");
+#pragma warning restore CA1305
                 }
             }
 

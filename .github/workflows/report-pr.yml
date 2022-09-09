@@ -18,8 +18,7 @@ jobs:
     name: Report PR (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     if: >
-      ${{ github.event.workflow_run.event == 'pull_request' &&
-      github.event.workflow_run.conclusion == 'success' }}
+      ${{ github.event.workflow_run.event == 'pull_request' }}
 
     strategy:
       fail-fast: false
@@ -124,4 +123,4 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/cover-netcoreapp3.1.json
+          files: ./temp/test-coverage/cover-net6.0.json

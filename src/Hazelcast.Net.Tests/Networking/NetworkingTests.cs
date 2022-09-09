@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
+using Hazelcast.Tests.Networking.NetworkingTests_;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
 {
-    using NetworkingTests_;
     namespace NetworkingTests_
     {
         internal static class Extensions
@@ -579,8 +579,7 @@ namespace Hazelcast.Tests.Networking
 
             HConsole.WriteLine(this, "Cluster?");
 
-            var serializationService = new SerializationServiceBuilder(new NullLoggerFactory())
-                .SetVersion(1)
+            var serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
                 .Build();
 
             var options = new HazelcastOptions();
@@ -588,7 +587,7 @@ namespace Hazelcast.Tests.Networking
             //options.Networking.Addresses.Add("sgay-l4");
             options.Networking.Addresses.Add("localhost");
 
-            var cluster = new Cluster(options, serializationService, new NullLoggerFactory());
+            var cluster = new Cluster(options, messaging => serializationService, new NullLoggerFactory());
             await cluster.Connections.ConnectAsync(CancellationToken.None).CfAwait();
 
             // now we can send messages...

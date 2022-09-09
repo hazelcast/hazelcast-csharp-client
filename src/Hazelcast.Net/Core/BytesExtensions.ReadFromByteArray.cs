@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ namespace Hazelcast.Core
 
         public static sbyte ReadSByte(this byte[] bytes, int position)
         {
-            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedByte);
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfByte);
 
             return (sbyte) bytes[position];
         }
@@ -83,7 +83,7 @@ namespace Hazelcast.Core
         /// <returns>The value.</returns>
         public static ushort ReadUShort(this byte[] bytes, int position, Endianness endianness)
         {
-            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfUnsignedShort);
+            Debug.Assert(bytes != null && position >= 0 && bytes.Length >= position + SizeOfShort);
 
             unchecked
             {

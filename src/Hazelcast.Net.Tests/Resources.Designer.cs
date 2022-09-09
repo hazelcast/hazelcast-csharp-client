@@ -162,7 +162,7 @@ namespace Hazelcast.Tests {
         
         /// <summary>
         ///   Looks up a localized string similar to {
-        ///  
+        ///
         ///  &quot;hazelcast-failover&quot;: {
         ///    &quot;tryCount&quot;: 42,
         ///    &quot;clusters&quot;: [

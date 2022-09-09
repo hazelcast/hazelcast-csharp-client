@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,13 +56,15 @@ namespace Hazelcast
                 bytes[i] = byte.Parse(key.Substring(i * 2, 2), NumberStyles.AllowHexSpecifier);
 #pragma warning restore CA1305 // Specify IFormatProvider
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms - well, that's what PublicKeyToken uses
-            using var csp = new SHA1CryptoServiceProvider();
+            using var csp = SHA1.Create();
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
             var hash = csp.ComputeHash(bytes);
             var text = new StringBuilder();
             for (var i = 0; i < 8; i++)
                 //token[i] = hash[^(i + 1)];
+#pragma warning disable CA1305 // Specify IFormatProvider
                 text.Append($"{hash[^(i + 1)]:x2}");
+#pragma warning restore CA1305
             return text.ToString();
         }
     }

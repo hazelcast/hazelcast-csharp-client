@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 
@@ -44,8 +43,8 @@ namespace Hazelcast.Clustering
             _isEnabled = options.FailoverOptions.Enabled; // TODO why 'enabled' in options ?!
 
             // no failover if only one cluster is declared in the failover configuration
-            _clusters = Enabled 
-                ? new List<HazelcastOptions>(options.FailoverOptions.Clients) 
+            _clusters = Enabled
+                ? new List<HazelcastOptions>(options.FailoverOptions.Clients)
                 : new List<HazelcastOptions> { options };
 
             // total count is try-count (the whole list) times the number of clusters

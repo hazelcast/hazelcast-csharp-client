@@ -1,4 +1,4 @@
-## Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+## Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 ##
 ## Licensed under the Apache License, Version 2.0 (the "License");
 ## you may not use this file except in compliance with the License.
@@ -273,6 +273,9 @@ $actions = @(
     @{ name = "remove-root-ca";
        desc = "(experimental) removes the ROOT CA test certificate";
        note = "Requires priviledges. Not supported."
+    },
+    @{ name = "cleanup-code";
+       desc = "cleans the code"
     }
 )
 
@@ -2327,6 +2330,66 @@ function hz-completion-initialize {
     }
 
     register-argumentCompleter -CommandName hz -ScriptBlock $scriptBlock
+}
+
+# cleanup code
+function hz-cleanup-code {
+
+    Write-Output "Clean C# code - headers and 'using' statements (JetBrains CleanupCode)"
+
+    # make sure we use the latest version of the JetBrains tool
+    # note: this may update .config/dotnet-tools.json
+    &dotnet tool update --local JetBrains.ReSharper.GlobalTools
+    # make sure we have the JetBrains tool
+    &dotnet tool restore
+    # run the JetBrains tool
+    &dotnet jb cleanupcode Hazelcast.Net.sln --profile="Cleanup C# Header and Using"
+
+    Write-Output ""
+    Write-Output "Clean C# code - whitespaces, tabs and new-lines"
+
+    $files = get-childitem -recurse -file -path "$srcDir\*" -include "*.cs" | ? { `
+        $_.FullName -inotmatch '\\obj\\' -and `
+        $_.FullName -inotmatch '\\bin\\' `
+    }
+
+    $nl = [Environment]::NewLine
+
+    $totalCount = 0
+    $fixedCount = 0
+    foreach ($file in $files) {
+
+        # -raw ignores newline characters and returns the entire contents of a file in one string with the newlines preserved
+        $text = get-content -path $file -raw
+        $totalCount += 1
+
+        # regex:
+        # see https://docs.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions
+        # - \s matches any whitespace characters and is equivalent to [^\f\n\r\t\v\x85\p{Z}]
+        # - \S matches any non-whitespace characters and is equivalent to [\f\n\r\t\v\x85\p{Z}]
+        # replacements:
+        # - tab -> 4 spaces
+        # - (not cr) + lf -> nl
+        # - cr + (not lf) -> nl
+        # - non-whitespace + whitespaces (but not nl) + nl -> non-whitespace + nl
+        # - whitespaces (incl. cr or lf) at end of file -> one single nl
+        $fixed = $text `
+            -replace "`t", "    " `
+            -replace "([^`r])`n", "`${1}$nl" `
+            -replace "`r([^`n])", "$nl`${1}" `
+            -replace "(\S)[`f`t`v\x85\p{Z}]+$nl", "`${1}$nl" `
+            -replace "\s+$", "$nl"
+
+            # -replace "[^\S`r`n]+([`r`n])", "`${1}" `
+
+        if ($fixed -ne $text) {
+            write-output $file.FullName.SubString($srcDir.Length-3)
+            set-content -path $file -value $fixed -encoding utf8BOM -noNewLine
+            $fixedCount += 1
+        }
+    }
+
+    Write-Output "Cleaned $fixedCount out of $totalCount files."
 }
 
 # ########
