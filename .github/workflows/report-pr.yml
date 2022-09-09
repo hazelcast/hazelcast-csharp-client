@@ -15,15 +15,10 @@ jobs:
 
   report-pr:
 
-    name: Report PR (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Report PR
+    runs-on: ubuntu-latest
     if: >
       ${{ github.event.workflow_run.event == 'pull_request' }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
 
     steps:
 
@@ -44,7 +39,7 @@ jobs:
           mkdir ./temp/test-coverage
 
       # cannot use download action because we get artifacts from another run
-      - name: Download tests results and coverage artifacts (${{ matrix.os }})
+      - name: Download tests results and coverage artifacts
         uses: actions/github-script@v4
         with:
           script: |
@@ -54,23 +49,23 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ github.event.workflow_run.id }},
             });
-            async function download(name, path) {
-                var artifact = artifacts.data.artifacts.filter((art) => {
-                  return art.name == name;
-                })[0];
-                if (artifact == null) {
-                    return;
-                }
+            async function download(prefix, path) {
+              var filtered = artifacts.data.artifacts.filter((x) => {
+                return x.name.startsWith(prefix);
+              });
+              for (const artifact of filtered) {
                 var download = await github.actions.downloadArtifact({
                    owner: context.repo.owner,
                    repo: context.repo.repo,
                    artifact_id: artifact.id,
                    archive_format: 'zip',
                 });
-                fs.writeFileSync(process.env.GITHUB_WORKSPACE + path, Buffer.from(download.data));
+                var path2 = path.replace('XXXX', artifact.name.substring(prefix.length));
+                await fs.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));                
+              }
             }
-            await download('Test-Results (${{ matrix.os }})', '/temp/test-results/test-results.zip');
-            await download('Test-Coverage (${{ matrix.os }})', '/temp/test-coverage/test-coverage.zip');
+            await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
+            await download('Test-Coverage ', '/temp/test-coverage/test-coverage-XXXX.zip');
 
       # unzip artifacts
       - name: Unzip artifacts
@@ -78,19 +73,30 @@ jobs:
         shell: bash
         run: |
           echo "Tests results:"
-          if [ -f temp/test-results/test-results.zip ]; then
+          found=0
+          for f in temp/test-results/test-results-*.zip;
+          do
+            found=1
+            echo "unzip $f"
+            unzip $f -d ${f%/*}
+          done
+          if [ $found -eq 1]; then
             echo "::set-output name=results::true"
-            unzip temp/test-results/test-results.zip -d temp/test-results
-            ls ./temp/test-results
           else
             echo "::set-output name=results::false"
             echo "(missing)"
           fi
+
           echo "Tests coverage:"
-          if [ -f temp/test-coverage/test-coverage.zip ]; then
+          found=0
+          for f in temp/test-results/test-coverage-*.zip;
+          do
+            found=1
+            echo "unzip $f"
+            unzip $f -d ${f%.*}
+          done
+          if [ $found -eq 1]; then
             echo "::set-output name=coverage::true"
-            unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
-            ls ./temp/test-coverage
           else
             echo "::set-output name=coverage::false"
             echo "(missing)"
@@ -101,7 +107,7 @@ jobs:
         if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
-          name: Test Results (${{ matrix.os }})
+          name: Test Results
           path: ./temp/test-results/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
@@ -113,8 +119,8 @@ jobs:
         if: steps.unzip.outputs.coverage == 'true'
         uses: ./.github/actions/dotcover-report
         with:
-          name: Test Coverage (${{ matrix.os }})
-          path: ./temp/test-coverage
+          name: Test Coverage
+          path: ./temp/test-coverage/test-coverage-windows-net6.0
           sha: ${{ github.sha }}
 
       # publish to codecov
@@ -123,4 +129,4 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/cover-net6.0.json
+          files: ./temp/test-coverage/test-coverage-windows-net6.0/cover-net6.0.json
