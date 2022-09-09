@@ -114,8 +114,13 @@ namespace Hazelcast.Tests.Sql
 
             await AssertEx.ThrowsAsync<OperationCanceledException>(async () =>
             {
-                using var cancellationSource = new CancellationTokenSource(50);
-                await result.Take(5).ToListAsync(cancellationSource.Token);
+                using var cancellationSource = new CancellationTokenSource();
+                var count = 0;
+                await result.Take(5).Select(x =>
+                {
+                    if (count++ == 2) cancellationSource.Cancel();
+                    return x;
+                }).ToListAsync(cancellationSource.Token);
             });
         }
 
