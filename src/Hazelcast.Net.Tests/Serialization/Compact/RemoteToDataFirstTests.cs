@@ -22,10 +22,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
-using Hazelcast.Tests.Serialization.Compact;
 using NUnit.Framework;
-
-[assembly:CompactSerializer(typeof(ThingCompactSerializer<Thing>))]
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
@@ -90,35 +87,10 @@ namespace Hazelcast.Tests.Serialization.Compact
             await AssertCompact(options, ComputedTypeName, ComputedValueFieldName, true);
         }
 
-        // FIXME - dead code
-        // does not make sense anymore now that the serializer *does* provide the type name
-        /*
-        [Test]
-        public async Task RegisterAssemblySerializers()
-        {
-            var options = GetHazelcastOptions();
-
-            // register the assembly, discover the [assembly:CompactSerializer(...)] attribute
-            // above and register the corresponding type and serializer - in real-life, the
-            // attribute will be part of generated code.
-            options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
-
-            // type name derived from type = computed
-            // field name obtained from the serializer = constant
-            await AssertCompact(options, ComputedTypeName, ConstantValueFieldName, false);
-        }
-        */
-
         [Test]
         public async Task AddAssemblySerializers()
         {
             var options = GetHazelcastOptions();
-
-            // add the assembly's serializers, discovered via the [assembly:CompactSerializer(...)]
-            // attribute - in real life, the attribute will be generated along with the code for the
-            // serializer - the type name is provided by the serializer - the schema will derive from
-            // the serializer and will be published when first used
-            options.Serialization.Compact.AddAssemblySerializers(GetType().Assembly);
 
             // type name and field name obtained from the serializer
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
@@ -136,25 +108,6 @@ namespace Hazelcast.Tests.Serialization.Compact
             // type name and field name obtained from the serializer
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
-
-        // FIXME - dead code
-        // the type name is *always* provided by the serializer itself
-        /*
-        [Test]
-        public async Task RegisterTypeWithSerializerAndTypeName()
-        {
-            var options = GetHazelcastOptions();
-
-            // register a type + type name + serializer, but not the schema
-            // so the type can be a plain POCO, we write the serializer independently, and the
-            // schema will be derived from the serializer (which must plainly write all fields
-            // without any clever optimization that would skip fields) and pushed to the cluster.
-            options.Serialization.Compact.Register(new ThingCompactSerializer<Thing>(), ConstantTypeName, false);
-
-            // type name and field name obtained from the registration + serializer = constant
-            await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
-        }
-        */
 
         [Test]
         public async Task AddSerializerAndSchema()
@@ -176,26 +129,6 @@ namespace Hazelcast.Tests.Serialization.Compact
             // type name and field name obtained from the registration + schema + serializer = constant
             await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
         }
-
-        // FIXME - dead code
-        // that does not exist anymore
-        /*
-        [Test]
-        public async Task RegisterType()
-        {
-            var options = GetHazelcastOptions();
-
-            // register a type, but not the schema so the type can be a plain POCO, nor the type name
-            // which will derive from the CLR name, nor the serializer which will therefore be the
-            // runtime reflection-based serializer, and the schema will be derived from the serializer
-            // and pushed to the cluster.
-            options.Serialization.Compact.Register<Thing>(false);
-
-            // type name and field name derived from type = computed
-            // (uses reflection and has to derive everything)
-            await AssertCompact(options, ComputedTypeName, ComputedValueFieldName, true);
-        }
-        */
 
         [Test]
         public async Task SetTypeName()
