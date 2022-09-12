@@ -590,11 +590,6 @@ namespace Hazelcast.Tests.Configuration
             { }
         }
 
-        public class DummyBinder
-        {
-            public int Count { get; set; }
-        }
-
         [Test]
         public void SerializationOptionsFile()
         {
