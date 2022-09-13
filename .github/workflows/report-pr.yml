@@ -61,7 +61,7 @@ jobs:
                    archive_format: 'zip',
                 });
                 var path2 = path.replace('XXXX', artifact.name.substring(prefix.length));
-                await fs.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));                
+                await fs.promises.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));
               }
             }
             await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
