@@ -88,15 +88,6 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
 
         [Test]
-        public async Task AddAssemblySerializers()
-        {
-            var options = GetHazelcastOptions();
-
-            // type name and field name obtained from the serializer
-            await AssertCompact(options, ConstantTypeName, ConstantValueFieldName, false);
-        }
-
-        [Test]
         public async Task AddSerializer()
         {
             var options = GetHazelcastOptions();
