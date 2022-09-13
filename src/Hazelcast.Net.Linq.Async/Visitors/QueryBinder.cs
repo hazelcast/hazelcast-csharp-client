@@ -81,11 +81,11 @@ namespace Hazelcast.Linq.Visitors
         private Expression BindWhere(Type type, Expression source, LambdaExpression predicate)
         {
             var projection = (ProjectionExpression)Visit(source); //DFS            
-            _map[predicate.Parameters[0]] = projection.Projector;//field (ex. AlbumId:int) to projector
+            _map[predicate.Parameters[0]] = projection.Projector;//map field (ex. AlbumId:int) to projector
             var where = Visit(predicate.Body); // Visit the body to handle inner expressions.
             var alias = GetNextAlias();
 
-            //Visit, nominate and replaced with SQL equvalients nodes on the 'projection' expression.
+            //Visit, nominate and replace with SQL equvalients nodes on the 'projection' expression.
             //Note: SQL equivalients are the custom ones defined by us under Hazelcast.Linq.Expressions.
             var pc = _projector.Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
@@ -192,7 +192,7 @@ namespace Hazelcast.Linq.Visitors
 
             switch (visitedNode.NodeType)
             {
-                //fill the gap
+                //Get only Member that matches within the expression. 
                 case ExpressionType.MemberInit:
                     var initExp = (MemberInitExpression)visitedNode;
 
