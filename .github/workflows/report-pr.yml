@@ -60,7 +60,8 @@ jobs:
                    artifact_id: artifact.id,
                    archive_format: 'zip',
                 });
-                var path2 = path.replace('XXXX', artifact.name.substring(prefix.length));
+                var xxxx = artifact.name.substring(prefix.length).replace(/\(|\)/g, '');
+                var path2 = path.replace('XXXX', xxxx);
                 await fs.promises.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));
               }
             }
@@ -78,7 +79,10 @@ jobs:
           do
             found=1
             echo "unzip $f"
-            unzip $f -d ${f%/*}
+            k=${f##*/} # path/to/foo-ubuntu-latest.zip -> foo-ubuntu-latest.zip
+            k=${k#test-results-} # foo-ubuntu-latest.zip -> ubuntu-latest.zip
+            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
+            unzip $f -d temp/test-results/$k # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
           done
           if [ $found -eq 1]; then
             echo "::set-output name=results::true"
@@ -93,7 +97,10 @@ jobs:
           do
             found=1
             echo "unzip $f"
-            unzip $f -d ${f%.*}
+            k=${f##*/}
+            k=${k#test-results-}
+            k=${k%-latest.*}
+            unzip $f -d temp/test-coverage/$k
           done
           if [ $found -eq 1]; then
             echo "::set-output name=coverage::true"
@@ -108,7 +115,7 @@ jobs:
         uses: dorny/test-reporter@v1
         with:
           name: Test Results
-          path: ./temp/test-results/results-*.trx
+          path: ./temp/test-results/*/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
@@ -120,7 +127,7 @@ jobs:
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
-          path: ./temp/test-coverage/test-coverage-windows-net6.0
+          path: ./temp/test-coverage-windows/net6.0
           sha: ${{ github.sha }}
 
       # publish to codecov
@@ -129,4 +136,4 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/test-coverage-windows-net6.0/cover-net6.0.json
+          files: ./temp/test-coverage/windows/cover-net6.0.json
