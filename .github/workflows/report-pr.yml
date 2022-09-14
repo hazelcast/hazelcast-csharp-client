@@ -22,6 +22,12 @@ jobs:
 
     steps:
 
+      - name: Install utilities
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends dos2unix
+
       # checkout the hazelcast/hazelcast-csharp-client repository
       # no need for submodules, but we need the .github directory
       - name: Checkout code
