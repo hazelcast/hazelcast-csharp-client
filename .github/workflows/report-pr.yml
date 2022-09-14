@@ -79,12 +79,12 @@ jobs:
           do
             found=1
             echo "unzip $f"
-            k=${f##*/} # path/to/foo-ubuntu-latest.zip -> foo-ubuntu-latest.zip
-            k=${k#test-results-} # foo-ubuntu-latest.zip -> ubuntu-latest.zip
+            k=${f##*/} # path/to/test-results-ubuntu-latest.zip -> test-results-ubuntu-latest.zip
+            k=${k#test-results-} # test-results-ubuntu-latest.zip -> ubuntu-latest.zip
             k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
             unzip $f -d temp/test-results/$k # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
           done
-          if [ $found -eq 1]; then
+          if [ $found -eq 1 ]; then
             echo "::set-output name=results::true"
           else
             echo "::set-output name=results::false"
@@ -93,16 +93,16 @@ jobs:
 
           echo "Tests coverage:"
           found=0
-          for f in temp/test-results/test-coverage-*.zip;
+          for f in temp/test-coverage/test-coverage-*.zip;
           do
             found=1
             echo "unzip $f"
-            k=${f##*/}
-            k=${k#test-results-}
-            k=${k%-latest.*}
-            unzip $f -d temp/test-coverage/$k
+            k=${f##*/} # path/to/test-coverage-ubuntu-latest.zip -> test-coverage-ubuntu-latest.zip
+            k=${k#test-coverage-} # test-coverage-ubuntu-latest.zip -> ubuntu-latest.zip
+            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
+            unzip $f -d temp/test-coverage/$k # linux cover-net6.0.json goes into temp/test-results/ubuntu/cover-net6.0.json
           done
-          if [ $found -eq 1]; then
+          if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
           else
             echo "::set-output name=coverage::false"
