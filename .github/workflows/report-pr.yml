@@ -22,12 +22,6 @@ jobs:
 
     steps:
 
-      - name: Install utilities
-        shell: bash
-        run: |
-          sudo apt-get update
-          sudo apt-get install --yes --no-install-recommends dos2unix
-
       # checkout the hazelcast/hazelcast-csharp-client repository
       # no need for submodules, but we need the .github directory
       - name: Checkout code
@@ -111,13 +105,12 @@ jobs:
           done
           if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
-            dos2unix temp/test-coverage/*/*.json # remove UTF8 BOM that seems to confuse codecov
           else
             echo "::set-output name=coverage::false"
             echo "(missing)"
           fi
 
-      # report test results
+      # report test results (all os/framework)
       - name: Report test results
         if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
@@ -129,7 +122,7 @@ jobs:
           list-tests: failed
           fail-on-error: false
 
-      # report test coverage
+      # report test coverage (windows/net6.0)
       - name: Report test coverage
         if: steps.unzip.outputs.coverage == 'true'
         uses: ./.github/actions/dotcover-report
@@ -138,10 +131,10 @@ jobs:
           path: ./temp/test-coverage/windows/cover-net6.0
           sha: ${{ github.sha }}
 
-      # publish to codecov
+      # publish to codecov (windows/net6.0)
       - name: Publish to Codecov
         if: steps.unzip.outputs.coverage == 'true'
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/windows/cover-net6.0.json
+          files: ./temp/test-coverage/windows/cover-net6.0.xml
