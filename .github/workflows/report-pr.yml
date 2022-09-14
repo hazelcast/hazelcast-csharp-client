@@ -63,6 +63,7 @@ jobs:
                 var xxxx = artifact.name.substring(prefix.length).replace(/\(|\)/g, '');
                 var path2 = path.replace('XXXX', xxxx);
                 await fs.promises.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));
+                console.log(`Downloaded: ${artifact.name} -> ${path2}`)
               }
             }
             await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
@@ -127,7 +128,7 @@ jobs:
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
-          path: ./temp/test-coverage-windows/net6.0
+          path: ./temp/test-coverage/windows
           sha: ${{ github.sha }}
 
       # publish to codecov
