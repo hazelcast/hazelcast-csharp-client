@@ -101,7 +101,7 @@ jobs:
             k=${f##*/} # path/to/test-coverage-ubuntu-latest.zip -> test-coverage-ubuntu-latest.zip
             k=${k#test-coverage-} # test-coverage-ubuntu-latest.zip -> ubuntu-latest.zip
             k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
-            unzip $f -d temp/test-coverage/$k # linux cover-net6.0.json goes into temp/test-results/ubuntu/cover-net6.0.json
+            unzip $f -d temp/test-coverage/$k # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
           done
           if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
@@ -128,7 +128,7 @@ jobs:
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
-          path: ./temp/test-coverage/windows
+          path: ./temp/test-coverage/windows/cover-net6.0
           sha: ${{ github.sha }}
 
       # publish to codecov
