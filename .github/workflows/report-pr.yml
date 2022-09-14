@@ -105,6 +105,7 @@ jobs:
           done
           if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
+            dos2unix temp/test-coverage/*.json # remove UTF8 BOM that seems to confuse codecov
           else
             echo "::set-output name=coverage::false"
             echo "(missing)"
