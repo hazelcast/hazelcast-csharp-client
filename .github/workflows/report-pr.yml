@@ -129,8 +129,8 @@ jobs:
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
-          path: ./temp/test-coverage/windows/cover-net6.0
-          sha: ${{ github.sha }}
+          path: ./temp/test-coverage
+          sha: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
 
       # publish to codecov (windows/net6.0)
       # see https://github.com/marketplace/actions/codecov
