@@ -28,14 +28,14 @@ async function run() {
 
     // get the ref
     // TODO: ref vs sha ?!
-    const ref = getSha(context);
-    if (!ref) {
-      core.error(`Context: ${JSON.stringify(context, null, 2)}`);
-      return process.exit(1);
-    }
+    const ref = sha;
+    //const ref = getSha(context);
+    //if (!ref) {
+    //  core.error(`Context: ${JSON.stringify(context, null, 2)}`);
+    //  return process.exit(1);
+    //}
 
     // create an in-progress check run
-    // TODO: could we have 1 run for both linux & windows?
     const created = await rest.checks.create({
         owner: owner,
         repo: repo,
@@ -48,7 +48,7 @@ async function run() {
     var failed = false;
     var summary = `${name}:`;
 
-    function readOsFiles(os) {
+    async function readOsFiles(os) {
         const fpath = process.cwd() + '/' + path + '/' + os;
         const files = await fs.readdir(fpath, { withFileTypes: true });
         for (const file of files) {
@@ -66,8 +66,8 @@ async function run() {
     }
 
     try {
-        readOsFiles('windows');
-        readOsFiles('ubuntu');
+        await readOsFiles('windows');
+        await readOsFiles('ubuntu');
 
         summary += '\n\nThe detailed code coverage report has been uploaded as an artifact.';
 
@@ -120,6 +120,8 @@ async function run() {
             annotations
         }
     });
+
+    core.info(`\n\n${summary}\n\n`);
 
     core.info(`Completed (run ${created.data.id} ref ${ref})`);
   }
