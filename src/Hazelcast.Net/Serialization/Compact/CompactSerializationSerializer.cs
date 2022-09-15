@@ -257,9 +257,6 @@ namespace Hazelcast.Serialization.Compact
             var registration = GetOrCreateRegistration(schema);
 
             var reader = new CompactReader(this, input, schema, registration.SerializedType);
-            // FIXME - but then, each serializer MUST support a TryRead method AND return a state and oh my...
-            // so *this* is where it becomes super painful, it even changes the signature of ICompactReader
-            // and, therefore, we should stick with exceptions for the time being?!
             obj = registration.Serializer.Read(reader);
             missingSchemaId = 0;
             return true;
