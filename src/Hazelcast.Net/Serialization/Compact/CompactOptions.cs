@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -336,7 +336,7 @@ namespace Hazelcast.Serialization.Compact
             _typeName_isClusterSchema[schema.TypeName] = isClusterSchema;
         }
 
-        private bool GetIsClusterSchema(Type serializedType, string typeName)
+        private bool IsClusterSchema(Type serializedType, string typeName)
         {
             var isClusterSchema = false;
             if (_serializedType_isClusterSchema.TryGetValue(serializedType, out var ics1))
@@ -373,7 +373,7 @@ namespace Hazelcast.Serialization.Compact
             // process the serializers (all other registrations below will use the reflection serializer)
             foreach (var serializer in _typeName_serializer.Values)
             {
-                var isClusterSchema = GetIsClusterSchema(serializer.GetSerializedType(), serializer.TypeName);
+                var isClusterSchema = IsClusterSchema(serializer.GetSerializedType(), serializer.TypeName);
                 var withSchema = _typeName_schema.TryGetValue(serializer.TypeName, out var schema);
 
                 // since the serializer has been declared, there *has* to be at least one serialized type for the type name
@@ -391,7 +391,7 @@ namespace Hazelcast.Serialization.Compact
             {
                 if (_typeName_serializer.ContainsKey(typeName)) continue; // already yielded above
 
-                var isClusterSchema = GetIsClusterSchema(serializedType, typeName);
+                var isClusterSchema = IsClusterSchema(serializedType, typeName);
 
                 yield return _typeName_schema.TryGetValue(typeName, out var schema)
                     ? new CompactRegistration(serializedType, ReflectionSerializerAdapter, schema, isClusterSchema)
@@ -407,7 +407,7 @@ namespace Hazelcast.Serialization.Compact
                 if (serializedType == null)
                     throw new ConfigurationException($"A schema was provided for type name {schema.TypeName}, but that type name does not match any CLR type.");
 
-                var isClusterSchema = GetIsClusterSchema(serializedType, schema.TypeName);
+                var isClusterSchema = IsClusterSchema(serializedType, schema.TypeName);
                 yield return new CompactRegistration(serializedType, ReflectionSerializerAdapter, schema, isClusterSchema);
             }
 
@@ -416,7 +416,7 @@ namespace Hazelcast.Serialization.Compact
                 if (_serializedType_typeName.ContainsKey(serializedType)) continue; // already yielded above
 
                 var typeName = GetDefaultTypeName(serializedType);
-                var isClusterSchema = GetIsClusterSchema(serializedType, typeName);
+                var isClusterSchema = IsClusterSchema(serializedType, typeName);
                 yield return new CompactRegistration(serializedType, ReflectionSerializerAdapter, GetDefaultTypeName(serializedType), isClusterSchema);
             }
         }
