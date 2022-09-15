@@ -52,14 +52,12 @@ namespace Hazelcast.Serialization.ConstantSerializers
             service.RegisterConstantSerializer<Guid>(new GuidSerializer());
             service.RegisterConstantSerializer<KeyValuePair<object, object>>(new KeyValuePairSerializer());
 
-            //TODO: proper support for generic types
             service.RegisterConstantSerializer<JavaClass>(new JavaClassSerializer());
             service.RegisterConstantSerializer<DateTime>(new DateSerializer());
             service.RegisterConstantSerializer<BigInteger>(new BigIntegerSerializer());
 
             service.RegisterConstantSerializer<object[]>(new ArrayStreamSerializer());
 
-            //TODO map server side collection types.
             service.RegisterConstantSerializer<List<object>>(new ListSerializer<object>());
             service.RegisterConstantSerializer<LinkedList<object>>(new LinkedListSerializer<object>());
             service.RegisterConstantSerializer<Dictionary<object, object>>(new HashMapStreamSerializer());
