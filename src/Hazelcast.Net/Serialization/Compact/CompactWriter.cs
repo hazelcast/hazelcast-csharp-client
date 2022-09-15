@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Models;
@@ -467,6 +468,21 @@ namespace Hazelcast.Serialization.Compact
             => WriteReference(name, FieldKind.Compact, value, (output, v) => _objectsWriter.Write(output, v));
 
         public void WriteArrayOfCompact<T>(string name, T?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
+        {
+            // verify that all object in the array are exactly of type T - there is zero reason for this
+            // constraint other than it is enforced in Java and we want to be identical to Java, but even
+            // in Java this constraint could probably be lifted without problems.
+            if (value != null)
+            {
+                var typeOfT = typeof(T);
+                var error = value.FirstOrDefault(x => x != null && x.GetType() != typeOfT);
+                if (error != null)
+                    throw new SerializationException("It is not allowed to serialize an array of Compact serializable "
+                                                         + $"objects containing different item types. A {typeOfT.Name}[] array "
+                                                         + $"cannot contain an object of type {error.GetType().Name}.");
+            }
+
+            WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
+        } 
     }
 }
