@@ -339,6 +339,20 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             options.SetSchema(SchemaBuilder.For("duh").Build(), true);
             Assert.Throws<ConfigurationException>(() => options.GetRegistrations().ToList());
+
+            options = new CompactOptions
+            {
+                ReflectionSerializer = Mock.Of<ICompactSerializer<object>>()
+            };
+            options.SetSchema(SchemaBuilder.For("System.Object").Build(), true);
+            Assert.That(options.GetRegistrations().Count(), Is.EqualTo(1));
+
+            options = new CompactOptions
+            {
+                ReflectionSerializer = Mock.Of<ICompactSerializer<object>>()
+            };
+            options.AddType<object>();
+            Assert.That(options.GetRegistrations().Count(), Is.EqualTo(1));
         }
     }
 }
