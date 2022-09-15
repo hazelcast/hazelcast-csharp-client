@@ -950,6 +950,42 @@ namespace Hazelcast.Tests.Serialization.Compact
             });
         }
 
+        [Test]
+        public void SerializeNestedClass()
+        {
+            var obj = new SomeExtend { Value = 33, Other = 44 };
+
+            Assert.That(obj.GetType(), Is.EqualTo(typeof(SomeExtend)));
+            var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            Assert.That(properties.Count, Is.EqualTo(2));
+            foreach (var property in properties) Console.WriteLine($"PROPERTY: {property.DeclaringType}.{property.Name}");
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, obj);
+            var schema = sw.Build();
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, obj);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            var obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2.GetType(), Is.EqualTo(typeof(SomeExtend)));
+            var obj2e = (SomeExtend)obj2;
+            Assert.That(obj2e.Value, Is.EqualTo(obj.Value));
+            Assert.That(obj2e.Other, Is.EqualTo(obj.Other));
+
+        }
+
         private class ActivatorKiller
         {
             private ActivatorKiller()
@@ -1036,6 +1072,13 @@ namespace Hazelcast.Tests.Serialization.Compact
             public SomeClass? Value { get; set; }
 
             public override string ToString() => $"SomeClass2(Value={Value})";
+        }
+
+        public class SomeExtend : SomeClass
+        {
+            public int Other { get; set; }
+
+            public override string ToString() => $"SomeExtend(Value={Value}, Other={Other})";
         }
 
         public struct SomeStruct

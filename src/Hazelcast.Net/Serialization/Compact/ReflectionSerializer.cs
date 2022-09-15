@@ -398,6 +398,9 @@ namespace Hazelcast.Serialization.Compact
         private static PropertyInfo[] GetProperties(Type objectType)
             => Properties.GetOrAdd(objectType, 
                 type => type
+                    // "[GetProperties] returns all public instance and static properties, both those defined
+                    // by the type represented by the current Type object as well as those inherited from its
+                    // base types."
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                     .Where(x => x.CanRead && x.CanWrite)
                     .ToArray()
