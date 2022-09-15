@@ -990,6 +990,30 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         }
 
+        [Test]
+        public void CannotSerializeNotSupportedTypes()
+        {
+            var obj = new List<int>();
+            Console.WriteLine(obj.GetType().FullName);
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            Console.WriteLine(e.Message);
+        }
+
+        [Test]
+        public void CannotSerializeAnonymousTypes()
+        {
+            var obj = new { a = 2 };
+            Console.WriteLine(obj.GetType().FullName);
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            Console.WriteLine(e.Message);
+        }
+
         private class ActivatorKiller
         {
             private ActivatorKiller()
