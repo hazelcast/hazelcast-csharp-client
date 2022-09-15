@@ -31,107 +31,107 @@ namespace Hazelcast.Serialization
 #pragma warning disable CA1720 // Identifier contains type name
 
         /// <summary>The type of a field that is not available.</summary>
-        NotAvailable = -1,
+        NotAvailable = 0,
 
         // ---- non-nullable types ----
 
         /// <summary>The boolean primitive type.</summary>
-        Boolean = 0,
+        Boolean = 1,
 
         /// <summary>The i8 primitive type.</summary>
-        Int8 = 2,
+        Int8 = 3,
 
         /// <summary>The char primitive type.</summary>
         /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
-        Char = 4,
+        Char = 5,
 
         /// <summary>The i16 primitive type.</summary>
-        Int16 = 6,
+        Int16 = 7,
 
         /// <summary>The i32 primitive type.</summary>
-        Int32 = 8,
+        Int32 = 9,
 
         /// <summary>The i64 primitive type.</summary>
-        Int64 = 10,
+        Int64 = 11,
 
         /// <summary>The f32 primitive type.</summary>
         /// <remarks>
         /// <para>The f32 primitive type is a 32-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        Float32 = 12,
+        Float32 = 13,
 
         /// <summary>The f64 primitive type.</summary>
         /// <remarks>
         /// <para>The f64 primitive type is a 64-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        Float64 = 14,
+        Float64 = 15,
 
 
         // ---- arrays of non-nullable types ----
 
         /// <summary>The array-of-boolean primitive type.</summary>
-        ArrayOfBoolean = 1,
+        ArrayOfBoolean = 2,
 
         /// <summary>The array-of-i8 primitive type.</summary>
-        ArrayOfInt8 = 3,
+        ArrayOfInt8 = 4,
 
         /// <summary>The array-of-char primitive type.</summary>
         /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
-        ArrayOfChar = 5,
+        ArrayOfChar = 6,
 
         /// <summary>The array-of-i16 primitive type.</summary>
-        ArrayOfInt16 = 7,
+        ArrayOfInt16 = 8,
 
         /// <summary>The array-of-i32 primitive type.</summary>
-        ArrayOfInt32 = 9,
+        ArrayOfInt32 = 10,
 
         /// <summary>The array-of-i64 primitive type.</summary>
-        ArrayOfInt64 = 11,
+        ArrayOfInt64 = 12,
 
         /// <summary>The array-of-f32 primitive type.</summary>
-        ArrayOfFloat32 = 13,
+        ArrayOfFloat32 = 14,
 
         /// <summary>The array-of-f64 primitive type.</summary>
-        ArrayOfFloat64 = 15,
+        ArrayOfFloat64 = 16,
 
 
         // ---- nullable types ----
         
         /// <summary>The nullable-boolean primitive type.</summary>
-        NullableBoolean = 32,
+        NullableBoolean = 33,
 
         /// <summary>The nullable-i8 primitive type.</summary>
-        NullableInt8 = 34,
+        NullableInt8 = 35,
 
         /// <summary>The nullable-i16 primitive type.</summary>
-        NullableInt16 = 36,
+        NullableInt16 = 37,
 
         /// <summary>The nullable-i32 primitive type.</summary>
-        NullableInt32 = 38,
+        NullableInt32 = 39,
 
         /// <summary>The nullable-i64 primitive type.</summary>
-        NullableInt64 = 40,
+        NullableInt64 = 41,
 
         /// <summary>The nullable-f32 primitive type.</summary>
         /// <remarks>
         /// <para>The f32 primitive type is a 32-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        NullableFloat32 = 42,
+        NullableFloat32 = 43,
 
         /// <summary>The nullable-f64 primitive type.</summary>
         /// <remarks>
         /// <para>The f64 primitive type is a 64-bits IEEE 754 floating-point number.</para>
         /// </remarks>
-        NullableFloat64 = 44,
+        NullableFloat64 = 45,
 
         /// <summary>The nullable-decimal primitive type.</summary>
         /// <remarks>
         /// <para>The decimal primitive type is an arbitrary-precision and scale floating-point number.</para>
         /// </remarks>
-        Decimal = 18,
+        Decimal = 19,
 
         /// <summary>The nullable-string primitive type.</summary>
-        String = 16,
+        String = 17,
 
         /// <summary>The nullable-time primitive type.</summary>
         /// <remarks>
@@ -141,7 +141,7 @@ namespace Hazelcast.Serialization
         /// values or values greater than 1 day. It is therefore not fully equivalent to the primitive
         /// type.</para>
         /// </remarks>
-        Time = 20,
+        Time = 21,
 
         /// <summary>The nullable-date primitive type.</summary>
         /// <remarks>
@@ -150,20 +150,20 @@ namespace Hazelcast.Serialization
         /// but note that <see cref="DateTime"/> only has support for years within the 1 to 9999 range,
         /// and supports time. It is therefore not fully equivalent to the primitive type.</para>
         /// </remarks>
-        Date = 22,
+        Date = 23,
 
         /// <summary>The nullable-timestamp primitive type.</summary>
         /// <remarks>
         /// <para>The timestamp primitive type is a combination of a date and a time primitive type.</para>
         /// </remarks>
-        TimeStamp = 24,
+        TimeStamp = 25,
 
         /// <summary>The nullable-timestamp-with-timezone primitive type.</summary>
         /// <remarks>
         /// <para>The timestamp-with-timezone primitive type is a combination of a timestamp primitive type
         /// and a timezone offset within the -18h to +18h range and with seconds precision.</para>
         /// </remarks>
-        TimeStampWithTimeZone = 26,
+        TimeStampWithTimeZone = 27,
 
         /// <summary>The nullable compact object primitive type.</summary>
         /// <remarks>
@@ -171,7 +171,7 @@ namespace Hazelcast.Serialization
         /// with primitive type values.</para>
         /// <para>This type is not supported by portable serialization.</para>
         /// </remarks>
-        Compact = 28,
+        Compact = 29,
 
         /// <summary>The nullable portable object primitive type.</summary>
         /// <remarks>
@@ -179,57 +179,57 @@ namespace Hazelcast.Serialization
         /// with primitive type values.</para>
         /// <para>This type is not supported by compact serialization.</para>
         /// </remarks>
-        Portable = 30,
+        Portable = 31,
 
 
         // ---- arrays of nullable types ----
 
         /// <summary>The array-of-nullable-boolean primitive type.</summary>
-        ArrayOfNullableBoolean = 33,
+        ArrayOfNullableBoolean = 34,
 
         /// <summary>The array-of-nullable-i8 primitive type.</summary>
-        ArrayOfNullableInt8 = 35,
+        ArrayOfNullableInt8 = 36,
 
         /// <summary>The array-of-nullable-i16 primitive type.</summary>
-        ArrayOfNullableInt16 = 37,
+        ArrayOfNullableInt16 = 38,
 
         /// <summary>The array-of-nullable-i32 primitive type.</summary>
-        ArrayOfNullableInt32 = 39,
+        ArrayOfNullableInt32 = 40,
 
         /// <summary>The array-of-nullable-i64 primitive type.</summary>
-        ArrayOfNullableInt64 = 41,
+        ArrayOfNullableInt64 = 42,
 
         /// <summary>The array-of-nullable-f32 primitive type.</summary>
-        ArrayOfNullableFloat32 = 43,
+        ArrayOfNullableFloat32 = 44,
 
         /// <summary>The array-of-nullable-f24 primitive type.</summary>
-        ArrayOfNullableFloat64 = 45,
+        ArrayOfNullableFloat64 = 46,
 
         /// <summary>The array-of-nullable-decimal primitive type.</summary>
-        ArrayOfDecimal = 19,
+        ArrayOfDecimal = 20,
 
         /// <summary>The array-of-nullable-time primitive type.</summary>
-        ArrayOfTime = 21,
+        ArrayOfTime = 22,
 
         /// <summary>The array-of-nullable-date primitive type.</summary>
-        ArrayOfDate = 23,
+        ArrayOfDate = 24,
 
         /// <summary>The array-of-nullable-timestamp primitive type.</summary>
-        ArrayOfTimeStamp = 25,
+        ArrayOfTimeStamp = 26,
 
         /// <summary>The array-of-nullable-timestamp-with-timezone primitive type.</summary>
-        ArrayOfTimeStampWithTimeZone = 27,
+        ArrayOfTimeStampWithTimeZone = 28,
 
         /// <summary>The array-of-string primitive type.</summary>
-        ArrayOfString = 17,
+        ArrayOfString = 18,
 
         /// <summary>The array-of-compact-object primitive type.</summary>
         /// <para>This type is not supported by portable serialization.</para>
-        ArrayOfCompact = 29,
+        ArrayOfCompact = 30,
 
         /// <summary>The array-of-portable-object primitive type.</summary>
         /// <para>This type is not supported by compact serialization.</para>
-        ArrayOfPortable = 31
+        ArrayOfPortable = 32
 
 #pragma warning restore CA1720 // Identifier contains type name
     }
