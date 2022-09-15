@@ -3,6 +3,7 @@
 #
 
 # beware! for workflow_run workflow to run, it must exist on the master or default branch!
+# see https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_run
 
 name: Report PR
 on:
@@ -132,9 +133,11 @@ jobs:
           sha: ${{ github.sha }}
 
       # publish to codecov (windows/net6.0)
+      # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
         if: steps.unzip.outputs.coverage == 'true'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./temp/test-coverage/windows/cover-net6.0.xml
+          override_commit: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
