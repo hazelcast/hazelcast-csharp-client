@@ -48,7 +48,9 @@ jobs:
         id: get-fwks
         shell: bash
         run: |
-          echo "::set-output name=fwks-${{ matrix.os }}::$(pwsh ./hz.ps1 getfwks-json)"
+          FWKS=$(pwsh ./hz.ps1 getfwks-json)
+          echo "fwks-${{ matrix.os }}=$FWKS"
+          echo "::set-output name=fwks-${{ matrix.os }}::$FWKS"
 
   # build & test
   build-test:
