@@ -118,7 +118,7 @@ jobs:
             echo "(missing)"
           fi
 
-      # report test results (all os/framework)
+      # report test results - always
       - name: Report test results
         if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
@@ -130,19 +130,19 @@ jobs:
           list-tests: failed
           fail-on-error: false
 
-      # report test coverage (windows/net6.0)
+      # report test coverage - if build&test was successful
       - name: Report test coverage
-        if: steps.unzip.outputs.coverage == 'true'
+        if: steps.unzip.outputs.coverage == 'true' && github.event.workflow_run.conclusion == 'success'
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
           path: ./temp/test-coverage
           sha: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
 
-      # publish to codecov (windows/net6.0)
+      # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: steps.unzip.outputs.coverage == 'true'
+        if: steps.unzip.outputs.coverage == 'true' && github.event.workflow_run.conclusion == 'success'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
