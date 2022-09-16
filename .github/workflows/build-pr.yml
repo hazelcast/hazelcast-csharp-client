@@ -8,7 +8,7 @@ on: pull_request
 jobs:
 
   # get frameworks
-  get-fwks:
+  get_fwks:
 
     name: Get Frameworks / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
@@ -45,7 +45,7 @@ jobs:
 
       # get frameworks
       - name: Get Frameworks
-        id: get-fwks
+        id: get_fwks
         shell: bash
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
@@ -53,9 +53,9 @@ jobs:
           echo "::set-output name=fwks-${{ matrix.os }}::$FWKS"
 
   # build & test
-  build-test:
+  build_test:
     name: Build&Test / ${{ matrix.os }}
-    needs: get-fwks
+    needs: get_fwks
     strategy:
       fail-fast: false
       matrix:
@@ -64,19 +64,19 @@ jobs:
     secrets: inherit
     with:
       os: ${{ matrix.os }}
-      fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
+      fwks: ${{ needs.get_fwks.outputs[format('fwks-{0}', matrix.os)] }}
 
   # report build & test result
   # -> GitHub is configured to require the 'Build&Test Result' check
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: build_test
     steps:
     - name: report
       shell: bash
       run: |
-        if [ "${{ needs.build-test.conclusion }}" == "success" ]; then
+        if [ "${{ needs.build_test.conclusion }}" == "success" ]; then
           echo "All Build&Test checks completed successfully."
         else
           echo "At least one Build&Test check has failed."
