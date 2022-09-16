@@ -19,8 +19,8 @@ jobs:
 
     outputs:
       # beware! this cannot be dynamic = must match the OS matrix
-      fwks-ubuntu-latest: ${{ steps.getfwks.outputs.fwks-ubuntu-latest }}
-      fwks-windows-latest: ${{ steps.getfwks.outputs.fwks-windows-latest }}
+      fwks-ubuntu-latest: ${{ steps.get_fwks.outputs.fwks-ubuntu-latest }}
+      fwks-windows-latest: ${{ steps.get_fwks.outputs.fwks-windows-latest }}
 
     steps:
 
