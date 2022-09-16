@@ -26,7 +26,6 @@ using Hazelcast.Projection;
 using Hazelcast.Query;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
-using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 
@@ -305,7 +304,6 @@ namespace Hazelcast
 
                 // define serializers for a range of primitive types (int, lists...)
                 // why there is 'default' vs 'constant' is a mystery - they should be merged
-                .AddDefinitions(new DefaultSerializerDefinitions())
                 .AddDefinitions(new ConstantSerializerDefinitions())
 
                 // and build

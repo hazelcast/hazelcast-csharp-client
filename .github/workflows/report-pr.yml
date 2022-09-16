@@ -3,6 +3,7 @@
 #
 
 # beware! for workflow_run workflow to run, it must exist on the master or default branch!
+# see https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_run
 
 name: Report PR
 on:
@@ -15,15 +16,10 @@ jobs:
 
   report-pr:
 
-    name: Report PR (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Report PR
+    runs-on: ubuntu-latest
     if: >
       ${{ github.event.workflow_run.event == 'pull_request' }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
 
     steps:
 
@@ -44,7 +40,7 @@ jobs:
           mkdir ./temp/test-coverage
 
       # cannot use download action because we get artifacts from another run
-      - name: Download tests results and coverage artifacts (${{ matrix.os }})
+      - name: Download tests results and coverage artifacts
         uses: actions/github-script@v4
         with:
           script: |
@@ -54,23 +50,25 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ github.event.workflow_run.id }},
             });
-            async function download(name, path) {
-                var artifact = artifacts.data.artifacts.filter((art) => {
-                  return art.name == name;
-                })[0];
-                if (artifact == null) {
-                    return;
-                }
+            async function download(prefix, path) {
+              var filtered = artifacts.data.artifacts.filter((x) => {
+                return x.name.startsWith(prefix);
+              });
+              for (const artifact of filtered) {
                 var download = await github.actions.downloadArtifact({
                    owner: context.repo.owner,
                    repo: context.repo.repo,
                    artifact_id: artifact.id,
                    archive_format: 'zip',
                 });
-                fs.writeFileSync(process.env.GITHUB_WORKSPACE + path, Buffer.from(download.data));
+                var xxxx = artifact.name.substring(prefix.length).replace(/\(|\)/g, '');
+                var path2 = path.replace('XXXX', xxxx);
+                await fs.promises.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));
+                console.log(`Downloaded: ${artifact.name} -> ${path2}`)
+              }
             }
-            await download('Test-Results (${{ matrix.os }})', '/temp/test-results/test-results.zip');
-            await download('Test-Coverage (${{ matrix.os }})', '/temp/test-coverage/test-coverage.zip');
+            await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
+            await download('Test-Coverage ', '/temp/test-coverage/test-coverage-XXXX.zip');
 
       # unzip artifacts
       - name: Unzip artifacts
@@ -78,49 +76,68 @@ jobs:
         shell: bash
         run: |
           echo "Tests results:"
-          if [ -f temp/test-results/test-results.zip ]; then
+          found=0
+          for f in temp/test-results/test-results-*.zip;
+          do
+            found=1
+            echo "unzip $f"
+            k=${f##*/} # path/to/test-results-ubuntu-latest.zip -> test-results-ubuntu-latest.zip
+            k=${k#test-results-} # test-results-ubuntu-latest.zip -> ubuntu-latest.zip
+            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
+            unzip $f -d temp/test-results/$k # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
+          done
+          if [ $found -eq 1 ]; then
             echo "::set-output name=results::true"
-            unzip temp/test-results/test-results.zip -d temp/test-results
-            ls ./temp/test-results
           else
             echo "::set-output name=results::false"
             echo "(missing)"
           fi
+
           echo "Tests coverage:"
-          if [ -f temp/test-coverage/test-coverage.zip ]; then
+          found=0
+          for f in temp/test-coverage/test-coverage-*.zip;
+          do
+            found=1
+            echo "unzip $f"
+            k=${f##*/} # path/to/test-coverage-ubuntu-latest.zip -> test-coverage-ubuntu-latest.zip
+            k=${k#test-coverage-} # test-coverage-ubuntu-latest.zip -> ubuntu-latest.zip
+            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
+            unzip $f -d temp/test-coverage/$k # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
+          done
+          if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
-            unzip temp/test-coverage/test-coverage.zip -d temp/test-coverage
-            ls ./temp/test-coverage
           else
             echo "::set-output name=coverage::false"
             echo "(missing)"
           fi
 
-      # report test results
+      # report test results (all os/framework)
       - name: Report test results
         if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
-          name: Test Results (${{ matrix.os }})
-          path: ./temp/test-results/results-*.trx
+          name: Test Results
+          path: ./temp/test-results/*/results-*.trx
           reporter: dotnet-trx
           list-suites: failed
           list-tests: failed
           fail-on-error: false
 
-      # report test coverage
+      # report test coverage (windows/net6.0)
       - name: Report test coverage
         if: steps.unzip.outputs.coverage == 'true'
         uses: ./.github/actions/dotcover-report
         with:
-          name: Test Coverage (${{ matrix.os }})
+          name: Test Coverage
           path: ./temp/test-coverage
-          sha: ${{ github.sha }}
+          sha: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
 
-      # publish to codecov
+      # publish to codecov (windows/net6.0)
+      # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
         if: steps.unzip.outputs.coverage == 'true'
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/cover-net6.0.json
+          files: ./temp/test-coverage/windows/cover-net6.0.xml
+          override_commit: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'

@@ -18,7 +18,6 @@ using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.ConstantSerializers;
-using Hazelcast.Serialization.DefaultSerializers;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -57,7 +56,6 @@ namespace Hazelcast.Tests.Serialization
         {
             _serializationService = new SerializationServiceBuilder(new SerializationOptions(), new NullLoggerFactory())
                 .AddDefinitions(new ConstantSerializerDefinitions())
-                .AddDefinitions(new DefaultSerializerDefinitions())
                 .Build();
         }
 
