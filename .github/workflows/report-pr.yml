@@ -50,6 +50,9 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ github.event.workflow_run.id }},
             });
+            for (const artifact of artifacts.data.artifacts) {
+                console.log(`Artifact: ${artifact.name}`);
+            }
             async function download(prefix, path) {
               var filtered = artifacts.data.artifacts.filter((x) => {
                 return x.name.startsWith(prefix);
@@ -64,7 +67,7 @@ jobs:
                 var xxxx = artifact.name.substring(prefix.length).replace(/\(|\)/g, '');
                 var path2 = path.replace('XXXX', xxxx);
                 await fs.promises.writeFile(process.env.GITHUB_WORKSPACE + path2, Buffer.from(download.data));
-                console.log(`Downloaded: ${artifact.name} -> ${path2}`)
+                console.log(`Downloaded: ${artifact.name} -> ${path2}`);
               }
             }
             await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
@@ -81,10 +84,12 @@ jobs:
           do
             found=1
             echo "unzip $f"
-            k=${f##*/} # path/to/test-results-ubuntu-latest.zip -> test-results-ubuntu-latest.zip
-            k=${k#test-results-} # test-results-ubuntu-latest.zip -> ubuntu-latest.zip
-            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
-            unzip $f -d temp/test-results/$k # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
+            k=${f##*/} # path/to/test-results-ubuntu-latest[-net00].zip -> test-results-ubuntu-latest[-net00].zip
+            k=${k#test-results-} # test-results-ubuntu-latest[-net00].zip -> ubuntu-latest[-net00].zip
+            k=${k%.*} # ubuntu-latest[-net00].zip -> ubuntu-latest[-net00]
+            k=${k//-latest} # ubuntu-latest[-net00] -> ubuntu[-net00]
+            os=${k%-*} # ubuntu[-net00] -> ubuntu
+            unzip $f -d temp/test-results/$os # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
           done
           if [ $found -eq 1 ]; then
             echo "::set-output name=results::true"
@@ -99,10 +104,12 @@ jobs:
           do
             found=1
             echo "unzip $f"
-            k=${f##*/} # path/to/test-coverage-ubuntu-latest.zip -> test-coverage-ubuntu-latest.zip
-            k=${k#test-coverage-} # test-coverage-ubuntu-latest.zip -> ubuntu-latest.zip
-            k=${k%-latest.*} # ubuntu-latest.zip -> ubuntu
-            unzip $f -d temp/test-coverage/$k # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
+            k=${f##*/} # path/to/test-coverage-ubuntu-latest[-net00].zip -> test-coverage-ubuntu-latest[-net00].zip
+            k=${k#test-coverage-} # test-coverage-ubuntu-latest[-net00].zip -> ubuntu-latest[-net00].zip
+            k=${k%.*} # ubuntu-latest[-net00].zip -> ubuntu-latest[-net00]
+            k=${k//-latest} # ubuntu-latest[-net00] -> ubuntu[-net00]
+            os=${k%-*} # ubuntu[-net00] -> ubuntu
+            unzip $f -d temp/test-coverage/$os # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
           done
           if [ $found -eq 1 ]; then
             echo "::set-output name=coverage::true"
