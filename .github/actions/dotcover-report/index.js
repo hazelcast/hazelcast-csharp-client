@@ -28,8 +28,7 @@ async function run() {
 
     // get the ref
     // TODO: ref vs sha ?!
-    const ref = sha;
-    //const ref = getSha(context);
+    const ref = getSha(context, sha);
     //if (!ref) {
     //  core.error(`Context: ${JSON.stringify(context, null, 2)}`);
     //  return process.exit(1);
@@ -130,12 +129,15 @@ async function run() {
   }
 }
 
-const getSha = (context) => {
+const getSha = (context, sha) => {
+  if (sha) {
+    return sha;
+  }
   if (context.eventName === "pull_request") {
     return context.payload.pull_request.head.sha || context.payload.after;
-  } else {
-    return context.sha;
   }
+
+  return context.sha;
 };
 
 run();
