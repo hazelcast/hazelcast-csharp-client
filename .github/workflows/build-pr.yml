@@ -71,6 +71,7 @@ jobs:
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
+    if: always()
     needs: build_test
     steps:
     - name: report
