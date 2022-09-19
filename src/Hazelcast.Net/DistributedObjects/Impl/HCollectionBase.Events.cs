@@ -56,7 +56,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var eventType = (CollectionItemEventTypes) eventTypeData;
 
             var member = Cluster.Members.GetMember(memberId);
-            var item = LazyArg<T>(itemData);
+            var item = await CreateLazyArgAsync<T>(itemData).CfAwait();
 
             // ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
             foreach (var handler in sstate.Handlers)

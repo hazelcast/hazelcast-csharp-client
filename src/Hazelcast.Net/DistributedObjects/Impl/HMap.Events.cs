@@ -110,10 +110,10 @@ namespace Hazelcast.DistributedObjects.Impl
             var eventType = (MapEventTypes) eventTypeData;
 
             var member = Cluster.Members.GetMember(memberId);
-            var key = LazyArg<TKey>(keyData);
-            var value = LazyArg<TValue>(valueData);
-            var oldValue = LazyArg<TValue>(oldValueData);
-            var mergingValue = LazyArg<TValue>(mergingValueData);
+            var key = await CreateLazyArgAsync<TKey>(keyData).CfAwait();
+            var value = await CreateLazyArgAsync<TValue>(valueData).CfAwait();
+            var oldValue = await CreateLazyArgAsync<TValue>(oldValueData).CfAwait();
+            var mergingValue = await CreateLazyArgAsync<TValue>(mergingValueData).CfAwait();
 
             var sstate = ToSafeState<MapSubscriptionState>(state);
 

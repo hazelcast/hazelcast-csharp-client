@@ -95,7 +95,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapRemoveCodec.EncodeRequest(Name, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         /// <inheritdoc />

@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ReplicatedMapPutCodec.EncodeRequest(Name, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task SetAllAsync(IDictionary<TKey, TValue> entries)
@@ -74,7 +74,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ReplicatedMapRemoveCodec.EncodeRequest(Name, keyData);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task ClearAsync()
@@ -91,7 +91,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData).CfAwait();
             var response = ReplicatedMapGetCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<IReadOnlyCollection<TKey>> GetKeysAsync()
@@ -229,10 +229,10 @@ namespace Hazelcast.DistributedObjects.Impl
             var eventType = (MapEventTypes) eventTypeData;
 
             var member = Cluster.Members.GetMember(memberId);
-            var key = LazyArg<TKey>(keyData);
-            var value = LazyArg<TValue>(valueData);
-            var oldValue = LazyArg<TValue>(oldValueData);
-            var mergingValue = LazyArg<TValue>(mergingValueData);
+            var key = await CreateLazyArgAsync<TKey>(keyData).CfAwait();
+            var value = await CreateLazyArgAsync<TValue>(valueData).CfAwait();
+            var oldValue = await CreateLazyArgAsync<TValue>(oldValueData).CfAwait();
+            var mergingValue = await CreateLazyArgAsync<TValue>(mergingValueData).CfAwait();
 
             var sstate = ToSafeState<SubscriptionState>(state);
 
