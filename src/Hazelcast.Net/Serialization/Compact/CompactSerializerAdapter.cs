@@ -52,7 +52,7 @@ namespace Hazelcast.Serialization.Compact
         /// <typeparam name="T">The serialized type.</typeparam>
         /// <returns>A <see cref="CompactSerializerAdapter"/> for the <paramref name="serializer"/>.</returns>
         public static CompactSerializerAdapter Create<T>(ICompactSerializer<T> serializer) where T : notnull
-            => new(
+            => new CompactSerializerAdapter(
                     serializer,
                     // ReSharper disable once HeapView.PossibleBoxingAllocation - accepted, T can be struct
                     reader => serializer.Read(reader),
@@ -72,7 +72,7 @@ namespace Hazelcast.Serialization.Compact
             // note: this is going to happen once per serializedType, no point caching the created method
             
             var serializedType = serializer.GetSerializedType();
-            return (CompactSerializerAdapter) CreateMethod.MakeGenericMethod(serializedType).Invoke(null, new object[] { serializer })!;
+            return (CompactSerializerAdapter) CreateMethod.MakeGenericMethod(serializedType).Invoke(null, new object[] { serializer });
         }
         
         /// <summary>

@@ -43,6 +43,8 @@ namespace Hazelcast.Serialization
         public const int ConstantTypeUuid = -21;
         public const int ConstantTypeSimpleEntry = -22;
         public const int ConstantTypeSimpleImmutableEntry = -23;
+        public const int ConstantTypeCompact = -55;
+        public const int ConstantTypeCompactWithSchema = -56;
 
         // ------------------------------------------------------------
         // DEFAULT SERIALIZERS

@@ -21,6 +21,17 @@ namespace Hazelcast.Serialization
     internal partial class SerializationService
     {
         /// <summary>
+        /// Represents the serialization service state during ToObject operations.
+        /// </summary>
+        public struct ToObjectState
+        {
+            /// <summary>
+            /// Gets or sets the compact schema identifier.
+            /// </summary>
+            public long SchemaId { get; set; }
+        }
+
+        /// <summary>
         /// Serializes an object to an <see cref="IData"/> blob.
         /// </summary>
         /// <param name="obj">The object.</param>
