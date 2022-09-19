@@ -117,6 +117,13 @@ namespace Hazelcast
             Cluster.Connections.ConnectionOpened
                 += _distributedOjects.OnConnectionOpened;
 
+            // when a connection to a new cluster is opened, make sure we republish all schemas
+            Cluster.Connections.ConnectionOpened += (_, _, _, isNewCluster) =>
+            {
+                if (isNewCluster) Cluster.SerializationService.CompactSerializer.Schemas.MarkAllForRepublication();
+                return default;
+            };
+
             // when a connection is opened, trigger the user-level event.
             Cluster.Connections.ConnectionOpened
                 += (conn, _, _, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));

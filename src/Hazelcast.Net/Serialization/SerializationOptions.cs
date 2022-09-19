@@ -18,6 +18,7 @@ using System.Text;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Serialization.Compact;
 
 // suppress warning about IPortableFactory not being disposed
 // TODO: should HazelcastOptions be IDisposable so in the end we dispose these factories?
@@ -67,6 +68,8 @@ namespace Hazelcast.Serialization
                     Creator = () => ServiceFactory.CreateInstance<ISerializer>(item.TypeName, item.Args)
                 });
             });
+
+            Compact = new CompactOptions();
         }
 
         /// <summary>
@@ -77,6 +80,8 @@ namespace Hazelcast.Serialization
             Endianness = other.Endianness;
             ValidateClassDefinitions = other.ValidateClassDefinitions;
             PortableVersion = other.PortableVersion;
+
+            Compact = other.Compact.Clone();
 
             ClassDefinitions = new HashSet<IClassDefinition>(other.ClassDefinitions);
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
@@ -102,6 +107,11 @@ namespace Hazelcast.Serialization
         /// Gets or sets the portable version.
         /// </summary>
         public int PortableVersion { get; set; }
+
+        /// <summary>
+        /// Gets the compact serialization options.
+        /// </summary>
+        public CompactOptions Compact { get; }
 
         #region Class Definitions
 

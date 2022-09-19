@@ -62,6 +62,7 @@ namespace Hazelcast.Serialization
         private readonly ISerializerAdapter _globalSerializerAdapter; // global serializer
         private readonly ISerializerAdapter _dataSerializerAdapter; // identified data serialization
         private readonly ISerializerAdapter _portableSerializerAdapter; // portable serialization
+        private readonly ISerializerAdapter _compactSerializerAdapter; // compact serialization
         private readonly ISerializerAdapter _serializableSerializerAdapter; // CLR serialization
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
@@ -69,6 +70,7 @@ namespace Hazelcast.Serialization
 #pragma warning disable CA2213 // Disposable fields should be disposed - they are
         private readonly PortableContext _portableContext;
         private readonly PortableSerializer _portableSerializer;
+        private readonly CompactSerializationSerializer _compactSerializer;
 #pragma warning restore CA2213 // Disposable fields should be disposed
 
         internal SerializationService(
@@ -81,6 +83,7 @@ namespace Hazelcast.Serialization
             IEnumerable<ISerializerDefinitions> definitions,
             bool validatePortableClassDefinitions, IPartitioningStrategy partitioningStrategy,
             int initialOutputBufferSize,
+            ISchemas schemas,
             ILoggerFactory loggerFactory)
         {
             _options = options;
@@ -112,6 +115,11 @@ namespace Hazelcast.Serialization
             var dataSerializer = new DataSerializer(hooks.Hooks, dataSerializableFactories, loggerFactory);
             _dataSerializerAdapter = CreateSerializerAdapter<IIdentifiedDataSerializable>(dataSerializer);
             RegisterConstantSerializer(_dataSerializerAdapter, typeof(IIdentifiedDataSerializable));
+
+            // Registers the constant 'compact serializer', which implements compact serialization.
+            _compactSerializer = new CompactSerializationSerializer(options.Compact, schemas, options.Endianness);
+            _compactSerializerAdapter = Using(new CompactSerializationSerializerAdapter(_compactSerializer));
+            RegisterConstantSerializer(_compactSerializerAdapter);
 
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
             // serialization of objects marked with the [Serializable] attributes.
@@ -161,7 +169,20 @@ namespace Hazelcast.Serialization
         public byte GetVersion() => SerializerVersion;
 #pragma warning restore CA1822 // Mark members as static
 
+        // for tests
+        public CompactSerializationSerializer CompactSerializer => _compactSerializer;
+
         public Endianness Endianness { get; }
+
+        /// <summary>
+        /// Gets the serialization service ready to send a message.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public ValueTask PrepareForSendingMessage()
+        {
+            // the only serializer that needs attention for now is compact
+            return _compactSerializer.Schemas.PublishAsync();
+        }
 
         /// <summary>
         /// Ensures that the serialization service can deserialize data.
@@ -176,9 +197,9 @@ namespace Hazelcast.Serialization
             var typeId = data.TypeId;
             if (typeId == SerializationConstants.ConstantTypeCompactWithSchema)
                 throw new NotSupportedException();
-            if (typeId == SerializationConstants.ConstantTypeCompact)
-                throw new NotSupportedException("We don't have a compact serializer for now.");
-            return default;
+            return typeId == SerializationConstants.ConstantTypeCompact 
+                ? _compactSerializer.EnsureSchemas(data.ToByteArray(), 2 * BytesExtensions.SizeOfInt)
+                : default;
         }
 
         /// <summary>

@@ -210,7 +210,20 @@ namespace Hazelcast.Serialization
         /// <exception cref="HazelcastException">Internal error.</exception>
         public async ValueTask<object> ToObjectAsync(object dataObj, ToObjectState state)
         {
-            throw new NotSupportedException("We don't have a compact serializer for now.");
+            var schemaId = state.SchemaId;
+            var safety = 1000;
+            while (safety-- > 0)
+            {
+                if (!await _compactSerializer.FetchSchema(schemaId).CfAwait())
+                    throw new UnknownCompactSchemaException(schemaId);
+
+                // and then we try again - we cannot do it on the fly during deserialization
+                // because that would force the entire deserialization (including ICompactReader)
+                // to turn asynchronous - and then we would have issues with lazy deserialization
+                if (TryToObject(dataObj, out var obj, out state)) return obj;
+                schemaId = state.SchemaId;
+            }
+            throw new HazelcastException(ExceptionMessages.InternalError);
         }
 
         /// <summary>
