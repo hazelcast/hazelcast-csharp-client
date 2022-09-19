@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = QueuePeekCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePeekCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<T>(response);
+            return await ToObjectAsync<T>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -45,7 +45,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = QueuePollCodec.EncodeRequest(Name, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueuePollCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<T>(response);
+            return await ToObjectAsync<T>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = QueueTakeCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueTakeCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<T>(response);
+            return await ToObjectAsync<T>(response).CfAwait();
         }
 
          /// <inheritdoc />
@@ -64,7 +64,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
-            foreach (var itemData in response) items.Add(ToObject<T>(itemData));
+            foreach (var itemData in response) items.Add(await ToObjectAsync<T>(itemData).CfAwait());
             return response.Count;
         }
 
@@ -75,7 +75,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = QueueDrainToMaxSizeCodec.DecodeResponse(responseMessage).Response;
 
-            foreach (var itemData in response) items.Add(ToObject<T>(itemData));
+            foreach (var itemData in response) items.Add(await ToObjectAsync<T>(itemData).CfAwait());
             return response.Count;
         }
     }
