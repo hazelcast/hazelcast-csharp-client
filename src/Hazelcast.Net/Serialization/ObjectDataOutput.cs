@@ -20,15 +20,15 @@ namespace Hazelcast.Serialization
     internal partial class ObjectDataOutput : IObjectDataOutput, IDisposable
     {
         private readonly int _initialBufferSize;
-        private readonly SerializationService _serializationService;
+        private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
 
-        internal ObjectDataOutput(int initialBufferSize, SerializationService serializationService, Endianness endianness)
+        internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness)
         {
             _initialBufferSize = initialBufferSize;
             _buffer = new byte[_initialBufferSize];
-            _serializationService = serializationService;
+            _objectsWriter = objectsReaderWriter;
             Endianness = endianness;
         }
 
@@ -98,12 +98,14 @@ namespace Hazelcast.Serialization
 
         internal void EnsureAvailable(int count)
         {
+            // TODO - input/output should work with memory and span and not copy arrays
+
             if (_buffer != null)
             {
                 if (_buffer.Length - Position >= count) return;
                 var newCap = Math.Max(_buffer.Length << 1, _buffer.Length + count);
                 var newBuffer = new byte[newCap];
-                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, Position);
+                System.Buffer.BlockCopy(_buffer, 0, newBuffer, 0, _buffer.Length);
                 _buffer = newBuffer;
             }
             else

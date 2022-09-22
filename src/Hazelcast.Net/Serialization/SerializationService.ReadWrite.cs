@@ -13,13 +13,27 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Partitioning.Strategies;
+using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
     internal partial class SerializationService
     {
+        /// <summary>
+        /// Represents the serialization service state during ToObject operations.
+        /// </summary>
+        public struct ToObjectState
+        {
+            /// <summary>
+            /// Gets or sets the compact schema identifier.
+            /// </summary>
+            public long SchemaId { get; set; }
+        }
+
         /// <summary>
         /// Serializes an object to an <see cref="IData"/> blob.
         /// </summary>
@@ -50,7 +64,7 @@ namespace Hazelcast.Serialization
                 WriteObject(output, obj, true);
                 return new HeapData(output.ToByteArray());
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
@@ -75,6 +89,29 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
+        /// Tries to deserialize an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <typeparam name="T">The expected type of the object.</typeparam>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="obj">The object, if deserialization succeeded; otherwise <c>default</c>.</param>
+        /// <param name="state">The serialization service state, when returning <c>false</c>.</param>
+        /// <returns><c>true</c> if the <see cref="IData"/> blob was successfully deserialized; <c>false</c>
+        /// if the serialization service was not in a state that allowed deserialization but deserialization
+        /// can be asynchronously retried using <see cref="ToObjectAsync{T}"/>.</returns>
+        /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
+        /// <exception cref="InvalidCastException">Failed to case deserialized object to type <typeparamref name="T"/>.</exception>
+        public bool TryToObject<T>(object dataObj, out T obj, out ToObjectState state)
+        {
+            if (!TryToObject(dataObj, out var oobj, out state))
+            {
+                obj = default;
+                return false;
+            }
+            obj = CastObject<T>(oobj, false);
+            return true;
+        }
+
+        /// <summary>
         /// Deserializes an <see cref="IData"/> blob to an object.
         /// </summary>
         /// <param name="dataObj">The <see cref="IData"/> blob.</param>
@@ -82,7 +119,7 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
         public object ToObject(object dataObj)
         {
-            if (!(dataObj is IData data)) return dataObj;
+            if (dataObj is not IData data) return dataObj;
 
             var input = GetDataInput(data);
             try
@@ -90,6 +127,55 @@ namespace Hazelcast.Serialization
                 var typeId = data.TypeId;
                 var serializer = LookupSerializer(typeId);
                 return serializer.Read(input);
+            }
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
+            {
+                throw new SerializationException(e);
+            }
+            finally
+            {
+                ReturnDataInput(input);
+            }
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="obj">The object, if deserialization succeeded; otherwise <c>default</c>.</param>
+        /// <param name="state">The serialization service state, when returning <c>false</c>.</param>
+        /// <returns><c>true</c> if the <see cref="IData"/> blob was successfully deserialized; <c>false</c>
+        /// if the serialization service was not in a state that allowed deserialization but deserialization
+        /// can be asynchronously retried using <see cref="ToObjectAsync"/>.</returns>
+        /// <exception cref="SerializationException">Failed to deserialize the object (see inner exception).</exception>
+        public bool TryToObject(object dataObj, out object obj, out ToObjectState state)
+        {
+            if (!(dataObj is IData data))
+            {
+                obj = dataObj;
+                state = default;
+                return true;
+            }
+
+            var input = GetDataInput(data);
+            try
+            {
+                var typeId = data.TypeId;
+                var serializer = LookupSerializer(typeId);
+                
+                // TODO: consider doing this via polymorphism
+                // i.e. have ISerializerAdapter implement TryRead(...)
+                if (serializer is CompactSerializationSerializerAdapter compact)
+                {
+                    var r = compact.TryRead(input, out obj, out state);
+                    return r;
+                }
+                else
+                {
+                    obj = serializer.Read(input);
+                    state = default;
+                    return true;
+                }
             }
             catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
             {
@@ -99,6 +185,45 @@ namespace Hazelcast.Serialization
             {
                 ReturnDataInput(input);
             }
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <typeparam name="T">The expected type of the object.</typeparam>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="state">The initial serialization service state.</param>
+        /// <returns>The object.</returns>
+        public async ValueTask<T> ToObjectAsync<T>(object dataObj, ToObjectState state)
+        {
+            var obj = await ToObjectAsync(dataObj, state).CfAwait();
+            return CastObject<T>(obj, false);
+        }
+
+        /// <summary>
+        /// Deserializes an <see cref="IData"/> blob to an object.
+        /// </summary>
+        /// <param name="dataObj">The <see cref="IData"/> blob.</param>
+        /// <param name="state">The initial serialization service state.</param>
+        /// <returns>The object.</returns>
+        /// <exception cref="UnknownCompactSchemaException">Deserialization requires a schema which could not be fetched from cluster.</exception>
+        /// <exception cref="HazelcastException">Internal error.</exception>
+        public async ValueTask<object> ToObjectAsync(object dataObj, ToObjectState state)
+        {
+            var schemaId = state.SchemaId;
+            var safety = 1000;
+            while (safety-- > 0)
+            {
+                if (!await _compactSerializer.FetchSchema(schemaId).CfAwait())
+                    throw new UnknownCompactSchemaException(schemaId);
+
+                // and then we try again - we cannot do it on the fly during deserialization
+                // because that would force the entire deserialization (including ICompactReader)
+                // to turn asynchronous - and then we would have issues with lazy deserialization
+                if (TryToObject(dataObj, out var obj, out state)) return obj;
+                schemaId = state.SchemaId;
+            }
+            throw new HazelcastException(ExceptionMessages.InternalError);
         }
 
         /// <summary>
@@ -130,7 +255,7 @@ namespace Hazelcast.Serialization
 
                 serializer.Write(output, obj);
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
@@ -160,17 +285,42 @@ namespace Hazelcast.Serialization
                 var obj = serializer.Read(input);
                 return CastObject<T>(obj, true);
             }
-            catch (Exception e) when (!(e is OutOfMemoryException) && !(e is SerializationException))
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {
                 throw new SerializationException(e);
             }
         }
 
-        public void Write(IObjectDataOutput output, object obj)
-            => WriteObject(output.MustBe<ObjectDataOutput>(), obj, false);
+        // same but 
+        private object ReadObject(ObjectDataInput input)
+        {
+            if (input == null) throw new ArgumentNullException(nameof(input));
 
-        public T Read<T>(IObjectDataInput input)
-            => ReadObject<T>(input.MustBe<ObjectDataInput>());
+            try
+            {
+                var typeId = input.ReadInt();
+                var serializer = LookupSerializer(typeId);
+
+                var obj = serializer.Read(input);
+                return obj;
+            }
+            catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
+            {
+                throw new SerializationException(e);
+            }
+        }
+
+        /// <inheritdoc />
+        void IWriteObjectsToObjectDataOutput.Write(IObjectDataOutput output, object obj)
+            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, false);
+
+        /// <inheritdoc />
+        T IReadObjectsFromObjectDataInput.Read<T>(IObjectDataInput input)
+            => ReadObject<T>(input.MustBe<ObjectDataInput>(nameof(input)));
+
+        /// <inheritdoc />
+        object IReadObjectsFromObjectDataInput.Read(IObjectDataInput input, Type type)
+            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)));
         
         public static T CastObject<T>(object obj, bool enforceNullable)
         {
@@ -184,10 +334,8 @@ namespace Hazelcast.Serialization
             return obj switch
             {
                 T t => t,
-
                 null when !enforceNullable || typeof(T).IsNullable() => default,
                 null => throw new SerializationException($"Cannot cast deserialized null value to value type {typeof(T)}."),
-
                 _ => throw new InvalidCastException($"Cannot cast deserialized object of type {obj.GetType()} to type {typeof(T)}.")
             };
         }

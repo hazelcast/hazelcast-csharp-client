@@ -29,8 +29,8 @@ namespace Hazelcast.Clustering
     /// </summary>
     internal class ClusterState : IAsyncDisposable
     {
-        private readonly CancellationTokenSource _clusterCancellation = new CancellationTokenSource(); // general kill switch
-        private readonly object _mutex = new object();
+        private readonly CancellationTokenSource _clusterCancellation = new(); // general kill switch
+        private readonly object _mutex = new();
         private readonly StateChangeQueue _stateChangeQueue;
         private readonly Failover _failover;
         private Action _shutdownRequested;
@@ -42,7 +42,7 @@ namespace Hazelcast.Clustering
         public ClusterState(HazelcastOptions options, string clusterName, string clientName, Partitioner partitioner, ILoggerFactory loggerFactory)
         {
             Options = options;
-            ClusterName = clusterName;//TODO:should remove? given name can be overrided ex: dev
+            ClusterName = clusterName; // TODO: should remove? given name can be overriden ex: dev
             ClientName = clientName;
             Partitioner = partitioner;
             LoggerFactory = loggerFactory;
@@ -51,6 +51,10 @@ namespace Hazelcast.Clustering
 
             _stateChangeQueue = new StateChangeQueue(loggerFactory);
 
+            // FIXME failover should be created outside of the state class
+            // and maybe it was wrong to add the AddressProvider here in the first place, too...
+            // and... failover should not have a dependency on the state.
+            // this all thing to be refactored
             _failover = new Failover(this, options);
 
             StateChanged += _failover.OnClusterStateChanged;
@@ -68,7 +72,7 @@ namespace Hazelcast.Clustering
         #region Events
 
         /// <summary>
-        /// Triggers when the state changes.
+        /// Triggers when the state has changed.
         /// </summary>
         public Func<ClientState, ValueTask> StateChanged
         {
@@ -152,12 +156,7 @@ namespace Hazelcast.Clustering
         {
             lock (_mutex)
             {
-                if (ClientState == newState)
-                    return;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
-                _stateChangeQueue.Add(newState);
+                ChangeStateLocked(newState);
             }
         }
 
@@ -171,12 +170,8 @@ namespace Hazelcast.Clustering
         {
             lock (_mutex)
             {
-                if (ClientState != expectedState)
-                    return false;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
-                _stateChangeQueue.Add(newState);
+                if (ClientState != expectedState) return false;
+                ChangeStateLocked(newState);
                 return true;
             }
         }
@@ -191,14 +186,20 @@ namespace Hazelcast.Clustering
         {
             lock (_mutex)
             {
-                if (!expectedStates.Contains(ClientState))
-                    return false;
-
-                ClientState = newState;
-                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
-                _stateChangeQueue.Add(newState);
+                if (!expectedStates.Contains(ClientState)) return false;
+                ChangeStateLocked(newState);
                 return true;
             }
+        }
+
+        private void ChangeStateLocked(ClientState newState)
+        {
+            if (ClientState == newState) return;
+
+            ClientState = newState;
+            HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
+            // ReSharper disable once InconsistentlySynchronizedField - invoked from within lock
+            _stateChangeQueue.Add(newState);
         }
 
         /// <summary>

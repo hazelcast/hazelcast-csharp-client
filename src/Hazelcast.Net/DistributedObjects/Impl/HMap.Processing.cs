@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapExecuteOnKeyCodec.EncodeRequest(Name, processorData, keyData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapExecuteOnKeyCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TResult>(response);
+            return await ToObjectAsync<TResult>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -86,7 +86,7 @@ namespace Hazelcast.DistributedObjects.Impl
             {
                 if (!keysmap.TryGetValue(keyData, out var key))
                     throw new InvalidOperationException("Server returned an unexpected key.");
-                result[key] = ToObject<TResult>(valueData);
+                result[key] = await ToObjectAsync<TResult>(valueData).CfAwait();
             }
 
             return result;
@@ -106,7 +106,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
-                result[ToObject<TKey>(keyData)] = ToObject<TResult>(valueData);
+                result[await ToObjectAsync<TKey>(keyData).CfAwait()] = await ToObjectAsync<TResult>(valueData).CfAwait();
             return result;
 
         }
@@ -125,7 +125,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var result = new Dictionary<TKey, TResult>();
             foreach (var (keyData, valueData) in response)
-                result[ToObject<TKey>(keyData)] = ToObject<TResult>(valueData);
+                result[await ToObjectAsync<TKey>(keyData).CfAwait()] = await ToObjectAsync<TResult>(valueData).CfAwait();
             return result;
 
         }

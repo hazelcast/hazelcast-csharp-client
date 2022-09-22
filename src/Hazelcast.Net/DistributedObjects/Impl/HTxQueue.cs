@@ -51,7 +51,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalQueuePeekCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalQueuePeekCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TItem>(response);
+            return await ToObjectAsync<TItem>(response).CfAwait();
         }
 
         public async Task<TItem> PollAsync(TimeSpan timeToWait = default)
@@ -62,7 +62,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalQueuePollCodec.EncodeRequest(Name, TransactionId, ContextId, timeToWaitMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalQueuePollCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TItem>(response);
+            return await ToObjectAsync<TItem>(response).CfAwait();
         }
 
         public async Task<int> GetSizeAsync()
@@ -77,7 +77,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalQueueTakeCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalQueueTakeCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TItem>(response);
+            return await ToObjectAsync<TItem>(response).CfAwait();
         }
     }
 }

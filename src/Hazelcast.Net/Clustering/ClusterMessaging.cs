@@ -29,6 +29,7 @@ namespace Hazelcast.Clustering
     {
         private readonly ClusterState _clusterState;
         private readonly ClusterMembers _clusterMembers;
+        private Func<ValueTask> _sendingMessage;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterMessaging"/> class.
@@ -43,6 +44,23 @@ namespace Hazelcast.Clustering
             HConsole.Configure(x => x.Configure<ClusterMessaging>().SetPrefix("MSGING"));
         }
 
+        #region Events
+
+        /// <summary>
+        /// Gets or set an action that will be executed before sending a message. 
+        /// </summary>
+        public Func<ValueTask> SendingMessage
+        {
+            get => _sendingMessage;
+            set
+            {
+                _clusterState.ThrowIfPropertiesAreReadOnly();
+                _sendingMessage = value;
+            }
+        }
+
+        #endregion
+
         /// <summary>
         /// Sends a message to a random member.
         /// </summary>
@@ -53,7 +71,21 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            return await SendAsyncInternal(message, null, -1, default, cancellationToken).CfAwait();
+            return await SendAsyncInternal(message, null, -1, default, true, cancellationToken).CfAwait();
+        }
+
+        /// <summary>
+        /// Sends a message to a random member.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="raiseEvents">Whether to raise events.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, bool raiseEvents, CancellationToken cancellationToken = default)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            return await SendAsyncInternal(message, null, -1, default, raiseEvents, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -71,7 +103,7 @@ namespace Hazelcast.Clustering
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
-            return await SendAsyncInternal(message, null, -1, memberId, cancellationToken).CfAwait();
+            return await SendAsyncInternal(message, null, -1, memberId, true, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -86,7 +118,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
-            return await SendAsyncInternal(message, memberConnection, -1, default, cancellationToken).CfAwait();
+            return await SendAsyncInternal(message, memberConnection, -1, default, true, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -102,7 +134,7 @@ namespace Hazelcast.Clustering
             if (message == null) throw new ArgumentNullException(nameof(message));
             if (memberConnection == null) throw new ArgumentNullException(nameof(memberConnection));
 
-            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, cancellationToken).CfAwait();
+            return await SendAsyncInternal(message, memberConnection, -1, default, correlationId, true, cancellationToken).CfAwait();
         }
 
         /// <summary>
@@ -125,7 +157,7 @@ namespace Hazelcast.Clustering
             if (partitionId < 0) throw new ArgumentException("Could not get a partition for this key.", nameof(key));
 
             message.PartitionId = partitionId;
-            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+            var task = SendAsyncInternal(message, null, partitionId, default, true, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -151,7 +183,7 @@ namespace Hazelcast.Clustering
             if (partitionId < 0) throw new ArgumentOutOfRangeException(nameof(partitionId));
 
             message.PartitionId = partitionId;
-            var task = SendAsyncInternal(message, null, partitionId, default, cancellationToken);
+            var task = SendAsyncInternal(message, null, partitionId, default, true, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -167,15 +199,16 @@ namespace Hazelcast.Clustering
         /// <param name="connection">An optional target client.</param>
         /// <param name="targetPartitionId">An optional target partition identifier.</param>
         /// <param name="targetMemberId">An optional target member identifier.</param>
+        /// <param name="raiseEvents">Whether to raise events.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
         private
 #if !HZ_OPTIMIZE_ASYNC
             async
 #endif
-        Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, CancellationToken cancellationToken = default)
+        Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, bool raiseEvents, CancellationToken cancellationToken = default)
         {
-            var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), cancellationToken);
+            var task = SendAsyncInternal(message, connection, targetPartitionId, targetMemberId, _clusterState.GetNextCorrelationId(), raiseEvents, cancellationToken);
 
 #if HZ_OPTIMIZE_ASYNC
             return task;
@@ -192,15 +225,21 @@ namespace Hazelcast.Clustering
         /// <param name="targetPartitionId">An optional target partition identifier.</param>
         /// <param name="targetMemberId">An optional target member identifier.</param>
         /// <param name="correlationId">A correlation identifier.</param>
+        /// <param name="raiseEvents">Whether to raise events.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
-        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, long correlationId, CancellationToken cancellationToken = default)
+        private async Task<ClientMessage> SendAsyncInternal(ClientMessage message, MemberConnection connection, int targetPartitionId, Guid targetMemberId, long correlationId, bool raiseEvents, CancellationToken cancellationToken = default)
         {
             if (message == null) throw new ArgumentNullException(nameof(message));
 
             // fail fast, if the cluster is not active
             _clusterState.ThrowIfNotActive();
+            
+            // NOTE: *every* invocation sent to the cluster goes through the code below
 
+            // trigger event
+            if (raiseEvents) await _sendingMessage.AwaitEach().CfAwait();
+            
             // assign a unique identifier to the message
             // and send in one fragment, with proper flags
             message.CorrelationId = correlationId;

@@ -108,15 +108,25 @@ namespace Hazelcast
             Cluster.Connections.ConnectionClosed
                 += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
 
-            // when a connection is opened, DistributedObjects.OnConnectionOpened checks
-            // whether it is the first connection to a new cluster, and then re-creates
-            // all the known distributed object so far on the new cluster.
+            // when a connection is opened, DistributedObjects.OnConnectionOpened checks whether it is the first
+            // connection to a new cluster, and then re-creates all the known distributed object so far on the
+            // new cluster. it does so by using the new connection, which should be stable: the only reason why
+            // a new connection could be teared down by ClusterMembers is if there already are known connections,
+            // which cannot be the case if this is the first connection. So we are not going to, like, jump to
+            // another connection while this runs - there's one and only connection for now.
             Cluster.Connections.ConnectionOpened
                 += _distributedOjects.OnConnectionOpened;
 
+            // when a connection to a new cluster is opened, make sure we republish all schemas
+            Cluster.Connections.ConnectionOpened += (_, _, _, isNewCluster) =>
+            {
+                if (isNewCluster) Cluster.SerializationService.CompactSerializer.Schemas.MarkAllForRepublication();
+                return default;
+            };
+
             // when a connection is opened, trigger the user-level event.
             Cluster.Connections.ConnectionOpened
-                += (conn, isFirstEver, isFirst, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
+                += (conn, _, _, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
         }
 
         /// <summary>

@@ -18,6 +18,7 @@ using System.Text;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
+using Hazelcast.Serialization.Compact;
 
 // suppress warning about IPortableFactory not being disposed
 // TODO: should HazelcastOptions be IDisposable so in the end we dispose these factories?
@@ -67,6 +68,8 @@ namespace Hazelcast.Serialization
                     Creator = () => ServiceFactory.CreateInstance<ISerializer>(item.TypeName, item.Args)
                 });
             });
+
+            Compact = new CompactOptions();
         }
 
         /// <summary>
@@ -77,6 +80,9 @@ namespace Hazelcast.Serialization
             Endianness = other.Endianness;
             ValidateClassDefinitions = other.ValidateClassDefinitions;
             PortableVersion = other.PortableVersion;
+            EnableClrSerialization = other.EnableClrSerialization;
+
+            Compact = other.Compact.Clone();
 
             ClassDefinitions = new HashSet<IClassDefinition>(other.ClassDefinitions);
             PortableFactories = new List<FactoryOptions<IPortableFactory>>(other.PortableFactories);
@@ -86,6 +92,17 @@ namespace Hazelcast.Serialization
             Serializers = new List<SerializerOptions>(other.Serializers);
         }
 
+        /// <summary>
+        /// Whether to enable CLR serialization via <see cref="BinaryFormatter"/>.
+        /// </summary>
+        /// <remarks>
+        /// <para><see cref="BinaryFormatter"/> is now considered insecure, and CLR serialization
+        /// is disabled by default. In order to enable CLR serialization, set this value to <c>true</c>.
+        /// Note that if a global serializer is configured via <see cref="GlobalSerializer"/>, then this
+        /// option must be true, and <see cref="GlobalSerializerOptions.OverrideClrSerialization"/> must
+        /// be false, for CLR serialization to be enabled.</para>
+        /// </remarks>
+        public bool EnableClrSerialization { get; set; } = true; // otherwise, breaking change
 
         /// <summary>
         /// Gets or sets the <see cref="Endianness"/>. This value should match the server configuration.
@@ -102,6 +119,11 @@ namespace Hazelcast.Serialization
         /// Gets or sets the portable version.
         /// </summary>
         public int PortableVersion { get; set; }
+
+        /// <summary>
+        /// Gets the compact serialization options.
+        /// </summary>
+        public CompactOptions Compact { get; }
 
         #region Class Definitions
 

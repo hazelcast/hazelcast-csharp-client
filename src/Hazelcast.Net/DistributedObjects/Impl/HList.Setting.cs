@@ -28,7 +28,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ListSetCodec.EncodeRequest(Name, index, itemData);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = ListSetCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<T>(response);
+            return await ToObjectAsync<T>(response).CfAwait();
         }
 
         /// <inheritdoc />
