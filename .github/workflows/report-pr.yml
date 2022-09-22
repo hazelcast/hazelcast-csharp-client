@@ -79,6 +79,7 @@ jobs:
         shell: bash
         run: |
           echo "Tests results:"
+          shopt -s nullglob # 'for f in ...' should do nothing if no file is found
           found=0
           for f in temp/test-results/test-results-*.zip;
           do
