@@ -519,8 +519,11 @@ namespace Hazelcast.Clustering
                 yield return address;
 
             // get configured addresses that haven't been tried already
-            addresses = _clusterState.AddressProvider.GetAddresses();
-            foreach (var address in Distinct(addresses, distinct, shuffle))
+            // shuffle them if needed - but keep trying primary addresses before secondary addresses
+            var (primary, secondary) = _clusterState.AddressProvider.GetAddresses();
+            foreach (var address in Distinct(primary, distinct, shuffle))
+                yield return address;
+            foreach (var address in Distinct(secondary, distinct, shuffle))
                 yield return address;
         }
 
