@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -22,6 +23,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Networking;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -290,6 +292,29 @@ namespace Hazelcast.Tests.Messaging
             await AssertEx.ThrowsAsync<OperationCanceledException>(async () => await m.SendAsync(message));
         }
 
+        [Test]
+        public async Task GitHubIssue661()
+        {
+            // if the socket connection drops while we are sending frames, it's going to report that
+            // it is shutting down to MemberConnection, which in turns will terminate and dispose the
+            // message connection - and the SendAsync operation should *not* throw but return false.
+
+            // in order to simulate a socket connection drop, we use a special test socket connection
+            // that will run some code before actually sending, and we use that code to dispose the
+            // message connection.
+
+            // issue #661: this test fails, messageConnection.SendAsync throws an ObjectDisposedException.
+
+            ClientMessageConnection messageConnection = null;
+            var socketConnection = new TestSocketConnection2(() => messageConnection.DisposeAsync()); ;
+            messageConnection = new ClientMessageConnection(socketConnection, new NullLoggerFactory());
+
+            var message = new ClientMessage(new Frame(new byte[16]));
+            var sent = await messageConnection.SendAsync(message);
+
+            Assert.That(sent, Is.False);
+        }
+
         private class TestSemaphore : IHSemaphore
         {
             private readonly Action _waitAsync;
@@ -328,6 +353,23 @@ namespace Hazelcast.Tests.Messaging
             public override ValueTask FlushAsync()
             {
                 return new ValueTask();
+            }
+        }
+
+        private class TestSocketConnection2 : SocketConnectionBase
+        {
+            private readonly Func<ValueTask> _sending;
+
+            public TestSocketConnection2(Func<ValueTask> sending)
+                : base(Guid.NewGuid())
+            {
+                _sending = sending;
+            }
+
+            public override async ValueTask<bool> SendAsync(byte[] bytes, int length, CancellationToken cancellationToken = default)
+            {
+                await _sending();
+                return await base.SendAsync(bytes, length, cancellationToken);
             }
         }
     }

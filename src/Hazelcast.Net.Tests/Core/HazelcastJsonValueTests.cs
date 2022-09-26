@@ -28,6 +28,7 @@ namespace Hazelcast.Tests.Core
 
             var jsonValue = new HazelcastJsonValue("{ \"key\": \"value\" }");
             Assert.That(jsonValue.ToString(), Is.EqualTo("{ \"key\": \"value\" }"));
+            Assert.That(jsonValue.Value, Is.EqualTo("{ \"key\": \"value\" }"));
 
             var otherValue = new HazelcastJsonValue("{ \"key\": \"value\" }");
             Assert.That(jsonValue.Equals(otherValue), Is.True);

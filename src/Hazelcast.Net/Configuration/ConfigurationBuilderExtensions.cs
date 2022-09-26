@@ -194,7 +194,7 @@ namespace Hazelcast.Configuration
             string[] args,
             IDictionary<string, string> switchMappings = null,
             IEnumerable<KeyValuePair<string, string>> defaults = null,
-            IEnumerable < KeyValuePair<string, string>> keyValues = null,
+            IEnumerable<KeyValuePair<string, string>> keyValues = null,
             string optionsFilePath = null,
             string optionsFileName = null,
             string environmentName = null)
@@ -213,8 +213,12 @@ namespace Hazelcast.Configuration
             // always process the hazelcast configuration file
             var i = sources.LastIndexOf(source => source is FileConfigurationSource);
             var (fullpath, extension) = GetHazelcastFilePath(optionsFilePath, optionsFileName);
-            var fileSource1 = new JsonConfigurationSource { Optional = true, ReloadOnChange = false, Path = fullpath + extension };
-            var fileSource2 = new JsonConfigurationSource { Optional = true, ReloadOnChange = false, Path = fullpath + '.' + DetermineEnvironment(environmentName) + extension };
+            var fileSource1 = new JsonConfigurationSource { Optional = false, ReloadOnChange = false, Path = fullpath + extension};
+            var fileSource2 = new JsonConfigurationSource { Optional = false, ReloadOnChange = false, Path = fullpath + '.' + DetermineEnvironment(environmentName) + extension };
+
+            fileSource1.ResolveFileProvider(); // It has to be called here since we insert the file source directly to sources                                             
+            fileSource2.ResolveFileProvider(); // which by passes the invocation of ResolveFileProvider.
+
             if (i != -1)
             {
                 sources.Insert(i + 1, fileSource2);
