@@ -14,6 +14,7 @@
 
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
+using Hazelcast.Core;
 using Hazelcast.Testing;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
@@ -63,6 +64,24 @@ namespace Hazelcast.Tests.Remote
             //    .Set(x => x.SetLevel(1)));
 
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(CreateHazelcastFailoverOptions());
+
+            await client.DisposeAsync();
+        }
+
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task FailoverClientCanConnect2()
+        {
+            // most basic test just to ensure that a failover client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var client = await HazelcastClientFactory.StartNewFailoverClientAsync(opt =>
+            {                
+                opt.Clients.Add(CreateHazelcastOptions());
+                opt.TryCount=1;
+            });
 
             await client.DisposeAsync();
         }
