@@ -1,1 +1,181 @@
-#nullable enable
+﻿#nullable enable
+*REMOVED*static Hazelcast.Core.ServiceFactory.CreateInstance<T>(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+*REMOVED*static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+*REMOVED*static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+*REMOVED*Hazelcast.Serialization.ISerializerHook<T>
+*REMOVED*Hazelcast.Serialization.ISerializerHook<T>.CreateSerializer() -> Hazelcast.Serialization.ISerializer
+*REMOVED*Hazelcast.Serialization.ISerializerHook<T>.GetSerializationType() -> System.Type
+*REMOVED*Hazelcast.Serialization.ISerializerHook<T>.IsOverwritable() -> bool
+*REMOVED*static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset dateTimeOffset) -> Hazelcast.Models.HOffsetDateTime
+*REMOVED*static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime offsetDateTime) -> System.DateTimeOffset
+abstract Hazelcast.Serialization.Compact.CompactSerializerBase<T>.Read(Hazelcast.Serialization.Compact.ICompactReader! reader) -> T
+abstract Hazelcast.Serialization.Compact.CompactSerializerBase<T>.Write(Hazelcast.Serialization.Compact.ICompactWriter! writer, T value) -> void
+Hazelcast.Models.HBigDecimal.Normalize() -> Hazelcast.Models.HBigDecimal
+Hazelcast.Models.HOffsetDateTime.HOffsetDateTime(Hazelcast.Models.HLocalDateTime localDateTime, int offsetSeconds = 0) -> void
+Hazelcast.Serialization.Compact.CompactOptions
+Hazelcast.Serialization.Compact.CompactOptions.AddSerializer(Hazelcast.Serialization.Compact.ICompactSerializer! serializer) -> void
+Hazelcast.Serialization.Compact.CompactOptions.AddSerializer<TSerialized>(Hazelcast.Serialization.Compact.ICompactSerializer<TSerialized>! serializer) -> void
+Hazelcast.Serialization.Compact.CompactOptions.AddSerializer<TSerializerSerialized, TSerialized>(Hazelcast.Serialization.Compact.ICompactSerializer<TSerializerSerialized>! serializer) -> void
+Hazelcast.Serialization.Compact.CompactOptions.AddType(System.Type! type) -> void
+Hazelcast.Serialization.Compact.CompactOptions.AddType<T>() -> void
+Hazelcast.Serialization.Compact.CompactOptions.CompactOptions() -> void
+Hazelcast.Serialization.Compact.CompactSerializerBase<T>
+Hazelcast.Serialization.Compact.CompactSerializerBase<T>.CompactSerializerBase() -> void
+Hazelcast.Serialization.Compact.ICompactReader
+Hazelcast.Serialization.Compact.ICompactReader.GetFieldKind(string! name) -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfBoolean(string! name) -> bool[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfCompact<T>(string! name) -> T?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDate(string! name) -> Hazelcast.Models.HLocalDate?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfDecimal(string! name) -> Hazelcast.Models.HBigDecimal?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat32(string! name) -> float[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfFloat64(string! name) -> double[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt16(string! name) -> short[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt32(string! name) -> int[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt64(string! name) -> long[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfInt8(string! name) -> sbyte[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableBoolean(string! name) -> bool?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat32(string! name) -> float?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableFloat64(string! name) -> double?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt16(string! name) -> short?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt32(string! name) -> int?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt64(string! name) -> long?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfNullableInt8(string! name) -> sbyte?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfString(string! name) -> string?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTime(string! name) -> Hazelcast.Models.HLocalTime?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStamp(string! name) -> Hazelcast.Models.HLocalDateTime?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadArrayOfTimeStampWithTimeZone(string! name) -> Hazelcast.Models.HOffsetDateTime?[]?
+Hazelcast.Serialization.Compact.ICompactReader.ReadBoolean(string! name) -> bool
+Hazelcast.Serialization.Compact.ICompactReader.ReadCompact<T>(string! name) -> T?
+Hazelcast.Serialization.Compact.ICompactReader.ReadDate(string! name) -> Hazelcast.Models.HLocalDate?
+Hazelcast.Serialization.Compact.ICompactReader.ReadDecimal(string! name) -> Hazelcast.Models.HBigDecimal?
+Hazelcast.Serialization.Compact.ICompactReader.ReadFloat32(string! name) -> float
+Hazelcast.Serialization.Compact.ICompactReader.ReadFloat64(string! name) -> double
+Hazelcast.Serialization.Compact.ICompactReader.ReadInt16(string! name) -> short
+Hazelcast.Serialization.Compact.ICompactReader.ReadInt32(string! name) -> int
+Hazelcast.Serialization.Compact.ICompactReader.ReadInt64(string! name) -> long
+Hazelcast.Serialization.Compact.ICompactReader.ReadInt8(string! name) -> sbyte
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableBoolean(string! name) -> bool?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat32(string! name) -> float?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableFloat64(string! name) -> double?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt16(string! name) -> short?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt32(string! name) -> int?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt64(string! name) -> long?
+Hazelcast.Serialization.Compact.ICompactReader.ReadNullableInt8(string! name) -> sbyte?
+Hazelcast.Serialization.Compact.ICompactReader.ReadString(string! name) -> string?
+Hazelcast.Serialization.Compact.ICompactReader.ReadTime(string! name) -> Hazelcast.Models.HLocalTime?
+Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStamp(string! name) -> Hazelcast.Models.HLocalDateTime?
+Hazelcast.Serialization.Compact.ICompactReader.ReadTimeStampWithTimeZone(string! name) -> Hazelcast.Models.HOffsetDateTime?
+Hazelcast.Serialization.Compact.ICompactSerializer
+Hazelcast.Serialization.Compact.ICompactSerializer.TypeName.get -> string!
+Hazelcast.Serialization.Compact.ICompactSerializer<T>
+Hazelcast.Serialization.Compact.ICompactSerializer<T>.Read(Hazelcast.Serialization.Compact.ICompactReader! reader) -> T
+Hazelcast.Serialization.Compact.ICompactSerializer<T>.Write(Hazelcast.Serialization.Compact.ICompactWriter! writer, T value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter
+Hazelcast.Serialization.Compact.ICompactWriter.GetFieldKind(string! name) -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfBoolean(string! name, bool[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfCompact<T>(string! name, T?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfDate(string! name, Hazelcast.Models.HLocalDate?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfDecimal(string! name, Hazelcast.Models.HBigDecimal?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfFloat32(string! name, float[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfFloat64(string! name, double[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfInt16(string! name, short[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfInt32(string! name, int[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfInt64(string! name, long[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfInt8(string! name, sbyte[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableBoolean(string! name, bool?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableFloat32(string! name, float?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableFloat64(string! name, double?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableInt16(string! name, short?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableInt32(string! name, int?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableInt64(string! name, long?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfNullableInt8(string! name, sbyte?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfString(string! name, string?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfTime(string! name, Hazelcast.Models.HLocalTime?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfTimeStamp(string! name, Hazelcast.Models.HLocalDateTime?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfTimeStampWithTimeZone(string! name, Hazelcast.Models.HOffsetDateTime?[]? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteBoolean(string! name, bool value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteCompact<T>(string! name, T? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteDate(string! name, Hazelcast.Models.HLocalDate? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteDecimal(string! name, Hazelcast.Models.HBigDecimal? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteFloat32(string! name, float value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteFloat64(string! name, double value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteInt16(string! name, short value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteInt32(string! name, int value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteInt64(string! name, long value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteInt8(string! name, sbyte value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableBoolean(string! name, bool? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableFloat32(string! name, float? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableFloat64(string! name, double? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableInt16(string! name, short? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableInt32(string! name, int? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableInt64(string! name, long? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteNullableInt8(string! name, sbyte? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteString(string! name, string? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteTime(string! name, Hazelcast.Models.HLocalTime? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteTimeStamp(string! name, Hazelcast.Models.HLocalDateTime? value) -> void
+Hazelcast.Serialization.Compact.ICompactWriter.WriteTimeStampWithTimeZone(string! name, Hazelcast.Models.HOffsetDateTime? value) -> void
+Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfBoolean = 1 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfChar = 5 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfCompact = 29 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfDate = 23 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfDecimal = 19 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfFloat32 = 13 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfFloat64 = 15 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt16 = 7 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt32 = 9 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt64 = 11 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt8 = 3 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableBoolean = 33 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat32 = 43 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat64 = 45 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt16 = 37 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt32 = 39 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt64 = 41 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt8 = 35 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfPortable = 31 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfString = 17 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTime = 21 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTimeStamp = 25 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTimeStampWithTimeZone = 27 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Boolean = 0 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Char = 4 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Compact = 28 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Date = 22 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Decimal = 18 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Float32 = 12 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Float64 = 14 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int16 = 6 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int32 = 8 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int64 = 10 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int8 = 2 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NotAvailable = -1 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableBoolean = 32 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableFloat32 = 42 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableFloat64 = 44 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt16 = 36 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt32 = 38 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt64 = 40 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt8 = 34 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Portable = 30 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.String = 16 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Time = 20 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.TimeStamp = 24 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.TimeStampWithTimeZone = 26 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.get -> bool
+Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.set -> void
+Hazelcast.Serialization.UnknownCompactSchemaException
+Hazelcast.Serialization.UnknownCompactSchemaException.SchemaId.get -> long
+Hazelcast.Serialization.UnknownCompactSchemaException.UnknownCompactSchemaException(long schemaId) -> void
+override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
+static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset value) -> Hazelcast.Models.HOffsetDateTime
+static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime value) -> System.DateTimeOffset
+virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get -> string!
+~Hazelcast.Serialization.SerializationOptions.Compact.get -> Hazelcast.Serialization.Compact.CompactOptions
+~Hazelcast.Sql.ISqlService.ExecuteCommandAsync(string sql, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), params object[] parameters) -> System.Threading.Tasks.Task<long>
+~Hazelcast.Sql.ISqlService.ExecuteQueryAsync(string sql, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), params object[] parameters) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+~static Hazelcast.Core.ServiceFactory.CreateInstance<TService, TActual>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
+~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
+~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
+~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
