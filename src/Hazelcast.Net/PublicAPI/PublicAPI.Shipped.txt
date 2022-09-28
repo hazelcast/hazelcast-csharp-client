@@ -1,1 +1,1616 @@
-#nullable enable
+﻿#nullable enable
+abstract Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.GetMember() -> System.Guid
+abstract Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.ThisBuilder.get -> TBuilder
+const Hazelcast.Models.HLocalDate.MaxYear = 999999999 -> int
+const Hazelcast.Models.HLocalDate.MinYear = -999999999 -> int
+Hazelcast.Aggregation.Aggregators
+Hazelcast.Aggregation.IAggregator<TResult>
+~Hazelcast.Aggregation.IAggregator<TResult>.AttributePath.get -> string
+Hazelcast.ClientState
+Hazelcast.ClientState.ClusterChanged = 5 -> Hazelcast.ClientState
+Hazelcast.ClientState.Connected = 2 -> Hazelcast.ClientState
+Hazelcast.ClientState.Disconnected = 3 -> Hazelcast.ClientState
+Hazelcast.ClientState.Shutdown = 6 -> Hazelcast.ClientState
+Hazelcast.ClientState.ShuttingDown = 4 -> Hazelcast.ClientState
+Hazelcast.ClientState.Started = 1 -> Hazelcast.ClientState
+Hazelcast.ClientState.Starting = 0 -> Hazelcast.ClientState
+Hazelcast.Clustering.AuthenticationOptions
+Hazelcast.Clustering.AuthenticationOptions.AuthenticationOptions() -> void
+~Hazelcast.Clustering.AuthenticationOptions.ConfigureCredentials(Hazelcast.Security.ICredentials credentials) -> Hazelcast.Clustering.AuthenticationOptions
+~Hazelcast.Clustering.AuthenticationOptions.ConfigureKerberosCredentials(string spn) -> Hazelcast.Clustering.AuthenticationOptions
+~Hazelcast.Clustering.AuthenticationOptions.ConfigureTokenCredentials(byte[] token) -> Hazelcast.Clustering.AuthenticationOptions
+~Hazelcast.Clustering.AuthenticationOptions.ConfigureUsernamePasswordCredentials(string username, string password) -> Hazelcast.Clustering.AuthenticationOptions
+~Hazelcast.Clustering.AuthenticationOptions.CredentialsFactory.get -> Hazelcast.Core.SingletonServiceFactory<Hazelcast.Security.ICredentialsFactory>
+Hazelcast.Clustering.HeartbeatOptions
+Hazelcast.Clustering.HeartbeatOptions.HeartbeatOptions() -> void
+Hazelcast.Clustering.HeartbeatOptions.PeriodMilliseconds.get -> int
+Hazelcast.Clustering.HeartbeatOptions.PeriodMilliseconds.set -> void
+Hazelcast.Clustering.HeartbeatOptions.TimeoutMilliseconds.get -> int
+Hazelcast.Clustering.HeartbeatOptions.TimeoutMilliseconds.set -> void
+Hazelcast.Clustering.LoadBalancing.ILoadBalancer
+Hazelcast.Clustering.LoadBalancing.ILoadBalancer.Count.get -> int
+Hazelcast.Clustering.LoadBalancing.ILoadBalancer.GetMember() -> System.Guid
+~Hazelcast.Clustering.LoadBalancing.ILoadBalancer.SetMembers(System.Collections.Generic.IEnumerable<System.Guid> memberIds) -> void
+Hazelcast.Clustering.LoadBalancing.LoadBalancerBase
+Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.LoadBalancerBase() -> void
+~Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Members.get -> System.Collections.Generic.List<System.Guid>
+Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer
+Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.RandomLoadBalancer() -> void
+Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer
+Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.RoundRobinLoadBalancer() -> void
+Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer
+~Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.StaticLoadBalancer(System.Collections.Generic.IReadOnlyDictionary<string, string> args) -> void
+Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.StaticLoadBalancer(System.Guid memberId) -> void
+Hazelcast.Configuration.ConfigurationBuilderExtensions
+Hazelcast.Configuration.ConfigurationException
+Hazelcast.Configuration.ConfigurationException.ConfigurationException() -> void
+~Hazelcast.Configuration.ConfigurationException.ConfigurationException(string message) -> void
+~Hazelcast.Configuration.ConfigurationException.ConfigurationException(string message, System.Exception innerException) -> void
+~Hazelcast.Configuration.ConfigurationException.ConfigurationException(System.Exception innerException) -> void
+Hazelcast.Core.AsyncContext
+Hazelcast.Core.AsyncContext.Id.get -> long
+Hazelcast.Core.ClientStateExtensions
+Hazelcast.Core.ConnectionRetryOptions
+Hazelcast.Core.ConnectionRetryOptions.ClusterConnectionTimeoutMilliseconds.get -> long
+Hazelcast.Core.ConnectionRetryOptions.ClusterConnectionTimeoutMilliseconds.set -> void
+Hazelcast.Core.ConnectionRetryOptions.ConnectionRetryOptions() -> void
+Hazelcast.Core.ConnectionRetryOptions.InitialBackoffMilliseconds.get -> int
+Hazelcast.Core.ConnectionRetryOptions.InitialBackoffMilliseconds.set -> void
+Hazelcast.Core.ConnectionRetryOptions.Jitter.get -> double
+Hazelcast.Core.ConnectionRetryOptions.Jitter.set -> void
+Hazelcast.Core.ConnectionRetryOptions.MaxBackoffMilliseconds.get -> int
+Hazelcast.Core.ConnectionRetryOptions.MaxBackoffMilliseconds.set -> void
+Hazelcast.Core.ConnectionRetryOptions.Multiplier.get -> double
+Hazelcast.Core.ConnectionRetryOptions.Multiplier.set -> void
+Hazelcast.Core.Endianness
+Hazelcast.Core.Endianness.BigEndian = 0 -> Hazelcast.Core.Endianness
+Hazelcast.Core.Endianness.LittleEndian = 1 -> Hazelcast.Core.Endianness
+Hazelcast.Core.EndiannessExtensions
+Hazelcast.Core.EventHandlersBase<TEventHandler>
+Hazelcast.Core.EventHandlersBase<TEventHandler>.Add(TEventHandler handler) -> void
+Hazelcast.Core.EventHandlersBase<TEventHandler>.EventHandlersBase() -> void
+~Hazelcast.Core.EventHandlersBase<TEventHandler>.GetEnumerator() -> System.Collections.Generic.IEnumerator<TEventHandler>
+Hazelcast.Core.EventHandlersBase<TEventHandler>.Remove(TEventHandler handler) -> void
+Hazelcast.Core.HazelcastJsonValue
+~Hazelcast.Core.HazelcastJsonValue.HazelcastJsonValue(string json) -> void
+~Hazelcast.Core.HazelcastJsonValue.Value.get -> string
+Hazelcast.Core.InMemoryFormat
+Hazelcast.Core.InMemoryFormat.Binary = 0 -> Hazelcast.Core.InMemoryFormat
+Hazelcast.Core.InMemoryFormat.Object = 1 -> Hazelcast.Core.InMemoryFormat
+Hazelcast.Core.IPatternMatcher
+~Hazelcast.Core.IPatternMatcher.Matches(System.Collections.Generic.IEnumerable<string> patterns, string name) -> string
+Hazelcast.Core.LockContext
+Hazelcast.Core.LockContext.Id.get -> long
+Hazelcast.Core.LockContext.LockContext() -> void
+Hazelcast.Core.SerializationInfoExtensions
+Hazelcast.Core.ServiceFactory
+~Hazelcast.Core.ServiceFactory<TService>
+~Hazelcast.Core.ServiceFactory<TService>.Creator.get -> System.Func<TService>
+~Hazelcast.Core.ServiceFactory<TService>.Creator.set -> void
+Hazelcast.Core.ServiceFactory<TService>.ServiceFactory() -> void
+Hazelcast.Core.ServiceFactoryException
+Hazelcast.Core.ServiceFactoryException.ServiceFactoryException() -> void
+~Hazelcast.Core.ServiceFactoryException.ServiceFactoryException(string message) -> void
+~Hazelcast.Core.ServiceFactoryException.ServiceFactoryException(string message, System.Exception innerException) -> void
+~Hazelcast.Core.ServiceFactoryException.ServiceFactoryException(System.Exception innerException) -> void
+~Hazelcast.Core.SingletonServiceFactory<TService>
+~Hazelcast.Core.SingletonServiceFactory<TService>.Creator.get -> System.Func<TService>
+~Hazelcast.Core.SingletonServiceFactory<TService>.Creator.set -> void
+Hazelcast.Core.SingletonServiceFactory<TService>.Dispose() -> void
+Hazelcast.Core.SingletonServiceFactory<TService>.IsConfigured.get -> bool
+Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.get -> bool
+Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.set -> void
+~Hazelcast.Core.SingletonServiceFactory<TService>.Service.get -> TService
+~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.get -> System.IServiceProvider
+~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.set -> void
+Hazelcast.Core.SingletonServiceFactory<TService>.SingletonServiceFactory() -> void
+~Hazelcast.Core.SingletonServiceFactory<TService>.SingletonServiceFactory(Hazelcast.Core.SingletonServiceFactory<TService> other, bool shallow) -> void
+Hazelcast.CP.IAtomicLong
+~Hazelcast.CP.IAtomicLong.AddAndGetAsync(long value) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.CompareAndSetAsync(long comparand, long value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IAtomicLong.DecrementAndGetAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.GetAndAddAsync(long value) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.GetAndDecrementAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.GetAndIncrementAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.GetAndSetAsync(long value) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.GetAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.IncrementAndGetAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IAtomicLong.SetAsync(long value) -> System.Threading.Tasks.Task
+Hazelcast.CP.IAtomicReference<T>
+~Hazelcast.CP.IAtomicReference<T>.ClearAsync() -> System.Threading.Tasks.Task
+~Hazelcast.CP.IAtomicReference<T>.CompareAndSetAsync(T comparand, T value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IAtomicReference<T>.ContainsAsync(T value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IAtomicReference<T>.GetAndSetAsync(T value) -> System.Threading.Tasks.Task<T>
+~Hazelcast.CP.IAtomicReference<T>.GetAsync() -> System.Threading.Tasks.Task<T>
+~Hazelcast.CP.IAtomicReference<T>.IsNullAsync() -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IAtomicReference<T>.SetAsync(T value) -> System.Threading.Tasks.Task
+Hazelcast.CP.ICPDistributedObject
+~Hazelcast.CP.ICPDistributedObject.GroupId.get -> Hazelcast.CP.ICPGroupId
+Hazelcast.CP.ICPGroupId
+Hazelcast.CP.ICPGroupId.Id.get -> long
+~Hazelcast.CP.ICPGroupId.Name.get -> string
+Hazelcast.CP.ICPSubsystem
+~Hazelcast.CP.ICPSubsystem.GetAtomicLongAsync(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.IAtomicLong>
+~Hazelcast.CP.ICPSubsystem.GetAtomicReferenceAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.IAtomicReference<T>>
+~Hazelcast.CP.ICPSubsystem.GetLockAsync(string name) -> System.Threading.Tasks.Task<Hazelcast.CP.IFencedLock>
+Hazelcast.CP.IFencedLock
+~Hazelcast.CP.IFencedLock.GetFenceAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IFencedLock.GetLockCountAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<int>
+Hazelcast.CP.IFencedLock.InvalidFence.get -> long
+~Hazelcast.CP.IFencedLock.IsLockedAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IFencedLock.IsLockedByContextAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IFencedLock.LockAndGetFenceAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IFencedLock.LockAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task
+~Hazelcast.CP.IFencedLock.TryLockAndGetFenceAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IFencedLock.TryLockAndGetFenceAsync(Hazelcast.Core.LockContext lockContext, System.TimeSpan timeout) -> System.Threading.Tasks.Task<long>
+~Hazelcast.CP.IFencedLock.TryLockAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IFencedLock.TryLockAsync(Hazelcast.Core.LockContext lockContext, System.TimeSpan timeout) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.CP.IFencedLock.UnlockAsync(Hazelcast.Core.LockContext lockContext) -> System.Threading.Tasks.Task
+Hazelcast.DistributedObjects.CollectionItemEventArgs<T>
+~Hazelcast.DistributedObjects.CollectionItemEventArgs<T>.CollectionItemEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<T> item, object state) -> void
+Hazelcast.DistributedObjects.CollectionItemEventArgs<T>.Item.get -> T
+~Hazelcast.DistributedObjects.CollectionItemEventArgs<T>.Member.get -> Hazelcast.Models.MemberInfo
+Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>
+Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>.CollectionItemEventHandlers() -> void
+~Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>.ItemAdded(System.Action<Hazelcast.DistributedObjects.IHCollection<T>, Hazelcast.DistributedObjects.CollectionItemEventArgs<T>> handler) -> Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>
+~Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>.ItemAdded(System.Func<Hazelcast.DistributedObjects.IHCollection<T>, Hazelcast.DistributedObjects.CollectionItemEventArgs<T>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>
+~Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>.ItemRemoved(System.Action<Hazelcast.DistributedObjects.IHCollection<T>, Hazelcast.DistributedObjects.CollectionItemEventArgs<T>> handler) -> Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>
+~Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>.ItemRemoved(System.Func<Hazelcast.DistributedObjects.IHCollection<T>, Hazelcast.DistributedObjects.CollectionItemEventArgs<T>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>
+Hazelcast.DistributedObjects.EventArgsBase
+~Hazelcast.DistributedObjects.EventArgsBase.EventArgsBase(object state) -> void
+~Hazelcast.DistributedObjects.EventArgsBase.State.get -> object
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.FlakeIdGeneratorOptions() -> void
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.PrefetchCount.get -> int
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.PrefetchCount.set -> void
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.PrefetchValidityPeriod.get -> System.TimeSpan
+Hazelcast.DistributedObjects.FlakeIdGeneratorOptions.PrefetchValidityPeriod.set -> void
+Hazelcast.DistributedObjects.ICollectionItemEventHandler<T>
+Hazelcast.DistributedObjects.ICollectionItemEventHandler<T>.EventType.get -> Hazelcast.Models.CollectionItemEventTypes
+~Hazelcast.DistributedObjects.ICollectionItemEventHandler<T>.HandleAsync(Hazelcast.DistributedObjects.IHCollection<T> sender, Hazelcast.Models.MemberInfo member, System.Lazy<T> item, object state) -> System.Threading.Tasks.ValueTask
+Hazelcast.DistributedObjects.IDistributedObject
+Hazelcast.DistributedObjects.IDistributedObject.DestroyAsync() -> System.Threading.Tasks.ValueTask
+~Hazelcast.DistributedObjects.IDistributedObject.Name.get -> string
+~Hazelcast.DistributedObjects.IDistributedObject.PartitionKey.get -> string
+~Hazelcast.DistributedObjects.IDistributedObject.ServiceName.get -> string
+Hazelcast.DistributedObjects.IEntryProcessor<TResult>
+Hazelcast.DistributedObjects.IFlakeIdGenerator
+Hazelcast.DistributedObjects.IFlakeIdGenerator.GetNewIdAsync() -> System.Threading.Tasks.ValueTask<long>
+Hazelcast.DistributedObjects.IHCollection<T>
+~Hazelcast.DistributedObjects.IHCollection<T>.AddAll<TItem>(System.Collections.Generic.ICollection<TItem> items) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.AddAsync(T item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.ClearAsync() -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHCollection<T>.ContainsAllAsync<TItem>(System.Collections.Generic.ICollection<TItem> items) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.ContainsAsync(T item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.GetAllAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<T>>
+~Hazelcast.DistributedObjects.IHCollection<T>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHCollection<T>.IsEmptyAsync() -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.RemoveAllAsync<TItem>(System.Collections.Generic.ICollection<TItem> items) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.RemoveAsync(T item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.RetainAllAsync<TItem>(System.Collections.Generic.ICollection<TItem> items) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHCollection<T>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.CollectionItemEventHandlers<T>> events, bool includeValue = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+Hazelcast.DistributedObjects.IHCollection<T>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.DistributedObjects.IHList<T>
+~Hazelcast.DistributedObjects.IHList<T>.AddAllAsync<TItem>(int index, System.Collections.Generic.ICollection<TItem> items) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHList<T>.AddAsync(int index, T item) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHList<T>.GetAsync(int index) -> System.Threading.Tasks.Task<T>
+~Hazelcast.DistributedObjects.IHList<T>.GetSublistAsync(int fromIndex, int toIndex) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<T>>
+~Hazelcast.DistributedObjects.IHList<T>.IndexOfAsync(T item) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHList<T>.LastIndexOfAsync(T item) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHList<T>.RemoveAsync(int index) -> System.Threading.Tasks.Task<T>
+~Hazelcast.DistributedObjects.IHList<T>.Set(int index, T item) -> System.Threading.Tasks.Task<T>
+Hazelcast.DistributedObjects.IHMap<TKey, TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.AddIndexAsync(Hazelcast.Models.IndexOptions indexOptions) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.AddIndexAsync(Hazelcast.Models.IndexType type, params string[] attributes) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.AddInterceptorAsync(Hazelcast.DistributedObjects.IMapInterceptor interceptor) -> System.Threading.Tasks.Task<string>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.AggregateAsync<TResult>(Hazelcast.Aggregation.IAggregator<TResult> aggregator) -> System.Threading.Tasks.Task<TResult>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.AggregateAsync<TResult>(Hazelcast.Aggregation.IAggregator<TResult> aggregator, Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<TResult>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.DeleteAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.EvictAllAsync() -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.EvictAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ExecuteAsync<TResult>(Hazelcast.DistributedObjects.IEntryProcessor<TResult> processor) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<TKey, TResult>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ExecuteAsync<TResult>(Hazelcast.DistributedObjects.IEntryProcessor<TResult> processor, Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<TKey, TResult>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ExecuteAsync<TResult>(Hazelcast.DistributedObjects.IEntryProcessor<TResult> processor, System.Collections.Generic.IEnumerable<TKey> keys) -> System.Threading.Tasks.Task<System.Collections.Generic.IDictionary<TKey, TResult>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ExecuteAsync<TResult>(Hazelcast.DistributedObjects.IEntryProcessor<TResult> processor, TKey key) -> System.Threading.Tasks.Task<TResult>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.FlushAsync() -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.GetAllAsync(System.Collections.Generic.ICollection<TKey> keys) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.GetEntriesAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.GetEntryViewAsync(TKey key) -> System.Threading.Tasks.Task<Hazelcast.Models.IMapEntryStats<TKey, TValue>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.GetKeysAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TKey>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.GetValuesAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.LoadAllAsync(bool replaceExistingValues) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.LoadAllAsync(System.Collections.Generic.ICollection<TKey> keys, bool replaceExistingValues) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ProjectAsync<TResult>(Hazelcast.Projection.IProjection projection) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TResult>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ProjectAsync<TResult>(Hazelcast.Projection.IProjection projection, Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TResult>>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutAsync(TKey key, TValue value, System.TimeSpan timeToLive, System.TimeSpan maxIdle) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutIfAbsentAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutIfAbsentAsync(TKey key, TValue value, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutIfAbsentAsync(TKey key, TValue value, System.TimeSpan timeToLive, System.TimeSpan maxIdle) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutTransientAsync(TKey key, TValue value, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.PutTransientAsync(TKey key, TValue value, System.TimeSpan timeToLive, System.TimeSpan maxIdle) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.RemoveAllAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.RemoveAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.RemoveInterceptorAsync(string id) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ReplaceAsync(TKey key, TValue newValue) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.ReplaceAsync(TKey key, TValue newValue, TValue comparisonValue) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetAsync(TKey key, TValue value) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetAsync(TKey key, TValue value, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SetAsync(TKey key, TValue value, System.TimeSpan timeToLive, System.TimeSpan maxIdle) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>> events, Hazelcast.Query.IPredicate predicate, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>> events, TKey key, Hazelcast.Query.IPredicate predicate, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryPutAsync(TKey key, TValue value, System.TimeSpan timeToWait) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.TryRemoveAsync(TKey key, System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<bool>
+Hazelcast.DistributedObjects.IHMap<TKey, TValue>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+~Hazelcast.DistributedObjects.IHMap<TKey, TValue>.UpdateTimeToLive(TKey key, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<bool>
+Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ClearAsync() -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ContainsKeyAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.ContainsValueAsync(TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.GetAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.GetEntriesAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.GetKeysAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TKey>>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.GetValuesAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.IsEmptyAsync() -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.PutAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.PutAsync(TKey key, TValue value, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.RemoveAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHMapBase<TKey, TValue>.SetAllAsync(System.Collections.Generic.IDictionary<TKey, TValue> entries) -> System.Threading.Tasks.Task
+Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.ClearAsync() -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.ContainsEntryAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.ContainsKeyAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.ContainsValueAsync(TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.DeleteAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetAsync(TKey key) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetEntriesAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<System.Collections.Generic.KeyValuePair<TKey, TValue>>>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetKeysAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TKey>>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetValueCountAsync(TKey key) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.GetValuesAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.PutAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.RemoveAsync(TKey key) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.RemoveAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>> events, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>> events, TKey key, bool includeValues = true, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.DistributedObjects.IHQueue<T>
+~Hazelcast.DistributedObjects.IHQueue<T>.DrainToAsync(System.Collections.Generic.ICollection<T> items) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHQueue<T>.DrainToAsync(System.Collections.Generic.ICollection<T> items, int maxElements) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHQueue<T>.GetElementAsync() -> System.Threading.Tasks.Task<T>
+~Hazelcast.DistributedObjects.IHQueue<T>.GetRemainingCapacityAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHQueue<T>.OfferAsync(T item, System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHQueue<T>.PeekAsync() -> System.Threading.Tasks.Task<T>
+~Hazelcast.DistributedObjects.IHQueue<T>.PollAsync(System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<T>
+~Hazelcast.DistributedObjects.IHQueue<T>.PutAsync(T item) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHQueue<T>.TakeAsync() -> System.Threading.Tasks.Task<T>
+Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>
+~Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>> events, Hazelcast.Query.IPredicate predicate, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>> events, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, Hazelcast.Query.IPredicate predicate, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+~Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>> events, TKey key, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.DistributedObjects.IHRingBuffer<TItem>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.AddAllAsync(System.Collections.Generic.ICollection<TItem> items, Hazelcast.DistributedObjects.OverflowPolicy overflowPolicy) -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.AddAsync(TItem item) -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.AddAsync(TItem item, Hazelcast.DistributedObjects.OverflowPolicy overflowPolicy) -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.GetCapacityAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.GetHeadSequenceAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.GetRemainingCapacityAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.GetSizeAsync() -> System.Threading.Tasks.Task<long>
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.GetTailSequenceAsync() -> System.Threading.Tasks.Task<long>
+Hazelcast.DistributedObjects.IHRingBuffer<TItem>.MaxBatchSize.get -> int
+~Hazelcast.DistributedObjects.IHRingBuffer<TItem>.ReadManyAsync(long startSequence, int minCount, int maxCount) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TItem>>
+Hazelcast.DistributedObjects.IHRingBuffer<TItem>.ReadOneAsync(long sequence) -> System.Threading.Tasks.ValueTask<TItem>
+Hazelcast.DistributedObjects.IHSet<T>
+Hazelcast.DistributedObjects.IHTopic<T>
+~Hazelcast.DistributedObjects.IHTopic<T>.PublishAsync(T message) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHTopic<T>.SubscribeAsync(System.Action<Hazelcast.DistributedObjects.TopicEventHandlers<T>> events, object state = null) -> System.Threading.Tasks.Task<System.Guid>
+Hazelcast.DistributedObjects.IHTopic<T>.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.DistributedObjects.IHTxList<TItem>
+~Hazelcast.DistributedObjects.IHTxList<TItem>.AddAsync(TItem item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxList<TItem>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxList<TItem>.RemoveAsync(TItem item) -> System.Threading.Tasks.Task<bool>
+Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.ContainsKeyAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.DeleteAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetForUpdateAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetKeysAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TKey>>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetKeysAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyList<TKey>>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetValuesAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.GetValuesAsync(Hazelcast.Query.IPredicate predicate) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.IsEmptyAsync() -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.PutAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.PutAsync(TKey key, TValue value, System.TimeSpan timeToLive) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.PutIfAbsentAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.RemoveAsync(TKey key) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.RemoveAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.ReplaceAsync(TKey key, TValue newValue) -> System.Threading.Tasks.Task<TValue>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.ReplaceAsync(TKey key, TValue oldValue, TValue newValue) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>.SetAsync(TKey key, TValue value) -> System.Threading.Tasks.Task
+Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.GetAsync(TKey key) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.GetValueCountAsync(TKey key) -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.PutAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.RemoveAsync(TKey key) -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<TValue>>
+~Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>.RemoveAsync(TKey key, TValue value) -> System.Threading.Tasks.Task<bool>
+Hazelcast.DistributedObjects.IHTxQueue<TItem>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.OfferAsync(TItem item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.OfferAsync(TItem item, System.TimeSpan timeToWait) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.PeekAsync(System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<TItem>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.PollAsync(System.TimeSpan timeToWait = default(System.TimeSpan)) -> System.Threading.Tasks.Task<TItem>
+~Hazelcast.DistributedObjects.IHTxQueue<TItem>.TakeAsync() -> System.Threading.Tasks.Task<TItem>
+Hazelcast.DistributedObjects.IHTxSet<TItem>
+~Hazelcast.DistributedObjects.IHTxSet<TItem>.AddAsync(TItem item) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IHTxSet<TItem>.GetSizeAsync() -> System.Threading.Tasks.Task<int>
+~Hazelcast.DistributedObjects.IHTxSet<TItem>.RemoveAsync(TItem item) -> System.Threading.Tasks.Task<bool>
+Hazelcast.DistributedObjects.IKeyLockable<TKey>
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.ForceUnlockAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.IsLockedAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.LockAsync(TKey key) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.LockAsync(TKey key, System.TimeSpan leaseTime) -> System.Threading.Tasks.Task
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.TryLockAsync(TKey key) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.TryLockAsync(TKey key, System.TimeSpan timeToWait) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.TryLockAsync(TKey key, System.TimeSpan timeToWait, System.TimeSpan leaseTime) -> System.Threading.Tasks.Task<bool>
+~Hazelcast.DistributedObjects.IKeyLockable<TKey>.UnlockAsync(TKey key) -> System.Threading.Tasks.Task
+Hazelcast.DistributedObjects.IMapEntryEventHandler<TKey, TValue, TSender>
+~Hazelcast.DistributedObjects.IMapEntryEventHandler<TKey, TValue, TSender>.HandleAsync(TSender sender, Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> value, System.Lazy<TValue> oldValue, System.Lazy<TValue> mergeValue, Hazelcast.Models.MapEventTypes eventType, int numberOfAffectedEntries, object state) -> System.Threading.Tasks.ValueTask
+Hazelcast.DistributedObjects.IMapEventHandler<TKey, TValue, TSender>
+~Hazelcast.DistributedObjects.IMapEventHandler<TKey, TValue, TSender>.HandleAsync(TSender sender, Hazelcast.Models.MemberInfo member, int numberOfAffectedEntries, object state) -> System.Threading.Tasks.ValueTask
+Hazelcast.DistributedObjects.IMapEventHandlerBase
+Hazelcast.DistributedObjects.IMapEventHandlerBase.EventType.get -> Hazelcast.Models.MapEventTypes
+Hazelcast.DistributedObjects.IMapInterceptor
+Hazelcast.DistributedObjects.ITopicEventHandler<T>
+~Hazelcast.DistributedObjects.ITopicEventHandler<T>.HandleAsync(Hazelcast.DistributedObjects.IHTopic<T> sender, Hazelcast.Models.MemberInfo member, long publishTime, T payload, object state) -> System.Threading.Tasks.ValueTask
+Hazelcast.DistributedObjects.ITransactionalDistributedObject
+Hazelcast.DistributedObjects.ITransactionalDistributedObject.TransactionId.get -> System.Guid
+Hazelcast.DistributedObjects.ITransactionalObject
+Hazelcast.DistributedObjects.MapClearedEventArgs
+~Hazelcast.DistributedObjects.MapClearedEventArgs.MapClearedEventArgs(Hazelcast.Models.MemberInfo member, int numberOfAffectedEntries, object state) -> void
+Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>.MapEntryAddedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> value, object state) -> void
+Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>.Value.get -> TValue
+Hazelcast.DistributedObjects.MapEntryEventArgsBase<TKey>
+Hazelcast.DistributedObjects.MapEntryEventArgsBase<TKey>.Key.get -> TKey
+~Hazelcast.DistributedObjects.MapEntryEventArgsBase<TKey>.MapEntryEventArgsBase(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, object state) -> void
+~Hazelcast.DistributedObjects.MapEntryEventArgsBase<TKey>.Member.get -> Hazelcast.Models.MemberInfo
+Hazelcast.DistributedObjects.MapEntryEvictedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryEvictedEventArgs<TKey, TValue>.MapEntryEvictedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> oldValue, object state) -> void
+Hazelcast.DistributedObjects.MapEntryEvictedEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryExpiredEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryExpiredEventArgs<TKey, TValue>.MapEntryExpiredEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> oldValue, object state) -> void
+Hazelcast.DistributedObjects.MapEntryExpiredEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryInvalidatedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryInvalidatedEventArgs<TKey, TValue>.MapEntryInvalidatedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, object state) -> void
+Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>.MapEntryLoadedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> value, System.Lazy<TValue> oldValue, object state) -> void
+Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>.Value.get -> TValue
+Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>.MapEntryMergedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> value, System.Lazy<TValue> oldValue, System.Lazy<TValue> mergeValue, object state) -> void
+Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>.MergeValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>.Value.get -> TValue
+Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>.MapEntryRemovedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> oldValue, object state) -> void
+Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>.MapEntryUpdatedEventArgs(Hazelcast.Models.MemberInfo member, System.Lazy<TKey> key, System.Lazy<TValue> oldValue, System.Lazy<TValue> value, object state) -> void
+Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>.OldValue.get -> TValue
+Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>.Value.get -> TValue
+Hazelcast.DistributedObjects.MapEventArgsBase
+~Hazelcast.DistributedObjects.MapEventArgsBase.MapEventArgsBase(Hazelcast.Models.MemberInfo member, int numberOfAffectedEntries, object state) -> void
+~Hazelcast.DistributedObjects.MapEventArgsBase.Member.get -> Hazelcast.Models.MemberInfo
+Hazelcast.DistributedObjects.MapEventArgsBase.NumberOfAffectedEntries.get -> int
+~Hazelcast.DistributedObjects.MapEventArgsBase.State.get -> object
+Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.Cleared(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.Cleared(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryAdded(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryAdded(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryEvicted(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryEvictedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryEvicted(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryEvictedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryExpired(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryExpiredEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryExpired(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryExpiredEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryInvalidated(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryInvalidatedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryInvalidated(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryInvalidatedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryLoaded(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryLoaded(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryLoadedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryMerged(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryMerged(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryRemoved(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryRemoved(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryUpdated(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.EntryUpdated(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.Evicted(System.Action<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEvictedEventArgs> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.Evicted(System.Func<Hazelcast.DistributedObjects.IHMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEvictedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>
+Hazelcast.DistributedObjects.MapEventHandlers<TKey, TValue>.MapEventHandlers() -> void
+Hazelcast.DistributedObjects.MapEvictedEventArgs
+~Hazelcast.DistributedObjects.MapEvictedEventArgs.MapEvictedEventArgs(Hazelcast.Models.MemberInfo member, int numberOfAffectedEntries, object state) -> void
+Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.Cleared(System.Action<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.Cleared(System.Func<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryAdded(System.Action<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryAdded(System.Func<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryMerged(System.Action<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryMerged(System.Func<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryRemoved(System.Action<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryRemoved(System.Func<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryUpdated(System.Action<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.EntryUpdated(System.Func<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>
+Hazelcast.DistributedObjects.MultiMapEventHandlers<TKey, TValue>.MultiMapEventHandlers() -> void
+Hazelcast.DistributedObjects.OverflowPolicy
+Hazelcast.DistributedObjects.OverflowPolicy.Fail = 1 -> Hazelcast.DistributedObjects.OverflowPolicy
+Hazelcast.DistributedObjects.OverflowPolicy.Overwrite = 0 -> Hazelcast.DistributedObjects.OverflowPolicy
+Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.Cleared(System.Action<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.Cleared(System.Func<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapClearedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryAdded(System.Action<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryAdded(System.Func<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryAddedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryMerged(System.Action<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryMerged(System.Func<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryMergedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryRemoved(System.Action<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryRemoved(System.Func<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryRemovedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryUpdated(System.Action<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+~Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.EntryUpdated(System.Func<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>, Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs<TKey, TValue>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>
+Hazelcast.DistributedObjects.ReplicatedMapEventHandlers<TKey, TValue>.ReplicatedMapEventHandlers() -> void
+Hazelcast.DistributedObjects.TopicEventHandlers<T>
+~Hazelcast.DistributedObjects.TopicEventHandlers<T>.Message(System.Action<Hazelcast.DistributedObjects.IHTopic<T>, Hazelcast.DistributedObjects.TopicMessageEventArgs<T>> handler) -> Hazelcast.DistributedObjects.TopicEventHandlers<T>
+~Hazelcast.DistributedObjects.TopicEventHandlers<T>.Message(System.Func<Hazelcast.DistributedObjects.IHTopic<T>, Hazelcast.DistributedObjects.TopicMessageEventArgs<T>, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.DistributedObjects.TopicEventHandlers<T>
+Hazelcast.DistributedObjects.TopicEventHandlers<T>.TopicEventHandlers() -> void
+Hazelcast.DistributedObjects.TopicMessageEventArgs<T>
+~Hazelcast.DistributedObjects.TopicMessageEventArgs<T>.Member.get -> Hazelcast.Models.MemberInfo
+Hazelcast.DistributedObjects.TopicMessageEventArgs<T>.Payload.get -> T
+Hazelcast.DistributedObjects.TopicMessageEventArgs<T>.PublishTime.get -> long
+~Hazelcast.DistributedObjects.TopicMessageEventArgs<T>.TopicMessageEventArgs(Hazelcast.Models.MemberInfo member, long publishTime, T payload, object state) -> void
+Hazelcast.Events.DistributedObjectCreatedEventArgs
+~Hazelcast.Events.DistributedObjectCreatedEventArgs.DistributedObjectCreatedEventArgs(string serviceName, string name, System.Guid sourceMemberId) -> void
+Hazelcast.Events.DistributedObjectDestroyedEventArgs
+~Hazelcast.Events.DistributedObjectDestroyedEventArgs.DistributedObjectDestroyedEventArgs(string serviceName, string name, System.Guid sourceMemberId) -> void
+Hazelcast.Events.DistributedObjectLifecycleEventArgs
+~Hazelcast.Events.DistributedObjectLifecycleEventArgs.DistributedObjectLifecycleEventArgs(string serviceName, string name, System.Guid sourceMemberId) -> void
+~Hazelcast.Events.DistributedObjectLifecycleEventArgs.Name.get -> string
+~Hazelcast.Events.DistributedObjectLifecycleEventArgs.ServiceName.get -> string
+Hazelcast.Events.DistributedObjectLifecycleEventArgs.SourceMemberId.get -> System.Guid
+Hazelcast.Events.EventsOptions
+~Hazelcast.Events.EventsOptions.Clone() -> Hazelcast.Events.EventsOptions
+Hazelcast.Events.EventsOptions.EventsOptions() -> void
+Hazelcast.Events.EventsOptions.SubscriptionCollectDelay.get -> System.TimeSpan
+Hazelcast.Events.EventsOptions.SubscriptionCollectDelay.set -> void
+Hazelcast.Events.EventsOptions.SubscriptionCollectPeriod.get -> System.TimeSpan
+Hazelcast.Events.EventsOptions.SubscriptionCollectPeriod.set -> void
+Hazelcast.Events.EventsOptions.SubscriptionCollectTimeout.get -> System.TimeSpan
+Hazelcast.Events.EventsOptions.SubscriptionCollectTimeout.set -> void
+Hazelcast.Events.MembersUpdatedEventArgs
+~Hazelcast.Events.MembersUpdatedEventArgs.AddedMembers.get -> System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.MemberInfo>
+~Hazelcast.Events.MembersUpdatedEventArgs.Members.get -> System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.MemberInfo>
+~Hazelcast.Events.MembersUpdatedEventArgs.RemovedMembers.get -> System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.MemberInfo>
+Hazelcast.Events.PartitionLostEventArgs
+Hazelcast.Events.PartitionLostEventArgs.IsAllReplicasInPartitionLost.get -> bool
+Hazelcast.Events.PartitionLostEventArgs.LostBackupCount.get -> int
+~Hazelcast.Events.PartitionLostEventArgs.Member.get -> Hazelcast.Models.MemberInfo
+Hazelcast.Events.PartitionLostEventArgs.PartitionId.get -> int
+~Hazelcast.Events.PartitionLostEventArgs.PartitionLostEventArgs(int partitionId, int lostBackupCount, bool isAllReplicasInPartitionLost, Hazelcast.Models.MemberInfo member) -> void
+Hazelcast.Exceptions.AuthenticationException
+Hazelcast.Exceptions.AuthenticationException.AuthenticationException() -> void
+~Hazelcast.Exceptions.AuthenticationException.AuthenticationException(string message) -> void
+~Hazelcast.Exceptions.AuthenticationException.AuthenticationException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.AuthenticationException.AuthenticationException(System.Exception innerException) -> void
+Hazelcast.Exceptions.ClientNotAllowedInClusterException
+Hazelcast.Exceptions.ClientNotAllowedInClusterException.ClientNotAllowedInClusterException() -> void
+~Hazelcast.Exceptions.ClientNotAllowedInClusterException.ClientNotAllowedInClusterException(string message) -> void
+~Hazelcast.Exceptions.ClientNotAllowedInClusterException.ClientNotAllowedInClusterException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.ClientNotAllowedInClusterException.ClientNotAllowedInClusterException(System.Exception innerException) -> void
+Hazelcast.Exceptions.ClientOfflineException
+Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(Hazelcast.ClientState state) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(string message) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(string message, Hazelcast.ClientState state) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(string message, System.Exception innerException, Hazelcast.ClientState state) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(System.Exception innerException) -> void
+~Hazelcast.Exceptions.ClientOfflineException.ClientOfflineException(System.Exception innerException, Hazelcast.ClientState state) -> void
+Hazelcast.Exceptions.ClientOfflineException.State.get -> Hazelcast.ClientState
+Hazelcast.Exceptions.ConnectionException
+Hazelcast.Exceptions.ConnectionException.ConnectionException() -> void
+~Hazelcast.Exceptions.ConnectionException.ConnectionException(string message) -> void
+~Hazelcast.Exceptions.ConnectionException.ConnectionException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.ConnectionException.ConnectionException(System.Exception innerException) -> void
+Hazelcast.Exceptions.HazelcastException
+Hazelcast.Exceptions.HazelcastException.HazelcastException() -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(string message) -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Exception innerException) -> void
+~Hazelcast.Exceptions.HazelcastException.HazelcastException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Exceptions.TargetDisconnectedException
+Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException() -> void
+~Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException(string message) -> void
+~Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.TargetDisconnectedException.TargetDisconnectedException(System.Exception innerException) -> void
+Hazelcast.Exceptions.TargetUnreachableException
+Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException() -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(string message) -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Exception innerException) -> void
+~Hazelcast.Exceptions.TargetUnreachableException.TargetUnreachableException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Exceptions.TaskTimeoutException
+~Hazelcast.Exceptions.TaskTimeoutException.Task.get -> System.Threading.Tasks.Task
+Hazelcast.Exceptions.TaskTimeoutException.TaskTimeoutException() -> void
+~Hazelcast.Exceptions.TaskTimeoutException.TaskTimeoutException(string message) -> void
+~Hazelcast.Exceptions.TaskTimeoutException.TaskTimeoutException(string message, System.Exception innerException) -> void
+~Hazelcast.Exceptions.TaskTimeoutException.TaskTimeoutException(string message, System.Threading.Tasks.Task task) -> void
+Hazelcast.HazelcastClientEventHandlers
+Hazelcast.HazelcastClientEventHandlers.HazelcastClientEventHandlers() -> void
+~Hazelcast.HazelcastClientEventHandlers.MembersUpdated(System.Action<Hazelcast.IHazelcastClient, Hazelcast.Events.MembersUpdatedEventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.MembersUpdated(System.Func<Hazelcast.IHazelcastClient, Hazelcast.Events.MembersUpdatedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.ObjectCreated(System.Action<Hazelcast.IHazelcastClient, Hazelcast.Events.DistributedObjectCreatedEventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.ObjectCreated(System.Func<Hazelcast.IHazelcastClient, Hazelcast.Events.DistributedObjectCreatedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Action<Hazelcast.IHazelcastClient, Hazelcast.Events.DistributedObjectDestroyedEventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.ObjectDestroyed(System.Func<Hazelcast.IHazelcastClient, Hazelcast.Events.DistributedObjectDestroyedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.PartitionLost(System.Action<Hazelcast.IHazelcastClient, Hazelcast.Events.PartitionLostEventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.PartitionLost(System.Func<Hazelcast.IHazelcastClient, Hazelcast.Events.PartitionLostEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.PartitionsUpdated(System.Action<Hazelcast.IHazelcastClient, System.EventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.PartitionsUpdated(System.Func<Hazelcast.IHazelcastClient, System.EventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.StateChanged(System.Action<Hazelcast.IHazelcastClient, Hazelcast.StateChangedEventArgs> handler) -> Hazelcast.HazelcastClientEventHandlers
+~Hazelcast.HazelcastClientEventHandlers.StateChanged(System.Func<Hazelcast.IHazelcastClient, Hazelcast.StateChangedEventArgs, System.Threading.Tasks.ValueTask> handler) -> Hazelcast.HazelcastClientEventHandlers
+Hazelcast.HazelcastClientFactory
+Hazelcast.HazelcastClientStart
+~Hazelcast.HazelcastClientStart.Client.get -> Hazelcast.IHazelcastClient
+Hazelcast.HazelcastClientStart.HazelcastClientStart() -> void
+~Hazelcast.HazelcastClientStart.Task.get -> System.Threading.Tasks.Task
+Hazelcast.HazelcastFailoverOptions
+~Hazelcast.HazelcastFailoverOptions.Clients.get -> System.Collections.Generic.IList<Hazelcast.HazelcastOptions>
+Hazelcast.HazelcastFailoverOptions.HazelcastFailoverOptions() -> void
+Hazelcast.HazelcastFailoverOptions.TryCount.get -> int
+Hazelcast.HazelcastFailoverOptions.TryCount.set -> void
+Hazelcast.HazelcastFailoverOptionsBuilder
+Hazelcast.HazelcastFailoverOptionsBuilder.HazelcastFailoverOptionsBuilder() -> void
+Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.AddSubscriber(Hazelcast.IHazelcastClientEventSubscriber subscriber) -> Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.AddSubscriber(string typename) -> Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.AddSubscriber(System.Action<Hazelcast.HazelcastClientEventHandlers> events) -> Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.AddSubscriber(System.Type type) -> Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.AddSubscriber<T>() -> Hazelcast.HazelcastOptions
+~Hazelcast.HazelcastOptions.Authentication.get -> Hazelcast.Clustering.AuthenticationOptions
+~Hazelcast.HazelcastOptions.ClientName.get -> string
+~Hazelcast.HazelcastOptions.ClientName.set -> void
+~Hazelcast.HazelcastOptions.ClusterName.get -> string
+~Hazelcast.HazelcastOptions.ClusterName.set -> void
+~Hazelcast.HazelcastOptions.Events.get -> Hazelcast.Events.EventsOptions
+~Hazelcast.HazelcastOptions.FlakeIdGenerators.get -> System.Collections.Generic.IDictionary<string, Hazelcast.DistributedObjects.FlakeIdGeneratorOptions>
+~Hazelcast.HazelcastOptions.GetFlakeIdGeneratorOptions(string name) -> Hazelcast.DistributedObjects.FlakeIdGeneratorOptions
+~Hazelcast.HazelcastOptions.GetNearCacheOptions(string name) -> Hazelcast.NearCaching.NearCacheOptions
+Hazelcast.HazelcastOptions.HazelcastOptions() -> void
+~Hazelcast.HazelcastOptions.Heartbeat.get -> Hazelcast.Clustering.HeartbeatOptions
+~Hazelcast.HazelcastOptions.Labels.get -> System.Collections.Generic.ISet<string>
+~Hazelcast.HazelcastOptions.LoadBalancer.get -> Hazelcast.Core.SingletonServiceFactory<Hazelcast.Clustering.LoadBalancing.ILoadBalancer>
+~Hazelcast.HazelcastOptions.LoggerFactory.get -> Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
+~Hazelcast.HazelcastOptions.Messaging.get -> Hazelcast.Messaging.MessagingOptions
+~Hazelcast.HazelcastOptions.Metrics.get -> Hazelcast.Metrics.MetricsOptions
+~Hazelcast.HazelcastOptions.NearCache.get -> Hazelcast.NearCaching.CommonNearCacheOptions
+~Hazelcast.HazelcastOptions.NearCaches.get -> System.Collections.Generic.IDictionary<string, Hazelcast.NearCaching.NearCacheOptions>
+~Hazelcast.HazelcastOptions.Networking.get -> Hazelcast.Networking.NetworkingOptions
+~Hazelcast.HazelcastOptions.PatternMatcher.get -> Hazelcast.Core.IPatternMatcher
+~Hazelcast.HazelcastOptions.PatternMatcher.set -> void
+~Hazelcast.HazelcastOptions.Preview.get -> Hazelcast.PreviewOptions
+~Hazelcast.HazelcastOptions.Serialization.get -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.HazelcastOptions.Subscribers.get -> System.Collections.Generic.IList<Hazelcast.IHazelcastClientEventSubscriber>
+Hazelcast.HazelcastOptionsBase
+Hazelcast.HazelcastOptionsBase.HazelcastOptionsBase() -> void
+~Hazelcast.HazelcastOptionsBase.ServiceProvider.get -> System.IServiceProvider
+Hazelcast.HazelcastOptionsBuilder
+Hazelcast.HazelcastOptionsBuilder.HazelcastOptionsBuilder() -> void
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.Bind(string key, object instance) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.Build() -> TOptions
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.ConfigureBuilder(System.Action<Microsoft.Extensions.Configuration.IConfigurationBuilder> configure) -> TBuilder
+Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.HazelcastOptionsBuilderBase() -> void
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(string key, string value) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(string[] args, System.Collections.Generic.IDictionary<string, string> switchMappings = null) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(System.Action<Microsoft.Extensions.Configuration.IConfiguration, TOptions> configure) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(System.Action<TOptions> configure) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithAltKey(string key) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(string key, string value) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(System.Action<TOptions> configure) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithEnvironment(string environmentName) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithFileName(string fileName) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithFilePath(string filePath) -> TBuilder
+Hazelcast.IHazelcastClient
+~Hazelcast.IHazelcastClient.BeginTransactionAsync() -> System.Threading.Tasks.Task<Hazelcast.Transactions.ITransactionContext>
+~Hazelcast.IHazelcastClient.BeginTransactionAsync(Hazelcast.Transactions.TransactionOptions options) -> System.Threading.Tasks.Task<Hazelcast.Transactions.ITransactionContext>
+~Hazelcast.IHazelcastClient.ClusterName.get -> string
+~Hazelcast.IHazelcastClient.CPSubsystem.get -> Hazelcast.CP.ICPSubsystem
+~Hazelcast.IHazelcastClient.DestroyAsync(Hazelcast.DistributedObjects.IDistributedObject o) -> System.Threading.Tasks.ValueTask
+~Hazelcast.IHazelcastClient.GetFlakeIdGeneratorAsync(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IFlakeIdGenerator>
+~Hazelcast.IHazelcastClient.GetListAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHList<T>>
+~Hazelcast.IHazelcastClient.GetMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHMap<TKey, TValue>>
+~Hazelcast.IHazelcastClient.GetMultiMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHMultiMap<TKey, TValue>>
+~Hazelcast.IHazelcastClient.GetQueueAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHQueue<T>>
+~Hazelcast.IHazelcastClient.GetReplicatedMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHReplicatedMap<TKey, TValue>>
+~Hazelcast.IHazelcastClient.GetRingBufferAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHRingBuffer<T>>
+~Hazelcast.IHazelcastClient.GetSetAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHSet<T>>
+~Hazelcast.IHazelcastClient.GetTopicAsync<T>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTopic<T>>
+Hazelcast.IHazelcastClient.Id.get -> System.Guid
+Hazelcast.IHazelcastClient.IsActive.get -> bool
+Hazelcast.IHazelcastClient.IsConnected.get -> bool
+~Hazelcast.IHazelcastClient.Members.get -> System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.MemberInfoState>
+~Hazelcast.IHazelcastClient.Name.get -> string
+~Hazelcast.IHazelcastClient.Options.get -> Hazelcast.HazelcastOptions
+~Hazelcast.IHazelcastClient.Sql.get -> Hazelcast.Sql.ISqlService
+Hazelcast.IHazelcastClient.State.get -> Hazelcast.ClientState
+~Hazelcast.IHazelcastClient.SubscribeAsync(System.Action<Hazelcast.HazelcastClientEventHandlers> events) -> System.Threading.Tasks.Task<System.Guid>
+Hazelcast.IHazelcastClient.UnsubscribeAsync(System.Guid subscriptionId) -> System.Threading.Tasks.ValueTask<bool>
+Hazelcast.IHazelcastClientEventHandler
+Hazelcast.IHazelcastClientEventSubscriber
+~Hazelcast.IHazelcastClientEventSubscriber.Build(Hazelcast.HazelcastClientEventHandlers events) -> void
+Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
+~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
+~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
+Hazelcast.Messaging.MessagingOptions
+~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
+Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
+Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
+Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.get -> bool
+Hazelcast.Messaging.MessagingOptions.RetryOnClientReconnecting.set -> void
+Hazelcast.Messaging.MessagingOptions.RetryTimeoutSeconds.get -> int
+Hazelcast.Messaging.MessagingOptions.RetryTimeoutSeconds.set -> void
+Hazelcast.Messaging.MessagingOptions.RetryUnsafeOperations.get -> bool
+Hazelcast.Messaging.MessagingOptions.RetryUnsafeOperations.set -> void
+Hazelcast.Metrics.MetricsOptions
+~Hazelcast.Metrics.MetricsOptions.Clone() -> Hazelcast.Metrics.MetricsOptions
+Hazelcast.Metrics.MetricsOptions.Enabled.get -> bool
+Hazelcast.Metrics.MetricsOptions.Enabled.set -> void
+Hazelcast.Metrics.MetricsOptions.MetricsOptions() -> void
+Hazelcast.Metrics.MetricsOptions.PeriodSeconds.get -> int
+Hazelcast.Metrics.MetricsOptions.PeriodSeconds.set -> void
+Hazelcast.Models.BitmapIndexOptions
+Hazelcast.Models.BitmapIndexOptions.BitmapIndexOptions() -> void
+~Hazelcast.Models.BitmapIndexOptions.UniqueKey.get -> string
+~Hazelcast.Models.BitmapIndexOptions.UniqueKey.set -> void
+Hazelcast.Models.BitmapIndexOptions.UniqueKeyTransformation.get -> Hazelcast.Models.UniqueKeyTransformation
+Hazelcast.Models.BitmapIndexOptions.UniqueKeyTransformation.set -> void
+Hazelcast.Models.CollectionItemEventTypes
+Hazelcast.Models.CollectionItemEventTypes.Added = 1 -> Hazelcast.Models.CollectionItemEventTypes
+Hazelcast.Models.CollectionItemEventTypes.Removed = 2 -> Hazelcast.Models.CollectionItemEventTypes
+Hazelcast.Models.HBigDecimal
+Hazelcast.Models.HBigDecimal.Equals(Hazelcast.Models.HBigDecimal other) -> bool
+Hazelcast.Models.HBigDecimal.HBigDecimal() -> void
+Hazelcast.Models.HBigDecimal.HBigDecimal(decimal value) -> void
+Hazelcast.Models.HBigDecimal.HBigDecimal(int value) -> void
+Hazelcast.Models.HBigDecimal.HBigDecimal(System.Numerics.BigInteger unscaledValue, int scale = 0) -> void
+Hazelcast.Models.HBigDecimal.Scale.get -> int
+Hazelcast.Models.HBigDecimal.ToDecimal() -> decimal
+Hazelcast.Models.HBigDecimal.ToString(System.Globalization.CultureInfo! cultureInfo) -> string!
+Hazelcast.Models.HBigDecimal.TryToDecimal(out decimal value) -> bool
+Hazelcast.Models.HBigDecimal.UnscaledValue.get -> System.Numerics.BigInteger
+Hazelcast.Models.HLocalDate
+Hazelcast.Models.HLocalDate.Day.get -> byte
+Hazelcast.Models.HLocalDate.Equals(Hazelcast.Models.HLocalDate other) -> bool
+Hazelcast.Models.HLocalDate.HLocalDate() -> void
+Hazelcast.Models.HLocalDate.HLocalDate(int year, byte month, byte day) -> void
+Hazelcast.Models.HLocalDate.HLocalDate(System.DateTime dateTime) -> void
+Hazelcast.Models.HLocalDate.Month.get -> byte
+Hazelcast.Models.HLocalDate.ToDateTime() -> System.DateTime
+Hazelcast.Models.HLocalDate.TryToDateTime(out System.DateTime dateTime) -> bool
+Hazelcast.Models.HLocalDate.Year.get -> int
+Hazelcast.Models.HLocalDateTime
+Hazelcast.Models.HLocalDateTime.Date.get -> Hazelcast.Models.HLocalDate
+Hazelcast.Models.HLocalDateTime.Day.get -> byte
+Hazelcast.Models.HLocalDateTime.Equals(Hazelcast.Models.HLocalDateTime other) -> bool
+Hazelcast.Models.HLocalDateTime.HLocalDateTime() -> void
+Hazelcast.Models.HLocalDateTime.HLocalDateTime(Hazelcast.Models.HLocalDate date, Hazelcast.Models.HLocalTime time) -> void
+Hazelcast.Models.HLocalDateTime.HLocalDateTime(int year, byte month, byte day) -> void
+Hazelcast.Models.HLocalDateTime.HLocalDateTime(int year, byte month, byte day, byte hour, byte minute, byte second, int nanosecond) -> void
+Hazelcast.Models.HLocalDateTime.HLocalDateTime(System.DateTime dateTime) -> void
+Hazelcast.Models.HLocalDateTime.Hour.get -> byte
+Hazelcast.Models.HLocalDateTime.Minute.get -> byte
+Hazelcast.Models.HLocalDateTime.Month.get -> byte
+Hazelcast.Models.HLocalDateTime.Nanosecond.get -> int
+Hazelcast.Models.HLocalDateTime.Second.get -> byte
+Hazelcast.Models.HLocalDateTime.Time.get -> Hazelcast.Models.HLocalTime
+Hazelcast.Models.HLocalDateTime.ToDateTime() -> System.DateTime
+Hazelcast.Models.HLocalDateTime.TryToDateTime(out System.DateTime dateTime) -> bool
+Hazelcast.Models.HLocalDateTime.Year.get -> int
+Hazelcast.Models.HLocalTime
+Hazelcast.Models.HLocalTime.Equals(Hazelcast.Models.HLocalTime other) -> bool
+Hazelcast.Models.HLocalTime.HLocalTime() -> void
+Hazelcast.Models.HLocalTime.HLocalTime(byte hour, byte minute, byte second, int nanosecond) -> void
+Hazelcast.Models.HLocalTime.HLocalTime(System.DateTime dateTime) -> void
+Hazelcast.Models.HLocalTime.HLocalTime(System.TimeSpan timeSpan) -> void
+Hazelcast.Models.HLocalTime.Hour.get -> byte
+Hazelcast.Models.HLocalTime.Minute.get -> byte
+Hazelcast.Models.HLocalTime.Nanosecond.get -> int
+Hazelcast.Models.HLocalTime.Second.get -> byte
+Hazelcast.Models.HLocalTime.ToTimeSpan() -> System.TimeSpan
+Hazelcast.Models.HOffsetDateTime
+Hazelcast.Models.HOffsetDateTime.Equals(Hazelcast.Models.HOffsetDateTime other) -> bool
+Hazelcast.Models.HOffsetDateTime.HOffsetDateTime() -> void
+Hazelcast.Models.HOffsetDateTime.HOffsetDateTime(Hazelcast.Models.HLocalDateTime localDateTime, System.TimeSpan offset = default(System.TimeSpan)) -> void
+Hazelcast.Models.HOffsetDateTime.HOffsetDateTime(System.DateTime localDateTime, System.TimeSpan offset = default(System.TimeSpan)) -> void
+Hazelcast.Models.HOffsetDateTime.HOffsetDateTime(System.DateTimeOffset dateTimeOffset) -> void
+Hazelcast.Models.HOffsetDateTime.LocalDateTime.get -> Hazelcast.Models.HLocalDateTime
+Hazelcast.Models.HOffsetDateTime.Offset.get -> System.TimeSpan
+Hazelcast.Models.HOffsetDateTime.ToDateTimeOffset() -> System.DateTimeOffset
+Hazelcast.Models.HOffsetDateTime.TryToDateTimeOffset(out System.DateTimeOffset dateTimeOffset) -> bool
+Hazelcast.Models.IMapEntryStats<TKey, TValue>
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.Cost.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.CreationTime.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.ExpirationTime.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.Hits.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.Key.get -> TKey
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.LastAccessTime.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.LastStoredTime.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.LastUpdateTime.get -> long
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.Value.get -> TValue
+Hazelcast.Models.IMapEntryStats<TKey, TValue>.Version.get -> long
+Hazelcast.Models.IndexOptions
+~Hazelcast.Models.IndexOptions.AddAttribute(string attribute) -> Hazelcast.Models.IndexOptions
+~Hazelcast.Models.IndexOptions.AddAttributes(params string[] attributes) -> Hazelcast.Models.IndexOptions
+~Hazelcast.Models.IndexOptions.Attributes.get -> System.Collections.Generic.IList<string>
+~Hazelcast.Models.IndexOptions.BitmapIndexOptions.get -> Hazelcast.Models.BitmapIndexOptions
+~Hazelcast.Models.IndexOptions.BitmapIndexOptions.set -> void
+Hazelcast.Models.IndexOptions.IndexOptions() -> void
+~Hazelcast.Models.IndexOptions.IndexOptions(System.Collections.Generic.IEnumerable<string> attributes) -> void
+~Hazelcast.Models.IndexOptions.Name.get -> string
+~Hazelcast.Models.IndexOptions.Name.set -> void
+Hazelcast.Models.IndexOptions.Type.get -> Hazelcast.Models.IndexType
+Hazelcast.Models.IndexOptions.Type.set -> void
+Hazelcast.Models.IndexType
+Hazelcast.Models.IndexType.Bitmap = 2 -> Hazelcast.Models.IndexType
+Hazelcast.Models.IndexType.Hashed = 1 -> Hazelcast.Models.IndexType
+Hazelcast.Models.IndexType.Sorted = 0 -> Hazelcast.Models.IndexType
+Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Added = 1 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.AllCleared = 64 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.AllEvicted = 32 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Evicted = 8 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Expired = 16 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Invalidated = 256 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Loaded = 512 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Merged = 128 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Removed = 2 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MapEventTypes.Updated = 4 -> Hazelcast.Models.MapEventTypes
+Hazelcast.Models.MemberInfo
+~Hazelcast.Models.MemberInfo.Address.get -> Hazelcast.Networking.NetworkAddress
+~Hazelcast.Models.MemberInfo.Attributes.get -> System.Collections.Generic.IReadOnlyDictionary<string, string>
+~Hazelcast.Models.MemberInfo.Equals(Hazelcast.Models.MemberInfo other) -> bool
+Hazelcast.Models.MemberInfo.HasPublicAddress.get -> bool
+Hazelcast.Models.MemberInfo.Id.get -> System.Guid
+Hazelcast.Models.MemberInfo.IsLiteMember.get -> bool
+~Hazelcast.Models.MemberInfo.MemberInfo(System.Guid id, Hazelcast.Networking.NetworkAddress address, Hazelcast.Models.MemberVersion version, bool isLiteMember, System.Collections.Generic.IReadOnlyDictionary<string, string> attributes) -> void
+~Hazelcast.Models.MemberInfo.PublicAddress.get -> Hazelcast.Networking.NetworkAddress
+~Hazelcast.Models.MemberInfo.ToShortString(bool flagConnectAddress) -> string
+~Hazelcast.Models.MemberInfo.Version.get -> Hazelcast.Models.MemberVersion
+Hazelcast.Models.MemberInfoState
+Hazelcast.Models.MemberInfoState.Equals(Hazelcast.Models.MemberInfoState other) -> bool
+Hazelcast.Models.MemberInfoState.IsConnected.get -> bool
+Hazelcast.Models.MemberInfoState.Member.get -> Hazelcast.Models.MemberInfo!
+Hazelcast.Models.MemberInfoState.MemberInfoState() -> void
+Hazelcast.Models.MemberVersion
+~Hazelcast.Models.MemberVersion.CompareTo(Hazelcast.Models.MemberVersion other) -> int
+~Hazelcast.Models.MemberVersion.Equals(Hazelcast.Models.MemberVersion other) -> bool
+~Hazelcast.Models.MemberVersion.Equals(Hazelcast.Models.MemberVersion other, bool ignorePatchVersion) -> bool
+Hazelcast.Models.MemberVersion.Major.get -> byte
+Hazelcast.Models.MemberVersion.MemberVersion(byte major, byte minor, byte patch) -> void
+Hazelcast.Models.MemberVersion.Minor.get -> byte
+Hazelcast.Models.MemberVersion.Patch.get -> byte
+~Hazelcast.Models.MemberVersion.ToString(bool ignorePatchVersion) -> string
+Hazelcast.Models.UniqueKeyTransformation
+Hazelcast.Models.UniqueKeyTransformation.Long = 1 -> Hazelcast.Models.UniqueKeyTransformation
+Hazelcast.Models.UniqueKeyTransformation.Object = 0 -> Hazelcast.Models.UniqueKeyTransformation
+Hazelcast.Models.UniqueKeyTransformation.Raw = 2 -> Hazelcast.Models.UniqueKeyTransformation
+Hazelcast.NearCaching.CommonNearCacheOptions
+Hazelcast.NearCaching.CommonNearCacheOptions.CommonNearCacheOptions() -> void
+Hazelcast.NearCaching.CommonNearCacheOptions.MaxToleratedMissCount.get -> int
+Hazelcast.NearCaching.CommonNearCacheOptions.MaxToleratedMissCount.set -> void
+Hazelcast.NearCaching.CommonNearCacheOptions.MinReconciliationIntervalSeconds.get -> int
+Hazelcast.NearCaching.CommonNearCacheOptions.MinReconciliationIntervalSeconds.set -> void
+Hazelcast.NearCaching.CommonNearCacheOptions.ReconciliationIntervalSeconds.get -> int
+Hazelcast.NearCaching.CommonNearCacheOptions.ReconciliationIntervalSeconds.set -> void
+Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.EvictionPolicy.Lfu = 2 -> Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.EvictionPolicy.Lru = 1 -> Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.EvictionPolicy.None = 0 -> Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.EvictionPolicy.Random = 3 -> Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.NearCacheOptions
+Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy.get -> Hazelcast.NearCaching.EvictionPolicy
+Hazelcast.NearCaching.NearCacheOptions.EvictionPolicy.set -> void
+Hazelcast.NearCaching.NearCacheOptions.InMemoryFormat.get -> Hazelcast.Core.InMemoryFormat
+Hazelcast.NearCaching.NearCacheOptions.InMemoryFormat.set -> void
+Hazelcast.NearCaching.NearCacheOptions.InvalidateOnChange.get -> bool
+Hazelcast.NearCaching.NearCacheOptions.InvalidateOnChange.set -> void
+Hazelcast.NearCaching.NearCacheOptions.MaxIdleSeconds.get -> int
+Hazelcast.NearCaching.NearCacheOptions.MaxIdleSeconds.set -> void
+Hazelcast.NearCaching.NearCacheOptions.MaxSize.get -> int
+Hazelcast.NearCaching.NearCacheOptions.MaxSize.set -> void
+Hazelcast.NearCaching.NearCacheOptions.NearCacheOptions() -> void
+Hazelcast.NearCaching.NearCacheOptions.TimeToLiveSeconds.get -> int
+Hazelcast.NearCaching.NearCacheOptions.TimeToLiveSeconds.set -> void
+Hazelcast.Networking.CloudOptions
+Hazelcast.Networking.CloudOptions.CloudOptions() -> void
+~Hazelcast.Networking.CloudOptions.DiscoveryToken.get -> string
+~Hazelcast.Networking.CloudOptions.DiscoveryToken.set -> void
+Hazelcast.Networking.CloudOptions.Enabled.get -> bool
+~Hazelcast.Networking.CloudOptions.Url.get -> System.Uri
+~Hazelcast.Networking.CloudOptions.Url.set -> void
+Hazelcast.Networking.NetworkAddress
+~Hazelcast.Networking.NetworkAddress.Equals(Hazelcast.Networking.NetworkAddress other) -> bool
+~Hazelcast.Networking.NetworkAddress.HostName.get -> string
+~Hazelcast.Networking.NetworkAddress.IPAddress.get -> System.Net.IPAddress
+~Hazelcast.Networking.NetworkAddress.IPEndPoint.get -> System.Net.IPEndPoint
+Hazelcast.Networking.NetworkAddress.IsIpV4.get -> bool
+Hazelcast.Networking.NetworkAddress.IsIpV6.get -> bool
+Hazelcast.Networking.NetworkAddress.IsIpV6GlobalOrScoped.get -> bool
+~Hazelcast.Networking.NetworkAddress.NetworkAddress(string hostName, int port = 0) -> void
+~Hazelcast.Networking.NetworkAddress.NetworkAddress(System.Net.IPAddress ipAddress, int port = 0) -> void
+Hazelcast.Networking.NetworkAddress.Port.get -> int
+Hazelcast.Networking.NetworkingOptions
+~Hazelcast.Networking.NetworkingOptions.Addresses.get -> System.Collections.Generic.IList<string>
+~Hazelcast.Networking.NetworkingOptions.Cloud.get -> Hazelcast.Networking.CloudOptions
+~Hazelcast.Networking.NetworkingOptions.ConnectionRetry.get -> Hazelcast.Core.ConnectionRetryOptions
+Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.get -> int
+Hazelcast.Networking.NetworkingOptions.ConnectionTimeoutMilliseconds.set -> void
+~Hazelcast.Networking.NetworkingOptions.NetworkingOptions(Hazelcast.PreviewOptions preview = null) -> void
+Hazelcast.Networking.NetworkingOptions.Reconnect.get -> bool
+Hazelcast.Networking.NetworkingOptions.Reconnect.set -> void
+Hazelcast.Networking.NetworkingOptions.ReconnectMode.get -> Hazelcast.Networking.ReconnectMode
+Hazelcast.Networking.NetworkingOptions.ReconnectMode.set -> void
+Hazelcast.Networking.NetworkingOptions.RedoOperations.get -> bool
+Hazelcast.Networking.NetworkingOptions.RedoOperations.set -> void
+Hazelcast.Networking.NetworkingOptions.ShuffleAddresses.get -> bool
+Hazelcast.Networking.NetworkingOptions.ShuffleAddresses.set -> void
+Hazelcast.Networking.NetworkingOptions.SmartRouting.get -> bool
+Hazelcast.Networking.NetworkingOptions.SmartRouting.set -> void
+~Hazelcast.Networking.NetworkingOptions.Socket.get -> Hazelcast.Networking.SocketOptions
+~Hazelcast.Networking.NetworkingOptions.Ssl.get -> Hazelcast.Networking.SslOptions
+Hazelcast.Networking.NetworkingOptions.UsePublicAddresses.get -> bool?
+Hazelcast.Networking.NetworkingOptions.UsePublicAddresses.set -> void
+Hazelcast.Networking.ReconnectMode
+Hazelcast.Networking.ReconnectMode.DoNotReconnect = 0 -> Hazelcast.Networking.ReconnectMode
+Hazelcast.Networking.ReconnectMode.ReconnectAsync = 2 -> Hazelcast.Networking.ReconnectMode
+Hazelcast.Networking.ReconnectMode.ReconnectSync = 1 -> Hazelcast.Networking.ReconnectMode
+Hazelcast.Networking.SocketOptions
+Hazelcast.Networking.SocketOptions.BufferSizeKiB.get -> int
+Hazelcast.Networking.SocketOptions.BufferSizeKiB.set -> void
+Hazelcast.Networking.SocketOptions.KeepAlive.get -> bool
+Hazelcast.Networking.SocketOptions.KeepAlive.set -> void
+Hazelcast.Networking.SocketOptions.LingerSeconds.get -> int
+Hazelcast.Networking.SocketOptions.LingerSeconds.set -> void
+Hazelcast.Networking.SocketOptions.SocketOptions() -> void
+Hazelcast.Networking.SocketOptions.TcpNoDelay.get -> bool
+Hazelcast.Networking.SocketOptions.TcpNoDelay.set -> void
+Hazelcast.Networking.SslOptions
+~Hazelcast.Networking.SslOptions.CertificateName.get -> string
+~Hazelcast.Networking.SslOptions.CertificateName.set -> void
+~Hazelcast.Networking.SslOptions.CertificatePassword.get -> string
+~Hazelcast.Networking.SslOptions.CertificatePassword.set -> void
+~Hazelcast.Networking.SslOptions.CertificatePath.get -> string
+~Hazelcast.Networking.SslOptions.CertificatePath.set -> void
+Hazelcast.Networking.SslOptions.CheckCertificateRevocation.get -> bool
+Hazelcast.Networking.SslOptions.CheckCertificateRevocation.set -> void
+Hazelcast.Networking.SslOptions.Enabled.get -> bool
+Hazelcast.Networking.SslOptions.Enabled.set -> void
+Hazelcast.Networking.SslOptions.Protocol.get -> System.Security.Authentication.SslProtocols
+Hazelcast.Networking.SslOptions.Protocol.set -> void
+Hazelcast.Networking.SslOptions.SslOptions() -> void
+Hazelcast.Networking.SslOptions.ValidateCertificateChain.get -> bool
+Hazelcast.Networking.SslOptions.ValidateCertificateChain.set -> void
+Hazelcast.Networking.SslOptions.ValidateCertificateName.get -> bool
+Hazelcast.Networking.SslOptions.ValidateCertificateName.set -> void
+Hazelcast.Partitioning.Strategies.IPartitionAware
+~Hazelcast.Partitioning.Strategies.IPartitionAware.GetPartitionKey() -> object
+Hazelcast.Partitioning.Strategies.IPartitioningStrategy
+~Hazelcast.Partitioning.Strategies.IPartitioningStrategy.GetPartitionKey(object o) -> object
+Hazelcast.PreviewOptions
+~Hazelcast.PreviewOptions.Clone() -> Hazelcast.PreviewOptions
+Hazelcast.PreviewOptions.EnableNewReconnectOptions.get -> bool
+Hazelcast.PreviewOptions.EnableNewReconnectOptions.set -> void
+Hazelcast.PreviewOptions.EnableNewRetryOptions.get -> bool
+Hazelcast.PreviewOptions.EnableNewRetryOptions.set -> void
+Hazelcast.PreviewOptions.PreviewOptions() -> void
+Hazelcast.Projection.IProjection
+Hazelcast.Projection.Projections
+Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.AccessControl = 64 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ArrayIndexOutOfBounds = 1 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ArrayStore = 2 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.AssertionError = 71 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Authentication = 3 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Cache = 4 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CacheLoader = 5 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CacheNotExists = 6 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CacheWriter = 7 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CallerNotMember = 8 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Cancellation = 9 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CannotReplicateException = 90 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ClassCast = 10 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ClassNotFound = 11 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ConcurrentModification = 12 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ConfigMismatch = 13 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ConsistencyLostException = 84 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.CpGroupDestroyedException = 89 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.DistributedObjectDestroyed = 14 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.DuplicateTask = 77 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.EntryProcessor = 16 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Eof = 15 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Execution = 17 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.FlakeIdNodeIdOutOfRangeException = 81 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Hazelcast = 18 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.HazelcastInstanceNotActive = 19 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.HazelcastOverload = 20 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.HazelcastSerialization = 21 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalAccessError = 25 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalAccessException = 24 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalArgument = 23 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalMonitorState = 26 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalState = 27 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IllegalThreadState = 28 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IndeterminateOperationState = 80 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IndexOutOfBounds = 29 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Interrupted = 30 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.InvalidAddress = 31 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.InvalidConfiguration = 32 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.IO = 22 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.JetExceptionsRangeEnd = 600 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.JetExceptionsRangeStart = 500 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.LeaderDemotedException = 91 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.LocalMemberReset = 79 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.LockAcquireLimitReachedException = 87 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.LockOwnershipLostException = 88 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Login = 65 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.MaxMessageSizeExceeded = 69 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.MemberLeft = 33 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.MutationDisallowedException = 83 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NativeOutOfMemoryError = 74 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NegativeArraySize = 34 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoClassDefinitionFound = 99 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoDataMember = 67 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoSuchElement = 35 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoSuchFieldError = 97 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoSuchFieldException = 98 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoSuchMethodError = 95 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NoSuchMethodException = 96 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NotLeaderException = 93 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NotSerializable = 36 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.NullPointer = 37 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.OperationTimeout = 38 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.OutOfMemoryError = 72 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.PartitionMigrating = 39 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Query = 40 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.QueryResultSizeExceeded = 41 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ReachedMaxSize = 43 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.RejectedExecution = 44 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ReplicatedMapCantBeCreated = 68 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ResponseAlreadySent = 45 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.RetryableHazelcast = 46 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.RetryableIO = 47 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Runtime = 48 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Security = 49 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.ServiceNotFound = 75 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.SessionExpiredException = 85 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Socket = 50 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.SplitBrainProtection = 42 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.StackOverflowError = 73 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.StaleAppendRequestException = 92 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.StaleSequence = 51 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.StaleTask = 78 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.StaleTaskId = 76 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TargetDisconnected = 52 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TargetNotMember = 53 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TargetNotReplicaException = 82 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Timeout = 54 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TopicOverload = 55 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Transaction = 56 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TransactionNotActive = 57 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.TransactionTimedOut = 58 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Undefined = 0 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.UnsupportedCallback = 66 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.UnsupportedOperation = 61 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.UriSyntax = 59 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.UserExceptionsRangeStart = 1000 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.UTFDataFormat = 60 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.VersionMismatchException = 94 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.WaitKeyCancelledException = 86 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.WanReplicationQueueFull = 70 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.WrongTarget = 62 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.Models.RemoteError.Xa = 63 -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.RemoteException
+Hazelcast.Protocol.RemoteException.Error.get -> Hazelcast.Protocol.Models.RemoteError
+Hazelcast.Protocol.RemoteException.Error.set -> void
+Hazelcast.Protocol.RemoteException.MemberId.get -> System.Guid
+Hazelcast.Protocol.RemoteException.MemberId.set -> void
+Hazelcast.Protocol.RemoteException.RemoteException() -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(string message) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(string message, System.Exception innerException) -> void
+Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId) -> void
+Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, Hazelcast.Protocol.Models.RemoteError error, bool retryable = false) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, Hazelcast.Protocol.Models.RemoteError error, string message, bool retryable = false) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, Hazelcast.Protocol.Models.RemoteError error, string message, System.Exception innerException, string serverStackTrace = "", bool retryable = false) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, Hazelcast.Protocol.Models.RemoteError error, System.Exception innerException, bool retryable = false) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, string message) -> void
+~Hazelcast.Protocol.RemoteException.RemoteException(System.Guid memberId, string message, System.Exception innerException) -> void
+Hazelcast.Protocol.RemoteException.Retryable.get -> bool
+Hazelcast.Protocol.RemoteException.Retryable.set -> void
+~Hazelcast.Protocol.RemoteException.ServerStackTrace.get -> string
+~Hazelcast.Protocol.RemoteException.ServerStackTrace.set -> void
+Hazelcast.Query.IPagingPredicate
+Hazelcast.Query.IPagingPredicate.NextPage() -> void
+Hazelcast.Query.IPagingPredicate.Page.get -> int
+Hazelcast.Query.IPagingPredicate.Page.set -> void
+Hazelcast.Query.IPagingPredicate.PageSize.get -> int
+Hazelcast.Query.IPagingPredicate.PreviousPage() -> void
+Hazelcast.Query.IPagingPredicate.Reset() -> void
+Hazelcast.Query.IPartitionPredicate
+~Hazelcast.Query.IPartitionPredicate.PartitionKey.get -> object
+~Hazelcast.Query.IPartitionPredicate.Target.get -> Hazelcast.Query.IPredicate
+Hazelcast.Query.IPredicate
+Hazelcast.Query.IterationType
+Hazelcast.Query.IterationType.Entry = 2 -> Hazelcast.Query.IterationType
+Hazelcast.Query.IterationType.Key = 0 -> Hazelcast.Query.IterationType
+Hazelcast.Query.IterationType.Value = 1 -> Hazelcast.Query.IterationType
+Hazelcast.Query.PredicateBuilder
+Hazelcast.Query.Predicates
+Hazelcast.Security.ICredentials
+~Hazelcast.Security.ICredentials.Name.get -> string
+Hazelcast.Security.ICredentialsFactory
+~Hazelcast.Security.ICredentialsFactory.NewCredentials() -> Hazelcast.Security.ICredentials
+Hazelcast.Security.IKerberosTokenProvider
+~Hazelcast.Security.IKerberosTokenProvider.GetToken(string spn, string username, string password, string domain) -> byte[]
+Hazelcast.Security.IPasswordCredentials
+~Hazelcast.Security.IPasswordCredentials.Password.get -> string
+Hazelcast.Security.IResettableCredentialsFactory
+Hazelcast.Security.IResettableCredentialsFactory.Reset() -> void
+Hazelcast.Security.ITokenCredentials
+~Hazelcast.Security.ITokenCredentials.GetToken() -> byte[]
+Hazelcast.Security.KerberosCredentials
+~Hazelcast.Security.KerberosCredentials.KerberosCredentials(byte[] token) -> void
+Hazelcast.Security.StaticCredentialsFactory
+Hazelcast.Security.StaticCredentialsFactory.Dispose() -> void
+~Hazelcast.Security.StaticCredentialsFactory.NewCredentials() -> Hazelcast.Security.ICredentials
+~Hazelcast.Security.StaticCredentialsFactory.StaticCredentialsFactory(Hazelcast.Security.ICredentials credentials) -> void
+Hazelcast.Security.TokenCredentials
+~Hazelcast.Security.TokenCredentials.GetToken() -> byte[]
+~Hazelcast.Security.TokenCredentials.Name.get -> string
+~Hazelcast.Security.TokenCredentials.TokenCredentials(byte[] token) -> void
+Hazelcast.Security.UsernamePasswordCredentials
+~Hazelcast.Security.UsernamePasswordCredentials.Name.get -> string
+~Hazelcast.Security.UsernamePasswordCredentials.Name.set -> void
+~Hazelcast.Security.UsernamePasswordCredentials.Password.get -> string
+~Hazelcast.Security.UsernamePasswordCredentials.Password.set -> void
+Hazelcast.Security.UsernamePasswordCredentials.UsernamePasswordCredentials() -> void
+Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddBooleanArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddBooleanField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddByteArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddByteField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddCharArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddCharField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddDoubleArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddDoubleField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddFloatArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddFloatField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddIntArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddIntField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddLongArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddLongField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddPortableArrayField(string fieldName, Hazelcast.Serialization.IClassDefinition def) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddPortableField(string fieldName, Hazelcast.Serialization.IClassDefinition def) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddShortArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddShortField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddStringArrayField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.AddStringField(string fieldName) -> Hazelcast.Serialization.ClassDefinitionBuilder
+~Hazelcast.Serialization.ClassDefinitionBuilder.Build() -> Hazelcast.Serialization.IClassDefinition
+Hazelcast.Serialization.ClassDefinitionBuilder.ClassDefinitionBuilder(int factoryId, int classId) -> void
+Hazelcast.Serialization.ClassDefinitionBuilder.ClassDefinitionBuilder(int factoryId, int classId, int version) -> void
+Hazelcast.Serialization.ClassDefinitionBuilder.ClassId.get -> int
+Hazelcast.Serialization.ClassDefinitionBuilder.FactoryId.get -> int
+Hazelcast.Serialization.ClassDefinitionBuilder.Version.get -> int
+~Hazelcast.Serialization.FactoryOptions<T>
+Hazelcast.Serialization.FactoryOptions<T>.FactoryOptions() -> void
+Hazelcast.Serialization.FactoryOptions<T>.Id.get -> int
+Hazelcast.Serialization.FactoryOptions<T>.Id.set -> void
+Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Boolean = 2 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.BooleanArray = 12 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Byte = 1 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.ByteArray = 11 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Char = 3 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.CharArray = 13 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Double = 8 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.DoubleArray = 18 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Float = 7 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.FloatArray = 17 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Int = 5 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.IntArray = 15 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Long = 6 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.LongArray = 16 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Portable = 0 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.PortableArray = 10 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Short = 4 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.ShortArray = 14 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.Utf = 9 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.FieldType.UtfArray = 19 -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.GlobalSerializerOptions
+Hazelcast.Serialization.GlobalSerializerOptions.GlobalSerializerOptions() -> void
+Hazelcast.Serialization.GlobalSerializerOptions.OverrideClrSerialization.get -> bool
+Hazelcast.Serialization.GlobalSerializerOptions.OverrideClrSerialization.set -> void
+Hazelcast.Serialization.IByteArraySerializer<T>
+~Hazelcast.Serialization.IByteArraySerializer<T>.Read(byte[] buffer) -> T
+~Hazelcast.Serialization.IByteArraySerializer<T>.Write(T obj) -> byte[]
+Hazelcast.Serialization.IClassDefinition
+Hazelcast.Serialization.IClassDefinition.ClassId.get -> int
+Hazelcast.Serialization.IClassDefinition.FactoryId.get -> int
+~Hazelcast.Serialization.IClassDefinition.GetField(int fieldIndex) -> Hazelcast.Serialization.IFieldDefinition
+~Hazelcast.Serialization.IClassDefinition.GetField(string name) -> Hazelcast.Serialization.IFieldDefinition
+~Hazelcast.Serialization.IClassDefinition.GetFieldClassId(string fieldName) -> int
+Hazelcast.Serialization.IClassDefinition.GetFieldCount() -> int
+~Hazelcast.Serialization.IClassDefinition.GetFieldNames() -> System.Collections.Generic.ICollection<string>
+~Hazelcast.Serialization.IClassDefinition.GetFieldType(string fieldName) -> Hazelcast.Serialization.FieldType
+~Hazelcast.Serialization.IClassDefinition.HasField(string fieldName) -> bool
+Hazelcast.Serialization.IClassDefinition.Version.get -> int
+Hazelcast.Serialization.IDataSerializableFactory
+~Hazelcast.Serialization.IDataSerializableFactory.Create(int typeId) -> Hazelcast.Serialization.IIdentifiedDataSerializable
+Hazelcast.Serialization.IFieldDefinition
+Hazelcast.Serialization.IFieldDefinition.ClassId.get -> int
+Hazelcast.Serialization.IFieldDefinition.FactoryId.get -> int
+Hazelcast.Serialization.IFieldDefinition.FieldType.get -> Hazelcast.Serialization.FieldType
+Hazelcast.Serialization.IFieldDefinition.Index.get -> int
+~Hazelcast.Serialization.IFieldDefinition.Name.get -> string
+Hazelcast.Serialization.IFieldDefinition.Version.get -> int
+Hazelcast.Serialization.IIdentifiedDataSerializable
+Hazelcast.Serialization.IIdentifiedDataSerializable.ClassId.get -> int
+Hazelcast.Serialization.IIdentifiedDataSerializable.FactoryId.get -> int
+~Hazelcast.Serialization.IIdentifiedDataSerializable.ReadData(Hazelcast.Serialization.IObjectDataInput input) -> void
+~Hazelcast.Serialization.IIdentifiedDataSerializable.WriteData(Hazelcast.Serialization.IObjectDataOutput output) -> void
+Hazelcast.Serialization.IObjectDataInput
+Hazelcast.Serialization.IObjectDataInput.Endianness.get -> Hazelcast.Core.Endianness
+~Hazelcast.Serialization.IObjectDataInput.Read(byte[] bytes) -> int
+~Hazelcast.Serialization.IObjectDataInput.Read(byte[] bytes, int offset, int count) -> int
+Hazelcast.Serialization.IObjectDataInput.ReadBoolean() -> bool
+~Hazelcast.Serialization.IObjectDataInput.ReadBooleanArray() -> bool[]
+Hazelcast.Serialization.IObjectDataInput.ReadByte() -> byte
+~Hazelcast.Serialization.IObjectDataInput.ReadByteArray() -> byte[]
+Hazelcast.Serialization.IObjectDataInput.ReadChar() -> char
+~Hazelcast.Serialization.IObjectDataInput.ReadCharArray() -> char[]
+Hazelcast.Serialization.IObjectDataInput.ReadDouble() -> double
+~Hazelcast.Serialization.IObjectDataInput.ReadDoubleArray() -> double[]
+Hazelcast.Serialization.IObjectDataInput.ReadFloat() -> float
+~Hazelcast.Serialization.IObjectDataInput.ReadFloatArray() -> float[]
+Hazelcast.Serialization.IObjectDataInput.ReadInt() -> int
+~Hazelcast.Serialization.IObjectDataInput.ReadIntArray() -> int[]
+Hazelcast.Serialization.IObjectDataInput.ReadLong() -> long
+~Hazelcast.Serialization.IObjectDataInput.ReadLongArray() -> long[]
+Hazelcast.Serialization.IObjectDataInput.ReadObject<T>() -> T
+Hazelcast.Serialization.IObjectDataInput.ReadSByte() -> sbyte
+Hazelcast.Serialization.IObjectDataInput.ReadShort() -> short
+~Hazelcast.Serialization.IObjectDataInput.ReadShortArray() -> short[]
+~Hazelcast.Serialization.IObjectDataInput.ReadString() -> string
+~Hazelcast.Serialization.IObjectDataInput.ReadStringArray() -> string[]
+Hazelcast.Serialization.IObjectDataInput.ReadUShort() -> ushort
+Hazelcast.Serialization.IObjectDataInput.SkipBytes(int count) -> int
+Hazelcast.Serialization.IObjectDataOutput
+Hazelcast.Serialization.IObjectDataOutput.Endianness.get -> Hazelcast.Core.Endianness
+~Hazelcast.Serialization.IObjectDataOutput.ToByteArray(int padding = 0) -> byte[]
+~Hazelcast.Serialization.IObjectDataOutput.Write(byte[] bytes) -> void
+~Hazelcast.Serialization.IObjectDataOutput.Write(byte[] bytes, int offset, int count) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteBoolean(bool value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteBooleanArray(bool[] values) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteByte(byte value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteByteArray(byte[] values) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteBytes(string value) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteChar(char value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteCharArray(char[] values) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteChars(string value) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteDouble(double value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteDoubleArray(double[] values) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteFloat(float value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteFloatArray(float[] values) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteInt(int value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteIntArray(int[] values) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteLong(long value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteLongArray(long[] values) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteObject(object value) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteSByte(sbyte value) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteShort(short value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteShortArray(short[] values) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteString(string value) -> void
+~Hazelcast.Serialization.IObjectDataOutput.WriteStringArray(string[] values) -> void
+Hazelcast.Serialization.IObjectDataOutput.WriteUShort(ushort value) -> void
+Hazelcast.Serialization.IPortable
+Hazelcast.Serialization.IPortable.ClassId.get -> int
+Hazelcast.Serialization.IPortable.FactoryId.get -> int
+~Hazelcast.Serialization.IPortable.ReadPortable(Hazelcast.Serialization.IPortableReader reader) -> void
+~Hazelcast.Serialization.IPortable.WritePortable(Hazelcast.Serialization.IPortableWriter writer) -> void
+Hazelcast.Serialization.IPortableFactory
+~Hazelcast.Serialization.IPortableFactory.Create(int classId) -> Hazelcast.Serialization.IPortable
+Hazelcast.Serialization.IPortableReader
+~Hazelcast.Serialization.IPortableReader.GetFieldClassId(string fieldName) -> int
+~Hazelcast.Serialization.IPortableReader.GetFieldNames() -> System.Collections.Generic.ICollection<string>
+~Hazelcast.Serialization.IPortableReader.GetFieldType(string fieldName) -> Hazelcast.Serialization.FieldType
+~Hazelcast.Serialization.IPortableReader.GetRawDataInput() -> Hazelcast.Serialization.IObjectDataInput
+~Hazelcast.Serialization.IPortableReader.HasField(string fieldName) -> bool
+~Hazelcast.Serialization.IPortableReader.ReadBoolean(string fieldName) -> bool
+~Hazelcast.Serialization.IPortableReader.ReadBooleanArray(string fieldName) -> bool[]
+~Hazelcast.Serialization.IPortableReader.ReadByte(string fieldName) -> byte
+~Hazelcast.Serialization.IPortableReader.ReadByteArray(string fieldName) -> byte[]
+~Hazelcast.Serialization.IPortableReader.ReadChar(string fieldName) -> char
+~Hazelcast.Serialization.IPortableReader.ReadCharArray(string fieldName) -> char[]
+~Hazelcast.Serialization.IPortableReader.ReadDouble(string fieldName) -> double
+~Hazelcast.Serialization.IPortableReader.ReadDoubleArray(string fieldName) -> double[]
+~Hazelcast.Serialization.IPortableReader.ReadFloat(string fieldName) -> float
+~Hazelcast.Serialization.IPortableReader.ReadFloatArray(string fieldName) -> float[]
+~Hazelcast.Serialization.IPortableReader.ReadInt(string fieldName) -> int
+~Hazelcast.Serialization.IPortableReader.ReadIntArray(string fieldName) -> int[]
+~Hazelcast.Serialization.IPortableReader.ReadLong(string fieldName) -> long
+~Hazelcast.Serialization.IPortableReader.ReadLongArray(string fieldName) -> long[]
+~Hazelcast.Serialization.IPortableReader.ReadPortable<TPortable>(string fieldName) -> TPortable
+~Hazelcast.Serialization.IPortableReader.ReadPortableArray<TPortable>(string fieldName) -> TPortable[]
+~Hazelcast.Serialization.IPortableReader.ReadShort(string fieldName) -> short
+~Hazelcast.Serialization.IPortableReader.ReadShortArray(string fieldName) -> short[]
+~Hazelcast.Serialization.IPortableReader.ReadString(string fieldName) -> string
+~Hazelcast.Serialization.IPortableReader.ReadStringArray(string fieldName) -> string[]
+Hazelcast.Serialization.IPortableReader.Version.get -> int
+Hazelcast.Serialization.IPortableWriter
+~Hazelcast.Serialization.IPortableWriter.GetRawDataOutput() -> Hazelcast.Serialization.IObjectDataOutput
+~Hazelcast.Serialization.IPortableWriter.WriteBoolean(string fieldName, bool value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteBooleanArray(string fieldName, bool[] bools) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteByte(string fieldName, byte value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteByteArray(string fieldName, byte[] bytes) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteChar(string fieldName, char value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteCharArray(string fieldName, char[] chars) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteDouble(string fieldName, double value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteDoubleArray(string fieldName, double[] values) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteFloat(string fieldName, float value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteFloatArray(string fieldName, float[] values) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteInt(string fieldName, int value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteIntArray(string fieldName, int[] ints) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteLong(string fieldName, long value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteLongArray(string fieldName, long[] longs) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteNullPortable(string fieldName, int factoryId, int classId) -> void
+~Hazelcast.Serialization.IPortableWriter.WritePortable(string fieldName, Hazelcast.Serialization.IPortable portable) -> void
+~Hazelcast.Serialization.IPortableWriter.WritePortableArray<TPortable>(string fieldName, TPortable[] portables) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteShort(string fieldName, short value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteShortArray(string fieldName, short[] values) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteString(string fieldName, string value) -> void
+~Hazelcast.Serialization.IPortableWriter.WriteStringArray(string fieldName, string[] strings) -> void
+Hazelcast.Serialization.ISerializer
+Hazelcast.Serialization.ISerializer.TypeId.get -> int
+Hazelcast.Serialization.ISerializerHook<T>
+Hazelcast.Serialization.ISerializerHook<T>.CreateSerializer() -> Hazelcast.Serialization.ISerializer
+Hazelcast.Serialization.ISerializerHook<T>.GetSerializationType() -> System.Type
+Hazelcast.Serialization.ISerializerHook<T>.IsOverwritable() -> bool
+Hazelcast.Serialization.IStreamSerializer<T>
+~Hazelcast.Serialization.IStreamSerializer<T>.Read(Hazelcast.Serialization.IObjectDataInput input) -> T
+~Hazelcast.Serialization.IStreamSerializer<T>.Write(Hazelcast.Serialization.IObjectDataOutput output, T obj) -> void
+Hazelcast.Serialization.IVersionedPortable
+Hazelcast.Serialization.IVersionedPortable.ClassVersion.get -> int
+Hazelcast.Serialization.JavaClass
+~Hazelcast.Serialization.JavaClass.Equals(Hazelcast.Serialization.JavaClass other) -> bool
+~Hazelcast.Serialization.JavaClass.JavaClass(string name) -> void
+~Hazelcast.Serialization.JavaClass.Name.get -> string
+Hazelcast.Serialization.SerializationException
+Hazelcast.Serialization.SerializationException.SerializationException() -> void
+Hazelcast.Serialization.SerializationException.SerializationException(string! message) -> void
+Hazelcast.Serialization.SerializationException.SerializationException(string! message, System.Exception! innerException) -> void
+Hazelcast.Serialization.SerializationException.SerializationException(System.Exception! innerException) -> void
+Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactory(int factoryId, Hazelcast.Serialization.IDataSerializableFactory factory) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass(int factoryId, string factoryTypeName) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddDataSerializableFactoryClass(int factoryId, System.Type factoryType) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddPortableFactory(int factoryId, Hazelcast.Serialization.IPortableFactory factory) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddPortableFactory(int factoryId, string factoryTypeName) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.AddPortableFactory(int factoryId, System.Type factoryType) -> Hazelcast.Serialization.SerializationOptions
+~Hazelcast.Serialization.SerializationOptions.ClassDefinitions.get -> System.Collections.Generic.ICollection<Hazelcast.Serialization.IClassDefinition>
+~Hazelcast.Serialization.SerializationOptions.DataSerializableFactories.get -> System.Collections.Generic.ICollection<Hazelcast.Serialization.FactoryOptions<Hazelcast.Serialization.IDataSerializableFactory>>
+Hazelcast.Serialization.SerializationOptions.Endianness.get -> Hazelcast.Core.Endianness
+Hazelcast.Serialization.SerializationOptions.Endianness.set -> void
+~Hazelcast.Serialization.SerializationOptions.GlobalSerializer.get -> Hazelcast.Serialization.GlobalSerializerOptions
+~Hazelcast.Serialization.SerializationOptions.GlobalSerializer.set -> void
+~Hazelcast.Serialization.SerializationOptions.PortableFactories.get -> System.Collections.Generic.ICollection<Hazelcast.Serialization.FactoryOptions<Hazelcast.Serialization.IPortableFactory>>
+Hazelcast.Serialization.SerializationOptions.PortableVersion.get -> int
+Hazelcast.Serialization.SerializationOptions.PortableVersion.set -> void
+Hazelcast.Serialization.SerializationOptions.SerializationOptions() -> void
+~Hazelcast.Serialization.SerializationOptions.Serializers.get -> System.Collections.Generic.ICollection<Hazelcast.Serialization.SerializerOptions>
+Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions.get -> bool
+Hazelcast.Serialization.SerializationOptions.ValidateClassDefinitions.set -> void
+Hazelcast.Serialization.SerializerOptions
+~Hazelcast.Serialization.SerializerOptions.SerializedType.get -> System.Type
+~Hazelcast.Serialization.SerializerOptions.SerializedType.set -> void
+Hazelcast.Serialization.SerializerOptions.SerializerOptions() -> void
+~Hazelcast.Serialization.SerializerOptions.SerializerOptions(Hazelcast.Serialization.SerializerOptions other, bool shallow) -> void
+Hazelcast.Sql.HazelcastSqlException
+Hazelcast.Sql.HazelcastSqlException.ClientId.get -> System.Guid
+~Hazelcast.Sql.HazelcastSqlException.HazelcastSqlException(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+Hazelcast.Sql.HazelcastSqlException.MemberId.get -> System.Guid
+~Hazelcast.Sql.HazelcastSqlException.Suggestion.get -> string
+Hazelcast.Sql.ISqlQueryResult
+Hazelcast.Sql.ISqlService
+~Hazelcast.Sql.ISqlService.ExecuteCommandAsync(string sql, object[] parameters = null, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>
+~Hazelcast.Sql.ISqlService.ExecuteQueryAsync(string sql, object[] parameters = null, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+Hazelcast.Sql.SqlColumnMetadata
+Hazelcast.Sql.SqlColumnMetadata.IsNullable.get -> bool
+~Hazelcast.Sql.SqlColumnMetadata.Name.get -> string
+~Hazelcast.Sql.SqlColumnMetadata.SqlColumnMetadata(string name, Hazelcast.Sql.SqlColumnType type, bool isNullable) -> void
+Hazelcast.Sql.SqlColumnMetadata.Type.get -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.BigInt = 5 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Boolean = 1 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Date = 9 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Decimal = 6 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Double = 8 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Integer = 4 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Json = 15 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Null = 14 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Object = 13 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Real = 7 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.SmallInt = 3 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Time = 10 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Timestamp = 11 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.TimestampWithTimeZone = 12 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.TinyInt = 2 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlColumnType.Varchar = 0 -> Hazelcast.Sql.SqlColumnType
+Hazelcast.Sql.SqlRow
+Hazelcast.Sql.SqlRow.GetColumn<T>(int index) -> T
+~Hazelcast.Sql.SqlRow.GetColumn<T>(string name) -> T
+Hazelcast.Sql.SqlRow.GetKey<T>() -> T
+Hazelcast.Sql.SqlRow.GetValue<T>() -> T
+~Hazelcast.Sql.SqlRow.Metadata.get -> Hazelcast.Sql.SqlRowMetadata
+~Hazelcast.Sql.SqlRow.SqlRow(System.Collections.Generic.IList<object> values, Hazelcast.Sql.SqlRowMetadata metadata) -> void
+Hazelcast.Sql.SqlRowMetadata
+~Hazelcast.Sql.SqlRowMetadata.Columns.get -> System.Collections.Generic.IEnumerable<Hazelcast.Sql.SqlColumnMetadata>
+~Hazelcast.Sql.SqlRowMetadata.GetColumnIndexByName(string name) -> int
+~Hazelcast.Sql.SqlRowMetadata.this[int index].get -> Hazelcast.Sql.SqlColumnMetadata
+Hazelcast.Sql.SqlServiceExtensions
+Hazelcast.Sql.SqlStatementOptions
+Hazelcast.Sql.SqlStatementOptions.CursorBufferSize.get -> int
+Hazelcast.Sql.SqlStatementOptions.CursorBufferSize.set -> void
+~Hazelcast.Sql.SqlStatementOptions.Schema.get -> string
+~Hazelcast.Sql.SqlStatementOptions.Schema.set -> void
+Hazelcast.Sql.SqlStatementOptions.SqlStatementOptions() -> void
+Hazelcast.Sql.SqlStatementOptions.Timeout.get -> System.TimeSpan
+Hazelcast.Sql.SqlStatementOptions.Timeout.set -> void
+Hazelcast.StateChangedEventArgs
+Hazelcast.StateChangedEventArgs.State.get -> Hazelcast.ClientState
+Hazelcast.StateChangedEventArgs.StateChangedEventArgs(Hazelcast.ClientState state) -> void
+Hazelcast.Transactions.ITransactionContext
+~Hazelcast.Transactions.ITransactionContext.CommitAsync() -> System.Threading.Tasks.Task
+Hazelcast.Transactions.ITransactionContext.Complete() -> void
+~Hazelcast.Transactions.ITransactionContext.GetListAsync<TItem>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTxList<TItem>>
+~Hazelcast.Transactions.ITransactionContext.GetMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTxMap<TKey, TValue>>
+~Hazelcast.Transactions.ITransactionContext.GetMultiMapAsync<TKey, TValue>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTxMultiMap<TKey, TValue>>
+~Hazelcast.Transactions.ITransactionContext.GetQueueAsync<TItem>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTxQueue<TItem>>
+~Hazelcast.Transactions.ITransactionContext.GetSetAsync<TItem>(string name) -> System.Threading.Tasks.Task<Hazelcast.DistributedObjects.IHTxSet<TItem>>
+~Hazelcast.Transactions.ITransactionContext.RollbackAsync() -> System.Threading.Tasks.Task
+Hazelcast.Transactions.ITransactionContext.TransactionId.get -> System.Guid
+Hazelcast.Transactions.TransactionOptions
+Hazelcast.Transactions.TransactionOptions.Durability.get -> int
+Hazelcast.Transactions.TransactionOptions.Durability.set -> void
+Hazelcast.Transactions.TransactionOptions.Timeout.get -> System.TimeSpan
+Hazelcast.Transactions.TransactionOptions.Timeout.set -> void
+Hazelcast.Transactions.TransactionOptions.TransactionOptions() -> void
+Hazelcast.Transactions.TransactionOptions.TransactionType
+Hazelcast.Transactions.TransactionOptions.TransactionType.OnePhase = 2 -> Hazelcast.Transactions.TransactionOptions.TransactionType
+Hazelcast.Transactions.TransactionOptions.TransactionType.TwoPhase = 1 -> Hazelcast.Transactions.TransactionOptions.TransactionType
+Hazelcast.Transactions.TransactionOptions.Type.get -> Hazelcast.Transactions.TransactionOptions.TransactionType
+Hazelcast.Transactions.TransactionOptions.Type.set -> void
+override Hazelcast.Clustering.LoadBalancing.RandomLoadBalancer.GetMember() -> System.Guid
+override Hazelcast.Clustering.LoadBalancing.RoundRobinLoadBalancer.GetMember() -> System.Guid
+override Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.get -> int
+override Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.GetMember() -> System.Guid
+~override Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.SetMembers(System.Collections.Generic.IEnumerable<System.Guid> memberIds) -> void
+~override Hazelcast.Core.HazelcastJsonValue.Equals(object obj) -> bool
+override Hazelcast.Core.HazelcastJsonValue.GetHashCode() -> int
+~override Hazelcast.Core.HazelcastJsonValue.ToString() -> string
+~override Hazelcast.Exceptions.ClientOfflineException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+override Hazelcast.Models.HBigDecimal.Equals(object? obj) -> bool
+override Hazelcast.Models.HBigDecimal.GetHashCode() -> int
+override Hazelcast.Models.HBigDecimal.ToString() -> string!
+override Hazelcast.Models.HLocalDate.Equals(object? obj) -> bool
+override Hazelcast.Models.HLocalDate.GetHashCode() -> int
+override Hazelcast.Models.HLocalDate.ToString() -> string!
+override Hazelcast.Models.HLocalDateTime.Equals(object? obj) -> bool
+override Hazelcast.Models.HLocalDateTime.GetHashCode() -> int
+override Hazelcast.Models.HLocalDateTime.ToString() -> string!
+override Hazelcast.Models.HLocalTime.Equals(object? obj) -> bool
+override Hazelcast.Models.HLocalTime.GetHashCode() -> int
+override Hazelcast.Models.HLocalTime.ToString() -> string!
+override Hazelcast.Models.HOffsetDateTime.Equals(object? obj) -> bool
+override Hazelcast.Models.HOffsetDateTime.GetHashCode() -> int
+override Hazelcast.Models.HOffsetDateTime.ToString() -> string!
+~override Hazelcast.Models.IndexOptions.ToString() -> string
+~override Hazelcast.Models.MemberInfo.Equals(object obj) -> bool
+override Hazelcast.Models.MemberInfo.GetHashCode() -> int
+~override Hazelcast.Models.MemberInfo.ToString() -> string
+override Hazelcast.Models.MemberInfoState.Equals(object? obj) -> bool
+override Hazelcast.Models.MemberInfoState.GetHashCode() -> int
+~override Hazelcast.Models.MemberVersion.Equals(object obj) -> bool
+override Hazelcast.Models.MemberVersion.GetHashCode() -> int
+~override Hazelcast.Models.MemberVersion.ToString() -> string
+~override Hazelcast.NearCaching.NearCacheOptions.ToString() -> string
+~override Hazelcast.Networking.NetworkAddress.Equals(object obj) -> bool
+override Hazelcast.Networking.NetworkAddress.GetHashCode() -> int
+~override Hazelcast.Networking.NetworkAddress.ToString() -> string
+~override Hazelcast.Networking.SslOptions.ToString() -> string
+~override Hazelcast.Protocol.RemoteException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Protocol.RemoteException.ToString() -> string
+~override Hazelcast.Security.KerberosCredentials.ToString() -> string
+~override Hazelcast.Security.TokenCredentials.ToString() -> string
+~override Hazelcast.Security.UsernamePasswordCredentials.ToString() -> string
+~override Hazelcast.Serialization.JavaClass.Equals(object obj) -> bool
+override Hazelcast.Serialization.JavaClass.GetHashCode() -> int
+~override Hazelcast.Serialization.JavaClass.ToString() -> string
+~override Hazelcast.Sql.HazelcastSqlException.GetObjectData(System.Runtime.Serialization.SerializationInfo info, System.Runtime.Serialization.StreamingContext context) -> void
+~override Hazelcast.Sql.SqlColumnMetadata.ToString() -> string
+~static Hazelcast.Aggregation.Aggregators.BigIntegerSum() -> Hazelcast.Aggregation.IAggregator<System.Numerics.BigInteger>
+~static Hazelcast.Aggregation.Aggregators.BigIntegerSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<System.Numerics.BigInteger>
+~static Hazelcast.Aggregation.Aggregators.Count() -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.Count(string attributePath) -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.DoubleAvg() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.DoubleAvg(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.DoubleSum() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.DoubleSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.FixedPointSum() -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.FixedPointSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.FloatingPointSum() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.FloatingPointSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.IntegerAvg() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.IntegerAvg(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.IntegerSum() -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.IntegerSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.LongAvg() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.LongAvg(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.LongSum() -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.LongSum(string attributePath) -> Hazelcast.Aggregation.IAggregator<long>
+~static Hazelcast.Aggregation.Aggregators.Max<TResult>() -> Hazelcast.Aggregation.IAggregator<TResult>
+~static Hazelcast.Aggregation.Aggregators.Max<TResult>(string attributePath) -> Hazelcast.Aggregation.IAggregator<TResult>
+~static Hazelcast.Aggregation.Aggregators.Min<TResult>() -> Hazelcast.Aggregation.IAggregator<TResult>
+~static Hazelcast.Aggregation.Aggregators.Min<TResult>(string attributePath) -> Hazelcast.Aggregation.IAggregator<TResult>
+~static Hazelcast.Aggregation.Aggregators.NumberAvg() -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Aggregation.Aggregators.NumberAvg(string attributePath) -> Hazelcast.Aggregation.IAggregator<double>
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcast(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder, string[] args, System.Collections.Generic.IDictionary<string, string> switchMappings = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> defaults = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastAndDefaults(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder, string[] args, System.Collections.Generic.IDictionary<string, string> switchMappings = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> defaults = null, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> keyValues = null, string optionsFilePath = null, string optionsFileName = null, string environmentName = null) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastCommandLine(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder, string[] args, System.Collections.Generic.IDictionary<string, string> switchMappings = null) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastEnvironmentVariables(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastFile(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder, string filePath, string fileName, string environmentName) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Configuration.ConfigurationBuilderExtensions.AddHazelcastInMemoryCollection(this Microsoft.Extensions.Configuration.IConfigurationBuilder configurationBuilder, System.Collections.Generic.IEnumerable<System.Collections.Generic.KeyValuePair<string, string>> initialData) -> Microsoft.Extensions.Configuration.IConfigurationBuilder
+~static Hazelcast.Core.AsyncContext.Current.get -> Hazelcast.Core.AsyncContext
+~static Hazelcast.Core.AsyncContext.New() -> System.IDisposable
+static Hazelcast.Core.ClientStateExtensions.IsActiveState(this Hazelcast.ClientState state) -> bool
+static Hazelcast.Core.EndiannessExtensions.IsBigEndian(this Hazelcast.Core.Endianness endianness) -> bool
+static Hazelcast.Core.EndiannessExtensions.IsLittleEndian(this Hazelcast.Core.Endianness endianness) -> bool
+static Hazelcast.Core.EndiannessExtensions.NativeEndianness.get -> Hazelcast.Core.Endianness
+~static Hazelcast.Core.SerializationInfoExtensions.GetGuid(this System.Runtime.Serialization.SerializationInfo info, string name) -> System.Guid
+~static Hazelcast.Core.ServiceFactory.CreateInstance(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
+~static Hazelcast.Core.ServiceFactory.CreateInstance(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
+static Hazelcast.Core.ServiceFactory.CreateInstance<T>(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
+~static Hazelcast.HazelcastClientFactory.GetNewStartingClient(Hazelcast.HazelcastOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
+~static Hazelcast.HazelcastClientFactory.GetNewStartingClient(System.Action<Hazelcast.HazelcastOptions> configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
+static Hazelcast.HazelcastClientFactory.GetNewStartingClient(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
+~static Hazelcast.HazelcastClientFactory.GetNewStartingFailoverClient(Hazelcast.HazelcastFailoverOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
+~static Hazelcast.HazelcastClientFactory.GetNewStartingFailoverClient(System.Action<Hazelcast.HazelcastFailoverOptions> configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
+~static Hazelcast.HazelcastClientFactory.StartNewClientAsync(Hazelcast.HazelcastOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Hazelcast.IHazelcastClient>
+~static Hazelcast.HazelcastClientFactory.StartNewClientAsync(System.Action<Hazelcast.HazelcastOptions> configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Hazelcast.IHazelcastClient>
+~static Hazelcast.HazelcastClientFactory.StartNewClientAsync(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Hazelcast.IHazelcastClient>
+~static Hazelcast.HazelcastClientFactory.StartNewFailoverClientAsync(Hazelcast.HazelcastFailoverOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Hazelcast.IHazelcastClient>
+~static Hazelcast.HazelcastClientFactory.StartNewFailoverClientAsync(System.Action<Hazelcast.HazelcastFailoverOptions> configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.ValueTask<Hazelcast.IHazelcastClient>
+static Hazelcast.Models.HBigDecimal.explicit operator decimal(Hazelcast.Models.HBigDecimal value) -> decimal
+static Hazelcast.Models.HBigDecimal.explicit operator Hazelcast.Models.HBigDecimal(decimal value) -> Hazelcast.Models.HBigDecimal
+static Hazelcast.Models.HBigDecimal.operator !=(Hazelcast.Models.HBigDecimal left, Hazelcast.Models.HBigDecimal right) -> bool
+static Hazelcast.Models.HBigDecimal.operator ==(Hazelcast.Models.HBigDecimal left, Hazelcast.Models.HBigDecimal right) -> bool
+static Hazelcast.Models.HBigDecimal.Parse(string! s) -> Hazelcast.Models.HBigDecimal
+static Hazelcast.Models.HBigDecimal.Parse(string! s, System.Globalization.CultureInfo! cultureInfo) -> Hazelcast.Models.HBigDecimal
+static Hazelcast.Models.HBigDecimal.TryParse(string! s, out Hazelcast.Models.HBigDecimal bigDecimal) -> bool
+static Hazelcast.Models.HBigDecimal.TryParse(string? s, System.Globalization.CultureInfo! cultureInfo, out Hazelcast.Models.HBigDecimal bigDecimal) -> bool
+static Hazelcast.Models.HLocalDate.explicit operator Hazelcast.Models.HLocalDate(System.DateTime dateTime) -> Hazelcast.Models.HLocalDate
+static Hazelcast.Models.HLocalDate.explicit operator System.DateTime(Hazelcast.Models.HLocalDate localDate) -> System.DateTime
+static Hazelcast.Models.HLocalDate.operator !=(Hazelcast.Models.HLocalDate left, Hazelcast.Models.HLocalDate right) -> bool
+static Hazelcast.Models.HLocalDate.operator ==(Hazelcast.Models.HLocalDate left, Hazelcast.Models.HLocalDate right) -> bool
+static Hazelcast.Models.HLocalDate.Parse(string! s) -> Hazelcast.Models.HLocalDate
+static Hazelcast.Models.HLocalDate.TryParse(string! s, out Hazelcast.Models.HLocalDate localDate) -> bool
+static Hazelcast.Models.HLocalDateTime.explicit operator Hazelcast.Models.HLocalDateTime(System.DateTime dateTime) -> Hazelcast.Models.HLocalDateTime
+static Hazelcast.Models.HLocalDateTime.explicit operator System.DateTime(Hazelcast.Models.HLocalDateTime localDateTime) -> System.DateTime
+static Hazelcast.Models.HLocalDateTime.operator !=(Hazelcast.Models.HLocalDateTime left, Hazelcast.Models.HLocalDateTime right) -> bool
+static Hazelcast.Models.HLocalDateTime.operator ==(Hazelcast.Models.HLocalDateTime left, Hazelcast.Models.HLocalDateTime right) -> bool
+static Hazelcast.Models.HLocalDateTime.Parse(string! s) -> Hazelcast.Models.HLocalDateTime
+static Hazelcast.Models.HLocalDateTime.TryParse(string? s, out Hazelcast.Models.HLocalDateTime localDateTime) -> bool
+static Hazelcast.Models.HLocalTime.explicit operator Hazelcast.Models.HLocalTime(System.DateTime dateTime) -> Hazelcast.Models.HLocalTime
+static Hazelcast.Models.HLocalTime.explicit operator Hazelcast.Models.HLocalTime(System.TimeSpan timeSpan) -> Hazelcast.Models.HLocalTime
+static Hazelcast.Models.HLocalTime.explicit operator System.TimeSpan(Hazelcast.Models.HLocalTime localTime) -> System.TimeSpan
+static Hazelcast.Models.HLocalTime.operator !=(Hazelcast.Models.HLocalTime left, Hazelcast.Models.HLocalTime right) -> bool
+static Hazelcast.Models.HLocalTime.operator ==(Hazelcast.Models.HLocalTime left, Hazelcast.Models.HLocalTime right) -> bool
+static Hazelcast.Models.HLocalTime.Parse(string! s) -> Hazelcast.Models.HLocalTime
+static Hazelcast.Models.HLocalTime.TryParse(string! s, out Hazelcast.Models.HLocalTime localTime) -> bool
+static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset dateTimeOffset) -> Hazelcast.Models.HOffsetDateTime
+static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime offsetDateTime) -> System.DateTimeOffset
+static Hazelcast.Models.HOffsetDateTime.operator !=(Hazelcast.Models.HOffsetDateTime left, Hazelcast.Models.HOffsetDateTime right) -> bool
+static Hazelcast.Models.HOffsetDateTime.operator ==(Hazelcast.Models.HOffsetDateTime left, Hazelcast.Models.HOffsetDateTime right) -> bool
+static Hazelcast.Models.HOffsetDateTime.Parse(string! s) -> Hazelcast.Models.HOffsetDateTime
+static Hazelcast.Models.HOffsetDateTime.TryParse(string! s, out Hazelcast.Models.HOffsetDateTime offsetDateTime) -> bool
+~static Hazelcast.Models.MemberInfo.operator !=(Hazelcast.Models.MemberInfo left, Hazelcast.Models.MemberInfo right) -> bool
+~static Hazelcast.Models.MemberInfo.operator ==(Hazelcast.Models.MemberInfo left, Hazelcast.Models.MemberInfo right) -> bool
+static Hazelcast.Models.MemberInfoState.operator !=(Hazelcast.Models.MemberInfoState left, Hazelcast.Models.MemberInfoState right) -> bool
+static Hazelcast.Models.MemberInfoState.operator ==(Hazelcast.Models.MemberInfoState left, Hazelcast.Models.MemberInfoState right) -> bool
+~static Hazelcast.Models.MemberVersion.operator !=(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Models.MemberVersion.operator <(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Models.MemberVersion.operator <=(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Models.MemberVersion.operator ==(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Models.MemberVersion.operator >(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Models.MemberVersion.operator >=(Hazelcast.Models.MemberVersion left, Hazelcast.Models.MemberVersion right) -> bool
+~static Hazelcast.Networking.NetworkAddress.operator !=(Hazelcast.Networking.NetworkAddress a1, Hazelcast.Networking.NetworkAddress a2) -> bool
+~static Hazelcast.Networking.NetworkAddress.operator ==(Hazelcast.Networking.NetworkAddress a1, Hazelcast.Networking.NetworkAddress a2) -> bool
+~static Hazelcast.Projection.Projections.MultipleAttribute(params string[] attributePaths) -> Hazelcast.Projection.IProjection
+~static Hazelcast.Projection.Projections.SingleAttribute(string attributePath) -> Hazelcast.Projection.IProjection
+~static Hazelcast.Query.Predicates.And(params Hazelcast.Query.IPredicate[] predicates) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Between(string name, object lowerBound, object upperBound) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.EqualTo(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.False() -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.GreaterThan(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.GreaterThanOrEqualTo(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.ILike(string name, string pattern) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.In(string name, params object[] values) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.In<T>(string name, System.Collections.Generic.IEnumerable<T> values) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.InstanceOf(string fullJavaClassName) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Key() -> Hazelcast.Query.PredicateBuilder
+~static Hazelcast.Query.Predicates.Key(string name) -> Hazelcast.Query.PredicateBuilder
+~static Hazelcast.Query.Predicates.LessThan(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.LessThanOrEqualTo(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Like(string name, string pattern) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Match(string name, string regex) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Not(Hazelcast.Query.IPredicate predicate) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.NotEqualTo(string name, object value) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Or(params Hazelcast.Query.IPredicate[] predicates) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Page(int pageSize) -> Hazelcast.Query.IPagingPredicate
+~static Hazelcast.Query.Predicates.Page(int pageSize, Hazelcast.Query.IPredicate predicate) -> Hazelcast.Query.IPagingPredicate
+~static Hazelcast.Query.Predicates.Page(int pageSize, Hazelcast.Query.IPredicate predicate, System.Collections.Generic.IComparer<System.Collections.Generic.KeyValuePair<object, object>> comparer) -> Hazelcast.Query.IPagingPredicate
+~static Hazelcast.Query.Predicates.Page(int pageSize, System.Collections.Generic.IComparer<System.Collections.Generic.KeyValuePair<object, object>> comparer) -> Hazelcast.Query.IPagingPredicate
+~static Hazelcast.Query.Predicates.Partition(object partitionKey, Hazelcast.Query.IPredicate predicate) -> Hazelcast.Query.IPartitionPredicate
+~static Hazelcast.Query.Predicates.Sql(string sql) -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.True() -> Hazelcast.Query.IPredicate
+~static Hazelcast.Query.Predicates.Value() -> Hazelcast.Query.PredicateBuilder
+~static Hazelcast.Query.Predicates.Value(string name) -> Hazelcast.Query.PredicateBuilder
+~static Hazelcast.Serialization.JavaClass.Equals(Hazelcast.Serialization.JavaClass left, Hazelcast.Serialization.JavaClass right) -> bool
+~static Hazelcast.Sql.SqlServiceExtensions.ExecuteCommandAsync(this Hazelcast.Sql.ISqlService service, string sql, Hazelcast.Sql.SqlStatementOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<long>
+~static Hazelcast.Sql.SqlServiceExtensions.ExecuteCommandAsync(this Hazelcast.Sql.ISqlService service, string sql, params object[] parameters) -> System.Threading.Tasks.Task<long>
+~static Hazelcast.Sql.SqlServiceExtensions.ExecuteQueryAsync(this Hazelcast.Sql.ISqlService service, string sql, Hazelcast.Sql.SqlStatementOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+~static Hazelcast.Sql.SqlServiceExtensions.ExecuteQueryAsync(this Hazelcast.Sql.ISqlService service, string sql, params object[] parameters) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+~static Hazelcast.Sql.SqlServiceExtensions.ExecuteQueryAsync(this Hazelcast.Sql.ISqlService service, string sql, System.Threading.CancellationToken cancellationToken) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+static readonly Hazelcast.Models.HBigDecimal.MinusOne -> Hazelcast.Models.HBigDecimal
+static readonly Hazelcast.Models.HBigDecimal.One -> Hazelcast.Models.HBigDecimal
+static readonly Hazelcast.Models.HBigDecimal.Ten -> Hazelcast.Models.HBigDecimal
+static readonly Hazelcast.Models.HBigDecimal.Zero -> Hazelcast.Models.HBigDecimal
+static readonly Hazelcast.Models.HLocalDate.Max -> Hazelcast.Models.HLocalDate
+static readonly Hazelcast.Models.HLocalDate.Min -> Hazelcast.Models.HLocalDate
+static readonly Hazelcast.Models.HLocalDateTime.Max -> Hazelcast.Models.HLocalDateTime
+static readonly Hazelcast.Models.HLocalDateTime.Min -> Hazelcast.Models.HLocalDateTime
+static readonly Hazelcast.Models.HLocalTime.Max -> Hazelcast.Models.HLocalTime
+static readonly Hazelcast.Models.HLocalTime.Midnight -> Hazelcast.Models.HLocalTime
+static readonly Hazelcast.Models.HLocalTime.Min -> Hazelcast.Models.HLocalTime
+static readonly Hazelcast.Models.HLocalTime.Noon -> Hazelcast.Models.HLocalTime
+static readonly Hazelcast.Models.HOffsetDateTime.Max -> Hazelcast.Models.HOffsetDateTime
+static readonly Hazelcast.Models.HOffsetDateTime.MaxOffset -> System.TimeSpan
+static readonly Hazelcast.Models.HOffsetDateTime.Min -> Hazelcast.Models.HOffsetDateTime
+static readonly Hazelcast.Models.HOffsetDateTime.MinOffset -> System.TimeSpan
+static readonly Hazelcast.Models.IndexOptions.DefaultType -> Hazelcast.Models.IndexType
+~static readonly Hazelcast.Sql.SqlStatementOptions.Default -> Hazelcast.Sql.SqlStatementOptions
+virtual Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.Count.get -> int
+~virtual Hazelcast.Clustering.LoadBalancing.LoadBalancerBase.SetMembers(System.Collections.Generic.IEnumerable<System.Guid> memberIds) -> void
+virtual Hazelcast.Core.SingletonServiceFactory<TService>.Dispose(bool disposing) -> void
+~virtual Hazelcast.Query.PredicateBuilder.IsBetween(object lowerBound, object upperBound) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsEqualTo(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsGreaterThan(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsGreaterThanOrEqualTo(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsILike(string pattern) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsIn(params object[] values) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsLessThan(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsLessThanOrEqualTo(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsLike(string pattern) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.IsNotEqualTo(object value) -> Hazelcast.Query.IPredicate
+~virtual Hazelcast.Query.PredicateBuilder.Matches(string regex) -> Hazelcast.Query.IPredicate
+virtual Hazelcast.Security.StaticCredentialsFactory.Dispose(bool disposing) -> void
