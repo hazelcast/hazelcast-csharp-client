@@ -232,6 +232,5 @@ namespace Hazelcast.Models
         public static bool operator !=(HLocalTime left, HLocalTime right) => !left.Equals(right);
 
         #endregion
-
     }
 }

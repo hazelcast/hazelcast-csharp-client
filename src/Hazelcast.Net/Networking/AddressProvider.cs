@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using Hazelcast.Configuration;
-using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
@@ -39,13 +38,10 @@ namespace Hazelcast.Networking
         private IAddressProviderSource _source;
         private readonly ILogger _logger;
 
-        // maps internal addresses to public addresses
-        private IDictionary<NetworkAddress, NetworkAddress> _internalToPublicMap;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="AddressProvider"/> class.
         /// </summary>
-        /// <param name="networkingOptions">The networking configuration.</param>
+        /// <param name="source">The address source.</param>
         /// <param name="loggerFactory">A logger factory.</param>
         public AddressProvider(IAddressProviderSource source, ILoggerFactory loggerFactory)
         {
@@ -78,19 +74,12 @@ namespace Hazelcast.Networking
         /// </summary>
         public bool HasMap => _source.Maps;
 
-        // ensures that we have a map, returns the map + whether it's a new map
-        private (bool NewMap, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap(bool forceRenew)
-        {
-            if (!forceRenew && _internalToPublicMap != null) return (false, _internalToPublicMap);
-            _internalToPublicMap = _source.CreateInternalToPublicMap() ?? throw new HazelcastException("Failed to obtain addresses.");
-            return (true, _internalToPublicMap);
-        }
-
         /// <summary>
         /// Gets known possible addresses for a cluster.
         /// </summary>
         /// <returns>All addresses.</returns>
-        public IEnumerable<NetworkAddress> GetAddresses() => EnsureMap(true).Map.Values;
+        public (IEnumerable<NetworkAddress> Primary, IEnumerable<NetworkAddress> Secondary) GetAddresses()
+            => _source.GetAddresses(true);
 
         /// <summary>
         /// Gets <see cref="IAddressProviderSource"/>
@@ -100,7 +89,7 @@ namespace Hazelcast.Networking
             get => _source;
             internal set {
                 _source = value;
-                EnsureMap(true);
+                //_source.EnsureMap(true); // FIXME what's the point?
             }
         }
 
@@ -111,13 +100,11 @@ namespace Hazelcast.Networking
         /// <returns>The public address, or null if no address was found.</returns>
         public NetworkAddress Map(NetworkAddress address)
         {
-            if (address == null || !HasMap)
+            if (address == null || !_source.Maps)
                 return address;
 
-            var (fresh, map) = EnsureMap(false);
-
             // if we can map, return
-            if (map.TryGetValue(address, out var publicAddress))
+            if (_source.TryMap(address, false, out var publicAddress, out var fresh))
                 return publicAddress;
 
             if (fresh)
@@ -127,15 +114,11 @@ namespace Hazelcast.Networking
                 return null;
             }
 
-            // otherwise, re-scan
+            // otherwise, try again, force refresh of the map
+            // TODO: throttle?
             _logger.LogDebug($"Address {address} was not found in the map, re-scanning.");
 
-            // if the map is not 'fresh' force-recreate the map and try again, else give up
-            // TODO: throttle?
-            map = EnsureMap(true).Map;
-
-            // now try again
-            if (map.TryGetValue(address, out publicAddress))
+            if (_source.TryMap(address, true, out publicAddress, out _))
                 return publicAddress;
 
             _logger.LogDebug($"Address {address} was not found in the map.");

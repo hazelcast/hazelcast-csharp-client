@@ -54,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapGetCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<TValue> GetForUpdateAsync(TKey key)
@@ -63,7 +63,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapGetForUpdateCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapGetForUpdateCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<bool> IsEmptyAsync()
@@ -111,7 +111,7 @@ namespace Hazelcast.DistributedObjects.Impl
              var requestMessage = TransactionalMapPutCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData, timeToLiveMs);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapPutCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<TValue> PutIfAbsentAsync(TKey key, TValue value)
@@ -121,7 +121,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapPutIfAbsentCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<TValue> RemoveAsync(TKey key)
@@ -130,7 +130,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapRemoveCodec.EncodeRequest(Name, TransactionId, ContextId, keyData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapRemoveCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
 
@@ -149,7 +149,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapReplaceCodec.EncodeRequest(Name, TransactionId, ContextId, keyData, valueData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapReplaceCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         public async Task<bool> ReplaceAsync(TKey key, TValue oldValue, TValue newValue)

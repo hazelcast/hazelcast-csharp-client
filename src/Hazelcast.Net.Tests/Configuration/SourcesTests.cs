@@ -185,5 +185,33 @@ namespace Hazelcast.Tests.Configuration
             Assert.That(configuration["hazelcast:arg41"], Is.EqualTo("value41"));
             Assert.That(configuration["hazelcast:arg42"], Is.EqualTo("value42"));
         }
+
+                [Test]
+        public void All3()
+        {
+            var path = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options"));
+
+            Environment.SetEnvironmentVariable("hazelcast.arg21", "value21");
+            Environment.SetEnvironmentVariable("hazelcast__arg22", "value22");
+
+            var configuration = new ConfigurationBuilder()
+                .AddCommandLine(CommandLineArgs) // In a normal flow, commandline args will be provided by framework.
+                .AddEnvironmentVariables()                
+                .AddHazelcast(CommandLineArgs, null, keyValues: InMemoryData, optionsFilePath: path, environmentName: "Testing")
+                .Build();
+
+            for (var i = 1; i <= 8; i++)
+                Assert.That(configuration["hazelcast:arg" + i], Is.EqualTo("value" + i));
+
+            Assert.That(configuration["hazelcast:arg11"], Is.EqualTo("value11"));
+            Assert.That(configuration["hazelcast:arg12"], Is.EqualTo("value12"));
+
+            Assert.That(configuration["hazelcast:arg21"], Is.EqualTo("value21"));
+            Assert.That(configuration["hazelcast:arg22"], Is.EqualTo("value22"));
+
+            Assert.That(configuration["hazelcast:arg41"], Is.EqualTo("value41"));
+            Assert.That(configuration["hazelcast:arg42"], Is.EqualTo("value42"));
+        }
+
     }
 }

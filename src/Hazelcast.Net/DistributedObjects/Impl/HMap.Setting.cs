@@ -89,7 +89,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ? MapPutWithMaxIdleCodec.DecodeResponse(responseMessage).Response
                 : MapPutCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -183,7 +183,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapReplaceCodec.EncodeRequest(Name, keyData, valueData, ContextId);
             var responseMessage = await Cluster.Messaging.SendToKeyPartitionOwnerAsync(requestMessage, keyData, cancellationToken).CfAwait();
             var response = MapReplaceCodec.DecodeResponse(responseMessage).Response;
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         /// <inheritdoc />
@@ -335,7 +335,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 ? MapPutIfAbsentWithMaxIdleCodec.DecodeResponse(responseMessage).Response
                 : MapPutIfAbsentCodec.DecodeResponse(responseMessage).Response;
 
-            return ToObject<TValue>(response);
+            return await ToObjectAsync<TValue>(response).CfAwait();
         }
 
         /// <inheritdoc />
