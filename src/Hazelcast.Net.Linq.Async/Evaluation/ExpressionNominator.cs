@@ -15,13 +15,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Hazelcast.Linq.Visitors;
 
 namespace Hazelcast.Linq.Evaluation
 {
     /// <summary>
     /// Travers the tree bottom up to find nodes that can be evaluated partially.
     /// </summary>
-    internal class ExpressionNominator : ExpressionVisitor
+    internal class ExpressionNominator : HzExpressionVisitor
     {
         private bool _cannotBeEvaluated;
         private Func<Expression, bool> _canBeEvaluatedFunc;
@@ -47,8 +48,9 @@ namespace Hazelcast.Linq.Evaluation
 
 
         public override Expression Visit(Expression node)
-        {
+        {            
             if (node == null) return node;
+            Console.WriteLine(node.NodeType);
 
             var copyOfEvaluationState = _cannotBeEvaluated;
 

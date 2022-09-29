@@ -22,24 +22,34 @@ using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
 {
+    /// <summary>
+    /// Traverses and prepares a SQLized expression tree to be traversed and converted to text based SQL statements.
+    /// </summary>
     internal class QueryBinder : ExpressionVisitor
     {
         private ColumnProjector _projector;
         private Dictionary<ParameterExpression, Expression> _map;
         private int _aliasCount;
+        private const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
         public QueryBinder()
         {
             _projector = new ColumnProjector(p => p.NodeType == (ExpressionType)HzExpressionType.Column);
         }
 
+        /// <summary>
+        /// Get an SQLized tree and its projection bindings
+        /// </summary>
+        /// <param name="expression"></param>
+        /// <returns></returns>
         public Expression Bind(Expression expression)
         {
             _map = new Dictionary<ParameterExpression, Expression>();
             return Visit(expression);
         }
 
-        private static Expression StripQuotes(Expression expression)
+        ///(Internal for tests)
+        internal static Expression StripQuotes(Expression expression)
         {
             while (expression.NodeType == ExpressionType.Quote)
                 expression = ((UnaryExpression)expression).Operand;
@@ -48,12 +58,22 @@ namespace Hazelcast.Linq.Visitors
         }
 
         /// <summary>
-        /// Generates an alias for the field.
+        /// Generates an alias for the field. (Internal for tests)
         /// </summary>
         /// <returns>alias</returns>
-        private string GetNextAlias()
+        internal string GetNextAlias()
         {
             return "t" + (_aliasCount++);
+        }
+
+        private static LambdaExpression GetLambda(Expression e)
+        {
+            e = StripQuotes(e);
+
+            if (e.NodeType == ExpressionType.Constant)
+                return ((ConstantExpression)e).Value as LambdaExpression;
+
+            return e as LambdaExpression;
         }
 
         public ProjectedColumns Project(Expression expression, string newAlias, string existingAlias)
@@ -68,8 +88,8 @@ namespace Hazelcast.Linq.Visitors
                 switch (m.Method.Name)
                 {
                     case "Where":
-                        //type of entry, source, predicate
-                        return this.BindWhere(m.Type, m.Arguments[0], (LambdaExpression)StripQuotes(m.Arguments[1]));
+                        //the arguments respectivly->type of entry, source e, predicate
+                        return this.BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
                 }
 
                 throw new NotSupportedException(string.Format("The method '{0}' is not supported", m.Method.Name));
@@ -78,16 +98,23 @@ namespace Hazelcast.Linq.Visitors
             return base.VisitMethodCall(m);
         }
 
+        /// <summary>
+        /// Visit the expressions and bind columns and conditions with SQL equavilent expressions. 
+        /// </summary>
+        /// <param name="type">Type of the result entry</param>
+        /// <param name="source">The source expression</param>
+        /// <param name="predicate">Predicate of the condition</param>
+        /// <returns>A Projection Expression</returns>
         private Expression BindWhere(Type type, Expression source, LambdaExpression predicate)
         {
-            var projection = (ProjectionExpression)Visit(source); //DFS            
-            _map[predicate.Parameters[0]] = projection.Projector;//map field (ex. AlbumId:int) to projector
+            var projection = (ProjectionExpression)Visit(source); //DFS and project everything about the entry type          
+            _map[predicate.Parameters[0]] = projection.Projector;//map the field (ex. AlbumId:int) to projector
             var where = Visit(predicate.Body); // Visit the body to handle inner expressions.
             var alias = GetNextAlias();
 
-            //Visit, nominate and replace with SQL equvalients nodes on the 'projection' expression.
-            //Note: SQL equivalients are the custom ones defined by us under Hazelcast.Linq.Expressions.
-            var pc = _projector.Project(projection.Projector, alias, GetExistingAlias(projection.Source));
+            //Visit, nominate and arrange which columns to be selected out of fields of the map.
+            //Note: SQL exp. are the custom ones defined by us under Hazelcast.Linq.Expressions.
+            var pc = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
             return new ProjectionExpression(new SelectExpression(alias, pc.Columns, projection.Source, where, type), pc.Projector, type);
         }
@@ -101,7 +128,7 @@ namespace Hazelcast.Linq.Visitors
                 case HzExpressionType.Map:
                     return ((MapExpression)source).Alias;
                 default:
-                    throw new InvalidOperationException(string.Format("Invalid source node type '{0}'", source.NodeType));
+                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'");
             }
         }
 
@@ -141,7 +168,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>List of fields</returns>
         private IEnumerable<MemberInfo> GetMappedMembers(Type entryType)
         {
-            return entryType.GetFields().Cast<MemberInfo>();
+            return entryType.GetFields(bindingFlags).Cast<MemberInfo>().Concat(entryType.GetProperties(bindingFlags)).ToArray();
         }
 
         /// <summary>
@@ -192,14 +219,14 @@ namespace Hazelcast.Linq.Visitors
 
             switch (visitedNode.NodeType)
             {
-                //Get only Member that matches within the expression. 
                 case ExpressionType.MemberInit:
                     var initExp = (MemberInitExpression)visitedNode;
 
                     foreach (MemberAssignment assigment in initExp.Bindings)
                     {
                         if (assigment != null && MembersMatch(assigment.Member, node.Member))
-                            return assigment.Expression;
+                            return assigment.Expression;//Most probably a Column Expressions,
+                                                        //already created at the Visit above.
                     }
 
                     break;
@@ -210,19 +237,34 @@ namespace Hazelcast.Linq.Visitors
 
                     if (newExp.Members == null) break;
 
-                    for (int i = 0; i < newExp.Members.Count; i++)
+                    for (var i = 0; i < newExp.Members.Count; i++)
                     {
                         if (MembersMatch(newExp.Members[i], node.Member))
                             return newExp.Arguments[i];
                     }
 
                     break;
-
             }
 
-            return visitedNode;
+            return visitedNode == node.Expression ? node : MakeMemberAccess(visitedNode, node.Member);
         }
 
+        /// <summary>
+        /// Creates an expression that represents the member access of the field/property
+        /// </summary>
+        /// <param name="source">Expression</param>
+        /// <param name="memberInfo">Member of the class</param>
+        /// <returns>Property/Field expression of given field/property</returns>
+        private Expression MakeMemberAccess(Expression source, MemberInfo memberInfo)
+        {
+            var fieldInfo = memberInfo as FieldInfo;
+
+            if (fieldInfo != null)
+                return Expression.Field(source, fieldInfo);
+
+            var propertyInfo = (PropertyInfo)memberInfo;
+            return Expression.Property(source, propertyInfo);
+        }
 
         private bool MembersMatch(MemberInfo a, MemberInfo b)
         {

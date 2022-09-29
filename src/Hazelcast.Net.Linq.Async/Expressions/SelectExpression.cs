@@ -36,11 +36,11 @@ namespace Hazelcast.Linq.Expressions
 
         public SelectExpression(string alias, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression where, Type type)
         {
-            Alias = alias ?? throw new ArgumentNullException(nameof(alias));
-            Columns = columns ?? throw new ArgumentNullException(nameof(columns));
-            From = from ?? throw new ArgumentNullException(nameof(from));
-            Where = where ?? throw new ArgumentNullException(nameof(where));
-            Type = type ?? throw new ArgumentNullException(nameof(type));
+            Alias = alias;
+            Columns = columns;
+            From = from;
+            Where = where;
+            Type = type;
             NodeType = (ExpressionType)HzExpressionType.Select;
         }
     }

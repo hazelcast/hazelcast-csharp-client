@@ -17,6 +17,9 @@ using System.Linq.Expressions;
 
 namespace Hazelcast.Linq.Expressions
 {
+    /// <summary>
+    /// Expression helps to reconstruct the result object
+    /// </summary>
     internal class ProjectionExpression : Expression
     {
         /// <summary>
@@ -25,7 +28,7 @@ namespace Hazelcast.Linq.Expressions
         public SelectExpression Source { get; }
 
         /// <summary>
-        /// Expression that holds the element/data type and its bindings
+        /// Expression that holds the element/data type and its bindings. It's useful while constructing the result objects
         /// </summary>
         public Expression Projector { get; }
         /// <inheritdoc/>

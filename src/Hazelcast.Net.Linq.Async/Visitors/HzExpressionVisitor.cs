@@ -23,7 +23,7 @@ using Hazelcast.Linq.Expressions;
 namespace Hazelcast.Linq.Visitors
 {
     /// <summary>
-    /// Traves and builds SQL equavilent of the expression tree.
+    /// Custom visitor for restructured expression tree.
     /// </summary>
     internal class HzExpressionVisitor : ExpressionVisitor
     {

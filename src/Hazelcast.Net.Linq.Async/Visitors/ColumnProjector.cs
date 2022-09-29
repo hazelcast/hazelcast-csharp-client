@@ -21,6 +21,9 @@ using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
 {
+    /// <summary>
+    /// Traverse and creates column definitations for projection.
+    /// </summary>
     internal class ColumnProjector : HzExpressionVisitor
     {
         public ExpressionNominator Nominator { get; }
@@ -29,7 +32,13 @@ namespace Hazelcast.Linq.Visitors
         private List<ColumnDefinition> _columns;
         private HashSet<string> _columnNames;
         private HashSet<Expression> _candidates;
+        /// <summary>
+        /// Alias of the current level
+        /// </summary>
         private string _existingAlias;
+        /// <summary>
+        /// Alias of the outer level of the query
+        /// </summary>
         private string _newAlias;
         private int _columnIndex;
 
@@ -40,6 +49,13 @@ namespace Hazelcast.Linq.Visitors
             Nominator = new ExpressionNominator(canBeColumn);
         }
 
+        /// <summary>
+        /// Arranges columns declarations for the select expression
+        /// </summary>
+        /// <param name="exp"></param>
+        /// <param name="newAlias">Alias of the outer level of the query</param>
+        /// <param name="existingAlias">Alias of the current level</param>
+        /// <returns></returns>
         public ProjectedColumns Project(Expression exp, string newAlias, string existingAlias)
         {
             _mapOfColumns = new Dictionary<ColumnExpression, ColumnExpression>();
@@ -54,20 +70,19 @@ namespace Hazelcast.Linq.Visitors
 
         public override Expression Visit(Expression node)
         {
-            //Skip if not nominated
+            //Skip if not nominated to be evaluated
             if (!_candidates.Contains(node))
                 return base.Visit(node);
 
             if (node.NodeType == (ExpressionType)HzExpressionType.Column)
             {
                 var column = (ColumnExpression)node;
-                ColumnExpression mappedColumn;
 
                 //The column is already defined on the tree
-                if (_mapOfColumns.TryGetValue(column, out mappedColumn))
+                if (_mapOfColumns.TryGetValue(column, out ColumnExpression mappedColumn))
                     return mappedColumn;
 
-                //Column overlaps though expression didn't match above.
+                //Maps are overlaped though column didn't match above.
                 if (_existingAlias == column.Alias)
                 {
                     var name = CreateUniqueColumnName(column.Name);

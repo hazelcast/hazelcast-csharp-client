@@ -21,12 +21,12 @@ using System.Text;
 namespace Hazelcast.Linq.Expressions
 {
     /// <summary>
-    /// Represents fields in the expression tree that are converted to a column.
+    /// Represents fields in the expression tree that are converted to a column for projection.
     /// </summary>
     internal class ProjectedColumns
     {
         /// <summary>
-        /// Sqlized expression tree.
+        /// Sqlized expression tree for projection.
         /// </summary>
         public Expression Projector { get;}
 
