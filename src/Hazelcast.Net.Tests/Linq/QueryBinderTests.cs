@@ -37,9 +37,10 @@ namespace Hazelcast.Tests.Linq
         [Test]
         public void TestStripQuotes()
         {
-            var quotedExp = Expression.Quote(Expression.Add(Expression.Constant(1), Expression.Constant(2)));
+            Expression<Func<int>> fn = () => 1 + 2;
+            var quotedExp = Expression.Quote(fn);
             var striped = QueryBinder.StripQuotes(quotedExp);
-            Assert.AreEqual(striped.NodeType, typeof(BinaryExpression));
+            Assert.AreEqual(striped.NodeType, ExpressionType.Lambda);
         }
 
         [Test]
