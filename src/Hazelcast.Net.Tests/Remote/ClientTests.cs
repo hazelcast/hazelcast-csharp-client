@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Remote
 
         private HazelcastFailoverOptions CreateHazelcastFailoverOptions()
         {
-            var failoverOptions = HazelcastFailoverOptionsBuilder.Build(builder =>
+            var failoverOptions = new HazelcastFailoverOptionsBuilder().Build(builder =>
             {
                 builder.AddHazelcastAndDefaults(null);
                 builder.AddUserSecrets(GetType().Assembly, true);
