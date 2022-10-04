@@ -89,7 +89,9 @@ namespace Hazelcast.Linq.Visitors
                 {
                     case "Where":
                         //the arguments respectivly->type of entry, source e, predicate
-                        return this.BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                        return BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                    case "Select":
+                        return BindSelect(m.Type,m.Arguments[0], GetLambda(m.Arguments[1]));
                 }
 
                 throw new NotSupportedException(string.Format("The method '{0}' is not supported", m.Method.Name));
@@ -107,16 +109,36 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>A Projection Expression</returns>
         private Expression BindWhere(Type type, Expression source, LambdaExpression predicate)
         {
-            var projection = (ProjectionExpression)Visit(source); //DFS and project everything about the entry type          
-            _map[predicate.Parameters[0]] = projection.Projector;//map the field (ex. AlbumId:int) to projector
-            var where = Visit(predicate.Body); // Visit the body to handle inner expressions.
+            var (projection, where) = VisitSourceAndPredicate(source, predicate);
             var alias = GetNextAlias();
 
             //Visit, nominate and arrange which columns to be selected out of fields of the map.
             //Note: SQL exp. are the custom ones defined by us under Hazelcast.Linq.Expressions.
-            var pc = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, pc.Columns, projection.Source, where, type), pc.Projector, type);
+            //Projected columns of the `Where` clause.
+            var projectedColumns = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
+
+            return new ProjectionExpression(new SelectExpression(alias, projectedColumns.Columns, projection.Source, where, type), projectedColumns.Projector, type);
+        }
+
+        private Expression BindSelect(Type type, Expression source, LambdaExpression selector)
+        {
+            //projection and expression(s) in the select clause.
+            var (projection, visitedSelector) = VisitSourceAndPredicate(source, selector);
+            var alias = GetNextAlias();
+
+            //Projected columns of the `Select` clause.
+            var projectedColumns = Project(visitedSelector, alias, GetExistingAlias(projection.Source));
+
+            return new ProjectionExpression(new SelectExpression(alias, projectedColumns.Columns, projection.Source, null, type), projectedColumns.Projector, type);
+        }
+                
+        private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression, LambdaExpression predicate)
+        {
+            var projection = (ProjectionExpression)Visit(expression);//DFS and project everything about the entry type          
+            _map[predicate.Parameters[0]] = projection.Projector;//map predicate to the projector
+            var predicateExp = Visit(predicate.Body);// Visit the body to handle inner expressions.
+            return (projection, predicateExp);
         }
 
         private static string GetExistingAlias(Expression source)

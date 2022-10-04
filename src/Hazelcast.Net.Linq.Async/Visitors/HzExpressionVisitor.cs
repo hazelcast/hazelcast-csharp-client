@@ -46,12 +46,18 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
-        private Expression VisitProjection(ProjectionExpression node)
+        protected virtual Expression VisitProjection(ProjectionExpression node)
         {
-            throw new NotImplementedException();
+            var visitedSource = (SelectExpression)Visit(node.Source);
+            var visitedProjector = Visit(node.Projector);
+
+            if (node.Source != visitedSource || node.Projector != visitedProjector)
+                return new ProjectionExpression(visitedSource, visitedProjector, visitedProjector.Type);
+
+            return node;
         }
 
-        private Expression VisitSelect(SelectExpression node)
+        protected virtual Expression VisitSelect(SelectExpression node)
         {
             var from = Visit(node.From);
             var where = Visit(node.Where);
@@ -63,7 +69,7 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        private ReadOnlyCollection<ColumnDefinition> VisitColumnDefinititions(ReadOnlyCollection<ColumnDefinition> columns)
+        protected virtual ReadOnlyCollection<ColumnDefinition> VisitColumnDefinititions(ReadOnlyCollection<ColumnDefinition> columns)
         {
             List<ColumnDefinition> definitions = null;
 
@@ -82,12 +88,12 @@ namespace Hazelcast.Linq.Visitors
             return definitions == null ? columns : definitions.AsReadOnly();
         }
 
-        private Expression VisitColumn(ColumnExpression node)
+        protected virtual Expression VisitColumn(ColumnExpression node)
         {
             return node;
         }
 
-        private Expression VisitMap(MapExpression node)
+        protected virtual Expression VisitMap(MapExpression node)
         {
             return node;
         }
