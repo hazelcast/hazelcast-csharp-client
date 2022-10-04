@@ -15,6 +15,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace Hazelcast.DependencyInjection
 {
@@ -24,30 +25,54 @@ namespace Hazelcast.DependencyInjection
     public static class ServiceCollectionExtensions
     {
         /// <summary>
-        /// Adds Hazelcast services.
+        /// Add <see cref="HazelcastOptions"/> to the service provider.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection" /> to add services to.</param>
+        /// <param name="configure">An <see cref="Action{HazelcastOptionsBuilder}"/> to configure the provided <see cref="HazelcastOptionsBuilder"/>.</param>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+        public static IServiceCollection AddHazelcastOptions(this IServiceCollection services, Action<HazelcastOptionsBuilder> configure)
+        {
+            services.AddOptions();
+
+            // register the factory that will will instantiate & configure the options instance
+            services.AddSingleton<IOptionsFactory<HazelcastOptions>>(serviceProvider => new HazelcastOptionsFactory(serviceProvider, configure));
+            return services;
+        }
+
+        /// <summary>
+        /// Add <see cref="HazelcastFailoverOptions"/> to the service provider.
+        /// </summary>
+        /// <param name="services">The <see cref="IServiceCollection" /> to add services to.</param>
+        /// <param name="configure">An <see cref="Action{HazelcastFailoverOptionsBuilder}"/> to configure the provided <see cref="HazelcastFailoverOptionsBuilder"/>.</param>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
+        public static IServiceCollection AddHazelcastFailoverOptions(this IServiceCollection services, Action<HazelcastFailoverOptionsBuilder> configure)
+        {
+            services.AddOptions();
+
+            // register the factory that will will instantiate & configure the options instance
+            services.AddSingleton<IOptionsFactory<HazelcastFailoverOptions>>(serviceProvider => new HazelcastFailoverOptionsFactory(serviceProvider, configure));
+            return services;
+        }
+
+        /// <summary>
+        /// Adds <see cref="IHazelcastClient"/> to the service provider.
         /// </summary>
         /// <param name="services">The service collection.</param>
         /// <param name="configuration">The configuration.</param>
-        /// <returns>The service collection.</returns>
+        /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
         public static IServiceCollection AddHazelcast(this IServiceCollection services, IConfiguration configuration)
         {
             configuration = configuration.GetSection(HazelcastOptions.SectionNameConstant);
 
             // wire the Hazelcast-specific configuration
             services.AddOptions();
-            services.AddSingleton<IOptionsChangeTokenSource<HazelcastOptions>>(new ConfigurationChangeTokenSource<HazelcastOptions>(string.Empty, configuration));
-
-            // register the HazelcastOptions, making sure that (1) HzBind is used to bind them, and (2) the
-            // service provider is assigned so that service factories that require it (see logging below) can
-            // use it
-            services.AddSingleton<IConfigureOptions<HazelcastOptions>>(provider =>
-                new HazelcastNamedConfigureFromConfigurationOptions<HazelcastOptions>(string.Empty, configuration, provider));
+            services.AddHazelcastOptions(builder => builder.AddConfiguration(configuration));
 
             // wire creators
             services.Configure<HazelcastOptions>(options =>
             {
                 // assumes that the ILoggerFactory has been registered in the container
-                options.LoggerFactory.ServiceProvider = options.ServiceProvider;
+                options.ObtainLoggerFactoryFromServiceProvider();
 
                 // we could do it for others but we cannot assume that users want all other services
                 // wired through dependency injection - so... this is just an example of how we would
@@ -70,25 +95,10 @@ namespace Hazelcast.DependencyInjection
 
             // wire the Hazelcast-specific configuration
             services.AddOptions();
-            services.AddSingleton<IOptionsChangeTokenSource<HazelcastFailoverOptions>>(new ConfigurationChangeTokenSource<HazelcastFailoverOptions>(string.Empty, configuration));
-
-            // register the HazelcastOptions, making sure that (1) HzBind is used to bind them, and (2) the
-            // service provider is assigned so that service factories that require it (see logging below) can
-            // use it
-            services.AddSingleton<IConfigureOptions<HazelcastFailoverOptions>>(provider =>
-                new HazelcastNamedConfigureFromConfigurationOptions<HazelcastFailoverOptions>(string.Empty, configuration, provider));
+            services.AddHazelcastFailoverOptions(builder => builder.AddConfiguration(configuration));
 
             // wire creators
-            services.Configure<HazelcastFailoverOptions>(options =>
-            {
-                // propagates the service provide + initialize the logger factory
-                // assumes that the ILoggerFactory has been registered in the container
-                foreach (var clusterOptions in options.Clients)
-                {
-                    clusterOptions.ServiceProvider = options.ServiceProvider;
-                    clusterOptions.LoggerFactory.ServiceProvider = clusterOptions.ServiceProvider;
-                }
-            });
+            services.Configure<HazelcastFailoverOptions>(options => options.ObtainLoggerFactoryFromServiceProvider());
 
             return services;
         }

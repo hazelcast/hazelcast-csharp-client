@@ -27,7 +27,7 @@ namespace Hazelcast.DependencyInjection
                 // (default configuration has been added by the host)
                 hostBuilder.AddHazelcast(args);
 
-                // for more control, users would need to implement their own version of this metho
+                // for more control, users would need to implement their own version of this method
                 // example: change the hazelcast options file name
                 //builder.AddHazelcast(args, optionsFileName: "special.json");
             });
