@@ -6,8 +6,8 @@
   <ItemGroup>
 
     <!-- documentation -->
-    <PackageReference Include="DocFX.Console" Version="2.58.0" />
-    <PackageReference Include="memberpage" Version="2.58.0" />
+    <PackageReference Include="DocFX.Console" Version="2.59.4" />
+    <PackageReference Include="memberpage" Version="2.59.4" />
 
     <!-- testing -->
     <PackageReference Include="NUnit.ConsoleRunner" Version="3.15.2" />
