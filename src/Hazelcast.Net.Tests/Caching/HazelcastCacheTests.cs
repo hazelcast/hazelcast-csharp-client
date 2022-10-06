@@ -249,6 +249,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
+    [Timeout(4000)]
     public async Task TestCacheProvided_ExplicitOptions()
     {
         var services = new ServiceCollection();
@@ -266,6 +267,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
+    [Timeout(4000)]
     public async Task TestCacheProvided_ExplicitFailoverOptions()
     {
         var services = new ServiceCollection();
@@ -285,6 +287,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
+    [Timeout(4000)]
     public async Task TestCacheProvided_ProvidedOptions()
     {
         var services = new ServiceCollection();
@@ -303,6 +306,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
 
     [Test]
     [Category("enterprise")]
+    [Timeout(4000)]
     public async Task TestCacheProvided_ProvidedFailoverOptions()
     {
         var services = new ServiceCollection();
@@ -323,6 +327,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
+    [Timeout(4000)]
     public async Task TestCacheProvided_ConfiguredOptions()
     {
         var services = new ServiceCollection();
