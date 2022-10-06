@@ -33,6 +33,19 @@ namespace Hazelcast.Tests.Caching;
 [TestFixture]
 public class HazelcastCacheTests : SingleMemberRemoteTestBase
 {
+    private void ConfigureOptions(HazelcastOptions options)
+    {
+        options.ClusterName = RcCluster?.Id ?? options.ClusterName;
+        options.Networking.Addresses.Clear();
+        options.Networking.Addresses.Add("127.0.0.1:5701");
+        options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync; // important!
+        options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 2000;
+        options.LoggerFactory.Creator = () => LoggerFactory;
+    }
+
+    protected override HazelcastOptions CreateHazelcastOptions()
+        => CreateHazelcastOptionsBuilder().With(ConfigureOptions).Build();
+
     [Test]
     public void TestOptions()
     {
@@ -233,15 +246,6 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         Assert.That(await cache.GetStringAsync("key0"), Is.EqualTo("value0"));
         await cache.RemoveAsync("key0");
         Assert.That(await cache.GetStringAsync("key0"), Is.Null);
-    }
-
-    private void ConfigureOptions(HazelcastOptions options)
-    {
-        options.ClusterName = RcCluster?.Id ?? options.ClusterName;
-        options.Networking.Addresses.Clear();
-        options.Networking.Addresses.Add("127.0.0.1:5701");
-        options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync; // important!
-        options.LoggerFactory.Creator = () => LoggerFactory;
     }
 
     [Test]
