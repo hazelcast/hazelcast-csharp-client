@@ -10,7 +10,7 @@
     <PackageReference Include="memberpage" Version="2.59.4" />
 
     <!-- testing -->
-    <PackageReference Include="NUnit.ConsoleRunner" Version="3.15.2" />
+    <PackageReference Include="NUnit.ConsoleRunner" Version="3.11.1" />
 
     <!--test coverage -->
     <!--
@@ -26,14 +26,14 @@
 
     <!-- non-Windows does not build for Framework and does not need this, Windows does -->
     <!-- version is detected by hz.ps1 automatically from this project file -->
-    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2022.2.3" Condition=" '$(OS)' == 'Windows_NT' ">
+    <PackageReference Include="JetBrains.dotCover.CommandLineTools" Version="2021.1.2" Condition=" '$(OS)' == 'Windows_NT' ">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
 
     <!-- all platforms need this, but it is not compatible with net462, hence the condition -->
     <!-- BEWARE, version must align with Hazelcast.Net.Tests csproj! -->
-    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2022.2.3" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
+    <PackageReference Include="JetBrains.dotCover.DotNetCliTool" Version="2021.1.2" Condition=" '$(TargetFramework)' != 'net462' and '$(TargetFramework)' != 'net48'">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
