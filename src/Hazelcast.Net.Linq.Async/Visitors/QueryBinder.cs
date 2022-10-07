@@ -145,16 +145,16 @@ namespace Hazelcast.Linq.Visitors
             return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source), projectedColumns.Projector, type);
         }
 
-        private ProjectionExpression BindWhere(Type type, Expression source, LambdaExpression selector)
+        private ProjectionExpression BindWhere(Type type, Expression source, LambdaExpression predicate)
         {
             //projection and expression(s) in the select clause.
-            var (projection, visitedSelector) = VisitSourceAndPredicate(source, selector);
+            var (projection, visitedPredicate) = VisitSourceAndPredicate(source, predicate);
             var alias = GetNextAlias();
 
             //Projected columns of the `Select` clause.
-            var projectedColumns = Project(visitedSelector, alias, GetExistingAlias(projection.Source));
+            var projectedColumns = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, null), projectedColumns.Projector, type);
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, visitedPredicate), projectedColumns.Projector, type);
         }
 
         private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression, LambdaExpression predicate)

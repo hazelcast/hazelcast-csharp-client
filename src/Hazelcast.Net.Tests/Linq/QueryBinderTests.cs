@@ -26,8 +26,8 @@ namespace Hazelcast.Tests.Linq
         {
             var qb = new QueryBinder();
 
-            var prefix = "t";
-            var count = 0;
+            var prefix = "m";
+            var count = 0; 
 
             Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
             Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
