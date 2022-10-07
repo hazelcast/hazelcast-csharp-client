@@ -31,19 +31,27 @@ namespace Hazelcast.Linq.Visitors
         {
             if (node == null) return null;
 
-            switch ((HzExpressionType)node.NodeType)
+            return (HzExpressionType)node.NodeType switch
             {
-                case HzExpressionType.Map:
-                    return VisitMap((MapExpression)node);
-                case HzExpressionType.Column:
-                    return VisitColumn((ColumnExpression)node);
-                case HzExpressionType.Select:
-                    return VisitSelect((SelectExpression)node);
-                case HzExpressionType.Projection:
-                    return VisitProjection((ProjectionExpression)node);
-                default:
-                    return base.Visit(node);
-            }
+                HzExpressionType.Map => VisitMap((MapExpression)node),
+                HzExpressionType.Column => VisitColumn((ColumnExpression)node),
+                HzExpressionType.Select => VisitSelect((SelectExpression)node),
+                HzExpressionType.Projection => VisitProjection((ProjectionExpression)node),
+                HzExpressionType.Join => VisitJoin((JoinExpression)node),
+                _ => base.Visit(node),
+            };
+        }
+
+        private Expression VisitJoin(JoinExpression node)
+        {
+            var left = Visit(node.Left);
+            var right = Visit(node.Right);
+            var condtition = Visit(node.JoinCondition);
+
+            if (left != node.Left || right != node.Right || condtition != node.JoinCondition)
+                return new JoinExpression(left, right, condtition, node.Type);
+
+            return node;
         }
 
         protected virtual Expression VisitProjection(ProjectionExpression node)
@@ -64,7 +72,7 @@ namespace Hazelcast.Linq.Visitors
             var columns = VisitColumnDefinititions(node.Columns);
 
             if (from != node.From || where != node.Where || columns != node.Columns)
-                return new SelectExpression(node.Alias, columns, from, where, node.Type);
+                return new SelectExpression(node.Alias, node.Type, columns, from, where);
 
             return node;
         }

@@ -63,7 +63,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>alias</returns>
         internal string GetNextAlias()
         {
-            return "t" + (_aliasCount++);
+            return "m" + (_aliasCount++);//m for map
         }
 
         private static LambdaExpression GetLambda(Expression e)
@@ -76,7 +76,7 @@ namespace Hazelcast.Linq.Visitors
             return e as LambdaExpression;
         }
 
-        public ProjectedColumns Project(Expression expression, string newAlias, string existingAlias)
+        public ProjectedColumns Project(Expression expression, string newAlias, params string[] existingAlias)
         {
             return _projector.Project(expression, newAlias, existingAlias);
         }
@@ -91,13 +91,37 @@ namespace Hazelcast.Linq.Visitors
                         //the arguments respectivly->type of entry, source e, predicate
                         return BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
                     case "Select":
-                        return BindSelect(m.Type,m.Arguments[0], GetLambda(m.Arguments[1]));
+                        return BindSelect(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                    case "Join":
+                        return BindJoin(m.Type, m.Arguments[0], m.Arguments[1], GetLambda(m.Arguments[2]), GetLambda(m.Arguments[3]), GetLambda(m.Arguments[4]));
                 }
 
                 throw new NotSupportedException(string.Format("The method '{0}' is not supported", m.Method.Name));
             }
 
             return base.VisitMethodCall(m);
+        }
+
+        private ProjectionExpression BindJoin(Type type, Expression outer, Expression inner, LambdaExpression outerKey, LambdaExpression innerKey, LambdaExpression selector)
+        {
+            var outerProjection = (ProjectionExpression)Visit(outer);
+            var innerProjection = (ProjectionExpression)Visit(inner);
+            var visitedOuterKey = Visit(outerKey.Body);
+            var visitedInnerKey = Visit(innerKey.Body);
+            var visitedSelector = Visit(selector.Body);
+
+            _map[outerKey.Parameters[0]] = outerProjection.Projector;
+            _map[innerKey.Parameters[0]] = innerProjection.Projector;
+            _map[selector.Parameters[0]] = outerProjection.Projector;
+            _map[selector.Parameters[1]] = innerProjection.Projector;
+
+            var alias = GetNextAlias();
+
+            var joinExp = new JoinExpression(outerProjection.Source, innerProjection.Source, Expression.Equal(visitedOuterKey, visitedInnerKey), type);
+
+            var projectedColumns = Project(visitedSelector, alias, outerProjection.Source.Alias, innerProjection.Source.Alias);
+
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, joinExp), projectedColumns.Projector, type);
         }
 
         /// <summary>
@@ -107,21 +131,21 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="source">The source expression</param>
         /// <param name="predicate">Predicate of the condition</param>
         /// <returns>A Projection Expression</returns>
-        private Expression BindWhere(Type type, Expression source, LambdaExpression predicate)
+        private ProjectionExpression BindSelect(Type type, Expression source, LambdaExpression predicate)
         {
-            var (projection, where) = VisitSourceAndPredicate(source, predicate);
+            var (projection, visitedPredicate) = VisitSourceAndPredicate(source, predicate);
             var alias = GetNextAlias();
 
             //Visit, nominate and arrange which columns to be selected out of fields of the map.
             //Note: SQL exp. are the custom ones defined by us under Hazelcast.Linq.Expressions.
 
             //Projected columns of the `Where` clause.
-            var projectedColumns = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
+            var projectedColumns = Project(visitedPredicate, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, projectedColumns.Columns, projection.Source, where, type), projectedColumns.Projector, type);
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source), projectedColumns.Projector, type);
         }
 
-        private Expression BindSelect(Type type, Expression source, LambdaExpression selector)
+        private ProjectionExpression BindWhere(Type type, Expression source, LambdaExpression selector)
         {
             //projection and expression(s) in the select clause.
             var (projection, visitedSelector) = VisitSourceAndPredicate(source, selector);
@@ -130,9 +154,9 @@ namespace Hazelcast.Linq.Visitors
             //Projected columns of the `Select` clause.
             var projectedColumns = Project(visitedSelector, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, projectedColumns.Columns, projection.Source, null, type), projectedColumns.Projector, type);
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, null), projectedColumns.Projector, type);
         }
-                
+
         private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression, LambdaExpression predicate)
         {
             var projection = (ProjectionExpression)Visit(expression);//DFS and project everything about the entry type          
@@ -220,7 +244,7 @@ namespace Hazelcast.Linq.Visitors
             var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
-            var selectExp = new SelectExpression(selectAlias, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)), null, entryType);
+            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)));
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 

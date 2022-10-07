@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using Hazelcast.Linq.Evaluation;
@@ -35,7 +36,7 @@ namespace Hazelcast.Linq.Visitors
         /// <summary>
         /// Alias of the current level
         /// </summary>
-        private string _existingAlias;
+        private IReadOnlyList<string> _existingAlias;
         /// <summary>
         /// Alias of the outer level of the query
         /// </summary>
@@ -56,7 +57,7 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="newAlias">Alias of the outer level of the query</param>
         /// <param name="existingAlias">Alias of the current level</param>
         /// <returns></returns>
-        public ProjectedColumns Project(Expression exp, string newAlias, string existingAlias)
+        public ProjectedColumns Project(Expression exp, string newAlias, params string[] existingAlias)
         {
             _mapOfColumns = new Dictionary<ColumnExpression, ColumnExpression>();
             _columns = new List<ColumnDefinition>();
@@ -83,7 +84,7 @@ namespace Hazelcast.Linq.Visitors
                     return mappedColumn;
 
                 //Maps are overlaped though column didn't match above.
-                if (_existingAlias == column.Alias)
+                if (_existingAlias.Contains(column.Alias))
                 {
                     var name = CreateUniqueColumnName(column.Name);
                     _columns.Add(new ColumnDefinition(name, column));

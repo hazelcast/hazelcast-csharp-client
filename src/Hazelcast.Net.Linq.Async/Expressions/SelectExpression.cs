@@ -34,7 +34,7 @@ namespace Hazelcast.Linq.Expressions
         /// <inheritdoc/>
         public override Type Type { get; }
 
-        public SelectExpression(string alias, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression where, Type type)
+        public SelectExpression(string alias, Type type, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression where = null)
         {
             Alias = alias;
             Columns = columns;
