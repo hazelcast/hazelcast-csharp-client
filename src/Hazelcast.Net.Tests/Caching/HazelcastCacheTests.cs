@@ -61,10 +61,10 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     [Test]
     public async Task TestCacheExceptions()
     {
-        Assert.Throws<ArgumentNullException>(() => new HazelcastCache(new HazelcastOptions(), null));
-        Assert.Throws<ArgumentNullException>(() => new HazelcastCache(new HazelcastFailoverOptions(), null));
-        Assert.Throws<ArgumentNullException>(() => new HazelcastCache(((HazelcastOptions)null)!, new HazelcastCacheOptions()));
-        Assert.Throws<ArgumentNullException>(() => new HazelcastCache(((HazelcastFailoverOptions)null)!, new HazelcastCacheOptions()));
+        Assert.Throws<ArgumentNullException>(() => _ = new HazelcastCache(new HazelcastOptions(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new HazelcastCache(new HazelcastFailoverOptions(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new HazelcastCache(((HazelcastOptions)null)!, new HazelcastCacheOptions()));
+        Assert.Throws<ArgumentNullException>(() => _ = new HazelcastCache(((HazelcastFailoverOptions)null)!, new HazelcastCacheOptions()));
 
         var cacheOptions = new HazelcastCacheOptions
         {
@@ -93,7 +93,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
-    public async Task TestSynchronousCache()
+    public async Task TestCacheSynchronous()
     {
         // we have to test it... but it should never be used synchronously
 
@@ -234,20 +234,6 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         Assert.That(await cache.GetStringAsync("key0"), Is.Null);
     }
 
-    private static async Task AssertCanUseProvidedCache(IServiceProvider serviceProvider)
-    {
-        var cache = serviceProvider.GetRequiredService<IDistributedCache>();
-
-        Assert.That(cache, Is.Not.Null);
-        Assert.That(cache, Is.InstanceOf<HazelcastCache>());
-
-        // test that we can use the cache
-        await cache.SetStringAsync("key0", "value0", new DistributedCacheEntryOptions());
-        Assert.That(await cache.GetStringAsync("key0"), Is.EqualTo("value0"));
-        await cache.RemoveAsync("key0");
-        Assert.That(await cache.GetStringAsync("key0"), Is.Null);
-    }
-
     [Test]
     [Timeout(10000)]
     public async Task TestCacheProvided_ExplicitOptions()
@@ -261,9 +247,12 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add Hazelcast cache with full explicit options
         services.AddHazelcastCache(hazelcastOptions, cacheOptions);
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
     }
 
     [Test]
@@ -281,9 +270,12 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add Hazelcast cache with full explicit options
         services.AddHazelcastCache(hazelcastFailoverOptions, cacheOptions);
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
     }
 
     [Test]
@@ -299,9 +291,12 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add Hazelcast cache using provided options
         services.AddHazelcastCache();
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
     }
 
     [Test]
@@ -321,9 +316,12 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add Hazelcast cache using provided options
         services.AddHazelcastCache(withFailover: true);
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
     }
 
     [Test]
@@ -371,10 +369,13 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add Hazelcast cache using provided options
         services.AddHazelcastCache();
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
 
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
 
         // verifications
         var ho = serviceProvider.GetRequiredService<IOptions<HazelcastOptions>>();
@@ -438,6 +439,9 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // beware! must use the right combination of AddHazelcast[Failover]Options and withFailover: true|false
         services.AddHazelcastCache(withFailover: true);
 
+        // the IDistributedCache will be injected into the asserter
+        services.AddTransient<ProvidedCacheAsserter>();
+
         // create the provider and retrieve and use the cache
         await using var serviceProvider = services.BuildServiceProvider();
 
@@ -448,7 +452,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         var co = serviceProvider.GetRequiredService<IOptions<HazelcastCacheOptions>>();
         Assert.That(co.Value.CacheUniqueIdentifier, Is.EqualTo(cacheUniqueIdentifier));
 
-        await AssertCanUseProvidedCache(serviceProvider);
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
 
         // note:
         //   standard dotnet key delimiter is ':' or '__' depending on providers, but AddHazelcastAndDefaults add
@@ -456,5 +460,27 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         //   starting with 'hazelcast.' or 'hazelcast-failover.'. Internally, the '.' separator is rewritten into the
         //   ':' separator - which should be used everywhere really, for instance in the Bind call used in the
         //   HazelcastCacheOptions registration. we're using the standard ':' delimiter everywhere in this test.
+    }
+
+    internal class ProvidedCacheAsserter
+    {
+        private readonly IDistributedCache _cache;
+
+        public ProvidedCacheAsserter(IDistributedCache cache)
+        {
+            _cache = cache;
+        }
+
+        public async Task AssertAsync()
+        {
+            Assert.That(_cache, Is.Not.Null);
+            Assert.That(_cache, Is.InstanceOf<HazelcastCache>());
+
+            // test that we can use the cache
+            await _cache.SetStringAsync("key0", "value0", new DistributedCacheEntryOptions());
+            Assert.That(await _cache.GetStringAsync("key0"), Is.EqualTo("value0"));
+            await _cache.RemoveAsync("key0");
+            Assert.That(await _cache.GetStringAsync("key0"), Is.Null);
+        }
     }
 }
