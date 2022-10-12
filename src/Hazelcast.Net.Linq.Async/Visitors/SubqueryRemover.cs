@@ -22,7 +22,7 @@ using Hazelcast.Linq.Expressions;
 namespace Hazelcast.Linq.Visitors
 {
     /// <summary>
-    /// Removes the provided portions of the given expresession
+    /// Removes(strpies) the provided portions of the given expresession
     /// </summary>
     internal class SubqueryRemover : HzExpressionVisitor
     {
