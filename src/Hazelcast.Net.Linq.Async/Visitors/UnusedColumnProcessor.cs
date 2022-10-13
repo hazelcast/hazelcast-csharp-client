@@ -39,5 +39,10 @@ namespace Hazelcast.Linq.Visitors
             
             return node;
         }
+
+        protected override Expression VisitSelect(SelectExpression node)
+        {
+            return base.VisitSelect(node);
+        }
     }
 }
