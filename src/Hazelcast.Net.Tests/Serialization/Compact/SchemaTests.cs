@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -51,6 +52,25 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.Throws<ArgumentNullException>(() => new Schema().ReadData(null));
             Assert.Throws<ArgumentNullException>(() => new Schema().WriteData(null));
+        }
+
+        [Test]
+        public void FieldsAndNames()
+        {
+            var schema = new Schema("thing", new[]
+            {
+                new SchemaField("field1", FieldKind.Boolean),
+                new SchemaField("field2", FieldKind.Boolean)
+            });
+
+            var fields = schema.Fields;
+            var fieldNames = schema.FieldNames;
+
+            Assert.That(fields.Count, Is.EqualTo(2));
+            Assert.That(fieldNames.Count, Is.EqualTo(2));
+
+            for (var i = 0; i < fields.Count; i++)
+                Assert.That(fields[i].FieldName, Is.EqualTo(fieldNames[i]));
         }
 
         [Test]

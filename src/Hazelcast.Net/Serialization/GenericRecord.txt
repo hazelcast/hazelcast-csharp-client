@@ -1,0 +1,21 @@
+﻿ 
+ GENERIC RECORDS
+
+    Java                                                C#
+
+    I.GenericRecord                                     I.IGenericRecord
+      I.InternalGenericRecord                             ?.GenericRecordBase
+        A.AbstractGenericRecord
+          ?.PortableGenericRecord                         (we don't do portable)
+          A.CompactGenericRecord
+            C.CompactInternalGenericRecord
+              C.DefaultCompactReader                        C.CompactReaderGenericRecord
+              C.DeserializedGenericRecord                   C.CompactDictionaryGenericRecord
+
+    I.GenericRecordBuilder                              I.IGenericRecordBuilder + S.GenericRecordBuilder
+      ?.PortableGenericRecordBuilder                      (we don't do portable)
+      A.AbstractGenericRecordBuilder
+        C.DeserializedGenericRecordBuilder                  C.CompactGenericRecordBuilder
+        C.DeserializedGenericRecordCloner                   (same)
+        C.DeserializedSchemaBoundGenericRecordBuilder       (same)
+

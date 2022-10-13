@@ -22,7 +22,6 @@ namespace Hazelcast.Serialization.Compact
 {
     internal abstract class CompactReaderWriterBase
     {
-        protected readonly Schema Schema;
         protected readonly int StartPosition;
         protected readonly int DataStartPosition;
 
@@ -36,6 +35,8 @@ namespace Hazelcast.Serialization.Compact
                 ? StartPosition + BytesExtensions.SizeOfInt
                 : StartPosition;
         }
+
+        public Schema Schema { get; init; }
 
         /// <summary>
         /// Tries to get a field with the specified name (case-insensitive) and kind.
