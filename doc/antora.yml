@@ -1,11 +1,18 @@
 name: csharp
 title: .NET
-version: 5.1
+# Version in the URL
+version: '5.2-snapshot'
+# Version in the version selector (we display only the latest major.minor version)
 display_version: '5.2-SNAPSHOT'
+# Displays a banner to inform users that this is a prerelease version 
+prerelease: true
 asciidoc:
   attributes:
     server-full-version: '5.2-SNAPSHOT'
     client-full-version: '5.1-SNAPSHOT'
+    # Allows us to use UI macros. See https://docs.asciidoctor.org/asciidoc/latest/macros/ui-macros/
+    experimental: true
+    snapshot: true
     examples: ../src/Hazelcast.Net.Examples
     page-latest-supported-imdg: '4.2'
     page-latest-supported-hazelcast: '5.1'
