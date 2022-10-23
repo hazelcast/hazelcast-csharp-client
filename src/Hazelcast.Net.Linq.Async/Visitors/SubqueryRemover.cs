@@ -50,7 +50,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitSelect(SelectExpression node)
         {
-            // Cut it from `From` expression as requested. `Where` clauses (if any) may be combined later.
+            // Cut it from `From` expression as requested. 
             if (_subqueriesToRemove.Contains(node))
                 return Visit(node.From);
 

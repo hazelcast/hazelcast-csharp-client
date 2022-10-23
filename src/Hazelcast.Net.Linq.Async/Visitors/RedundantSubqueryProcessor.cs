@@ -29,21 +29,39 @@ namespace Hazelcast.Linq.Visitors
     internal class RedundantSubqueryProcessor : HzExpressionVisitor
     {
         /// <summary>
-        /// Reduces the redundant subqueries, and combined their conditions.
+        /// Reduces the redundant subqueries which has no semantic value, and combined their conditions.
         /// </summary>
         /// <param name="select">Expression to be cleaned.</param>
         /// <returns>Cleaned expression</returns>
-        internal Expression Clean(SelectExpression select)
+        internal Expression CleanInternal(Expression select)
         {
             return Visit(select);
         }
 
+        public static Expression Clean(Expression expression)
+        {
+            return new RedundantSubqueryProcessor().CleanInternal(expression);
+        }
+
+        protected override Expression VisitProjection(ProjectionExpression node)
+        {
+            var visitedProj = (ProjectionExpression)base.VisitProjection(node);
+
+            if (visitedProj.Source.From is SelectExpression)
+            {
+                if (RedundantCollector.TryCollect(visitedProj.Source, out var redundants))
+                    return SubqueryRemover.Remove(visitedProj.Source, redundants);
+            }
+
+            return visitedProj;
+        }
+
         protected override Expression VisitSelect(SelectExpression node)
         {
-            var visitedSelect = base.VisitSelect(node) as SelectExpression;
+            var visitedSelect = (SelectExpression)base.VisitSelect(node);
 
             // Try to find and clean redundant subqueries.
-            if (RedundantCollector.TryCollect(visitedSelect, out var redundants))
+            if (RedundantCollector.TryCollect(visitedSelect.From, out var redundants))
                 visitedSelect = (SelectExpression)SubqueryRemover.Remove(visitedSelect, redundants);
 
             //There could be a queries on the same level but different nodes,

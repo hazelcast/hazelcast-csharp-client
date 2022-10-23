@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Hazelcast.Core;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -53,17 +54,37 @@ namespace Hazelcast.Linq.Visitors
 
         public static bool IsRedundant(SelectExpression select)
         {
-            return select.Where == null && IsRedundant(select);
+            return (select.Where is null && HasSimpleProjection(select))
+                || IsWrapperOfFrom(select);
         }
 
         public static bool HasSimpleProjection(SelectExpression select)
         {
-            foreach (ColumnDefinition item in select.Columns)
+            foreach (var item in select.Columns)
             {
                 var column = item.Expression as ColumnExpression;
                 //If column name is changed, so projection to.
-                if (column == null || column.Name != item.Name) return false;
+                if (column is null || column.Name != item.Name) return false;
             }
+            return true;
+        }
+
+        internal static bool IsWrapperOfFrom(SelectExpression node)
+        {
+            if (node.From is MapExpression) return false;
+
+            var from = node.From as SelectExpression;
+
+            // to be redundant, current node should be pure wrapper of its from node.
+            if (from is null || node.Columns.Count != from.Columns.Count) return false;
+
+            for (int i = 0, n = node.Columns.Count; i < n; i++)
+            {
+                var col = node.Columns[i].Expression as ColumnExpression;
+                //check order of the columns between select and from.
+                if (col is null || !(col.Name == from.Columns[i].Name)) return false;
+            }
+
             return true;
         }
     }

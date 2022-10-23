@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using Hazelcast.Linq.Expressions;
@@ -24,7 +25,12 @@ namespace Hazelcast.Linq.Visitors
     {
         private Dictionary<string, HashSet<string>> _columnsInUseByAlias = new();
 
-        internal Expression Clean(Expression expression)
+        public static Expression Clean(Expression expression)
+        {
+            return new UnusedColumnProcessor().CleanInternal(expression) as ProjectionExpression;
+        }
+
+        internal Expression CleanInternal(Expression expression)
         {
             return Visit(expression);
         }
@@ -36,13 +42,70 @@ namespace Hazelcast.Linq.Visitors
                 columns.Add(node.Name);
             else
                 _columnsInUseByAlias[node.Alias] = new HashSet<string> { node.Name };
-            
+
             return node;
         }
 
         protected override Expression VisitSelect(SelectExpression node)
         {
-            return base.VisitSelect(node);
+            if (_columnsInUseByAlias.TryGetValue(node.Alias, out var usedColumns))
+            {
+                List<ColumnDefinition> alternate = null;
+
+                for (int i = 0; i < node.Columns.Count; i++)
+                {
+                    var currentColumn = node.Columns[i];
+
+                    if (IsUsed(node.Alias, currentColumn.Name))
+                    {
+                        var visitedExp = Visit(currentColumn.Expression);
+                        if (visitedExp != currentColumn.Expression)
+                            currentColumn = new ColumnDefinition(currentColumn.Name, visitedExp);
+                    }
+                    else
+                        currentColumn = null; // the column is not in use.
+
+                    if (currentColumn != node.Columns[i] && alternate is null)
+                    {
+                        alternate = node.Columns.Take(i).ToList();
+                    }
+
+                    if (currentColumn is not null && alternate is not null)
+                        alternate.Add(currentColumn);
+                }
+
+                var visitedWhere = Visit(node.Where);
+                var visitedFrom = Visit(node.From);
+                var columns = alternate?.AsReadOnly() ?? node.Columns;
+
+                usedColumns.Clear();
+
+                if (visitedWhere != node.Where || visitedFrom != node.From || columns != node.Columns)
+                {
+                    node = new SelectExpression(node.Alias, node.Type, columns, visitedFrom, visitedWhere);
+                }
+            }
+
+            return node;
+        }
+
+        protected override Expression VisitProjection(ProjectionExpression node)
+        {
+            var visitedProjector = Visit(node.Projector);// first collect the columns at projector
+            var visitedSource = (SelectExpression)Visit(node.Source);
+
+            if (visitedProjector != node.Projector || visitedSource != node.Source)
+                return new ProjectionExpression(visitedSource, visitedProjector, node.Type);
+
+            return node;
+        }
+
+        private bool IsUsed(string alias, string name)
+        {
+            if (_columnsInUseByAlias.TryGetValue(alias, out var columns))
+                return columns is not null && columns.Contains(name);
+
+            return false;
         }
     }
 }

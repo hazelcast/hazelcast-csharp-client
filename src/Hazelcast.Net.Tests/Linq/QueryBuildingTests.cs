@@ -12,7 +12,7 @@ using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Tests.Linq
 {
-    public class QueryBinderTests
+    public class QueryBuildingTests
     {
         public class DummyType
         {
@@ -21,13 +21,15 @@ namespace Hazelcast.Tests.Linq
         }
 
 
+        public static string[] ColumnNames => typeof(DummyType).GetProperties().Select(p => p.Name).ToArray();
+
         [Test]
         public void TestGetNextAlias()
         {
             var qb = new QueryBinder();
 
             var prefix = "m";
-            var count = 0; 
+            var count = 0;
 
             Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
             Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
@@ -58,8 +60,8 @@ namespace Hazelcast.Tests.Linq
 
             //projection aka select
             var projection = projectedExp.Source as SelectExpression;
-            Assert.That(projection.Columns.Count, Is.EqualTo(2));
-            Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(columnNames), columnNames);
+            Assert.That(projection.Columns.Count, Is.EqualTo(ColumnNames.Count()));
+            Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(ColumnNames), ColumnNames);
             Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Alias, nameof(DummyType));//redundandt queries are another PR's deal.
 
             var where = projectedExp.Source.Where as BinaryExpression;
@@ -105,10 +107,10 @@ namespace Hazelcast.Tests.Linq
             var evaluated = ExpressionEvaluator.EvaluatePartially(query.Expression);
 
             var projectedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated);
-            var columnNames = typeof(DummyType).GetProperties().Select(p => p.Name).ToArray();
+
 
             var projection = projectedExp.Source as SelectExpression;
-            
+
             Assert.AreEqual((ExpressionType)HzExpressionType.Join, projectedExp.Source.From.NodeType);
             Assert.AreEqual(nameof(DummyType.ColumnInteger),
                 ((MemberExpression)((BinaryExpression)((JoinExpression)projectedExp.Source.From).JoinCondition).Left).Member.Name);
@@ -117,6 +119,36 @@ namespace Hazelcast.Tests.Linq
                 ((MemberExpression)((BinaryExpression)((JoinExpression)projectedExp.Source.From).JoinCondition).Right).Member.Name);
 
             Assert.AreEqual(ExpressionType.Equal, ((JoinExpression)projectedExp.Source.From).JoinCondition.NodeType);
+
+        }
+
+        [Test]
+        public void TestRemoveRedundantProjections()
+        {
+            var dummyData = new List<DummyType>();
+            var val = 10;
+            var exp = dummyData.AsQueryable()
+                .Where(p => p.ColumnString == "param1")
+                .Where(p => p.ColumnString == "param2")
+                .Select(p => new { i = p.ColumnInteger })
+                .Where(p => p.i > val)
+                .Select(p => p.i);
+
+            var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
+            var bindedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated) as Expression;
+
+            bindedExp = UnusedColumnProcessor.Clean(bindedExp);
+            bindedExp = RedundantSubqueryProcessor.Clean(bindedExp);
+            var projected = bindedExp as ProjectionExpression;
+
+            // unused columns and sub queries are removed. 
+            // Only one of the columns are used.
+            Assert.That(projected.Source.Columns.Count, Is.EqualTo(1));
+
+            Assert.AreEqual(projected.Source.Columns[0].Name, nameof(DummyType.ColumnInteger));
+
+            //One layer query, From clause should point to Map directly.
+            Assert.AreEqual(projected.Source.From.NodeType, (ExpressionType)HzExpressionType.Map);
 
         }
 
