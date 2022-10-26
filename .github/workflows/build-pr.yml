@@ -97,6 +97,7 @@ jobs:
   # build & test
   build-test:
     name: Build&Test / ${{ matrix.os }}
+    id: build-test
     needs: [ get-fwks, get-refs ]
 
     strategy:
@@ -123,11 +124,12 @@ jobs:
     - name: Report
       shell: bash
       run: |
-        if [ "${{ needs.build_test.conclusion }}" == "success" ]; then
+        if [ "${{ needs.build-test.conclusion }}" == "success" ]; then
           echo "All Build&Test checks completed successfully."
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
+          core.setFailed("At least one Build&Test check has failed.")
         fi
       
   # create checks
