@@ -79,7 +79,6 @@ jobs:
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
-          core.setFailed("At least one Build&Test check has failed.")
         fi
 
   # create checks
