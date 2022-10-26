@@ -54,7 +54,7 @@ jobs:
 
       # get frameworks
       - name: Get Frameworks
-        id: get_fwks
+        id: get-fwks
         shell: bash
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
