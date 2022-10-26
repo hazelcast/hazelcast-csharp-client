@@ -21,7 +21,6 @@ jobs:
   get-fwks:
     name: Get Frameworks / ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: ensure-membership
 
     strategy:
       matrix:
