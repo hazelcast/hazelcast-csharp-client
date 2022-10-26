@@ -43,6 +43,7 @@ jobs:
   # get frameworks
   get-fwks:
     name: Get Frameworks
+    needs: ensure-repo
     uses: ./.github/workflows/get-frameworks.yml
     secrets: inherit
 
