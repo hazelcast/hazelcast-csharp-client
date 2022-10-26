@@ -1,23 +1,46 @@
 #
-# Workflow: Build PR
+# Reusable Workflow: Build&Test
+#
+# Builds the code and run tests on the specified OS and for the specified frameworks,
+# but only if the user is a member of the Hazelcast organization, as running the tests
+# may end up running unsafe user code or expose secrets such as the enterprise key.
+#
+# Results are uploaded as artifacts.
 #
 
-name: Build PR
+name: Build&Test
 on: 
+
+  # called by upper-level workflow
   workflow_call:
     inputs:
+
+      # the OS to run on e.g. 'ubuntu-latest'
       os:
         required: true
         type: string
+
+      # the json-serialized array of frameworks to test
       fwks:
         required: true
         type: string
 
+      # the optional ref to checkout
+      ref:
+        required: false
+        type: string
+        default: ""
+
+      # the optional merged-ref to validate
+      merged-ref:
+        required: false
+        type: string
+        default: ""
+
 jobs:
 
-  # build and test pr
-  build:
-
+  # build and test
+  build-and-test:
     name: ${{ matrix.fwk }}
     runs-on: ${{ inputs.os }}
 
@@ -72,8 +95,22 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
+
+      # validate code
+      - name: Validate code
+        if: ${{ inputs.merged-ref != "" }}
+        shell: bash
+        run: |
+          git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
+          if [ $? -eq 0 ]; then
+            echo "Code is valid, found merged-ref as parent of HEAD."
+          else
+            echo "Code is NOT valid, could not find merged-ref as parent of HEAD."
+            echo "::error::Invalid merged-ref."
+          fi
 
       # build
       - name: Build
@@ -83,7 +120,6 @@ jobs:
 
       # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
-      # (which means that we do NOT run enterprise tests on PRs from external repositories)
       - name: Test
         id: test
         env:

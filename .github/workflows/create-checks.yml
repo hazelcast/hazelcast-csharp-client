@@ -1,24 +1,44 @@
 #
-# Workflow: Report PR
+# Reusable Workflow: Create Checks
+#
+# Creates the checks (test results, code coverage).
 #
 
-# beware! for workflow_run workflow to run, it must exist on the master or default branch!
-# see https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_run
+name: Create Checks
+on: 
 
-name: Report PR
-on:
-  workflow_run:
-    workflows: [ "Build PR" ]
-    types:
-      - completed
+  # called by upper-level workflow
+  workflow_call:
+    inputs:
+
+      # the conclusion of the build & test
+      conclusion:
+        required: true
+        type: string
+
+      # the identifier of the run which should receive the checks
+      run_id:
+        required: true
+        type: string
+
+      # the sha of the commit for which the checks were run
+      head_sha:
+        required: true
+        type: string
+
+      # whether to report test coverage
+      coverage:
+        required: false
+        type: boolean
+        default: true
 
 jobs:
 
-  report-pr:
-
-    name: Report PR
+  create-checks:
+    name: Create Checks
     runs-on: ubuntu-latest
     if: >
+      # FIXME can be a branch too? a pull_request_target?
       ${{ github.event.workflow_run.event == 'pull_request' }}
 
     steps:
@@ -31,14 +51,16 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: false
 
+      # create required directories, etc
       - name: Prepare
         shell: bash
         run: |
-          echo "Build PR conclusion: ${{ github.event.workflow_run.conclusion }}"
+          echo "Build&Test conclusion = ${{ inputs.conclusion }}"
           mkdir ./temp
           mkdir ./temp/test-results
           mkdir ./temp/test-coverage
 
+      # download all the tests results and coverage artifacts
       # cannot use download action because we get artifacts from another run
       - name: Download tests results and coverage artifacts
         uses: actions/github-script@v4
@@ -48,7 +70,7 @@ jobs:
             var artifacts = await github.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               run_id: ${{ github.event.workflow_run.id }},
+               run_id: ${{ inputs.run_id }},
             });
             for (const artifact of artifacts.data.artifacts) {
                 console.log(`Artifact: ${artifact.name}`);
@@ -120,6 +142,7 @@ jobs:
           fi
 
       # report test results - always
+      # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
         if: steps.unzip.outputs.results == 'true'
         uses: dorny/test-reporter@v1
@@ -133,19 +156,19 @@ jobs:
 
       # report test coverage - if build&test was successful
       - name: Report test coverage
-        if: steps.unzip.outputs.coverage == 'true' && github.event.workflow_run.conclusion == 'success'
+        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
           path: ./temp/test-coverage
-          sha: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
+          sha: ${{ inputs.head_sha }} # required since report runs on 'master'
 
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: steps.unzip.outputs.coverage == 'true' && github.event.workflow_run.conclusion == 'success'
+        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./temp/test-coverage/windows/cover-net6.0.xml
-          override_commit: ${{ github.event.workflow_run.head_sha }} # required since report runs on 'master'
+          override_commit: ${{ inputs.head_sha }} # required since report runs on 'master'

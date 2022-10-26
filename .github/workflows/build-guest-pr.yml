@@ -1,0 +1,50 @@
+#
+# Workflow: Build&Test PR for guests
+#
+#
+#
+
+name: Build&Test Guest PR
+on: workflow_dispatch # pull_request
+
+jobs:
+
+  # get frameworks
+  get_fwks:
+    name: Get Frameworks
+    uses: ./.github/workflows/get-frameworks.yml
+    secrets: inherit
+
+  # build & test
+  build_test:
+    name: Build&Test / ${{ matrix.os }}
+    needs: get_fwks
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+    uses: ./.github/workflows/build-callable.yml
+    secrets: inherit
+    with:
+      os: ${{ matrix.os }}
+      fwks: ${{ needs.get_fwks.outputs[format('fwks-{0}', matrix.os)] }}
+
+  # create the result check
+  report:
+    name: Build&Test Result
+    runs-on: ubuntu-latest
+    if: always()
+    needs: build_test
+    steps:
+    - name: report
+      shell: bash
+      run: |
+        if [ "${{ needs.build_test.conclusion }}" == "success" ]; then
+          echo "All Build&Test checks completed successfully."
+        else
+          echo "At least one Build&Test check has failed."
+          echo "::error::At least one Build&Test check has failed."
+        fi
+      
+  # this is a guest PR build on pull_request, we cannot create checks here
+  # but report-guest-pr.yml will trigger and do what is needed
