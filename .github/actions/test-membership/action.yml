@@ -16,7 +16,7 @@ inputs:
   token:
     required: true
 outputs:
-  check-result:
+  is-member:
     description: "Whether the member name is a member of the organization"
     value: ${{ steps.test-membership.outputs.is-member }}
 runs:
