@@ -72,7 +72,6 @@ jobs:
   # get
   get-refs:
     name: Get Refs
-    id: get-refs
     runs-on: ubuntu-latest
     outputs:
       ref: ${{ steps.get-refs.ref }}
