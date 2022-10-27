@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Networking
@@ -24,6 +25,7 @@ namespace Hazelcast.Networking
     internal class CloudAddressProviderSource : IAddressProviderSource
     {
         private readonly CloudDiscovery _cloudDiscovery;
+        private IDictionary<NetworkAddress, NetworkAddress> _map;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CloudAddressProviderSource"/> class.
@@ -44,10 +46,23 @@ namespace Hazelcast.Networking
         }
 
         /// <inheritdoc />
-        public IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap()
-            => _cloudDiscovery.Scan();
+        public bool Maps => true;
 
         /// <inheritdoc />
-        public bool Maps => true;
+        public (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(bool forceRefresh)
+        {
+            if (_map == null || forceRefresh)
+                _map = _cloudDiscovery.Scan() ?? throw new HazelcastException("Failed to obtain addresses.");
+            return ((IReadOnlyCollection<NetworkAddress>)_map.Values, Array.Empty<NetworkAddress>());
+        }
+
+        /// <inheritdoc />
+        public bool TryMap(NetworkAddress address, bool forceRefreshMap, out NetworkAddress result, out bool freshMap)
+        {
+            freshMap = _map == null || forceRefreshMap;
+            if (freshMap) _map = _cloudDiscovery.Scan();
+            if (_map == null) throw new HazelcastException("Failed to obtain addresses.");
+            return _map.TryGetValue(address, out result);
+        }
     }
 }

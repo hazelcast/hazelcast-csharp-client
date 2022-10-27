@@ -1,3 +1,9 @@
+#
+# Action: DotCover Report
+#
+# Posts the test coverage values as a check for easy access.
+#
+
 name: 'dotcover-report'
 description: 'Reports dotCover output.'
 inputs:
@@ -22,5 +28,5 @@ inputs:
     required: false
     default: ${{ github.token }}
 runs:
-  using: 'node12'
+  using: 'node16'
   main: 'dist/index.js'

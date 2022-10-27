@@ -1,5 +1,6 @@
 {
   "hazelcast": {
-    "arg41":  "value41" 
+    "arg41": "value41",
+    "labels": ["label41"]
   } 
 }

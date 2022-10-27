@@ -1,0 +1,33 @@
+#
+# Action: Test Membership
+#
+# Tests whether a member name is part of an organization.
+#
+# copied and adapted from https://github.com/hazelcast/hazelcast-tpm/blob/main/membership/action.yaml
+# example usage in https://github.com/hazelcast/hazelcast-nodejs-client/blob/master/.github/workflows/coverage_runner.yml#L19
+#
+
+name: Test Membership
+inputs:
+  organization-name:
+    required: true
+  member-name:
+    required: true
+  token:
+    required: true
+outputs:
+  is-member:
+    description: "Whether the member name is a member of the organization"
+    value: ${{ steps.test-membership.outputs.is-member }}
+runs:
+  using: "composite"
+  steps:
+    - id: test-membership
+      shell: bash
+      run: |
+        response=$(curl -v -H "Authorization: token ${{ inputs.token }}" --write-out '%{http_code}' --silent --output /dev/null "https://api.github.com/orgs/${{ inputs.organization-name }}/memberships/${{ inputs.member-name }}")
+        if [[ "$response" -ne 200 ]] ; then
+          echo "is-member=false" >> $GITHUB_OUTPUT
+        else
+          echo "is-member=true" >> $GITHUB_OUTPUT
+        fi

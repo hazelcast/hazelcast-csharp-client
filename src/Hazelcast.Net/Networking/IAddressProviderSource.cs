@@ -17,7 +17,7 @@ using System.Collections.Generic;
 namespace Hazelcast.Networking
 {
     /// <summary>
-    /// Defines a source of internal-to-public addesses map for the <see cref="AddressProvider"/>.
+    /// Defines a source of addresses for the <see cref="AddressProvider"/>.
     /// </summary>
     internal interface IAddressProviderSource
     {
@@ -25,11 +25,23 @@ namespace Hazelcast.Networking
         /// Provides an internal-to-public addresses map.
         /// </summary>
         /// <returns>An internal-to-public addresses map.</returns>
-        IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap();
+        //IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap();
 
         /// <summary>
         /// Determines whether this source maps addresses.
         /// </summary>
         bool Maps { get; }
+
+        //IReadOnlyCollection<NetworkAddress> PrimaryAddresses { get; }
+
+        //IReadOnlyCollection<NetworkAddress> SecondaryAddresses { get; }
+
+        (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(bool forceRefresh);
+
+        //NetworkAddress Map(NetworkAddress address);
+
+        //(bool Fresh, IDictionary<NetworkAddress, NetworkAddress> Map) EnsureMap(bool forceRenew);
+
+        bool TryMap(NetworkAddress address, bool forceRefreshMap, out NetworkAddress result, out bool freshMap);
     }
 }

@@ -57,13 +57,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "workflows", "workflows", "{
 		.github\workflows\assign-milestones.js = .github\workflows\assign-milestones.js
 		.github\workflows\assign-milestones.yml = .github\workflows\assign-milestones.yml
 		.github\workflows\build-branch.yml = .github\workflows\build-branch.yml
-		.github\workflows\build-pr-on.yml = .github\workflows\build-pr-on.yml
-		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
+		.github\workflows\build-and-test.yml = .github\workflows\build-and-test.yml
 		.github\workflows\build-release.yml = .github\workflows\build-release.yml
+		.github\workflows\build-guest-pr.yml = .github\workflows\build-guest-pr.yml
+		.github\workflows\build-pr.yml = .github\workflows\build-pr.yml
+		.github\workflows\create-checks.yml = .github\workflows\create-checks.yml
+		.github\workflows\get-frameworks.yml = .github\workflows\get-frameworks.yml
 		.github\workflows\jira-label.yml = .github\workflows\jira-label.yml
 		.github\workflows\release-scripts.js = .github\workflows\release-scripts.js
-		.github\workflows\report-pr.yml = .github\workflows\report-pr.yml
 		.github\workflows\trigger-release.yml = .github\workflows\trigger-release.yml
+		.github\workflows\report-guest-pr.yml = .github\workflows\report-guest-pr.yml
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "actions", "actions", "{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}"
@@ -81,6 +84,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "dotcover-report", "dotcover
 		.github\actions\dotcover-report\index.js = .github\actions\dotcover-report\index.js
 		.github\actions\dotcover-report\package.json = .github\actions\dotcover-report\package.json
 		.github\actions\dotcover-report\README.md = .github\actions\dotcover-report\README.md
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test-membership", "test-membership", "{295E2764-401E-4604-8C2E-E20B99171705}"
+	ProjectSection(SolutionItems) = preProject
+		.github\actions\test-membership\action.yml = .github\actions\test-membership\action.yml
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{7A5DDB5C-A126-4A4E-914E-87E7E54941DB}"
+	ProjectSection(SolutionItems) = preProject
+		.github\actions\install\action.yml = .github\actions\install\action.yml
 	EndProjectSection
 EndProject
 Global
@@ -137,6 +150,8 @@ Global
 		{48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA} = {0C348BC9-F8B2-4AEE-A32C-6E68CDD120C1}
 		{EC9DC3B3-C54D-4055-A553-63E757DF3E39} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 		{3C970CF6-DF19-4FD0-9BE3-F63EE72AC4CC} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
+		{295E2764-401E-4604-8C2E-E20B99171705} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
+		{7A5DDB5C-A126-4A4E-914E-87E7E54941DB} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}

@@ -1,86 +1,150 @@
 #
-# Workflow: Build PR
+# Workflow: Build&Test PR for Hazelcast organization members
+#
+# Builds the code and run tests on a 2-dimension matrix of OS and frameworks, but
+# only if the user is a member of the Hazelcast organization, as running the tests
+# may end up running unsafe user code or expose secrets such as the enterprise key.
+#
+# Relies on build-and-test.yml workflow to do the actual building and testing of
+# each OS and framework. Results are uploaded as artifacts and published as checks.
+#
+# Creates the 'Build&Test Result' check which is the check that GitHub requires
+# (the PR cannot be merged until that check has completed successfully).
 #
 
-name: Build PR
-on: pull_request
+name: Build&Test PR
+on: 
+
+  # automatic on every pull request
+  pull_request_target:
+
+  # manual (for community PRs that we want to force-run here)  
+  workflow_dispatch:
+    inputs:
+
+      # the PR number eg 712
+      pr_number:
+        description: Enter guest PR number to run test & coverage on it.
+        required: true
+
+      # the PR HEAD commit SHA which MUST have been verified
+      pr_commit:
+        description: Enter guest PR verified HEAD commit SHA.
+        required: true
 
 jobs:
 
-  # get frameworks
-  get_fwks:
-
-    name: Get Frameworks / ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      matrix:
-        os: [ ubuntu-latest, windows-latest ]
-
+  # test hazelcast membership
+  test-membership:
+    name: Test Hazelcast Membership
+    runs-on: ubuntu-latest
     outputs:
-      # beware! this cannot be dynamic = must match the OS matrix
-      fwks-ubuntu-latest: ${{ steps.get_fwks.outputs.fwks-ubuntu-latest }}
-      fwks-windows-latest: ${{ steps.get_fwks.outputs.fwks-windows-latest }}
+      is-hazelcast: ${{ steps.test-membership.outputs.is-member }}
 
     steps:
-
       # checkout the hazelcast/hazelcast-csharp-client repository
-      # no need for submodules here
+      # bare minimum - just to use actions
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: false
 
-      # install powershell
-      - name: Install utilities (Linux only)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Test
+        id: test-membership
+        uses: ./.github/actions/test-membership
+        with:
+          organization-name: hazelcast
+          member-name: ${{ github.event.pull_request.head.repo.owner.login }}
+          token: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
+
+  # ensure we are an Hazelcast organization member OR manually running
+  ensure-membership:
+    name: Ensure Membership
+    runs-on: ubuntu-latest
+    needs: test-membership
+    if: needs.test-membership.outputs.is-hazelcast == 'true' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Report
+        shell: bash
+        run: echo "User ${{ github.event.pull_request.head.repo.owner.login }} is a member of the Hazelcast organization"
+
+  # get frameworks
+  get-fwks:
+    name: Get Frameworks
+    uses: ./.github/workflows/get-frameworks.yml
+    needs: ensure-membership
+    secrets: inherit
+
+  # get
+  get-refs:
+    name: Get Refs
+    runs-on: ubuntu-latest
+    outputs:
+      ref: ${{ steps.get-refs.ref }}
+      merged-ref: ${{ steps.get-refs.merged-ref }}
+
+    steps:
+      - name: Get Refs
+        id: get-refs
         shell: bash
         run: |
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # get frameworks
-      - name: Get Frameworks
-        id: get_fwks
-        shell: bash
-        run: |
-          FWKS=$(pwsh ./hz.ps1 getfwks-json)
-          echo "fwks-${{ matrix.os }}=$FWKS"
-          echo "::set-output name=fwks-${{ matrix.os }}::$FWKS"
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "ref=refs/pull/${{ inputs.pr_number }}/merge" >> $GITHUB_OUTPUT
+            echo "merged-ref=${{ inputs.pr_commit }}" >> $GITHUB_OUTPUT
+          else
+            echo "ref=''" >> $GITHUB_OUTPUT
+            echo "merged-ref=''" >> $GITHUB_OUTPUT
+          fi
 
   # build & test
-  build_test:
+  build-test:
     name: Build&Test / ${{ matrix.os }}
-    needs: get_fwks
+    needs: [ get-fwks, get-refs ]
+
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
-    uses: ./.github/workflows/build-pr-on.yml
+
+    uses: ./.github/workflows/build-and-test.yml
     secrets: inherit
     with:
       os: ${{ matrix.os }}
-      fwks: ${{ needs.get_fwks.outputs[format('fwks-{0}', matrix.os)] }}
+      fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
+      ref: ${{ needs.get-refs.ref }}
+      merged-ref: ${{ needs.get-refs.merged-ref }}
 
-  # report build & test result
-  # -> GitHub is configured to require the 'Build&Test Result' check
+  # create the result check
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
     if: always()
-    needs: build_test
+    needs: build-test
+
     steps:
-    - name: report
+    - name: Report
       shell: bash
       run: |
-        if [ "${{ needs.build_test.conclusion }}" == "success" ]; then
+        if [ "${{ needs.build-test.result }}" == "success" ]; then
           echo "All Build&Test checks completed successfully."
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
+          exit 1
         fi
       
+  # create checks
+  create-checks:
+    name: Create Checks
+    if: always()
+    needs: build-test
+
+    uses: ./.github/workflows/create-checks.yml
+    secrets: inherit
+    with:
+      conclusion: ${{ needs.build-test.conclusion }}
+      run_id: ${{ github.run_id }} # run id
+      head_sha: ${{ github.sha }} # sha that triggered the workflow

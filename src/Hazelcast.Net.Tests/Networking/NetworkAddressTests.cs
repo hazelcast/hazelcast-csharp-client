@@ -78,29 +78,27 @@ namespace Hazelcast.Tests.Networking
             Assert.AreEqual("b", d[new IPEndPoint(IPAddress.Parse("127.0.0.1"), 666)]);
         }
 
-        private static void AssertAddresses(IEnumerable<NetworkAddress> xx, string n, bool v6)
+        private static void AssertAddresses(IReadOnlyCollection<NetworkAddress> addresses, int count, string n, int port, bool isIpV6)
         {
-            var xa = xx.ToArray();
-            foreach (var x in xa)
-                Console.WriteLine("  " + x);
-            Assert.That(xa.Length, Is.GreaterThanOrEqualTo(3));
-            for (var i = 0; i < 3; i++)
+            foreach (var address in addresses) Console.WriteLine("  " + address);
+            Assert.That(addresses.Count, Is.EqualTo(count));
+            foreach (var address in addresses)
             {
                 if (n == "*")
-                    Assert.That(xa[i].ToString().EndsWith(":570" + (i + 1)));
+                    Assert.That(address.ToString(), Does.EndWith(":" + port++));
                 else
-                    Assert.That(xa[i].ToString(), Is.EqualTo(n + ":570" + (i + 1)));
-                Assert.That(xa[i].IsIpV6, Is.EqualTo(v6));
+                    Assert.That(address.ToString(), Is.EqualTo(n + ":" + port++));
+                Assert.That(address.IsIpV6, Is.EqualTo(isIpV6));
             }
         }
 
-        private static ICollection<NetworkAddress> GetAddresses(string address)
+        private static (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(string address)
         {
             var options = new NetworkingOptions();
             options.Addresses.Clear();
             options.Addresses.Add(address);
             var addressProviderSource = new ConfigurationAddressProviderSource(options, new NullLoggerFactory());
-            return addressProviderSource.CreateInternalToPublicMap().Values;
+            return addressProviderSource.GetAddresses(false);
         }
 
         [Test]
@@ -116,11 +114,13 @@ namespace Hazelcast.Tests.Networking
 
             var addresses = GetAddresses("127.0.0.1");
             Console.WriteLine("127.0.0.1");
-            AssertAddresses(addresses, "127.0.0.1", false);
+            AssertAddresses(addresses.Primary, 1, "127.0.0.1", 5701, false);
+            AssertAddresses(addresses.Secondary, 2, "127.0.0.1", 5702, false);
 
             addresses = GetAddresses("localhost");
             Console.WriteLine("localhost");
-            AssertAddresses(addresses, "127.0.0.1", false);
+            AssertAddresses(addresses.Primary, 1, "127.0.0.1", 5701, false);
+            AssertAddresses(addresses.Secondary, 2, "127.0.0.1", 5702, false);
 
             // on Windows, this gets 127.0.0.1 but on Linux it gets what the host name
             // maps to in /etc/hosts and by default on some systems (eg Debian) it can
@@ -130,11 +130,13 @@ namespace Hazelcast.Tests.Networking
             Console.Write(Dns.GetHostName());
             var n = Dns.GetHostAddresses(Dns.GetHostName()).First(x => x.AddressFamily == AddressFamily.InterNetwork).ToString();
             Console.WriteLine(" -> " + n);
-            AssertAddresses(addresses, n, false);
+            AssertAddresses(addresses.Primary, 1, n, 5701, false);
+            AssertAddresses(addresses.Secondary, 2, n, 5702, false);
 
             addresses = GetAddresses("::1");
             Console.WriteLine("::1");
-            AssertAddresses(addresses, "[::1]", true);
+            AssertAddresses(addresses.Primary, 1, "[::1]", 5701, true);
+            AssertAddresses(addresses.Secondary, 2, "[::1]", 5702, true);
 
             // on Windows, this gets the various fe80 local addresses (but not the random one
             // that we specified) - on Linux this gets nothing and it may eventually be an issue?
@@ -146,13 +148,14 @@ namespace Hazelcast.Tests.Networking
             Console.WriteLine("fe80::bd0f:a8bc:6480:238b");
             if (OS.IsWindows)
             {
-                // test the first 3, we might get more depending on NICs
-                AssertAddresses(addresses, "*", true);
+                // test the first, we might get more depending on NICs
+                AssertAddresses(addresses.Primary.Take(1).ToList(), 1, "*", 5701, true);
+                AssertAddresses(addresses.Secondary.Take(2).ToList(), 2, "*", 5702, true);
             }
             else
             {
-                foreach (var a in addresses)
-                    Console.WriteLine("  " + a);
+                foreach (var a in addresses.Primary) Console.WriteLine("  " + a);
+                foreach (var a in addresses.Secondary) Console.WriteLine("  " + a);
             }
         }
 

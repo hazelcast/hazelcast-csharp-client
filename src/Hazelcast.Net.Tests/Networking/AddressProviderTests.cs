@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using Hazelcast.Configuration;
 using Hazelcast.Exceptions;
@@ -29,22 +28,30 @@ namespace Hazelcast.Tests.Networking
     {
         private class TestAddressProviderSource : IAddressProviderSource
         {
-            private readonly Func<IDictionary<NetworkAddress, NetworkAddress>> _createInternalToPublicMap;
+            private readonly Func<IDictionary<NetworkAddress, NetworkAddress>> _createMap;
+            private IDictionary<NetworkAddress, NetworkAddress> _map;
 
-            public TestAddressProviderSource(Func<IDictionary<NetworkAddress, NetworkAddress>> createInternalToPublicMap = null)
+            public TestAddressProviderSource(Func<IDictionary<NetworkAddress, NetworkAddress>> createMap)
             {
-                _createInternalToPublicMap = createInternalToPublicMap;
-            }
-
-            public IDictionary<NetworkAddress, NetworkAddress> CreateInternalToPublicMap()
-            {
-                if (_createInternalToPublicMap == null)
-                    throw new InvalidOperationException("Cannot create a map.");
-
-                return _createInternalToPublicMap();
+                _createMap = createMap ?? throw new ArgumentNullException(nameof(createMap));
             }
 
             public bool Maps => true;
+
+            public (IReadOnlyCollection<NetworkAddress>, IReadOnlyCollection<NetworkAddress>) GetAddresses(bool forceRefresh)
+            {
+                if (_map == null || forceRefresh)
+                    _map = _createMap() ?? throw new HazelcastException("Failed to obtain addresses.");
+                return ((IReadOnlyCollection<NetworkAddress>)_map.Values, Array.Empty<NetworkAddress>());
+            }
+
+            public bool TryMap(NetworkAddress address, bool forceRefreshMap, out NetworkAddress result, out bool freshMap)
+            {
+                freshMap = _map == null || forceRefreshMap;
+                if (freshMap) _map = _createMap();
+                if (_map == null) throw new HazelcastException("Failed to obtain addresses.");
+                return _map.TryGetValue(address, out result);
+            }
         }
 
         [Test]
@@ -56,10 +63,9 @@ namespace Hazelcast.Tests.Networking
             var addressProviderSource = new ConfigurationAddressProviderSource(options, loggerFactory);
             var addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
 
-            Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(3));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5701)));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5702)));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("127.0.0.1", 5703)));
+            var (primary, secondary) = addressProvider.GetAddresses();
+            Assert.That(primary, Is.EquivalentTo(new[] { new NetworkAddress("127.0.0.1", 5701) }));
+            Assert.That(secondary, Is.EquivalentTo(new[] { new NetworkAddress("127.0.0.1", 5702), new NetworkAddress("127.0.0.1", 5703) }));
 
             options.Addresses.Clear();
             options.Addresses.Add("##??##");
@@ -77,11 +83,15 @@ namespace Hazelcast.Tests.Networking
             addressProviderSource = new ConfigurationAddressProviderSource(options, loggerFactory);
             addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
 
-            Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(3));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5701)));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5702)));
-            Assert.That(addressProvider.GetAddresses(), Does.Contain(new NetworkAddress("192.0.0.1", 5703)));
-
+            (primary, secondary) = addressProvider.GetAddresses();
+            Assert.That(primary, Is.EquivalentTo(new[]
+            {
+                new NetworkAddress("192.0.0.1", 5701),
+                new NetworkAddress("192.0.0.1", 5702), 
+                new NetworkAddress("192.0.0.1", 5703)
+            }));
+            Assert.That(secondary, Is.Empty);
+            
             var address = new NetworkAddress("192.0.0.1");
             Assert.That(addressProvider.Map(address), Is.SameAs(address));
 
@@ -90,10 +100,38 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
+        public void ExpandedPortsAreSecondaryAddresses()
+        {
+            var options = new NetworkingOptions();
+            var loggerFactory = new NullLoggerFactory();
+
+            options.Addresses.Clear();
+            options.Addresses.Add("192.168.0.1");
+            options.Addresses.Add("192.168.0.2");
+
+            var addressProviderSource = new ConfigurationAddressProviderSource(options, loggerFactory);
+            var addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
+
+            var (primary, secondary) = addressProvider.GetAddresses();
+            Assert.That(primary, Is.EquivalentTo(new[]
+            {
+                new NetworkAddress("192.168.0.1", 5701),
+                new NetworkAddress("192.168.0.2", 5701)
+            }));
+            Assert.That(secondary, Is.EquivalentTo(new[]
+            {
+                new NetworkAddress("192.168.0.1", 5702), 
+                new NetworkAddress("192.168.0.1", 5703),
+                new NetworkAddress("192.168.0.2", 5702),
+                new NetworkAddress("192.168.0.2", 5703)
+            }));
+        }
+
+        [Test]
         public void ArgumentExceptions()
         {
             Assert.Throws<ArgumentNullException>(() => _ = new AddressProvider(null, new NullLoggerFactory()));
-            Assert.Throws<ArgumentNullException>(() => _ = new AddressProvider(new TestAddressProviderSource(), null));
+            Assert.Throws<ArgumentNullException>(() => _ = new AddressProvider(new TestAddressProviderSource(() => default), null));
         }
 
         [Test]
@@ -142,11 +180,15 @@ namespace Hazelcast.Tests.Networking
 
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
 
-                Assert.That(addressProvider.GetAddresses().Count(), Is.EqualTo(4));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.6:5701")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.7:5701")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.8:5703")));
-                Assert.That(addressProvider.GetAddresses(), Does.Contain(NetworkAddress.Parse("192.147.0.9:5707")));
+                var (primary, secondary) = addressProvider.GetAddresses();
+                Assert.That(secondary, Is.Empty);
+                Assert.That(primary, Is.EquivalentTo(new[]
+                {
+                    NetworkAddress.Parse("192.147.0.6:5701"),
+                    NetworkAddress.Parse("192.147.0.7:5701"),
+                    NetworkAddress.Parse("192.147.0.8:5703"),
+                    NetworkAddress.Parse("192.147.0.9:5707")
+                }));
 
                 addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
                 Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
@@ -161,7 +203,6 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public void BogusCreateMapThrows()
         {
-            var options = new NetworkingOptions();
             var addressProvider = new AddressProvider(new TestAddressProviderSource(() => null), new NullLoggerFactory());
 
             // if the source returns null we get an exception
@@ -173,7 +214,6 @@ namespace Hazelcast.Tests.Networking
         {
             var count = 0;
 
-            var options = new NetworkingOptions();
             var addressProviderSource = new TestAddressProviderSource(() =>
             {
                 Interlocked.Increment(ref count);
@@ -183,10 +223,10 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(count, Is.EqualTo(0));
 
-            var addresses1 = addressProvider.GetAddresses();
+            var unused1 = addressProvider.GetAddresses();
             Assert.That(count, Is.EqualTo(1));
 
-            var addresses2 = addressProvider.GetAddresses();
+            var unused2 = addressProvider.GetAddresses();
             Assert.That(count, Is.EqualTo(2));
         }
 
@@ -195,7 +235,6 @@ namespace Hazelcast.Tests.Networking
         {
             var count = 0;
 
-            var options = new NetworkingOptions();
             var addressProviderSource = new TestAddressProviderSource(() =>
             {
                 Interlocked.Increment(ref count);
@@ -209,10 +248,10 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(count, Is.EqualTo(0));
 
-            var addresses1 = addressProvider.GetAddresses();
+            var unused1 = addressProvider.GetAddresses();
             Assert.That(count, Is.EqualTo(1));
 
-            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
+            var unused2 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
             Assert.That(count, Is.EqualTo(1)); // successful Map = use cached map
         }
 
@@ -221,7 +260,6 @@ namespace Hazelcast.Tests.Networking
         {
             var count = 0;
 
-            var options = new NetworkingOptions();
             var addressProviderSource = new TestAddressProviderSource(() =>
             {
                 Interlocked.Increment(ref count);
@@ -235,10 +273,10 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(count, Is.EqualTo(0));
 
-            var addresses1 = addressProvider.GetAddresses();
+            var unused1 = addressProvider.GetAddresses();
             Assert.That(count, Is.EqualTo(1));
 
-            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
+            var unused2 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
             Assert.That(count, Is.EqualTo(2)); // failed Map = tried again
         }
 
@@ -247,7 +285,6 @@ namespace Hazelcast.Tests.Networking
         {
             var count = 0;
 
-            var options = new NetworkingOptions();
             var addressProviderSource = new TestAddressProviderSource(() =>
             {
                 Interlocked.Increment(ref count);
@@ -261,7 +298,7 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(count, Is.EqualTo(0));
 
-            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
+            var unused = addressProvider.Map(NetworkAddress.Parse("192.168.0.1"));
             Assert.That(count, Is.EqualTo(1)); // created a map, then successful Map
         }
 
@@ -270,7 +307,6 @@ namespace Hazelcast.Tests.Networking
         {
             var count = 0;
 
-            var options = new NetworkingOptions();
             var addressProviderSource = new TestAddressProviderSource(() =>
             {
                 Interlocked.Increment(ref count);
@@ -284,7 +320,7 @@ namespace Hazelcast.Tests.Networking
 
             Assert.That(count, Is.EqualTo(0));
 
-            var address1 = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
+            var unused = addressProvider.Map(NetworkAddress.Parse("192.168.0.2"));
             Assert.That(count, Is.EqualTo(1)); // created a map, then failed Map, no point re-creating
         }
     }

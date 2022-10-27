@@ -1,14 +1,24 @@
 #
-# Workflow: Build Branch
+# Workflow: Build&Test Branch
+#
+# Builds the code and run tests on a 2-dimension matrix of OS and frameworks.
+#
+# Note: runs only on the hazelcast/hazelcast-csharp-client so that we do not pollute
+# fork repositories with unwanted actions (our contributors may not want an action to
+# run in their fork).
+#
+# Relies on build-and-test.yml workflow to do the actual building and testing of
+# each OS and framework. Results are uploaded as artifacts and published as checks.
 #
 
-name: Build Branch
+name: Build&Test Branch
 on:
-  # trigger on schedule, to the default branch only
-  # see https://docs.github.com/en/actions/learn-github-actions/events-that-trigger-workflows
+
+  # trigger on schedule (default branch only)
   schedule:
     # everyday at 4:27 UTC
     - cron: '27 4 * * *'
+
   # trigger on push to any branch
   push:
     branches-ignore:
@@ -19,124 +29,68 @@ on:
 
 jobs:
 
-  # build and test the branch
-  build-branch:
-
-    name: Build Branch (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-
+  # ensure we are running on the proper repository
+  ensure-repo:
+    name: Ensure Repository
+    runs-on: ubuntu-latest
     if: github.repository == 'hazelcast/hazelcast-csharp-client'
+
+    steps:
+      - name: Report
+        shell: bash
+        run: echo "Repository is ${{ github.repository }}"
+
+  # get frameworks
+  get-fwks:
+    name: Get Frameworks
+    needs: ensure-repo
+    uses: ./.github/workflows/get-frameworks.yml
+    secrets: inherit
+
+  # build and test
+  build-test:
+    name: Build&Test / ${{ matrix.os }}
+    needs: get-fwks
 
     strategy:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
+    uses: ./.github/workflows/build-and-test.yml
+    secrets: inherit
+    with:
+      os: ${{ matrix.os }}
+      fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
+
+  # create the result check
+  report:
+    name: Build&Test Result
+    runs-on: ubuntu-latest
+    if: always()
+    needs: build-test
+
     steps:
+    - name: Report
+      shell: bash
+      run: |
+        if [ "${{ needs.build-test.result }}" == "success" ]; then
+          echo "All Build&Test checks completed successfully."
+        else
+          echo "At least one Build&Test check has failed."
+          echo "::error::At least one Build&Test check has failed."
+          exit 1
+        fi
 
-      # Install Linux utilities
-      - name: Install utilities (Linux only)
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
+  # create checks
+  create-checks:
+    name: Create Checks
+    if: always()
+    needs: build-test
 
-      # Install .NET
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: |
-            3.1.x
-            5.0.x
-            6.0.x
-
-      # Install Java
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
-
-      # checkout the hazelcast/hazelcast-csharp-client repository
-      # including all submodules, we are going to need them
-      - name: Checkout code
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
-
-      # build
-      - name: Build
-        id: build
-        shell: pwsh
-        run: ./hz.ps1 -localRestore build #,docs,pubdocs
-
-      # test (with coverage)
-      # -enterprise only if the key is available, we do not share it outside of the HZ org
-      - name: Test
-        id: test
-        env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-        shell: pwsh
-        run: |
-          $a = @( "test", "-noRestore", "-localRestore", "-cover" )
-          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
-          ./hz.ps1 @a
-
-      # report test results
-      - name: Report test results
-        uses: dorny/test-reporter@v1
-        if: (success() || failure()) && steps.build.conclusion == 'success'
-        with:
-          name: Test Results (${{ matrix.os }})
-          path: temp/tests/results/results-*.trx
-          reporter: dotnet-trx
-          list-suites: failed
-          list-tests: failed
-          fail-on-error: false
-
-      # report test coverage
-      - name: Report test coverage
-        uses: ./.github/actions/dotcover-report
-        with:
-          name: Test Coverage (${{ matrix.os }})
-          path: temp/tests/cover
-          sha: ${{ github.sha }}
-
-      # upload test results artifact
-      - name: Upload test results artifact
-        if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Results (${{ matrix.os }})
-          path: './temp/tests/results/*.trx'
-
-      # upload test coverage artifact
-      - name: Upload test coverage artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Coverage (${{ matrix.os }})
-          path: './temp/tests/cover/' # entire directory
-
-      # publish to codecov
-      - name: Publish to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/tests/cover/cover-net6.0.xml
+    uses: ./.github/workflows/create-checks.yml
+    secrets: inherit
+    with:
+      conclusion: ${{ needs.build-test.conclusion }}
+      run_id: ${{ github.run_id }} # run id
+      head_sha: ${{ github.sha }} # sha that triggered the workflow

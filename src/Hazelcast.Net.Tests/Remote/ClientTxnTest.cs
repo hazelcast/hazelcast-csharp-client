@@ -39,6 +39,14 @@ namespace Hazelcast.Tests.Remote
             });
         }
 
+        [Test]
+        public void TestPositiveDurability()
+        {
+            var opt = new TransactionOptions();
+            opt.Durability = 1;
+            Assert.AreEqual(1, opt.Durability);
+        }
+
         // TODO: negative timeout is OK and means infinite?
         /*
         [Test]
