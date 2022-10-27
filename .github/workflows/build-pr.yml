@@ -80,9 +80,6 @@ jobs:
     steps:
       - name: Get Refs
         id: get-refs
-        outputs:
-          ref:
-          merged-ref:
         shell: bash
         run: |
           if [ "${{ github.event_name }}" == "workflow_dispatch" ];
