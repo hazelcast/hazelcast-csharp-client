@@ -1,3 +1,9 @@
+#
+# Action: DotCover Report
+#
+# Posts the test coverage values as a check for easy access.
+#
+
 name: 'dotcover-report'
 description: 'Reports dotCover output.'
 inputs:

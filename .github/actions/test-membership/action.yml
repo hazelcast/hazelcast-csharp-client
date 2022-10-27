@@ -1,5 +1,11 @@
+#
+# Action: Test Membership
+#
+# Tests whether a member name is part of an organization.
+#
 # copied and adapted from https://github.com/hazelcast/hazelcast-tpm/blob/main/membership/action.yaml
 # example usage in https://github.com/hazelcast/hazelcast-nodejs-client/blob/master/.github/workflows/coverage_runner.yml#L19
+#
 
 name: Test Membership
 inputs:

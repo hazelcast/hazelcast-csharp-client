@@ -42,7 +42,7 @@ jobs:
     steps:
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -138,7 +138,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -314,7 +314,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -360,7 +360,7 @@ jobs:
 
       # checkout documentation
       - name: Checkout documentation
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: gh-pages
@@ -433,7 +433,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
@@ -449,7 +449,7 @@ jobs:
       # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
       # repository that is private you will need to provide your own PAT."
       - name: Checkout devops
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: hazelcast/DevOps
           ref: master
@@ -497,7 +497,7 @@ jobs:
 
       # checkout documentation
       - name: Checkout documentation
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: gh-pages

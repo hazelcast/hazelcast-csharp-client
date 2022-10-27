@@ -1,4 +1,8 @@
-
+#
+# Action: Install
+#
+# Installs various dependencies.
+#
 
 name: Install
 inputs:

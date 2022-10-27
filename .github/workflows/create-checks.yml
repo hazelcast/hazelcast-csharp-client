@@ -43,7 +43,7 @@ jobs:
       # checkout the hazelcast/hazelcast-csharp-client repository
       # no need for submodules, but we need the .github directory
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: false
@@ -63,7 +63,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            console.log(`Downloading artifacts for run ID ${{inputs.run_id}}`)
+            console.log(`Downloading artifacts for run ID ${{inputs.run_id}}, repo ${{ context.repo.repo }} owner ${{ context.repo.owner }}`)
             var fs = require('fs');
             var artifacts = await github.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
