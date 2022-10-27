@@ -43,6 +43,15 @@ jobs:
       is-hazelcast: ${{ steps.test-membership.outputs.is-member }}
 
     steps:
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # bare minimum - just to use actions
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          submodules: false
+
       - name: Test
         id: test-membership
         uses: ./.github/actions/test-membership
@@ -83,7 +92,7 @@ jobs:
         id: get-refs
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" == "workflow_dispatch" ];
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
             echo "ref=refs/pull/${{ inputs.pr_number }}/merge" >> $GITHUB_OUTPUT
             echo "merged-ref=${{ inputs.pr_commit }}" >> $GITHUB_OUTPUT
           else
@@ -125,6 +134,7 @@ jobs:
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
+          exit 1
         fi
       
   # create checks
