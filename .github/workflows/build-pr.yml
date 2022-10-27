@@ -67,6 +67,7 @@ jobs:
   get-fwks:
     name: Get Frameworks
     uses: ./.github/workflows/get-frameworks.yml
+    needs: ensure-membership
     secrets: inherit
 
   # get
