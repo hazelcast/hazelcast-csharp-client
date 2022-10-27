@@ -41,7 +41,7 @@ jobs:
 
   # build and test
   build-and-test:
-    name: ${{ matrix.fwk }}
+    name: ${{ inputs.os }}+${{ matrix.fwk }}
     runs-on: ${{ inputs.os }}
 
     strategy:

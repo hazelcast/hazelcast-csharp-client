@@ -37,9 +37,6 @@ jobs:
   create-checks:
     name: Create Checks
     runs-on: ubuntu-latest
-    if: >
-      # FIXME can be a branch too? a pull_request_target?
-      ${{ github.event.workflow_run.event == 'pull_request' }}
 
     steps:
 
@@ -66,6 +63,8 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
+            console.log(`Downloading artifacts for run ID ${inputs.run_id}`)
+            console.log(`Downloading artifacts for run ID ${{inputs.run_id}}`)
             var fs = require('fs');
             var artifacts = await github.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
