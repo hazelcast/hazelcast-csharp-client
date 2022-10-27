@@ -51,14 +51,6 @@ jobs:
 
     steps:
 
-      # Install our environment
-      - name: Install environment
-        uses: ./.github/actions/install
-        with:
-          os: ${{ inputs.os }}
-          dotnet: true
-          java: true
-
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
@@ -67,6 +59,14 @@ jobs:
           ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
+
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: true
 
       # validate code
       - name: Validate code
