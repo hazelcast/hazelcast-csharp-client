@@ -94,7 +94,6 @@ jobs:
   # build & test
   build-test:
     name: Build&Test / ${{ matrix.os }}
-    id: build-test
     needs: [ get-fwks, get-refs ]
 
     strategy:
