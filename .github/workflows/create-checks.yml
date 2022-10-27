@@ -63,7 +63,7 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            console.log(`Downloading artifacts for run ID ${{inputs.run_id}}, repo ${{ context.repo.repo }} owner ${{ context.repo.owner }}`)
+            console.log(`Downloading artifacts for run ID ${{inputs.run_id}}, repo ${context.repo.repo} owner ${context.repo.owner}`)
             var fs = require('fs');
             var artifacts = await github.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
