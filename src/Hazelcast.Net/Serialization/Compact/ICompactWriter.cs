@@ -27,14 +27,6 @@ namespace Hazelcast.Serialization.Compact
         // the two methods, thus avoiding allocating an extra nullable struct and/or
         // boxing when it is not necessary.
 
-        /// <summary>
-        /// Gets the <see cref="FieldKind"/> of a field.
-        /// </summary>
-        /// <param name="name">The name of the field.</param>
-        /// <returns>The <see cref="FieldKind"/> of the field, which can be <see cref="FieldKind.NotAvailable"/> if the field does not exist.</returns>
-        FieldKind GetFieldKind(string name);
-
-
         // do NOT remove nor alter the <generated></generated> lines!
         // <generated>
 
