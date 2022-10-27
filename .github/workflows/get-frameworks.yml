@@ -40,17 +40,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # install powershell
-      - name: Install utilities (Linux only)
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: false
+          java: false
 
       # get frameworks
       - name: Get Frameworks
@@ -59,4 +55,4 @@ jobs:
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
           echo "fwks-${{ matrix.os }}=$FWKS"
-          echo "::set-output name=fwks-${{ matrix.os }}::$FWKS"
+          echo "fwks-${{ matrix.os }}=$FWKS" >> $GITHUB_OUTPUT

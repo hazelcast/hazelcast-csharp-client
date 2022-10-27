@@ -63,7 +63,6 @@ jobs:
         uses: actions/github-script@v4
         with:
           script: |
-            console.log(`Downloading artifacts for run ID ${inputs.run_id}`)
             console.log(`Downloading artifacts for run ID ${{inputs.run_id}}`)
             var fs = require('fs');
             var artifacts = await github.actions.listWorkflowRunArtifacts({
@@ -114,9 +113,9 @@ jobs:
             unzip $f -d temp/test-results/$os # linux results-net5.0.trx goes into temp/test-results/ubuntu/results-net5.0.trx
           done
           if [ $found -eq 1 ]; then
-            echo "::set-output name=results::true"
+            echo "results=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=results::false"
+            echo "results=false" >> $GITHUB_OUTPUT
             echo "(missing)"
           fi
 
@@ -134,9 +133,9 @@ jobs:
             unzip $f -d temp/test-coverage/$os # linux cover-net6.0.json goes into temp/test-coverage/ubuntu/cover-net6.0.json
           done
           if [ $found -eq 1 ]; then
-            echo "::set-output name=coverage::true"
+            echo "coverage=true" >> $GITHUB_OUTPUT
           else
-            echo "::set-output name=coverage::false"
+            echo "coverage=false" >> $GITHUB_OUTPUT
             echo "(missing)"
           fi
 

@@ -64,8 +64,8 @@ jobs:
                 if [ $? -ne 0 ]; then
                     echo "Tag v$HZVERSION does not exist, proceed with build"
                     # set step/job output
-                    echo "::set-output name=todo::build"
-                    echo "::set-output name=version::$HZVERSION"
+                    echo "todo=build" >> $GITHUB_OUTPUT
+                    echo "version=$HZVERSION" >> $GITHUB_OUTPUT
                 else
                     HZTAGSHA=$(git rev-parse v$HZVERSION >/dev/null 2>&1)
                     if [ "$HZTAGSHA" != "${{ github.sha }}" ]; then
@@ -74,8 +74,8 @@ jobs:
                     else
                         echo "Tag v$HZVERSION exists on this commit, nothing to do"
                         # set step/job output
-                        echo "::set-output name=todo::nothing"
-                        echo "::set-output name=version::$HZVERSION"
+                        echo "todo=nothing" >> $GITHUB_OUTPUT
+                        echo "version=$HZVERSION" >> $GITHUB_OUTPUT
                     fi
                 fi
             else
@@ -103,8 +103,8 @@ jobs:
                     else
                         echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
                         # set step/job output
-                        echo "::set-output name=todo::release"
-                        echo "::set-output name=version::$HZVERSION"
+                        echo "todo=release" >> $GITHUB_OUTPUT
+                        echo "version=$HZVERSION" >> $GITHUB_OUTPUT
                     fi
                 fi
             else
@@ -135,44 +135,13 @@ jobs:
 
     steps:
 
-      # Install Linux utilities
-      - name: Install utilities (Linux only)
-        if: matrix.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # Install .NET
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
         with:
-          dotnet-version: |
-            3.1.x
-            5.0.x
-            6.0.x
-
-      # Install Java
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: true
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them

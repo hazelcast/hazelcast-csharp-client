@@ -21,7 +21,7 @@ runs:
       run: |
         response=$(curl -v -H "Authorization: token ${{ inputs.token }}" --write-out '%{http_code}' --silent --output /dev/null "https://api.github.com/orgs/${{ inputs.organization-name }}/memberships/${{ inputs.member-name }}")
         if [[ "$response" -ne 200 ]] ; then
-          echo "::set-output name=is-member::false"
+          echo "is-member=false" >> $GITHUB_OUTPUT
         else
-          echo "::set-output name=is-member::true"
+          echo "is-member=true" >> $GITHUB_OUTPUT
         fi

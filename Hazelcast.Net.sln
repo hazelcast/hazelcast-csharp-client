@@ -91,6 +91,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test-membership", "test-mem
 		.github\actions\test-membership\action.yml = .github\actions\test-membership\action.yml
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{7A5DDB5C-A126-4A4E-914E-87E7E54941DB}"
+	ProjectSection(SolutionItems) = preProject
+		.github\actions\install\action.yml = .github\actions\install\action.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -146,6 +151,7 @@ Global
 		{EC9DC3B3-C54D-4055-A553-63E757DF3E39} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 		{3C970CF6-DF19-4FD0-9BE3-F63EE72AC4CC} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 		{295E2764-401E-4604-8C2E-E20B99171705} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
+		{7A5DDB5C-A126-4A4E-914E-87E7E54941DB} = {48E8586E-CD6C-43B8-B353-0B3F3BDCDDCA}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F18DBBE5-FCEE-4B50-AF9E-D01D5B871564}

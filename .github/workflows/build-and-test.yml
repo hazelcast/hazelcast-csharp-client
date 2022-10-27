@@ -51,44 +51,13 @@ jobs:
 
     steps:
 
-      # Install Linux utilities
-      - name: Install utilities (Linux only)
-        if: inputs.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # Install .NET
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
         with:
-          dotnet-version: |
-            3.1.x
-            5.0.x
-            6.0.x
-
-      # Install Java
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: true
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
