@@ -71,6 +71,8 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ inputs.run_id }},
             });
+            console.log(artifacts)
+            console.log(`Found ${artifacts.data.artifacts.length()} artifacts:`)
             for (const artifact of artifacts.data.artifacts) {
                 console.log(`Artifact: ${artifact.name}`);
             }

@@ -36,7 +36,6 @@ jobs:
 
   # test hazelcast membership
   test-membership:
-
     name: Test Hazelcast Membership
     runs-on: ubuntu-latest
     outputs:
