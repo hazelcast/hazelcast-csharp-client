@@ -79,6 +79,7 @@ jobs:
           else
             echo "Code is NOT valid, could not find merged-ref as parent of HEAD."
             echo "::error::Invalid merged-ref."
+            exit 1
           fi
 
       # build

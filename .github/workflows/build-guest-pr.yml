@@ -44,6 +44,7 @@ jobs:
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
+          exit 1
         fi
       
   # this is a guest PR build on pull_request, we cannot create checks here

@@ -60,7 +60,7 @@ jobs:
       # download all the tests results and coverage artifacts
       # cannot use download action because we get artifacts from another run
       - name: Download tests results and coverage artifacts
-        uses: actions/github-script@v5
+        uses: actions/github-script@v6
         with:
           script: |
             const restapi = github.rest

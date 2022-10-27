@@ -74,11 +74,12 @@ jobs:
     - name: Report
       shell: bash
       run: |
-        if [ "${{ needs.build-test.conclusion }}" == "success" ]; then
+        if [ "${{ needs.build-test.result }}" == "success" ]; then
           echo "All Build&Test checks completed successfully."
         else
           echo "At least one Build&Test check has failed."
           echo "::error::At least one Build&Test check has failed."
+          exit 1
         fi
 
   # create checks
