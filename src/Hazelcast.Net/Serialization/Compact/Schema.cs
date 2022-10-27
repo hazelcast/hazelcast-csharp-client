@@ -30,7 +30,7 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal class Schema : IIdentifiedDataSerializable, IEquatable<Schema>
     {
-        private SortedDictionary<string, SchemaField> _fieldsMap;
+        private Dictionary<string, SchemaField> _fieldsMap;
         private Dictionary<string, SchemaField>? _fieldsMapInvariant;
 
         /// <inheritdoc />
@@ -112,11 +112,7 @@ namespace Hazelcast.Serialization.Compact
         {
             TypeName = typeName;
 
-            // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
-            // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
-            // order", and good luck finding a definition for this, so we're going with whatever is
-            // default in C# and hope it works.
-            var fieldsMap = new SortedDictionary<string, SchemaField>();
+            _fieldsMap = new Dictionary<string, SchemaField>();
 
             // ensure no duplicate field name
             var fieldNames = new HashSet<string>();
@@ -131,10 +127,16 @@ namespace Hazelcast.Serialization.Compact
             {
                 if (!fieldNames.Add(field.FieldName))
                     throw new ArgumentException($"Fields contain duplicate field name {field.FieldName}.", nameof(typeFields));
-                fieldsMap[field.FieldName] = field;
+                _fieldsMap[field.FieldName] = field;
             }
 
-            foreach (var field in fieldsMap.Values)
+            // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
+            // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
+            // order", and good luck finding a definition for this, apart from it being case-sensitive,
+            // so we're going with whatever seems best in C# and hope it works.
+            Fields = _fieldsMap.Values.OrderBy(x => x.FieldName, StringComparer.InvariantCulture).ToArray();
+
+            foreach (var field in Fields)
             {
                 if (field.Kind == FieldKind.Boolean)
                     (booleanFields ??= new List<SchemaField>()).Add(field);
@@ -193,9 +195,6 @@ namespace Hazelcast.Serialization.Compact
 
             ValueFieldLength = offset;
             ReferenceFieldCount = referenceFields?.Count ?? 0;
-
-            Fields = fieldsMap.Values.ToArray();
-            _fieldsMap = fieldsMap;
 
             Id = ComputeId();
         }

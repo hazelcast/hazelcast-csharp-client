@@ -28,6 +28,9 @@ namespace Hazelcast.Serialization
     /// </remarks>
     public enum FieldKind
     {
+        // Note: following PR&QA reviews it has been decided that values that are not supported
+        // by .NET / Compact would not be listed here. This is for Char, Portable, etc.
+
 #pragma warning disable CA1720 // Identifier contains type name
 
         /// <summary>The type of a field that is not available.</summary>
@@ -41,9 +44,11 @@ namespace Hazelcast.Serialization
         /// <summary>The i8 primitive type.</summary>
         Int8 = 3,
 
+        /*
         /// <summary>The char primitive type.</summary>
         /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
         Char = 5,
+        */
 
         /// <summary>The i16 primitive type.</summary>
         Int16 = 7,
@@ -75,9 +80,11 @@ namespace Hazelcast.Serialization
         /// <summary>The array-of-i8 primitive type.</summary>
         ArrayOfInt8 = 4,
 
+        /*
         /// <summary>The array-of-char primitive type.</summary>
         /// <remarks><para>This type is not supported by compact serialization.</para></remarks>
         ArrayOfChar = 6,
+        */
 
         /// <summary>The array-of-i16 primitive type.</summary>
         ArrayOfInt16 = 8,
@@ -173,6 +180,7 @@ namespace Hazelcast.Serialization
         /// </remarks>
         Compact = 29,
 
+        /*
         /// <summary>The nullable portable object primitive type.</summary>
         /// <remarks>
         /// <para>The portable object primitive type represents any object which is, in turn, composed of fields
@@ -180,6 +188,7 @@ namespace Hazelcast.Serialization
         /// <para>This type is not supported by compact serialization.</para>
         /// </remarks>
         Portable = 31,
+        */
 
 
         // ---- arrays of nullable types ----
@@ -225,11 +234,13 @@ namespace Hazelcast.Serialization
 
         /// <summary>The array-of-compact-object primitive type.</summary>
         /// <para>This type is not supported by portable serialization.</para>
-        ArrayOfCompact = 30,
+        ArrayOfCompact = 30
 
+        /*
         /// <summary>The array-of-portable-object primitive type.</summary>
         /// <para>This type is not supported by compact serialization.</para>
         ArrayOfPortable = 32
+        */
 
 #pragma warning restore CA1720 // Identifier contains type name
     }

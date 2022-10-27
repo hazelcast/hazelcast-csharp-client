@@ -42,18 +42,6 @@ namespace Hazelcast.Serialization.Compact
             }
         }
 
-        // fingerprints an array of bytes
-        public static ulong Fingerprint(ulong fingerprint, byte[] bytes)
-        {
-            if (bytes == null) throw new ArgumentNullException(nameof(bytes));
-
-            // trust .NET to optimize the foreach call over an array and to JIT-inline the method
-            // ReSharper disable once LoopCanBeConvertedToQuery
-            foreach (var value in bytes) fingerprint = Fingerprint(fingerprint, value);
-
-            return fingerprint;
-        }
-
         // fingerprints a single byte value
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong Fingerprint(ulong fingerprint, byte value)

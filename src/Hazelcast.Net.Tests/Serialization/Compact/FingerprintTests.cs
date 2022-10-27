@@ -37,12 +37,6 @@ namespace Hazelcast.Tests.Serialization.Compact
         }
 
         [Test]
-        public void CannotFingerprintNullBytes()
-        {
-            Assert.Throws<ArgumentNullException>(() => RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, (byte[])null));
-        }
-
-        [Test]
         public async Task CanFingerprintStringSameAsJava()
         {
             const string text = @"// Unless required by applicable law or agreed to in writing, software
@@ -71,7 +65,7 @@ result = """" + fingerprint
             var bytes = Encoding.UTF8.GetBytes(text);
 
             // fingerprint on .NET
-            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, bytes);
+            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, text);
 
             // fingerprint on Java
             var script = scriptTemplate

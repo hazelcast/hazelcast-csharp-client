@@ -187,8 +187,7 @@ namespace Hazelcast.Serialization
             {
                 var serializer = error.serializer == null ? "the reflection serializer" : $"serializer {error.serializer}";
                 throw new ConfigurationException($"Cannot register {serializer} for type {error.type} " +
-                                                 "because this type is a constant type and SerializationOptions.AllowOverrideDefaultSerializers " +
-                                                 "is false. Set this property to true to enable overriding constant type serializers.");
+                                                 "because this type is a constant type and constant type serializers cannot be overriden.");
             }
         }
 
