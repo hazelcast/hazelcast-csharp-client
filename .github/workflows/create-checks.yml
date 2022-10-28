@@ -73,6 +73,7 @@ jobs:
         if: inputs.run_id == ''
         shell: bash
         run: |
+          ls -lR ./temp/artifacts
           for i in './temp/artifacts/Test-Results *.zip'; do
             n=$(basename $i)
             n=${n:13:-4}
