@@ -76,11 +76,13 @@ jobs:
           for i in './temp/artifacts/Test-Results *.zip'; do
             n=$(basename $i)
             n=${n:13:-4}
+            echo "Move $i ($n)"
             mv $i ./temp/test-results/test-results-$n.zip
           done
           for i in './temp/artifacts/Test-Coverage *.zip'; do
             n=$(basename $i)
             n=${n:14:-4}
+            echo "Move $i ($n)"
             mv $i ./temp/test-coverage/test-coverage-$n.zip
           done
 
