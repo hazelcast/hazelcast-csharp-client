@@ -68,24 +68,47 @@ jobs:
           # don't specify name = download all available artifacts
           path: ./temp/artifacts
 
-      # move artifacts to their right place
+      # move artifacts to their right place (this run)
       - name: Move tests results and coverage artifacts
+        id: move
         if: inputs.run_id == ''
         shell: bash
         run: |
-          ls -lR ./temp/artifacts
-          for i in './temp/artifacts/Test-Results *.zip'; do
-            n=$(basename $i)
-            n=${n:13:-4}
-            echo "Move $i ($n)"
-            mv $i ./temp/test-results/test-results-$n.zip
+          found=0
+          for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
+            echo "Move $i"
+            found=1
+            mv $i/* ./temp/test-results/ubuntu/
           done
-          for i in './temp/artifacts/Test-Coverage *.zip'; do
-            n=$(basename $i)
-            n=${n:14:-4}
-            echo "Move $i ($n)"
-            mv $i ./temp/test-coverage/test-coverage-$n.zip
+          for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
+            echo "Move $i"
+            found=1
+            mv $i/* ./temp/test-results/windows/
           done
+          if [ $found -eq 1 ]; then
+            echo "results=true" >> $GITHUB_OUTPUT
+          else
+            echo "results=false" >> $GITHUB_OUTPUT
+            echo "(missing)"
+          fi
+
+          found=0
+          for i in ./temp/artifacts/Test-Coverage\ ubuntu-latest-*; do
+            echo "Move $i"
+            found=1
+            mv $i/* ./temp/test-coverage/ubuntu/
+          done
+          for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
+            echo "Move $i"
+            found=1
+            mv $i/* ./temp/test-coverage/windows/
+          done
+          if [ $found -eq 1 ]; then
+            echo "coverage=true" >> $GITHUB_OUTPUT
+          else
+            echo "coverage=false" >> $GITHUB_OUTPUT
+            echo "(missing)"
+          fi
 
       # download all the tests results and coverage artifacts (other run)
       # cannot use download action because we get artifacts from another run
@@ -126,8 +149,9 @@ jobs:
             await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
             await download('Test-Coverage ', '/temp/test-coverage/test-coverage-XXXX.zip');
 
-      # unzip artifacts
+      # unzip artifacts (other run)
       - name: Unzip artifacts
+        if: inputs.run_id != ''
         id: unzip
         shell: bash
         run: |
@@ -175,7 +199,7 @@ jobs:
       # report test results - always
       # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
-        if: steps.unzip.outputs.results == 'true'
+        if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
           name: Test Results
@@ -187,7 +211,7 @@ jobs:
 
       # report test coverage - if build&test was successful
       - name: Report test coverage
-        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
+        if: inputs.coverage && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true') && inputs.conclusion == 'success'
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
@@ -197,7 +221,7 @@ jobs:
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
+        if: inputs.coverage && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true') && inputs.conclusion == 'success'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
