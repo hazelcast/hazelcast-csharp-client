@@ -56,10 +56,37 @@ jobs:
           mkdir ./temp
           mkdir ./temp/test-results
           mkdir ./temp/test-coverage
+          mkdir ./temp/artifacts
 
-      # download all the tests results and coverage artifacts
+      # download all the tests results and coverage artifacts (this run)
+      # cannot use script because we get artifacts from same run
+      - name: Download tests results and coverage artifacts (this run)
+        if: inputs.run_id == ''
+        uses: actions/download-artifact@v3
+        with:
+          # don't specify name = download all available artifacts
+          path: ./temp/artifacts
+
+      # move artifacts to their right place
+      - name: Move tests results and coverage artifacts
+        if: inputs.run_id == ''
+        shell: bash
+        run: |
+          for i in './temp/artifacts/Test-Results *.zip'; do
+            n=$(basename $i)
+            n=${n:13:-4}
+            mv $i ./temp/test-results/test-results-$n.zip
+          done
+          for i in './temp/artifacts/Test-Coverage *.zip'; do
+            n=$(basename $i)
+            n=${n:14:-4}
+            mv $i ./temp/test-coverage/test-coverage-$n.zip
+          done
+
+      # download all the tests results and coverage artifacts (other run)
       # cannot use download action because we get artifacts from another run
-      - name: Download tests results and coverage artifacts
+      - name: Download tests results and coverage artifacts (other run)
+        if: inputs.run_id != ''
         uses: actions/github-script@v6
         with:
           script: |
@@ -71,8 +98,7 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ inputs.run_id }},
             });
-            console.log(artifacts)
-            console.log(`Found ${artifacts.data.artifacts.length()} artifacts:`)
+            console.log(`Found ${artifacts.data.artifacts.length} artifacts:`)
             for (const artifact of artifacts.data.artifacts) {
                 console.log(`Artifact: ${artifact.name}`);
             }
