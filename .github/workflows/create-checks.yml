@@ -56,7 +56,11 @@ jobs:
           echo "Build&Test conclusion = ${{ inputs.conclusion }}"
           mkdir ./temp
           mkdir ./temp/test-results
+          mkdir ./temp/test-results/ubuntu
+          mkdir ./temp/test-results/windows
           mkdir ./temp/test-coverage
+          mkdir ./temp/test-coverage/ubuntu
+          mkdir ./temp/test-coverage/windows
           mkdir ./temp/artifacts
 
       # download all the tests results and coverage artifacts (this run)
