@@ -18,8 +18,9 @@ on:
 
       # the identifier of the run which should receive the checks
       run_id:
-        required: true
+        required: false
         type: string
+        default: ''
 
       # the sha of the commit for which the checks were run
       head_sha:
