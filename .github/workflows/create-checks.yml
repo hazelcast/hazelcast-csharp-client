@@ -82,12 +82,12 @@ jobs:
           for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            mv $i/* ./temp/test-results/ubuntu/
+            mv "$i/*" "./temp/test-results/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv $i/* ./temp/test-results/windows/
+            mv "$i/*" "./temp/test-results/windows/"
           done
           if [ $found -eq 1 ]; then
             echo "results=true" >> $GITHUB_OUTPUT
@@ -100,12 +100,12 @@ jobs:
           for i in ./temp/artifacts/Test-Coverage\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            mv $i/* ./temp/test-coverage/ubuntu/
+            mv "$i/*" "./temp/test-coverage/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv $i/* ./temp/test-coverage/windows/
+            mv "$i/*" "./temp/test-coverage/windows/"
           done
           if [ $found -eq 1 ]; then
             echo "coverage=true" >> $GITHUB_OUTPUT
