@@ -73,7 +73,7 @@ jobs:
           path: ./temp/artifacts
 
       # move artifacts to their right place (this run)
-      - name: Move tests results and coverage artifacts
+      - name: Move tests results and coverage artifacts (this run)
         id: move
         if: inputs.run_id == ''
         shell: bash
@@ -82,17 +82,13 @@ jobs:
           for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            echo "FILES:"
-            ls "$i"
-            echo "FILES:"
-            ls "$i/*"
             echo "MOVE:"
-            mv "$i/*" "./temp/test-results/ubuntu/"
+            mv "$i/"* "./temp/test-results/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/*" "./temp/test-results/windows/"
+            mv "$i/"* "./temp/test-results/windows/"
           done
           if [ $found -eq 1 ]; then
             echo "results=true" >> $GITHUB_OUTPUT
@@ -105,12 +101,12 @@ jobs:
           for i in ./temp/artifacts/Test-Coverage\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/*" "./temp/test-coverage/ubuntu/"
+            mv "$i/"* "./temp/test-coverage/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
             echo "Move $i"
             found=1
-            mv "$i/*" "./temp/test-coverage/windows/"
+            mv "$i/"* "./temp/test-coverage/windows/"
           done
           if [ $found -eq 1 ]; then
             echo "coverage=true" >> $GITHUB_OUTPUT
@@ -159,7 +155,7 @@ jobs:
             await download('Test-Coverage ', '/temp/test-coverage/test-coverage-XXXX.zip');
 
       # unzip artifacts (other run)
-      - name: Unzip artifacts
+      - name: Unzip artifacts (other run)
         if: inputs.run_id != ''
         id: unzip
         shell: bash
