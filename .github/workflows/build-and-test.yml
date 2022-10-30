@@ -108,7 +108,7 @@ jobs:
       # upload test results artifact
       - name: Upload test results artifact
         if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/results/*.trx'
@@ -116,7 +116,7 @@ jobs:
       # upload test coverage artifact
       - name: Upload test coverage artifact
         if: steps.test.conclusion == 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory

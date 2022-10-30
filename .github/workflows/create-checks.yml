@@ -216,7 +216,7 @@ jobs:
 
       # report test coverage - if build&test was successful
       - name: Report test coverage
-        if: inputs.coverage && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true') && inputs.conclusion == 'success'
+        if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
@@ -226,7 +226,7 @@ jobs:
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: inputs.coverage && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true') && inputs.conclusion == 'success'
+        if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
