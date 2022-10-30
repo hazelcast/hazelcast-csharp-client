@@ -51,6 +51,7 @@ function Validate-Platform {
     # and there are some annoying differences, so we are requiring 6.2+
     $psVersion=(get-host | select-object Version).Version
     $minVersion=[System.Version]::Parse("6.2.0")
+    $script:powershellVersion = $psVersion
     if (-not (Powershell-IsAtLeast($minVersion.ToString()))) {
         Write-Output ""
         Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
@@ -59,7 +60,6 @@ function Validate-Platform {
         Write-Output "Please note that this version will need to be invoked with 'pwsh' not 'powershell'."
         Die "Unsupported PowerShell version: $($psVersion.Major).$($psVersion.Minor)"
     }
-    $script:powershellVersion = $psVersion
 
     # determine platform
     $platform = "windows"
