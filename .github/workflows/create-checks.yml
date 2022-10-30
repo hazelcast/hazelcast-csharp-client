@@ -82,6 +82,11 @@ jobs:
           for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
             echo "Move $i"
             found=1
+            echo "FILES:"
+            ls "$i"
+            echo "FILES:"
+            ls "$i/*"
+            echo "MOVE:"
             mv "$i/*" "./temp/test-results/ubuntu/"
           done
           for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
