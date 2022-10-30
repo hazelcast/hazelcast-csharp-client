@@ -387,7 +387,7 @@ jobs:
         uses: codecov/codecov-action@v1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/tests/cover/cover-netcoreapp3.1.xml
+          files: ./temp/tests/cover/cover-net6.0.xml
 
 
 

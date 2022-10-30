@@ -32,7 +32,7 @@ $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
 $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 # include utils
-. "$buildDir\utils.ps1"
+. "$buildDir/utils.ps1"
 
 # ensure we have the right platform
 Validate-Platform
@@ -280,7 +280,7 @@ $actions = @(
 )
 
 # include devops
-$devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
+$devops_actions = "$buildDir/devops/csharp-release/actions.ps1"
 if (test-path $devops_actions) { . $devops_actions }
 
 # prepare
@@ -728,8 +728,8 @@ function verify-server-files {
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig) -and -not (test-path $options.serverConfig)) { return $false }
 
     # defaults?
-    if (-not (test-path "$libDir\hazelcast-$($options.server).xml") -or
-        -not (test-path "$libDir\hazelcast-$serverVersion.xml")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-$($options.server).xml") -or
+        -not (test-path "$libDir/hazelcast-$serverVersion.xml")) { return $false }
 
     # all clear
     return $true
@@ -783,15 +783,15 @@ function ensure-server-files {
             Die "Configuration file $($options.serverConfig) is missing."
         }
     }
-    elseif (test-path "$libDir\hazelcast-$($options.server).xml") {
+    elseif (test-path "$libDir/hazelcast-$($options.server).xml") {
         # config was not specified, try with exact specified server version
         Write-Output "Detected hazelcast-$($options.server).xml"
-        $options.serverConfig = "$libDir\hazelcast-$($options.server).xml"
+        $options.serverConfig = "$libDir/hazelcast-$($options.server).xml"
     }
-    elseif (test-path "$libDir\hazelcast-$serverVersion.xml") {
+    elseif (test-path "$libDir/hazelcast-$serverVersion.xml") {
         # config was not specified, try with detected server version
         Write-Output "Detected hazelcast-$serverVersion.xml"
-        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir/hazelcast-$serverVersion.xml"
     }
     else {
         # no config found, try to download
@@ -890,7 +890,7 @@ function ensure-server-files {
             Die "Running out of options... failed to download hazelcast-default.xml."
         }
 
-        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir/hazelcast-$serverVersion.xml"
     }
 }
 
@@ -1062,9 +1062,9 @@ function ensure-python {
 # ensures we can sign if required
 function ensure-can-sign {
 
-    if ($options.sign -and -not (test-path "$buildDir\hazelcast.snk")) {
+    if ($options.sign -and -not (test-path "$buildDir/hazelcast.snk")) {
 
-        Die "Cannot sign code, missing key file $buildDir\hazelcast.snk"
+        Die "Cannot sign code, missing key file $buildDir/hazelcast.snk"
     }
 }
 
@@ -1173,7 +1173,7 @@ function hz-clean {
     clean-dir "$tmpdir/publish"
 
     # clears tests (results, cover...)
-    clean-dir "$tmpDir\tests"
+    clean-dir "$tmpDir/tests"
 
     # clears logs (server, rc...)
     if (test-path "$tmpDir") {
@@ -1184,13 +1184,13 @@ function hz-clean {
     }
 
     # clears docs
-    clean-dir "$tmpDir\docfx.out"
-    clean-dir "$docDir\templates\hz\Plugins"
-    clean-dir "$tmpDir\gh-pages"
-    clean-dir "$tmpDir\gh-pages-patches"
+    clean-dir "$tmpDir/docfx.out"
+    clean-dir "$docDir/templates/hz/Plugins"
+    clean-dir "$tmpDir/gh-pages"
+    clean-dir "$tmpDir/gh-pages-patches"
 
     # clean ndepend
-    clean-dir "$tmpDir\ndepend.out"
+    clean-dir "$tmpDir/ndepend.out"
 
     Write-Output ""
 }
@@ -1462,7 +1462,7 @@ function hz-build {
 
     if ($options.sign) {
         $buildArgs += "-p:ASSEMBLY_SIGNING=true"
-        $buildArgs += "-p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+        $buildArgs += "-p:AssemblyOriginatorKeyFile=`"$buildDir/hazelcast.snk`""
     }
 
     if (![string]::IsNullOrWhiteSpace($options.constants)) {
@@ -1478,8 +1478,8 @@ function hz-build {
 
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build $srcDir\$_ $buildArgs"
-        dotnet build "$srcDir\$_" $buildArgs
+        Write-Output "> dotnet build $srcDir/$_ $buildArgs"
+        dotnet build "$srcDir/$_" $buildArgs
 
         # if it failed, we can stop here
         if ($LASTEXITCODE) {
@@ -2025,7 +2025,7 @@ function hz-test {
     # run tests
     $script:testResults = @()
 
-    rm "$tmpDir\tests\results\results-*" >$null 2>&1
+    rm "$tmpDir/tests/results/results-*" >$null 2>&1
 
     $ownsrc = $false
     try {
@@ -2199,23 +2199,23 @@ function hz-serve-docs {
     Write-Output "Documentation Server"
     Write-Output "  Path           : $tmpdir/docfx.out"
 
-    if (-not (test-path "$tmpDir\docfx.out")) {
+    if (-not (test-path "$tmpDir/docfx.out")) {
 
         Die "Missing documentation directory."
     }
 
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
-    &$docfx serve "$tmpDir\docfx.out"
+    &$docfx serve "$tmpDir/docfx.out"
 }
 
 # packs a NuGet package
 function nuget-pack ( $name ) {
 
     $packArgs = @(
-        "$srcDir\$name\$name.csproj", `
+        "$srcDir/$name/$name.csproj", `
         "--no-build", "--nologo", `
-        "-o", "$tmpDir\output", `
+        "-o", "$tmpDir/output", `
         "-c", $options.configuration
     )
 
@@ -2259,7 +2259,7 @@ function hz-pack-nuget {
     nuget-pack("Hazelcast.Net.Win32")
     nuget-pack("Hazelcast.Net.DependencyInjection")
 
-    Get-ChildItem "$tmpDir\output" | Foreach-Object { Write-Output "  $_" }
+    Get-ChildItem "$tmpDir/output" | Foreach-Object { Write-Output "  $_" }
 }
 
 # verifies that the version in Directory.Build.props is the specified version
@@ -2353,9 +2353,10 @@ function hz-cleanup-code {
     Write-Output ""
     Write-Output "Clean C# code - whitespaces, tabs and new-lines"
 
-    $files = get-childitem -recurse -file -path "$srcDir\*" -include "*.cs" | ? { `
-        $_.FullName -inotmatch '\\obj\\' -and `
-        $_.FullName -inotmatch '\\bin\\' `
+    $sc = [System.IO.Path]::DirectorySeparatorChar
+    $files = get-childitem -recurse -file -path "$srcDir/*" -include "*.cs" | ? { `
+        $_.FullName -inotmatch "$($sc)obj$($sc)" -and `
+        $_.FullName -inotmatch "$($sc)bin$($sc)" `
     }
 
     $nl = [Environment]::NewLine
