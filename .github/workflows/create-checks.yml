@@ -201,6 +201,18 @@ jobs:
             echo "(missing)"
           fi
 
+      # log
+      - name: Log
+        shell: bash
+        run: |
+          echo "inputs.coverage   = ${{ inputs.coverage }}"
+          echo "inputs.conclusion = ${{ inputs.conclusion }}"
+          echo "inputs.head_sha   = ${{ inputs.head_sha }}"
+          echo "unzip.results     = ${{ steps.unzip.outputs.results }}"
+          echo "unzip.coverage    = ${{ steps.unzip.outputs.coverage }}"
+          echo "move.results      = ${{ steps.move.outputs.results }}"
+          echo "move.coverage     = ${{ steps.move.outputs.coverage }}"
+
       # report test results - always
       # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
