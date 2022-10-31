@@ -4,9 +4,12 @@ GITHUB ACTIONS WORKFLOWS
 build-branch
 ------------
 
-  on push to any branch, except release/* or a tag
+  runs if the repository is hazelcast/hazelcast-csharp-client (not on forks)
+
+  on push to any branchv(except release/* or wip/*) or a tag
   - builds and runs tests both on ubuntu and windows
-  - publishes tests results
+  - uploads tests & coverage results as artifact
+  - publishes tests & coverage results
 
   note:
   - on forks, enterprise tests are skipped as we cannot share the enterprise key
@@ -19,7 +22,7 @@ build-pr
 
   on PR,
   - builds and runs tests both on ubuntu and windows
-  - uploads tests results as artifact
+  - uploads tests & coverage results as artifact
 
   notes:
   - unless the PR branch itself is a repo branch (not a fork branch) the run does not 
@@ -32,8 +35,14 @@ build-pr
     workflow is triggered from a forked repository." - even for org members
 
 
-report-pr
----------
+build-guest-pr
+--------------
+
+?
+
+
+report-guest-pr
+---------------
 
   on build-pr success,
   - downloads tests results artifact

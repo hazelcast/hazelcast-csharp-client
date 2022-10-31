@@ -1,24 +1,47 @@
 #
-# Workflow: Build PR
+# Reusable Workflow: Build&Test
+#
+# Builds the code and run tests on the specified OS and for the specified frameworks,
+# but only if the user is a member of the Hazelcast organization, as running the tests
+# may end up running unsafe user code or expose secrets such as the enterprise key.
+#
+# Results are uploaded as artifacts.
 #
 
-name: Build PR
+name: Build&Test
 on: 
+
+  # called by upper-level workflow
   workflow_call:
     inputs:
+
+      # the OS to run on e.g. 'ubuntu-latest'
       os:
         required: true
         type: string
+
+      # the json-serialized array of frameworks to test
       fwks:
         required: true
         type: string
 
+      # the optional ref to checkout
+      ref:
+        required: false
+        type: string
+        default: ''
+
+      # the optional merged-ref to validate
+      merged-ref:
+        required: false
+        type: string
+        default: ''
+
 jobs:
 
-  # build and test pr
-  build:
-
-    name: ${{ matrix.fwk }}
+  # build and test
+  build-and-test:
+    name: ${{ inputs.os }}+${{ matrix.fwk }}
     runs-on: ${{ inputs.os }}
 
     strategy:
@@ -28,52 +51,36 @@ jobs:
 
     steps:
 
-      # Install Linux utilities
-      - name: Install utilities (Linux only)
-        if: inputs.os == 'ubuntu-latest'
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # Install .NET
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
-        with:
-          dotnet-version: |
-            3.1.x
-            5.0.x
-            6.0.x
-
-      # Install Java
-      - name: Install JDK
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt'
-          java-version: '11'
-
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          ref: ${{ inputs.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
           submodules: true
+
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: true
+
+      # validate code
+      - name: Validate code
+        if: inputs.merged-ref != ''
+        shell: bash
+        run: |
+          git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
+          if [ $? -eq 0 ]; then
+            echo "Code is valid, found merged-ref as parent of HEAD."
+          else
+            echo "Code is NOT valid, could not find merged-ref as parent of HEAD."
+            echo "::error::Invalid merged-ref."
+            exit 1
+          fi
 
       # build
       - name: Build
@@ -83,7 +90,6 @@ jobs:
 
       # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
-      # (which means that we do NOT run enterprise tests on PRs from external repositories)
       - name: Test
         id: test
         env:
@@ -102,7 +108,7 @@ jobs:
       # upload test results artifact
       - name: Upload test results artifact
         if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/results/*.trx'
@@ -110,7 +116,7 @@ jobs:
       # upload test coverage artifact
       - name: Upload test coverage artifact
         if: steps.test.conclusion == 'success'
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
