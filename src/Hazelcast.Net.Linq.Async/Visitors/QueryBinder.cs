@@ -32,7 +32,9 @@ namespace Hazelcast.Linq.Visitors
         private int _aliasCount;
         private const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public QueryBinder()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             _projector = new ColumnProjector(p => p.NodeType == (ExpressionType)HzExpressionType.Column);
         }
@@ -44,7 +46,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns></returns>
         public Expression Bind(Expression expression)
         {
-            _map = new Dictionary<ParameterExpression, Expression>();
+            _map = new();
             return Visit(expression);
         }
 
@@ -71,9 +73,13 @@ namespace Hazelcast.Linq.Visitors
             e = StripQuotes(e);
 
             if (e.NodeType == ExpressionType.Constant)
+#pragma warning disable CS8603 // Possible null reference return.
                 return ((ConstantExpression)e).Value as LambdaExpression;
+#pragma warning restore CS8603 // Possible null reference return.
 
+#pragma warning disable CS8603 // Possible null reference return.
             return e as LambdaExpression;
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
         public ProjectedColumns Project(Expression expression, string newAlias, string existingAlias)
@@ -92,7 +98,7 @@ namespace Hazelcast.Linq.Visitors
                         return this.BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
                 }
 
-                throw new NotSupportedException(string.Format("The method '{0}' is not supported", m.Method.Name));
+                throw new NotSupportedException($"The method '{m.Method.Name}' is not supported.");
             }
 
             return base.VisitMethodCall(m);
@@ -128,14 +134,13 @@ namespace Hazelcast.Linq.Visitors
                 case HzExpressionType.Map:
                     return ((MapExpression)source).Alias;
                 default:
-                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'");
+                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'.");
             }
         }
 
-        private bool IsMap(object value)
+        private bool IsMap(object? value)
         {
-            var q = value as IQueryable;
-            return q != null && q.Expression.NodeType == ExpressionType.Constant;
+            return value is IQueryable q && q.Expression.NodeType == ExpressionType.Constant;
         }
 
         private string GetMapName(object map)
@@ -198,14 +203,14 @@ namespace Hazelcast.Linq.Visitors
             var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
-            var selectExp = new SelectExpression(selectAlias, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)), null, entryType);
+            var selectExp = new SelectExpression(selectAlias, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)), default, entryType);
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value) : (Expression)node;
+            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value!) : (Expression)node;
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
@@ -215,7 +220,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            var visitedNode = Visit(node.Expression);
+            var visitedNode = Visit(node.Expression)!;
 
             switch (visitedNode.NodeType)
             {

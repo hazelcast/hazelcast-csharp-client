@@ -27,14 +27,14 @@ namespace Hazelcast.Linq.Expressions
         public string Alias { get; }
         public ReadOnlyCollection<ColumnDefinition> Columns { get; }
         public Expression From { get; }
-        public Expression Where { get; }
+        public Expression? Where { get; }
 
         /// <inheritdoc/>
         public override ExpressionType NodeType { get; }
         /// <inheritdoc/>
         public override Type Type { get; }
 
-        public SelectExpression(string alias, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression where, Type type)
+        public SelectExpression(string alias, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression? where, Type type)
         {
             Alias = alias;
             Columns = columns;
