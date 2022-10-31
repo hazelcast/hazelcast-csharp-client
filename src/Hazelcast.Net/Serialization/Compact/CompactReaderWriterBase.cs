@@ -56,13 +56,6 @@ namespace Hazelcast.Serialization.Compact
         }
 
         /// <summary>
-        /// Gets the <see cref="FieldKind"/> of a field.
-        /// </summary>
-        /// <param name="name">The name of the field.</param>
-        /// <returns>The <see cref="FieldKind"/> of the field, which can be <see cref="FieldKind.NotAvailable"/> if the field does not exist.</returns>
-        public FieldKind GetFieldKind(string name) => Schema.TryGetField(name, out var field) ? field.Kind : FieldKind.NotAvailable;
-
-        /// <summary>
         /// Gets the schema field with the specified name (case-sensitive).
         /// </summary>
         /// <exception cref="SerializationException">No such field.</exception>

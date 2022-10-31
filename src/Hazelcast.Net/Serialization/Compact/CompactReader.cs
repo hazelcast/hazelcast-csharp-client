@@ -45,6 +45,13 @@ namespace Hazelcast.Serialization.Compact
 
         public Type ObjectType { get; }
 
+        /// <summary>
+        /// Gets the <see cref="FieldKind"/> of a field.
+        /// </summary>
+        /// <param name="name">The name of the field.</param>
+        /// <returns>The <see cref="FieldKind"/> of the field, which can be <see cref="FieldKind.NotAvailable"/> if the field does not exist.</returns>
+        public FieldKind GetFieldKind(string name) => Schema.TryGetField(name, out var field) ? field.Kind : FieldKind.NotAvailable;
+
         internal static Func<ObjectDataInput, int, int, int> GetOffsetReader(int dataLength)
         {
             if (dataLength < byte.MaxValue) return (input, start, index) =>
