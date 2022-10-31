@@ -122,7 +122,7 @@ namespace Hazelcast.Serialization.Compact
             List<SchemaField>? valueFields = null;
             List<SchemaField>? referenceFields = null;
 
-            // build the fields map, which is sorted (see above)
+            // build the fields map
             foreach (var field in typeFields)
             {
                 if (!fieldNames.Add(field.FieldName))
