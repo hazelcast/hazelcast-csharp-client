@@ -18,8 +18,9 @@ on:
 
       # the identifier of the run which should receive the checks
       run_id:
-        required: true
+        required: false
         type: string
+        default: ''
 
       # the sha of the commit for which the checks were run
       head_sha:
@@ -55,11 +56,69 @@ jobs:
           echo "Build&Test conclusion = ${{ inputs.conclusion }}"
           mkdir ./temp
           mkdir ./temp/test-results
+          mkdir ./temp/test-results/ubuntu
+          mkdir ./temp/test-results/windows
           mkdir ./temp/test-coverage
+          mkdir ./temp/test-coverage/ubuntu
+          mkdir ./temp/test-coverage/windows
+          mkdir ./temp/artifacts
 
-      # download all the tests results and coverage artifacts
+      # download all the tests results and coverage artifacts (this run)
+      # cannot use script because we get artifacts from same run
+      - name: Download tests results and coverage artifacts (this run)
+        if: inputs.run_id == ''
+        uses: actions/download-artifact@v3
+        with:
+          # don't specify name = download all available artifacts
+          path: ./temp/artifacts
+
+      # move artifacts to their right place (this run)
+      - name: Move tests results and coverage artifacts (this run)
+        id: move
+        if: inputs.run_id == ''
+        shell: bash
+        run: |
+          found=0
+          for i in ./temp/artifacts/Test-Results\ ubuntu-latest-*; do
+            echo "Move $i"
+            found=1
+            echo "MOVE:"
+            mv "$i/"* "./temp/test-results/ubuntu/"
+          done
+          for i in ./temp/artifacts/Test-Results\ windows-latest-*; do
+            echo "Move $i"
+            found=1
+            mv "$i/"* "./temp/test-results/windows/"
+          done
+          if [ $found -eq 1 ]; then
+            echo "results=true" >> $GITHUB_OUTPUT
+          else
+            echo "results=false" >> $GITHUB_OUTPUT
+            echo "(missing)"
+          fi
+
+          found=0
+          for i in ./temp/artifacts/Test-Coverage\ ubuntu-latest-*; do
+            echo "Move $i"
+            found=1
+            mv "$i/"* "./temp/test-coverage/ubuntu/"
+          done
+          for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
+            echo "Move $i"
+            found=1
+            mv "$i/"* "./temp/test-coverage/windows/"
+          done
+          if [ $found -eq 1 ]; then
+            echo "coverage=true" >> $GITHUB_OUTPUT
+          else
+            echo "coverage=false" >> $GITHUB_OUTPUT
+            echo "(missing)"
+          fi
+
+      # download all the tests results and coverage artifacts (other run)
       # cannot use download action because we get artifacts from another run
-      - name: Download tests results and coverage artifacts
+      - name: Download tests results and coverage artifacts (other run)
+        if: inputs.run_id != ''
         uses: actions/github-script@v6
         with:
           script: |
@@ -71,6 +130,7 @@ jobs:
                repo: context.repo.repo,
                run_id: ${{ inputs.run_id }},
             });
+            console.log(`Found ${artifacts.data.artifacts.length} artifacts:`)
             for (const artifact of artifacts.data.artifacts) {
                 console.log(`Artifact: ${artifact.name}`);
             }
@@ -94,8 +154,9 @@ jobs:
             await download('Test-Results ', '/temp/test-results/test-results-XXXX.zip');
             await download('Test-Coverage ', '/temp/test-coverage/test-coverage-XXXX.zip');
 
-      # unzip artifacts
-      - name: Unzip artifacts
+      # unzip artifacts (other run)
+      - name: Unzip artifacts (other run)
+        if: inputs.run_id != ''
         id: unzip
         shell: bash
         run: |
@@ -140,10 +201,22 @@ jobs:
             echo "(missing)"
           fi
 
+      # log
+      - name: Log
+        shell: bash
+        run: |
+          echo "inputs.coverage   = ${{ inputs.coverage }}"
+          echo "inputs.conclusion = ${{ inputs.conclusion }}"
+          echo "inputs.head_sha   = ${{ inputs.head_sha }}"
+          echo "unzip.results     = ${{ steps.unzip.outputs.results }}"
+          echo "unzip.coverage    = ${{ steps.unzip.outputs.coverage }}"
+          echo "move.results      = ${{ steps.move.outputs.results }}"
+          echo "move.coverage     = ${{ steps.move.outputs.coverage }}"
+
       # report test results - always
       # see https://github.com/marketplace/actions/test-reporter
       - name: Report test results
-        if: steps.unzip.outputs.results == 'true'
+        if: steps.unzip.outputs.results == 'true' || steps.move.outputs.results == 'true'
         uses: dorny/test-reporter@v1
         with:
           name: Test Results
@@ -155,7 +228,7 @@ jobs:
 
       # report test coverage - if build&test was successful
       - name: Report test coverage
-        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
+        if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
         uses: ./.github/actions/dotcover-report
         with:
           name: Test Coverage
@@ -165,7 +238,7 @@ jobs:
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: inputs.coverage && steps.unzip.outputs.coverage == 'true' && inputs.conclusion == 'success'
+        if: inputs.coverage && inputs.conclusion == 'success' && (steps.unzip.outputs.coverage == 'true' || steps.move.outputs.coverage == 'true')
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}

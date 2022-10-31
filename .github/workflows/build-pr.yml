@@ -36,7 +36,6 @@ jobs:
 
   # test hazelcast membership
   test-membership:
-
     name: Test Hazelcast Membership
     runs-on: ubuntu-latest
     outputs:
@@ -146,6 +145,7 @@ jobs:
     uses: ./.github/workflows/create-checks.yml
     secrets: inherit
     with:
-      conclusion: ${{ needs.build-test.conclusion }}
-      run_id: ${{ github.run_id }} # run id
-      head_sha: ${{ github.sha }} # sha that triggered the workflow
+      conclusion: ${{ needs.build-test.result }}
+      #run_id: ${{ github.run_id }} # run id
+      head_sha: ${{ github.event.pull_request.head.sha }} # sha that triggered the workflow
+      coverage: true

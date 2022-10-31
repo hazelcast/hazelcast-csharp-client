@@ -49,8 +49,10 @@ function Validate-Platform {
     #            5.1                             10AU         2016
     # and then, we have PowerShell 6.0+ aka 'Core' which is not integrated
     # and there are some annoying differences, so we are requiring 6.2+
-    $script:powershellVersion = (get-host | select-object Version).Version
-    if (-not (Powershell-IsAtLeast("6.2.0"))) {
+    $psVersion=(get-host | select-object Version).Version
+    $minVersion=[System.Version]::Parse("6.2.0")
+    $script:powershellVersion = $psVersion
+    if (-not (Powershell-IsAtLeast($minVersion.ToString()))) {
         Write-Output ""
         Write-Output "This script requires at least version $($minVersion.Major).$($minVersion.Minor) of PowerShell, but you seem to be running version $($psVersion.Major).$($psVersion.Minor)."
         Write-Output "We recommend you install the most recent stable version available for download at:"
