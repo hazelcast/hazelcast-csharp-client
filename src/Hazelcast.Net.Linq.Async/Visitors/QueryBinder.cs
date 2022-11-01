@@ -32,7 +32,9 @@ namespace Hazelcast.Linq.Visitors
         private int _aliasCount;
         private const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public QueryBinder()
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             _projector = new ColumnProjector(p => p.NodeType == (ExpressionType)HzExpressionType.Column);
         }
@@ -44,7 +46,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns></returns>
         public Expression Bind(Expression expression)
         {
-            _map = new Dictionary<ParameterExpression, Expression>();
+            _map = new();
             return Visit(expression);
         }
 
@@ -71,9 +73,13 @@ namespace Hazelcast.Linq.Visitors
             e = StripQuotes(e);
 
             if (e.NodeType == ExpressionType.Constant)
+#pragma warning disable CS8603 // Possible null reference return.
                 return ((ConstantExpression)e).Value as LambdaExpression;
+#pragma warning restore CS8603 // Possible null reference return.
 
+#pragma warning disable CS8603 // Possible null reference return.
             return e as LambdaExpression;
+#pragma warning restore CS8603 // Possible null reference return.
         }
 
         public ProjectedColumns Project(Expression expression, string newAlias, params string[] existingAlias)
@@ -96,7 +102,7 @@ namespace Hazelcast.Linq.Visitors
                         return BindJoin(m.Type, m.Arguments[0], m.Arguments[1], GetLambda(m.Arguments[2]), GetLambda(m.Arguments[3]), GetLambda(m.Arguments[4]));
                 }
 
-                throw new NotSupportedException(string.Format("The method '{0}' is not supported", m.Method.Name));
+                throw new NotSupportedException($"The method '{m.Method.Name}' is not supported.");
             }
 
             return base.VisitMethodCall(m);
@@ -178,10 +184,9 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
-        private bool IsMap(object value)
+        private bool IsMap(object? value)
         {
-            var q = value as IQueryable;
-            return q != null && q.Expression.NodeType == ExpressionType.Constant;
+            return value is IQueryable q && q.Expression.NodeType == ExpressionType.Constant;
         }
 
         private string GetMapName(object map)

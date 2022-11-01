@@ -22,7 +22,7 @@ jobs:
 
     # check the repository out
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -36,7 +36,7 @@ jobs:
     # "${{ github.token }} is scoped to the current repository, so if you want to checkout a different
     # repository that is private you will need to provide your own PAT."
     - name: Checkout devops
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         repository: hazelcast/DevOps
         ref: master

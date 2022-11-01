@@ -31,7 +31,7 @@ namespace Hazelcast.Linq.Evaluation
         public ExpressionNominator(Func<Expression, bool> canBeEvaluated)
         {
             _canBeEvaluatedFunc = canBeEvaluated;
-
+            _canditateNodes = new();
         }
 
         /// <summary>
@@ -41,15 +41,18 @@ namespace Hazelcast.Linq.Evaluation
         /// <returns>Subtrees that can be evaluated partially.</returns>
         public HashSet<Expression> Nominate(Expression expression)
         {
-            _canditateNodes = new HashSet<Expression>();
+            _canditateNodes.Clear();
             Visit(expression);
             return _canditateNodes;
         }
 
-
+#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         public override Expression Visit(Expression node)
-        {            
+#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+        {
+#pragma warning disable CS8603 // Possible null reference return.
             if (node == null) return node;
+#pragma warning restore CS8603 // Possible null reference return.
             Console.WriteLine(node.NodeType);
 
             var copyOfEvaluationState = _cannotBeEvaluated;
@@ -63,7 +66,7 @@ namespace Hazelcast.Linq.Evaluation
             //If we can't, no need to check the parent.
             if (!_cannotBeEvaluated)
             {
-                if(_canBeEvaluatedFunc(node))
+                if (_canBeEvaluatedFunc(node))
                     _canditateNodes.Add(node);
                 else
                     _cannotBeEvaluated = true;//The node cannot be evaluated, so also the parent.

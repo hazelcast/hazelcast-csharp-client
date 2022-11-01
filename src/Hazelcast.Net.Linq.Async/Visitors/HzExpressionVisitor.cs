@@ -27,9 +27,11 @@ namespace Hazelcast.Linq.Visitors
     /// </summary>
     internal class HzExpressionVisitor : ExpressionVisitor
     {
-        public override Expression Visit(Expression node)
+        public override Expression Visit(Expression? node)
         {
-            if (node == null) return null;
+#pragma warning disable CS8603 // Possible null reference return.
+            if (node == null) return node;
+#pragma warning restore CS8603 // Possible null reference return.
 
             return (HzExpressionType)node.NodeType switch
             {
@@ -40,7 +42,7 @@ namespace Hazelcast.Linq.Visitors
                 HzExpressionType.Join => VisitJoin((JoinExpression)node),
                 _ => base.Visit(node),
             };
-        }
+            }
 
         private Expression VisitJoin(JoinExpression node)
         {
@@ -79,7 +81,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected virtual ReadOnlyCollection<ColumnDefinition> VisitColumnDefinititions(ReadOnlyCollection<ColumnDefinition> columns)
         {
-            List<ColumnDefinition> definitions = null;
+            List<ColumnDefinition>? definitions = null;
 
             for (int i = 0; i < columns.Count; i++)
             {

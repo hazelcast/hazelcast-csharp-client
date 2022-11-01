@@ -1,0 +1,25 @@
+#
+# Workflow: Report Build&Test
+#
+
+# beware! for workflow_run workflow to run, it must exist on the master or default branch!
+# see https://docs.github.com/en/developers/webhooks-and-events/webhooks/webhook-events-and-payloads#workflow_run
+
+name: Report Guest PR Build&Test
+on:
+  workflow_run:
+    workflows: [ "Build&Test Guest PR" ]
+    types:
+      - completed
+
+jobs:
+
+  report:
+    name: Report
+    uses: ./.github/workflows/create-checks.yml
+    secrets: inherit
+    with:
+      conclusion: ${{ needs.build-test.conclusion }}
+      run_id: ${{ github.run_id }} # run id
+      head_sha: ${{ github.sha }} # sha that triggered the workflow
+      coverage: false # do NOT report test coverage, only test results
