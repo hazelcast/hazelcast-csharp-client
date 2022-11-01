@@ -26,7 +26,6 @@ on:
       - 'wip/*'
     tags-ignore:
       - '*'
-    if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
 jobs:
 
@@ -68,7 +67,7 @@ jobs:
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
-    if: always()
+    if: (success() || failure()) && github.repository == 'hazelcast/hazelcast-csharp-client'
     needs: build-test
 
     steps:
@@ -86,7 +85,7 @@ jobs:
   # create checks
   create-checks:
     name: Create Checks
-    if: always()
+    if: (success() || failure()) && github.repository == 'hazelcast/hazelcast-csharp-client'
     needs: build-test
 
     uses: ./.github/workflows/create-checks.yml
