@@ -26,6 +26,7 @@ on:
       - 'wip/*'
     tags-ignore:
       - '*'
+    if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
 jobs:
 
