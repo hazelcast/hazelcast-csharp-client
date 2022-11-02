@@ -96,6 +96,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{7A5D
 		.github\actions\install\action.yml = .github\actions\install\action.yml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Linq.Async", "src\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj", "{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -138,6 +140,10 @@ Global
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE505BEF-9319-4F93-A9D2-16CB721DBE44}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
