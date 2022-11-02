@@ -222,14 +222,6 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schema.Fields[0].Kind, Is.EqualTo(testCase.ExpectedFieldKind));
         }
 
-        // this test ensures that SchemaBuilderWriter throws the right exceptions.
-        [Test]
-        public void SchemaBuilderWriterExceptions()
-        {
-            var sw = new SchemaBuilderWriter("thing");
-            Assert.Throws<NotSupportedException>(() => sw.GetFieldKind("fieldname"));
-        }
-
         private static readonly (Type, object?)[] SerializeSource = 
         {
 // ReSharper disable RedundantCast
