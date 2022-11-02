@@ -23,6 +23,7 @@ namespace Hazelcast.Serialization.Compact
     internal class SchemaBuilderWriter : ICompactWriter
     {
         private readonly string _typeName;
+        private readonly HashSet<string> _names = new();
         private readonly List<SchemaField> _fields = new();
 
         public SchemaBuilderWriter(string typeName)
@@ -34,7 +35,11 @@ namespace Hazelcast.Serialization.Compact
             => throw new NotSupportedException();
 
         private void AddField(string name, FieldKind kind)
-            => _fields.Add(new SchemaField(name, kind));
+        {
+            if (!_names.Add(name)) 
+                throw new SerializationException($"Field '{name}' has already been written, fields can only be written once.");
+            _fields.Add(new SchemaField(name, kind));
+        }
 
         public Schema Build() => new(_typeName, _fields);
 

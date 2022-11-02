@@ -18,11 +18,13 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
+    [ServerCondition("[5.2,)")]
     public class RemoteToObjectFirstTests : SingleMemberRemoteTestBase
     {
         // we have to have 1 member per test else the schemas may end up being cached

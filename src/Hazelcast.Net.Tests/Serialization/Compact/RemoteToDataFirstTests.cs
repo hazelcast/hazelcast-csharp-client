@@ -22,6 +22,7 @@ using Hazelcast.DistributedObjects;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -33,6 +34,7 @@ namespace Hazelcast.Tests.Serialization.Compact
     // cluster).
 
     [TestFixture]
+    [ServerCondition("[5.2,)")]
     internal class RemoteToDataFirstTests : ClusterRemoteTestBase
     {
         // needed for SQL

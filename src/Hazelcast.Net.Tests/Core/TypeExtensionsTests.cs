@@ -37,9 +37,12 @@ namespace Hazelcast.Tests.Core
 
         [TestCase(typeof(int), true, "int")]
         [TestCase(typeof(int), false, "int")]
+        [TestCase(typeof(int?), false, "int?")]
         [TestCase(typeof(List<int>), false, "List<int>")]
         [TestCase(typeof(List<int>), true, "System.Collections.Generic.List<int>")]
         [TestCase(typeof(List<List<bool>>), false, "List<List<bool>>")]
+        [TestCase(typeof(int[]), false, "int[]")]
+        [TestCase(typeof(int?[]), false, "int?[]")]
         public void ToCsString(Type type, bool fqn, string csString)
         {
             Assert.That(type.ToCsString(fqn), Is.EqualTo(csString));

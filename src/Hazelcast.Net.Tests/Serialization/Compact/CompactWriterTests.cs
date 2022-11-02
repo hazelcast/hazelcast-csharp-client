@@ -74,5 +74,44 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.Throws<SerializationException>(() => writer.WriteInt8("name", 0));
         }
+
+        [Test]
+        public void CanWriteArrayOfCompactOfSameType()
+        {
+            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
+            var writer = new CompactWriter(orw, output, schema);
+
+            // only one type and the right one
+            var value = new Thing[] { new(), new() };
+            writer.WriteArrayOfCompact("array", value);
+        }
+
+        [Test]
+        public void CannotWriteArrayOfCompactOfDifferentTypes()
+        {
+            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
+            var writer = new CompactWriter(orw, output, schema);
+
+            // two different types
+            var value = new Thing[] { new(), new ThingExtend() };
+            Assert.Throws<SerializationException>(() => writer.WriteArrayOfCompact("array", value));
+        }
+
+        [Test]
+        public void CannotWriteArrayOfCompactOfDerivedTypes()
+        {
+            var orw = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
+            var output = new ObjectDataOutput(0, orw, Endianness.BigEndian);
+            var schema = SchemaBuilder.For("array").WithField("array", FieldKind.ArrayOfCompact).Build();
+            var writer = new CompactWriter(orw, output, schema);
+
+            // only one type but not the right one
+            var value = new Thing[] { new ThingExtend() };
+            Assert.Throws<SerializationException>(() => writer.WriteArrayOfCompact("array", value));
+        }
     }
 }
