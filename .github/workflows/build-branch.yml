@@ -68,8 +68,7 @@ jobs:
     name: Build&Test Result
     runs-on: ubuntu-latest
     needs: [ "build-test", "ensure-repo" ]
-    if: always() && needs.ensure-repo.result == 'success'
-    needs: build-test
+    if: always() && needs.ensure-repo.result == 'success'    
 
     steps:
     - name: Report
