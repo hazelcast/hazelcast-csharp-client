@@ -20,20 +20,20 @@ using System.Threading.Tasks;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
+    [ServerCondition("[5.2,)")]
     public class FingerprintTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public void CanFingerprintNullString()
+        public void CannotFingerprintNullString()
         {
-            var fingerprint = RabinFingerprint.InitialValue;
-            fingerprint = RabinFingerprint.Fingerprint(fingerprint, (string)null);
-            Assert.That(fingerprint, Is.EqualTo(16130581598588476612L)); // yes - that magic number
+            Assert.Throws<ArgumentNullException>(() => RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, (string)null));
         }
 
         [Test]
@@ -65,7 +65,7 @@ result = """" + fingerprint
             var bytes = Encoding.UTF8.GetBytes(text);
 
             // fingerprint on .NET
-            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, bytes);
+            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, text);
 
             // fingerprint on Java
             var script = scriptTemplate
@@ -126,12 +126,11 @@ var Schema = Java.type(""com.hazelcast.internal.serialization.impl.compact.Schem
 var FieldDescriptor = Java.type(""com.hazelcast.internal.serialization.impl.compact.FieldDescriptor"")
 var FieldKind = Java.type(""com.hazelcast.nio.serialization.FieldKind"")
 
-// fails: not a type - but Java generic are magic, just ignore them
-//var TreeMap = Java.type(""java.util.TreeMap<String, com.hazelcast.internal.serialization.impl.compact.FieldDescriptor>"")
-var TreeMap = Java.type(""java.util.TreeMap"")
+// Java generic are magic, just ignore them
+var ArrayList = Java.type(""java.util.ArrayList"")
 
 // create a schema & fingerprint it
-var fields = new TreeMap()
+var fields = new ArrayList()
 $$FIELDS$$
 var schema = new Schema(""$$TYPENAME$$"", fields)
 result = """" + schema.getSchemaId() // as a string
@@ -147,7 +146,7 @@ result = """" + schema.getSchemaId() // as a string
             var script = scriptTemplate
                 .Replace("$$TYPENAME$$", schema.TypeName)
                 .Replace("$$FIELDS$$", string.Join("\n",
-                    javaFieldsDictionary.Select(x => @$"fields.put(""{x.Key}"", new FieldDescriptor(""{x.Key}"", FieldKind.{x.Value}))")));
+                    javaFieldsDictionary.Select(x => @$"fields.add(new FieldDescriptor(""{x.Key}"", FieldKind.{x.Value}))")));
 
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
 

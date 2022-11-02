@@ -191,10 +191,6 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // remove those that don't make sense here or are not supported by compact serialization
             kindValues.Remove(FieldKind.NotAvailable);
-            kindValues.Remove(FieldKind.Char);
-            kindValues.Remove(FieldKind.ArrayOfChar);
-            kindValues.Remove(FieldKind.Portable);
-            kindValues.Remove(FieldKind.ArrayOfPortable);
 
             // remove those that are tested
             foreach (var (_, kind) in GenerateSchemaSource) kindValues.Remove(kind);
@@ -220,6 +216,17 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schema.Fields.Count, Is.EqualTo(1));
             Assert.That(schema.Fields[0].FieldName, Is.EqualTo("Value0"));
             Assert.That(schema.Fields[0].Kind, Is.EqualTo(testCase.ExpectedFieldKind));
+        }
+
+        // this test ensures that SchemaBuilderWriter throws the right exceptions.
+        [Test]
+        public void SchemaBuilderWriterExceptions()
+        {
+            var sw = new SchemaBuilderWriter("thing");
+            sw.WriteBoolean("foo", false);
+            Assert.Throws<SerializationException>(() => sw.WriteBoolean("foo", false));
+            Assert.Throws<SerializationException>(() => sw.WriteInt8("foo", 0));
+            sw.WriteBoolean("FOO", false); // is case-sensitive
         }
 
         private static readonly (Type, object?)[] SerializeSource = 
@@ -942,6 +949,66 @@ namespace Hazelcast.Tests.Serialization.Compact
             });
         }
 
+        [Test]
+        public void SerializeNestedClass()
+        {
+            var obj = new SomeExtend { Value = 33, Other = 44 };
+
+            Assert.That(obj.GetType(), Is.EqualTo(typeof(SomeExtend)));
+            var properties = obj.GetType().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+            Assert.That(properties.Count, Is.EqualTo(2));
+            foreach (var property in properties) Console.WriteLine($"PROPERTY: {property.DeclaringType}.{property.Name}");
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, obj);
+            var schema = sw.Build();
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, obj);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            var obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2.GetType(), Is.EqualTo(typeof(SomeExtend)));
+            var obj2e = (SomeExtend)obj2;
+            Assert.That(obj2e.Value, Is.EqualTo(obj.Value));
+            Assert.That(obj2e.Other, Is.EqualTo(obj.Other));
+
+        }
+
+        [Test]
+        public void CannotSerializeNotSupportedTypes()
+        {
+            var obj = new List<int>();
+            Console.WriteLine(obj.GetType().FullName);
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            Console.WriteLine(e.Message);
+        }
+
+        [Test]
+        public void CannotSerializeAnonymousTypes()
+        {
+            var obj = new { a = 2 };
+            Console.WriteLine(obj.GetType().FullName);
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            Console.WriteLine(e.Message);
+        }
+
         private class ActivatorKiller
         {
             private ActivatorKiller()
@@ -1028,6 +1095,13 @@ namespace Hazelcast.Tests.Serialization.Compact
             public SomeClass? Value { get; set; }
 
             public override string ToString() => $"SomeClass2(Value={Value})";
+        }
+
+        public class SomeExtend : SomeClass
+        {
+            public int Other { get; set; }
+
+            public override string ToString() => $"SomeExtend(Value={Value}, Other={Other})";
         }
 
         public struct SomeStruct

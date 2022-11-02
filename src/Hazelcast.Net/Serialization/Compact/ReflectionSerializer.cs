@@ -19,6 +19,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Models;
 
 #nullable enable
@@ -34,7 +35,7 @@ namespace Hazelcast.Serialization.Compact
 
         /// <inheritdoc />
         public string TypeName => throw new NotSupportedException();
-        
+
         // internal for tests
         internal static T UnboxNonNull<T>(object? value)
         {
@@ -47,7 +48,7 @@ namespace Hazelcast.Serialization.Compact
             where T : struct
         {
             if (value.HasValue) return value.Value;
-            throw new InvalidOperationException($"Cannot return null value as {typeof(T)}.");
+            throw new InvalidOperationException($"Cannot return null value as {typeof (T)}.");
         }
 
         private static TArray?[]? ToArray<TArray>(object? o, Func<object?, TArray?> convert) where TArray : struct
@@ -244,99 +245,99 @@ namespace Hazelcast.Serialization.Compact
                 // first, register some non-generated readers for convenient .NET types
                 // TODO: consider adding more types, supporting lists...?
 
-                { typeof (HBigDecimal), (r, n) => (HBigDecimal) ValueNonNull(r.ReadDecimal(n)) },
-                { typeof (HBigDecimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (HBigDecimal) ValueNonNull(x)) },
-                { typeof (HLocalTime), (r, n) => (HLocalTime) ValueNonNull(r.ReadTime(n)) },
-                { typeof (HLocalTime[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (HLocalTime) ValueNonNull(x)) },
-                { typeof (HLocalDate), (r, n) => (HLocalDate) ValueNonNull(r.ReadDate(n)) },
-                { typeof (HLocalDate[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (HLocalDate) ValueNonNull(x)) },
-                { typeof (HLocalDateTime), (r, n) => (HLocalDateTime) ValueNonNull(r.ReadTimeStamp(n)) },
-                { typeof (HLocalDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (HLocalDateTime) ValueNonNull(x)) },
-                { typeof (HOffsetDateTime), (r, n) => (HOffsetDateTime) ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
-                { typeof (HOffsetDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (HOffsetDateTime) ValueNonNull(x)) },
+                { typeof (HBigDecimal), (r, n) => (HBigDecimal)ValueNonNull(r.ReadDecimal(n)) },
+                { typeof (HBigDecimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (HBigDecimal)ValueNonNull(x)) },
+                { typeof (HLocalTime), (r, n) => (HLocalTime)ValueNonNull(r.ReadTime(n)) },
+                { typeof (HLocalTime[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (HLocalTime)ValueNonNull(x)) },
+                { typeof (HLocalDate), (r, n) => (HLocalDate)ValueNonNull(r.ReadDate(n)) },
+                { typeof (HLocalDate[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (HLocalDate)ValueNonNull(x)) },
+                { typeof (HLocalDateTime), (r, n) => (HLocalDateTime)ValueNonNull(r.ReadTimeStamp(n)) },
+                { typeof (HLocalDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (HLocalDateTime)ValueNonNull(x)) },
+                { typeof (HOffsetDateTime), (r, n) => (HOffsetDateTime)ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
+                { typeof (HOffsetDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (HOffsetDateTime)ValueNonNull(x)) },
 
-                { typeof (decimal), (r, n) => (decimal) ValueNonNull(r.ReadDecimal(n)) },
-                { typeof (decimal?), (r, n) => (decimal?) r.ReadDecimal(n) },
-                { typeof (decimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (decimal) ValueNonNull(x)) },
-                { typeof (decimal?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDecimal(n), x => (decimal?) x) },
+                { typeof (decimal), (r, n) => (decimal)ValueNonNull(r.ReadDecimal(n)) },
+                { typeof (decimal?), (r, n) => (decimal?)r.ReadDecimal(n) },
+                { typeof (decimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (decimal)ValueNonNull(x)) },
+                { typeof (decimal?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDecimal(n), x => (decimal?)x) },
 
-                { typeof (TimeSpan), (r, n) => (TimeSpan) ValueNonNull(r.ReadTime(n)) },
-                { typeof (TimeSpan?), (r, n) => (TimeSpan?) r.ReadTime(n) },
-                { typeof (TimeSpan[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeSpan) ValueNonNull(x)) },
-                { typeof (TimeSpan?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeSpan?) x) },
+                { typeof (TimeSpan), (r, n) => (TimeSpan)ValueNonNull(r.ReadTime(n)) },
+                { typeof (TimeSpan?), (r, n) => (TimeSpan?)r.ReadTime(n) },
+                { typeof (TimeSpan[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeSpan)ValueNonNull(x)) },
+                { typeof (TimeSpan?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeSpan?)x) },
 
-                { typeof (DateTime), (r, n) => (DateTime) ValueNonNull(r.ReadTimeStamp(n)) },
-                { typeof (DateTime?), (r, n) => (DateTime?) r.ReadTimeStamp(n) },
-                { typeof (DateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (DateTime) ValueNonNull(x)) },
-                { typeof (DateTime?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStamp(n), x => (DateTime?) x) },
+                { typeof (DateTime), (r, n) => (DateTime)ValueNonNull(r.ReadTimeStamp(n)) },
+                { typeof (DateTime?), (r, n) => (DateTime?)r.ReadTimeStamp(n) },
+                { typeof (DateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (DateTime)ValueNonNull(x)) },
+                { typeof (DateTime?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStamp(n), x => (DateTime?)x) },
 
-                { typeof (DateTimeOffset), (r, n) => (DateTimeOffset) ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
-                { typeof (DateTimeOffset?), (r, n) => (DateTimeOffset?) r.ReadTimeStampWithTimeZone(n) },
-                { typeof (DateTimeOffset[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset) ValueNonNull(x)) },
-                { typeof (DateTimeOffset?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset?) x) },
+                { typeof (DateTimeOffset), (r, n) => (DateTimeOffset)ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
+                { typeof (DateTimeOffset?), (r, n) => (DateTimeOffset?)r.ReadTimeStampWithTimeZone(n) },
+                { typeof (DateTimeOffset[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset)ValueNonNull(x)) },
+                { typeof (DateTimeOffset?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset?)x) },
 
 #if NET6_0_OR_GREATER
-                { typeof (TimeOnly), (r, n) => (TimeOnly) ValueNonNull(r.ReadTime(n)) },
-                { typeof (TimeOnly?), (r, n) => (TimeOnly?) r.ReadTime(n) },
-                { typeof (TimeOnly[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x=> (TimeOnly) ValueNonNull(x)) },
-                { typeof (TimeOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeOnly?) x) },
+                { typeof (TimeOnly), (r, n) => (TimeOnly)ValueNonNull(r.ReadTime(n)) },
+                { typeof (TimeOnly?), (r, n) => (TimeOnly?)r.ReadTime(n) },
+                { typeof (TimeOnly[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeOnly)ValueNonNull(x)) },
+                { typeof (TimeOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeOnly?)x) },
 
-                { typeof (DateOnly), (r, n) => (DateOnly) ValueNonNull(r.ReadDate(n)) },
-                { typeof (DateOnly?), (r, n) => (DateOnly?) r.ReadDate(n) },
-                { typeof (DateOnly[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x=> (DateOnly) ValueNonNull(x)) },
-                { typeof (DateOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDate(n), x => (DateOnly?) x) },
+                { typeof (DateOnly), (r, n) => (DateOnly)ValueNonNull(r.ReadDate(n)) },
+                { typeof (DateOnly?), (r, n) => (DateOnly?)r.ReadDate(n) },
+                { typeof (DateOnly[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (DateOnly)ValueNonNull(x)) },
+                { typeof (DateOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDate(n), x => (DateOnly?)x) },
 #endif
 
                 // do NOT remove nor alter the <generated></generated> lines!
                 // <generated>
 
-                { typeof (bool), (r, n) => (bool) r.ReadBoolean(n) },
-                { typeof (sbyte), (r, n) => (sbyte) r.ReadInt8(n) },
-                { typeof (short), (r, n) => (short) r.ReadInt16(n) },
-                { typeof (int), (r, n) => (int) r.ReadInt32(n) },
-                { typeof (long), (r, n) => (long) r.ReadInt64(n) },
-                { typeof (float), (r, n) => (float) r.ReadFloat32(n) },
-                { typeof (double), (r, n) => (double) r.ReadFloat64(n) },
-                { typeof (bool[]), (r, n) => (bool[]?) r.ReadArrayOfBoolean(n) },
-                { typeof (sbyte[]), (r, n) => (sbyte[]?) r.ReadArrayOfInt8(n) },
-                { typeof (short[]), (r, n) => (short[]?) r.ReadArrayOfInt16(n) },
-                { typeof (int[]), (r, n) => (int[]?) r.ReadArrayOfInt32(n) },
-                { typeof (long[]), (r, n) => (long[]?) r.ReadArrayOfInt64(n) },
-                { typeof (float[]), (r, n) => (float[]?) r.ReadArrayOfFloat32(n) },
-                { typeof (double[]), (r, n) => (double[]?) r.ReadArrayOfFloat64(n) },
-                { typeof (bool?), (r, n) => (bool?) r.ReadNullableBoolean(n) },
-                { typeof (sbyte?), (r, n) => (sbyte?) r.ReadNullableInt8(n) },
-                { typeof (short?), (r, n) => (short?) r.ReadNullableInt16(n) },
-                { typeof (int?), (r, n) => (int?) r.ReadNullableInt32(n) },
-                { typeof (long?), (r, n) => (long?) r.ReadNullableInt64(n) },
-                { typeof (float?), (r, n) => (float?) r.ReadNullableFloat32(n) },
-                { typeof (double?), (r, n) => (double?) r.ReadNullableFloat64(n) },
-                { typeof (HBigDecimal?), (r, n) => (HBigDecimal?) r.ReadDecimal(n) },
-                { typeof (string), (r, n) => (string?) r.ReadString(n) },
-                { typeof (HLocalTime?), (r, n) => (HLocalTime?) r.ReadTime(n) },
-                { typeof (HLocalDate?), (r, n) => (HLocalDate?) r.ReadDate(n) },
-                { typeof (HLocalDateTime?), (r, n) => (HLocalDateTime?) r.ReadTimeStamp(n) },
-                { typeof (HOffsetDateTime?), (r, n) => (HOffsetDateTime?) r.ReadTimeStampWithTimeZone(n) },
-                { typeof (bool?[]), (r, n) => (bool?[]?) r.ReadArrayOfNullableBoolean(n) },
-                { typeof (sbyte?[]), (r, n) => (sbyte?[]?) r.ReadArrayOfNullableInt8(n) },
-                { typeof (short?[]), (r, n) => (short?[]?) r.ReadArrayOfNullableInt16(n) },
-                { typeof (int?[]), (r, n) => (int?[]?) r.ReadArrayOfNullableInt32(n) },
-                { typeof (long?[]), (r, n) => (long?[]?) r.ReadArrayOfNullableInt64(n) },
-                { typeof (float?[]), (r, n) => (float?[]?) r.ReadArrayOfNullableFloat32(n) },
-                { typeof (double?[]), (r, n) => (double?[]?) r.ReadArrayOfNullableFloat64(n) },
-                { typeof (HBigDecimal?[]), (r, n) => (HBigDecimal?[]?) r.ReadArrayOfDecimal(n) },
-                { typeof (HLocalTime?[]), (r, n) => (HLocalTime?[]?) r.ReadArrayOfTime(n) },
-                { typeof (HLocalDate?[]), (r, n) => (HLocalDate?[]?) r.ReadArrayOfDate(n) },
-                { typeof (HLocalDateTime?[]), (r, n) => (HLocalDateTime?[]?) r.ReadArrayOfTimeStamp(n) },
-                { typeof (HOffsetDateTime?[]), (r, n) => (HOffsetDateTime?[]?) r.ReadArrayOfTimeStampWithTimeZone(n) },
-                { typeof (string[]), (r, n) => (string?[]?) r.ReadArrayOfString(n) },
+                { typeof (bool), (r, n) => (bool)r.ReadBoolean(n) },
+                { typeof (sbyte), (r, n) => (sbyte)r.ReadInt8(n) },
+                { typeof (short), (r, n) => (short)r.ReadInt16(n) },
+                { typeof (int), (r, n) => (int)r.ReadInt32(n) },
+                { typeof (long), (r, n) => (long)r.ReadInt64(n) },
+                { typeof (float), (r, n) => (float)r.ReadFloat32(n) },
+                { typeof (double), (r, n) => (double)r.ReadFloat64(n) },
+                { typeof (bool[]), (r, n) => (bool[]?)r.ReadArrayOfBoolean(n) },
+                { typeof (sbyte[]), (r, n) => (sbyte[]?)r.ReadArrayOfInt8(n) },
+                { typeof (short[]), (r, n) => (short[]?)r.ReadArrayOfInt16(n) },
+                { typeof (int[]), (r, n) => (int[]?)r.ReadArrayOfInt32(n) },
+                { typeof (long[]), (r, n) => (long[]?)r.ReadArrayOfInt64(n) },
+                { typeof (float[]), (r, n) => (float[]?)r.ReadArrayOfFloat32(n) },
+                { typeof (double[]), (r, n) => (double[]?)r.ReadArrayOfFloat64(n) },
+                { typeof (bool?), (r, n) => (bool?)r.ReadNullableBoolean(n) },
+                { typeof (sbyte?), (r, n) => (sbyte?)r.ReadNullableInt8(n) },
+                { typeof (short?), (r, n) => (short?)r.ReadNullableInt16(n) },
+                { typeof (int?), (r, n) => (int?)r.ReadNullableInt32(n) },
+                { typeof (long?), (r, n) => (long?)r.ReadNullableInt64(n) },
+                { typeof (float?), (r, n) => (float?)r.ReadNullableFloat32(n) },
+                { typeof (double?), (r, n) => (double?)r.ReadNullableFloat64(n) },
+                { typeof (HBigDecimal?), (r, n) => (HBigDecimal?)r.ReadDecimal(n) },
+                { typeof (string), (r, n) => (string?)r.ReadString(n) },
+                { typeof (HLocalTime?), (r, n) => (HLocalTime?)r.ReadTime(n) },
+                { typeof (HLocalDate?), (r, n) => (HLocalDate?)r.ReadDate(n) },
+                { typeof (HLocalDateTime?), (r, n) => (HLocalDateTime?)r.ReadTimeStamp(n) },
+                { typeof (HOffsetDateTime?), (r, n) => (HOffsetDateTime?)r.ReadTimeStampWithTimeZone(n) },
+                { typeof (bool?[]), (r, n) => (bool?[]?)r.ReadArrayOfNullableBoolean(n) },
+                { typeof (sbyte?[]), (r, n) => (sbyte?[]?)r.ReadArrayOfNullableInt8(n) },
+                { typeof (short?[]), (r, n) => (short?[]?)r.ReadArrayOfNullableInt16(n) },
+                { typeof (int?[]), (r, n) => (int?[]?)r.ReadArrayOfNullableInt32(n) },
+                { typeof (long?[]), (r, n) => (long?[]?)r.ReadArrayOfNullableInt64(n) },
+                { typeof (float?[]), (r, n) => (float?[]?)r.ReadArrayOfNullableFloat32(n) },
+                { typeof (double?[]), (r, n) => (double?[]?)r.ReadArrayOfNullableFloat64(n) },
+                { typeof (HBigDecimal?[]), (r, n) => (HBigDecimal?[]?)r.ReadArrayOfDecimal(n) },
+                { typeof (HLocalTime?[]), (r, n) => (HLocalTime?[]?)r.ReadArrayOfTime(n) },
+                { typeof (HLocalDate?[]), (r, n) => (HLocalDate?[]?)r.ReadArrayOfDate(n) },
+                { typeof (HLocalDateTime?[]), (r, n) => (HLocalDateTime?[]?)r.ReadArrayOfTimeStamp(n) },
+                { typeof (HOffsetDateTime?[]), (r, n) => (HOffsetDateTime?[]?)r.ReadArrayOfTimeStampWithTimeZone(n) },
+                { typeof (string[]), (r, n) => (string?[]?)r.ReadArrayOfString(n) },
 
                 // </generated>
 
-                { typeof (char), (r, n) => (char) r.ReadInt16(n) },
-                { typeof (char?), (r, n) => (char?) r.ReadNullableInt16(n) },
-                { typeof (char[]), (r, n) => ToArray(r.ReadArrayOfInt16(n), x => (char) (short) x) },
-                { typeof (char?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfNullableInt16(n), x => (char?) (short?) x) },
+                { typeof (char), (r, n) => (char)r.ReadInt16(n) },
+                { typeof (char?), (r, n) => (char?)r.ReadNullableInt16(n) },
+                { typeof (char[]), (r, n) => ToArray(r.ReadArrayOfInt16(n), x => (char)(short)x) },
+                { typeof (char?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfNullableInt16(n), x => (char?)(short?)x) },
 
 // ReSharper restore RedundantCast
 #pragma warning restore IDE0004
@@ -396,13 +397,16 @@ namespace Hazelcast.Serialization.Compact
         }
 
         private static PropertyInfo[] GetProperties(Type objectType)
-            => Properties.GetOrAdd(objectType, 
+            => Properties.GetOrAdd(objectType,
                 type => type
+                    // "[GetProperties] returns all public instance and static properties, both those defined
+                    // by the type represented by the current Type object as well as those inherited from its
+                    // base types."
                     .GetProperties(BindingFlags.Instance | BindingFlags.Public)
                     .Where(x => x.CanRead && x.CanWrite)
                     .ToArray()
             );
-        
+
         /// <inheritdoc />
         public virtual object Read(ICompactReader reader)
         {
@@ -443,17 +447,17 @@ namespace Hazelcast.Serialization.Compact
                     {
                         var enumType = isEnum ? property.PropertyType : t0;
                         var o = GetReader(typeof (string))(reader, fieldName);
-                        if (o is string s) 
+                        if (o is string s)
                         {
                             var parsed = Enum.Parse(enumType, s);
-                            value = isEnum ? parsed : typeof(Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType }).Invoke(new[] { parsed });
+                            value = isEnum ? parsed : typeof (Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType }).Invoke(new[] { parsed });
                         }
                     }
                     else if (isArrayOfEnum || isArrayOfNullableEnum)
                     {
                         var enumType = isArrayOfEnum ? property.PropertyType.GetElementType() : t1;
 
-                        var o = GetReader(typeof(string[]))(reader, fieldName);
+                        var o = GetReader(typeof (string[]))(reader, fieldName);
                         if (o is Array a)
                         {
                             var elementType = isArrayOfNullableEnum ? typeof (Nullable<>).MakeGenericType(enumType) : enumType;
@@ -472,7 +476,7 @@ namespace Hazelcast.Serialization.Compact
                     {
                         value = GetReader(property.PropertyType)(reader, fieldName);
                     }
-                    
+
                     property.SetValue(obj, value);
                 }
             }
@@ -490,11 +494,13 @@ namespace Hazelcast.Serialization.Compact
             fieldName = propertyName;
             return !(writer is CompactWriter w) || w.ValidateFieldNameInvariant(propertyName, out fieldName);
         }
-        
+
         /// <inheritdoc />
         public virtual void Write(ICompactWriter writer, object obj)
         {
             if (obj == null) throw new ArgumentNullException(nameof(obj));
+
+            VerifyTypeIsSupported(obj);
 
             // TODO: consider emitting the property getters
 
@@ -528,5 +534,26 @@ namespace Hazelcast.Serialization.Compact
             for (var i = 0; i < x.Length; i++) r[i] = x.GetValue(i)?.ToString();
             return r;
         }
+
+        private static void VerifyTypeIsSupported(object o)
+        {
+            // for FullName to be null, the type would need to be derived from an open generic somehow,
+            // which makes no sense since it is the actual type of a concrete object. we can assume that
+            // type is not going to be null.
+            var type = o.GetType();
+            var name = type.FullName!;
+
+            if (name.StartsWith("<", StringComparison.Ordinal))
+                throw new SerializationException($"The {type} type cannot be serialized via zero-configuration "
+                                                 + "Compact serialization because anonymous types are not supported.");
+
+            if (NonSupportedNamespaces.Any(x => name.StartsWith(x, StringComparison.Ordinal)))
+                throw new SerializationException($"The {name} type is not supported by zero-configuration Compact "
+                                                 + "serialization. Consider writing a custom ICompactSerializer for this type.");
+        }
+
+        // for now, we do *not* support all System.* namespaces
+        // we may want to add more later on
+        private static readonly string[] NonSupportedNamespaces = { "System." };
     }
 }

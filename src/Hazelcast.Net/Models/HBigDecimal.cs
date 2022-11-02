@@ -18,6 +18,8 @@ using System;
 using System.Globalization;
 using System.Numerics;
 
+#nullable enable
+
 namespace Hazelcast.Models
 {
     // NOTE:

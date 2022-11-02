@@ -20,6 +20,7 @@ using Hazelcast.Messaging;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Tests.Serialization.Compact.SchemasRemoteTestsLocal;
 using NUnit.Framework;
 
@@ -68,6 +69,7 @@ namespace Hazelcast.Tests.Serialization.Compact
     }
 
     [TestFixture]
+    [ServerCondition("[5.2,)")]
     public class SchemasRemoteTests : SingleMemberClientRemoteTestBase
     {
         // make sure to use distinct schema names since we're running all the tests
