@@ -191,10 +191,6 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // remove those that don't make sense here or are not supported by compact serialization
             kindValues.Remove(FieldKind.NotAvailable);
-            kindValues.Remove(FieldKind.Char);
-            kindValues.Remove(FieldKind.ArrayOfChar);
-            kindValues.Remove(FieldKind.Portable);
-            kindValues.Remove(FieldKind.ArrayOfPortable);
 
             // remove those that are tested
             foreach (var (_, kind) in GenerateSchemaSource) kindValues.Remove(kind);
