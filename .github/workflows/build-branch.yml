@@ -67,7 +67,8 @@ jobs:
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
-    if: (success() || failure()) && github.repository == 'hazelcast/hazelcast-csharp-client'
+    needs: [ "build-test", "ensure-repo" ]
+    if: always() && needs.ensure-repo.result == 'success'
     needs: build-test
 
     steps:
@@ -84,10 +85,8 @@ jobs:
 
   # create checks
   create-checks:
-    name: Create Checks
-    if: (success() || failure()) && github.repository == 'hazelcast/hazelcast-csharp-client'
+    name: Create Checks    
     needs: build-test
-
     uses: ./.github/workflows/create-checks.yml
     secrets: inherit
     with:
