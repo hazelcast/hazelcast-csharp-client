@@ -97,8 +97,18 @@ jobs:
         shell: pwsh
         run: |
           $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
-          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { $a += "-enterprise"}
-          ./hz.ps1 @a
+          $keyPath = "temp/private-test-artifacts.key"
+          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
+            $a += "-enterprise"
+            echo "${{ secrets.PRIVATE_TEST_ARTIFACTS_KEY }}" > $keyPath
+            $a += "$(get-location)/$keyPath"
+          }
+          try {
+            ./hz.ps1 @a
+          }
+          finally {
+            if (test-path $keyPath) { rm $keyPath }
+          }
 
       # test results & coverage: we cannot report here as this workflow doesn't have
       # the required permissions nor tokens to write back to our resources (since it runs

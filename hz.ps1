@@ -1111,31 +1111,66 @@ function clean-dir ( $dir ) {
 # ensure we have the test certificates, or create them
 function ensure-certs {
     if ($options.enterprise) {
+        $download = $false
         if (test-path "$tmpDir/certs") {
             Write-Output "Detected $tmpDir/certs directory"
+            if ((test-path "$tmpDir/certs/client1.pfx") -and (([DateTime]::Now - (ls "$tmpDir/certs/client1.pfx").CreationTime).Days -gt 7)) {
+                Write-Output "Certificates are not too old"
+            }
+            else {
+                Write-Output "Certificates are too old, downloading"
+                $download = $true
+            }
         }
         else {
-            Write-Output "Missing $tmpDir/certs directory, generating"
+            Write-Output "Missing $tmpDir/certs directory, downloading"
+            $download = $true
+        }
+        if ($download) {
             hz-generate-certs
-            hz-install-root-ca
         }
     }
 }
 
 # generate the test certificates
 function hz-generate-certs {
-    . "$buildDir/certs.ps1"
-    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
-    if ($CERTSEXITCODE) {
-        Die "Failed to generate test certificates."
+    if (test-path "$tmpDir/certs") { rm -recurse -force "$tmpDir/certs" }
+
+    # alas, that will not work because the repository is internal
+    #$zipUrl = "https://github.com/hazelcast/private-test-artifacts/blob/master/certs.zip"
+    #invoke-web-request $zipUrl "$tmpDir/certs.zip"
+    #expand-archive "$tmpDir/certs.zip" -destinationPath "$tmpDir/certs"
+
+    # that is convoluted, but works
+
+    if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
+    git init "$tmpDir/certx"
+    git -C "$tmpDir/certx" config core.sparseCheckout true
+
+    $repo = "https://github.com/hazelcast/private-test-artifacts.git"
+
+    if ($options.commargs.Count -eq 1) {
+        Write-Output "Detected private repository access key"
+        $repo = "git@github.com:hazelcast/private-test-artifacts.git"
+        $keyPath = $options.commargs[0].Replace('\', '/')
+        git -C "$tmpDir/certx" config core.sshCommand "ssh -i $keyPath"
     }
+
+    git -C "$tmpDir/certx" remote add -f origin $repo
+    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+    echo "certs/" >> "$tmpDir/certx/.git/info/sparse-checkout"
+    git -C "$tmpDir/certx" pull origin master
+    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+    mv "$tmpDir/certx/certs" "$tmpDir/certs"
+    rm -recurse -force "$tmpDir/certx"
+
     Write-Output ""
 }
 
 # install the root-ca certificate
 function hz-install-root-ca {
     . "$buildDir/certs.ps1"
-    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    install-root-ca "$tmpDir/certs/root-ca.crt"
     if ($CERTSEXITCODE) {
         Die "Failed to install the ROOT CA certificate."
     }
@@ -1145,7 +1180,7 @@ function hz-install-root-ca {
 # remove the root-ca certificate
 function hz-remove-root-ca {
     . "$buildDir/certs.ps1"
-    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    remove-root-ca "$tmpDir/certs/root-ca.crt"
     if ($CERTSEXITCODE) {
         Die "Failed to remove the ROOT CA certificate."
     }
