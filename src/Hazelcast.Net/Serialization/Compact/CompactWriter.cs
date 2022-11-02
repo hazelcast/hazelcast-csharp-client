@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Linq;
 using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Models;
@@ -467,6 +468,29 @@ namespace Hazelcast.Serialization.Compact
             => WriteReference(name, FieldKind.Compact, value, (output, v) => _objectsWriter.Write(output, v));
 
         public void WriteArrayOfCompact<T>(string name, T?[]? value)
-            => WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
+        {
+            // verify that all object in the array are exactly of type T - there is zero reason for this
+            // constraint other than it is enforced in Java and we want to be identical to Java, but even
+            // in Java this constraint could probably be lifted without problems.
+            if (value != null)
+            {
+                // typeof(T) would be Nullable<int> not int - same with GetElementType() - and then, 
+                // when processing each array element, it's going to be boxed to an object so either
+                // be null or int. and so, we need to unwrap the nullable for checks to be valid.
+                var elementType = value.GetType().GetElementType()!;
+                if (elementType.IsNullableOfT(out var underlyingType)) elementType = underlyingType;
+
+                foreach (var element in value)
+                {
+                    if (element == null || element.GetType() == elementType) continue;
+
+                    throw new SerializationException("It is not allowed to serialize an array of Compact serializable "
+                                                     + $"objects containing different item types. A {value.GetType().ToCsString()} array "
+                                                     + $"cannot contain an object of type {element.GetType().ToCsString()}.");
+                }
+            }
+
+            WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
+        } 
     }
 }

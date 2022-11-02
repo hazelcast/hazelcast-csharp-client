@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
+using System;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -39,15 +42,6 @@ namespace Hazelcast.Serialization.Compact
             }
         }
 
-        // fingerprints an array of bytes
-        public static ulong Fingerprint(ulong fingerprint, byte[] bytes)
-        {
-            // trust .NET to optimize the foreach call over an array and to JIT-inline the method
-            foreach (var value in bytes) fingerprint = Fingerprint(fingerprint, value);
-
-            return fingerprint;
-        }
-
         // fingerprints a single byte value
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ulong Fingerprint(ulong fingerprint, byte value)
@@ -66,10 +60,13 @@ namespace Hazelcast.Serialization.Compact
         // fingerprints a string value
         public static ulong Fingerprint(ulong fingerprint, string value)
         {
-            if (value == null) return Fingerprint(fingerprint, 0);
+            if (value == null) throw new ArgumentNullException(nameof(value));
 
             var bytes = Encoding.UTF8.GetBytes(value);
             fingerprint = Fingerprint(fingerprint, bytes.Length);
+
+            // trust .NET to optimize the foreach call over an array and to JIT-inline the method
+            // ReSharper disable once LoopCanBeConvertedToQuery
             foreach (var b in bytes) fingerprint = Fingerprint(fingerprint, b);
 
             return fingerprint;
