@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
-using System.Text;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 
