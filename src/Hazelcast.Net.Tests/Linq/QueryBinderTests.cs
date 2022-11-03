@@ -15,8 +15,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using NUnit.Framework;
 
 using Hazelcast.Linq.Visitors;
@@ -28,7 +26,7 @@ namespace Hazelcast.Tests.Linq
 {
     public class QueryBinderTests
     {
-        public class DummyType
+        private class DummyType
         {
             public int ColumnInteger { get; set; }
             public string ColumnString { get; set; }
@@ -44,7 +42,7 @@ namespace Hazelcast.Tests.Linq
             var count = 0;
 
             Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
-            Assert.AreEqual((prefix) + (count++), qb.GetNextAlias());
+            Assert.AreEqual(prefix + count, qb.GetNextAlias());
         }
 
 
@@ -58,7 +56,7 @@ namespace Hazelcast.Tests.Linq
         }
 
         [Test]
-        public void TestQueryWhereBinderBindsCorrecytly()
+        public void TestQueryBinderBindsCorrectly()
         {
             var dummyData = new List<DummyType>();
             var val = 0;
@@ -74,7 +72,7 @@ namespace Hazelcast.Tests.Linq
             var projection = projectedExp.Source as SelectExpression;
             Assert.That(projection.Columns.Count, Is.EqualTo(2));
             Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(columnNames), columnNames);
-            Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Alias, nameof(DummyType));//redundandt queries are another PR's deal.
+            Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Alias, nameof(DummyType));//redundant queries are another PR's deal.
 
             var where = projectedExp.Source.Where as BinaryExpression;
             Assert.AreEqual(where.NodeType, ExpressionType.Equal);

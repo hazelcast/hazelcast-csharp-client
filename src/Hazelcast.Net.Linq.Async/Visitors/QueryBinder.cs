@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
