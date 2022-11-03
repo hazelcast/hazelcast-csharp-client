@@ -40,8 +40,8 @@ public class EmployeeSerializer : ICompactSerializer<Employee>
     {
         return new Employee
         {
-            Id = reader.ReadInt64("id");
-            Name = reader.ReadString("name");
+            Id = reader.ReadInt64("id"),
+            Name = reader.ReadString("name")
         }
     }
 
