@@ -223,7 +223,6 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void SchemaBuilderWriterExceptions()
         {
             var sw = new SchemaBuilderWriter("thing");
-            Assert.Throws<NotSupportedException>(() => sw.GetFieldKind("fieldname"));
             sw.WriteBoolean("foo", false);
             Assert.Throws<SerializationException>(() => sw.WriteBoolean("foo", false));
             Assert.Throws<SerializationException>(() => sw.WriteInt8("foo", 0));

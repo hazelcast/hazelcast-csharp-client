@@ -31,9 +31,6 @@ namespace Hazelcast.Serialization.Compact
             _typeName = typeName;
         }
 
-        public FieldKind GetFieldKind(string name)
-            => throw new NotSupportedException();
-
         private void AddField(string name, FieldKind kind)
         {
             if (!_names.Add(name)) 
