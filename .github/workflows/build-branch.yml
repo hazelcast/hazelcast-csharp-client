@@ -85,7 +85,7 @@ jobs:
   # create checks
   create-checks:
     name: Create Checks    
-    needs: [build-test,ensure-repo]
+    needs: ["build-test","ensure-repo"]
     if: always() && needs.ensure-repo.result == 'success'    
     uses: ./.github/workflows/create-checks.yml
     secrets: inherit
