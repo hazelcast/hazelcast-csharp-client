@@ -13,14 +13,13 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
 namespace Hazelcast.Linq.Expressions
 {
     /// <summary>
-    /// Expression equalivent of a SQL Select statement.
+    /// Expression equivalent of a SQL Select statement.
     /// </summary>
     internal class SelectExpression : Expression
     {

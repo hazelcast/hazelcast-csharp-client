@@ -26,7 +26,7 @@ namespace Hazelcast.Linq.Evaluation
         /// Travers and evaluates the expression tree.
         /// </summary>
         /// <param name="expression">Root node</param>
-        /// <param name="evaluateFunc">A function decides that the node can be evaluated or not.</param>
+        /// <param name="canBeEvaluatedFunc">A function decides that the node can be evaluated or not.</param>
         /// <returns>A new Tree which is evaluated partially.</returns>
         public static Expression EvaluatePartially(Expression expression, Func<Expression, bool> canBeEvaluatedFunc)
         {
