@@ -25,7 +25,7 @@ namespace Hazelcast.Linq.Visitors
     /// <summary>
     /// Traverses and prepares a SQLized expression tree to be traversed and converted to text based SQL statements.
     /// </summary>
-    internal class QueryBinder : ExpressionVisitor
+    internal class QueryBinder : HzExpressionVisitor
     {
         private ColumnProjector _projector;
         private Dictionary<ParameterExpression, Expression> _map;
