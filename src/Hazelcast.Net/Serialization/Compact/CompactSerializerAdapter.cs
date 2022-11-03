@@ -72,7 +72,7 @@ namespace Hazelcast.Serialization.Compact
             // note: this is going to happen once per serializedType, no point caching the created method
             
             var serializedType = serializer.GetSerializedType();
-            return (CompactSerializerAdapter) CreateMethod.MakeGenericMethod(serializedType).Invoke(null, new object[] { serializer });
+            return (CompactSerializerAdapter) CreateMethod.MakeGenericMethod(serializedType).Invoke(null, new object[] { serializer })!;
         }
         
         /// <summary>

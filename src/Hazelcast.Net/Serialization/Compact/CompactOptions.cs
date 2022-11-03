@@ -452,6 +452,6 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Clones the options.
         /// </summary>
-        public CompactOptions Clone() => new(this);
+        internal CompactOptions Clone() => new(this);
     }
 }

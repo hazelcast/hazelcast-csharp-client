@@ -87,10 +87,7 @@ namespace Hazelcast.Networking
         public IAddressProviderSource AddressProviderSource
         {
             get => _source;
-            internal set {
-                _source = value;
-                //_source.EnsureMap(true); // FIXME what's the point?
-            }
+            internal set => _source = value;
         }
 
         /// <summary>

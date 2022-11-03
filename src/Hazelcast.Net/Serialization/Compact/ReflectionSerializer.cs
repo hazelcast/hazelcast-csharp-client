@@ -53,7 +53,7 @@ namespace Hazelcast.Serialization.Compact
 
         private static TArray?[]? ToArray<TArray>(object? o, Func<object?, TArray?> convert) where TArray : struct
         {
-            if (!(o is Array { Rank: 1 } source)) return null;
+            if (o is not Array { Rank: 1 } source) return null;
             var array = new TArray?[source.Length];
             var i = 0;
             foreach (var element in source) array[i++] = convert(element);
@@ -99,19 +99,25 @@ namespace Hazelcast.Serialization.Compact
         private static short CharToShort(object? o) => (short)(ushort)UnboxNonNull<char>(o);
         private static short? NullableCharToNullableShort(object? o) => o is char value ? (short)(ushort)value : null;
 
-        private static short[]? CharsToShorts(char[]? x)
+        private static short[]? CharsToShorts(object? o)
         {
-            if (x == null) return null;
+            if (o == null) return null;
+            if (o is not char[] x) throw new InvalidCastException();
             var shorts = new short[x.Length];
             for (var i = 0; i < x.Length; i++) shorts[i] = (short)(ushort)x[i];
             return shorts;
         }
 
-        private static short?[]? NullableCharsToNullableShorts(char?[]? x)
+        private static short?[]? NullableCharsToNullableShorts(object? o)
         {
-            if (x == null) return null;
+            if (o == null) return null;
+            if (o is not char?[] x) throw new InvalidCastException();
             var shorts = new short?[x.Length];
-            for (var i = 0; i < x.Length; i++) shorts[i] = x[i] is null ? null : (short)(ushort)x[i];
+            for (var i = 0; i < x.Length; i++)
+            {
+                var c = x[i];
+                shorts[i] = c is null ? null : (short)(ushort)c;
+            }
             return shorts;
         }
 
@@ -225,8 +231,8 @@ namespace Hazelcast.Serialization.Compact
 
                 { typeof (char), (w, n, o) => w.WriteInt16(n, CharToShort(o)) },
                 { typeof (char?), (w, n, o) => w.WriteNullableInt16(n, NullableCharToNullableShort(o)) },
-                { typeof (char[]), (w, n, o) => w.WriteArrayOfInt16(n, CharsToShorts((char[])o)) },
-                { typeof (char?[]), (w, n, o) => w.WriteArrayOfNullableInt16(n, NullableCharsToNullableShorts((char?[]?)o)) },
+                { typeof (char[]), (w, n, o) => w.WriteArrayOfInt16(n, CharsToShorts(o)) },
+                { typeof (char?[]), (w, n, o) => w.WriteArrayOfNullableInt16(n, NullableCharsToNullableShorts(o)) },
             };
 
         private static readonly Dictionary<Type, Func<ICompactReader, string, object?>> Readers
@@ -439,7 +445,7 @@ namespace Hazelcast.Serialization.Compact
                     var isEnum = property.PropertyType.IsEnum;
                     var isNullableEnum = property.PropertyType.IsNullableOfT(out t0) && t0.IsEnum;
                     var isArray = property.PropertyType.IsArray && property.PropertyType.GetArrayRank() == 1;
-                    var isArrayOfEnum = isArray && property.PropertyType.GetElementType().IsEnum;
+                    var isArrayOfEnum = isArray && property.PropertyType.GetElementType()!.IsEnum;
                     var isArrayOfNullableEnum = isArray && property.PropertyType.GetElementType().IsNullableOfT(out t1) && t1.IsEnum;
 
                     object? value = null;
@@ -450,12 +456,12 @@ namespace Hazelcast.Serialization.Compact
                         if (o is string s)
                         {
                             var parsed = Enum.Parse(enumType, s);
-                            value = isEnum ? parsed : typeof (Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType }).Invoke(new[] { parsed });
+                            value = isEnum ? parsed : typeof(Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType })!.Invoke(new[] { parsed });
                         }
                     }
                     else if (isArrayOfEnum || isArrayOfNullableEnum)
                     {
-                        var enumType = isArrayOfEnum ? property.PropertyType.GetElementType() : t1;
+                        var enumType = isArrayOfEnum ? property.PropertyType.GetElementType()! : t1!;
 
                         var o = GetReader(typeof (string[]))(reader, fieldName);
                         if (o is Array a)
@@ -468,7 +474,7 @@ namespace Hazelcast.Serialization.Compact
                                 if (a.GetValue(i) is string s)
                                 {
                                     var parsed = Enum.Parse(enumType, s);
-                                    valueArray.SetValue(isArrayOfEnum ? parsed : elementCtor.Invoke(new[] { parsed }), i);
+                                    valueArray.SetValue(isArrayOfEnum ? parsed : elementCtor!.Invoke(new[] { parsed }), i);
                                 }
                         }
                     }
@@ -511,7 +517,7 @@ namespace Hazelcast.Serialization.Compact
                     var isEnum = property.PropertyType.IsEnum;
                     var isNullableEnum = property.PropertyType.IsNullableOfT(out var t0) && t0.IsEnum;
                     var isArray = property.PropertyType.IsArray && property.PropertyType.GetArrayRank() == 1;
-                    var isArrayOfEnum = isArray && property.PropertyType.GetElementType().IsEnum;
+                    var isArrayOfEnum = isArray && property.PropertyType.GetElementType()!.IsEnum;
                     var isArrayOfNullableEnum = isArray && property.PropertyType.GetElementType().IsNullableOfT(out var t1) && t1.IsEnum;
                     var type =
                         isEnum || isNullableEnum ? typeof (string) :

@@ -118,7 +118,8 @@ namespace Hazelcast.Serialization
             RegisterConstantSerializer(_dataSerializerAdapter, typeof(IIdentifiedDataSerializable));
 
             // Registers the constant 'compact serializer', which implements compact serialization.
-            _compactSerializer = new CompactSerializationSerializer(options.Compact, schemas, options.Endianness);
+            // Own the ISchemas instance and make sure to dispose it
+            _compactSerializer = new CompactSerializationSerializer(options.Compact, Using(schemas), options.Endianness);
             _compactSerializerAdapter = Using(new CompactSerializationSerializerAdapter(_compactSerializer));
             RegisterConstantSerializer(_compactSerializerAdapter);
 
