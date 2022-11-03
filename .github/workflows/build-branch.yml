@@ -67,8 +67,8 @@ jobs:
   report:
     name: Build&Test Result
     runs-on: ubuntu-latest
-    if: always()
-    needs: build-test
+    needs: [ "build-test", "ensure-repo" ]
+    if: always() && needs.ensure-repo.result == 'success'    
 
     steps:
     - name: Report
@@ -84,10 +84,9 @@ jobs:
 
   # create checks
   create-checks:
-    name: Create Checks
-    if: always()
-    needs: build-test
-
+    name: Create Checks    
+    needs: ["build-test","ensure-repo"]
+    if: always() && needs.ensure-repo.result == 'success'    
     uses: ./.github/workflows/create-checks.yml
     secrets: inherit
     with:
