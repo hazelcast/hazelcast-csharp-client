@@ -41,9 +41,10 @@ namespace Hazelcast.Linq.Visitors
                 HzExpressionType.Join => VisitJoin((JoinExpression)node),
                 _ => base.Visit(node),
             };
-            }
+        }
 
-        protected virtual Expression VisitJoin(JoinExpression node)
+        //internal for test purposes
+        internal virtual Expression VisitJoin(JoinExpression node)
         {
             var left = Visit(node.Left);
             var right = Visit(node.Right);
@@ -55,7 +56,8 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        protected virtual Expression VisitProjection(ProjectionExpression node)
+        //internal for test purposes
+        internal virtual Expression VisitProjection(ProjectionExpression node)
         {
             var visitedSource = (SelectExpression)Visit(node.Source);
             var visitedProjector = Visit(node.Projector);
@@ -66,7 +68,8 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        protected virtual Expression VisitSelect(SelectExpression node)
+        //internal for test purposes
+        internal virtual Expression VisitSelect(SelectExpression node)
         {
             var from = Visit(node.From);
             var where = Visit(node.Where);
@@ -78,6 +81,7 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
+        //internal for test purposes
         protected virtual ReadOnlyCollection<ColumnDefinition> VisitColumnDefinititions(ReadOnlyCollection<ColumnDefinition> columns)
         {
             List<ColumnDefinition>? definitions = null;
@@ -97,12 +101,14 @@ namespace Hazelcast.Linq.Visitors
             return definitions == null ? columns : definitions.AsReadOnly();
         }
 
-        protected virtual Expression VisitColumn(ColumnExpression node)
+        //internal for test purposes
+        internal virtual Expression VisitColumn(ColumnExpression node)
         {
             return node;
         }
 
-        protected virtual Expression VisitMap(MapExpression node)
+        //internal for test purposes
+        internal virtual Expression VisitMap(MapExpression node)
         {
             return node;
         }
