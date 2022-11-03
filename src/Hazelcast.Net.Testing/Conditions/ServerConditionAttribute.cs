@@ -75,8 +75,8 @@ namespace Hazelcast.Testing.Conditions
                 return;
             }
 
-            // test the range
-            if (_range.Satisfies(serverVersion))
+            // test the range - only on version, ignore metadata (-SNAPSHOT etc)
+            if (_range.Satisfies(serverVersion, VersionComparison.Version))
                 return;
 
             // ignore the test if out-of-range
