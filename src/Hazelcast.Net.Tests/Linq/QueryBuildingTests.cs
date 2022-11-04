@@ -125,6 +125,27 @@ namespace Hazelcast.Tests.Linq
         [Test]
         public void TestRemoveRedundantProjections()
         {
+            bool DoesConditionExist<T>(Expression exp, string column, ExpressionType operatorType, T value)
+            {
+                if (exp == null) return false;
+
+                if (exp is BinaryExpression condition
+                    && condition.Left is ColumnExpression c1
+                    && c1.Name == column && condition.NodeType == operatorType
+                    && condition.Right is ConstantExpression c2 && c2.Value is T c2Val && c2Val.Equals(value))
+                {
+                    return true;
+                }
+
+                return exp switch
+                {
+                    SelectExpression s => DoesConditionExist(s.From, column, operatorType, value) || DoesConditionExist(s.Where, column, operatorType, value),
+                    ProjectionExpression p => DoesConditionExist(p.Source, column, operatorType, value),
+                    BinaryExpression b => DoesConditionExist(b.Left, column, operatorType, value) || DoesConditionExist(b.Right, column, operatorType, value),
+                    _ => false,
+                };
+            }
+
             var dummyData = new List<DummyType>();
             var val = 10;
             var exp = dummyData.AsQueryable()
@@ -144,12 +165,14 @@ namespace Hazelcast.Tests.Linq
             // unused columns and sub queries are removed. 
             // Only one of the columns are used.
             Assert.That(projected.Source.Columns.Count, Is.EqualTo(1));
-
             Assert.AreEqual(projected.Source.Columns[0].Name, nameof(DummyType.ColumnInteger));
-
             //One layer query, From clause should point to Map directly.
             Assert.AreEqual(projected.Source.From.NodeType, (ExpressionType)HzExpressionType.Map);
+            Assert.IsInstanceOf(typeof(BinaryExpression), projected.Source.Where);
 
+            Assert.True(DoesConditionExist<string>(projected, nameof(DummyType.ColumnString), ExpressionType.Equal, "param1"));
+            Assert.True(DoesConditionExist<string>(projected, nameof(DummyType.ColumnString), ExpressionType.Equal, "param2"));
+            Assert.True(DoesConditionExist<int>(projected, nameof(DummyType.ColumnInteger), ExpressionType.GreaterThan, val));
         }
 
     }

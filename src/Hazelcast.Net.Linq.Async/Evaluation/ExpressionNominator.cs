@@ -50,8 +50,7 @@ namespace Hazelcast.Linq.Evaluation
         public override Expression Visit(Expression node)
         {            
             if (node == null) return node;
-            Console.WriteLine(node.NodeType);
-
+            
             var copyOfEvaluationState = _cannotBeEvaluated;
 
             _cannotBeEvaluated = false;// Initially, accept everthing can be evaluated.
