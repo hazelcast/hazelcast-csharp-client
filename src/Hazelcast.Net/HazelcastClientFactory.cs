@@ -290,10 +290,12 @@ namespace Hazelcast
         // (internal for tests only) creates the default serialization service
         internal static SerializationService CreateSerializationService(SerializationOptions options, IClusterMessaging messaging, ILoggerFactory loggerFactory)
         {
+            var schemas = new Schemas(messaging);
+
             return new SerializationServiceBuilder(options, loggerFactory)
 
                 .SetPartitioningStrategy(new PartitionAwarePartitioningStragegy()) // TODO: should be configure-able
-                .SetCompactSchemas(new Schemas(messaging))
+                .SetCompactSchemas(schemas) // transfer ownership, schemas will be disposed by serialization service
 
                 // add hooks that construct and provide IIdentifiedDataSerialization factories for more
                 // built-in types such as predicates, aggregators or projections.

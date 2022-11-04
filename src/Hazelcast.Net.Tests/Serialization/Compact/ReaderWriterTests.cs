@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Serialization.Compact
     [TestFixture]
     public class ReaderWriterTests
     {
-        private byte[] Write(Schema schema, Endianness endianness, Action<ICompactWriter> write)
+        private static byte[] Write(Schema schema, Endianness endianness, Action<ICompactWriter> write)
         {
             // should not be invoked, a dummy mock is all we need
             var objectsReaderWriter = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
@@ -39,22 +39,20 @@ namespace Hazelcast.Tests.Serialization.Compact
             return output.ToByteArray();
         }
 
-        private void Read(Schema schema, Endianness endianness, byte[] bytes, Action<ICompactReader> read)
+        private static void Read(Schema schema, Endianness endianness, byte[] bytes, Action<ICompactReader> read)
         {
             // should not be invoked, a dummy mock is all we need
             var objectsReaderWriter = Mock.Of<IReadWriteObjectsFromIObjectDataInputOutput>();
             
             var input = new ObjectDataInput(bytes, objectsReaderWriter, endianness);
-            var reader = new CompactReader(objectsReaderWriter, input, schema, typeof(object)); // FIXME TYPEOF?!
+            var reader = new CompactReader(objectsReaderWriter, input, schema, typeof(object));
             read(reader);
         }
         
-        [Test]
-        public void Int32()
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void Int32(Endianness endianness)
         {
-            var endianness = Endianness.BigEndian; // FIXME should we test both?
-            var initialBufferSize = 1024;
-
             var schema = SchemaBuilder.For("whatever").WithField("value", FieldKind.Int32).Build();
 
             var value0 = 1 + RandomProvider.Next();
@@ -64,12 +62,10 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(value1, Is.EqualTo(value0));
         }
 
-        [Test]
-        public void Int64()
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void Int64(Endianness endianness)
         {
-            var endianness = Endianness.BigEndian; // FIXME should we test both?
-            var initialBufferSize = 1024;
-
             var schema = SchemaBuilder.For("whatever").WithField("value", FieldKind.Int64).Build();
 
             var value0 = 1 + ((long) RandomProvider.Next() << 32) + RandomProvider.Next();
@@ -79,12 +75,10 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(value1, Is.EqualTo(value0));
         }
 
-        [Test]
-        public void Boolean()
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void Boolean(Endianness endianness)
         {
-            var endianness = Endianness.BigEndian; // FIXME should we test both?
-            var initialBufferSize = 1024;
-
             var schema = SchemaBuilder.For("whatever").WithField("value", FieldKind.Boolean).Build();
 
             var v = false;
@@ -95,13 +89,11 @@ namespace Hazelcast.Tests.Serialization.Compact
             Read(schema, endianness, bytes, r => { v = r.ReadBoolean("value"); });
             Assert.That(!v);
         }
-        
-        [Test]
-        public void Booleans()
-        {
-            var endianness = Endianness.BigEndian; // FIXME should we test both?
-            var initialBufferSize = 1024;
 
+        [TestCase(Endianness.BigEndian)]
+        [TestCase(Endianness.LittleEndian)]
+        public void Booleans(Endianness endianness)
+        {
             var schema = SchemaBuilder.For("whatever")
                 .WithField("valueA", FieldKind.Boolean)
                 .WithField("valueB", FieldKind.Boolean)
