@@ -24,12 +24,8 @@ using Hazelcast.Exceptions;
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
-    /// (preview) Represents the compact serialization options.
+    /// Represents the compact serialization options.
     /// </summary>
-    /// <remarks>
-    /// <para>During the preview period, compact serialization is not enabled by default.</para>
-    /// <para>The options represented by this class may change in breaking ways in the future.</para>
-    /// </remarks>
     public sealed class CompactOptions
     {
         // we have, by design:
