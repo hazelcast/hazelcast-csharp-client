@@ -14,6 +14,7 @@
 
 #nullable enable
 
+using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
@@ -22,7 +23,7 @@ namespace Hazelcast.Serialization.Compact
     /// <summary>
     /// Defines a schema-management service.
     /// </summary>
-    internal interface ISchemas
+    internal interface ISchemas : IDisposable
     {
         /// <summary>
         /// Adds a schema.

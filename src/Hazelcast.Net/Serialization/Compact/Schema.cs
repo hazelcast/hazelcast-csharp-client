@@ -86,9 +86,9 @@ namespace Hazelcast.Serialization.Compact
         /// <returns><c>true</c> if a field with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
         internal bool TryGetField(string name, [NotNullWhen(true)] out SchemaField field, bool caseSensitive = true)
         {
-            if (caseSensitive) return _fieldsMap.TryGetValue(name, out field);
+            if (caseSensitive) return _fieldsMap.TryGetValue(name, out field!);
             _fieldsMapInvariant ??= new Dictionary<string, SchemaField>(_fieldsMap, StringComparer.OrdinalIgnoreCase);
-            return _fieldsMapInvariant.TryGetValue(name, out field);
+            return _fieldsMapInvariant.TryGetValue(name, out field!);
         }
         
         /// <summary>
@@ -125,6 +125,8 @@ namespace Hazelcast.Serialization.Compact
             // build the fields map
             foreach (var field in typeFields)
             {
+                if (field == null)
+                    throw new ArgumentException("Fields contain a null field.", nameof(typeFields));
                 if (!fieldNames.Add(field.FieldName))
                     throw new ArgumentException($"Fields contain duplicate field name {field.FieldName}.", nameof(typeFields));
                 _fieldsMap[field.FieldName] = field;

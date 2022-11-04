@@ -70,6 +70,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public static Type CreateObjectSerializerType(Type objectType, string propertyName, FieldKind fieldKind)
         {
             var property = objectType.GetProperty(propertyName);
+            if (property == null) throw new ArgumentException("Not a valid property name.", nameof(propertyName));
             var propertyType = property.PropertyType;
 
             var assemblyName = new AssemblyName("Hazelcast.Net.Tests"); // to access internals!
@@ -125,7 +126,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             ilgen.Emit(OpCodes.Ret);
             propertyBuilder.SetGetMethod(getBuilder);
 
-            var write = typeof(ICompactWriter).GetMethod($"Write{fieldKind}");
+            var write = typeof(ICompactWriter).GetMethod($"Write{fieldKind}")!;
             if (fieldKind == FieldKind.Compact) write = write.MakeGenericMethod(propertyType);
             var writeBuilder = typeBuilder.DefineMethod("Write", MethodAttributes.Public | MethodAttributes.Virtual, null, new[] { typeof(ICompactWriter), objectType });
             ilgen = writeBuilder.GetILGenerator();
@@ -133,7 +134,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             ilgen.Emit(OpCodes.Ldarg_0);
             ilgen.Emit(OpCodes.Call, getFieldName);
             ilgen.Emit(OpCodes.Ldarg_2);
-            ilgen.Emit(OpCodes.Callvirt, property.GetMethod);
+            ilgen.Emit(OpCodes.Callvirt, property.GetMethod!);
             ilgen.Emit(OpCodes.Callvirt, write);
             ilgen.Emit(OpCodes.Ret);
 
@@ -158,7 +159,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             }
         }
 
-        public static object GetPropertyValue(object obj, string propertyName)
+        public static object? GetPropertyValue(object obj, string propertyName)
         {
             var property = obj.GetType().GetProperty(propertyName);
             if (property == null) throw new ArgumentException("Property not found.", nameof(propertyName));

@@ -80,7 +80,7 @@ namespace Hazelcast.Serialization.Compact
 
         public void Dispose()
         {
-            // note: ISchemas is not IDisposable because we don't have background tasks
+            // note: ISchemas is IDisposable but is owned by the global SerializationService
         }
 
         public object Read(IObjectDataInput input)

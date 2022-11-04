@@ -669,8 +669,9 @@ namespace Hazelcast.Tests.Serialization.Compact
             var properties = new PropertyInfo[propertyTypes.Length];
             for (var i = 0; i < propertyTypes.Length; i++)
             {
-                var property = properties[i] = type.GetProperty($"Value{i}");
+                var property = type.GetProperty($"Value{i}");
                 Assert.That(property, Is.Not.Null);
+                properties[i] = property!;
                 try
                 {
                     property!.SetValue(obj, i % 3 == 0);
@@ -792,8 +793,9 @@ namespace Hazelcast.Tests.Serialization.Compact
             var properties = new PropertyInfo[count];
             for (var i = 0; i < count; i++)
             {
-                var property = properties[i] = type.GetProperty($"Value{i}");
+                var property = type.GetProperty($"Value{i}");
                 Assert.That(property, Is.Not.Null);
+                properties[i] = property!;
                 try
                 {
                     var size = i == 0 ? sizeFirst : sizeOther;
@@ -844,8 +846,9 @@ namespace Hazelcast.Tests.Serialization.Compact
             var properties = new PropertyInfo[count];
             for (var i = 0; i < count; i++)
             {
-                var property = properties[i] = type.GetProperty($"Value{i}");
+                var property = type.GetProperty($"Value{i}");
                 Assert.That(property, Is.Not.Null);
+                properties[i] = property!;
                 try
                 {
                     property!.SetValue(obj, sources[i].Item2);
@@ -993,7 +996,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var serializer = new ReflectionSerializer();
             var sw = new SchemaBuilderWriter("thing");
-            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj))!;
             Console.WriteLine(e.Message);
         }
 
@@ -1005,7 +1008,7 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var serializer = new ReflectionSerializer();
             var sw = new SchemaBuilderWriter("thing");
-            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj));
+            var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj))!;
             Console.WriteLine(e.Message);
         }
 
