@@ -259,8 +259,7 @@ $actions = @(
        note = "The resulting commit still needs to be pushed."
     },
     @{ name = "generate-certs";
-       desc = "generates the test certificates";
-       need = @( "certs-tools" )
+       desc = "generates the test certificates"
     },
     @{ name = "install-root-ca";
        desc = "(experimental) installs the ROOT CA test certificate";
@@ -1095,12 +1094,6 @@ function ensure-build-proj {
     }
 }
 
-# ensure we have openssl and keytool for certs
-function ensure-certs-tools {
-    ensure-command "openssl"
-    ensure-command "keytool"
-}
-
 function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
@@ -1151,9 +1144,11 @@ function hz-generate-certs {
 
     if ($options.commargs.Count -eq 1) {
         Write-Output "Detected private repository access key"
+        $ssh = (command ssh).Source
+        Write-Output "SSH at $ssh"
         $repo = "git@github.com:hazelcast/private-test-artifacts.git"
         $keyPath = $options.commargs[0].Replace('\', '/')
-        git -C "$tmpDir/certx" config core.sshCommand "ssh -i $keyPath"
+        git -C "$tmpDir/certx" config core.sshCommand "$ssh -i $keyPath"
     }
 
     git -C "$tmpDir/certx" remote add -f origin $repo
