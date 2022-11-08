@@ -121,7 +121,7 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
                                     : TimeSpan.Zero); // zero = infinite
 
         if (maxIdle < TimeSpan.Zero || timeToLive < TimeSpan.Zero)
-            throw new InvalidOperationException("Invalid expiration options.");
+            throw new InvalidOperationException("Invalid expiration options: values must be positive.");
 
         await _map!.SetAsync(key, value, timeToLive, maxIdle).CfAwait();
     }

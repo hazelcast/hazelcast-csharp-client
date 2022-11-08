@@ -26,6 +26,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Caching;
@@ -90,6 +91,15 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         await cache.DisposeAsync();
 
         await AssertEx.ThrowsAsync<ObjectDisposedException>(async () => await cache.SetStringAsync("xxx", "xxx"));
+    }
+
+    [Test]
+    public void ProvidedCacheExceptions()
+    {
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(Mock.Of<IOptions<HazelcastOptions>>(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCache(null!, Mock.Of<IOptions<HazelcastCacheOptions>>()));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(Mock.Of<IOptions<HazelcastFailoverOptions>>(), null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new ProvidedHazelcastCacheWithFailover(null!, Mock.Of<IOptions<HazelcastCacheOptions>>()));
     }
 
     [Test]

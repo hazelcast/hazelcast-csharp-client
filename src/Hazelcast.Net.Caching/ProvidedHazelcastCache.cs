@@ -12,17 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using Microsoft.Extensions.Options;
 
 namespace Hazelcast.Caching;
 
 // class to be registered in dependency-injection scenario to properly resolve options
-internal class ProvidedHazelcastCache : HazelcastCache
+internal sealed class ProvidedHazelcastCache : HazelcastCache
 {
     public ProvidedHazelcastCache(IOptions<HazelcastOptions> hazelcastOptions, IOptions<HazelcastCacheOptions> hazelcastCacheOptions)
-        : base(
-            hazelcastOptions?.Value ?? throw new ArgumentNullException(nameof(hazelcastOptions)),
-            hazelcastCacheOptions?.Value ?? throw new ArgumentNullException(nameof(hazelcastCacheOptions)))
+        : base(hazelcastOptions.SafeValue(), hazelcastCacheOptions.SafeValue())
     { }
 }

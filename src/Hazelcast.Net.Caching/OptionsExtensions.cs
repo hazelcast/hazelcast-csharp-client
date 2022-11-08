@@ -13,14 +13,17 @@
 // limitations under the License.
 
 using System;
+using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Options;
 
 namespace Hazelcast.Caching;
 
-// class to be registered in dependency-injection scenario to properly resolve options
-internal sealed class ProvidedHazelcastCacheWithFailover : HazelcastCache
+internal static class OptionsExtensions
 {
-    public ProvidedHazelcastCacheWithFailover(IOptions<HazelcastFailoverOptions> hazelcastFailoverOptions, IOptions<HazelcastCacheOptions> hazelcastCacheOptions)
-        : base(hazelcastFailoverOptions.SafeValue(), hazelcastCacheOptions.SafeValue())
-    { }
+    public static T SafeValue<T>(this IOptions<T> options, [CallerArgumentExpression("options")] string? argumentName = null)
+        where T : class
+    {
+        if (options == null) throw new ArgumentNullException(argumentName);
+        return options.Value;
+    }
 }
