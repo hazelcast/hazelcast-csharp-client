@@ -1148,6 +1148,7 @@ function hz-generate-certs {
         Write-Output "SSH at $ssh"
         $repo = "git@github.com:hazelcast/private-test-artifacts.git"
         $keyPath = $options.commargs[0].Replace('\', '/')
+        $ssh = $ssh.Replace('\', '/')
         git -C "$tmpDir/certx" config core.sshCommand "$ssh -i $keyPath"
     }
 
