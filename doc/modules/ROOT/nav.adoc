@@ -13,6 +13,7 @@
 
 * Serialization
 ** xref:serialization:overview.adoc[Overview]
+** xref:serialization:compact.adoc[Compact]
 ** xref:serialization:ids.adoc[IdentifiedDataSerializable]
 ** xref:serialization:portable.adoc[Portable]
 ** xref:serialization:custom.adoc[Custom]

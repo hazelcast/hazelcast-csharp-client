@@ -61,7 +61,7 @@ hazelcastOptions.Serialization.Serializers.Add(
 
 Declarative::
 +
-[source,xml]
+[source,json]
 ----
 {
     "hazelcast": {
