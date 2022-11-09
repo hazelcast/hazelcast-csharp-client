@@ -1146,7 +1146,7 @@ function hz-generate-certs {
         $directorySeparator = [System.IO.Path]::DirectorySeparatorChar
         $keyPath = $options.commargs[0]
         $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
-        $keyPath = $keyPath.Replace('\', $directorySeparator)
+        $keyPath = $keyPath.Replace('\', '/')
         if (-not (test-path $keyPath)) {
             Die "File not found: $keyPath"
         }
