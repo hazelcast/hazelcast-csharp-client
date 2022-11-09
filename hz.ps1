@@ -1146,16 +1146,16 @@ function hz-generate-certs {
         $directorySeparator = [System.IO.Path]::DirectorySeparatorChar
         $keyPath = $options.commargs[0]
         $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
-        $keyPath = $keyPath.Replace('\', '/')
+        $keyPath = $keyPath.Replace('\', $directorySeparator) 
         if (-not (test-path $keyPath)) {
             Die "File not found: $keyPath"
         }
         Write-Output "Detected private repository access key at $keyPath"
         $ssh = (command ssh).Source
-        $ssh = $ssh.Replace('\', $directorySeparator)
+        $ssh = $ssh.Replace('\', '/') # that *has* to be / for git to be happy
         Write-Output "Detected SSH at $ssh"
         $repo = "git@github.com:hazelcast/private-test-artifacts.git"
-        git -C "$tmpDir/certx" config core.sshCommand "$ssh -i $keyPath"
+        git -C "$tmpDir/certx" config core.sshCommand "$ssh -i `"$keyPath`""
     }
 
     git -C "$tmpDir/certx" remote add -f origin $repo
