@@ -1143,17 +1143,36 @@ function hz-generate-certs {
     $repo = "https://github.com/hazelcast/private-test-artifacts.git"
 
     if ($options.commargs.Count -eq 1) {
-        $directorySeparator = [System.IO.Path]::DirectorySeparatorChar
+
         $keyPath = $options.commargs[0]
         $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
-        $keyPath = $keyPath.Replace('\', $directorySeparator) 
-        if (-not (test-path $keyPath)) {
-            Die "File not found: $keyPath"
-        }
-        Write-Output "Detected private repository access key at $keyPath"
+        $keyPath = $keyPath.Replace('\', '/') # that *has* to be / for git to be happy
+        if (-not (test-path $keyPath)) { Die "File not found: $keyPath" }
+        Write-Output "Private repository access key at $keyPath"
+
         $ssh = (command ssh).Source
         $ssh = $ssh.Replace('\', '/') # that *has* to be / for git to be happy
-        Write-Output "Detected SSH at $ssh"
+        Write-Output "SSH at $ssh"
+
+        if ($isWindows) {
+            # known-hosts are required
+            if (-not (test-path ~/.ssh/known_hosts) -or -not (select-string -path ~/.ssh/known_hosts -pattern 'github.com')) {
+                if (-not (test-path ~/.ssh)) { mkdir ~/.ssh >$null 2>&1 }
+                ssh-keyscan -H github.com >> ~/.ssh/known_hosts
+            }
+
+            # restrict permissions else SSH refuses to use the file
+            $acl = get-acl "$keyPath"
+            $isProtected = $true
+            $preserveInheritance = $false
+            $acl.SetAccessRuleProtection($isProtected, $preserveInheritance)
+            set-acl "$keyPath" $acl
+        }
+        else {
+            # restrict permissions else SSH refuses to use the file
+            chmod 600 "$keyPath" 
+        }
+
         $repo = "git@github.com:hazelcast/private-test-artifacts.git"
         git -C "$tmpDir/certx" config core.sshCommand "$ssh -i `"$keyPath`""
     }
