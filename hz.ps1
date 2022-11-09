@@ -142,6 +142,9 @@ $params = @(
     @{ name = "verbose-tests";   type = [switch];  default = $false;
        desc = "verbose tests results with errors"
     },
+    @{ name = "verbose-builds";   type = [switch];  default = $false;
+       desc = "verbose build results with all warnings"
+    },
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "confirms excution of sensitive actions"
     }
@@ -999,6 +1002,7 @@ function require-dotnet ( $full ) {
     }
 
     require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
 
     # report
     Write-Output $result.sdkInfos
@@ -1486,6 +1490,10 @@ function hz-build {
         "-c", $options.configuration,
         "--packages", $nugetPackages
     )
+
+    if(!$options."verbose-builds"){
+        $buildArgs += "-p:CheckEolTargetFramework=false"
+    }
 
     if ($options.reproducible) {
         $buildArgs += "-p:ContinuousIntegrationBuild=true"
