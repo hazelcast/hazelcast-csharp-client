@@ -1143,12 +1143,17 @@ function hz-generate-certs {
     $repo = "https://github.com/hazelcast/private-test-artifacts.git"
 
     if ($options.commargs.Count -eq 1) {
-        Write-Output "Detected private repository access key"
+        $keyPath = $options.commargs[0]
+        $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
+        $keyPath = $keyPath.Replace('\', '/')
+        if (-not (test-path $keyPath)) {
+            Die "File not found: $keyPath"
+        }
+        Write-Output "Detected private repository access key at $keyPath"
         $ssh = (command ssh).Source
-        Write-Output "SSH at $ssh"
-        $repo = "git@github.com:hazelcast/private-test-artifacts.git"
-        $keyPath = $options.commargs[0].Replace('\', '/')
         $ssh = $ssh.Replace('\', '/')
+        Write-Output "Detected SSH at $ssh"
+        $repo = "git@github.com:hazelcast/private-test-artifacts.git"
         git -C "$tmpDir/certx" config core.sshCommand "$ssh -i $keyPath"
     }
 
