@@ -138,18 +138,29 @@ namespace Hazelcast.Core
         {
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            var s = type.FullName;
-            if (s == null) return type.ToString();
-            if (!type.IsGenericType) return NonGenericToCsString(s, fqn);
+            var fullname = type.FullName;
+            if (fullname == null) return type.ToString();
 
-            var p = s.IndexOf('`', StringComparison.Ordinal);
-            var def = NonGenericToCsString(s.Substring(0, p), fqn);
+            if (type.IsNullableOfT(out var underlyingType))
+                return $"{ToCsString(underlyingType, fqn)}?";
+            if (type.IsGenericType) 
+                return GenericToCsString(type, fullname, fqn);
+            if (type.IsArray) 
+                return $"{type.GetElementType().ToCsString(fqn)}[{new string(',', type.GetArrayRank() - 1)}]";
+
+            return TypeToCsString(fullname, fqn);
+        }
+
+        private static string GenericToCsString(Type type, string fullname, bool fqn)
+        {
+            var p = fullname.IndexOf('`', StringComparison.Ordinal);
+            var def = TypeToCsString(fullname.Substring(0, p), fqn);
             var args = type.GetGenericArguments().Select(x => x.ToCsString(fqn));
 
             return def + "<" + string.Join(", ", args) + ">";
         }
 
-        private static string NonGenericToCsString(string fullname, bool fqn)
+        private static string TypeToCsString(string fullname, bool fqn)
         {
             if (TypesMap.TryGetValue(fullname, out var typeName))
                 return typeName;

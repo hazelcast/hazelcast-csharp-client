@@ -76,16 +76,20 @@ namespace Hazelcast.Serialization
         /// <exception cref="SerializationException">Cannot find a custom serializer for the <paramref name="obj"/>.</exception>
         private ISerializerAdapter LookupSerializer(object obj)
         {
-            if (obj == null) return _nullSerializerAdapter;
+            if (obj == null) return _nullSerializerAdapter;             // 1. NULL serializer
 
             var typeOfObj = obj.GetType();
 
-            var serializer = LookupKnownSerializer(typeOfObj) ??
-                             LookupConstantSerializer(typeOfObj) ??
-                             LookupCustomSerializer(typeOfObj) ??
-                             LookupSerializableSerializer(typeOfObj) ??
-                             LookupGlobalSerializer(typeOfObj) ??
-                             LookupCompactSerializer(typeOfObj);
+            var serializer = LookupKnownSerializer(typeOfObj) ??        // 2a. compact, identified, portable
+                             LookupConstantSerializer(typeOfObj) ??     // 2b. primitive, string, etc
+                             LookupCustomSerializer(typeOfObj) ??       // 3.  custom, registered by user
+                             LookupSerializableSerializer(typeOfObj) ?? // 4.  .NET BinaryFormatter for [Serializable] types
+                             LookupGlobalSerializer(typeOfObj) ??       // 5.  global, if registered by user
+                             LookupCompactSerializer(typeOfObj);        // 6.  compact
+
+            // NOTE:
+            // for 4, _enableClrSerialization must be true
+            //        i.e. SerializationOptions.EnableClrSerialization && !globalSerializer.OverrideClrSerialization
 
             if (serializer != null) return serializer;
 

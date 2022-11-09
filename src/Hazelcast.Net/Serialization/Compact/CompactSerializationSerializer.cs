@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -70,9 +71,16 @@ namespace Hazelcast.Serialization.Compact
 
         public bool HasRegistrationForType(Type type) => _registrationsByType.ContainsKey(type);
 
+        public bool TryGetSerializer(Type type, out ICompactSerializer? serializer)
+        {
+            var hasSerializer = _registrationsByType.TryGetValue(type, out var registration);
+            serializer = hasSerializer ? registration!.Serializer?.Serializer : null;
+            return hasSerializer;
+        }
+
         public void Dispose()
         {
-            // note: ISchemas is not IDisposable because we don't have background tasks
+            // note: ISchemas is IDisposable but is owned by the global SerializationService
         }
 
         public object Read(IObjectDataInput input)

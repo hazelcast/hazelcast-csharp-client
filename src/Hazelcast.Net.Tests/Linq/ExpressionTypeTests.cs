@@ -13,19 +13,23 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Linq.Expressions;
+using Hazelcast.Linq.Expressions;
+using NUnit.Framework;
 
-namespace Hazelcast.Linq.Expressions
+namespace Hazelcast.Tests.Linq
 {
-    internal class ColumnDefinition
+    internal class ExpressionTypeTests
     {
-        public string Name { get; }
-        public Expression Expression { get; }
-
-        public ColumnDefinition(string name, Expression expression)
+        [Test]
+        public void TestExpressionTypesDontOverlap()
         {
-            Name = name ?? throw new ArgumentNullException(nameof(name));
-            Expression = expression ?? throw new ArgumentNullException(nameof(expression));
+            var hzExpressions = Enum.GetValues(typeof(HzExpressionType)).Cast<int>();
+            var builtInExpressions = Enum.GetValues(typeof(ExpressionType)).Cast<int>();
+            Assert.Greater(hzExpressions.Count(), 0);
+            Assert.Greater(builtInExpressions.Count(), 0);
+            Assert.IsEmpty(hzExpressions.Intersect(builtInExpressions));
         }
     }
 }

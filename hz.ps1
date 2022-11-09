@@ -14,6 +14,9 @@
 
 ## Hazelcast.NET Build Script
 
+# constant
+$defaultServerVersion="5.2.0-SNAPSHOT"
+
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
 # see https://stackoverflow.com/questions/10666101
@@ -29,7 +32,7 @@ $tmpDir = [System.IO.Path]::GetFullPath("$slnRoot/temp")
 $buildDir = [System.IO.Path]::GetFullPath("$slnRoot/build")
 
 # include utils
-. "$buildDir\utils.ps1"
+. "$buildDir/utils.ps1"
 
 # ensure we have the right platform
 Validate-Platform
@@ -74,7 +77,7 @@ $params = @(
        desc = "whether to run enterprise tests";
        info = "Running enterprise tests require an enterprise key, which can be supplied either via the HAZELCAST_ENTERPRISE_KEY environment variable, or the build/enterprise.key file."
     },
-    @{ name = "server";          type = [string];  default = "5.1"; alias="server-version";
+    @{ name = "server";          type = [string];  default = $defaultServerVersion; alias="server-version";
        parm = "<version>";
        desc = "the server version when running tests, the remote controller, or a server";
        note = "The server <version> must match a released Hazelcast IMDG server version, e.g. 4.0 or 4.1-SNAPSHOT. Server JARs are automatically downloaded."
@@ -256,8 +259,7 @@ $actions = @(
        note = "The resulting commit still needs to be pushed."
     },
     @{ name = "generate-certs";
-       desc = "generates the test certificates";
-       need = @( "certs-tools" )
+       desc = "generates the test certificates"
     },
     @{ name = "install-root-ca";
        desc = "(experimental) installs the ROOT CA test certificate";
@@ -277,7 +279,7 @@ $actions = @(
 )
 
 # include devops
-$devops_actions = "$buildDir\devops\csharp-release\actions.ps1"
+$devops_actions = "$buildDir/devops/csharp-release/actions.ps1"
 if (test-path $devops_actions) { . $devops_actions }
 
 # prepare
@@ -725,8 +727,8 @@ function verify-server-files {
     if (-not [string]::IsNullOrWhiteSpace($options.serverConfig) -and -not (test-path $options.serverConfig)) { return $false }
 
     # defaults?
-    if (-not (test-path "$libDir\hazelcast-$($options.server).xml") -or
-        -not (test-path "$libDir\hazelcast-$serverVersion.xml")) { return $false }
+    if (-not (test-path "$libDir/hazelcast-$($options.server).xml") -or
+        -not (test-path "$libDir/hazelcast-$serverVersion.xml")) { return $false }
 
     # all clear
     return $true
@@ -780,15 +782,15 @@ function ensure-server-files {
             Die "Configuration file $($options.serverConfig) is missing."
         }
     }
-    elseif (test-path "$libDir\hazelcast-$($options.server).xml") {
+    elseif (test-path "$libDir/hazelcast-$($options.server).xml") {
         # config was not specified, try with exact specified server version
         Write-Output "Detected hazelcast-$($options.server).xml"
-        $options.serverConfig = "$libDir\hazelcast-$($options.server).xml"
+        $options.serverConfig = "$libDir/hazelcast-$($options.server).xml"
     }
-    elseif (test-path "$libDir\hazelcast-$serverVersion.xml") {
+    elseif (test-path "$libDir/hazelcast-$serverVersion.xml") {
         # config was not specified, try with detected server version
         Write-Output "Detected hazelcast-$serverVersion.xml"
-        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir/hazelcast-$serverVersion.xml"
     }
     else {
         # no config found, try to download
@@ -887,7 +889,7 @@ function ensure-server-files {
             Die "Running out of options... failed to download hazelcast-default.xml."
         }
 
-        $options.serverConfig = "$libDir\hazelcast-$serverVersion.xml"
+        $options.serverConfig = "$libDir/hazelcast-$serverVersion.xml"
     }
 }
 
@@ -1059,9 +1061,9 @@ function ensure-python {
 # ensures we can sign if required
 function ensure-can-sign {
 
-    if ($options.sign -and -not (test-path "$buildDir\hazelcast.snk")) {
+    if ($options.sign -and -not (test-path "$buildDir/hazelcast.snk")) {
 
-        Die "Cannot sign code, missing key file $buildDir\hazelcast.snk"
+        Die "Cannot sign code, missing key file $buildDir/hazelcast.snk"
     }
 }
 
@@ -1092,12 +1094,6 @@ function ensure-build-proj {
     }
 }
 
-# ensure we have openssl and keytool for certs
-function ensure-certs-tools {
-    ensure-command "openssl"
-    ensure-command "keytool"
-}
-
 function clean-dir ( $dir ) {
     if (test-path $dir) {
         Write-Output "  $dir"
@@ -1108,31 +1104,75 @@ function clean-dir ( $dir ) {
 # ensure we have the test certificates, or create them
 function ensure-certs {
     if ($options.enterprise) {
+        $download = $false
         if (test-path "$tmpDir/certs") {
             Write-Output "Detected $tmpDir/certs directory"
+            if ((test-path "$tmpDir/certs/client1.pfx") -and (([DateTime]::Now - (ls "$tmpDir/certs/client1.pfx").CreationTime).Days -gt 7)) {
+                Write-Output "Certificates are not too old"
+            }
+            else {
+                Write-Output "Certificates are too old, downloading"
+                $download = $true
+            }
         }
         else {
-            Write-Output "Missing $tmpDir/certs directory, generating"
+            Write-Output "Missing $tmpDir/certs directory, downloading"
+            $download = $true
+        }
+        if ($download) {
             hz-generate-certs
-            hz-install-root-ca
         }
     }
 }
 
 # generate the test certificates
 function hz-generate-certs {
-    . "$buildDir/certs.ps1"
-    gen-test-certs "$tmpDir/certs" "$srcDir" "$buildDir"
-    if ($CERTSEXITCODE) {
-        Die "Failed to generate test certificates."
+    if (test-path "$tmpDir/certs") { rm -recurse -force "$tmpDir/certs" }
+
+    # alas, that will not work because the repository is internal
+    #$zipUrl = "https://github.com/hazelcast/private-test-artifacts/blob/master/certs.zip"
+    #invoke-web-request $zipUrl "$tmpDir/certs.zip"
+    #expand-archive "$tmpDir/certs.zip" -destinationPath "$tmpDir/certs"
+
+    # that is convoluted, but works
+
+    if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
+    git init "$tmpDir/certx"
+    git -C "$tmpDir/certx" config core.sparseCheckout true
+
+    $repo = "https://github.com/hazelcast/private-test-artifacts.git"
+
+    if ($options.commargs.Count -eq 1) {
+        $directorySeparator = [System.IO.Path]::DirectorySeparatorChar
+        $keyPath = $options.commargs[0]
+        $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
+        $keyPath = $keyPath.Replace('\', $directorySeparator) 
+        if (-not (test-path $keyPath)) {
+            Die "File not found: $keyPath"
+        }
+        Write-Output "Detected private repository access key at $keyPath"
+        $ssh = (command ssh).Source
+        $ssh = $ssh.Replace('\', '/') # that *has* to be / for git to be happy
+        Write-Output "Detected SSH at $ssh"
+        $repo = "git@github.com:hazelcast/private-test-artifacts.git"
+        git -C "$tmpDir/certx" config core.sshCommand "$ssh -i `"$keyPath`""
     }
+
+    git -C "$tmpDir/certx" remote add -f origin $repo
+    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+    echo "certs/" >> "$tmpDir/certx/.git/info/sparse-checkout"
+    git -C "$tmpDir/certx" pull origin master
+    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+    mv "$tmpDir/certx/certs" "$tmpDir/certs"
+    rm -recurse -force "$tmpDir/certx"
+
     Write-Output ""
 }
 
 # install the root-ca certificate
 function hz-install-root-ca {
     . "$buildDir/certs.ps1"
-    install-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    install-root-ca "$tmpDir/certs/root-ca.crt"
     if ($CERTSEXITCODE) {
         Die "Failed to install the ROOT CA certificate."
     }
@@ -1142,7 +1182,7 @@ function hz-install-root-ca {
 # remove the root-ca certificate
 function hz-remove-root-ca {
     . "$buildDir/certs.ps1"
-    remove-root-ca "$tmpDir/certs/root-ca/root-ca.crt"
+    remove-root-ca "$tmpDir/certs/root-ca.crt"
     if ($CERTSEXITCODE) {
         Die "Failed to remove the ROOT CA certificate."
     }
@@ -1170,7 +1210,7 @@ function hz-clean {
     clean-dir "$tmpdir/publish"
 
     # clears tests (results, cover...)
-    clean-dir "$tmpDir\tests"
+    clean-dir "$tmpDir/tests"
 
     # clears logs (server, rc...)
     if (test-path "$tmpDir") {
@@ -1181,13 +1221,13 @@ function hz-clean {
     }
 
     # clears docs
-    clean-dir "$tmpDir\docfx.out"
-    clean-dir "$docDir\templates\hz\Plugins"
-    clean-dir "$tmpDir\gh-pages"
-    clean-dir "$tmpDir\gh-pages-patches"
+    clean-dir "$tmpDir/docfx.out"
+    clean-dir "$docDir/templates/hz/Plugins"
+    clean-dir "$tmpDir/gh-pages"
+    clean-dir "$tmpDir/gh-pages-patches"
 
     # clean ndepend
-    clean-dir "$tmpDir\ndepend.out"
+    clean-dir "$tmpDir/ndepend.out"
 
     Write-Output ""
 }
@@ -1459,7 +1499,7 @@ function hz-build {
 
     if ($options.sign) {
         $buildArgs += "-p:ASSEMBLY_SIGNING=true"
-        $buildArgs += "-p:AssemblyOriginatorKeyFile=`"$buildDir\hazelcast.snk`""
+        $buildArgs += "-p:AssemblyOriginatorKeyFile=`"$buildDir/hazelcast.snk`""
     }
 
     if (![string]::IsNullOrWhiteSpace($options.constants)) {
@@ -1475,8 +1515,8 @@ function hz-build {
 
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build $srcDir\$_ $buildArgs"
-        dotnet build "$srcDir\$_" $buildArgs
+        Write-Output "> dotnet build $srcDir/$_ $buildArgs"
+        dotnet build "$srcDir/$_" $buildArgs
 
         # if it failed, we can stop here
         if ($LASTEXITCODE) {
@@ -2022,7 +2062,7 @@ function hz-test {
     # run tests
     $script:testResults = @()
 
-    rm "$tmpDir\tests\results\results-*" >$null 2>&1
+    rm "$tmpDir/tests/results/results-*" >$null 2>&1
 
     $ownsrc = $false
     try {
@@ -2196,23 +2236,23 @@ function hz-serve-docs {
     Write-Output "Documentation Server"
     Write-Output "  Path           : $tmpdir/docfx.out"
 
-    if (-not (test-path "$tmpDir\docfx.out")) {
+    if (-not (test-path "$tmpDir/docfx.out")) {
 
         Die "Missing documentation directory."
     }
 
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
-    &$docfx serve "$tmpDir\docfx.out"
+    &$docfx serve "$tmpDir/docfx.out"
 }
 
 # packs a NuGet package
 function nuget-pack ( $name ) {
 
     $packArgs = @(
-        "$srcDir\$name\$name.csproj", `
+        "$srcDir/$name/$name.csproj", `
         "--no-build", "--nologo", `
-        "-o", "$tmpDir\output", `
+        "-o", "$tmpDir/output", `
         "-c", $options.configuration
     )
 
@@ -2256,7 +2296,7 @@ function hz-pack-nuget {
     nuget-pack("Hazelcast.Net.Win32")
     nuget-pack("Hazelcast.Net.DependencyInjection")
 
-    Get-ChildItem "$tmpDir\output" | Foreach-Object { Write-Output "  $_" }
+    Get-ChildItem "$tmpDir/output" | Foreach-Object { Write-Output "  $_" }
 }
 
 # verifies that the version in Directory.Build.props is the specified version
@@ -2350,9 +2390,10 @@ function hz-cleanup-code {
     Write-Output ""
     Write-Output "Clean C# code - whitespaces, tabs and new-lines"
 
-    $files = get-childitem -recurse -file -path "$srcDir\*" -include "*.cs" | ? { `
-        $_.FullName -inotmatch '\\obj\\' -and `
-        $_.FullName -inotmatch '\\bin\\' `
+    $sc = [System.IO.Path]::DirectorySeparatorChar
+    $files = get-childitem -recurse -file -path "$srcDir/*" -include "*.cs" | ? { `
+        $_.FullName -inotmatch "$($sc)obj$($sc)" -and `
+        $_.FullName -inotmatch "$($sc)bin$($sc)" `
     }
 
     $nl = [Environment]::NewLine

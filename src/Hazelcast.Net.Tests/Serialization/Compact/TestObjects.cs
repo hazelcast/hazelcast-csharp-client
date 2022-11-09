@@ -48,6 +48,9 @@ namespace Hazelcast.Tests.Serialization.Compact
         public override string ToString() => $"Thing (Name=\"{Name}\", Value={Value})";
     }
 
+    internal class ThingExtend : Thing
+    { }
+
     internal class DifferentThing : IThing
     {
         public const string TypeName = "different_thing";

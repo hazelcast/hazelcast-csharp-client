@@ -30,7 +30,7 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal class Schema : IIdentifiedDataSerializable, IEquatable<Schema>
     {
-        private SortedDictionary<string, SchemaField> _fieldsMap;
+        private Dictionary<string, SchemaField> _fieldsMap;
         private Dictionary<string, SchemaField>? _fieldsMapInvariant;
 
         /// <inheritdoc />
@@ -86,9 +86,9 @@ namespace Hazelcast.Serialization.Compact
         /// <returns><c>true</c> if a field with the specified <paramref name="name"/> was found; otherwise <c>false</c>.</returns>
         internal bool TryGetField(string name, [NotNullWhen(true)] out SchemaField field, bool caseSensitive = true)
         {
-            if (caseSensitive) return _fieldsMap.TryGetValue(name, out field);
+            if (caseSensitive) return _fieldsMap.TryGetValue(name, out field!);
             _fieldsMapInvariant ??= new Dictionary<string, SchemaField>(_fieldsMap, StringComparer.OrdinalIgnoreCase);
-            return _fieldsMapInvariant.TryGetValue(name, out field);
+            return _fieldsMapInvariant.TryGetValue(name, out field!);
         }
         
         /// <summary>
@@ -112,11 +112,7 @@ namespace Hazelcast.Serialization.Compact
         {
             TypeName = typeName;
 
-            // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
-            // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
-            // order", and good luck finding a definition for this, so we're going with whatever is
-            // default in C# and hope it works.
-            var fieldsMap = new SortedDictionary<string, SchemaField>();
+            _fieldsMap = new Dictionary<string, SchemaField>();
 
             // ensure no duplicate field name
             var fieldNames = new HashSet<string>();
@@ -126,15 +122,23 @@ namespace Hazelcast.Serialization.Compact
             List<SchemaField>? valueFields = null;
             List<SchemaField>? referenceFields = null;
 
-            // build the fields map, which is sorted (see above)
+            // build the fields map
             foreach (var field in typeFields)
             {
+                if (field == null)
+                    throw new ArgumentException("Fields contain a null field.", nameof(typeFields));
                 if (!fieldNames.Add(field.FieldName))
                     throw new ArgumentException($"Fields contain duplicate field name {field.FieldName}.", nameof(typeFields));
-                fieldsMap[field.FieldName] = field;
+                _fieldsMap[field.FieldName] = field;
             }
 
-            foreach (var field in fieldsMap.Values)
+            // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
+            // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
+            // order", and good luck finding a definition for this, apart from it being case-sensitive,
+            // so we're going with whatever seems best in C# and hope it works.
+            Fields = _fieldsMap.Values.OrderBy(x => x.FieldName, StringComparer.InvariantCulture).ToArray();
+
+            foreach (var field in Fields)
             {
                 if (field.Kind == FieldKind.Boolean)
                     (booleanFields ??= new List<SchemaField>()).Add(field);
@@ -193,9 +197,6 @@ namespace Hazelcast.Serialization.Compact
 
             ValueFieldLength = offset;
             ReferenceFieldCount = referenceFields?.Count ?? 0;
-
-            Fields = fieldsMap.Values.ToArray();
-            _fieldsMap = fieldsMap;
 
             Id = ComputeId();
         }

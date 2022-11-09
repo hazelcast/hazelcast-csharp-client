@@ -1,0 +1,58 @@
+#
+# Reusable Workflow: Get Frameworks
+#
+# Determines the frameworks to test depending on the OS.
+#
+
+name: Get Frameworks
+on: 
+
+  # called by upper-level workflow
+  workflow_call:
+    outputs:
+      fwks-ubuntu-latest:
+        value: ${{ jobs.get-fwks.outputs.fwks-ubuntu-latest }}
+      fwks-windows-latest:
+        value: ${{ jobs.get-fwks.outputs.fwks-windows-latest }}
+
+jobs:
+
+  # get frameworks
+  get-fwks:
+    name: Get Frameworks / ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest ]
+
+    outputs:
+      # beware! this cannot be dynamic = must match the OS matrix
+      fwks-ubuntu-latest: ${{ steps.get-fwks.outputs.fwks-ubuntu-latest }}
+      fwks-windows-latest: ${{ steps.get-fwks.outputs.fwks-windows-latest }}
+
+    steps:
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      # no need for submodules here
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: false
+          java: false
+
+      # get frameworks
+      - name: Get Frameworks
+        id: get-fwks
+        shell: bash
+        run: |
+          FWKS=$(pwsh ./hz.ps1 getfwks-json)
+          echo "fwks-${{ matrix.os }}=$FWKS"
+          echo "fwks-${{ matrix.os }}=$FWKS" >> $GITHUB_OUTPUT

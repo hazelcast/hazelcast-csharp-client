@@ -20,14 +20,14 @@ using System.Linq.Expressions;
 namespace Hazelcast.Linq.Expressions
 {
     /// <summary>
-    /// Expression equalivent of a SQL Select statement.
+    /// Expression equivalent of a SQL Select statement.
     /// </summary>
     internal class SelectExpression : Expression
     {
         public string Alias { get; }
         public ReadOnlyCollection<ColumnDefinition> Columns { get; }
         public Expression From { get; }
-        public Expression Where { get; }
+        public Expression? Where { get; }
 
         /// <inheritdoc/>
         public override ExpressionType NodeType { get; }

@@ -93,11 +93,12 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Whether to enable CLR serialization via <see cref="BinaryFormatter"/>.
+        /// Whether to enable CLR serialization via <see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/>.
         /// </summary>
         /// <remarks>
-        /// <para><see cref="BinaryFormatter"/> is now considered insecure, and CLR serialization
-        /// is disabled by default. In order to enable CLR serialization, set this value to <c>true</c>.
+        /// <para><see cref="System.Runtime.Serialization.Formatters.Binary.BinaryFormatter"/> is now
+        /// considered insecure, and CLR serialization is disabled by default. In order to enable CLR
+        /// serialization, set this value to <c>true</c>.
         /// Note that if a global serializer is configured via <see cref="GlobalSerializer"/>, then this
         /// option must be true, and <see cref="GlobalSerializerOptions.OverrideClrSerialization"/> must
         /// be false, for CLR serialization to be enabled.</para>
@@ -146,6 +147,7 @@ namespace Hazelcast.Serialization
         public ICollection<FactoryOptions<IPortableFactory>> PortableFactories { get; }
 
 #pragma warning disable IDE0052 // Remove unread private members - used by binding
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
         [BinderIgnore(false)]
         [BinderName("portableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> PortableFactoriesBinder { get; }
@@ -171,7 +173,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddPortableFactory(int factoryId, Type factoryType)
         {
-            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryType, null) });
+            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryType) });
             return this;
         }
 
@@ -183,7 +185,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddPortableFactory(int factoryId, string factoryTypeName)
         {
-            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryTypeName, null) });
+            PortableFactories.Add(new FactoryOptions<IPortableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IPortableFactory>(factoryTypeName) });
             return this;
         }
 
@@ -198,6 +200,7 @@ namespace Hazelcast.Serialization
         public ICollection<FactoryOptions<IDataSerializableFactory>> DataSerializableFactories { get; }
 
 #pragma warning disable IDE0052 // Remove unread private members - used by binding
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
         [BinderIgnore(false)]
         [BinderName("dataSerializableFactories")]
         private CollectionBinder<IdentifiedInjectionOptions> DataSerializableFactoriesBinder { get; }
@@ -223,7 +226,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddDataSerializableFactoryClass(int factoryId, string factoryTypeName)
         {
-            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryTypeName, null) });
+            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryTypeName) });
             return this;
         }
 
@@ -235,7 +238,7 @@ namespace Hazelcast.Serialization
         /// <returns>The <see cref="SerializationOptions"/>.</returns>
         public SerializationOptions AddDataSerializableFactoryClass(int factoryId, Type factoryType)
         {
-            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryType, null) });
+            DataSerializableFactories.Add(new FactoryOptions<IDataSerializableFactory> { Id = factoryId, Creator = () => ServiceFactory.CreateInstance<IDataSerializableFactory>(factoryType) });
             return this;
         }
 
@@ -262,9 +265,10 @@ namespace Hazelcast.Serialization
         /// with the additional <c>overrideClrSerialization</c> property.</para>
         /// </remarks>
         [BinderIgnore]
-        public GlobalSerializerOptions GlobalSerializer { get; set; } = new GlobalSerializerOptions();
+        public GlobalSerializerOptions GlobalSerializer { get; set; } = new();
 
 #pragma warning disable IDE0051 // Remove unused private members - used by binding
+        // ReSharper disable once UnusedMember.Local
         [BinderIgnore(false)]
         [BinderName("globalSerializer")]
         private GlobalSerializerInjectionOptions GlobalSerializerBinder
@@ -291,6 +295,7 @@ namespace Hazelcast.Serialization
         public ICollection<SerializerOptions> Serializers { get; }
 
 #pragma warning disable IDE0052 // Remove unread private members - used by binding
+        // ReSharper disable once UnusedAutoPropertyAccessor.Local
         [BinderIgnore(false)]
         [BinderName("serializers")]
         private CollectionBinder<SerializerInjectionOptions> SerializersBinder { get; }
@@ -338,6 +343,6 @@ namespace Hazelcast.Serialization
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal SerializationOptions Clone() => new SerializationOptions(this);
+        internal SerializationOptions Clone() => new(this);
     }
 }

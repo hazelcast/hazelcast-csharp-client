@@ -20,26 +20,26 @@ using System.Threading.Tasks;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
 {
     [TestFixture]
+    [ServerCondition("[5.2,)")]
     public class FingerprintTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public void CanFingerprintNullString()
+        public void CannotFingerprintNullString()
         {
-            var fingerprint = RabinFingerprint.InitialValue;
-            fingerprint = RabinFingerprint.Fingerprint(fingerprint, (string)null);
-            Assert.That(fingerprint, Is.EqualTo(16130581598588476612L)); // yes - that magic number
+            Assert.Throws<ArgumentNullException>(() => RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, (string)null));
         }
 
         [Test]
         public async Task CanFingerprintStringSameAsJava()
         {
-            const string text = @"// Unless required by applicable law or agreed to in writing, software
+            var text = @"// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an ""AS IS"" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
@@ -48,30 +48,28 @@ namespace Hazelcast.Tests.Serialization.Compact
             const string scriptTemplate = @"
 // import types
 var rabin = Java.type(""com.hazelcast.internal.serialization.impl.compact.RabinFingerprint"")
-var ArrayOfBytes = Java.type(""byte[]"")
 
-// prepare bytes
-var bytes = new ArrayOfBytes($$COUNT$$)
-$$BYTES$$
-
-// alas, the method that fingerprints a byte array is private and thus, we have to cheat
-var m = rabin.class.getDeclaredMethod(""fingerprint64"", ArrayOfBytes.class)
+// alas, the method that fingerprints a string is private and thus, we have to cheat
+var m = rabin.class.getDeclaredMethod(""fingerprint64"", Java.type(""long"").class, Java.type(""java.lang.String"").class)
 m.setAccessible(true)
-var fingerprint = m.invoke(null, bytes)
+
+// same for the initial value (a field)
+var f = rabin.class.getDeclaredField(""INIT"")
+f.setAccessible(true)
+
+var fingerprint = m.invoke(null, f.get(null), ""$$STRING$$"")
 
 result = """" + fingerprint
 ";
 
-            var bytes = Encoding.UTF8.GetBytes(text);
+            text = text.Replace("\r", "");
 
             // fingerprint on .NET
-            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, bytes);
+            var fingerprint = (long) RabinFingerprint.Fingerprint(RabinFingerprint.InitialValue, text);
 
             // fingerprint on Java
             var script = scriptTemplate
-                .Replace("$$COUNT$$", bytes.Length.ToString())
-                .Replace("$$BYTES$$", string.Join("\n",
-                    bytes.Select((x, i) => $"bytes[{i}] = {bytes[i]}")));
+                .Replace("$$STRING$$", text.Replace("\n", "\\n").Replace("\"", "\\\""));
 
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
             Assert.That(response.Success, $"message: {response.Message}");
@@ -126,12 +124,11 @@ var Schema = Java.type(""com.hazelcast.internal.serialization.impl.compact.Schem
 var FieldDescriptor = Java.type(""com.hazelcast.internal.serialization.impl.compact.FieldDescriptor"")
 var FieldKind = Java.type(""com.hazelcast.nio.serialization.FieldKind"")
 
-// fails: not a type - but Java generic are magic, just ignore them
-//var TreeMap = Java.type(""java.util.TreeMap<String, com.hazelcast.internal.serialization.impl.compact.FieldDescriptor>"")
-var TreeMap = Java.type(""java.util.TreeMap"")
+// Java generic are magic, just ignore them
+var ArrayList = Java.type(""java.util.ArrayList"")
 
 // create a schema & fingerprint it
-var fields = new TreeMap()
+var fields = new ArrayList()
 $$FIELDS$$
 var schema = new Schema(""$$TYPENAME$$"", fields)
 result = """" + schema.getSchemaId() // as a string
@@ -147,7 +144,7 @@ result = """" + schema.getSchemaId() // as a string
             var script = scriptTemplate
                 .Replace("$$TYPENAME$$", schema.TypeName)
                 .Replace("$$FIELDS$$", string.Join("\n",
-                    javaFieldsDictionary.Select(x => @$"fields.put(""{x.Key}"", new FieldDescriptor(""{x.Key}"", FieldKind.{x.Value}))")));
+                    javaFieldsDictionary.Select(x => @$"fields.add(new FieldDescriptor(""{x.Key}"", FieldKind.{x.Value}))")));
 
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
 

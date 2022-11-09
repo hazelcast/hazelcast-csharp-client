@@ -26,7 +26,6 @@ namespace Hazelcast.Serialization
                 case FieldKind.NotAvailable:
                 case FieldKind.Boolean:
                 case FieldKind.Int8:
-                case FieldKind.Char:
                 case FieldKind.Int16:
                 case FieldKind.Int32:
                 case FieldKind.Int64:
@@ -34,7 +33,6 @@ namespace Hazelcast.Serialization
                 case FieldKind.Float64:
                 case FieldKind.ArrayOfBoolean:
                 case FieldKind.ArrayOfInt8:
-                case FieldKind.ArrayOfChar:
                 case FieldKind.ArrayOfInt16:
                 case FieldKind.ArrayOfInt32:
                 case FieldKind.ArrayOfInt64:
@@ -54,7 +52,6 @@ namespace Hazelcast.Serialization
                 case FieldKind.TimeStamp:
                 case FieldKind.TimeStampWithTimeZone:
                 case FieldKind.Compact:
-                case FieldKind.Portable:
                 case FieldKind.ArrayOfNullableBoolean:
                 case FieldKind.ArrayOfNullableInt8:
                 case FieldKind.ArrayOfNullableInt16:
@@ -69,7 +66,6 @@ namespace Hazelcast.Serialization
                 case FieldKind.ArrayOfTimeStampWithTimeZone:
                 case FieldKind.ArrayOfString:
                 case FieldKind.ArrayOfCompact:
-                case FieldKind.ArrayOfPortable:
                     return kind;
                 default:
                     throw new ArgumentException($"Value {value} is not a valid FieldKind value.", nameof(value));

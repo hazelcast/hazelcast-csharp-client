@@ -44,7 +44,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var serializer = new CompactSerializationSerializer(new CompactOptions(), Mock.Of<ISchemas>(), Endianness.BigEndian);
 
-            Assert.Throws<ArgumentException>(() => serializer.TryRead(null, out _, out _));
+            Assert.Throws<ArgumentException>(() => serializer.TryRead(null!, out _, out _));
 
             var bogusObjectDataInput = Mock.Of<IObjectDataInput>();
             Assert.Throws<ArgumentException>(() => serializer.TryRead(bogusObjectDataInput, out _, out _));

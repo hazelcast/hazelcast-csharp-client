@@ -43,11 +43,15 @@ namespace Hazelcast.Linq.Visitors
         private string _newAlias;
         private int _columnIndex;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public ColumnProjector(Func<Expression, bool> canBeColumn)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
             if (canBeColumn == null) throw new ArgumentNullException(nameof(canBeColumn));
 
             Nominator = new ExpressionNominator(canBeColumn);
+            _existingAlias = String.Empty;
+            _newAlias = String.Empty;
         }
 
         /// <summary>
@@ -59,9 +63,9 @@ namespace Hazelcast.Linq.Visitors
         /// <returns></returns>
         public ProjectedColumns Project(Expression exp, string newAlias, params string[] existingAlias)
         {
-            _mapOfColumns = new Dictionary<ColumnExpression, ColumnExpression>();
-            _columns = new List<ColumnDefinition>();
-            _columnNames = new HashSet<string>();
+            _mapOfColumns = new();
+            _columns = new();
+            _columnNames = new();
             _newAlias = newAlias;
             _existingAlias = existingAlias;
             _candidates = Nominator.Nominate(exp);
@@ -69,7 +73,9 @@ namespace Hazelcast.Linq.Visitors
             return new ProjectedColumns(Visit(exp), _columns.AsReadOnly());
         }
 
+#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         public override Expression Visit(Expression node)
+#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         {
             //Skip if not nominated to be evaluated
             if (!_candidates.Contains(node))

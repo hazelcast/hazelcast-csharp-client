@@ -30,10 +30,13 @@ namespace Hazelcast.Linq.Evaluation
         {
             _markedNodes = markedNodes;
         }
-
+#pragma warning disable 8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         public override Expression Visit(Expression node)
+#pragma warning restore 8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         {
-            if (node == null) return null;
+#pragma warning disable CS8603 // Possible null reference return.
+            if (node == null) return node;
+#pragma warning restore CS8603 // Possible null reference return.
 
             if (_markedNodes.Contains(node))
             {

@@ -712,9 +712,6 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.That(writer.ValidateFieldNameInvariant("duh", out validated), Is.False);
             Assert.That(validated, Is.Null);
-
-            Assert.That(writer.GetFieldKind("field"), Is.EqualTo(FieldKind.String));
-            Assert.That(writer.GetFieldKind("duh"), Is.EqualTo(FieldKind.NotAvailable));
         }
     }
 }

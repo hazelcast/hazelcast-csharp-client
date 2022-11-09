@@ -251,6 +251,8 @@ namespace Hazelcast.DistributedObjects
             {
                 await TryDispose(value).CfAwait();
             }
+
+            _createAllMutex.Dispose();
         }
 
         private async ValueTask TryDispose(IDistributedObject o)

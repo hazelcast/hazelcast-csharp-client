@@ -26,6 +26,7 @@ using Hazelcast;
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("hb, PublicKey=" + AssemblySigning.PublicKey)]
 [assembly: InternalsVisibleTo("Hazelcast.Net.DependencyInjection, PublicKey=" + AssemblySigning.PublicKey)]
+[assembly: InternalsVisibleTo("Hazelcast.Net.Linq.Async, PublicKey=" + AssemblySigning.PublicKey)]
 
 // see https://github.com/Moq/moq4/wiki/Quickstart and https://stackoverflow.com/questions/30089042
 // we need the full public key here in order to be able to use Moq when our assemblies are signed
