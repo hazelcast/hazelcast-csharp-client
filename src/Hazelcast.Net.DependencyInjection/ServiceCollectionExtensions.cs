@@ -34,7 +34,7 @@ namespace Hazelcast.DependencyInjection
         {
             services.AddOptions();
 
-            // register the factory that will will instantiate & configure the options instance
+            // register the factory that will instantiate & configure the options instance
             services.AddSingleton<IOptionsFactory<HazelcastOptions>>(serviceProvider => new HazelcastOptionsFactory(serviceProvider, configure));
             return services;
         }
@@ -49,7 +49,7 @@ namespace Hazelcast.DependencyInjection
         {
             services.AddOptions();
 
-            // register the factory that will will instantiate & configure the options instance
+            // register the factory that will instantiate & configure the options instance
             services.AddSingleton<IOptionsFactory<HazelcastFailoverOptions>>(serviceProvider => new HazelcastFailoverOptionsFactory(serviceProvider, configure));
             return services;
         }

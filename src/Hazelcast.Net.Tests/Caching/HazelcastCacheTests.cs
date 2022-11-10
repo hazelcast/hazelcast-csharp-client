@@ -85,7 +85,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.RemoveAsync(null!));
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.RefreshAsync(null!));
 
-        await AssertEx.ThrowsAsync<InvalidOperationException>(async () => await cache.SetAsync("xxx", Array.Empty<byte>(), 
+        await AssertEx.ThrowsAsync<ArgumentException>(async () => await cache.SetAsync("xxx", Array.Empty<byte>(), 
             new DistributedCacheEntryOptions { AbsoluteExpiration = DateTimeOffset.UtcNow.AddDays(-2) }));
 
         await cache.DisposeAsync();
@@ -338,54 +338,10 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     [Timeout(10000)]
     public async Task TestCacheProvided_ConfiguredOptions()
     {
-        var services = new ServiceCollection();
-
         var cacheUniqueIdentifier = Guid.NewGuid().ToShortString();
 
-        // build the IConfiguration instance
-        // pretend all options come from the configuration (via a key/values provider, could be command line or anything)
-        var configuration = new ConfigurationBuilder()
-            .AddHazelcastAndDefaults(args: Array.Empty<string>(), keyValues: new KeyValuePair<string, string>[]
-            {
-                new("hazelcast:networking:addresses:0", "localhost:5701"),
-                new("hazelcast:networking:reconnectMode", "ReconnectAsync"),
-                new("hazelcast:clusterName", RcCluster?.Id ?? ""),
-                new("hazelcast:caching:cacheUniqueIdentifier", cacheUniqueIdentifier),
-            })
-            .Build();
-
-        // add logging to the container, the normal way
-        services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
-
-        // register Hazelcast options
-        services.AddHazelcastOptions(builder => builder
-
-            // get hazelcast options from the configuration defined above
-            .AddConfiguration(configuration) 
-
-            // override logger factory options to specify that it should be provided by the service provider
-            .With(options => options.ObtainLoggerFactoryFromServiceProvider())
-        );
-
-        // note: that would be a nicer syntax, but it requires that the factory has access
-        // back to the options (or some sort of IProvideServiceProvider service) and that
-        // would be a breaking change in the factory signature -> not now.
-        //options.LoggerFactory.ObtainFromServiceProvider();
-
-        // register Hazelcast cache options
-        // get them from the configuration defined above
-        services.Configure<HazelcastCacheOptions>(options => configuration.Bind("hazelcast:caching", options));
-
-        // add Hazelcast cache using provided options
-        services.AddHazelcastCache();
-
-        // the IDistributedCache will be injected into the asserter
-        services.AddTransient<ProvidedCacheAsserter>();
-
-        // create the provider and retrieve and use the cache
-        await using var serviceProvider = services.BuildServiceProvider();
-
-        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
+        // create the provider
+        await using var serviceProvider = TestCacheProvided_ConfiguredOptions_GetServices(withFailover: false, cacheUniqueIdentifier);
 
         // verifications
         var ho = serviceProvider.GetRequiredService<IOptions<HazelcastOptions>>();
@@ -393,12 +349,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         var co = serviceProvider.GetRequiredService<IOptions<HazelcastCacheOptions>>();
         Assert.That(co.Value.CacheUniqueIdentifier, Is.EqualTo(cacheUniqueIdentifier));
 
-        // note:
-        //   standard dotnet key delimiter is ':' or '__' depending on providers, but AddHazelcastAndDefaults add
-        //   support for '.' too for command line, environment and in-memory collection providers - but only for keys
-        //   starting with 'hazelcast.' or 'hazelcast-failover.'. Internally, the '.' separator is rewritten into the
-        //   ':' separator - which should be used everywhere really, for instance in the Bind call used in the
-        //   HazelcastCacheOptions registration. we're using the standard ':' delimiter everywhere in this test.
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
     }
 
     [Test]
@@ -406,18 +357,41 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     [Timeout(10000)]
     public async Task TestCacheProvided_ConfiguredFailoverOptions()
     {
+        var cacheUniqueIdentifier = Guid.NewGuid().ToShortString();
+
+        // create the provider
+        await using var serviceProvider = TestCacheProvided_ConfiguredOptions_GetServices(withFailover: true, cacheUniqueIdentifier);
+
+        // verifications
+        var ho = serviceProvider.GetRequiredService<IOptions<HazelcastFailoverOptions>>();
+        Assert.That(ho.Value.Clients.Count, Is.EqualTo(1));
+        Assert.That(ho.Value.Clients[0].Networking.ReconnectMode, Is.EqualTo(ReconnectMode.ReconnectAsync));
+        var co = serviceProvider.GetRequiredService<IOptions<HazelcastCacheOptions>>();
+        Assert.That(co.Value.CacheUniqueIdentifier, Is.EqualTo(cacheUniqueIdentifier));
+
+        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
+    }
+
+    private ServiceProvider TestCacheProvided_ConfiguredOptions_GetServices(bool withFailover, string cacheUniqueIdentifier)
+    {
         var services = new ServiceCollection();
 
-        var cacheUniqueIdentifier = Guid.NewGuid().ToShortString();
+        // note:
+        //   standard dotnet key delimiter is ':' or '__' depending on providers, but AddHazelcastAndDefaults add
+        //   support for '.' too for command line, environment and in-memory collection providers - but only for keys
+        //   starting with 'hazelcast.' or 'hazelcast-failover.'. Internally, the '.' separator is rewritten into the
+        //   ':' separator - which should be used everywhere really, for instance in the Bind call used in the
+        //   HazelcastCacheOptions registration. we're using the standard ':' delimiter everywhere in this test.
 
         // build the IConfiguration instance
         // pretend all options come from the configuration (via a key/values provider, could be command line or anything)
+        var clientKey = withFailover ? "hazelcast-failover:clients:0" : "hazelcast";
         var configuration = new ConfigurationBuilder()
             .AddHazelcastAndDefaults(args: Array.Empty<string>(), keyValues: new KeyValuePair<string, string>[]
             {
-                new("hazelcast-failover:clients:0:networking:addresses:0", "localhost:5701"),
-                new("hazelcast-failover:clients:0:networking:reconnectMode", "ReconnectAsync"),
-                new("hazelcast-failover:clients:0:clusterName", RcCluster?.Id ?? ""),
+                new($"{clientKey}:networking:addresses:0", "localhost:5701"),
+                new($"{clientKey}:networking:reconnectMode", "ReconnectAsync"),
+                new($"{clientKey}:clusterName", RcCluster?.Id ?? ""),
                 new("hazelcast:caching:cacheUniqueIdentifier", cacheUniqueIdentifier),
                 new("logging:logLevel:default", "Debug"),
             })
@@ -426,15 +400,25 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         // add logging to the container, the normal way
         services.AddLogging(builder => builder.AddConfiguration(configuration.GetSection("logging")).AddConsole());
 
+        // configure hazelcast options
+        void ConfigureHazelcastOptions<TOptions, TBuilder>(TBuilder builder) 
+            where TBuilder : HazelcastOptionsBuilderBase<TOptions, TBuilder>
+            where TOptions : HazelcastOptionsBase, new()
+        {
+            builder
+
+                // get hazelcast options from the configuration defined above
+                .AddConfiguration(configuration)
+
+                // override logger factory options to specify that it should be provided by the service provider
+                .With(options => options.ObtainLoggerFactoryFromServiceProvider());
+        }
+
         // register Hazelcast options
-        services.AddHazelcastFailoverOptions(builder => builder
-
-            // get hazelcast options from the configuration defined above
-            .AddConfiguration(configuration)
-
-            // override logger factory options to specify that it should be provided by the service provider
-            .With(options => options.ObtainLoggerFactoryFromServiceProvider())
-        );
+        if (withFailover)
+            services.AddHazelcastFailoverOptions(ConfigureHazelcastOptions<HazelcastFailoverOptions, HazelcastFailoverOptionsBuilder>);
+        else
+            services.AddHazelcastOptions(ConfigureHazelcastOptions<HazelcastOptions, HazelcastOptionsBuilder>);
 
         // note: that would be a nicer syntax, but it requires that the factory has access
         // back to the options (or some sort of IProvideServiceProvider service) and that
@@ -447,29 +431,13 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
 
         // add Hazelcast cache using provided options
         // beware! must use the right combination of AddHazelcast[Failover]Options and withFailover: true|false
-        services.AddHazelcastCache(withFailover: true);
+        services.AddHazelcastCache(withFailover);
 
         // the IDistributedCache will be injected into the asserter
         services.AddTransient<ProvidedCacheAsserter>();
 
         // create the provider and retrieve and use the cache
-        await using var serviceProvider = services.BuildServiceProvider();
-
-        // verifications
-        var ho = serviceProvider.GetRequiredService<IOptions<HazelcastFailoverOptions>>();
-        Assert.That(ho.Value.Clients.Count, Is.EqualTo(1));
-        Assert.That(ho.Value.Clients[0].Networking.ReconnectMode, Is.EqualTo(ReconnectMode.ReconnectAsync));
-        var co = serviceProvider.GetRequiredService<IOptions<HazelcastCacheOptions>>();
-        Assert.That(co.Value.CacheUniqueIdentifier, Is.EqualTo(cacheUniqueIdentifier));
-
-        await serviceProvider.GetRequiredService<ProvidedCacheAsserter>().AssertAsync();
-
-        // note:
-        //   standard dotnet key delimiter is ':' or '__' depending on providers, but AddHazelcastAndDefaults add
-        //   support for '.' too for command line, environment and in-memory collection providers - but only for keys
-        //   starting with 'hazelcast.' or 'hazelcast-failover.'. Internally, the '.' separator is rewritten into the
-        //   ':' separator - which should be used everywhere really, for instance in the Bind call used in the
-        //   HazelcastCacheOptions registration. we're using the standard ':' delimiter everywhere in this test.
+        return services.BuildServiceProvider();
     }
 
     internal class ProvidedCacheAsserter

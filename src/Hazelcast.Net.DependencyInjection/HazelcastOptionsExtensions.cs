@@ -14,6 +14,7 @@
 
 #nullable enable
 
+using System;
 using System.Collections.Generic;
 
 namespace Hazelcast.DependencyInjection;
@@ -39,6 +40,29 @@ public static class HazelcastOptionsExtensions
     public static HazelcastFailoverOptions ObtainLoggerFactoryFromServiceProvider(this HazelcastFailoverOptions options)
     {
         foreach (var o in options.Clients) o.ObtainLoggerFactoryFromServiceProvider();
+        return options;
+    }
+
+    /// <summary>
+    /// Specifies that the options logger factory is to be obtained from the service provider.
+    /// </summary>
+    /// <param name="options">The options to configure.</param>
+    /// <returns>The options so that additional calls can be chained.</returns>
+    public static TOptions ObtainLoggerFactoryFromServiceProvider<TOptions>(this TOptions options)
+        where TOptions : HazelcastOptionsBase
+    {
+        switch (options ?? throw new ArgumentNullException(nameof(options)))
+        {
+            case HazelcastOptions hazelcastOptions:
+                hazelcastOptions.ObtainLoggerFactoryFromServiceProvider();
+                break;
+            case HazelcastFailoverOptions hazelcastFailoverOptions:
+                hazelcastFailoverOptions.ObtainLoggerFactoryFromServiceProvider();
+                break;
+            default:
+                throw new NotSupportedException($"Unsupported options type {options.GetType()}.");
+        }
+
         return options;
     }
 }

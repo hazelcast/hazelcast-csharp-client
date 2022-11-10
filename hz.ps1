@@ -999,6 +999,8 @@ function require-dotnet ( $full ) {
     }
 
     require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "8.0" $frameworks "net8.0" "8.0.x" $true $allowPrerelease
 
     # report
     Write-Output $result.sdkInfos
@@ -2448,6 +2450,7 @@ function hz-cleanup-code {
     Write-Output "Clean C# code - whitespaces, tabs and new-lines"
 
     $sc = [System.IO.Path]::DirectorySeparatorChar
+    if ($sc -eq '\') { $sc = '\\' } # make it a valid pattern
     $files = get-childitem -recurse -file -path "$srcDir/*" -include "*.cs" | ? { `
         $_.FullName -inotmatch "$($sc)obj$($sc)" -and `
         $_.FullName -inotmatch "$($sc)bin$($sc)" `

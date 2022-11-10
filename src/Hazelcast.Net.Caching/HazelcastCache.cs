@@ -1,11 +1,11 @@
 ﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -66,7 +66,7 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
     }
 
     private static string CreateMapName(string? cacheId)
-        => string.IsNullOrWhiteSpace(cacheId) ? "distributed_cache" : cacheId;
+        => string.IsNullOrWhiteSpace(cacheId) ? "distributed_cache" : cacheId!;
 
     private async Task ConnectAsync(CancellationToken token = default)
     {
@@ -114,14 +114,18 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
         token.ThrowIfCancellationRequested();
         await ConnectAsync(token).CfAwait();
 
+        // the precedence order used here, i.e. AbsoluteExpirationRelativeToNow taking
+        // over AbsoluteExpiration, is not formally specified but is what Microsoft uses
+        // in all their own providers.
+
         var maxIdle = options.SlidingExpiration ?? TimeSpan.Zero; // zero = never idle
         var timeToLive = options.AbsoluteExpirationRelativeToNow ??
                                 (options.AbsoluteExpiration.HasValue
-                                    ? options.AbsoluteExpiration.Value - DateTimeOffset.UtcNow 
+                                    ? options.AbsoluteExpiration.Value - DateTimeOffset.UtcNow
                                     : TimeSpan.Zero); // zero = infinite
 
         if (maxIdle < TimeSpan.Zero || timeToLive < TimeSpan.Zero)
-            throw new InvalidOperationException("Invalid expiration options: values must be positive.");
+            throw new ArgumentException("Options produce negative max-idle or time-to-live.", nameof(options));
 
         await _map!.SetAsync(key, value, timeToLive, maxIdle).CfAwait();
     }
