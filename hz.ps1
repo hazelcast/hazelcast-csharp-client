@@ -1148,7 +1148,8 @@ function hz-generate-certs {
         $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
         $keyPath = $keyPath.Replace('\', '/') # that *has* to be / for git to be happy
         if (-not (test-path $keyPath)) { Die "File not found: $keyPath" }
-        Write-Output "Private repository access key at $keyPath"
+        $keyLen = (ls "$keyPath").length
+        Write-Output "Private repository access key at $keyPath ($keyLen bytes)"
 
         $ssh = (command ssh).Source
         $ssh = $ssh.Replace('\', '/') # that *has* to be / for git to be happy
@@ -1166,6 +1167,9 @@ function hz-generate-certs {
             $isProtected = $true
             $preserveInheritance = $false
             $acl.SetAccessRuleProtection($isProtected, $preserveInheritance)
+            $ruleArgs = $acl.Owner, "Read", "Allow"
+            $rule = new-object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ruleArgs
+            $acl.SetAccessRule($rule)
             set-acl "$keyPath" $acl
         }
         else {
