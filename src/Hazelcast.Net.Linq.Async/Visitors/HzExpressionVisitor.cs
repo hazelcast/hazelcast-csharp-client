@@ -44,7 +44,7 @@ namespace Hazelcast.Linq.Visitors
             };
             }
 
-        private Expression VisitJoin(JoinExpression node)
+        protected virtual Expression VisitJoin(JoinExpression node)
         {
             var left = Visit(node.Left);
             var right = Visit(node.Right);

@@ -18,6 +18,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
+using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
 using NUnit.Framework;
@@ -26,6 +27,12 @@ namespace Hazelcast.Tests.Linq
 {
     internal class QueryFormatterTests
     {
+        private class DummyType
+        {
+            public int ColumnInteger { get; set; }
+            public string ColumnString { get; set; }
+        }
+
         class DummyExpression : Expression
         {
 #if NETSTANDARD2_1_OR_GREATER
@@ -88,6 +95,22 @@ namespace Hazelcast.Tests.Linq
 
 
             return true;
+        }
+
+        [Test]
+        public void TestFormatSelectQuery()
+        {
+            var dummyData = new List<DummyType>();
+            var exp = dummyData.AsQueryable();
+
+            var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
+            var bindedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated) as Expression;
+
+            bindedExp = UnusedColumnProcessor.Clean(bindedExp);
+            bindedExp = RedundantSubqueryProcessor.Clean(bindedExp);
+            var formattedQuery = QueryFormatter.Format(bindedExp);
+            Console.WriteLine(formattedQuery);
+
         }
     }
 }

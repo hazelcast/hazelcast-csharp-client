@@ -50,7 +50,7 @@ namespace Hazelcast.Linq.Visitors
             if (canBeColumn == null) throw new ArgumentNullException(nameof(canBeColumn));
 
             Nominator = new ExpressionNominator(canBeColumn);
-            _existingAlias = String.Empty;
+            _existingAlias = Enumerable.Empty<string>().ToList();
             _newAlias = String.Empty;
         }
 
