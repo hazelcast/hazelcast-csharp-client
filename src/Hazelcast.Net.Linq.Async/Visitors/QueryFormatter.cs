@@ -15,8 +15,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
+using Hazelcast.Core;
 using Hazelcast.Linq.Expressions;
 using Ionic.Zip;
 
@@ -35,13 +37,19 @@ namespace Hazelcast.Linq.Visitors
         private QueryFormatter()
         {
             _sb = new();
+            _values = new();
         }
 
-        public static string Format(Expression expression)
+        /// <summary>
+        /// Translate the tree into SQL statement
+        /// </summary>
+        /// <param name="expression">tree</param>
+        /// <returns>(SQL statement, Value of variables)</returns>
+        public static (string, IEnumerable<object>) Format(Expression expression)
         {
             var f = new QueryFormatter();
             f.Visit(expression);
-            return f.ToString();
+            return (f.ToString(), f._values);
         }
 
         public override string ToString()
@@ -77,12 +85,16 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.Multiply:
                 case ExpressionType.Subtract:
                 case ExpressionType.Parameter:
-                case (ExpressionType)HzExpressionType.Map:
-                case (ExpressionType)HzExpressionType.Column:
-                case (ExpressionType)HzExpressionType.Projection:
-                case (ExpressionType)HzExpressionType.Select:
-                case (ExpressionType)HzExpressionType.Join:
+                case (ExpressionType) HzExpressionType.Map:
+                case (ExpressionType) HzExpressionType.Column:
+                case (ExpressionType) HzExpressionType.Projection:
+                case (ExpressionType) HzExpressionType.Select:
+                case (ExpressionType) HzExpressionType.Join:
                     return base.Visit(node);
+                case ExpressionType.Convert:
+                    if (node.GetType().IsNullable())
+                        return base.Visit(node);
+                    throw new NotSupportedException($"{node.NodeType} is not supported.");
                 default:
                     throw new NotSupportedException($"{node.NodeType} is not supported.");
             }
@@ -91,23 +103,243 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitColumn(ColumnExpression column)
         {
-            if (column.Alias is not null)
+            if (!string.IsNullOrEmpty(column.Alias))
             {
                 Write(column.Alias);
                 Write(".");
             }
-            Write("`");
+
+            //Write("\"");
             Write(column.Name);
-            Write("`");
+            //Write("\"");
             return column;
         }
 
         protected override Expression VisitProjection(ProjectionExpression proj)
         {
-            Write("(");
             var _ = Visit(proj.Source);
-            Write(")");
             return proj;
+        }
+
+
+        protected override Expression VisitConstant(ConstantExpression node)
+        {
+            WriteValue(node.Value);
+            return node;
+        }
+
+        private void WriteValue(object? val)
+        {
+            if (val is null)
+                Write("NULL");
+            else if (val.GetType().IsEnum)
+                WriteParameter(val);
+            else
+            {
+                var valType = val.GetType().IsNullable()
+                    ? Type.GetTypeCode(Nullable.GetUnderlyingType(val.GetType()))
+                    : Type.GetTypeCode(val.GetType());
+                switch (valType)
+                {
+                    case TypeCode.Boolean:
+                        WriteParameter(val);
+                        break;
+                    case TypeCode.String:
+                        WriteParameter(val);
+                        break;
+                    case TypeCode.Object:
+                        throw new NotSupportedException($"The constant for '{val}' is not supported.");
+                    case TypeCode.Single:
+                    case TypeCode.Double:
+                    case TypeCode.Int16:
+                    case TypeCode.Int32:
+                    case TypeCode.Int64:
+                        WriteParameter(val);
+                        break;
+                    default:
+                        WriteParameter((val as IConvertible)?.ToString(CultureInfo.InvariantCulture) ?? val);
+                        break;
+                }
+            }
+        }
+
+        private void WriteParameter(object v)
+        {
+            Write("?");
+            _values.Add(v);
+        }
+
+        private void Write(object v)
+        {
+            _sb.Append(v);
+        }
+
+        protected override Expression VisitUnary(UnaryExpression u)
+        {
+            string op = this.GetOperator(u);
+            switch (u.NodeType)
+            {
+                case ExpressionType.Not:
+                    if (IsBoolean(u.Operand.Type) || op.Length > 1)
+                    {
+                        Write(op);
+                        Write(" ");
+                        VisitPredicate(u.Operand);
+                    }
+                    else
+                    {
+                        Write(op);
+                        Visit(u.Operand);
+                    }
+
+                    break;
+                case ExpressionType.Negate:
+                case ExpressionType.NegateChecked:
+                    Write(op);
+                    Visit(u.Operand);
+                    break;
+                case ExpressionType.UnaryPlus:
+                    Visit(u.Operand);
+                    break;
+                case ExpressionType.Convert:
+                    // ignore conversions for now
+                    Visit(u.Operand);
+                    break;
+                default:
+                    throw new NotSupportedException($"The unary operator '{u.NodeType}' is not supported");
+            }
+
+            return u;
+        }
+
+        protected override Expression VisitBinary(BinaryExpression b)
+        {
+            var op = GetOperator(b);
+            var left = b.Left;
+            var right = b.Right;
+
+            Write("(");
+            switch (b.NodeType)
+            {
+                case ExpressionType.And:
+                case ExpressionType.AndAlso:
+                case ExpressionType.Or:
+                case ExpressionType.OrElse:
+                    if (IsBoolean(left.Type))
+                    {
+                        VisitPredicate(left);
+                        Write(" ");
+                        Write(op);
+                        Write(" ");
+                        VisitPredicate(right);
+                    }
+                    else
+                    {
+                        Visit(left);
+                        Write(" ");
+                        Write(op);
+                        Write(" ");
+                        Visit(right);
+                    }
+
+                    break;
+                case ExpressionType.Equal:
+                    if (right.NodeType == ExpressionType.Constant)
+                    {
+                        var ce = (ConstantExpression) right;
+                        if (ce.Value == null)
+                        {
+                            Visit(left);
+                            Write(" IS NULL");
+                            break;
+                        }
+                    }
+                    else if (left.NodeType == ExpressionType.Constant)
+                    {
+                        var ce = (ConstantExpression) left;
+                        if (ce.Value == null)
+                        {
+                            Visit(right);
+                            Write(" IS NULL");
+                            break;
+                        }
+                    }
+
+                    goto case ExpressionType.LessThan;
+                case ExpressionType.NotEqual:
+                    if (right.NodeType == ExpressionType.Constant)
+                    {
+                        ConstantExpression ce = (ConstantExpression) right;
+                        if (ce.Value == null)
+                        {
+                            this.Visit(left);
+                            this.Write(" IS NOT NULL");
+                            break;
+                        }
+                    }
+                    else if (left.NodeType == ExpressionType.Constant)
+                    {
+                        var ce = (ConstantExpression) left;
+                        if (ce.Value == null)
+                        {
+                            Visit(right);
+                            Write(" IS NOT NULL");
+                            break;
+                        }
+                    }
+
+                    goto case ExpressionType.LessThan;
+                case ExpressionType.LessThan:
+                case ExpressionType.LessThanOrEqual:
+                case ExpressionType.GreaterThan:
+                case ExpressionType.GreaterThanOrEqual:
+                    // check for special x.CompareTo(y) && type.Compare(x,y)
+                    if (left.NodeType == ExpressionType.Call && right.NodeType == ExpressionType.Constant)
+                    {
+                        var mc = (MethodCallExpression) left;
+                        var ce = (ConstantExpression) right;
+                        if (ce.Value is not null && ce.Value.GetType() == typeof(int) && ((int) ce.Value) == 0)
+                        {
+                            if (mc.Method.Name == "CompareTo" && !mc.Method.IsStatic && mc.Arguments.Count == 1)
+                            {
+                                left = mc.Object;
+                                right = mc.Arguments[0];
+                            }
+                            else if (
+                                (mc.Method.DeclaringType == typeof(string) ||
+                                 mc.Method.DeclaringType == typeof(decimal))
+                                && mc.Method.Name == "Compare" && mc.Method.IsStatic && mc.Arguments.Count == 2)
+                            {
+                                left = mc.Arguments[0];
+                                right = mc.Arguments[1];
+                            }
+                        }
+                    }
+
+                    goto case ExpressionType.Add;
+                case ExpressionType.Add:
+                case ExpressionType.AddChecked:
+                case ExpressionType.Subtract:
+                case ExpressionType.SubtractChecked:
+                case ExpressionType.Multiply:
+                case ExpressionType.MultiplyChecked:
+                case ExpressionType.Divide:
+                case ExpressionType.Modulo:
+                case ExpressionType.ExclusiveOr:
+                case ExpressionType.LeftShift:
+                case ExpressionType.RightShift:
+                    Visit(left);
+                    Write(" ");
+                    Write(op);
+                    Write(" ");
+                    Visit(right);
+                    break;
+                default:
+                    throw new NotSupportedException($"The binary operator '{b.NodeType}' is not supported");
+            }
+
+            this.Write(")");
+            return b;
         }
 
         protected override Expression VisitSelect(SelectExpression select)
@@ -115,36 +347,32 @@ namespace Hazelcast.Linq.Visitors
             Write("SELECT ");
             WriteColumns(select.Columns);
 
-            if (select.From is not null)
-            {
-                Write("FROM ");
-                VisitSource(select.From);
-            }
+            Write("FROM ");
+            VisitSource(select.From);
 
-            if (select.Where is not null)
-            {
-                Write("WHERE");
-                VisitPredicate(select.Where);
-            }
+            if (select.Where is null) return select;
+
+            Write(" WHERE ");
+            VisitPredicate(select.Where);
 
             return select;
         }
 
         protected virtual Expression VisitSource(Expression from)
         {
-            switch ((HzExpressionType)from.NodeType)
+            switch ((HzExpressionType) from.NodeType)
             {
                 case HzExpressionType.Map:
-                    WriteMapName((MapExpression)from);
+                    WriteMapName((MapExpression) from);
                     break;
                 case HzExpressionType.Select:
                     Write("(");
                     Visit(from);
                     Write(") ");
-                    Write(((SelectExpression)from).Alias);
+                    Write(((SelectExpression) from).Alias);
                     break;
                 case HzExpressionType.Join:
-                    VisitJoin((JoinExpression)from);
+                    VisitJoin((JoinExpression) from);
                     break;
             }
 
@@ -169,10 +397,12 @@ namespace Hazelcast.Linq.Visitors
             {
                 Write(" <> 0");
             }
+
             return predicate;
         }
 
         #region Helpers
+
         private void WriteColumns(ReadOnlyCollection<ColumnDefinition> columns)
         {
             for (int i = 0; i < columns.Count; i++)
@@ -210,9 +440,9 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.AndAlso:
                 case ExpressionType.Or:
                 case ExpressionType.OrElse:
-                    return IsBoolean(((BinaryExpression)predicate).Type);
+                    return IsBoolean(((BinaryExpression) predicate).Type);
                 case ExpressionType.Not:
-                    return IsBoolean(((UnaryExpression)predicate).Type);
+                    return IsBoolean(((UnaryExpression) predicate).Type);
                 case ExpressionType.Equal:
                 case ExpressionType.NotEqual:
                 case ExpressionType.LessThan:
@@ -221,7 +451,7 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.GreaterThanOrEqual:
                     return true;
                 case ExpressionType.Call:
-                    return IsBoolean(((MethodCallExpression)predicate).Type);
+                    return IsBoolean(((MethodCallExpression) predicate).Type);
                 default:
                     return false;
             }
@@ -276,6 +506,7 @@ namespace Hazelcast.Linq.Visitors
             };
         }
 
+
         private bool IsBoolean(Type type)
         {
             return type == typeof(bool) || type == typeof(bool?);
@@ -285,6 +516,7 @@ namespace Hazelcast.Linq.Visitors
         {
             _sb.Append(v);
         }
+
         #endregion
     }
 }

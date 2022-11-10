@@ -25,12 +25,18 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
 {
+    [TestFixture]
     internal class QueryFormatterTests
     {
         private class DummyType
         {
-            public int ColumnInteger { get; set; }
             public string ColumnString { get; set; }
+            public double ColumnDouble { get; set; }
+            public float ColumnFloat { get; set; }
+            public int ColumnInt { get; set; }
+            public long ColumnLong { get; set; }
+            public bool ColumnBool { get; set; }
+            public HzExpressionType ColumnEnum { get; set; }
         }
 
         class DummyExpression : Expression
@@ -43,9 +49,9 @@ namespace Hazelcast.Tests.Linq
                 NodeType = nodeType;
             }
 #else
-            public DummyExpression(ExpressionType nodeType) : base(nodeType, typeof(Expression)) { }
+            public DummyExpression(ExpressionType nodeType) : base(nodeType, typeof(Expression))
+            { }
 #endif
-
         }
 
         [Test]
@@ -57,6 +63,7 @@ namespace Hazelcast.Tests.Linq
         [TestCase(ExpressionType.Not, ExpectedResult = true)]
         [TestCase(ExpressionType.Constant, ExpectedResult = true)]
         [TestCase(ExpressionType.Divide, ExpectedResult = true)]
+        [TestCase(ExpressionType.Convert, ExpectedResult = true)]
         [TestCase(ExpressionType.Modulo, ExpectedResult = true)]
         [TestCase(ExpressionType.ExclusiveOr, ExpectedResult = true)]
         [TestCase(ExpressionType.GreaterThan, ExpectedResult = true)]
@@ -68,12 +75,11 @@ namespace Hazelcast.Tests.Linq
         [TestCase(ExpressionType.Multiply, ExpectedResult = true)]
         [TestCase(ExpressionType.Subtract, ExpectedResult = true)]
         [TestCase(ExpressionType.Parameter, ExpectedResult = true)]
-        [TestCase((ExpressionType)HzExpressionType.Map, ExpectedResult = true)]
-        [TestCase((ExpressionType)HzExpressionType.Column, ExpectedResult = true)]
-        [TestCase((ExpressionType)HzExpressionType.Projection, ExpectedResult = true)]
-        [TestCase((ExpressionType)HzExpressionType.Select, ExpectedResult = true)]
-        [TestCase((ExpressionType)HzExpressionType.Join, ExpectedResult = true)]
-
+        [TestCase((ExpressionType) HzExpressionType.Map, ExpectedResult = true)]
+        [TestCase((ExpressionType) HzExpressionType.Column, ExpectedResult = true)]
+        [TestCase((ExpressionType) HzExpressionType.Projection, ExpectedResult = true)]
+        [TestCase((ExpressionType) HzExpressionType.Select, ExpectedResult = true)]
+        [TestCase((ExpressionType) HzExpressionType.Join, ExpectedResult = true)]
         public bool TestFormatSupportedTypes(ExpressionType nodeType)
         {
             var exp = new DummyExpression(nodeType);
@@ -87,7 +93,8 @@ namespace Hazelcast.Tests.Linq
                 // We expect that because our dummy node type is too dummy to be visited.
                 // If we got the exception, then means that the type is supported but couldn't be visited. 
                 if ((ex is ArgumentException && ex.Message == "must be reducible node")
-                   || (ex is InvalidCastException && ex.Message.StartsWith("Unable to cast object of type 'DummyExpression'")))
+                    || (ex is InvalidCastException &&
+                        ex.Message.StartsWith("Unable to cast object of type 'DummyExpression'")))
                     return true;
 
                 throw;
@@ -97,20 +104,81 @@ namespace Hazelcast.Tests.Linq
             return true;
         }
 
-        [Test]
-        public void TestFormatSelectQuery()
+        [TestCase(nameof(DummyType.ColumnString), null,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString IS NULL)")]
+        [TestCase(nameof(DummyType.ColumnString), "str-value",
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString = ?)")]
+        [TestCase(nameof(DummyType.ColumnBool), true,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnBool = ?)")]
+        [TestCase(nameof(DummyType.ColumnFloat), 1.1f,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnFloat = ?)")]
+        [TestCase(nameof(DummyType.ColumnDouble), 1.1d,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnDouble = ?)")]
+        [TestCase(nameof(DummyType.ColumnInt), 1,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt = ?)")]
+        [TestCase(nameof(DummyType.ColumnLong), 1l,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnLong = ?)")]
+        [TestCase(nameof(DummyType.ColumnEnum), HzExpressionType.Column,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnEnum = ?)")]
+        public string TestValueTypesOnQuery(string columnName, object? val)
         {
             var dummyData = new List<DummyType>();
             var exp = dummyData.AsQueryable();
 
+            switch (columnName)
+            {
+                case nameof(DummyType.ColumnString):
+                    var str = (string?) val;
+                    exp = exp.Where(p => p.ColumnString == str);
+                    break;
+                case nameof(DummyType.ColumnDouble):
+                    var db = (double?) val;
+                    exp = exp.Where(p => p.ColumnDouble == db);
+                    break;
+                case nameof(DummyType.ColumnLong):
+                    var lng = (long?) val;
+                    exp = exp.Where(p => p.ColumnLong == lng);
+                    break;
+                case nameof(DummyType.ColumnFloat):
+                    var flt = (float?) val;
+                    exp = exp.Where(p => p.ColumnFloat == flt);
+                    break;
+                case nameof(DummyType.ColumnInt):
+                    var num = (int?) val;
+                    exp = exp.Where(p => p.ColumnInt == num);
+                    break;
+                case nameof(DummyType.ColumnBool):
+                    var bln = (bool?) val;
+                    exp = exp.Where(p => p.ColumnBool == bln);
+                    break;
+                case nameof(DummyType.ColumnEnum):
+                    var enm = (HzExpressionType) val!;
+                    exp = exp.Where(p => p.ColumnEnum == enm);
+                    break;
+            }
+
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
-            var bindedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated) as Expression;
+            var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
 
-            bindedExp = UnusedColumnProcessor.Clean(bindedExp);
-            bindedExp = RedundantSubqueryProcessor.Clean(bindedExp);
-            var formattedQuery = QueryFormatter.Format(bindedExp);
-            Console.WriteLine(formattedQuery);
+            boundExp = UnusedColumnProcessor.Clean(boundExp);
+            boundExp = RedundantSubqueryProcessor.Clean(boundExp);
+            var formattedQuery = QueryFormatter.Format(boundExp);
 
+            if (val != null && !val.GetType().IsEnum)
+                Assert.That(formattedQuery.Item2, Contains.Item(val));
+            else if (val != null && val.GetType().IsEnum)
+                Assert.That(formattedQuery.Item2, Contains.Item((int) val));
+
+            Console.WriteLine(formattedQuery.Item1);
+            return formattedQuery.Item1;
         }
     }
 }
