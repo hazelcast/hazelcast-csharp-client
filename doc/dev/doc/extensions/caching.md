@@ -51,4 +51,4 @@ With these declarations, the Hazelcast cache implementation would be injected in
 
 ## Cache Functionnality
 
-Hazelcast's implementation of `IDistributedCache` supports all functionnality of the interface. Note however that, due to the inherently asynchronous nature of the Hazelcast client, all synchronous cache operations have to be implemented over asynchronous operations using the `task.GetAwaiter().GetResult()` pattern. This pattern can cause potential threading problems, and should be avoided as much as possible. Always use the asynchronous API wherever possible.
+Hazelcast's implementation of `IDistributedCache` supports all functionality of the interface. Note however that, due to the inherently asynchronous nature of the Hazelcast client, all synchronous cache operations have to be implemented over asynchronous operations using the `task.GetAwaiter().GetResult()` pattern. This pattern can cause potential threading problems, and should be avoided as much as possible. Always use the asynchronous API wherever possible.

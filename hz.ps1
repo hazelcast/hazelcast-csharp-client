@@ -1597,7 +1597,7 @@ function hz-build-docs-on-windows {
         Write-Output "  -> added System.Memory binding redirect to memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
     }
     else {
-        Write-Output "  -> found System.Memory binding redirec in memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
+        Write-Output "  -> found System.Memory binding redirect in memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
     }
 
     # prepare templates

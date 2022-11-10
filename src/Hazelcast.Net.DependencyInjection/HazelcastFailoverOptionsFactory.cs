@@ -19,7 +19,7 @@ using Microsoft.Extensions.Options;
 
 namespace Hazelcast.DependencyInjection;
 
-// an options factory for Hazelcast options, that wires the IServiceProvider into the options
+// an options factory for Hazelcast failover options, that wires the IServiceProvider into the options
 internal class HazelcastFailoverOptionsFactory : IOptionsFactory<HazelcastFailoverOptions>
 {
     private readonly IServiceProvider _serviceProvider;

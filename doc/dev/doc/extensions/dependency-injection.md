@@ -4,7 +4,7 @@ The [Hazelcast.Net.DependencyInjection](https://www.nuget.org/packages/Hazelcast
 
 ## Registering Options
 
-Registering the Hazelcast options into the service container is achieved via the `AddHazelcastOptions` method. This method accepts one parameter, which is an `Action<HazelcastOptionsBuilder>` delegate. In can be used to configure the options just as one would do with any `HazelcastOptionsBuilder`. For instance:
+Registering the Hazelcast options into the service container is achieved via the `AddHazelcastOptions` method. This method accepts one parameter, which is an `Action<HazelcastOptionsBuilder>` delegate. It can be used to configure the options just as one would do with any `HazelcastOptionsBuilder`. For instance:
 
 ```csharp
 services.AddHazelcastOptions(builder => builder

@@ -11,7 +11,7 @@
     <PropertyGroup>
         <Description>Open-source caching extensions for Hazelcast, the open-source in-memory distributed computing platform.</Description>
         <PackageProjectUrl>https://hazelcast.github.io/hazelcast-csharp-client/</PackageProjectUrl>
-        <PackageTags>hazelcast cache clustering scalabilty distributed caching dependency injection</PackageTags>
+        <PackageTags>hazelcast cache clustering scalability distributed caching dependency injection</PackageTags>
         <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
         <PackageIcon>nuget-logo.png</PackageIcon>
         <PackageReadmeFile>README.md</PackageReadmeFile>
