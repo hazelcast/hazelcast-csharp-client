@@ -128,9 +128,6 @@ namespace Hazelcast.Messaging
                 }
             }
 
-            // update the reference
-            bufferReference.Buffer = bytes;
-
             // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
             // created the byte array, so ... might be nicer to copy now
@@ -146,7 +143,7 @@ namespace Hazelcast.Messaging
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
-            HConsole.WriteLine(this, 2, $"Frame is complete");
+            HConsole.WriteLine(this, 2, "Frame is complete");
 
             // we now have a fully assembled message
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it
