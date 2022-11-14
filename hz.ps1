@@ -1444,9 +1444,13 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
+    $branchName = git symbolic-ref --short HEAD
+    $isReleaseBranch = $branchName.StartsWith("release/")
+
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
+    Write-Output "  Release Branch : $isReleaseBranch"
     Write-Output "  Define         : $($options.constants)"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
@@ -1519,9 +1523,12 @@ function hz-build {
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
 
+    $buildArgs += "-p:SolutionDir=`"$slnRoot`""
+    $buildArgs += "-p:ReleaseBranch=$isReleaseBranch"
+
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build $srcDir/$_ $buildArgs"
+        Write-Output "> dotnet build `"$srcDir/$_`" $buildArgs"
         dotnet build "$srcDir/$_" $buildArgs
 
         # if it failed, we can stop here

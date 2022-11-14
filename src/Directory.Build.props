@@ -3,6 +3,7 @@
   <!-- import our targets (once) -->
   <PropertyGroup><HazelcastTargets>true</HazelcastTargets></PropertyGroup>
   <Import Project="Directory.Build.targets" Condition="'$(HazelcastTargets)' == ''"/>
+  <Import Project="$(SolutionDir)/build/AnalysisRules.props" />
 
   <PropertyGroup>
     <GitRepositoryRemoteName></GitRepositoryRemoteName>

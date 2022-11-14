@@ -85,14 +85,6 @@
     <ProjectReference Include="..\Hazelcast.Net.JetBrainsAnnotations\Hazelcast.Net.JetBrainsAnnotations.csproj" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Configuration)'=='Debug'">
-      <EditorConfigFiles Include="debug.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(Configuration)'=='Release'">
-      <EditorConfigFiles Include="release.editorconfig" Link=".editorconfig" />
-  </ItemGroup>
-
   <ItemGroup>
     <Compile Update="Serialization\SerializationService.*.cs">
       <DependentUpon>SerializationService.cs</DependentUpon>
