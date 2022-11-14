@@ -25,7 +25,7 @@ using Ionic.Zip;
 namespace Hazelcast.Linq.Visitors
 {
     /// <summary>
-    /// Traverse and translete tree to SQL string statement.
+    /// Traverse and translate tree to SQL string statement.
     /// </summary>
     internal class QueryFormatter : HzExpressionVisitor
     {
@@ -34,7 +34,8 @@ namespace Hazelcast.Linq.Visitors
         private bool _isDebug = false;
         private List<object> _values;
 
-        private QueryFormatter()
+        // internal for test
+        internal QueryFormatter()
         {
             _sb = new();
             _values = new();
@@ -75,7 +76,6 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.Constant:
                 case ExpressionType.Divide:
                 case ExpressionType.Modulo:
-                case ExpressionType.ExclusiveOr:
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanOrEqual:
                 case ExpressionType.LessThan:
@@ -100,7 +100,6 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
-
         protected override Expression VisitColumn(ColumnExpression column)
         {
             if (!string.IsNullOrEmpty(column.Alias))
@@ -109,9 +108,7 @@ namespace Hazelcast.Linq.Visitors
                 Write(".");
             }
 
-            //Write("\"");
             Write(column.Name);
-            //Write("\"");
             return column;
         }
 
@@ -120,7 +117,6 @@ namespace Hazelcast.Linq.Visitors
             var _ = Visit(proj.Source);
             return proj;
         }
-
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
@@ -147,15 +143,16 @@ namespace Hazelcast.Linq.Visitors
                     case TypeCode.String:
                         WriteParameter(val);
                         break;
-                    case TypeCode.Object:
-                        throw new NotSupportedException($"The constant for '{val}' is not supported.");
                     case TypeCode.Single:
                     case TypeCode.Double:
                     case TypeCode.Int16:
                     case TypeCode.Int32:
                     case TypeCode.Int64:
+                    case TypeCode.Decimal:
                         WriteParameter(val);
                         break;
+                    case TypeCode.Object:
+                        throw new NotSupportedException($"The constant for '{val}' is not supported.");
                     default:
                         WriteParameter((val as IConvertible)?.ToString(CultureInfo.InvariantCulture) ?? val);
                         break;
@@ -176,7 +173,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitUnary(UnaryExpression u)
         {
-            string op = this.GetOperator(u);
+            var op = GetOperator(u);
             switch (u.NodeType)
             {
                 case ExpressionType.Not:
@@ -202,7 +199,6 @@ namespace Hazelcast.Linq.Visitors
                     Visit(u.Operand);
                     break;
                 case ExpressionType.Convert:
-                    // ignore conversions for now
                     Visit(u.Operand);
                     break;
                 default:
@@ -212,14 +208,23 @@ namespace Hazelcast.Linq.Visitors
             return u;
         }
 
-        protected override Expression VisitBinary(BinaryExpression b)
+        protected override Expression VisitBinary(BinaryExpression bExp)
         {
-            var op = GetOperator(b);
-            var left = b.Left;
-            var right = b.Right;
+            var op = GetOperator(bExp);
+            var left = bExp.Left;
+            var right = bExp.Right;
+
+            void VisitAndWriteInOrder(Expression l, Expression r, string o)
+            {
+                Visit(l);
+                Write(" ");
+                Write(o);
+                Write(" ");
+                Visit(r);
+            }
 
             Write("(");
-            switch (b.NodeType)
+            switch (bExp.NodeType)
             {
                 case ExpressionType.And:
                 case ExpressionType.AndAlso:
@@ -235,15 +240,12 @@ namespace Hazelcast.Linq.Visitors
                     }
                     else
                     {
-                        Visit(left);
-                        Write(" ");
-                        Write(op);
-                        Write(" ");
-                        Visit(right);
+                        VisitAndWriteInOrder(left, right, op);
                     }
 
                     break;
                 case ExpressionType.Equal:
+                    // Something == null
                     if (right.NodeType == ExpressionType.Constant)
                     {
                         var ce = (ConstantExpression) right;
@@ -254,6 +256,7 @@ namespace Hazelcast.Linq.Visitors
                             break;
                         }
                     }
+                    // null == Something
                     else if (left.NodeType == ExpressionType.Constant)
                     {
                         var ce = (ConstantExpression) left;
@@ -265,18 +268,21 @@ namespace Hazelcast.Linq.Visitors
                         }
                     }
 
-                    goto case ExpressionType.LessThan;
+                    VisitAndWriteInOrder(left, right, op);
+                    break;
                 case ExpressionType.NotEqual:
+                    // Something != null
                     if (right.NodeType == ExpressionType.Constant)
                     {
-                        ConstantExpression ce = (ConstantExpression) right;
+                        var ce = (ConstantExpression) right;
                         if (ce.Value == null)
                         {
-                            this.Visit(left);
-                            this.Write(" IS NOT NULL");
+                            Visit(left);
+                            Write(" IS NOT NULL");
                             break;
                         }
                     }
+                    // null != Something
                     else if (left.NodeType == ExpressionType.Constant)
                     {
                         var ce = (ConstantExpression) left;
@@ -288,35 +294,12 @@ namespace Hazelcast.Linq.Visitors
                         }
                     }
 
-                    goto case ExpressionType.LessThan;
+                    VisitAndWriteInOrder(left, right, op);
+                    break;
                 case ExpressionType.LessThan:
                 case ExpressionType.LessThanOrEqual:
                 case ExpressionType.GreaterThan:
                 case ExpressionType.GreaterThanOrEqual:
-                    // check for special x.CompareTo(y) && type.Compare(x,y)
-                    if (left.NodeType == ExpressionType.Call && right.NodeType == ExpressionType.Constant)
-                    {
-                        var mc = (MethodCallExpression) left;
-                        var ce = (ConstantExpression) right;
-                        if (ce.Value is not null && ce.Value.GetType() == typeof(int) && ((int) ce.Value) == 0)
-                        {
-                            if (mc.Method.Name == "CompareTo" && !mc.Method.IsStatic && mc.Arguments.Count == 1)
-                            {
-                                left = mc.Object;
-                                right = mc.Arguments[0];
-                            }
-                            else if (
-                                (mc.Method.DeclaringType == typeof(string) ||
-                                 mc.Method.DeclaringType == typeof(decimal))
-                                && mc.Method.Name == "Compare" && mc.Method.IsStatic && mc.Arguments.Count == 2)
-                            {
-                                left = mc.Arguments[0];
-                                right = mc.Arguments[1];
-                            }
-                        }
-                    }
-
-                    goto case ExpressionType.Add;
                 case ExpressionType.Add:
                 case ExpressionType.AddChecked:
                 case ExpressionType.Subtract:
@@ -325,21 +308,14 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.MultiplyChecked:
                 case ExpressionType.Divide:
                 case ExpressionType.Modulo:
-                case ExpressionType.ExclusiveOr:
-                case ExpressionType.LeftShift:
-                case ExpressionType.RightShift:
-                    Visit(left);
-                    Write(" ");
-                    Write(op);
-                    Write(" ");
-                    Visit(right);
+                    VisitAndWriteInOrder(left, right, op);
                     break;
                 default:
-                    throw new NotSupportedException($"The binary operator '{b.NodeType}' is not supported");
+                    throw new NotSupportedException($"The binary operator '{bExp.NodeType}' is not supported");
             }
 
-            this.Write(")");
-            return b;
+            Write(")");
+            return bExp;
         }
 
         protected override Expression VisitSelect(SelectExpression select)
@@ -379,7 +355,6 @@ namespace Hazelcast.Linq.Visitors
             return from;
         }
 
-
         protected override Expression VisitJoin(JoinExpression join)
         {
             VisitSource(join.Left);
@@ -393,19 +368,18 @@ namespace Hazelcast.Linq.Visitors
         protected virtual Expression VisitPredicate(Expression predicate)
         {
             Visit(predicate);
+
             if (!IsPredicate(predicate))
-            {
-                Write(" <> 0");
-            }
+                Write(" != FALSE");
 
             return predicate;
         }
 
         #region Helpers
 
-        private void WriteColumns(ReadOnlyCollection<ColumnDefinition> columns)
+        private void WriteColumns(IReadOnlyList<ColumnDefinition> columns)
         {
-            for (int i = 0; i < columns.Count; i++)
+            for (var i = 0; i < columns.Count; i++)
             {
                 var column = columns[i];
 
@@ -432,7 +406,8 @@ namespace Hazelcast.Linq.Visitors
             Write(from.Alias);
         }
 
-        private bool IsPredicate(Expression predicate)
+        // internal for tests
+        internal bool IsPredicate(Expression predicate)
         {
             switch (predicate.NodeType)
             {
@@ -457,14 +432,14 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
-        protected virtual string GetOperator(BinaryExpression b)
+        internal virtual string GetOperator(BinaryExpression b)
         {
             return b.NodeType switch
             {
-                ExpressionType.And or ExpressionType.AndAlso => (IsBoolean(b.Left.Type)) ? "AND" : "&",
-                ExpressionType.Or or ExpressionType.OrElse => (IsBoolean(b.Left.Type) ? "OR" : "|"),
+                ExpressionType.And or ExpressionType.AndAlso => "AND",
+                ExpressionType.Or or ExpressionType.OrElse => "OR",
                 ExpressionType.Equal => "=",
-                ExpressionType.NotEqual => "<>",
+                ExpressionType.NotEqual => "!=",
                 ExpressionType.LessThan => "<",
                 ExpressionType.LessThanOrEqual => "<=",
                 ExpressionType.GreaterThan => ">",
@@ -473,15 +448,11 @@ namespace Hazelcast.Linq.Visitors
                 ExpressionType.Subtract or ExpressionType.SubtractChecked => "-",
                 ExpressionType.Multiply or ExpressionType.MultiplyChecked => "*",
                 ExpressionType.Divide => "/",
-                ExpressionType.Modulo => "%",
-                ExpressionType.ExclusiveOr => "^",
-                ExpressionType.LeftShift => "<<",
-                ExpressionType.RightShift => ">>",
                 _ => "",
             };
         }
-
-        protected virtual string GetOperator(UnaryExpression u)
+        // internal for test
+        internal virtual string GetOperator(UnaryExpression u)
         {
             return u.NodeType switch
             {
@@ -492,7 +463,8 @@ namespace Hazelcast.Linq.Visitors
             };
         }
 
-        protected virtual string? GetOperator(string methodName)
+        // internal for test
+        internal virtual string? GetOperator(string methodName)
         {
             return methodName switch
             {
@@ -507,7 +479,7 @@ namespace Hazelcast.Linq.Visitors
         }
 
 
-        private bool IsBoolean(Type type)
+        private static bool IsBoolean(Type type)
         {
             return type == typeof(bool) || type == typeof(bool?);
         }

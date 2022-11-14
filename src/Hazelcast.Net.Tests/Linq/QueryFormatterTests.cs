@@ -16,8 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
@@ -25,8 +23,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
 {
-    [TestFixture]
-    internal class QueryFormatterTests
+    public class QueryFormatterTests
     {
         private class DummyType
         {
@@ -54,7 +51,6 @@ namespace Hazelcast.Tests.Linq
 #endif
         }
 
-        [Test]
         [TestCase(ExpressionType.Throw, ExpectedResult = false)]
         [TestCase(ExpressionType.And, ExpectedResult = true)]
         [TestCase(ExpressionType.AndAlso, ExpectedResult = true)]
@@ -65,7 +61,6 @@ namespace Hazelcast.Tests.Linq
         [TestCase(ExpressionType.Divide, ExpectedResult = true)]
         [TestCase(ExpressionType.Convert, ExpectedResult = true)]
         [TestCase(ExpressionType.Modulo, ExpectedResult = true)]
-        [TestCase(ExpressionType.ExclusiveOr, ExpectedResult = true)]
         [TestCase(ExpressionType.GreaterThan, ExpectedResult = true)]
         [TestCase(ExpressionType.GreaterThanOrEqual, ExpectedResult = true)]
         [TestCase(ExpressionType.LessThan, ExpectedResult = true)]
@@ -100,7 +95,6 @@ namespace Hazelcast.Tests.Linq
                 throw;
             }
 
-
             return true;
         }
 
@@ -122,7 +116,7 @@ namespace Hazelcast.Tests.Linq
         [TestCase(nameof(DummyType.ColumnInt), 1,
             ExpectedResult =
                 "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt = ?)")]
-        [TestCase(nameof(DummyType.ColumnLong), 1l,
+        [TestCase(nameof(DummyType.ColumnLong), 1L,
             ExpectedResult =
                 "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnLong = ?)")]
         [TestCase(nameof(DummyType.ColumnEnum), HzExpressionType.Column,
@@ -170,15 +164,108 @@ namespace Hazelcast.Tests.Linq
 
             boundExp = UnusedColumnProcessor.Clean(boundExp);
             boundExp = RedundantSubqueryProcessor.Clean(boundExp);
-            var formattedQuery = QueryFormatter.Format(boundExp);
+            var (query, values) = QueryFormatter.Format(boundExp);
 
             if (val != null && !val.GetType().IsEnum)
-                Assert.That(formattedQuery.Item2, Contains.Item(val));
+                Assert.That(values, Contains.Item(val));
             else if (val != null && val.GetType().IsEnum)
-                Assert.That(formattedQuery.Item2, Contains.Item((int) val));
+                Assert.That(values, Contains.Item((int) val));
 
-            Console.WriteLine(formattedQuery.Item1);
-            return formattedQuery.Item1;
+            return query;
+        }
+
+        [TestCase("Add", ExpectedResult = "+")]
+        [TestCase("Subtract", ExpectedResult = "-")]
+        [TestCase("Multiply", ExpectedResult = "*")]
+        [TestCase("Divide", ExpectedResult = "/")]
+        [TestCase("Negate", ExpectedResult = "-")]
+        [TestCase("Remainder", ExpectedResult = "%")]
+        [TestCase("NotSupportedOpt", ExpectedResult = null)]
+        public string TestGetOperator(string name)
+        {
+            var qf = new QueryFormatter();
+            return qf.GetOperator(name);
+        }
+
+        [TestCase(ExpressionType.Negate, false, ExpectedResult = "-")]
+        [TestCase(ExpressionType.UnaryPlus, false, ExpectedResult = "+")]
+        [TestCase(ExpressionType.Not, false, ExpectedResult = "NOT")]
+        [TestCase(ExpressionType.AndAlso, true, ExpectedResult = "AND")]
+        [TestCase(ExpressionType.Or, true, ExpectedResult = "OR")]
+        [TestCase(ExpressionType.OrElse, true, ExpectedResult = "OR")]
+        [TestCase(ExpressionType.Equal, true, ExpectedResult = "=")]
+        [TestCase(ExpressionType.NotEqual, true, ExpectedResult = "!=")]
+        [TestCase(ExpressionType.LessThan, true, ExpectedResult = "<")]
+        [TestCase(ExpressionType.LessThanOrEqual, true, ExpectedResult = "<=")]
+        [TestCase(ExpressionType.GreaterThan, true, ExpectedResult = ">")]
+        [TestCase(ExpressionType.GreaterThanOrEqual, true, ExpectedResult = ">=")]
+        [TestCase(ExpressionType.Add, true, ExpectedResult = "+")]
+        [TestCase(ExpressionType.AddChecked, true, ExpectedResult = "+")]
+        [TestCase(ExpressionType.Subtract, true, ExpectedResult = "-")]
+        [TestCase(ExpressionType.SubtractChecked, true, ExpectedResult = "-")]
+        [TestCase(ExpressionType.Multiply, true, ExpectedResult = "*")]
+        [TestCase(ExpressionType.MultiplyChecked, true, ExpectedResult = "*")]
+        [TestCase(ExpressionType.Divide, true, ExpectedResult = "/")]
+        public string TestGetOperatorAsExpression(ExpressionType type, bool isBinary)
+        {
+            var qf = new QueryFormatter();
+            var exp = MakeExpressionBy(type, isBinary);
+            return isBinary ? qf.GetOperator(((BinaryExpression) exp)!) : qf.GetOperator(((UnaryExpression) exp)!);
+        }
+
+        private static Expression MakeExpressionBy(ExpressionType type, bool isBinary)
+        {
+            Expression exp;
+            var arg1 = Expression.Constant(1);
+            var arg2 = Expression.Constant(2);
+            var name = type.ToString();
+            switch (isBinary)
+            {
+                case true when type is ExpressionType.AndAlso or ExpressionType.Or or ExpressionType.OrElse:
+                    exp = (Expression) typeof(Expression)
+                        .GetMethod(name, new[] {typeof(Expression), typeof(Expression)})
+                        ?.Invoke(null, new object[] {Expression.Constant(true), Expression.Constant(true)});
+                    break;
+                case true:
+                    exp = (Expression) typeof(Expression)
+                        .GetMethod(name, new[] {typeof(Expression), typeof(Expression)})
+                        ?.Invoke(null, new object[] {arg1, arg2});
+                    break;
+                default:
+                    exp = (Expression) typeof(Expression)
+                        .GetMethod(name, new[] {typeof(Expression)})
+                        ?.Invoke(null, new object[] {arg1});
+                    break;
+            }
+
+            return exp;
+        }
+
+        [TestCase(ExpressionType.And)]
+        public void TestIsPredicate(ExpressionType type)
+        {
+            var isBinary = type != ExpressionType.Not;
+            var exp = MakeExpressionBy(type, isBinary);
+            var qf = new QueryFormatter();
+            Assert.True(qf.IsPredicate(exp.Reduce()));
+        }
+
+        [Test]
+        public void TestCustom()
+        {
+            var dummyData = new List<DummyType>();
+            var exp = dummyData.AsQueryable()
+                .Select(p => new {p.ColumnInt, p.ColumnString})
+                .Where(p => p.ColumnInt > 1 && p.ColumnInt < 10)
+                .Where(p => p.ColumnString == "asd" || p.ColumnString == "cvb");
+
+            var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
+            var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
+
+            boundExp = UnusedColumnProcessor.Clean(boundExp);
+            boundExp = RedundantSubqueryProcessor.Clean(boundExp);
+            var (query, values) = QueryFormatter.Format(boundExp);
+            Console.WriteLine(query);
         }
     }
 }
