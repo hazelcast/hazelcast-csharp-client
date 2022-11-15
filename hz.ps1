@@ -999,6 +999,8 @@ function require-dotnet ( $full ) {
     }
 
     require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
+    require-dotnet-version $result $sdks "8.0" $frameworks "net8.0" "8.0.x" $true $allowPrerelease
 
     # report
     Write-Output $result.sdkInfos
@@ -1568,6 +1570,38 @@ function hz-build-docs-on-windows {
         remove-item -recurse -force "$docDir/obj"
     }
 
+    # patch plugins
+    Write-Output ""
+    Write-Output "Docs: Patching plugins..."
+    # see https://github.com/dotnet/docfx/issues/8205 - this has to be temporary
+    $pluginsConfigFile = "$nugetPackages/memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
+    $pluginsConfig = [xml] (Get-Content $pluginsConfigFile)
+    $nsManager = new-object System.Xml.XmlNamespaceManager $pluginsConfig.NameTable
+    $ns = "urn:schemas-microsoft-com:asm.v1"
+    $nsManager.AddNamespace("asm", $ns)
+    $n = $pluginsConfig.SelectNodes("//asm:assemblyBinding/asm:dependentAssembly [asm:assemblyIdentity/@name = 'System.Memory']", $nsManager)
+    if ($n.Count -eq 0) {
+        $runtimeNode = $pluginsConfig.SelectSingleNode("//runtime")
+        $c0 = $pluginsConfig.CreateElement("assemblyBinding", $ns)
+        $c1 = $pluginsConfig.CreateElement("dependentAssembly", $ns)
+        $c2 = $pluginsConfig.CreateElement("assemblyIdentity", $ns)
+        $c2.SetAttribute("name", "System.Memory")
+        $c2.SetAttribute("publicKeyToken", "cc7b13ffcd2ddd51")
+        $c2.SetAttribute("culture", "neutral")
+        $c3 = $pluginsConfig.CreateElement("bindingRedirect", $ns)
+        $c3.SetAttribute("oldVersion", "0.0.0.0-4.0.1.2")
+        $c3.SetAttribute("newVersion", "4.0.1.2")
+        $c1.AppendChild($c2)
+        $c1.AppendChild($c3)
+        $c0.AppendChild($c1)
+        $runtimeNode.AppendChild($c0)
+        $pluginsConfig.Save($pluginsConfigFile)
+        Write-Output "  -> added System.Memory binding redirect to memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
+    }
+    else {
+        Write-Output "  -> found System.Memory binding redirect in memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
+    }
+
     # prepare templates
     $template = "default,$nugetPackages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
 
@@ -1578,12 +1612,12 @@ function hz-build-docs-on-windows {
     mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
 
     # copy our plugin dll
-    $target = "net48"
+    $target = "netstandard2.0"
     $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target/Hazelcast.Net.DocAsCode.dll"
     if (-not (test-path $pluginDll)) {
         Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target"
     }
-    cp $pluginDll "$docDir/templates/hz/Plugins/"
+    #cp $pluginDll "$docDir/templates/hz/Plugins/"
 
     # copy our plugin dll dependencies
     # not *everything* needs to be copied, only ... some
@@ -1601,6 +1635,7 @@ function hz-build-docs-on-windows {
     &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     if ($LASTEXITCODE) { Die "Error." }
     if (-not (test-path "$docDir/obj/dev/api/toc.yml")) { Die "Error: failed to generate metadata" }
+
     Write-Output "Docs: Build..."
     &$docfx build "$docDir/docfx.json" --template $template
     if ($LASTEXITCODE) { Die "Error." }
@@ -2318,6 +2353,7 @@ function hz-pack-nuget {
     nuget-pack("Hazelcast.Net")
     nuget-pack("Hazelcast.Net.Win32")
     nuget-pack("Hazelcast.Net.DependencyInjection")
+    nuget-pack("Hazelcast.Net.Caching")
 
     Get-ChildItem "$tmpDir/output" | Foreach-Object { Write-Output "  $_" }
 }
@@ -2414,6 +2450,7 @@ function hz-cleanup-code {
     Write-Output "Clean C# code - whitespaces, tabs and new-lines"
 
     $sc = [System.IO.Path]::DirectorySeparatorChar
+    if ($sc -eq '\') { $sc = '\\' } # make it a valid pattern
     $files = get-childitem -recurse -file -path "$srcDir/*" -include "*.cs" | ? { `
         $_.FullName -inotmatch "$($sc)obj$($sc)" -and `
         $_.FullName -inotmatch "$($sc)bin$($sc)" `

@@ -35,6 +35,6 @@ namespace Hazelcast
         /// scenario, this returns <c>null</c>.</para>
         /// </remarks>
         /// <returns>The service provider.</returns>
-        public IServiceProvider ServiceProvider { get; internal set; }
+        public virtual IServiceProvider ServiceProvider { get; internal set; }
     }
 }

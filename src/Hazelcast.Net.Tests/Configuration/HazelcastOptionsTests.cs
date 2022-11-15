@@ -36,14 +36,14 @@ namespace Hazelcast.Tests.Configuration
     [TestFixture]
     public class HazelcastOptionsTests
     {
-        private static string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/"));
+        private static readonly string _optionsPath = Path.GetFullPath(Path.Combine(Assembly.GetExecutingAssembly().Location, "../../../../Resources/Options/"));
 
         [Test]
         public void BuildExceptions()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                HazelcastOptionsBuilder.Build((Action<IConfigurationBuilder>)null));
-            Assert.Throws<ArgumentNullException>(() => HazelcastOptionsBuilder.Build(null, null, null, "key"));
+                new HazelcastOptionsBuilder().Build((Action<IConfigurationBuilder>)null));
+            Assert.Throws<ArgumentNullException>(() => new HazelcastOptionsBuilder().Build(null, null, null, "key"));
         }
 
         [Test]
@@ -728,7 +728,7 @@ namespace Hazelcast.Tests.Configuration
             stream1 = new MemoryStream(Encoding.UTF8.GetBytes(json1));
             stream2 = new MemoryStream(Encoding.UTF8.GetBytes(json2));
 
-            options = HazelcastOptionsBuilder.Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
+            options = new HazelcastOptionsBuilder().Build(x => x.AddJsonStream(stream1).AddJsonStream(stream2),
                 null, null, "alt");
 
             Assert.AreEqual("altClient", options.ClientName);

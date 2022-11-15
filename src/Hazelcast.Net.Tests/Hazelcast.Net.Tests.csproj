@@ -50,6 +50,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Hazelcast.Net.Caching\Hazelcast.Net.Caching.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Testing\Hazelcast.Net.Testing.csproj" />
     <ProjectReference Include="..\Hazelcast.Net.Win32\Hazelcast.Net.Win32.csproj" />
