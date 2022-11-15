@@ -73,12 +73,14 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
         };
         await using var cache = new HazelcastCache(CreateHazelcastOptions(), cacheOptions);
 
+        Assert.Throws<ArgumentNullException>(() => cache.Get(null!));
         Assert.Throws<ArgumentNullException>(() => cache.Set(null!, Array.Empty<byte>(), new DistributedCacheEntryOptions()));
         Assert.Throws<ArgumentNullException>(() => cache.Set("xxx", null!, new DistributedCacheEntryOptions()));
         Assert.Throws<ArgumentNullException>(() => cache.Set("xxx", Array.Empty<byte>(), null!));
         Assert.Throws<ArgumentNullException>(() => cache.Remove(null!));
         Assert.Throws<ArgumentNullException>(() => cache.Refresh(null!));
 
+        await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.GetAsync(null!));
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.SetAsync(null!, Array.Empty<byte>(), new DistributedCacheEntryOptions()));
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.SetAsync("xxx", null!, new DistributedCacheEntryOptions()));
         await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await cache.SetAsync("xxx", Array.Empty<byte>(), null!));
