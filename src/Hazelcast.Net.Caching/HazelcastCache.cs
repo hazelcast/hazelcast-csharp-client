@@ -30,6 +30,10 @@ namespace Hazelcast.Caching;
 /// needs to be properly configured, and in particular MUST be configured for reconnecting
 /// the cluster (see <see cref="Networking.NetworkingOptions.ReconnectMode"/>). Otherwise,
 /// the cache may end up in a disconnected state, and never be able to recover.</para>
+/// <para>The <see cref="HazelcastCache"/> uses the <see cref="IHazelcastClient"/> which
+/// is fully asynchronous. Although <see cref="IDistributedCache"/> exposes synchronous
+/// methods such as <see cref="Get"/>, these are implemented on top of their asynchronous
+/// counterpart via the <c>.GetAwaiter().GetResult()</c> pattern and should be avoided.</para>
 /// </remarks>
 public class HazelcastCache : IDistributedCache, IAsyncDisposable
 {
@@ -96,12 +100,22 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>This method is implemented via the <c>.GetAwaiter().GetResult()</c> on top of
+    /// its <see cref="GetAsync"/> counterpart. Avoid using it and prefer the asynchronous
+    /// method.</para>
+    /// </remarks>
     public byte[]? Get(string key) => GetAsync(key).GetAwaiter().GetResult();
 
     /// <inheritdoc />
     public Task<byte[]?> GetAsync(string key, CancellationToken token = default) => GetAndRefreshAsync(key, getData: true, token);
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>This method is implemented via the <c>.GetAwaiter().GetResult()</c> on top of
+    /// its <see cref="SetAsync"/> counterpart. Avoid using it and prefer the asynchronous
+    /// method.</para>
+    /// </remarks>
     public void Set(string key, byte[] value, DistributedCacheEntryOptions options) => SetAsync(key, value, options).GetAwaiter().GetResult();
 
     /// <inheritdoc />
@@ -131,6 +145,11 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>This method is implemented via the <c>.GetAwaiter().GetResult()</c> on top of
+    /// its <see cref="RefreshAsync"/> counterpart. Avoid using it and prefer the asynchronous
+    /// method.</para>
+    /// </remarks>
     public void Refresh(string key) => GetAndRefreshAsync(key, getData: false).GetAwaiter().GetResult();
 
     /// <inheritdoc />
@@ -150,6 +169,11 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// <para>This method is implemented via the <c>.GetAwaiter().GetResult()</c> on top of
+    /// its <see cref="RemoveAsync"/> counterpart. Avoid using it and prefer the asynchronous
+    /// method.</para>
+    /// </remarks>
     public void Remove(string key) => RemoveAsync(key).GetAwaiter().GetResult();
 
     /// <inheritdoc />
