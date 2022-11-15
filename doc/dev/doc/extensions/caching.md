@@ -49,6 +49,6 @@ services.AddHazelcastCache(withFailover: true); // register cache
 
 With these declarations, the Hazelcast cache implementation would be injected into any service requiring an `IDistributedCache`.
 
-## Cache Functionnality
+## Cache Functionality
 
 Hazelcast's implementation of `IDistributedCache` supports all functionality of the interface. Note however that, due to the inherently asynchronous nature of the Hazelcast client, all synchronous cache operations have to be implemented over asynchronous operations using the `task.GetAwaiter().GetResult()` pattern. This pattern can cause potential threading problems, and should be avoided as much as possible. Always use the asynchronous API wherever possible.
