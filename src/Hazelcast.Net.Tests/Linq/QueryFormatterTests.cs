@@ -16,6 +16,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
+using System.Xml.Xsl;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
@@ -25,7 +27,43 @@ namespace Hazelcast.Tests.Linq
 {
     public class QueryFormatterTests
     {
-        private class DummyType
+        // Test cases for where clause.
+        // Predicate, Query, Values
+        private static IEnumerable<(Expression<Func<DummyType, bool>>, string, IEnumerable<object>)> ConditionCases
+        {
+            get
+            {
+                yield return ((DummyType p) => p.ColumnBool == true,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnBool = ?)",
+                    new object[] {true});
+                yield return ((DummyType p) => p.ColumnInt > 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt > ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt < 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt < ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt == 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt = ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt >= 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt >= ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt <= 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt <= ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt != 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt != ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnString != null,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString IS NOT NULL)",
+                    new object[] {});
+                yield return ((DummyType p) => p.ColumnInt != 0 && p.ColumnString != 7.ToString(),
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE ((m0.ColumnInt != ?) AND (m0.ColumnString != ?))",
+                    new object[] {0, "7"});
+            }
+        }
+
+        public class DummyType
         {
             public string ColumnString { get; set; }
             public double ColumnDouble { get; set; }
@@ -33,7 +71,7 @@ namespace Hazelcast.Tests.Linq
             public int ColumnInt { get; set; }
             public long ColumnLong { get; set; }
             public bool ColumnBool { get; set; }
-            public HzExpressionType ColumnEnum { get; set; }
+            public ExpressionType ColumnEnum { get; set; }
         }
 
         class DummyExpression : Expression
@@ -92,6 +130,9 @@ namespace Hazelcast.Tests.Linq
                         ex.Message.StartsWith("Unable to cast object of type 'DummyExpression'")))
                     return true;
 
+                if (ex is NotSupportedException)
+                    return false;
+
                 throw;
             }
 
@@ -122,10 +163,12 @@ namespace Hazelcast.Tests.Linq
         [TestCase(nameof(DummyType.ColumnEnum), HzExpressionType.Column,
             ExpectedResult =
                 "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnEnum = ?)")]
+        [TestCase("noColumn", null,
+            ExpectedResult =
+                "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0")]
         public string TestValueTypesOnQuery(string columnName, object? val)
         {
-            var dummyData = new List<DummyType>();
-            var exp = dummyData.AsQueryable();
+            var exp = GetQuery();
 
             switch (columnName)
             {
@@ -154,7 +197,7 @@ namespace Hazelcast.Tests.Linq
                     exp = exp.Where(p => p.ColumnBool == bln);
                     break;
                 case nameof(DummyType.ColumnEnum):
-                    var enm = (HzExpressionType) val!;
+                    var enm = (ExpressionType) val!;
                     exp = exp.Where(p => p.ColumnEnum == enm);
                     break;
             }
@@ -184,7 +227,15 @@ namespace Hazelcast.Tests.Linq
         public string TestGetOperator(string name)
         {
             var qf = new QueryFormatter();
-            return qf.GetOperator(name);
+
+            try
+            {
+                return qf.GetOperator(name);
+            }
+            catch (NotSupportedException)
+            {
+                return null;
+            }
         }
 
         [TestCase(ExpressionType.Negate, false, ExpectedResult = "-")]
@@ -206,18 +257,78 @@ namespace Hazelcast.Tests.Linq
         [TestCase(ExpressionType.Multiply, true, ExpectedResult = "*")]
         [TestCase(ExpressionType.MultiplyChecked, true, ExpectedResult = "*")]
         [TestCase(ExpressionType.Divide, true, ExpectedResult = "/")]
+        [TestCase(ExpressionType.Quote, true, ExpectedResult = null)]
         public string TestGetOperatorAsExpression(ExpressionType type, bool isBinary)
         {
             var qf = new QueryFormatter();
-            var exp = MakeExpressionBy(type, isBinary);
-            return isBinary ? qf.GetOperator(((BinaryExpression) exp)!) : qf.GetOperator(((UnaryExpression) exp)!);
+            var exp = MakeExpressionBy(type, isBinary, true);
+            try
+            {
+                return isBinary ? qf.GetOperator(((BinaryExpression) exp)!) : qf.GetOperator(((UnaryExpression) exp)!);
+            }
+            catch (NotSupportedException)
+            {
+                return null;
+            }
         }
 
-        private static Expression MakeExpressionBy(ExpressionType type, bool isBinary)
+        [TestCase(ExpressionType.AndAlso, false)]
+        [TestCase(ExpressionType.And, false)]
+        [TestCase(ExpressionType.Or, false)]
+        [TestCase(ExpressionType.OrElse, false)]
+        [TestCase(ExpressionType.Not, false)]
+        [TestCase(ExpressionType.Equal, false)]
+        [TestCase(ExpressionType.NotEqual, false)]
+        [TestCase(ExpressionType.LessThan, true)]
+        [TestCase(ExpressionType.LessThanOrEqual, true)]
+        [TestCase(ExpressionType.GreaterThan, true)]
+        [TestCase(ExpressionType.GreaterThanOrEqual, true)]
+        public void TestIsPredicate(ExpressionType type, bool argAsNumb)
+        {
+            // Predicate should return boolean to be a predicate.
+            // So, have expressions with boolean args.
+            var isBinary = type != ExpressionType.Not;
+            var exp = MakeExpressionBy(type, isBinary, argAsNumb);
+            var qf = new QueryFormatter();
+            Assert.True(qf.IsPredicate(exp));
+        }
+
+        [Test]
+        public void TestProjectFewColumns()
+        {
+            var exp = GetQuery().Select(p => new {p.ColumnInt, p.ColumnString});
+            var boundExp = HandleExpression(exp);
+
+            var (query, values) = QueryFormatter.Format(boundExp);
+
+            Assert.AreEqual("SELECT m0.ColumnInt, m0.ColumnString FROM DummyType m0", query);
+        }
+
+        [TestCaseSource(nameof(QueryFormatterTests.ConditionCases))]
+        public void TestWhereCondition(ValueTuple<Expression<Func<DummyType, bool>>, string, IEnumerable<object>> t)
+        {
+            var exp = GetQuery().Where(t.Item1);
+
+            var (q, v) = QueryFormatter.Format(HandleExpression(exp));
+
+            Assert.AreEqual(t.Item2, q);
+            Assert.That(t.Item3, Is.EquivalentTo(v));
+        }
+
+        #region Helpers
+
+        private static IQueryable<DummyType> GetQuery()
+        {
+            var dummyData = new List<DummyType>();
+            var exp = dummyData.AsQueryable();
+            return exp;
+        }
+
+        private static Expression MakeExpressionBy(ExpressionType type, bool isBinary, bool argsAsNumb)
         {
             Expression exp;
-            var arg1 = Expression.Constant(1);
-            var arg2 = Expression.Constant(2);
+            var arg1 = argsAsNumb ? Expression.Constant(1) : Expression.Constant(true);
+            var arg2 = argsAsNumb ? Expression.Constant(1) : Expression.Constant(true);
             var name = type.ToString();
             switch (isBinary)
             {
@@ -226,10 +337,16 @@ namespace Hazelcast.Tests.Linq
                         .GetMethod(name, new[] {typeof(Expression), typeof(Expression)})
                         ?.Invoke(null, new object[] {Expression.Constant(true), Expression.Constant(true)});
                     break;
+                case true when type is ExpressionType.Quote: // We don't support Quote, using it for testing purposes 
+                    exp = Expression.LeftShift(arg1, arg2);
+                    break;
                 case true:
                     exp = (Expression) typeof(Expression)
                         .GetMethod(name, new[] {typeof(Expression), typeof(Expression)})
                         ?.Invoke(null, new object[] {arg1, arg2});
+                    break;
+                case false when type is ExpressionType.Quote:
+                    exp = Expression.Quote(() => 1);
                     break;
                 default:
                     exp = (Expression) typeof(Expression)
@@ -241,31 +358,16 @@ namespace Hazelcast.Tests.Linq
             return exp;
         }
 
-        [TestCase(ExpressionType.And)]
-        public void TestIsPredicate(ExpressionType type)
+        private static Expression HandleExpression(IQueryable exp)
         {
-            var isBinary = type != ExpressionType.Not;
-            var exp = MakeExpressionBy(type, isBinary);
-            var qf = new QueryFormatter();
-            Assert.True(qf.IsPredicate(exp.Reduce()));
-        }
-
-        [Test]
-        public void TestCustom()
-        {
-            var dummyData = new List<DummyType>();
-            var exp = dummyData.AsQueryable()
-                .Select(p => new {p.ColumnInt, p.ColumnString})
-                .Where(p => p.ColumnInt > 1 && p.ColumnInt < 10)
-                .Where(p => p.ColumnString == "asd" || p.ColumnString == "cvb");
-
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
             var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
 
             boundExp = UnusedColumnProcessor.Clean(boundExp);
             boundExp = RedundantSubqueryProcessor.Clean(boundExp);
-            var (query, values) = QueryFormatter.Format(boundExp);
-            Console.WriteLine(query);
+            return boundExp;
         }
+
+        #endregion
     }
 }

@@ -85,6 +85,7 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.Multiply:
                 case ExpressionType.Subtract:
                 case ExpressionType.Parameter:
+                case ExpressionType.Call:
                 case (ExpressionType) HzExpressionType.Map:
                 case (ExpressionType) HzExpressionType.Column:
                 case (ExpressionType) HzExpressionType.Projection:
@@ -169,6 +170,37 @@ namespace Hazelcast.Linq.Visitors
         private void Write(object v)
         {
             _sb.Append(v);
+        }
+
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            if (node.Method.Name == "ToString" && node.Object?.Type == typeof(string))
+            {
+                Visit(node.Object);
+            }
+            else if (node.Method.Name == "Equals")
+            {
+                var op = GetOperator("Equal");
+                switch (node.Method.IsStatic)
+                {
+                    case true when node.Method.DeclaringType == typeof(object):
+                        Write("(");
+                        Visit(node.Arguments[0]);
+                        Write(" " + op + " ");
+                        Visit(node.Arguments[1]);
+                        Write(")");
+                        break;
+                    case false when node.Arguments.Count == 1 && node.Arguments[0].Type == node.Object?.Type:
+                        Write("(");
+                        Visit(node.Object!);
+                        Write(" " + op + " ");
+                        Visit(node.Arguments[0]);
+                        Write(")");
+                        break;
+                }
+            }
+
+            return node;
         }
 
         protected override Expression VisitUnary(UnaryExpression u)
@@ -448,9 +480,10 @@ namespace Hazelcast.Linq.Visitors
                 ExpressionType.Subtract or ExpressionType.SubtractChecked => "-",
                 ExpressionType.Multiply or ExpressionType.MultiplyChecked => "*",
                 ExpressionType.Divide => "/",
-                _ => "",
+                _ => throw new NotSupportedException($"Operation '{b.NodeType}' is not supported.")
             };
         }
+
         // internal for test
         internal virtual string GetOperator(UnaryExpression u)
         {
@@ -459,7 +492,8 @@ namespace Hazelcast.Linq.Visitors
                 ExpressionType.Negate or ExpressionType.NegateChecked => "-",
                 ExpressionType.UnaryPlus => "+",
                 ExpressionType.Not => "NOT",
-                _ => "",
+                ExpressionType.Convert => "",
+                _ => throw new NotSupportedException($"Operation '{u.NodeType}' is not supported."),
             };
         }
 
@@ -474,7 +508,8 @@ namespace Hazelcast.Linq.Visitors
                 "Divide" => "/",
                 "Negate" => "-",
                 "Remainder" => "%",
-                _ => null,
+                "Equal" => "=",
+                _ => throw new NotSupportedException($"Operation '{methodName}' is not supported."),
             };
         }
 
