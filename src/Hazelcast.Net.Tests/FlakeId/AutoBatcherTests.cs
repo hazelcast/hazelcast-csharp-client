@@ -559,7 +559,6 @@ namespace Hazelcast.Tests.FlakeId
                 var batchNumber = GetNextBatchNumber();
                 if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
                 var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
-                SetBatch(batch);
                 return Task.FromResult(batch);
             }
         }
@@ -598,7 +597,6 @@ namespace Hazelcast.Tests.FlakeId
                 var batchNumber = GetNextBatchNumber();
                 if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
                 var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
-                SetBatch(batch);
                 return Task.FromResult(batch);
             }
         }
@@ -638,8 +636,63 @@ namespace Hazelcast.Tests.FlakeId
                 var batchNumber = GetNextBatchNumber();
                 if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
                 var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
-                SetBatch(batch);
                 return batch;
+            }
+        }
+
+        [Test]
+        public async Task TestConcurrentFetching()
+        {
+            var batcher = new AutoBatcherTester2();
+
+            var fetch0 = batcher.GetNextIdAsync();
+            var fetch1 = batcher.GetNextIdAsync();
+
+            await Task.Delay(500);
+
+            // by now both fetch0 and fetch1 should be blocked waiting for the batcher
+
+            batcher.Release();
+
+            var success0 = false;
+            try
+            {
+                await fetch0;
+                success0 = true;
+            }
+            catch { /* don't care */ }
+
+            var success1 = false;
+            try
+            {
+                await fetch1;
+                success1 = true;
+            }
+            catch { /* don't care */ }
+
+            // 1 of them should fail - but not both
+            Assert.That(success0 ? !success1 : success1);
+        }
+
+        internal sealed class AutoBatcherTester2 : AutoBatcherBase
+        {
+            private readonly SemaphoreSlim _semaphore = new(0, 1);
+            private int _count;
+
+            public void Release() => _semaphore.Release();
+
+            protected override async Task<Batch> FetchBatch()
+            {
+                await _semaphore.WaitAsync();
+                try
+                {
+                    if (_count++ == 0) throw new Exception("bang");
+                    return new Batch(0, 1, 100, TimeSpan.FromMinutes(1));
+                }
+                finally
+                {
+                    _semaphore.Release();
+                }
             }
         }
     }
