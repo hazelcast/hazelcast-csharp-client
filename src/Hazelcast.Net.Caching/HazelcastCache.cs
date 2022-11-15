@@ -164,7 +164,7 @@ public class HazelcastCache : IDistributedCache, IAsyncDisposable
 
         if (getData) return await _map!.GetAsync(key).CfAwait();
 
-        await _map!.ContainsKeyAsync(key).CfAwait(); // 'contains' does bump the TTL
+        await _map!.ContainsKeyAsync(key).CfAwait(); // 'contains' does bump idle reference i.e. last read time
         return default;
     }
 
