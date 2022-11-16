@@ -25,12 +25,12 @@ namespace Hazelcast.Tests.Linq
             Expression<Func<DummyType, string>> exp = p => p.Name;
 
             var columnDef = new ColumnDefinition("name", exp);
-            var columndDefs = new List<ColumnDefinition>() { columnDef };
+            var columnDefs = new List<ColumnDefinition>() { columnDef };
 
             Expression<Func<DummyType, string>> joinFieldExp = p => p.LastName;
             var joinExp = new JoinExpression(joinFieldExp, joinFieldExp, Expression.Equal(joinFieldExp, joinFieldExp), typeof(DummyType));
 
-            var selectExp = new SelectExpression("m1", typeof(DummyType), columndDefs.AsReadOnly(), joinExp);
+            var selectExp = new SelectExpression("m1", typeof(DummyType), columnDefs.AsReadOnly(), joinExp);
 
             var projector = new ColumnProjector(p => p.NodeType == (ExpressionType)HzExpressionType.Column)
                 .Project(exp, "m1", new string[] { "m", "m1" });
@@ -62,13 +62,6 @@ namespace Hazelcast.Tests.Linq
             moqVisitor.Verify(p => p.VisitSelect(projection.Source), Times.Once(), "Select not visited.");
             moqVisitor.Verify(p => p.VisitJoin((JoinExpression)projection.Source.From), Times.Once(), "Join not visited.");
         }
-
-
-
-
     }
-
-
-
 }
 

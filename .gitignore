@@ -9,6 +9,8 @@ bin/
 /.github/actions/**/node_modules
 /build/devops/
 
+src/Hazelcast.Net.Examples/Properties/launchSettings.json
+
 *.user
 *.suo
 *.snk

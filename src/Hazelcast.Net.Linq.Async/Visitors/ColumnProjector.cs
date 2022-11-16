@@ -22,7 +22,7 @@ using Hazelcast.Linq.Expressions;
 namespace Hazelcast.Linq.Visitors
 {
     /// <summary>
-    /// Traverse and creates column definitations for projection.
+    /// Traverse and creates column definitions for projection.
     /// </summary>
     internal class ColumnProjector : HzExpressionVisitor
     {
@@ -45,8 +45,8 @@ namespace Hazelcast.Linq.Visitors
             if (canBeColumn == null) throw new ArgumentNullException(nameof(canBeColumn));
 
             Nominator = new ExpressionNominator(canBeColumn);
-            _existingAliases = Enumerable.Empty<string>().ToList();
-            _newAlias = String.Empty;
+            _existingAliases = Array.Empty<string>();
+            _newAlias = string.Empty;
         }
 
         /// <summary>
@@ -73,7 +73,7 @@ namespace Hazelcast.Linq.Visitors
 #pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         {
             //Skip if not nominated to be evaluated
-            if (node == null || !_candidates.Contains(node))
+            if (node is null || !_candidates.Contains(node))
                 return base.Visit(node);
 
             if (node.NodeType == (ExpressionType)HzExpressionType.Column)
@@ -84,7 +84,7 @@ namespace Hazelcast.Linq.Visitors
                 if (_mapOfColumns.TryGetValue(column, out var mappedColumn))
                     return mappedColumn;
 
-                //Maps are overlaped though column didn't match above.
+                //Maps are overlapped though column didn't match above.
                 if (_existingAliases.Contains(column.Alias))
                 {
                     var name = CreateUniqueColumnName(column.Name);

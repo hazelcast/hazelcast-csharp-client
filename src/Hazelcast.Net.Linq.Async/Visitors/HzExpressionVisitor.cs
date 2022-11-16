@@ -48,10 +48,10 @@ namespace Hazelcast.Linq.Visitors
         {
             var left = Visit(node.Left);
             var right = Visit(node.Right);
-            var condtition = Visit(node.JoinCondition);
+            var condition = Visit(node.JoinCondition);
 
-            if (left != node.Left || right != node.Right || condtition != node.JoinCondition)
-                return new JoinExpression(left, right, condtition, node.Type);
+            if (left != node.Left || right != node.Right || condition != node.JoinCondition)
+                return new JoinExpression(left, right, condition, node.Type);
 
             return node;
         }
@@ -73,7 +73,7 @@ namespace Hazelcast.Linq.Visitors
         {
             var from = Visit(node.From);
             var where = Visit(node.Where);
-            var columns = VisitColumnDefinititions(node.Columns);
+            var columns = VisitColumnDefinitions(node.Columns);
 
             if (from != node.From || where != node.Where || columns != node.Columns)
                 return new SelectExpression(node.Alias, node.Type, columns, from, where);
@@ -82,11 +82,11 @@ namespace Hazelcast.Linq.Visitors
         }
 
         //internal for test purposes
-        protected virtual ReadOnlyCollection<ColumnDefinition> VisitColumnDefinititions(ReadOnlyCollection<ColumnDefinition> columns)
+        internal virtual ReadOnlyCollection<ColumnDefinition> VisitColumnDefinitions(ReadOnlyCollection<ColumnDefinition> columns)
         {
             List<ColumnDefinition>? definitions = null;
 
-            for (int i = 0; i < columns.Count; i++)
+            for (var i = 0; i < columns.Count; i++)
             {
                 var column = columns[i];
                 var exp = Visit(column.Expression);
@@ -94,8 +94,7 @@ namespace Hazelcast.Linq.Visitors
                 if (definitions == null && exp != column.Expression)
                     definitions = columns.Take(i).ToList();
 
-                if (definitions != null)
-                    definitions.Add(new ColumnDefinition(column.Name, exp));
+                definitions?.Add(new ColumnDefinition(column.Name, exp));
             }
 
             return definitions == null ? columns : definitions.AsReadOnly();
