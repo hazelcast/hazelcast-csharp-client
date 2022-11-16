@@ -30,8 +30,6 @@ namespace Hazelcast.Linq.Visitors
     internal class QueryFormatter : HzExpressionVisitor
     {
         private StringBuilder _sb;
-        private int _indentSize = 2;
-        private bool _isDebug = false;
         private List<object> _values;
 
         // internal for test
@@ -63,7 +61,7 @@ namespace Hazelcast.Linq.Visitors
 #pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         {
 #pragma warning disable CS8603 // Possible null reference return.
-            if (node == null) return node;
+            if (node is null) return node;
 #pragma warning restore CS8603 // Possible null reference return.
 
             switch (node.NodeType)
@@ -85,7 +83,10 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.Multiply:
                 case ExpressionType.Subtract:
                 case ExpressionType.Parameter:
+                case ExpressionType.Negate:
+                case ExpressionType.NegateChecked:
                 case ExpressionType.Call:
+                case ExpressionType.UnaryPlus:
                 case (ExpressionType) HzExpressionType.Map:
                 case (ExpressionType) HzExpressionType.Column:
                 case (ExpressionType) HzExpressionType.Projection:
@@ -166,12 +167,7 @@ namespace Hazelcast.Linq.Visitors
             Write("?");
             _values.Add(v);
         }
-
-        private void Write(object v)
-        {
-            _sb.Append(v);
-        }
-
+        
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             if (node.Method.Name == "ToString" && node.Object?.Type == typeof(string))
@@ -209,18 +205,9 @@ namespace Hazelcast.Linq.Visitors
             switch (u.NodeType)
             {
                 case ExpressionType.Not:
-                    if (IsBoolean(u.Operand.Type) || op.Length > 1)
-                    {
-                        Write(op);
-                        Write(" ");
-                        VisitPredicate(u.Operand);
-                    }
-                    else
-                    {
-                        Write(op);
-                        Visit(u.Operand);
-                    }
-
+                    Write(op);
+                    Write(" ");
+                    VisitPredicate(u.Operand);
                     break;
                 case ExpressionType.Negate:
                 case ExpressionType.NegateChecked:
@@ -373,30 +360,14 @@ namespace Hazelcast.Linq.Visitors
                 case HzExpressionType.Map:
                     WriteMapName((MapExpression) from);
                     break;
-                case HzExpressionType.Select:
-                    Write("(");
-                    Visit(from);
-                    Write(") ");
-                    Write(((SelectExpression) from).Alias);
-                    break;
-                case HzExpressionType.Join:
-                    VisitJoin((JoinExpression) from);
-                    break;
+                // Currently no support for:
+                // case HzExpressionType.Join:
+                // case HzExpressionType.Select -> Nested Query.
             }
 
             return from;
         }
-
-        protected override Expression VisitJoin(JoinExpression join)
-        {
-            VisitSource(join.Left);
-            Write("INNER JOIN "); // TODO: PM -> implement other types of join?
-            VisitSource(join.Right);
-            Write("ON ");
-            VisitPredicate(join.JoinCondition);
-            return join;
-        }
-
+        
         protected virtual Expression VisitPredicate(Expression predicate)
         {
             Visit(predicate);
@@ -464,6 +435,7 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
+        // internal for test
         internal virtual string GetOperator(BinaryExpression b)
         {
             return b.NodeType switch

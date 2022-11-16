@@ -14,9 +14,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.Remoting;
 using System.Xml.Xsl;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
@@ -27,68 +29,6 @@ namespace Hazelcast.Tests.Linq
 {
     public class QueryFormatterTests
     {
-        // Test cases for where clause.
-        // Predicate, Query, Values
-        private static IEnumerable<(Expression<Func<DummyType, bool>>, string, IEnumerable<object>)> ConditionCases
-        {
-            get
-            {
-                yield return ((DummyType p) => p.ColumnBool == true,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnBool = ?)",
-                    new object[] {true});
-                yield return ((DummyType p) => p.ColumnInt > 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt > ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnInt < 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt < ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnInt == 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt = ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnInt >= 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt >= ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnInt <= 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt <= ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnInt != 0,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt != ?)",
-                    new object[] {0});
-                yield return ((DummyType p) => p.ColumnString != null,
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString IS NOT NULL)",
-                    new object[] {});
-                yield return ((DummyType p) => p.ColumnInt != 0 && p.ColumnString != 7.ToString(),
-                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE ((m0.ColumnInt != ?) AND (m0.ColumnString != ?))",
-                    new object[] {0, "7"});
-            }
-        }
-
-        public class DummyType
-        {
-            public string ColumnString { get; set; }
-            public double ColumnDouble { get; set; }
-            public float ColumnFloat { get; set; }
-            public int ColumnInt { get; set; }
-            public long ColumnLong { get; set; }
-            public bool ColumnBool { get; set; }
-            public ExpressionType ColumnEnum { get; set; }
-        }
-
-        class DummyExpression : Expression
-        {
-#if NETSTANDARD2_1_OR_GREATER
-            public override ExpressionType NodeType { get; }
-
-            public DummyExpression(ExpressionType nodeType)
-            {
-                NodeType = nodeType;
-            }
-#else
-            public DummyExpression(ExpressionType nodeType) : base(nodeType, typeof(Expression))
-            { }
-#endif
-        }
-
         [TestCase(ExpressionType.Throw, ExpectedResult = false)]
         [TestCase(ExpressionType.And, ExpectedResult = true)]
         [TestCase(ExpressionType.AndAlso, ExpectedResult = true)]
@@ -108,6 +48,9 @@ namespace Hazelcast.Tests.Linq
         [TestCase(ExpressionType.Multiply, ExpectedResult = true)]
         [TestCase(ExpressionType.Subtract, ExpectedResult = true)]
         [TestCase(ExpressionType.Parameter, ExpectedResult = true)]
+        [TestCase(ExpressionType.Negate, ExpectedResult = true)]
+        [TestCase(ExpressionType.NegateChecked, ExpectedResult = true)]
+        [TestCase(ExpressionType.UnaryPlus, ExpectedResult = true)]
         [TestCase((ExpressionType) HzExpressionType.Map, ExpectedResult = true)]
         [TestCase((ExpressionType) HzExpressionType.Column, ExpectedResult = true)]
         [TestCase((ExpressionType) HzExpressionType.Projection, ExpectedResult = true)]
@@ -294,6 +237,63 @@ namespace Hazelcast.Tests.Linq
         }
 
         [Test]
+        public void TestEqual()
+        {
+            var val = "myvalue";
+            object val2 = 3;
+            var q = GetQuery()
+                .Where(p => p.ColumnString.Equals(val) || object.Equals(val2, p.ColumnInt))
+                .Select(p => p.ColumnString);
+
+            var exp = HandleExpression(q);
+            var (query, values) = QueryFormatter.Format(exp);
+
+            Assert.AreEqual(
+                "SELECT m0.ColumnString FROM DummyType m0 WHERE ((m0.ColumnString = ?) OR (? = m0.ColumnInt))",
+                query);
+            Assert.True(values.Contains(val));
+            Assert.True(values.Contains(val2));
+        }
+
+        [Test]
+        public void TestToString()
+        {
+            var val = 99;
+            var q = GetQuery()
+                .Where(p => p.ColumnString == val.ToString())
+                .Select(p => p.ColumnString);
+
+            var exp = HandleExpression(q);
+            var (query, values) = QueryFormatter.Format(exp);
+
+            Assert.AreEqual("SELECT m0.ColumnString FROM DummyType m0 WHERE (m0.ColumnString = ?)", query);
+            Assert.True(values.Contains(val.ToString()));
+        }
+
+        [Test]
+        public void TestUnaryOperations()
+        {
+            var val = 99;
+            var q = GetQuery()
+                .Where(p => +p.ColumnInt > +val || -p.ColumnInt > -val || !p.ColumnBool)
+                .Select(p => p.ColumnString);
+
+            var exp = HandleExpression(q);
+            var (query, values) = QueryFormatter.Format(exp);
+
+            // + sign doesn't change the sign of the value, so we don't write it.
+            // Also, note that third expression on the where is in another level of parenthesis. 
+            // That is because of nature of the structure. But it doesn't effect the logical result.
+            // Like;
+            // BinaryExp(Left: BinaryExp(Left: Expression1, Right: Expression2), Right: Expression3)
+            Assert.AreEqual(
+                "SELECT m0.ColumnString FROM DummyType m0 WHERE (((m0.ColumnInt > ?) OR (-m0.ColumnInt > ?)) OR NOT m0.ColumnBool != FALSE)",
+                query);
+            Assert.True(values.Contains(+val));
+            Assert.True(values.Contains(-val));
+        }
+
+        [Test]
         public void TestProjectFewColumns()
         {
             var exp = GetQuery().Select(p => new {p.ColumnInt, p.ColumnString});
@@ -316,6 +316,71 @@ namespace Hazelcast.Tests.Linq
         }
 
         #region Helpers
+
+        // Test cases for where clause.
+        // Predicate, Query, Values
+        private static IEnumerable<(Expression<Func<DummyType, bool>>, string, IEnumerable<object>)> ConditionCases
+        {
+            get
+            {
+                yield return ((DummyType p) => p.ColumnBool == true,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnBool = ?)",
+                    new object[] {true});
+                yield return ((DummyType p) => p.ColumnInt > 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt > ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt < 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt < ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt == 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt = ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt >= 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt >= ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt <= 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt <= ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnInt != 0,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnInt != ?)",
+                    new object[] {0});
+                yield return ((DummyType p) => p.ColumnString != null,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString IS NOT NULL)",
+                    new object[] { });
+                yield return ((DummyType p) => null != p.ColumnString,
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE (m0.ColumnString IS NOT NULL)",
+                    new object[] { });
+                yield return ((DummyType p) => p.ColumnInt != 0 && p.ColumnString != 7.ToString(),
+                    "SELECT m0.ColumnString, m0.ColumnDouble, m0.ColumnFloat, m0.ColumnInt, m0.ColumnLong, m0.ColumnBool, m0.ColumnEnum FROM DummyType m0 WHERE ((m0.ColumnInt != ?) AND (m0.ColumnString != ?))",
+                    new object[] {0, "7"});
+            }
+        }
+
+        public class DummyType
+        {
+            public string ColumnString { get; set; }
+            public double ColumnDouble { get; set; }
+            public float ColumnFloat { get; set; }
+            public int ColumnInt { get; set; }
+            public long ColumnLong { get; set; }
+            public bool ColumnBool { get; set; }
+            public ExpressionType ColumnEnum { get; set; }
+        }
+
+        class DummyExpression : Expression
+        {
+#if NETSTANDARD2_1_OR_GREATER
+            public override ExpressionType NodeType { get; }
+
+            public DummyExpression(ExpressionType nodeType)
+            {
+                NodeType = nodeType;
+            }
+#else
+            public DummyExpression(ExpressionType nodeType) : base(nodeType, typeof(Expression))
+            { }
+#endif
+        }
 
         private static IQueryable<DummyType> GetQuery()
         {
