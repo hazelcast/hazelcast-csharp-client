@@ -40,11 +40,24 @@ namespace Hazelcast
         private List<Action<IConfiguration, TOptions>> _configureActions;
         private List<Action<TOptions>> _preConfigureActions;
         private List<Action<IConfigurationBuilder>> _setups;
+        private IServiceProvider _serviceProvider;
+        private IConfiguration _configuration;
 
         /// <summary>
         /// Gets this instance as <typeparamref name="TBuilder"/>.
         /// </summary>
         protected abstract TBuilder ThisBuilder { get; }
+
+        /// <summary>
+        /// Sets the service provider.
+        /// </summary>
+        /// <param name="serviceProvider">The service provider.</param>
+        /// <returns>This options builder.</returns>
+        internal TBuilder With(IServiceProvider serviceProvider)
+        {
+            _serviceProvider = serviceProvider;
+            return ThisBuilder;
+        }
 
         /// <summary>
         /// Sets the command-line arguments to use when building the options.
@@ -198,12 +211,27 @@ namespace Hazelcast
         /// </summary>
         /// <param name="configure">The delegate.</param>
         /// <returns>This options builder.</returns>
+        /// <remarks>Do not specify configuration delegates if an <see cref="IConfiguration"/>
+        /// is specified via <see cref="AddConfiguration"/>.</remarks>
         public TBuilder ConfigureBuilder(Action<IConfigurationBuilder> configure)
         {
             if (configure == null) throw new ArgumentNullException(nameof(configure));
 
             _setups ??= new List<Action<IConfigurationBuilder>>();
             _setups.Add(configure);
+            return ThisBuilder;
+        }
+
+        /// <summary>
+        /// Sets the <see cref="IConfiguration"/>.
+        /// </summary>
+        /// <param name="configuration">The configuration.</param>
+        /// <returns>This options builder.</returns>
+        /// <remarks>When an <see cref="IConfiguration"/> is added, no <see cref="IConfigurationBuilder"/>
+        /// configuration delegate should be registered via <see cref="ConfigureBuilder"/>.</remarks>
+        public TBuilder AddConfiguration(IConfiguration configuration)
+        {
+            _configuration = configuration;
             return ThisBuilder;
         }
 
@@ -248,7 +276,10 @@ namespace Hazelcast
         /// <returns>The options.</returns>
         public TOptions Build()
         {
-            return Build(Setup, PreConfigure, Configure, _altKey);
+            if (_configuration == null) return Build(Setup, PreConfigure, Configure, _altKey);
+            if (_setups is { Count: > 0 })
+                throw new ConfigurationException("It is illegal to provide an IConfiguration object as well as configuration delegates.");
+            return Build(_configuration, PreConfigure, Configure, _altKey);
         }
 
         /// <summary>
@@ -258,7 +289,7 @@ namespace Hazelcast
         /// <param name="preConfigure">An <typeparamref name="TOptions"/> pre-configuration delegate.</param>
         /// <param name="configure">Optional <typeparamref name="TOptions"/> configuration delegate.</param>
         /// <returns>Hazelcast options.</returns>
-        internal static TOptions Build(Action<IConfigurationBuilder> setup, Action<TOptions> preConfigure = null, Action<IConfiguration, TOptions> configure = null)
+        internal TOptions Build(Action<IConfigurationBuilder> setup, Action<TOptions> preConfigure = null, Action<IConfiguration, TOptions> configure = null)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -283,7 +314,7 @@ namespace Hazelcast
         /// override them. This allows one json file to contain several configuration sets, which is
         /// convenient for instance when using the "user secrets" during tests.</para>
         /// </remarks>
-        internal static TOptions Build(Action<IConfigurationBuilder> setup, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure, string altKey)
+        internal TOptions Build(Action<IConfigurationBuilder> setup, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure, string altKey)
         {
             if (setup == null) throw new ArgumentNullException(nameof(setup));
 
@@ -295,17 +326,17 @@ namespace Hazelcast
         }
 
         // builds options, no alternate keys
-        private static TOptions Build(IConfiguration configuration, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure = null)
+        private TOptions Build(IConfiguration configuration, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure = null)
             => Build(configuration, preConfigure, configure, null);
 
         // builds options, optionally binding alternate keys
-        private static TOptions Build(IConfiguration configuration, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure, string altKey)
+        private TOptions Build(IConfiguration configuration, Action<TOptions> preConfigure, Action<IConfiguration, TOptions> configure, string altKey)
         {
             // must HzBind here and not simply Bind because we use our custom
             // binder which handles more situations such as ignoring and/or
             // renaming properties
 
-            var options = new TOptions();
+            var options = new TOptions { ServiceProvider = _serviceProvider };
 
             preConfigure?.Invoke(options);
 

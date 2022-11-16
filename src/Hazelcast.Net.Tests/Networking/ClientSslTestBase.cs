@@ -126,18 +126,18 @@ namespace Hazelcast.Tests.Networking
 #endif
 
 #if SSLCERTS_CUSTOM
-        public const string ServerCertificateValidName = "cluster1.hazelcast.meh";
+        public const string ServerCertificateValidName = "hz-2ef34a78.net";
         public const string ServerCertificateInvalidName = "meh";
         public const string ClientCertificatePassword = "123456";
-        public const string ClientCertificatePath = "temp:certs/clients";
+        public const string ClientCertificatePath = "temp:certs";
         public const string ClientCertificatePrefix = "";
-        public const string Ssl_KeyStorePath = "temp:certs/server1/server1.keystore";
+        public const string Ssl_KeyStorePath = "temp:certs/cluster1.standalone.keystore";
         public const string Ssl_KeyStorePassword = "123456";
-        public const string SslSigned_KeyStorePath = "temp:certs/keystore/keystore.jks";
+        public const string SslSigned_KeyStorePath = "temp:certs/cluster1.signed2.keystore";
         public const string SslSigned_KeyStorePassword = "123456";
-        public const string SslMA_KeyStorePath = "temp:certs/keystore/keystore.jks";
+        public const string SslMA_KeyStorePath = "temp:certs/cluster1.signed2.keystore";
         public const string SslMA_KeyStorePassword = "123456";
-        public const string SslMA_TrustStorePath = "temp:certs/server1/server1.truststore";
+        public const string SslMA_TrustStorePath = "temp:certs/cluster1.truststore";
         public const string SslMA_TrustStorePassword = "123456";
 #endif
 
@@ -166,6 +166,7 @@ namespace Hazelcast.Tests.Networking
             }
             AppendProperty(ssl, "keyStore", keyStoreFullPath);
             AppendProperty(ssl, "keyStorePassword", keyStorePassword);
+            AppendProperty(ssl, "keyStoreType", "PKCS12");
             if (trustStorePath != null)
             {
                 var trustStoreFullPath = TestFiles.GetFullPath(this, trustStorePath);
