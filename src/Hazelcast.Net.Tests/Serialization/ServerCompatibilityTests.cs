@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
@@ -28,24 +29,54 @@ namespace Hazelcast.Tests.Serialization
     public class ServerCompatibilityTests : SingleMemberClientRemoteTestBase
     {
         [Test]
-        public async Task GuidTest()
+        public async Task GuidValueTest()
         {
-            var originalValue = Guid.NewGuid();
-            var serverValueStr = await GetAsServerString(originalValue);
+            // we set a Guid in the map, and then use a script to retrieve it as a string
+            // which means we are getting Java's representation of the Guid - and then we
+            // parse it and compare it to the original Guid, thus ensuring that Java sees
+            // the same Guid as .NET
 
-            Assert.That(Guid.TryParse(serverValueStr, out var serverValue));
-            Assert.That(originalValue, Is.EqualTo(serverValue));
+            var mapName = CreateUniqueName();
+            await using var map = await Client.GetMapAsync<string, Guid>(mapName);
+            var guid = Guid.NewGuid();
+            await map.SetAsync("key", guid);
+
+            var script = $@"
+                result = """" + instance_0.getMap(""{mapName}"").get(""key"")
+            ";
+
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
+            Assert.That(response.Result, Is.Not.Null);
+            var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length);
+            Console.WriteLine(guid.ToString("D"));
+            Console.WriteLine(resultString);
+            Assert.That(Guid.TryParse(resultString, out var resultGuid));
+            Assert.That(resultGuid, Is.EqualTo(guid));
         }
 
-        private async Task<string> GetAsServerString<T>(T value)
+        [Test]
+        public async Task GuidKeyTest()
         {
-            var (mapName, key) = (CreateUniqueName(), 0);
-            await using var map = await Client.GetMapAsync<int, T>(mapName);
-            await map.SetAsync(key, value);
+            // we use a Guid as a key, and then use a script to retrieve the value for
+            // that key, passing the key as a string - and we ensure that we indeed get
+            // a value, thus ensuring that Java sees the same Guid as .NET
 
-            var script = $"result = \"\" + instance_0.getMap(\"{mapName}\").get({key})";
+            var mapName = CreateUniqueName();
+            await using var map = await Client.GetMapAsync<Guid, string>(mapName);
+            var guid = Guid.NewGuid();
+            await map.SetAsync(guid, "value");
+
+            var script = $@"
+                var UUID = Java.type(""java.util.UUID"")
+                var key = UUID.fromString(""{guid:D}"")
+                result = """" + instance_0.getMap(""{mapName}"").get(key)
+            ";
+
             var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
-            return Encoding.UTF8.GetString(response.Result, 0, response.Result.Length);
+            Assert.That(response.Result, Is.Not.Null);
+            var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length);
+            Console.WriteLine(resultString);
+            Assert.That(resultString, Is.EqualTo("value"));
         }
     }
 }
