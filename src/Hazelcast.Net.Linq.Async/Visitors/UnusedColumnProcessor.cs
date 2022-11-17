@@ -25,7 +25,7 @@ namespace Hazelcast.Linq.Visitors
     {
         private Dictionary<string, HashSet<string>> _columnsInUseByAlias = new();
 
-        public static Expression Clean(Expression expression)
+        public static Expression? Clean(Expression expression)
         {
             return new UnusedColumnProcessor().CleanInternal(expression) as ProjectionExpression;
         }
@@ -35,7 +35,8 @@ namespace Hazelcast.Linq.Visitors
             return Visit(expression);
         }
 
-        protected override Expression VisitColumn(ColumnExpression node)
+        // internal for testing
+        internal override Expression VisitColumn(ColumnExpression node)
         {
             // Collect column names by alias.
             if (_columnsInUseByAlias.TryGetValue(node.Alias, out var columns))
@@ -46,11 +47,12 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        protected override Expression VisitSelect(SelectExpression node)
+        // internal for testing
+        internal override Expression VisitSelect(SelectExpression node)
         {
             if (_columnsInUseByAlias.TryGetValue(node.Alias, out var usedColumns))
             {
-                List<ColumnDefinition> alternate = null;
+                List<ColumnDefinition> alternate = null!;
 
                 for (int i = 0; i < node.Columns.Count; i++)
                 {
@@ -89,7 +91,8 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        protected override Expression VisitProjection(ProjectionExpression node)
+        // internal for testing
+        internal override Expression VisitProjection(ProjectionExpression node)
         {
             var visitedProjector = Visit(node.Projector);// first collect the columns at projector
             var visitedSource = (SelectExpression)Visit(node.Source);
@@ -100,6 +103,7 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
+        // internal for testing
         private bool IsUsed(string alias, string name)
         {
             if (_columnsInUseByAlias.TryGetValue(alias, out var columns))

@@ -32,7 +32,9 @@ namespace Hazelcast.Linq.Visitors
         /// </summary>
         Dictionary<string, Dictionary<string, Expression>> _subqueries;
 
+#pragma warning disable 8618
         private SubqueryRemover() { }
+#pragma warning restore 8618
 
         public static Expression Remove(SelectExpression root, params SelectExpression[] toBeRemoved)
         {
@@ -47,8 +49,8 @@ namespace Hazelcast.Linq.Visitors
             return Visit(root);
         }
 
-
-        protected override Expression VisitSelect(SelectExpression node)
+        // internal for testing
+        internal override Expression VisitSelect(SelectExpression node)
         {
             // Cut it from `From` expression as requested. 
             if (_subqueriesToRemove.Contains(node))
@@ -56,8 +58,9 @@ namespace Hazelcast.Linq.Visitors
 
             return base.VisitSelect(node);
         }
-
-        protected override Expression VisitColumn(ColumnExpression node)
+        
+        // internal for testing
+        internal override Expression VisitColumn(ColumnExpression node)
         {
             //Check whether `node` is in the provided remove list.
             if (_subqueries.TryGetValue(node.Alias, out var map))

@@ -44,7 +44,7 @@ namespace Hazelcast.Linq.Visitors
             return _redundants;
         }
 
-        protected override Expression VisitSelect(SelectExpression node)
+        internal override Expression VisitSelect(SelectExpression node)
         {
             if (IsRedundant(node))
                 _redundants.Add(node);

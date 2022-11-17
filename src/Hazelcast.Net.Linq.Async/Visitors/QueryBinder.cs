@@ -25,7 +25,7 @@ namespace Hazelcast.Linq.Visitors
     /// <summary>
     /// Traverses and prepares a SQLized expression tree to be traversed and converted to text based SQL statements.
     /// </summary>
-    internal class QueryBinder : ExpressionVisitor
+    internal class QueryBinder : HzExpressionVisitor
     {
         private ColumnProjector _projector;
         private Dictionary<ParameterExpression, Expression> _map;
@@ -180,7 +180,7 @@ namespace Hazelcast.Linq.Visitors
                 case HzExpressionType.Map:
                     return ((MapExpression)source).Alias;
                 default:
-                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'.");
+                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'");
             }
         }
 
@@ -256,7 +256,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value) : (Expression)node;
+            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value!) : (Expression)node;
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
@@ -266,7 +266,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            var visitedNode = Visit(node.Expression)!;
+            var visitedNode = Visit(node.Expression);
 
             switch (visitedNode.NodeType)
             {
