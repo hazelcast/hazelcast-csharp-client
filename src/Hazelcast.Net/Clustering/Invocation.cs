@@ -238,7 +238,7 @@ namespace Hazelcast.Clustering
 
             // fast fail on timeout
             var elapsedMilliseconds = (int) (Clock.Milliseconds - StartTime);
-            if (elapsedMilliseconds > _messagingOptions.RetryTimeoutSeconds * 1000)
+            if (elapsedMilliseconds >= _messagingOptions.RetryTimeoutSeconds * 1000)
                 throw new TaskTimeoutException($"Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).");
 
             _attemptsCount += 1;
@@ -266,9 +266,8 @@ namespace Hazelcast.Clustering
             var delayMilliseconds = Math.Max(1 << (_attemptsCount - _messagingOptions.MaxFastInvocationCount), _messagingOptions.MinRetryDelayMilliseconds);
 
             // but no more than the remaining milliseconds before timeout (if any)
+            // if we come here, remainingMilliseconds *is* positive (tested in WaitRetryAsync)
             var remainingMilliseconds = _messagingOptions.RetryTimeoutSeconds * 1000 - elapsedMilliseconds;
-            if (remainingMilliseconds <= 0)
-                throw new TaskTimeoutException($"Cannot retry the invocation: timeout ({_messagingOptions.RetryTimeoutSeconds}s).");
             delayMilliseconds = Math.Min(delayMilliseconds, remainingMilliseconds);
 
             await System.Threading.Tasks.Task.Delay(delayMilliseconds, cancellationToken).CfAwait(); // throws if cancelled
