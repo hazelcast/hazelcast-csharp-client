@@ -96,8 +96,8 @@ namespace Hazelcast.Tests.Linq
             Expression<Func<DummyType, DummyType, string>> tempPredicate = (DummyType o, DummyType i) => i.ColumnString;
             var query = dummyData
                 .AsQueryable()
-                // the other data source must be also Querable. Otherwise, it will be interpred as a (constant)value on expression tree which
-                // doesn't work for us. Note: HMap is Querable. It will be used as joined data source in normal usage. Current usage 
+                // the other data source must be also Queryable. Otherwise, it will be interpreted as a (constant)value on expression tree which
+                // doesn't work for us. Note: HMap is Queryable. It will be used as joined data source in normal usage. Current usage 
                 // is only for testing.
                 .Join(dummyData2.AsQueryable(),
                 o => o.ColumnInteger,
