@@ -128,6 +128,12 @@ namespace Hazelcast.Messaging
                 }
             }
 
+            // NOTE
+            // bufferReference.Buffer is a 'readonly struct', so its content (i.e. the content
+            // of the bytes variable) *cannot* be modified - we pass bytes as a 'ref' to the
+            // Frame.ReadXxx(ref bytes) methods, and they replace bytes with a new value - we
+            // then have to update bufferReference.Buffer back
+
             // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
             // created the byte array, so ... might be nicer to copy now
