@@ -55,7 +55,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestThreadIdFieldOffset = RequestTransactionTypeFieldOffset + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfCodecGuid;
 
 #if SERVER_CODEC
         public sealed class RequestParameters

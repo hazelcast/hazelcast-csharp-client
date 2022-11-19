@@ -40,7 +40,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     {
         private const int CodeFieldOffset = 0;
         private const int OriginatingMemberIdFieldOffset = CodeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int InitialFrameSize = OriginatingMemberIdFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int InitialFrameSize = OriginatingMemberIdFieldOffset + BytesExtensions.SizeOfCodecGuid;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Sql.SqlError sqlError)
         {
