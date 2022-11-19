@@ -78,7 +78,7 @@ namespace Hazelcast.Tests.Protocol
             var comparatorData = new HeapData();
             var partitionKeyData = new HeapData();
 
-            var holder = new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, 5, 12, 3, partitionKeyData);
+            var holder = new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, 5, 12, 3, partitionKeyData, false, null);
 
             Assert.That(holder.AnchorDataListHolder, Is.SameAs(anchorDataListHolder));
             Assert.That(holder.PredicateData, Is.SameAs(predicateData));
