@@ -102,7 +102,7 @@ namespace Hazelcast.Linq.Visitors
             }
         }
 
-        protected override Expression VisitColumn(ColumnExpression column)
+        internal override Expression VisitColumn(ColumnExpression column)
         {
             if (!string.IsNullOrEmpty(column.Alias))
             {
@@ -114,7 +114,7 @@ namespace Hazelcast.Linq.Visitors
             return column;
         }
 
-        protected override Expression VisitProjection(ProjectionExpression proj)
+        internal override Expression VisitProjection(ProjectionExpression proj)
         {
             var _ = Visit(proj.Source);
             return proj;
@@ -337,7 +337,7 @@ namespace Hazelcast.Linq.Visitors
             return bExp;
         }
 
-        protected override Expression VisitSelect(SelectExpression select)
+        internal override Expression VisitSelect(SelectExpression select)
         {
             Write("SELECT ");
             WriteColumns(select.Columns);

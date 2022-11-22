@@ -43,7 +43,7 @@ namespace Hazelcast.Linq.Visitors
             return new RedundantSubqueryProcessor().CleanInternal(expression);
         }
 
-        protected override Expression VisitProjection(ProjectionExpression node)
+        internal override Expression VisitProjection(ProjectionExpression node)
         {
             var visitedProj = (ProjectionExpression)base.VisitProjection(node);
 
@@ -56,7 +56,7 @@ namespace Hazelcast.Linq.Visitors
             return visitedProj;
         }
 
-        protected override Expression VisitSelect(SelectExpression node)
+        internal override Expression VisitSelect(SelectExpression node)
         {
             var visitedSelect = (SelectExpression)base.VisitSelect(node);
 
@@ -80,7 +80,7 @@ namespace Hazelcast.Linq.Visitors
                 var where = visitedSelect.Where;
 
                 if (where != null)
-                    where = Expression.And(from.Where, where);
+                    where = Expression.And(from.Where!, where);
                 else
                     where = from.Where;
 

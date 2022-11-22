@@ -15,12 +15,15 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.NearCaching;
 using Hazelcast.Query;
+using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.NearCache
@@ -98,6 +101,12 @@ namespace Hazelcast.Tests.NearCache
                 InvalidateOnChange = false
             };
 
+            options.NearCaches["nc-expire*"] = new NearCacheOptions
+            {
+                TimeToLiveSeconds = 10,
+                CleanupPeriodSeconds = 1
+            };
+
             return options;
         }
 
@@ -134,6 +143,61 @@ namespace Hazelcast.Tests.NearCache
             // verify the cache contains all values
             Assert.That(cache.Count, Is.EqualTo(MaxSize));
             Assert.That(cache.Statistics.EntryCount, Is.EqualTo(MaxSize));
+        }
+
+        [Test]
+        public async Task SafeConcurrentExpiration()
+        {
+            var clock = new TestClockSource { Now = DateTime.UtcNow };
+            using var clockOverride = Clock.Override(clock);
+
+            var dictionary = await _client.GetMapAsync<object, object>("nc-expire-" + TestUtils.RandomString());
+            await using var _ = new AsyncDisposable(dictionary.DestroyAsync);
+            var cache = GetNearCache(dictionary);
+
+            // add values, then get the values, to populate the cache
+            for (var i = 0; i < 10; i++) await dictionary.SetAsync($"key-{i}", "value");
+            for (var i = 0; i < 10; i++) await dictionary.GetAsync($"key-{i}");
+
+            // nc-expire cache configured with
+            // - CleanupPeriod = 1s
+            // - TimeToLive = 10s
+
+            // we want to test that if we are already expiring, we skip the expiration
+            // this is a concurrency test that is hard to reproduce "by chance"
+            // so here we are cheating with chance
+
+            var expiringField = typeof(NearCacheBase).GetField("_expiring", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(expiringField, Is.Not.Null);
+            var entriesField = typeof(NearCacheBase).GetField("_entries", BindingFlags.Instance | BindingFlags.NonPublic);
+            Assert.That(entriesField, Is.Not.Null);
+            var entries = (ConcurrentAsyncDictionary<IData, NearCacheEntry>) entriesField.GetValue(cache);
+            Assert.That(entries.Count, Is.EqualTo(10));
+
+            // pretend we are already expiring
+            expiringField.SetValue(cache, 1);
+
+            // pretend enough time has passed, so we *should* be expiring
+            clock.Now += TimeSpan.FromSeconds(20);
+
+            // await - will *not* expire all entries
+            var keyData = ((HazelcastClient)_client).SerializationService.ToData("key");
+            var value = await cache.TryGetAsync(keyData);
+            Assert.That(value.Success, Is.False);
+            Assert.That(entries.Count, Is.EqualTo(10)); // all entries still there
+
+            // pretend we are not expiring anymore
+            expiringField.SetValue(cache, 0);
+
+            // await - *will* expire
+            value = await cache.TryGetAsync(keyData);
+            Assert.That(value.Success, Is.False);
+            Assert.That(entries.Count, Is.EqualTo(0)); // all entries gone
+        }
+
+        private class TestClockSource : IClockSource
+        {
+            public DateTime Now { get; set; }
         }
 
         [Test]

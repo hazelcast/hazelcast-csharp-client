@@ -16,14 +16,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
 {
     /// <summary>
-    /// Traverse and creates column definitations for projection.
+    /// Traverse and creates column definitions for projection.
     /// </summary>
     internal class ColumnProjector : HzExpressionVisitor
     {
@@ -33,13 +32,9 @@ namespace Hazelcast.Linq.Visitors
         private List<ColumnDefinition> _columns;
         private HashSet<string> _columnNames;
         private HashSet<Expression> _candidates;
-        /// <summary>
-        /// Alias of the current level
-        /// </summary>
-        private IReadOnlyList<string> _existingAlias;
-        /// <summary>
-        /// Alias of the outer level of the query
-        /// </summary>
+        // Alias of the current level        
+        private IReadOnlyList<string> _existingAliases;
+        // Alias of the outer level of the query
         private string _newAlias;
         private int _columnIndex;
 
@@ -50,8 +45,8 @@ namespace Hazelcast.Linq.Visitors
             if (canBeColumn == null) throw new ArgumentNullException(nameof(canBeColumn));
 
             Nominator = new ExpressionNominator(canBeColumn);
-            _existingAlias = Enumerable.Empty<string>().ToList();
-            _newAlias = String.Empty;
+            _existingAliases = Array.Empty<string>();
+            _newAlias = string.Empty;
         }
 
         /// <summary>
@@ -61,13 +56,13 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="newAlias">Alias of the outer level of the query</param>
         /// <param name="existingAlias">Alias of the current level</param>
         /// <returns></returns>
-        public ProjectedColumns Project(Expression exp, string newAlias, params string[] existingAlias)
+        public ProjectedColumns Project(Expression exp, string newAlias, string[] existingAlias)
         {
             _mapOfColumns = new();
             _columns = new();
             _columnNames = new();
             _newAlias = newAlias;
-            _existingAlias = existingAlias;
+            _existingAliases = existingAlias;
             _candidates = Nominator.Nominate(exp);
 
             return new ProjectedColumns(Visit(exp), _columns.AsReadOnly());
@@ -78,7 +73,7 @@ namespace Hazelcast.Linq.Visitors
 #pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
         {
             //Skip if not nominated to be evaluated
-            if (!_candidates.Contains(node))
+            if (node is null || !_candidates.Contains(node))
                 return base.Visit(node);
 
             if (node.NodeType == (ExpressionType)HzExpressionType.Column)
@@ -86,11 +81,11 @@ namespace Hazelcast.Linq.Visitors
                 var column = (ColumnExpression)node;
 
                 //The column is already defined on the tree
-                if (_mapOfColumns.TryGetValue(column, out ColumnExpression mappedColumn))
+                if (_mapOfColumns.TryGetValue(column, out var mappedColumn))
                     return mappedColumn;
 
-                //Maps are overlaped though column didn't match above.
-                if (_existingAlias.Contains(column.Alias))
+                //Maps are overlapped though column didn't match above.
+                if (_existingAliases.Contains(column.Alias))
                 {
                     var name = CreateUniqueColumnName(column.Name);
                     _columns.Add(new ColumnDefinition(name, column));

@@ -84,7 +84,7 @@ namespace Hazelcast.Core
         /// </summary>
         /// <remarks>The epoch time in milliseconds.</remarks>
         public static long Milliseconds
-            => ToEpoch(DateTime.UtcNow);
+            => ToEpoch(Now);
 
         public static DateTime Now
             => _clockSource.Now;

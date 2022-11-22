@@ -44,7 +44,7 @@ namespace Hazelcast.Linq.Visitors
             return _redundants;
         }
 
-        protected override Expression VisitSelect(SelectExpression node)
+        internal override Expression VisitSelect(SelectExpression node)
         {
             if (IsRedundant(node))
                 _redundants.Add(node);
@@ -63,7 +63,7 @@ namespace Hazelcast.Linq.Visitors
             foreach (var item in select.Columns)
             {
                 var column = item.Expression as ColumnExpression;
-                //If column name is changed, so projection to.
+                //If column name is changed, so projection too.
                 if (column is null || column.Name != item.Name) return false;
             }
             return true;

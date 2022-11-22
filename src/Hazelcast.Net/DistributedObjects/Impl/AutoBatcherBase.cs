@@ -32,17 +32,21 @@ namespace Hazelcast.DistributedObjects.Impl
             var batch = _batch;
             return batch != null && batch.TryGetNextId(out var id)
                 ? new ValueTask<long>(id)
-                : GetNextIdAsync2(cancellationToken);
+                : FetchBatchAndGetNextIdAsync(cancellationToken);
         }
+
+        // async methods that returns a batch
+        protected abstract Task<Batch> FetchBatch();
 
         // async method that returns a batch *and* assigns _batch through SetBatch() - this is important: because
         // _batch is assigned by the fetching task, it's assigned only once and always assigned before tha task
         // completes, thus avoiding having to lock
-        protected abstract Task<Batch> FetchBatch();
+        private async Task<Batch> FetchAndSetBatch()
+        {
+            return _batch = await FetchBatch().CfAwait();
+        }
 
-        protected void SetBatch(Batch batch) => _batch = batch;
-
-        private async ValueTask<long> GetNextIdAsync2(CancellationToken cancellationToken)
+        private async ValueTask<long> FetchBatchAndGetNextIdAsync(CancellationToken cancellationToken)
         {
             while (true)
             {
@@ -50,7 +54,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
                 var fetchingBatch = _fetchingBatch;
 
-                if (fetchingBatch != null)
+                if (fetchingBatch != null) // are we already fetching?
                 {
                     // await fetchingBatch - this may throw, in which case we raise the exception to the
                     // caller, but before that we make sure to clear _fetchingBatch so that FetchBatch()
@@ -76,7 +80,7 @@ namespace Hazelcast.DistributedObjects.Impl
 
                     try
                     {
-                        _fetchingBatch = FetchBatch();
+                        _fetchingBatch = FetchAndSetBatch();
                     }
                     catch
                     {

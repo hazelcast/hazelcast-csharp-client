@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
 
@@ -34,7 +33,7 @@ namespace Hazelcast.Linq.Expressions
         /// <inheritdoc/>
         public override Type Type { get; }
 
-        public SelectExpression(string alias, Type type, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression where = null)
+        public SelectExpression(string alias, Type type, ReadOnlyCollection<ColumnDefinition> columns, Expression from, Expression? where = null)
         {
             Alias = alias;
             Columns = columns;
