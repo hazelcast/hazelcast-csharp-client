@@ -13,16 +13,21 @@
 // limitations under the License.
 
 using System;
+using System.Buffers;
+using System.Data.Common;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Networking;
+using Hazelcast.Tests.Serialization.Objects;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -69,6 +74,74 @@ namespace Hazelcast.Tests.Messaging
 
         private static void OnReceiveMessageNotImplemented(ClientMessageConnection conn, ClientMessage msg)
             => throw new NotImplementedException();
+
+        private static async Task SendMessage(SocketConnectionBase c, ClientMessage m)
+        {
+            var frame = m.FirstFrame;
+            while (frame != null)
+            {
+                const int sizeofHeader = Hazelcast.Messaging.FrameFields.SizeOf.LengthAndFlags;
+
+                var header = new byte[sizeofHeader];
+                frame.WriteLengthAndFlags(header);
+                await c.SendAsync(header, sizeofHeader).CfAwait(); // 6 bytes
+                await c.FlushAsync().CfAwait();
+
+                //await c.SendAsync(frame.Bytes, frame.Bytes.Length).CfAwait(); // 13 bytes
+                var buffer = new byte[2];
+                for (var i = 0; i < frame.Bytes.Length;)
+                {
+                    var len = 1;
+                    buffer[0] = frame.Bytes[i++];
+                    if (i < frame.Bytes.Length)
+                    {
+                        buffer[1] = frame.Bytes[i++];
+                        len = 2;
+                    }
+                    await c.SendAsync(buffer, len).CfAwait();
+                    await c.FlushAsync().CfAwait();
+                }
+                await c.FlushAsync().CfAwait();
+
+                frame = frame.Next;
+            }
+        }
+
+        [Test]
+        public async Task HandlePartialBytes()
+        {
+            // this test uses the special SendMessage function above to send the reply back,
+            // but by fragmenting it, making sure that the client connection receives many
+            // small amounts of bytes - and will correctly aggregate everything.
+
+            static async ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
+            {
+                var response = ClientPingServerCodec.EncodeResponse();
+
+                var f = typeof (ClientMessageConnection).GetField("_connection", BindingFlags.Instance|BindingFlags.NonPublic);
+                var sc = (SocketConnectionBase)f.GetValue(c);
+                await SendMessage(sc, response);
+            }
+
+            var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
+            await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
+            await server.StartAsync();
+
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
+            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
+            var received = false;
+            m.OnReceiveMessage += (_, receivedMessage) =>
+            {
+                if (receivedMessage.MessageType == ClientPingServerCodec.ResponseMessageType)
+                    received = true;
+            };
+
+            await socket.ConnectAsync(default);
+            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length);
+
+            var sent = await m.SendAsync(ClientPingServerCodec.EncodeRequest());
+            await AssertEx.SucceedsEventually(() => Assert.That(received, Is.True), 5000, 500);
+        }
 
         [Test]
         public async Task HandleFragments()

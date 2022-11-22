@@ -38,9 +38,7 @@ namespace Hazelcast.DistributedObjects.Impl
             var responseMessage = await _messaging.SendAsync(requestMessage).CfAwait();
             var response = FlakeIdGeneratorNewIdBatchCodec.DecodeResponse(responseMessage);
 
-            var batch = new Batch(response.Base, response.Increment, response.BatchSize, _options.PrefetchValidityPeriod);
-            SetBatch(batch); // important!
-            return batch;
+            return new Batch(response.Base, response.Increment, response.BatchSize, _options.PrefetchValidityPeriod);
         }
     }
 }

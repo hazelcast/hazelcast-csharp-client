@@ -247,7 +247,6 @@ namespace Hazelcast.Benchmarks
                 var batchNumber = GetNextBatchNumber();
                 if (batchNumber >= _batchCount) throw new InvalidOperationException("Overflow.");
                 var batch = new Batch(batchNumber * _batchSize, 1, _batchSize, Timeout.InfiniteTimeSpan);
-                SetBatch(batch);
                 return Task.FromResult(batch);
             }
         }

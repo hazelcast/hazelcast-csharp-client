@@ -253,6 +253,58 @@ namespace Hazelcast.Tests.Clustering
             }
         }
 
+        [Test]
+        public async Task FailCurentInvocationWhenDisposed()
+        {
+            var loggerFactory = new NullLoggerFactory();
+            var address = NetworkAddress.Parse($"127.0.0.1:{TestEndPointPort.GetNext()}");
+            var state = new ServerState
+            {
+                Id = 0,
+                MemberId = Guid.NewGuid(),
+                Address = address
+            };
+            await using var server = new Server(address, ServerHandler, loggerFactory, state, "0")
+            {
+                MemberId = state.MemberId,
+            };
+            await server.StartAsync();
+
+            var options = new HazelcastOptionsBuilder().Build();
+            var messaging = Mock.Of<IClusterMessaging>();
+            var serializationService = HazelcastClientFactory.CreateSerializationService(options.Serialization, messaging, loggerFactory);
+            var authenticator = new Authenticator(options.Authentication, serializationService, loggerFactory);
+
+            ISequence<long> correlationIdSequence = new Int64Sequence();
+
+            var memberConnection = new MemberConnection(address, authenticator,
+                options.Messaging, options.Networking, options.Networking.Ssl,
+                correlationIdSequence,
+                loggerFactory);
+
+            const string clusterName = "dev";
+            const string clientName = "client";
+            var clusterState = new ClusterState(options,
+                clusterName, clientName,
+                new Partitioner(), loggerFactory);
+
+            await memberConnection.ConnectAsync(clusterState, CancellationToken.None);
+
+            // prepare and send a message
+            var message = ClientPingServerCodec.EncodeRequest();
+            message.CorrelationId = correlationIdSequence.GetNext();
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+            var invocation = new Invocation(message, options.Messaging);
+            var invoking = memberConnection.SendAsync(invocation);
+
+            // the server does *not* respond to pings, so the invocation is pending
+            // disposing the member connection should terminate the invocation
+            await memberConnection.DisposeAsync();
+
+            // bam
+            await AssertEx.ThrowsAsync<TargetDisconnectedException>(async () => await invoking);
+        }
+
         internal class ServerState
         {
             public int Id { get; set; }
