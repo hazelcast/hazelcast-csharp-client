@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -255,7 +256,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value) : (Expression)node;
+            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value!) : (Expression)node;
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
