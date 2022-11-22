@@ -71,7 +71,6 @@ Hazelcast.Serialization.Compact.ICompactSerializer<T>
 Hazelcast.Serialization.Compact.ICompactSerializer<T>.Read(Hazelcast.Serialization.Compact.ICompactReader! reader) -> T
 Hazelcast.Serialization.Compact.ICompactSerializer<T>.Write(Hazelcast.Serialization.Compact.ICompactWriter! writer, T value) -> void
 Hazelcast.Serialization.Compact.ICompactWriter
-Hazelcast.Serialization.Compact.ICompactWriter.GetFieldKind(string! name) -> Hazelcast.Serialization.FieldKind
 Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfBoolean(string! name, bool[]? value) -> void
 Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfCompact<T>(string! name, T?[]? value) -> void
 Hazelcast.Serialization.Compact.ICompactWriter.WriteArrayOfDate(string! name, Hazelcast.Models.HLocalDate?[]? value) -> void
@@ -115,53 +114,49 @@ Hazelcast.Serialization.Compact.ICompactWriter.WriteTime(string! name, Hazelcast
 Hazelcast.Serialization.Compact.ICompactWriter.WriteTimeStamp(string! name, Hazelcast.Models.HLocalDateTime? value) -> void
 Hazelcast.Serialization.Compact.ICompactWriter.WriteTimeStampWithTimeZone(string! name, Hazelcast.Models.HOffsetDateTime? value) -> void
 Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfBoolean = 1 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfChar = 5 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfCompact = 29 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfDate = 23 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfDecimal = 19 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfFloat32 = 13 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfFloat64 = 15 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfInt16 = 7 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfInt32 = 9 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfInt64 = 11 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfInt8 = 3 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableBoolean = 33 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat32 = 43 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat64 = 45 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableInt16 = 37 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableInt32 = 39 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableInt64 = 41 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfNullableInt8 = 35 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfPortable = 31 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfString = 17 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfTime = 21 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfTimeStamp = 25 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.ArrayOfTimeStampWithTimeZone = 27 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Boolean = 0 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Char = 4 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Compact = 28 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Date = 22 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Decimal = 18 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Float32 = 12 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Float64 = 14 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Int16 = 6 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Int32 = 8 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Int64 = 10 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Int8 = 2 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NotAvailable = -1 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableBoolean = 32 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableFloat32 = 42 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableFloat64 = 44 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableInt16 = 36 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableInt32 = 38 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableInt64 = 40 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.NullableInt8 = 34 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Portable = 30 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.String = 16 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.Time = 20 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.TimeStamp = 24 -> Hazelcast.Serialization.FieldKind
-Hazelcast.Serialization.FieldKind.TimeStampWithTimeZone = 26 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfBoolean = 2 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfCompact = 30 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfDate = 24 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfDecimal = 20 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfFloat32 = 14 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfFloat64 = 16 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt16 = 8 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt32 = 10 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt64 = 12 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfInt8 = 4 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableBoolean = 34 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat32 = 44 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableFloat64 = 46 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt16 = 38 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt32 = 40 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt64 = 42 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfNullableInt8 = 36 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfString = 18 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTime = 22 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTimeStamp = 26 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.ArrayOfTimeStampWithTimeZone = 28 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Boolean = 1 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Compact = 29 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Date = 23 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Decimal = 19 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Float32 = 13 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Float64 = 15 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int16 = 7 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int32 = 9 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int64 = 11 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Int8 = 3 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NotAvailable = 0 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableBoolean = 33 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableFloat32 = 43 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableFloat64 = 45 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt16 = 37 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt32 = 39 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt64 = 41 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.NullableInt8 = 35 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.String = 17 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.Time = 21 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.TimeStamp = 25 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.FieldKind.TimeStampWithTimeZone = 27 -> Hazelcast.Serialization.FieldKind
 Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.get -> bool
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.set -> void
