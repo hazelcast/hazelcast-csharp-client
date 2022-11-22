@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "Hazelcast.Net.Examples": {
-      "commandName": "Project",
-      "commandLineArgs": "~MapEventsExample"
-    }
-  }
-}
