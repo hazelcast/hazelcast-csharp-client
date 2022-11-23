@@ -8,7 +8,14 @@
     <GitRepositoryRemoteName></GitRepositoryRemoteName>
   </PropertyGroup>
 
-  <!-- populate GitRepositoryRemoteName (does not have to be 'origin') -->
+  <PropertyGroup>
+    <!-- Kill NuGet 'HTTPS Everywhere' warning -->
+    <NoWarn>$(NoWarn);NU1803</NoWarn>
+    <!-- Kill EolTargetFrameworks warning -->
+    <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
+  </PropertyGroup>
+
+    <!-- populate GitRepositoryRemoteName (does not have to be 'origin') -->
   <Target Name="GetGitRepositoryRemoteName" BeforeTargets="BeforeBuild" Condition="'$(GitRepositoryRemoteName)'==''">
     <GetGitRepositoryRemoteName GitRepositoryRemoteUrl="https://github.com/hazelcast/hazelcast-csharp-client.git">
       <Output TaskParameter="GitRepositoryRemoteName" PropertyName="GitRepositoryRemoteName" />

@@ -100,7 +100,7 @@ jobs:
           $keyPath = "temp/private-test-artifacts.key"
           if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
-            echo "${{ secrets.PRIVATE_TEST_ARTIFACTS_KEY }}" > $keyPath
+            set-content "$keyPath" "${{ secrets.PRIVATE_TEST_ARTIFACTS_KEY }}"
             $a += "$(get-location)/$keyPath"
           }
           try {

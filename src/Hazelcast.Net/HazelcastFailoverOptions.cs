@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Configuration.Binding;
@@ -33,19 +34,21 @@ namespace Hazelcast
     /// <para>The retry strategy for each cluster is configured with a 2 minutes timeout, i.e. the
     /// client will try to connect to each cluster for at most 2 minutes before failing.</para>
     /// </remarks>
-    public sealed class HazelcastFailoverOptions : HazelcastOptionsBase
+    public sealed partial class HazelcastFailoverOptions : HazelcastOptionsBase
     {
         /// <summary>
         /// Gets the Hazelcast failover configuration section name, which is <c>"hazelcast-failover"</c>.
         /// </summary>
         internal const string SectionNameConstant = "hazelcast-failover";
 
+        private readonly ListOfHazelcastOptions _clients;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HazelcastFailoverOptions"/> class.
         /// </summary>
         public HazelcastFailoverOptions()
         {
-            Clients = new List<HazelcastOptions>();
+            _clients = new ListOfHazelcastOptions();
         }
 
         /// <summary>
@@ -54,12 +57,19 @@ namespace Hazelcast
         private HazelcastFailoverOptions(HazelcastFailoverOptions other)
         {
             TryCount = other.TryCount;
-            Clients = new List<HazelcastOptions>(other.Clients.Select(x => x.Clone()));
+            _clients = new ListOfHazelcastOptions(other.Clients.Select(x => x.Clone()), other.ServiceProvider);
             Enabled = other.Enabled;
         }
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
+
+        /// <inheritdoc />
+        public override IServiceProvider ServiceProvider
+        {
+            get => base.ServiceProvider;
+            internal set => _clients.ServiceProvider = base.ServiceProvider = value;
+        }
 
         /// <summary>
         /// Gets status of failover
@@ -79,13 +89,13 @@ namespace Hazelcast
         /// </summary>
         // TODO: consider supporting merging external files?
         // "clients": [ { "client": "path-to-json" }, ... ]
-        public IList<HazelcastOptions> Clients { get; }
+        public IList<HazelcastOptions> Clients => _clients;
 
         /// <summary>
         /// Clones the options.
         /// </summary>
-        /// <remarks>Dosen't clone <see cref="HazelcastOptions.FailoverOptions"/> due to cyclic dependncy</remarks>
+        /// <remarks>Does not clone <see cref="HazelcastOptions.FailoverOptions"/> due to cyclic dependency.</remarks>
         /// <returns>A deep clone of the options.</returns>
-        internal HazelcastFailoverOptions Clone() => new HazelcastFailoverOptions(this);
+        internal HazelcastFailoverOptions Clone() => new(this);
     }
 }

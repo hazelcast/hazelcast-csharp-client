@@ -19,6 +19,7 @@ namespace Hazelcast.Linq.Expressions
         Map = 1001,//Don't overlap with other expression types.
         Column = 1002,
         Select = 1003,
-        Projection = 1004
+        Projection = 1004,
+        Join = 1005
     }
 }

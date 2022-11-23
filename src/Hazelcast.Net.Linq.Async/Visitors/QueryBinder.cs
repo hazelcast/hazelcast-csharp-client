@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Text;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -24,7 +25,7 @@ namespace Hazelcast.Linq.Visitors
     /// <summary>
     /// Traverses and prepares a SQLized expression tree to be traversed and converted to text based SQL statements.
     /// </summary>
-    internal class QueryBinder : ExpressionVisitor
+    internal class QueryBinder : HzExpressionVisitor
     {
         private ColumnProjector _projector;
         private Dictionary<ParameterExpression, Expression> _map;
@@ -64,7 +65,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>alias</returns>
         internal string GetNextAlias()
         {
-            return "t" + (_aliasCount++);
+            return "m" + (_aliasCount++);//m for map
         }
 
         private static LambdaExpression GetLambda(Expression e)
@@ -81,7 +82,7 @@ namespace Hazelcast.Linq.Visitors
 #pragma warning restore CS8603 // Possible null reference return.
         }
 
-        public ProjectedColumns Project(Expression expression, string newAlias, string existingAlias)
+        public ProjectedColumns Project(Expression expression, string newAlias, params string[] existingAlias)
         {
             return _projector.Project(expression, newAlias, existingAlias);
         }
@@ -94,13 +95,39 @@ namespace Hazelcast.Linq.Visitors
                 {
                     case "Where":
                         //the arguments respectivly->type of entry, source e, predicate
-                        return this.BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                        return BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                    case "Select":
+                        return BindSelect(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
+                    case "Join":
+                        return BindJoin(m.Type, m.Arguments[0], m.Arguments[1], GetLambda(m.Arguments[2]), GetLambda(m.Arguments[3]), GetLambda(m.Arguments[4]));
                 }
 
                 throw new NotSupportedException($"The method '{m.Method.Name}' is not supported.");
             }
 
             return base.VisitMethodCall(m);
+        }
+
+        private ProjectionExpression BindJoin(Type type, Expression outer, Expression inner, LambdaExpression outerKey, LambdaExpression innerKey, LambdaExpression selector)
+        {
+            var outerProjection = (ProjectionExpression)Visit(outer);
+            var innerProjection = (ProjectionExpression)Visit(inner);
+            var visitedOuterKey = Visit(outerKey.Body);
+            var visitedInnerKey = Visit(innerKey.Body);
+            var visitedSelector = Visit(selector.Body);
+
+            _map[outerKey.Parameters[0]] = outerProjection.Projector;
+            _map[innerKey.Parameters[0]] = innerProjection.Projector;
+            _map[selector.Parameters[0]] = outerProjection.Projector;
+            _map[selector.Parameters[1]] = innerProjection.Projector;
+
+            var alias = GetNextAlias();
+
+            var joinExp = new JoinExpression(outerProjection.Source, innerProjection.Source, Expression.Equal(visitedOuterKey, visitedInnerKey), type);
+
+            var projectedColumns = Project(visitedSelector, alias, outerProjection.Source.Alias, innerProjection.Source.Alias);
+
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, joinExp), projectedColumns.Projector, type);
         }
 
         /// <summary>
@@ -110,18 +137,38 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="source">The source expression</param>
         /// <param name="predicate">Predicate of the condition</param>
         /// <returns>A Projection Expression</returns>
-        private Expression BindWhere(Type type, Expression source, LambdaExpression predicate)
+        private ProjectionExpression BindSelect(Type type, Expression source, LambdaExpression predicate)
         {
-            var projection = (ProjectionExpression)Visit(source); //DFS and project everything about the entry type          
-            _map[predicate.Parameters[0]] = projection.Projector;//map the field (ex. AlbumId:int) to projector
-            var where = Visit(predicate.Body); // Visit the body to handle inner expressions.
+            var (projection, visitedPredicate) = VisitSourceAndPredicate(source, predicate);
             var alias = GetNextAlias();
 
             //Visit, nominate and arrange which columns to be selected out of fields of the map.
             //Note: SQL exp. are the custom ones defined by us under Hazelcast.Linq.Expressions.
-            var pc = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, pc.Columns, projection.Source, where, type), pc.Projector, type);
+            //Projected columns of the `Where` clause.
+            var projectedColumns = Project(visitedPredicate, alias, GetExistingAlias(projection.Source));
+
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source), projectedColumns.Projector, type);
+        }
+
+        private ProjectionExpression BindWhere(Type type, Expression source, LambdaExpression predicate)
+        {
+            //projection and expression(s) in the select clause.
+            var (projection, visitedPredicate) = VisitSourceAndPredicate(source, predicate);
+            var alias = GetNextAlias();
+
+            //Projected columns of the `Select` clause.
+            var projectedColumns = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
+
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, visitedPredicate), projectedColumns.Projector, type);
+        }
+
+        private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression, LambdaExpression predicate)
+        {
+            var projection = (ProjectionExpression)Visit(expression);//DFS and project everything about the entry type          
+            _map[predicate.Parameters[0]] = projection.Projector;//map predicate to the projector
+            var predicateExp = Visit(predicate.Body);// Visit the body to handle inner expressions.
+            return (projection, predicateExp);
         }
 
         private static string GetExistingAlias(Expression source)
@@ -133,7 +180,7 @@ namespace Hazelcast.Linq.Visitors
                 case HzExpressionType.Map:
                     return ((MapExpression)source).Alias;
                 default:
-                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'.");
+                    throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'");
             }
         }
 
@@ -202,7 +249,7 @@ namespace Hazelcast.Linq.Visitors
             var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
-            var selectExp = new SelectExpression(selectAlias, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)), default, entryType);
+            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)));
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 
@@ -219,7 +266,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            var visitedNode = Visit(node.Expression)!;
+            var visitedNode = Visit(node.Expression);
 
             switch (visitedNode.NodeType)
             {

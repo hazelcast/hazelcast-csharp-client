@@ -128,8 +128,11 @@ namespace Hazelcast.Messaging
                 }
             }
 
-            // update the reference
-            bufferReference.Buffer = bytes;
+            // NOTE
+            // bufferReference.Buffer is a 'readonly struct', so its content (i.e. the content
+            // of the bytes variable) *cannot* be modified - we pass bytes as a 'ref' to the
+            // Frame.ReadXxx(ref bytes) methods, and they replace bytes with a new value - we
+            // then have to update bufferReference.Buffer back
 
             // TODO: consider buffering here
             // at the moment we are buffering in the pipe, but we have already
@@ -146,7 +149,7 @@ namespace Hazelcast.Messaging
             bufferReference.Buffer = bytes;
 
             _bytesLength = -1;
-            HConsole.WriteLine(this, 2, $"Frame is complete");
+            HConsole.WriteLine(this, 2, "Frame is complete");
 
             // we now have a fully assembled message
             // don't test _currentFrame.IsFinal, adding the frame to a message has messed it

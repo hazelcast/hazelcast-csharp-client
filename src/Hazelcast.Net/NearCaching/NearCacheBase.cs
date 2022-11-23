@@ -430,6 +430,10 @@ namespace Hazelcast.NearCaching
                 if (Interlocked.CompareExchange(ref _expiring, 1, 0) == 1)
                     return;
 
+                // double check
+                if (Clock.Milliseconds < _lastExpire + _cleanupInterval)
+                    return;
+
                 _lastExpire = Clock.Milliseconds;
 
                 await DoExpireEntries().CfAwait();
