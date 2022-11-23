@@ -55,10 +55,8 @@ namespace Hazelcast.Linq.Visitors
         {
             return _sb.ToString();
         }
-
-#pragma warning disable CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
-        public override Expression Visit(Expression node)
-#pragma warning restore CS8765 // Nullability of type of parameter doesn't match overridden member (possibly because of nullability attributes).
+        
+        public override Expression Visit(Expression? node)
         {
 #pragma warning disable CS8603 // Possible null reference return.
             if (node is null) return node;
