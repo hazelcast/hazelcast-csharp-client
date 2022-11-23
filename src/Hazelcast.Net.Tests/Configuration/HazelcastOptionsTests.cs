@@ -240,7 +240,10 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual("cert", sslOptions.CertificateName);
             Assert.AreEqual("path", sslOptions.CertificatePath);
             Assert.AreEqual("password", sslOptions.CertificatePassword);
+#pragma warning disable SYSLIB0039 // 'SslProtocols.Tls11' is obsolete
+            // using only testing purposes
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
+#pragma warning restore SYSLIB0039
             Console.WriteLine(sslOptions.ToString());
 
 #if NETCOREAPP

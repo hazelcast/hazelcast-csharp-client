@@ -1617,6 +1617,7 @@ function hz-build-docs-on-windows {
     if (-not (test-path $pluginDll)) {
         Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target"
     }
+    # FIXME! what is this?
     #cp $pluginDll "$docDir/templates/hz/Plugins/"
 
     # copy our plugin dll dependencies
