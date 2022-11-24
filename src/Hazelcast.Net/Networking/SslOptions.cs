@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Hazelcast.Configuration;
 
@@ -30,7 +31,16 @@ namespace Hazelcast.Networking
         /// Initializes a new instance of the <see cref="SslOptions"/> class.
         /// </summary>
         public SslOptions()
-        { }
+        {
+#if NETSTANDARD2_0
+            KeyStorageFlags = X509KeyStorageFlags.DefaultKeySet;
+#else
+            // DefaultKeySet causes error: System.ComponentModel.Win32Exception (0x8009030D):
+            // "The credentials supplied to the package were not recognized..." on .NET 7 whereas
+            // this works - however it is not available on netstandard2.0.
+            KeyStorageFlags = X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.UserKeySet;
+#endif
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SslOptions"/> class.
@@ -44,6 +54,7 @@ namespace Hazelcast.Networking
             CertificateName = other.CertificateName;
             CertificatePath = other.CertificatePath;
             CertificatePassword = other.CertificatePassword;
+            KeyStorageFlags = other.KeyStorageFlags;
             _sslProtocol = other._sslProtocol;
         }
 
@@ -81,6 +92,11 @@ namespace Hazelcast.Networking
         /// Gets or sets the password for the certificate file.
         /// </summary>
         public string CertificatePassword { get; set; }
+
+        /// <summary>
+        /// Gets or sets the X509 key storage flags.
+        /// </summary>
+        internal X509KeyStorageFlags KeyStorageFlags { get; set; }
 
         /// <summary>
         /// Gets or sets the SSL protocol.
@@ -124,6 +140,7 @@ namespace Hazelcast.Networking
             text.Append(", CheckCertificateRevocation=").Append(CheckCertificateRevocation ? "true" : "false");
             text.Append(", CertificateName='").Append(CertificateName);
             text.Append("', CertificatePath='").Append(CertificatePath);
+            text.Append("', KeyStorageFlags='").Append(KeyStorageFlags);
             text.Append("'}");
             return text.ToString();
         }
@@ -131,6 +148,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal SslOptions Clone() => new SslOptions(this);
+        internal SslOptions Clone() => new(this);
     }
 }
