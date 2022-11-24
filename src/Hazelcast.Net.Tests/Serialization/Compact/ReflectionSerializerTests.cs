@@ -1012,6 +1012,77 @@ namespace Hazelcast.Tests.Serialization.Compact
             Console.WriteLine(e.Message);
         }
 
+        [Test]
+        public void SerializeRecordClass()
+        {
+            var rec = new RecordClass("value") { IntValue = 42 };
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, rec);
+            var schema = sw.Build();
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, rec);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+            Console.WriteLine(buffer.Dump());
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, rec.GetType());
+
+            var obj = serializer.Read(reader);
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.GetType(), Is.EqualTo(rec.GetType()));
+            var rec2 = (RecordClass) obj;
+
+            Assert.That(rec2.StringValue, Is.EqualTo(rec.StringValue));
+            Assert.That(rec2.IntValue, Is.EqualTo(rec.IntValue));
+        }
+
+        public record RecordClass(string StringValue)
+        {
+            public int IntValue { get; set; }
+        }
+
+        [Test]
+        public void SerializeRecordStruct()
+        {
+            var rec = new RecordStruct("value");
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, rec);
+            var schema = sw.Build();
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, rec);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+            Console.WriteLine(buffer.Dump());
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, rec.GetType());
+
+            var obj = serializer.Read(reader);
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.GetType(), Is.EqualTo(rec.GetType()));
+            var rec2 = (RecordStruct)obj;
+
+            Assert.That(rec2.StringValue, Is.EqualTo(rec.StringValue));
+        }
+
+        public readonly record struct RecordStruct(string StringValue)
+        { }
+
         private class ActivatorKiller
         {
             private ActivatorKiller()
