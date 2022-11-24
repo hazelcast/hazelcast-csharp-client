@@ -57,6 +57,14 @@ namespace Hazelcast.Serialization.Compact
         }
 
         /// <summary>
+        /// Determines whether a name is a valid field name (case-sensitive).
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>Whether a field with the specified name (case-sensitive) was found.</returns>
+        public bool ValidateFieldName(string name)
+            => Schema.TryGetField(name, out _, caseSensitive: true);
+
+        /// <summary>
         /// Gets the schema field with the specified name (case-sensitive).
         /// </summary>
         /// <exception cref="SerializationException">No such field.</exception>
