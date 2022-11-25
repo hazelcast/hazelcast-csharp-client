@@ -128,7 +128,7 @@ namespace Hazelcast.Networking
             var clientCertificates = new X509Certificate2Collection();
             try
             {
-                clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, X509KeyStorageFlags.DefaultKeySet);
+                clientCertificates.Import(_options.CertificatePath, _options.CertificatePassword, _options.KeyStorageFlags);
             }
             catch (Exception e)
             {
