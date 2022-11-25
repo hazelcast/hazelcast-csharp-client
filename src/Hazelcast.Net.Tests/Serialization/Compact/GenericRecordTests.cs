@@ -160,8 +160,12 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         Assert.Throws<ArgumentNullException>(() => _ = new CompactGenericRecordBuilder(schema, null!));
 
         var builder = new CompactGenericRecordBuilder(schema);
+
+        // getting an ArgumentException with "should not be null nor empty" in both cases
+        // we don't differentiate null & empty string exception to keep it simple
         Assert.Throws<ArgumentException>(() => builder.SetBoolean(null!, true));
         Assert.Throws<ArgumentException>(() => builder.SetBoolean("", true));
+
         builder.SetBoolean("field-name-1", true); // set it once
         Assert.Throws<SerializationException>(() => builder.SetBoolean("field-name-1", true)); // not twice
 
