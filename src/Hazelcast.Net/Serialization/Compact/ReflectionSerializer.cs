@@ -350,25 +350,68 @@ namespace Hazelcast.Serialization.Compact
 
             };
 
-        private static Action<ICompactWriter, string, object?> GetWriter(Type type)
-        {
-            static void WriteUnknownType(ICompactWriter writer, string name, Type type, object? obj)
+        private static readonly Dictionary<Type, (FieldKind, Action<ObjectDataOutput, object?>)> Mehs
+            = new()
             {
-                if (type.IsArray && type.GetArrayRank() == 1)
+                { typeof(int), ( FieldKind.Int8, (output, value) => output.WriteInt((int)value) ) },
+                { typeof(int[]), (FieldKind.Int8, (output, value) => output.WriteIntArray((int[])value)) }
+            };
+
+        private static void WriteAsArray(ICompactWriter writer, string name, Type elementType, object? value)
+        {
+            // FIXME not! it may contains eg int32! yet we don't want to ToArray it!
+            var w = (CompactWriter)writer;
+            var (kind, meh) = Mehs[elementType];
+            //w.WriteArrayOfReference(name, kind, value, meh);
+            var writeObject = w.GetType().GetMethod(nameof(CompactWriter.WriteArrayOfReference));
+            var writeObjectOfType = writeObject!.MakeGenericMethod(elementType);
+            writeObjectOfType.Invoke(writer, new[] { name, kind, obj, meh });
+        }
+
+        private static void WriteUnknownType(ICompactWriter writer, string name, Type type, object? obj)
+        {
+            if (type.IsArray && type.GetArrayRank() == 1)
+            {
+                // is an array, and not a known builtin array, so treat is as an array of compact objects
+                var elementType = type.GetElementType()!; // cannot be null, type is an array
+                var writeObject = writer.GetType().GetMethod(nameof(ICompactWriter.WriteArrayOfCompact));
+                var writeObjectOfType = writeObject!.MakeGenericMethod(elementType);
+                writeObjectOfType.Invoke(writer, new[] { name, obj });
+                return;
+            }
+
+            if (type.IsGenericType)
+            {
+                var genericType = type.GetGenericTypeDefinition();
+                if (genericType == typeof(List<>) || genericType == typeof(IList<>) ||
+                    genericType == typeof(HashSet<>) || genericType == typeof(ISet<>))
                 {
-                    var elementType = type.GetElementType()!; // cannot be null, type is an array
-                    var writeObject = writer.GetType().GetMethod(nameof(ICompactWriter.WriteArrayOfCompact));
-                    var writeObjectOfType = writeObject!.MakeGenericMethod(elementType);
-                    writeObjectOfType.Invoke(writer, new[] { name, obj });
+                    // is explicitly a list or a set, treat is as an array of elements
+                    var elementType = type.GetGenericArguments()[0];
+                    WriteAsArray(writer, name, elementType, obj);
+                    return;
                 }
-                else
+
+                if (genericType == typeof (Dictionary<,>) || genericType == typeof (IDictionary<,>))
                 {
-                    var writeObject = writer.GetType().GetMethod(nameof(ICompactWriter.WriteCompact));
-                    var writeObjectOfType = writeObject!.MakeGenericMethod(type);
-                    writeObjectOfType.Invoke(writer, new[] { name, obj });
+                    // is explicitly a dictionary, treat it as two arrays of elements
+                    var keyType = type.GetGenericArguments()[0];
+                    var valueType = type.GetGenericArguments()[1];
+                    WriteAsArray(writer, name, valueType, obj.Values);
+                    return;
                 }
             }
 
+            {
+                // is anything else, treat is as compact object
+                var writeObject = writer.GetType().GetMethod(nameof(ICompactWriter.WriteCompact));
+                var writeObjectOfType = writeObject!.MakeGenericMethod(type);
+                writeObjectOfType.Invoke(writer, new[] { name, obj });
+            }
+        }
+
+        private static Action<ICompactWriter, string, object?> GetWriter(Type type)
+        {
             return Writers.TryGetValue(type, out var write)
                 ? write
                 : (writer, name, obj) => WriteUnknownType(writer, name, type, obj);
