@@ -539,9 +539,64 @@ namespace Hazelcast.Tests.Serialization.Compact
             (typeof (LongEnum), LongEnum.A),
             (typeof (ULongEnum), ULongEnum.A),
 
+            (typeof (List<int>), null),
+            (typeof (List<int>), new List<int>()),
+            (typeof (List<int>), Enumerable.Range(0, 10).ToList()),
+            (typeof (IList<int>), null),
+            (typeof (IList<int>), new List<int>()),
+            (typeof (IList<int>), Enumerable.Range(0, 10).ToList()),
+
+            (typeof (HashSet<int>), null),
+            (typeof (HashSet<int>), new HashSet<int>()),
+            (typeof (HashSet<int>), GetHashSet()),
+            (typeof (ISet<int>), null),
+            (typeof (ISet<int>), new HashSet<int>()),
+            (typeof (ISet<int>), GetHashSet()),
+
+            (typeof (Dictionary<int, string>), null),
+            (typeof (Dictionary<int, string>), new Dictionary<int, string>()),
+            (typeof (Dictionary<int, string>), GetDictionary()),
+            (typeof (IDictionary<int, string>), null),
+            (typeof (IDictionary<int, string>), new Dictionary<int, string>()),
+            (typeof (IDictionary<int, string>), GetDictionary()),
+            
             // ReSharper enable RedundantCast
 #pragma warning restore IDE0004
         };
+
+        private static readonly (Type, object?)[] SerializeExceptionSource =
+        {
+            (typeof (List<List<int>>), null),
+            (typeof (List<List<int>>), new List<List<int>>()),
+        };
+
+        private static HashSet<int> GetHashSet()
+        {
+            var set = new HashSet<int>();
+            for (var i = 0; i < 10; i++) set.Add(i);
+            return set;
+        }
+
+        private static Dictionary<int, string> GetDictionary()
+        {
+            var dict = new Dictionary<int, string>();
+            for (var i = 0; i < 10; i++) dict[i] = i.ToString();
+            return dict;
+        }
+
+        [TestCaseSource(nameof(SerializeExceptionSource))]
+        public void SerializeOneExceptions((Type PropertyType, object? PropertyValue) testCase)
+        {
+            var type = ReflectionHelper.CreateObjectType(testCase.PropertyType);
+            var obj = Activator.CreateInstance(type);
+            if (obj == null) throw new Exception("panic: null obj");
+            ReflectionHelper.SetPropertyValue(obj, "Value0", testCase.PropertyValue);
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+
+            Assert.Throws<SerializationException>(()=> serializer.Write(sw, obj));
+        }
 
         // this ensures that ReflectionSerializer + SchemaBuilderWriter can write then read primitive types
         //
