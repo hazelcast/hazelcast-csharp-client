@@ -2021,14 +2021,14 @@ function run-tests ( $f ) {
     # see https://docs.nunit.org/articles/vs-test-adapter/Tips-And-Tricks.html
     # for available options and names here
     $nunitArgs = @(
-        "NUnit.WorkDirectory=`"$tmpDir/tests/results`"",
-        "NUnit.TestOutputXml=`".`"",
+        "NUnit.WorkDirectory=$tmpDir/tests/results",
+        "NUnit.TestOutputXml=.",
         "NUnit.Labels=Off", # quiet please
-        "NUnit.DefaultTestNamePattern=`"$($testName.Replace("<FRAMEWORK>", $f))`"",
+        "NUnit.DefaultTestNamePattern=$($testName.Replace("<FRAMEWORK>", $f))",
         "NUnit.ConsoleOut=0" # quiet please
     )
 
-    if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=`"$($options.testFilter.Replace("<FRAMEWORK>", $f))`"" }
+    if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=$($options.testFilter.Replace("<FRAMEWORK>", $f))" }
 
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
