@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -104,7 +105,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
     private static short[]? CharsToShorts(object? o)
     {
         if (o == null) return null;
-        if (o is not char[] x) throw new InvalidCastException();
+        var x = Verify.MustBe<char[], InvalidCastException>(o);
         var shorts = new short[x.Length];
         for (var i = 0; i < x.Length; i++) shorts[i] = (short)(ushort)x[i];
         return shorts;
@@ -113,7 +114,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
     private static short?[]? NullableCharsToNullableShorts(object? o)
     {
         if (o == null) return null;
-        if (o is not char?[] x) throw new InvalidCastException();
+        var x = Verify.MustBe<char?[], InvalidCastException>(o);
         var shorts = new short?[x.Length];
         for (var i = 0; i < x.Length; i++)
         {
@@ -250,12 +251,12 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
             else
             {
                 var keysProperty = value.GetType().GetProperty("Keys");
-                if (keysProperty == null) throw new HazelcastException($"Internal error: cannot get {type}.Keys property.");
+                Verify.Condition<HazelcastException>(keysProperty != null, "Internal error: cannot get {0}.Keys property.", type);
                 var valuesProperty = value.GetType().GetProperty("Values");
-                if (valuesProperty == null) throw new HazelcastException($"Internal error: cannot get {type}.Values property.");
+                Verify.Condition<HazelcastException>(valuesProperty != null, "Internal error: cannot get {0}.Values property.", type);
 
-                WriteAsArray(writer, name + "!keys", keyType, keysProperty.GetValue(value));
-                WriteAsArray(writer, name + "!values", valueType, valuesProperty.GetValue(value));
+                WriteAsArray(writer, name + "!keys", keyType, keysProperty!.GetValue(value));
+                WriteAsArray(writer, name + "!values", valueType, valuesProperty!.GetValue(value));
             }
 
             return true;
@@ -308,7 +309,8 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
                 value = Enum.Parse(enumType, s);
                 return true;
             }
-            if (!isNullableEnum) throw new SerializationException("Read null value for non-nullable enum.");
+
+            Verify.Condition<SerializationException>(isNullableEnum, "Read null value for non-nullable enum.");
             value = null;
             return true;
         }
@@ -339,7 +341,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
             {
                 if (a.GetValue(i) is not string s) // null value (if ok) = just don't initialize
                 {
-                    if (!isArrayOfNullableEnum) throw new SerializationException("Read null value for non-nullable enum.");
+                    Verify.Condition<SerializationException>(isArrayOfNullableEnum, "Read null value for non-nullable enum.");
                     continue;
                 }
 
@@ -391,9 +393,9 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
                 var objType = objGenericType.MakeGenericType(elementType);
                 var obj = Activator.CreateInstance(objType);
                 var add = objType.GetMethod("Add", BindingFlags.Instance | BindingFlags.Public);
-                if (add == null) throw new HazelcastException($"Internal exception: cannot get {objType}.Add method.");
+                Verify.Condition<HazelcastException>(add != null, "Internal exception: cannot get {0}.Add method.", objType);
                 for (var i = 0; i < array.Length; i++)
-                    add.Invoke(obj, new[] { array.GetValue(i) });
+                    add!.Invoke(obj, new[] { array.GetValue(i) });
                 value = obj;
             }
 
@@ -413,17 +415,16 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
                 return true;
             }
 
-            if (keysArray == null || valuesArray == null)
-                throw new SerializationException("Cannot read corrupt dictionary.");
+            Verify.Condition<SerializationException>(keysArray != null && valuesArray != null, "Cannot read corrupt dictionary.");
             var dictionaryType = typeof(Dictionary<,>).MakeGenericType(keyType, valueType);
             var dictionary = Activator.CreateInstance(dictionaryType);
             var addPair = dictionaryType.GetMethod("Add", BindingFlags.Instance | BindingFlags.Public);
-            if (addPair == null) throw new HazelcastException($"Internal exception: cannot get {dictionaryType}.Add method.");
+            Verify.Condition<HazelcastException>(addPair != null, "Internal exception: cannot get {0}.Add method.", dictionaryType);
             for (var i = 0; i < keysArray.Length; i++)
             {
                 var k = keysArray.GetValue(i);
                 var v = valuesArray.GetValue(i);
-                addPair.Invoke(dictionary, new[] { k, v });
+                addPair!.Invoke(dictionary, new[] { k, v });
             }
 
             value = dictionary;

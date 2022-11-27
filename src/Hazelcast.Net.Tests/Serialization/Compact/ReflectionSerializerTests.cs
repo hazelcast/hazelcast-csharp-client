@@ -1007,6 +1007,124 @@ namespace Hazelcast.Tests.Serialization.Compact
             });
         }
 
+        private static readonly object[] ExceptionObjects = 
+        {
+            PoisonClass1.CreateInstance("duh"),
+            PoisonClass2.CreateInstance("duh")
+        };
+
+        [TestCaseSource(nameof(ExceptionObjects))]
+        public void ReflectionSerializerMoreExceptions(object obj)
+        {
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, obj);
+            var schema = sw.Build();
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, obj);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            Assert.Throws<SerializationException>(() => serializer.Read(reader));
+        }
+
+        [Test]
+        public void ReflectionSerializerInvalidDictionaryData()
+        {
+            var obj = new SomeClassWithDictionary();
+            obj.Values[33] = "meh";
+
+            var serializer = new ReflectionSerializer();
+            var sw = new SchemaBuilderWriter("thing");
+            serializer.Write(sw, obj);
+            var schema = sw.Build();
+
+            Assert.That(schema.Fields.Count, Is.EqualTo(2));
+            Assert.That(schema.Fields.Any(x => x.FieldName == "Values!keys"));
+            Assert.That(schema.Fields.Any(x => x.FieldName == "Values!values"));
+
+            var orw = new ObjectReaderWriter(serializer);
+
+            var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
+            var writer = new CompactWriter(orw, output, schema);
+            serializer.Write(writer, obj);
+            writer.Complete();
+
+            var buffer = output.ToByteArray();
+
+            var input = new ObjectDataInput(buffer, orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            var obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2, Is.InstanceOf<SomeClassWithDictionary>());
+            var d = (SomeClassWithDictionary)obj2;
+            Assert.That(d.Values[33], Is.EqualTo("meh"));
+
+            schema = SchemaBuilder.For("thing")
+                .WithField("Values!keys", FieldKind.ArrayOfInt32)
+                .WithField("Values!values", FieldKind.ArrayOfString)
+                .Build();
+
+            input.Position = 0;
+            reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2, Is.InstanceOf<SomeClassWithDictionary>());
+            d = (SomeClassWithDictionary)obj2;
+            Assert.That(d.Values[33], Is.EqualTo("meh"));
+
+            schema = SchemaBuilder.For("thing")
+                .WithField("Values-keys", FieldKind.ArrayOfInt32)
+                .WithField("Values!values", FieldKind.ArrayOfString)
+                .Build();
+
+            input.Position = 0;
+            reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2, Is.InstanceOf<SomeClassWithDictionary>());
+            d = (SomeClassWithDictionary)obj2;
+            Assert.That(d.Values.Count, Is.Zero);
+
+            schema = SchemaBuilder.For("thing")
+                .WithField("Values!keys", FieldKind.ArrayOfInt32)
+                .WithField("Values-values", FieldKind.ArrayOfString)
+                .Build();
+
+            input.Position = 0;
+            reader = new CompactReader(orw, input, schema, obj.GetType());
+
+            obj2 = serializer.Read(reader);
+            Assert.That(obj2, Is.Not.Null);
+            Assert.That(obj2, Is.InstanceOf<SomeClassWithDictionary>());
+            d = (SomeClassWithDictionary)obj2;
+            Assert.That(d.Values.Count, Is.Zero);
+        }
+
+        private class SomeClassWithDictionary
+        {
+            private readonly Dictionary<int, string> _values = new();
+
+            public Dictionary<int, string> Values
+            {
+                get => _values;
+
+                // a true setter is not required, but at least an init setter must exist
+                init => _values = value ?? throw new ArgumentNullException(nameof(value));
+            }
+        }
+
         [Test]
         public void SerializeNestedClass()
         {
@@ -1065,6 +1183,18 @@ namespace Hazelcast.Tests.Serialization.Compact
             var sw = new SchemaBuilderWriter("thing");
             var e = Assert.Throws<SerializationException>(() => serializer.Write(sw, obj))!;
             Console.WriteLine(e.Message);
+        }
+
+        [Test]
+        public void CannotDeserializeInterface()
+        {
+            var serializer = new ReflectionSerializer();
+            var orw = new ObjectReaderWriter(serializer);
+            var input = new ObjectDataInput(new byte[64], orw, Endianness.LittleEndian);
+            var schema = SchemaBuilder.For("thing").WithField("Values", FieldKind.Compact).Build();
+            var reader = new CompactReader(orw, input, schema, typeof (ClassWithInterfaceProperty));
+
+            Assert.Throws<SerializationException>(() => serializer.Read(reader));
         }
 
         [Test]
@@ -1146,12 +1276,12 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         private class ClassWithInterfaceProperty
         {
-            public IList<int> Values { get; set; } = new List<int>();
+            public IEnumerable<int> Values { get; set; } = new List<int>();
         }
 
         private class ClassWithInterfaceArrayProperty
         {
-            public IList<int>[] Values { get; set; } = Array.Empty<IList<int>>();
+            public IEnumerable<int>[] Values { get; set; } = Array.Empty<IEnumerable<int>>();
         }
 
         private class ObjectReaderWriter : IReadObjectsFromObjectDataInput, IWriteObjectsToObjectDataOutput
@@ -1231,6 +1361,49 @@ namespace Hazelcast.Tests.Serialization.Compact
             public int Other { get; set; }
 
             public override string ToString() => $"SomeExtend(Value={Value}, Other={Other})";
+        }
+
+        public class PoisonClass1
+        {
+            private static bool _throw = true;
+
+            public PoisonClass1()
+            {
+                if (_throw) throw new Exception("bang");
+            }
+
+            public string? Value { get; set; }
+
+            public static PoisonClass1 CreateInstance(string value)
+            {
+                _throw = false;
+                var instance = new PoisonClass1();
+                instance.Value = value;
+                _throw = true;
+                return instance;
+            }
+        }
+
+        public class PoisonClass2
+        {
+            private static bool _throw = true;
+
+            // ReSharper disable once InconsistentNaming
+            public PoisonClass2(string Value)
+            {
+                if (_throw) throw new Exception("bang");
+                this.Value = Value;
+            }
+
+            public string? Value { get; set; }
+
+            public static PoisonClass2 CreateInstance(string value)
+            {
+                _throw = false;
+                var instance = new PoisonClass2(value);
+                _throw = true;
+                return instance;
+            }
         }
 
         public struct SomeStruct
