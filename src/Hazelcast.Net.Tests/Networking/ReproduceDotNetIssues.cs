@@ -28,7 +28,7 @@ namespace Hazelcast.Tests.Networking
         //
         // this issue breaks the APM (Asynchronous Programming Model, based upon Begin+End and callbacks) in
         // .NET 6 - prior to .NET 6 they were implementing TAP (Task-based Asynchronous Pattern, based on
-        // async calls)on top of APM and in .NET 6 they now switched to implementing APM on top of TAP, as
+        // async calls) on top of APM and in .NET 6 they now switched to implementing APM on top of TAP, as
         // async becomes the recommended approach - but with some issues - essentially leaving an underlying
         // task hidden and non-awaited/awaitable - which means its exceptions are bubbled as unobserved - and
         // this is bad for the health of the overall process.
@@ -36,6 +36,8 @@ namespace Hazelcast.Tests.Networking
         // for this reason we cannot continue using APM (which we used for historical reasons) with .NET 6
         // and have to switch to TAP (which is OK for all .NET versions) -> SocketExtensions is updated to
         // use TAP for all .NET versions.
+        //
+        // note that the issue was fixed in .NET 7 (but it's still best to use TAP anyways)
 
         [Test]
         [Timeout(20_000)]
@@ -48,6 +50,7 @@ namespace Hazelcast.Tests.Networking
             var okToDispose = new TaskCompletionSource<object>();
             var calledBack = false;
             var caughtObjectDisposedException = false;
+            var caughtSocketException = false;
             var caughtOtherException = false;
             socket.BeginAccept(asyncResult =>
             {
@@ -75,6 +78,11 @@ namespace Hazelcast.Tests.Networking
                         caughtAsyncResultException = true;
                     }
                     */
+                }
+                catch (SocketException)
+                {
+                    Console.WriteLine("caught SocketException");
+                    caughtSocketException = true;
                 }
                 catch (Exception e)
                 {
@@ -105,17 +113,23 @@ namespace Hazelcast.Tests.Networking
             await AssertEx.SucceedsEventually(() => Assert.That(calledBack), 2000, 100);
 
             // and here is the issue we are reproducing:
-            Assert.That(caughtObjectDisposedException); // EndAccept throws because the socket has been disposed = expected
+#if NET7_0_OR_GREATER
+            Assert.That(!caughtObjectDisposedException); // EndAccept does not throw about the disposed object = expected
+            Assert.That(caughtSocketException); // but throws about the socket being closed = expected
             Assert.That(!caughtOtherException); // and nothing else
+#else
+            Assert.That(caughtObjectDisposedException); // EndAccept throws because the socket has been disposed = expected
+            Assert.That(!caughtOtherException && !caughtSocketException); // and nothing else
+#endif
 
             var e = GetUnobservedExceptions();
 
-#if NET6_0_OR_GREATER
+#if NET6_0
             // .NET 6 has 1 unobserved exception
             Assert.That(e.Count, Is.EqualTo(1));
             ClearUnobservedExceptions(); // don't fail the test
 #else
-            // anything before .NET 6 is safe
+            // anything before and after .NET 6 is safe
             Assert.That(e.Count, Is.Zero);
 #endif
         }

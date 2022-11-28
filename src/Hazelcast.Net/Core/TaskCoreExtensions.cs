@@ -200,7 +200,7 @@ namespace Hazelcast.Core
         /// observed, i.e. they will not come out as unobserved exceptions.</para>
         /// </remarks>
         public static ConfiguredTaskAwaitable CfAwait(this Task task, TimeSpan timeout, CancellationTokenSource? cancellation = null)
-            => AwaitWithTimeout(task, timeout.RoundedMilliseconds().ClampToInt32(), cancellation).ConfigureAwait(false);
+            => AwaitWithTimeout(task, timeout, cancellation).ConfigureAwait(false);
 
         /// <summary>
         /// Configures an awaiter used to await this <see cref="Task"/>, continuing on
@@ -222,7 +222,7 @@ namespace Hazelcast.Core
         /// observed, i.e. they will not come out as unobserved exceptions.</para>
         /// </remarks>
         public static ConfiguredTaskAwaitable CfAwait(this Task task, int timeoutMilliseconds, CancellationTokenSource? cancellation = null)
-            => AwaitWithTimeout(task, timeoutMilliseconds, cancellation).ConfigureAwait(false);
+            => AwaitWithTimeout(task, TimeSpan.FromMilliseconds(timeoutMilliseconds), cancellation).ConfigureAwait(false);
 
         /// <summary>
         /// Configures an awaiter used to await this <see cref="Task{TResult}"/>, continuing on
@@ -244,7 +244,7 @@ namespace Hazelcast.Core
         /// observed, i.e. they will not come out as unobserved exceptions.</para>
         /// </remarks>
         public static ConfiguredTaskAwaitable<TResult> CfAwait<TResult>(this Task<TResult> task, TimeSpan timeout, CancellationTokenSource? cancellation = null)
-            => AwaitWithTimeout(task, timeout.RoundedMilliseconds().ClampToInt32(), cancellation).ConfigureAwait(false);
+            => AwaitWithTimeout(task, timeout, cancellation).ConfigureAwait(false);
 
         /// <summary>
         /// Configures an awaiter used to await this <see cref="Task{TResult}"/>, continuing on
@@ -266,82 +266,58 @@ namespace Hazelcast.Core
         /// observed, i.e. they will not come out as unobserved exceptions.</para>
         /// </remarks>
         public static ConfiguredTaskAwaitable<TResult> CfAwait<TResult>(this Task<TResult> task, int timeoutMilliseconds, CancellationTokenSource? cancellation = null)
-            => AwaitWithTimeout(task, timeoutMilliseconds, cancellation).ConfigureAwait(false);
+            => AwaitWithTimeout(task, TimeSpan.FromMilliseconds(timeoutMilliseconds), cancellation).ConfigureAwait(false);
 
-        private static async Task AwaitWithTimeout(Task task, int timeoutMilliseconds, CancellationTokenSource? cancellation)
+        private static async Task AwaitWithTimeout(Task task, TimeSpan timeout, CancellationTokenSource? cancellation)
         {
-            if (timeoutMilliseconds < 0)
+            try
             {
-                await task.ConfigureAwait(false);
-                return;
+                await task.WaitAsync(timeout).ConfigureAwait(false);
             }
-
-            using var delayCancel = new CancellationTokenSource();
-            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
-
-            await Task.WhenAny(task, delay).ConfigureAwait(false);
-
-            // if the delay is not completed, cancel it & observe the corresponding exception
-            if (!delay.IsCompleted)
+            catch (TimeoutException)
             {
-                delayCancel.Cancel(); // task cancellation are never unobserved
+                cancellation?.Cancel(); // signal the task it should cancel
+                task.ObserveException(); // ensure we don't leak an unobserved exception
+                throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
             }
-
-            // if the task is completed (success or fault...), return
-            if (task.IsCompleted)
-            {
-                await task.CfAwait();
-                return;
-            }
-
-            // signal the task it should cancel
-            cancellation?.Cancel();
-
-            // task cancellation are never unobserved
-            // OTOH the task *could* throw another exception
-            // and... most people will probably ignore them or forget to pay
-            // attention, so it feels safer to observe these exceptions
-            task.ObserveException();
-
-            // else timeout
-            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
         }
 
-        private static async Task<TResult> AwaitWithTimeout<TResult>(Task<TResult> task, int timeoutMilliseconds, CancellationTokenSource? cancellation)
+#if !NET6_0_OR_GREATER
+
+        // .NET 6 introduced the built-in WaitAsync method so let use use it everywhere,
+        // and for pre-.NET 6 let us use MS' own code from https://github.com/dotnet/runtime/pull/48842
+
+        private static async Task WaitAsync(this Task task, TimeSpan timeout)
         {
-            if (timeoutMilliseconds < 0)
+            var tcs = new TaskCompletionSource<bool>();
+            using (new Timer(s => ((TaskCompletionSource<bool>)s).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
             {
-                return await task.ConfigureAwait(false);
+                await (await Task.WhenAny(task, tcs.Task).ConfigureAwait(false)).ConfigureAwait(false);
             }
+        }
 
-            using var delayCancel = new CancellationTokenSource();
-            var delay = Task.Delay(timeoutMilliseconds, delayCancel.Token);
-
-            await Task.WhenAny(task, delay).ConfigureAwait(false);
-
-            // if the delay is not completed, cancel it & observe the corresponding exception
-            if (!delay.IsCompleted)
+        private static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
+        {
+            var tcs = new TaskCompletionSource<TResult>();
+            using (new Timer(s => ((TaskCompletionSource<bool>)s).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
             {
-                delayCancel.Cancel(); // task cancellation are never unobserved
+                return await (await Task.WhenAny(task, tcs.Task).ConfigureAwait(false)).ConfigureAwait(false);
             }
+        }
+#endif
 
-            // if the task is completed (success or fault...), return
-            if (task.IsCompleted)
+        private static async Task<TResult> AwaitWithTimeout<TResult>(Task<TResult> task, TimeSpan timeout, CancellationTokenSource? cancellation)
+        {
+            try
             {
-                return await task.CfAwait();
+                return await task.WaitAsync(timeout).ConfigureAwait(false);
             }
-
-            // signal the task it should cancel
-            cancellation?.Cancel();
-
-            // task cancellation are never unobserved
-            // OTOH the task *could* throw another exception
-            // and... most people will probably ignore them or forget to pay
-            // attention, so it feels safer to observe these exceptions
-            task.ObserveException();
-
-            // else timeout
-            throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
+            catch (TimeoutException)
+            {
+                cancellation?.Cancel(); // signal the task it should cancel
+                task.ObserveException(); // ensure we don't leak an unobserved exception
+                throw new TaskTimeoutException(ExceptionMessages.Timeout, task);
+            }
         }
 
         /// <summary>

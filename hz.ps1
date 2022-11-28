@@ -2013,20 +2013,22 @@ function run-tests ( $f ) {
         "--no-restore", "--no-build",
         "-f", "$f",
         "-v", "normal",
-        "--logger", "trx;LogFileName=results-$f.trx",
+        "--logger", "trx;LogFileName=results-$f.trx", # log to file
+        "--logger", "console;verbosity=minimal", # and *not* to console (values: quiet|minimal|normal|detailed|diagnostic)
         "--results-directory", "$tmpDir/tests/results"
     )
 
     # see https://docs.nunit.org/articles/vs-test-adapter/Tips-And-Tricks.html
     # for available options and names here
     $nunitArgs = @(
-        "NUnit.WorkDirectory=`"$tmpDir/tests/results`"",
-        "NUnit.TestOutputXml=`".`"",
-        "NUnit.Labels=Before",
-        "NUnit.DefaultTestNamePattern=`"$($testName.Replace("<FRAMEWORK>", $f))`""
+        "NUnit.WorkDirectory=$tmpDir/tests/results",
+        "NUnit.TestOutputXml=.",
+        "NUnit.Labels=Off", # quiet please
+        "NUnit.DefaultTestNamePattern=$($testName.Replace("<FRAMEWORK>", $f))",
+        "NUnit.ConsoleOut=0" # quiet please
     )
 
-    if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=`"$($options.testFilter.Replace("<FRAMEWORK>", $f))`"" }
+    if (-not [string]::IsNullOrEmpty($options.testFilter)) { $nunitArgs += "NUnit.Where=$($options.testFilter.Replace("<FRAMEWORK>", $f))" }
 
     if ($options.cover) {
         $coveragePath = "$tmpDir/tests/cover"
