@@ -40,6 +40,11 @@
 * SQL
 include::sql:partial$nav.adoc[]
 
+* Extensions
+** xref:extensions:overview.adoc[]
+** xref:extensions:dependency-injection.adoc[]
+** xref:extensions:caching.adoc[]
+
 * xref:canceling.adoc[]
 * xref:events.adoc[]
 * xref:examples.adoc[]
