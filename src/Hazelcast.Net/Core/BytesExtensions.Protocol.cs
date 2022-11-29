@@ -37,8 +37,8 @@ namespace Hazelcast.Core
         public static void WriteBoolL(this byte[] bytes, int position, bool value)
             => bytes.WriteBool(position, value);
 
-        public static void WriteGuidL(this byte[] bytes, int position, Guid value)
-            => bytes.WriteGuid(position, value);
+        public static void WriteGuidL(this byte[] bytes, int position, Guid value, bool withEmptyFlag = true)
+            => bytes.WriteGuid(position, value, Endianness.LittleEndian, withEmptyFlag);
 
         public static void WriteByteL(this byte[] bytes, int position, byte value)
             => bytes.WriteByte(position, value);
@@ -61,52 +61,28 @@ namespace Hazelcast.Core
         public static bool ReadBoolL(this byte[] bytes, int position)
             => bytes.ReadBool(position);
 
-        public static Guid ReadGuidL(this byte[] bytes, int position)
-            => bytes.ReadGuid(position);
+        public static Guid ReadGuidL(this byte[] bytes, int position, bool withEmptyFlag = true)
+            => bytes.ReadGuid(position, Endianness.LittleEndian, withEmptyFlag);
 
         public static byte ReadByteL(this byte[] bytes, int position)
             => bytes.ReadByte(position);
 
-        private static Guid ReadGuid(this byte[] bytes, int position)
+        public static Guid ReadGuid(this byte[] bytes, int position, Endianness endianness, bool withEmptyFlag = true)
         {
-            // read the 'empty' bool
-            if (bytes.ReadBool(position)) return Guid.Empty;
+            if (withEmptyFlag)
+            {
+                // read the 'empty' bool
+                if (bytes.ReadBool(position++)) return Guid.Empty;
+            }
 
             // not 'empty', must be able to read a full guid
             if (bytes.Length < position + SizeOfGuid)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            position += SizeOfByte;
-
-            // ReSharper disable once UseObjectOrCollectionInitializer
-#pragma warning disable IDE0017 // Simplify object initialization
-            var v = new JavaUuidOrder();
-#pragma warning restore IDE0017 // Simplify object initialization
-
-            v.X0 = bytes[position]; position += SizeOfByte;
-            v.X1 = bytes[position]; position += SizeOfByte;
-            v.X2 = bytes[position]; position += SizeOfByte;
-            v.X3 = bytes[position]; position += SizeOfByte;
-
-            v.X4 = bytes[position]; position += SizeOfByte;
-            v.X5 = bytes[position]; position += SizeOfByte;
-            v.X6 = bytes[position]; position += SizeOfByte;
-            v.X7 = bytes[position]; position += SizeOfByte;
-
-            v.X8 = bytes[position]; position += SizeOfByte;
-            v.X9 = bytes[position]; position += SizeOfByte;
-            v.XA = bytes[position]; position += SizeOfByte;
-            v.XB = bytes[position]; position += SizeOfByte;
-
-            v.XC = bytes[position]; position += SizeOfByte;
-            v.XD = bytes[position]; position += SizeOfByte;
-            v.XE = bytes[position]; position += SizeOfByte;
-            v.XF = bytes[position];
-
-            return v.Value;
+            return new JavaUuidOrder().ReadBytes(bytes, position, endianness).Value;
         }
 
-        private static void WriteGuid(this byte[] bytes, int position, Guid value)
+        public static void WriteGuid(this byte[] bytes, int position, Guid value, Endianness endianness, bool withEmptyFlag = true)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
 
@@ -115,51 +91,17 @@ namespace Hazelcast.Core
                 throw new ArgumentOutOfRangeException(nameof(position));
 
             // write the 'empty' bool
-            bytes.WriteBool(position, value == Guid.Empty);
-            if (value == Guid.Empty) return;
+            if (withEmptyFlag)
+            {
+                bytes.WriteBool(position++, value == Guid.Empty);
+                if (value == Guid.Empty) return;
+            }
 
             // if not empty, must be able to write the full guid
             if (bytes.Length < position + SizeOfGuid)
                 throw new ArgumentOutOfRangeException(nameof(position));
 
-            position += SizeOfByte;
-
-            var v = new JavaUuidOrder {Value = value};
-
-            bytes[position] = v.X0;
-            position += SizeOfByte;
-            bytes[position] = v.X1;
-            position += SizeOfByte;
-            bytes[position] = v.X2;
-            position += SizeOfByte;
-            bytes[position] = v.X3;
-            position += SizeOfByte;
-
-            bytes[position] = v.X4;
-            position += SizeOfByte;
-            bytes[position] = v.X5;
-            position += SizeOfByte;
-            bytes[position] = v.X6;
-            position += SizeOfByte;
-            bytes[position] = v.X7;
-            position += SizeOfByte;
-
-            bytes[position] = v.X8;
-            position += SizeOfByte;
-            bytes[position] = v.X9;
-            position += SizeOfByte;
-            bytes[position] = v.XA;
-            position += SizeOfByte;
-            bytes[position] = v.XB;
-            position += SizeOfByte;
-
-            bytes[position] = v.XC;
-            position += SizeOfByte;
-            bytes[position] = v.XD;
-            position += SizeOfByte;
-            bytes[position] = v.XE;
-            position += SizeOfByte;
-            bytes[position] = v.XF;
+            new JavaUuidOrder { Value = value }.WriteBytes(bytes, position, endianness);
         }
     }
 }
