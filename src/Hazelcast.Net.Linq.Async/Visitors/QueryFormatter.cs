@@ -44,11 +44,11 @@ namespace Hazelcast.Linq.Visitors
         /// </summary>
         /// <param name="expression">tree</param>
         /// <returns>(SQL statement, Value of variables)</returns>
-        public static (string, IEnumerable<object>) Format(Expression expression)
+        public static (string, IReadOnlyCollection<object>) Format(Expression expression)
         {
             var f = new QueryFormatter();
             f.Visit(expression);
-            return (f.ToString(), f._values);
+            return (f.ToString(), f._values.AsReadOnly());
         }
 
         public override string ToString()

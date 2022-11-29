@@ -18,6 +18,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
+using Hazelcast.DistributedObjects;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -54,7 +55,7 @@ namespace Hazelcast.Linq.Visitors
         internal static Expression StripQuotes(Expression expression)
         {
             while (expression.NodeType == ExpressionType.Quote)
-                expression = ((UnaryExpression)expression).Operand;
+                expression = ((UnaryExpression) expression).Operand;
 
             return expression;
         }
@@ -65,7 +66,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>alias</returns>
         internal string GetNextAlias()
         {
-            return "m" + (_aliasCount++);//m for map
+            return "m" + (_aliasCount++); //m for map
         }
 
         private static LambdaExpression GetLambda(Expression e)
@@ -74,7 +75,7 @@ namespace Hazelcast.Linq.Visitors
 
             if (e.NodeType == ExpressionType.Constant)
 #pragma warning disable CS8603 // Possible null reference return.
-                return ((ConstantExpression)e).Value as LambdaExpression;
+                return ((ConstantExpression) e).Value as LambdaExpression;
 #pragma warning restore CS8603 // Possible null reference return.
 
 #pragma warning disable CS8603 // Possible null reference return.
@@ -89,7 +90,7 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitMethodCall(MethodCallExpression m)
         {
-            if (m.Method.DeclaringType == typeof(Queryable) || m.Method.DeclaringType == typeof(Enumerable))
+            if (m.Method.DeclaringType == typeof(AsyncQueryable) || m.Method.DeclaringType == typeof(Enumerable))
             {
                 switch (m.Method.Name)
                 {
@@ -99,7 +100,8 @@ namespace Hazelcast.Linq.Visitors
                     case "Select":
                         return BindSelect(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
                     case "Join":
-                        return BindJoin(m.Type, m.Arguments[0], m.Arguments[1], GetLambda(m.Arguments[2]), GetLambda(m.Arguments[3]), GetLambda(m.Arguments[4]));
+                        return BindJoin(m.Type, m.Arguments[0], m.Arguments[1], GetLambda(m.Arguments[2]),
+                            GetLambda(m.Arguments[3]), GetLambda(m.Arguments[4]));
                 }
 
                 throw new NotSupportedException($"The method '{m.Method.Name}' is not supported.");
@@ -108,10 +110,11 @@ namespace Hazelcast.Linq.Visitors
             return base.VisitMethodCall(m);
         }
 
-        private ProjectionExpression BindJoin(Type type, Expression outer, Expression inner, LambdaExpression outerKey, LambdaExpression innerKey, LambdaExpression selector)
+        private ProjectionExpression BindJoin(Type type, Expression outer, Expression inner, LambdaExpression outerKey,
+            LambdaExpression innerKey, LambdaExpression selector)
         {
-            var outerProjection = (ProjectionExpression)Visit(outer);
-            var innerProjection = (ProjectionExpression)Visit(inner);
+            var outerProjection = (ProjectionExpression) Visit(outer);
+            var innerProjection = (ProjectionExpression) Visit(inner);
             var visitedOuterKey = Visit(outerKey.Body);
             var visitedInnerKey = Visit(innerKey.Body);
             var visitedSelector = Visit(selector.Body);
@@ -123,11 +126,14 @@ namespace Hazelcast.Linq.Visitors
 
             var alias = GetNextAlias();
 
-            var joinExp = new JoinExpression(outerProjection.Source, innerProjection.Source, Expression.Equal(visitedOuterKey, visitedInnerKey), type);
+            var joinExp = new JoinExpression(outerProjection.Source, innerProjection.Source,
+                Expression.Equal(visitedOuterKey, visitedInnerKey), type);
 
-            var projectedColumns = Project(visitedSelector, alias, outerProjection.Source.Alias, innerProjection.Source.Alias);
+            var projectedColumns = Project(visitedSelector, alias, outerProjection.Source.Alias,
+                innerProjection.Source.Alias);
 
-            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, joinExp), projectedColumns.Projector, type);
+            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, joinExp),
+                projectedColumns.Projector, type);
         }
 
         /// <summary>
@@ -148,7 +154,9 @@ namespace Hazelcast.Linq.Visitors
             //Projected columns of the `Where` clause.
             var projectedColumns = Project(visitedPredicate, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source), projectedColumns.Projector, type);
+            return new ProjectionExpression(
+                new SelectExpression(alias, type, projectedColumns.Columns, projection.Source),
+                projectedColumns.Projector, type);
         }
 
         private ProjectionExpression BindWhere(Type type, Expression source, LambdaExpression predicate)
@@ -160,25 +168,29 @@ namespace Hazelcast.Linq.Visitors
             //Projected columns of the `Select` clause.
             var projectedColumns = Project(projection.Projector, alias, GetExistingAlias(projection.Source));
 
-            return new ProjectionExpression(new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, visitedPredicate), projectedColumns.Projector, type);
+            return new ProjectionExpression(
+                new SelectExpression(alias, type, projectedColumns.Columns, projection.Source, visitedPredicate),
+                projectedColumns.Projector, type);
         }
 
-        private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression, LambdaExpression predicate)
+        private (ProjectionExpression, Expression) VisitSourceAndPredicate(Expression expression,
+            LambdaExpression predicate)
         {
-            var projection = (ProjectionExpression)Visit(expression);//DFS and project everything about the entry type          
-            _map[predicate.Parameters[0]] = projection.Projector;//map predicate to the projector
-            var predicateExp = Visit(predicate.Body);// Visit the body to handle inner expressions.
+            var projection =
+                (ProjectionExpression) Visit(expression); //DFS and project everything about the entry type          
+            _map[predicate.Parameters[0]] = projection.Projector; //map predicate to the projector
+            var predicateExp = Visit(predicate.Body); // Visit the body to handle inner expressions.
             return (projection, predicateExp);
         }
 
         private static string GetExistingAlias(Expression source)
         {
-            switch ((HzExpressionType)source.NodeType)
+            switch ((HzExpressionType) source.NodeType)
             {
                 case HzExpressionType.Select:
-                    return ((SelectExpression)source).Alias;
+                    return ((SelectExpression) source).Alias;
                 case HzExpressionType.Map:
-                    return ((MapExpression)source).Alias;
+                    return ((MapExpression) source).Alias;
                 default:
                     throw new InvalidOperationException($"Invalid source node type '{source.NodeType}'");
             }
@@ -186,14 +198,13 @@ namespace Hazelcast.Linq.Visitors
 
         private bool IsMap(object? value)
         {
-            return value is IQueryable q && q.Expression.NodeType == ExpressionType.Constant;
+            return value is IAsyncQueryable q && q.Expression.NodeType == ExpressionType.Constant;
         }
 
         private string GetMapName(object map)
         {
-            var mapQuery = (IQueryable)map;
-            var rowType = mapQuery.ElementType;
-            return rowType.Name;
+            var hMap = (IDistributedObject) map;
+            return hMap.Name;
         }
 
         private string GetColumnName(MemberInfo member)
@@ -208,7 +219,7 @@ namespace Hazelcast.Linq.Visitors
             if (finfo != null)
                 return finfo.FieldType;
 
-            var pinfo = (PropertyInfo)member;
+            var pinfo = (PropertyInfo) member;
             return pinfo.PropertyType;
         }
 
@@ -219,7 +230,8 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>List of fields</returns>
         private IEnumerable<MemberInfo> GetMappedMembers(Type entryType)
         {
-            return entryType.GetFields(bindingFlags).Cast<MemberInfo>().Concat(entryType.GetProperties(bindingFlags)).ToArray();
+            return entryType.GetFields(bindingFlags).Cast<MemberInfo>().Concat(entryType.GetProperties(bindingFlags))
+                .ToArray();
         }
 
         /// <summary>
@@ -229,7 +241,7 @@ namespace Hazelcast.Linq.Visitors
         /// <returns>Projection of the entry type</returns>
         private ProjectionExpression GetMapProjection(object obj)
         {
-            var map = (IQueryable)obj;//map means HMap as a data source
+            var map = (IAsyncQueryable) obj; //map means HMap as a data source
 
             var mapAlias = GetNextAlias();
             var selectAlias = GetNextAlias();
@@ -241,22 +253,25 @@ namespace Hazelcast.Linq.Visitors
             {
                 var columnName = GetColumnName(mi);
                 var columnType = GetColumnType(mi);
-
-                bindings.Add(Expression.Bind(mi, new ColumnExpression(columnType, selectAlias, columnName, columns.Count)));
-                columns.Add(new ColumnDefinition(columnName, new ColumnExpression(columnType, mapAlias, columnName, columns.Count)));
+                // TODO: handle key value
+                bindings.Add(Expression.Bind(mi,
+                    new ColumnExpression(columnType, selectAlias, columnName, columns.Count)));
+                columns.Add(new ColumnDefinition(columnName,
+                    new ColumnExpression(columnType, mapAlias, columnName, columns.Count)));
             }
 
             var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
-            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)));
+            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(),
+                new MapExpression(entryType, mapAlias, GetMapName(map)));
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 
 
         protected override Expression VisitConstant(ConstantExpression node)
         {
-            return IsMap(node.Value) ? (Expression)GetMapProjection(node.Value!) : (Expression)node;
+            return IsMap(node.Value) ? (Expression) GetMapProjection(node.Value!) : (Expression) node;
         }
 
         protected override Expression VisitParameter(ParameterExpression node)
@@ -271,20 +286,20 @@ namespace Hazelcast.Linq.Visitors
             switch (visitedNode.NodeType)
             {
                 case ExpressionType.MemberInit:
-                    var initExp = (MemberInitExpression)visitedNode;
+                    var initExp = (MemberInitExpression) visitedNode;
 
                     foreach (MemberAssignment assigment in initExp.Bindings)
                     {
                         if (assigment != null && MembersMatch(assigment.Member, node.Member))
-                            return assigment.Expression;//Most probably a Column Expressions,
-                                                        //already created at the Visit above.
+                            return assigment.Expression; //Most probably a Column Expressions,
+                        //already created at the Visit above.
                     }
 
                     break;
 
                 case ExpressionType.New:
 
-                    var newExp = (NewExpression)visitedNode;
+                    var newExp = (NewExpression) visitedNode;
 
                     if (newExp.Members == null) break;
 
@@ -313,7 +328,7 @@ namespace Hazelcast.Linq.Visitors
             if (fieldInfo != null)
                 return Expression.Field(source, fieldInfo);
 
-            var propertyInfo = (PropertyInfo)memberInfo;
+            var propertyInfo = (PropertyInfo) memberInfo;
             return Expression.Property(source, propertyInfo);
         }
 
