@@ -53,7 +53,6 @@ namespace Hazelcast.Linq.Evaluation
 #pragma warning disable CS8603 // Possible null reference return.
             if (node == null) return node;
 #pragma warning restore CS8603 // Possible null reference return.
-            Console.WriteLine(node.NodeType);
 
             var copyOfEvaluationState = _cannotBeEvaluated;
 
