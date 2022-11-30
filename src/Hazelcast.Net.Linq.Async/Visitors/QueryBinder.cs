@@ -249,7 +249,7 @@ namespace Hazelcast.Linq.Visitors
             var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
-            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(), new MapExpression(entryType, mapAlias, GetMapName(map)));
+            var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(), new MapExpression(entryType, GetMapName(map), mapAlias));
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 
