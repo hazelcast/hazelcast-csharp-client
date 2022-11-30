@@ -94,7 +94,7 @@ jobs:
         id: test
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-          GITHUB_TOKEN_DEVOPS: ${{ secrets.GITHUB_TOKEN_DEVOPS }}
+          GITHUB_TOKEN_DEVOPS: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
         shell: pwsh
         run: |
           $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
