@@ -25,28 +25,33 @@ using Hazelcast.Sql;
 
 namespace Hazelcast.Linq
 {
+    /// <summary>
+    /// Implements IAsyncQueryProvider
+    /// </summary>
     internal class QueryProvider : IAsyncQueryProvider
     {
         internal readonly ISqlService SqlService;
         private readonly string _mapName;
         private readonly QueryTranslator _translator;
+        private readonly Type _rootType;
 
-        public QueryProvider(ISqlService sqlService, string mapName)
+        public QueryProvider(ISqlService sqlService, string mapName, Type rootElementType)
         {
             SqlService = sqlService;
-            _translator = new QueryTranslator(mapName);
+            _translator = new QueryTranslator(mapName, rootElementType);
             _mapName = mapName;
+            _rootType = rootElementType;
         }
 
         public Task<ISqlQueryResult> ExecuteQuery(Expression expression)
         {
-            var (sql, values) = this.GetQuery(expression);
+            var (sql, values) = GetQuery(expression);
             return this.SqlService.ExecuteQueryAsync(sql, values);
         }
 
         public (string, IReadOnlyCollection<object>) GetQuery(Expression expression)
         {
-            var (sql, values) = _translator.Translate(ExpressionEvaluator.EvaluatePartially(expression));
+            var (sql, values) = _translator.Translate(expression);
             return (sql, values);
         }
 
@@ -55,9 +60,8 @@ namespace Hazelcast.Linq
             try
             {
                 var itemType = typeof(TElement);
-                var mapQ = Activator.CreateInstance(typeof(MapQuery<,>).MakeGenericType(itemType.GenericTypeArguments),
-                    new object[] {this, expression})!;
-
+                var mapQ = Activator.CreateInstance(typeof(MapQuery<>).MakeGenericType(itemType),
+                    this, expression)!;
                 return ((IAsyncQueryable<TElement>) mapQ);
             }
             catch (TargetInvocationException ex)
@@ -66,12 +70,35 @@ namespace Hazelcast.Linq
             }
         }
 
+        private Type[] GetTypeArgumentsBasedKeyValueTypes(Type itemType)
+        {
+            var types = new Type[2];
+            var keyValueTypes = _rootType.GenericTypeArguments;
+            if (keyValueTypes[0] == itemType)
+            {
+                types[0] = itemType;
+                types[1] = keyValueTypes[1]; //value
+            }
+            else if (keyValueTypes[1] == itemType)
+            {
+                types[0] = keyValueTypes[0]; //key
+                types[1] = itemType;
+            }
+            else
+            {
+                types[0] = keyValueTypes[0];
+                types[1] = keyValueTypes[1];
+            }
+
+            return types;
+        }
+
         public TResult Execute<TResult>(Expression expression)
         {
             var itemType = typeof(TResult);
-            var keyValueType = itemType.GenericTypeArguments[0].GetTypeInfo().GetGenericArguments();
+            //var keyValueType = itemType.GenericTypeArguments[0].GetTypeInfo().GetGenericArguments();
             return (TResult) Activator.CreateInstance(
-                typeof(ObjectReader<,>).MakeGenericType(keyValueType), new object[] {this, expression})!;
+                typeof(ObjectReader<>).MakeGenericType(itemType), this, expression)!;
         }
 
         public ValueTask<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)

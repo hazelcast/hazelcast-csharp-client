@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Linq.Expressions;
@@ -32,12 +33,13 @@ namespace Hazelcast.Linq.Visitors
         private Dictionary<ParameterExpression, Expression> _map;
         private int _aliasCount;
         private const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
+        private Type _rootType;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public QueryBinder()
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         {
-            _projector = new ColumnProjector(p => p.NodeType == (ExpressionType)HzExpressionType.Column);
+            _projector = new ColumnProjector(p => p.NodeType == (ExpressionType) HzExpressionType.Column);
         }
 
         /// <summary>
@@ -45,9 +47,10 @@ namespace Hazelcast.Linq.Visitors
         /// </summary>
         /// <param name="expression"></param>
         /// <returns></returns>
-        public Expression Bind(Expression expression)
+        public Expression Bind(Expression expression, Type rootType = null)
         {
             _map = new();
+            _rootType = rootType;
             return Visit(expression);
         }
 
@@ -203,13 +206,19 @@ namespace Hazelcast.Linq.Visitors
 
         private string GetMapName(object map)
         {
-            var hMap = (IDistributedObject) map;
-            return hMap.Name;
+            //var hMap = (MapQuery<,>) map;
+            //return hMap.Name;
+            return "linqMap1";
         }
 
         private string GetColumnName(MemberInfo member)
         {
-            return member.Name;
+            if (member.DeclaringType == _rootType)
+            {
+                return member.Name == "Key" ? "__key" : "this";
+            }
+            
+            return  member.Name;
         }
 
         private Type GetColumnType(MemberInfo member)
@@ -229,9 +238,21 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="entryType">The type of the object that will be queried from the map.</param>
         /// <returns>List of fields</returns>
         private IEnumerable<MemberInfo> GetMappedMembers(Type entryType)
-        {
-            return entryType.GetFields(bindingFlags).Cast<MemberInfo>().Concat(entryType.GetProperties(bindingFlags))
+        { 
+            
+            var fields = entryType
+                .GetFields(bindingFlags)
+                .Cast<MemberInfo>()
+                .Concat(entryType.GetProperties(bindingFlags))
                 .ToArray();
+            
+            //Strip KeyValuePair if it matches
+            if (entryType == _rootType)
+            {
+                //fields[0] = fields[0].
+            }
+
+            return fields;
         }
 
         /// <summary>
@@ -254,7 +275,7 @@ namespace Hazelcast.Linq.Visitors
                 var columnName = GetColumnName(mi);
                 var columnType = GetColumnType(mi);
                 // TODO: handle key value
-                bindings.Add(Expression.Bind(mi,
+               bindings.Add(Expression.Bind(mi,
                     new ColumnExpression(columnType, selectAlias, columnName, columns.Count)));
                 columns.Add(new ColumnDefinition(columnName,
                     new ColumnExpression(columnType, mapAlias, columnName, columns.Count)));
@@ -264,7 +285,7 @@ namespace Hazelcast.Linq.Visitors
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
             var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(),
-                new MapExpression(entryType, mapAlias, GetMapName(map)));
+                new MapExpression(entryType, GetMapName(map), mapAlias));
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 

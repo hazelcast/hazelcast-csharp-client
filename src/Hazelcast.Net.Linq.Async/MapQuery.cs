@@ -22,7 +22,7 @@ using Hazelcast.DistributedObjects.Impl;
 
 namespace Hazelcast.Linq
 {
-    internal class MapQuery<TKey, TValue> : IAsyncQueryable<KeyValuePair<TKey, TValue>>
+    internal class MapQuery<TElement> : IAsyncQueryable<TElement>
     {
         private readonly QueryProvider _queryProvider;
         private readonly Expression _expression;
@@ -37,16 +37,16 @@ namespace Hazelcast.Linq
             _queryProvider = queryProvider;
             _expression = Expression.Constant(this);
         }
-        public Type ElementType => typeof(KeyValuePair<TKey, TValue>);
+        public Type ElementType => typeof(TElement);
 
         public Expression Expression => _expression;
 
         public IAsyncQueryProvider Provider => _queryProvider;
 
-        public IAsyncEnumerator<KeyValuePair<TKey, TValue>> GetAsyncEnumerator(CancellationToken token)
+        public IAsyncEnumerator<TElement> GetAsyncEnumerator(CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            return _queryProvider.Execute<IAsyncEnumerator<KeyValuePair<TKey, TValue>>>(_expression);
+            return _queryProvider.Execute<IAsyncEnumerator<TElement>>(_expression);
         }
     }
 }

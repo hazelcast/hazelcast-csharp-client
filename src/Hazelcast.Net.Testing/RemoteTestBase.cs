@@ -43,7 +43,7 @@ namespace Hazelcast.Testing
                 .ConfigureBuilder(builder =>
                 {
                     builder.AddHazelcastAndDefaults(null);
-                    builder.AddUserSecrets(GetType().Assembly, true);
+                    //builder.AddUserSecrets(GetType().Assembly, true);
                 })
                 .WithAltKey(ConfigurationSecretsKey)
                 .With(options =>

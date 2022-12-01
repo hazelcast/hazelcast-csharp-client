@@ -21,22 +21,22 @@ using Hazelcast.Sql;
 
 namespace Hazelcast.Linq
 {
-    internal class ObjectReader<TKey, TValue> : IAsyncEnumerator<KeyValuePair<TKey, TValue>>, IAsyncDisposable
+    internal class ObjectReader<TResult> : IAsyncEnumerator<TResult>, IAsyncDisposable
     {
-
         private readonly QueryProvider _queryProvider;
         private IAsyncEnumerator<SqlRow> _enumerator;
         private ISqlQueryResult _queryResult;
         private Expression _expression;
+        private Func<SqlRow, TResult> _projector;
 
-        public ObjectReader(QueryProvider queryProvider, Expression expression)
+        public ObjectReader(QueryProvider queryProvider, Expression expression, Func<SqlRow, TResult> projector)
         {
             _queryProvider = queryProvider;
             _expression = expression;
+            _projector = projector;
         }
 
-        public KeyValuePair<TKey, TValue> Current { get; private set; }
-
+        public TResult Current { get; private set; }
 
 
         public ValueTask DisposeAsync()
@@ -58,15 +58,14 @@ namespace Hazelcast.Linq
 
             if (await _enumerator.MoveNextAsync().CfAwait())
             {
-                var row = _enumerator.Current;
-                var key = row.GetKey<TKey>();
-                var val = row.GetValue<TValue>();
-                Current = new KeyValuePair<TKey, TValue>(key, val);
+                //var row = _enumerator.Current;
+                //var key = row.GetKey<TKey>();
+                //var val = row.GetValue<TValue>();
+                Current = _projector(_enumerator.Current);
                 return true;
             }
 
             return false;
         }
-
     }
 }

@@ -13,19 +13,19 @@
 // limitations under the License.
 
 using System.Collections.Generic;
-using System.Linq;
-using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Impl;
 
 namespace Hazelcast.Linq
 {
-    public static class HMapExtension
+    public class HKeyValuePair<TKey, TValue>
     {
-        public static IAsyncQueryable<KeyValuePair<TKey, TValue>> AsAsyncQueryable<TKey, TValue>(
-            this IHMap<TKey, TValue> map)
+        public HKeyValuePair(){}
+        public HKeyValuePair(TKey key, TValue value)
         {
-            var mapInternal = (HMap<TKey, TValue>) map;
-            return new MapQuery<KeyValuePair<TKey, TValue>>(new QueryProvider(mapInternal.SqlService, mapInternal.Name, typeof(KeyValuePair<TKey, TValue>)));
+            Key = key;
+            Value = value;
         }
+
+        public TKey Key { get; set; }
+        public TValue Value { get; set; }
     }
 }

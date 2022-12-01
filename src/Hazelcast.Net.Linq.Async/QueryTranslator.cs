@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
@@ -24,16 +25,18 @@ namespace Hazelcast.Linq
     internal class QueryTranslator
     {
         private readonly string _mapName;
+        private readonly Type _rootElementType;
 
-        public QueryTranslator(string mapName)
+        public QueryTranslator(string mapName, Type rootElementType)
         {
             _mapName = mapName;
+            _rootElementType = rootElementType;
         }
 
         public (string, IReadOnlyCollection<object>) Translate(Expression root)
         {
             var evaluated = ExpressionEvaluator.EvaluatePartially(root);
-            var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
+            var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated,_rootElementType) as Expression;
             boundExp = UnusedColumnProcessor.Clean(boundExp);
             boundExp = RedundantSubqueryProcessor.Clean(boundExp!);
             return QueryFormatter.Format(boundExp);

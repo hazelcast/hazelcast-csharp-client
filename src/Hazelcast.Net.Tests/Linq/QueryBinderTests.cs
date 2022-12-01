@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NUnit.Framework;
-
 using Hazelcast.Linq.Visitors;
 using System.Linq.Expressions;
 using Hazelcast.Linq.Evaluation;
@@ -65,19 +64,20 @@ namespace Hazelcast.Tests.Linq
             //Overcome the referenced values, such as `val` in the where clause
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
 
-            var projectedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated);
+            var projectedExp = (ProjectionExpression) new QueryBinder().Bind(evaluated);
             var columnNames = typeof(DummyType).GetProperties().Select(p => p.Name).ToArray();
 
             //projection aka select
             var projection = projectedExp.Source as SelectExpression;
             Assert.That(projection.Columns.Count, Is.EqualTo(2));
             Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(columnNames), columnNames);
-            Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Alias, nameof(DummyType));//redundant queries are another PR's deal.
+            Assert.AreEqual(((MapExpression) ((SelectExpression) projection.From).From).Alias,
+                nameof(DummyType)); //redundant queries are another PR's deal.
 
             var where = projectedExp.Source.Where as BinaryExpression;
             Assert.AreEqual(where.NodeType, ExpressionType.Equal);
-            Assert.AreEqual(((ColumnExpression)where.Left).Name, nameof(DummyType.ColumnInteger));
-            Assert.AreEqual(((ConstantExpression)where.Right).Value, val);
+            Assert.AreEqual(((ColumnExpression) where.Left).Name, nameof(DummyType.ColumnInteger));
+            Assert.AreEqual(((ConstantExpression) where.Right).Value, val);
         }
 
         [Test]
@@ -88,8 +88,9 @@ namespace Hazelcast.Tests.Linq
 
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
 
-            var projectedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated);
-            var columnNames = typeof(DummyType).GetProperties().Select(p => p.Name == nameof(DummyType.ColumnInteger)).ToArray();
+            var projectedExp = (ProjectionExpression) new QueryBinder().Bind(evaluated);
+            var columnNames = typeof(DummyType).GetProperties().Select(p => p.Name == nameof(DummyType.ColumnInteger))
+                .ToArray();
 
             var projection = projectedExp.Source as SelectExpression;
 
@@ -110,27 +111,27 @@ namespace Hazelcast.Tests.Linq
                 // doesn't work for us. Note: HMap is Querable. It will be used as joined data source in normal usage. Current usage 
                 // is only for testing.
                 .Join(dummyData2.AsQueryable(),
-                o => o.ColumnInteger,
-                i => i.ColumnInteger,
-                tempPredicate);
+                    o => o.ColumnInteger,
+                    i => i.ColumnInteger,
+                    tempPredicate);
 
             var evaluated = ExpressionEvaluator.EvaluatePartially(query.Expression);
 
-            var projectedExp = (ProjectionExpression)new QueryBinder().Bind(evaluated);
+            var projectedExp = (ProjectionExpression) new QueryBinder().Bind(evaluated);
             var columnNames = typeof(DummyType).GetProperties().Select(p => p.Name).ToArray();
 
             var projection = projectedExp.Source as SelectExpression;
-            
-            Assert.AreEqual((ExpressionType)HzExpressionType.Join, projectedExp.Source.From.NodeType);
+
+            Assert.AreEqual((ExpressionType) HzExpressionType.Join, projectedExp.Source.From.NodeType);
             Assert.AreEqual(nameof(DummyType.ColumnInteger),
-                ((MemberExpression)((BinaryExpression)((JoinExpression)projectedExp.Source.From).JoinCondition).Left).Member.Name);
+                ((MemberExpression) ((BinaryExpression) ((JoinExpression) projectedExp.Source.From).JoinCondition).Left)
+                .Member.Name);
 
             Assert.AreEqual(nameof(DummyType.ColumnInteger),
-                ((MemberExpression)((BinaryExpression)((JoinExpression)projectedExp.Source.From).JoinCondition).Right).Member.Name);
+                ((MemberExpression) ((BinaryExpression) ((JoinExpression) projectedExp.Source.From).JoinCondition)
+                    .Right).Member.Name);
 
-            Assert.AreEqual(ExpressionType.Equal, ((JoinExpression)projectedExp.Source.From).JoinCondition.NodeType);
-
+            Assert.AreEqual(ExpressionType.Equal, ((JoinExpression) projectedExp.Source.From).JoinCondition.NodeType);
         }
-
     }
 }
