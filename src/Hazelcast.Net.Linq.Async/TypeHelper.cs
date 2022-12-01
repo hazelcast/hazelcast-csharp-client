@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Hazelcast.Linq
@@ -38,5 +39,54 @@ namespace Hazelcast.Linq
                     );
             }
         }
+        /// <summary>
+        /// Gets the element type given the sequence type.
+        /// If the type is not a sequence, returns the type itself.
+        /// </summary>
+        public static Type GetElementType(Type sequenceType)
+        {
+            var iEnumerable = FindIEnumerable(sequenceType);
+            return iEnumerable is null ? sequenceType : iEnumerable.GetTypeInfo().GenericTypeArguments[0];
+        }
+        
+        /// <summary>
+        /// Finds the type's implemented <see cref="IEnumerable{T}"/> type.
+        /// </summary>
+        public static Type? FindIEnumerable(this Type? type)
+        {
+            if (type is null || type == typeof(string))
+                return null;
+
+            if (type.IsArray)
+                return typeof(IEnumerable<>).MakeGenericType(type.GetElementType()!);
+
+            var typeInfo = type.GetTypeInfo();
+            if (typeInfo.IsGenericType)
+            {
+                foreach (var arg in typeInfo.GenericTypeArguments)
+                {
+                    var iEnumerable = typeof(IEnumerable<>).MakeGenericType(arg);
+                    if (iEnumerable.GetTypeInfo().IsAssignableFrom(typeInfo))
+                    {
+                        return iEnumerable;
+                    }
+                }
+            }
+
+            foreach (var impInterface in typeInfo.ImplementedInterfaces)
+            {
+                var iEnumerable = FindIEnumerable(impInterface);
+                if (iEnumerable != null) return iEnumerable;
+            }
+
+            if (typeInfo.BaseType != null && typeInfo.BaseType != typeof(object))
+            {
+                return FindIEnumerable(typeInfo.BaseType);
+            }
+
+            return null;
+        }
     }
+    
+    
 }

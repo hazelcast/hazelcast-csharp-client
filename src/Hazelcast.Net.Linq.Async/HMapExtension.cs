@@ -21,11 +21,11 @@ namespace Hazelcast.Linq
 {
     public static class HMapExtension
     {
-        public static IAsyncQueryable<KeyValuePair<TKey, TValue>> AsAsyncQueryable<TKey, TValue>(
+        public static IAsyncQueryable<HKeyValuePair<TKey, TValue>> AsAsyncQueryable<TKey, TValue>(
             this IHMap<TKey, TValue> map)
         {
             var mapInternal = (HMap<TKey, TValue>) map;
-            return new MapQuery<KeyValuePair<TKey, TValue>>(new QueryProvider(mapInternal.SqlService, mapInternal.Name, typeof(KeyValuePair<TKey, TValue>)));
+            return new MapQuery<HKeyValuePair<TKey, TValue>>(new QueryProvider(mapInternal.SqlService, mapInternal.Name, typeof(HKeyValuePair<TKey, TValue>)));
         }
     }
 }

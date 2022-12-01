@@ -33,13 +33,15 @@ namespace Hazelcast.Linq
             _rootElementType = rootElementType;
         }
 
-        public (string, IReadOnlyCollection<object>) Translate(Expression root)
+        public (string, IReadOnlyCollection<object>,LambdaExpression) Translate(Expression root)
         {
             var evaluated = ExpressionEvaluator.EvaluatePartially(root);
-            var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated,_rootElementType) as Expression;
+            var boundExp = new QueryBinder().Bind(evaluated, _rootElementType) as Expression;
             boundExp = UnusedColumnProcessor.Clean(boundExp);
             boundExp = RedundantSubqueryProcessor.Clean(boundExp!);
-            return QueryFormatter.Format(boundExp);
+            var projector = new ProjectionBuilder().Build(((ProjectionExpression) boundExp).Projector);
+            var (sql, values) = QueryFormatter.Format(boundExp);
+            return (sql, values, projector);
         }
     }
 }

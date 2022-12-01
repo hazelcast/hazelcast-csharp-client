@@ -28,12 +28,12 @@ namespace Hazelcast.Linq
         private ISqlQueryResult _queryResult;
         private Expression _expression;
         private Func<SqlRow, TResult> _projector;
+        
+        public ObjectReader(QueryProvider queryProvider, Expression expression)
 
-        public ObjectReader(QueryProvider queryProvider, Expression expression, Func<SqlRow, TResult> projector)
         {
             _queryProvider = queryProvider;
             _expression = expression;
-            _projector = projector;
         }
 
         public TResult Current { get; private set; }
@@ -52,7 +52,9 @@ namespace Hazelcast.Linq
             if (_enumerator == null)
             {
                 // execute sql
-                _queryResult = await _queryProvider.ExecuteQuery(_expression).CfAwait();
+                var (result, projector) = _queryProvider.ExecuteQuery(_expression);
+                _queryResult = await result.CfAwait();
+                _projector = (Func<SqlRow, TResult>) projector.Compile();
                 _enumerator = _queryResult.GetAsyncEnumerator();
             }
 

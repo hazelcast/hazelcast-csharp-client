@@ -43,16 +43,17 @@ namespace Hazelcast.Linq
             _rootType = rootElementType;
         }
 
-        public Task<ISqlQueryResult> ExecuteQuery(Expression expression)
+        public (Task<ISqlQueryResult>,LambdaExpression) ExecuteQuery(Expression expression)
         {
-            var (sql, values) = GetQuery(expression);
-            return this.SqlService.ExecuteQueryAsync(sql, values);
+            var (sql, values,projector) = GetQuery(expression);
+            var result= SqlService.ExecuteQueryAsync(sql, values);
+            return (result, projector);
         }
 
-        public (string, IReadOnlyCollection<object>) GetQuery(Expression expression)
+        public (string, IReadOnlyCollection<object>, LambdaExpression) GetQuery(Expression expression)
         {
-            var (sql, values) = _translator.Translate(expression);
-            return (sql, values);
+            var (sql, values, projector) = _translator.Translate(expression);
+            return (sql, values, projector);
         }
 
         IAsyncQueryable<TElement> IAsyncQueryProvider.CreateQuery<TElement>(Expression expression)
@@ -95,15 +96,14 @@ namespace Hazelcast.Linq
 
         public TResult Execute<TResult>(Expression expression)
         {
-            var itemType = typeof(TResult);
-            //var keyValueType = itemType.GenericTypeArguments[0].GetTypeInfo().GetGenericArguments();
+            var itemType = typeof(TResult).GenericTypeArguments[0];
             return (TResult) Activator.CreateInstance(
                 typeof(ObjectReader<>).MakeGenericType(itemType), this, expression)!;
         }
 
         public ValueTask<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)
         {
-            return new ValueTask<TResult>(this.Execute<TResult>(expression));
+            return new ValueTask<TResult>(Execute<TResult>(expression));
         }
     }
 }
