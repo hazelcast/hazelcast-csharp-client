@@ -118,8 +118,8 @@ jobs:
     with:
       os: ${{ matrix.os }}
       fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
-      ref: ${{ needs.get-refs.ref }}
-      merged-ref: ${{ needs.get-refs.merged-ref }}
+      ref: ${{ needs.get-refs.outputs.ref }}
+      merged-ref: ${{ needs.get-refs.outputs.merged-ref }}
 
   # create the result check
   report:
