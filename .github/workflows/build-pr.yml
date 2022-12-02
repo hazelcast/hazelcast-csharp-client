@@ -91,11 +91,15 @@ jobs:
         id: get-refs
         shell: bash
         run: |
+          echo "EVENT: ${{ github.event_name }}"
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "PR_NUMBER: ${{ inputs.pr_number }}"
+            echo "PR_COMMIT: ${{ inputs.pr_commit }}"
             echo "ref=refs/pull/${{ inputs.pr_number }}/merge" >> $GITHUB_OUTPUT
             echo "merged-ref=${{ inputs.pr_commit }}" >> $GITHUB_OUTPUT
           else
-            echo "ref=$GITHUB_REF" >> $GITHUB_OUTPUT
+            echo "PR_NUMBER: ${{ github.event.pull_request.number }}"
+            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
             echo "merged-ref=''" >> $GITHUB_OUTPUT
           fi
 
