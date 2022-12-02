@@ -94,21 +94,17 @@ jobs:
         id: test
         env:
           HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
+          GITHUB_TOKEN_DEVOPS: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
         shell: pwsh
         run: |
           $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
-          $keyPath = "temp/private-test-artifacts.key"
           if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
-            set-content "$keyPath" "${{ secrets.PRIVATE_TEST_ARTIFACTS_KEY }}"
-            $a += "$(get-location)/$keyPath"
+            if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
+              $a += $env:GITHUB_TOKEN_DEVOPS
+            }
           }
-          try {
-            ./hz.ps1 @a
-          }
-          finally {
-            if (test-path $keyPath) { rm $keyPath }
-          }
+          ./hz.ps1 @a
 
       # test results & coverage: we cannot report here as this workflow doesn't have
       # the required permissions nor tokens to write back to our resources (since it runs

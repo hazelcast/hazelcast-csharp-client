@@ -1129,68 +1129,46 @@ function ensure-certs {
 
 # generate the test certificates
 function hz-generate-certs {
-    if (test-path "$tmpDir/certs") { rm -recurse -force "$tmpDir/certs" }
 
-    # alas, that will not work because the repository is internal
-    #$zipUrl = "https://github.com/hazelcast/private-test-artifacts/blob/master/certs.zip"
-    #invoke-web-request $zipUrl "$tmpDir/certs.zip"
-    #expand-archive "$tmpDir/certs.zip" -destinationPath "$tmpDir/certs"
-
-    # that is convoluted, but works
-
-    if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
-    git init "$tmpDir/certx"
-    git -C "$tmpDir/certx" config core.sparseCheckout true
-
-    $repo = "https://github.com/hazelcast/private-test-artifacts.git"
-
+    $token = ""
     if ($options.commargs.Count -eq 1) {
-
-        $keyPath = $options.commargs[0]
-        $keyPath = [System.IO.Path]::GetFullPath($keyPath, (get-location))
-        $keyPath = $keyPath.Replace('\', '/') # that *has* to be / for git to be happy
-        if (-not (test-path $keyPath)) { Die "File not found: $keyPath" }
-        $keyLen = (ls "$keyPath").length
-        Write-Output "Private repository access key at $keyPath ($keyLen bytes)"
-
-        $ssh = (command ssh).Source
-        $ssh = $ssh.Replace('\', '/') # that *has* to be / for git to be happy
-        Write-Output "SSH at $ssh"
-
-        if ($isWindows) {
-            # known-hosts are required
-            if (-not (test-path ~/.ssh/known_hosts) -or -not (select-string -path ~/.ssh/known_hosts -pattern 'github.com')) {
-                if (-not (test-path ~/.ssh)) { mkdir ~/.ssh >$null 2>&1 }
-                ssh-keyscan -H github.com >> ~/.ssh/known_hosts
-            }
-
-            # restrict permissions else SSH refuses to use the file
-            $acl = get-acl "$keyPath"
-            $isProtected = $true
-            $preserveInheritance = $false
-            $acl.SetAccessRuleProtection($isProtected, $preserveInheritance)
-            $ruleArgs = $acl.Owner, "Read", "Allow"
-            $rule = new-object -TypeName System.Security.AccessControl.FileSystemAccessRule -ArgumentList $ruleArgs
-            $acl.SetAccessRule($rule)
-            set-acl "$keyPath" $acl
-        }
-        else {
-            # restrict permissions else SSH refuses to use the file
-            chmod 600 "$keyPath" 
-        }
-
-        $repo = "git@github.com:hazelcast/private-test-artifacts.git"
-        git -C "$tmpDir/certx" config core.sshCommand "$ssh -i `"$keyPath`""
+        $token = $options.commargs[0]
     }
 
-    git -C "$tmpDir/certx" remote add -f origin $repo
-    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
-    echo "certs/" >> "$tmpDir/certx/.git/info/sparse-checkout"
-    git -C "$tmpDir/certx" pull origin master
-    if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
-    mv "$tmpDir/certx/certs" "$tmpDir/certs"
-    rm -recurse -force "$tmpDir/certx"
+    if ([string]::IsNullOrWhiteSpace($token)) {
+        # no token provided, maybe the dev has auth to access the private repo?
+        Write-Output "Download test certificates (using GitHub clone)"
+        if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
+        mkdir "$tmpDir/certx" >$null 2>&1
+        git init "$tmpDir/certx"
+        git -C "$tmpDir/certx" config core.sparseCheckout true
+        $repo = "https://github.com/hazelcast/private-test-artifacts.git"
+        git -C "$tmpDir/certx" remote add -f origin $repo
+        if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+        echo "certs.zip" >> "$tmpDir/certx/.git/info/sparse-checkout"
+        git -C "$tmpDir/certx" pull origin master
+        if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+        mv "$tmpDir/certx/certs.zip" "$tmpDir"
+        rm -recurse -force "$tmpDir/certx"
+    }
+    else {
+        # a token was provided, use it
+        Write-Output "Download test certificates (using GitHub token)"
+        $zipUrl = "https://raw.githubusercontent.com/hazelcast/private-test-artifacts/master/certs.zip"
+        #$token64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($token))
+        #$headers = @{ "Authorization" = "Basic $token64" }
+        $headers = @{ "Authorization" = "Token $token" }
+        $response = invoke-web-request $zipUrl "$tmpDir/certs.zip" $headers
+        if ($response.StatusCode -ne 200) {
+            Write-Output "Url:      $zipUrl"
+            Write-Output "Response: $($response.StatusCode) $($response.StatusDescription)"
+            Die "Failed to download certificates."
+        }
+    }
 
+    if (test-path "$tmpDir/certs") { rm -recurse -force "$tmpDir/certs" }
+    Expand-Archive "$tmpDir/certs.zip" -DestinationPath "$tmpDir/certs"
+    rm "$tmpDir/certs.zip"
     Write-Output ""
 }
 

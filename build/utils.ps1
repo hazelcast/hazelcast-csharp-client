@@ -416,11 +416,15 @@ function Get-HazelcastRemote () {
     return $remote
 }
 
-function invoke-web-request($url, $dest) {
+function invoke-web-request($url, $dest, $headers) {
     $args = @{ Uri = $url }
     if (![System.String]::IsNullOrWhiteSpace($dest)) {
         $args.OutFile = $dest
         $args.PassThru = $true
+    }
+
+    if ($null -ne $headers) {
+        $args.Headers = $headers
     }
 
     $pp = $progressPreference
@@ -436,9 +440,9 @@ function invoke-web-request($url, $dest) {
     try {
         $r = invoke-webRequest @args
         if ($null -ne $r) {
-            if ($r.StatusCode -ne 200) {
-                Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
-            }
+            #if ($r.StatusCode -ne 200) {
+            #    Write-Output "--> $($r.StatusCode) $($r.StatusDescription)"
+            #}
             return $r
         }
         return @{ StatusCode = 999; StatusDescription = "Error" }
