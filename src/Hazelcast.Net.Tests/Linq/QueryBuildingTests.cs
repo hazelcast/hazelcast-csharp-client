@@ -62,7 +62,7 @@ namespace Hazelcast.Tests.Linq
             var projection = projectedExp.Source as SelectExpression;
             Assert.That(projection.Columns.Count, Is.EqualTo(ColumnNames.Count()));
             Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(ColumnNames), ColumnNames);
-            Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Alias, nameof(DummyType));//redundandt queries are another PR's deal.
+            Assert.AreEqual(((MapExpression)((SelectExpression)projection.From).From).Name, nameof(DummyType));//redundandt queries are another PR's deal.
 
             var where = projectedExp.Source.Where as BinaryExpression;
             Assert.AreEqual(where.NodeType, ExpressionType.Equal);
