@@ -83,8 +83,8 @@ jobs:
     name: Get Refs
     runs-on: ubuntu-latest
     outputs:
-      ref: ${{ steps.get-refs.ref }}
-      merged-ref: ${{ steps.get-refs.merged-ref }}
+      ref: ${{ steps.get-refs.outputs.ref }}
+      merged-ref: ${{ steps.get-refs.outputs.merged-ref }}
 
     steps:
       - name: Get Refs
