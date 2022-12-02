@@ -26,7 +26,7 @@ using MemberInfo = Hazelcast.Models.MemberInfo;
 
 namespace Hazelcast.Tests.Linq
 {
-    public class LinqSimpleTests : SqlTestBase
+    public class LinqSimpleTests : SingleMemberClientRemoteTestBase
     {
         public class DummyType
         {
@@ -38,43 +38,57 @@ namespace Hazelcast.Tests.Linq
             public bool ColumnBool { get; set; }
         }
 
-        private IHMap<int, string> _map;
+        public class Person
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string LastName { get; set; }
+        }
+
+        private IHMap<int, Person> _map;
 
         [OneTimeSetUp]
         public async Task Up()
         {
-            _map = await Client.GetMapAsync<int, string>("linqMap1");
+            _map = await Client.GetMapAsync<int, Person>("linqMap1");
 
             await Client.Sql.ExecuteCommandAsync(
-                "CREATE MAPPING \"linqMap1\" TYPE IMap OPTIONS ('keyFormat' = 'int','valueFormat' = 'varchar')");
-            
+                "CREATE MAPPING \"linqMap1\" (id INT EXTERNAL NAME \"__key.id\", name varchar, lastName varchar) " +
+                "TYPE IMap " +
+                "OPTIONS ('keyFormat' = 'compact'," +
+                "'keyCompactTypeName' = 'personId'," +
+                "'valueFormat' = 'compact'," +
+                "'valueCompactTypeName' = 'person')");
+
             for (var i = 0; i < 100; i++)
             {
-                await _map.PutAsync(i, "VALUE: " + i);
+                await _map.PutAsync(i, new Person() {Id = i, Name = "Emre " + i, LastName = "Yigit " + i});
             }
         }
 
         [Test]
         public async Task TestLinq()
         {
-            var result = _map.AsAsyncQueryable().Where(p => p.Key > 90).Select(p=> p.Key);
+            var result = _map.AsAsyncQueryable()
+                .Where(p => p.Key > 90)
+                .Select(p => new {Name = p.Value.Name, Id = p.Value.Id});
 
             await foreach (var entry in result)
             {
-                Console.WriteLine($"Value: {entry}");
+                //Console.WriteLine($"Value: {entry}");
                 //Console.WriteLine($"Key: {entry.Key}, Value: {entry.Value}");
+                Console.WriteLine($"Key: {entry.Id}, Name: {entry.Name}");
             }
         }
 
         [Test]
         public async Task T()
         {
-            var result = await 
-                Client.Sql.ExecuteQueryAsync("SELECT m0.__key, m0.this FROM linqMap1 m0 WHERE (m0.__key > ?)", new object[]{90});
-            
-            await  foreach(var row in result)
+            var result = await
+                Client.Sql.ExecuteQueryAsync("SELECT m0.__key, m0.this FROM linqMap1 m0 WHERE (m0.__key > ?)", new object[] {90});
+
+            await foreach (var row in result)
                 Console.WriteLine(row.GetValue<string>());
-            
         }
     }
 }

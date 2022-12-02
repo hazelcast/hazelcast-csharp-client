@@ -22,24 +22,29 @@ using Hazelcast.DistributedObjects.Impl;
 
 namespace Hazelcast.Linq
 {
-    internal class MapQuery<TElement> : IAsyncQueryable<TElement>
+    // It represents the queryable part of HMap.
+    internal class QueryableMap<TElement> : IAsyncQueryable<TElement>,IQueryableMap
     {
         private readonly QueryProvider _queryProvider;
         private readonly Expression _expression;
-        
-        public MapQuery(QueryProvider provider, Expression expression) : this(provider)
+
+        public QueryableMap(QueryProvider provider, Expression expression, string name) : this(provider, name)
         {
             _expression = expression ?? throw new ArgumentNullException(nameof(expression));
         }
-        
-        public MapQuery(QueryProvider queryProvider)
+
+        public QueryableMap(QueryProvider queryProvider, string name)
         {
             _queryProvider = queryProvider;
-            _expression = Expression.Constant(this);
+            _expression ??= Expression.Constant(this);
+            Name = name;
         }
+
         public Type ElementType => typeof(TElement);
 
         public Expression Expression => _expression;
+
+        public string Name { get; }
 
         public IAsyncQueryProvider Provider => _queryProvider;
 

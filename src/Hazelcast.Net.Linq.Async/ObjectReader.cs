@@ -21,16 +21,16 @@ using Hazelcast.Sql;
 
 namespace Hazelcast.Linq
 {
+    // Implements IAsyncEnumerator and reads result.
     internal class ObjectReader<TResult> : IAsyncEnumerator<TResult>, IAsyncDisposable
     {
         private readonly QueryProvider _queryProvider;
-        private IAsyncEnumerator<SqlRow> _enumerator;
-        private ISqlQueryResult _queryResult;
-        private Expression _expression;
-        private Func<SqlRow, TResult> _projector;
-        
-        public ObjectReader(QueryProvider queryProvider, Expression expression)
+        private IAsyncEnumerator<SqlRow>? _enumerator;
+        private ISqlQueryResult? _queryResult;
+        private readonly Expression _expression;
+        private Func<SqlRow, TResult>? _projector;
 
+        public ObjectReader(QueryProvider queryProvider, Expression expression)
         {
             _queryProvider = queryProvider;
             _expression = expression;
@@ -38,10 +38,9 @@ namespace Hazelcast.Linq
 
         public TResult Current { get; private set; }
 
-
         public ValueTask DisposeAsync()
         {
-            if (_queryResult != null)
+            if (_queryResult is not null)
                 return _queryResult.DisposeAsync();
 
             return default;
@@ -49,7 +48,7 @@ namespace Hazelcast.Linq
 
         public async ValueTask<bool> MoveNextAsync()
         {
-            if (_enumerator == null)
+            if (_enumerator is null)
             {
                 // execute sql
                 var (result, projector) = _queryProvider.ExecuteQuery(_expression);
@@ -60,10 +59,7 @@ namespace Hazelcast.Linq
 
             if (await _enumerator.MoveNextAsync().CfAwait())
             {
-                //var row = _enumerator.Current;
-                //var key = row.GetKey<TKey>();
-                //var val = row.GetValue<TValue>();
-                Current = _projector(_enumerator.Current);
+                Current = _projector!(_enumerator.Current);
                 return true;
             }
 

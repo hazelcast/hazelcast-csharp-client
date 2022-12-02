@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using Hazelcast.Linq.Expressions;
@@ -26,7 +27,10 @@ namespace Hazelcast.Linq.Visitors
 
         public ProjectionBuilder()
         {
-            var genericMethods = typeof(SqlRow).GetMethod(nameof(SqlRow.GetColumn));
+            var genericMethods = typeof(SqlRow).GetMethods()
+                .FirstOrDefault(m =>
+                    m.Name == nameof(SqlRow.GetColumn) &&
+                    m.GetParameters().Any(ga => ga.ParameterType == typeof(string)));
             _miGetColumn = genericMethods.MakeGenericMethod(typeof(object));
             _row = Expression.Parameter(typeof(SqlRow), "row");
         }
@@ -39,8 +43,7 @@ namespace Hazelcast.Linq.Visitors
 
         internal override Expression VisitColumn(ColumnExpression column)
         {
-            return Expression.Convert(Expression.Call(_row, _miGetColumn, Expression.Constant(column.Ordinal)),
-                column.Type);
+            return Expression.Convert(Expression.Call(_row, _miGetColumn, Expression.Constant(column.Name)), column.Type);
         }
     }
 }

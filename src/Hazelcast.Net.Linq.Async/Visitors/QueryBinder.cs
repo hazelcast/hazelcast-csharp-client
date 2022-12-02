@@ -46,8 +46,9 @@ namespace Hazelcast.Linq.Visitors
         /// Get an SQLized tree and its projection bindings
         /// </summary>
         /// <param name="expression"></param>
+        /// <param name="rootType"></param>
         /// <returns></returns>
-        public Expression Bind(Expression expression, Type rootType = null)
+        public Expression Bind(Expression expression, Type? rootType = null)
         {
             _map = new();
             _rootType = rootType;
@@ -206,9 +207,8 @@ namespace Hazelcast.Linq.Visitors
 
         private string GetMapName(object map)
         {
-            //var hMap = (MapQuery<,>) map;
-            //return hMap.Name;
-            return "linqMap1";
+            var hMap = (IQueryableMap) map;
+            return hMap.Name;
         }
 
         private string GetColumnName(MemberInfo member)
@@ -217,8 +217,8 @@ namespace Hazelcast.Linq.Visitors
             {
                 return member.Name == "Key" ? "__key" : "this";
             }
-            
-            return  member.Name;
+
+            return member.Name;
         }
 
         private Type GetColumnType(MemberInfo member)
@@ -238,14 +238,13 @@ namespace Hazelcast.Linq.Visitors
         /// <param name="entryType">The type of the object that will be queried from the map.</param>
         /// <returns>List of fields</returns>
         private IEnumerable<MemberInfo> GetMappedMembers(Type entryType)
-        { 
-            
+        {
             var fields = entryType
                 .GetFields(bindingFlags)
                 .Cast<MemberInfo>()
                 .Concat(entryType.GetProperties(bindingFlags))
                 .ToArray();
-            
+
             //Strip KeyValuePair if it matches
             if (entryType == _rootType)
             {
@@ -275,7 +274,7 @@ namespace Hazelcast.Linq.Visitors
                 var columnName = GetColumnName(mi);
                 var columnType = GetColumnType(mi);
                 // TODO: handle key value
-               bindings.Add(Expression.Bind(mi,
+                bindings.Add(Expression.Bind(mi,
                     new ColumnExpression(columnType, selectAlias, columnName, columns.Count)));
                 columns.Add(new ColumnDefinition(columnName,
                     new ColumnExpression(columnType, mapAlias, columnName, columns.Count)));

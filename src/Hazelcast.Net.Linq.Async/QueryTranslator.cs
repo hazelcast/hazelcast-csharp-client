@@ -16,27 +16,27 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq.Expressions;
+using Hazelcast.Core;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Linq
 {
     internal class QueryTranslator
     {
-        private readonly string _mapName;
         private readonly Type _rootElementType;
 
-        public QueryTranslator(string mapName, Type rootElementType)
+        public QueryTranslator(Type rootElementType)
         {
-            _mapName = mapName;
             _rootElementType = rootElementType;
         }
 
-        public (string, IReadOnlyCollection<object>,LambdaExpression) Translate(Expression root)
+        public (string, object[], LambdaExpression) Translate(Expression root)
         {
             var evaluated = ExpressionEvaluator.EvaluatePartially(root);
-            var boundExp = new QueryBinder().Bind(evaluated, _rootElementType) as Expression;
+            var boundExp = new QueryBinder().Bind(evaluated, _rootElementType);
             boundExp = UnusedColumnProcessor.Clean(boundExp);
             boundExp = RedundantSubqueryProcessor.Clean(boundExp!);
             var projector = new ProjectionBuilder().Build(((ProjectionExpression) boundExp).Projector);
