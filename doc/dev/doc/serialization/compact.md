@@ -103,4 +103,4 @@ var field2 = rec.GetInt32("field-name-2")
 var field3 = rec.GetString("field-name-3")
 ```
 
-Refer to the general documentation for more details on how to [access domain objects without domain classes](https://docs.hazelcast.com/hazelcast/5.1/clusters/accessing-domain-objects).
+Refer to the general documentation for more details on how to [access domain objects without domain classes](https://docs.hazelcast.com/hazelcast/latest/clusters/accessing-domain-objects).

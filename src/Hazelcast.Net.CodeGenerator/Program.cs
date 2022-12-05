@@ -432,7 +432,7 @@ void GenerateIGenericRecordBuilder(StringBuilder text)
         if (kindInfo.IsArray) type = $"{type}[]?";
 
         text.Append($@"    /// <summary>
-    /// Adds a <see cref=""FieldKind.{kindInfo.FullName}""/> field to the record and sets its value.
+    /// Adds a <see cref=""FieldKind.{kindInfo.FullName}""/> field to the record.
     /// </summary>
     /// <param name=""fieldname"">The name of the field.</param>
     /// <param name=""value"">The value of the field.</param>

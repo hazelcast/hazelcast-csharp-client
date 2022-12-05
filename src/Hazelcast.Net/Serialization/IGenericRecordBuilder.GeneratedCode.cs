@@ -23,7 +23,7 @@ public partial interface IGenericRecordBuilder
     // <generated>
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Boolean"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Boolean"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -31,7 +31,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetBoolean(string fieldname, bool value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Int8"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Int8"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -39,7 +39,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetInt8(string fieldname, sbyte value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Int16"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Int16"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -47,7 +47,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetInt16(string fieldname, short value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Int32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Int32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -55,7 +55,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetInt32(string fieldname, int value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Int64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Int64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -63,7 +63,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetInt64(string fieldname, long value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Float32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Float32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -71,7 +71,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetFloat32(string fieldname, float value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Float64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Float64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -79,7 +79,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetFloat64(string fieldname, double value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfBoolean"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfBoolean"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -87,7 +87,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfBoolean(string fieldname, bool[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfInt8"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfInt8"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -95,7 +95,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfInt8(string fieldname, sbyte[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfInt16"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfInt16"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -103,7 +103,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfInt16(string fieldname, short[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfInt32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfInt32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -111,7 +111,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfInt32(string fieldname, int[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfInt64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfInt64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -119,7 +119,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfInt64(string fieldname, long[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfFloat32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfFloat32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -127,7 +127,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfFloat32(string fieldname, float[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfFloat64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfFloat64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -135,7 +135,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfFloat64(string fieldname, double[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableBoolean"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableBoolean"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -143,7 +143,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableBoolean(string fieldname, bool? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableInt8"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableInt8"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -151,7 +151,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableInt8(string fieldname, sbyte? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableInt16"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableInt16"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -159,7 +159,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableInt16(string fieldname, short? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableInt32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableInt32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -167,7 +167,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableInt32(string fieldname, int? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableInt64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableInt64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -175,7 +175,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableInt64(string fieldname, long? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableFloat32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableFloat32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -183,7 +183,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableFloat32(string fieldname, float? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.NullableFloat64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.NullableFloat64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -191,7 +191,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetNullableFloat64(string fieldname, double? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Decimal"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Decimal"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -199,7 +199,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetDecimal(string fieldname, HBigDecimal? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.String"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.String"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -207,7 +207,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetString(string fieldname, string? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Time"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Time"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -215,7 +215,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetTime(string fieldname, HLocalTime? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.Date"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.Date"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -223,7 +223,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetDate(string fieldname, HLocalDate? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.TimeStamp"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.TimeStamp"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -231,7 +231,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetTimeStamp(string fieldname, HLocalDateTime? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.TimeStampWithTimeZone"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.TimeStampWithTimeZone"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -239,7 +239,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetTimeStampWithTimeZone(string fieldname, HOffsetDateTime? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableBoolean"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableBoolean"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -247,7 +247,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableBoolean(string fieldname, bool?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableInt8"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableInt8"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -255,7 +255,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableInt8(string fieldname, sbyte?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableInt16"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableInt16"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -263,7 +263,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableInt16(string fieldname, short?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableInt32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableInt32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -271,7 +271,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableInt32(string fieldname, int?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableInt64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableInt64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -279,7 +279,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableInt64(string fieldname, long?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableFloat32"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableFloat32"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -287,7 +287,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableFloat32(string fieldname, float?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfNullableFloat64"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfNullableFloat64"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -295,7 +295,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfNullableFloat64(string fieldname, double?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfDecimal"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfDecimal"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -303,7 +303,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfDecimal(string fieldname, HBigDecimal?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfTime"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfTime"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -311,7 +311,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfTime(string fieldname, HLocalTime?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfDate"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfDate"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -319,7 +319,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfDate(string fieldname, HLocalDate?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfTimeStamp"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfTimeStamp"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -327,7 +327,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfTimeStamp(string fieldname, HLocalDateTime?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfTimeStampWithTimeZone"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfTimeStampWithTimeZone"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -335,7 +335,7 @@ public partial interface IGenericRecordBuilder
     IGenericRecordBuilder SetArrayOfTimeStampWithTimeZone(string fieldname, HOffsetDateTime?[]? value);
 
     /// <summary>
-    /// Adds a <see cref="FieldKind.ArrayOfString"/> field to the record and sets its value.
+    /// Adds a <see cref="FieldKind.ArrayOfString"/> field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>

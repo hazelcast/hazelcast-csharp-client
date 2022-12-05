@@ -28,6 +28,12 @@ public partial interface IGenericRecord
     /// with all the fields being non-initialized.
     /// </summary>
     /// <returns>A new <see cref="GenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>This method is a convenience method to get a builder without creating
+    /// the schema for the type, but by re-using the schema of this record. See
+    /// <see cref="GenericRecordBuilder.Compact(string)"/> for creating a generic record
+    /// in compact form, with a new schema.</para>
+    /// </remarks>
     public IGenericRecordBuilder NewBuilder();
 
     /// <summary>
@@ -35,6 +41,10 @@ public partial interface IGenericRecord
     /// with all the fields copied from this record.
     /// </summary>
     /// <returns>A new <see cref="GenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>This method produces an exact copy of this generic record, which can
+    /// then be updated.</para>
+    /// </remarks>
     public IGenericRecordBuilder NewBuilderWithClone();
 
     /// <summary>
@@ -52,7 +62,7 @@ public partial interface IGenericRecord
     public FieldKind GetFieldKind(string fieldname);
 
     /// <summary>
-    /// Gets the value of a <see cref="FieldKind.Compact"/> field as a <see cref="IGenericRecord"/>.
+    /// Gets the value of a <see cref="IGenericRecord"/> field.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <returns>The value of the field.</returns>
@@ -61,7 +71,7 @@ public partial interface IGenericRecord
     public IGenericRecord? GetGenericRecord(string fieldname);
 
     /// <summary>
-    /// Gets the value of a <see cref="FieldKind.ArrayOfCompact"/> field as an array of <see cref="IGenericRecord"/>.
+    /// Gets the value of an array of <see cref="IGenericRecord"/> field.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <returns>The value of the field.</returns>
