@@ -225,7 +225,7 @@ void GenerateReflectionWriters(StringBuilder text)
             type0 = $"{type0}[]";
         }
 
-        var castobj = kindInfo.IsArray || kindInfo.IsNullable || kindInfo.ClrType == "string" ? $"({type})o" : $"UnboxNonNull<{type}>(o)";
+        var castobj = kindInfo.IsArray || kindInfo.IsNullable || kindInfo.ClrType == "string" ? $"({type})o" : $"ConvertEx.UnboxNonNull<{type}>(o)";
 
         //        if (isValueTypeNullableOnly)
         //            text.Append($@"                {{ typeof ({type00}), (w, n, o) => w.Write{name}(n, {castobj}) }},
@@ -397,8 +397,8 @@ void GenerateCompactDictionaryGenericRecord(StringBuilder text)
             {
                 altKind = $", FieldKind.{(kindInfo.IsArray ? "ArrayOf" : "")}Nullable{kindInfo.Name}";
                 ret = kindInfo.IsArray
-                    ? $"GetArrayOf<{type0}>(_fieldValues[fieldname])"
-                    : $"_fieldValues[fieldname] is {type} value ? value : throw new SerializationException($\"Null value for field '{{fieldname}}'.\")";
+                    ? $"GetArrayOf<{type0}>(_fieldValues[fieldname], fieldname, FieldKind.{kindInfo.FullName}{altKind})"
+                    : $"GetValueOf<{type0}>(_fieldValues[fieldname], fieldname, FieldKind.{kindInfo.FullName}{altKind})";
             }
         }
         else
@@ -437,6 +437,15 @@ void GenerateIGenericRecordBuilder(StringBuilder text)
     /// <param name=""fieldname"">The name of the field.</param>
     /// <param name=""value"">The value of the field.</param>
     /// <returns>This <see cref=""IGenericRecordBuilder""/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref=""IGenericRecord.NewBuilderWithClone()""/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref=""SerializationException"">The build has been initialized with a
+    /// schema, and <paramref name=""fieldname""/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder Set{kindInfo.FullName}(string fieldname, {type} value);
 
 ");
@@ -492,7 +501,11 @@ void GenerateCompactWriterWriteAny(StringBuilder text)
         if (kindInfo.IsNullable) type = $"{type}?";
         if (kindInfo.IsArray) type = $"{type}[]?";
 
-        text.Append($@"            case FieldKind.{kindInfo.FullName}: writer.Write{kindInfo.FullName}(fieldname, ({type}) value); break;
+        if (kindInfo.IsValueType && !kindInfo.IsArray && !kindInfo.IsNullable)
+            text.Append($@"            case FieldKind.{kindInfo.FullName}: writer.Write{kindInfo.FullName}(fieldname, ConvertEx.UnboxNonNull<{type}>(value)); break;
+");
+        else
+            text.Append($@"            case FieldKind.{kindInfo.FullName}: writer.Write{kindInfo.FullName}(fieldname, ({type}) value); break;
 ");
     }
 }

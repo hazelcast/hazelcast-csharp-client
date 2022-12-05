@@ -29,5 +29,11 @@ public static class GenericRecordBuilder
     /// </summary>
     /// <param name="typename">The compact typename.</param>
     /// <returns>A new <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <example>
+    /// var rec = GenericRecordBuilder.Compact("thing")
+    ///   .SetBoolean("field-bool", true)
+    ///   .SetInt32("field-int", 1234)
+    ///   .Build();
+    /// </example>
     public static IGenericRecordBuilder Compact(string typename) => new CompactGenericRecordBuilder(typename);
 }

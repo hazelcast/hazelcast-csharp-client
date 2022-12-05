@@ -28,6 +28,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetBoolean(string fieldname, bool value);
 
     /// <summary>
@@ -36,6 +45,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetInt8(string fieldname, sbyte value);
 
     /// <summary>
@@ -44,6 +62,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetInt16(string fieldname, short value);
 
     /// <summary>
@@ -52,6 +79,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetInt32(string fieldname, int value);
 
     /// <summary>
@@ -60,6 +96,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetInt64(string fieldname, long value);
 
     /// <summary>
@@ -68,6 +113,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetFloat32(string fieldname, float value);
 
     /// <summary>
@@ -76,6 +130,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetFloat64(string fieldname, double value);
 
     /// <summary>
@@ -84,6 +147,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfBoolean(string fieldname, bool[]? value);
 
     /// <summary>
@@ -92,6 +164,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfInt8(string fieldname, sbyte[]? value);
 
     /// <summary>
@@ -100,6 +181,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfInt16(string fieldname, short[]? value);
 
     /// <summary>
@@ -108,6 +198,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfInt32(string fieldname, int[]? value);
 
     /// <summary>
@@ -116,6 +215,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfInt64(string fieldname, long[]? value);
 
     /// <summary>
@@ -124,6 +232,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfFloat32(string fieldname, float[]? value);
 
     /// <summary>
@@ -132,6 +249,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfFloat64(string fieldname, double[]? value);
 
     /// <summary>
@@ -140,6 +266,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableBoolean(string fieldname, bool? value);
 
     /// <summary>
@@ -148,6 +283,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableInt8(string fieldname, sbyte? value);
 
     /// <summary>
@@ -156,6 +300,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableInt16(string fieldname, short? value);
 
     /// <summary>
@@ -164,6 +317,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableInt32(string fieldname, int? value);
 
     /// <summary>
@@ -172,6 +334,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableInt64(string fieldname, long? value);
 
     /// <summary>
@@ -180,6 +351,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableFloat32(string fieldname, float? value);
 
     /// <summary>
@@ -188,6 +368,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetNullableFloat64(string fieldname, double? value);
 
     /// <summary>
@@ -196,6 +385,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetDecimal(string fieldname, HBigDecimal? value);
 
     /// <summary>
@@ -204,6 +402,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetString(string fieldname, string? value);
 
     /// <summary>
@@ -212,6 +419,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetTime(string fieldname, HLocalTime? value);
 
     /// <summary>
@@ -220,6 +436,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetDate(string fieldname, HLocalDate? value);
 
     /// <summary>
@@ -228,6 +453,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetTimeStamp(string fieldname, HLocalDateTime? value);
 
     /// <summary>
@@ -236,6 +470,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetTimeStampWithTimeZone(string fieldname, HOffsetDateTime? value);
 
     /// <summary>
@@ -244,6 +487,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableBoolean(string fieldname, bool?[]? value);
 
     /// <summary>
@@ -252,6 +504,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableInt8(string fieldname, sbyte?[]? value);
 
     /// <summary>
@@ -260,6 +521,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableInt16(string fieldname, short?[]? value);
 
     /// <summary>
@@ -268,6 +538,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableInt32(string fieldname, int?[]? value);
 
     /// <summary>
@@ -276,6 +555,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableInt64(string fieldname, long?[]? value);
 
     /// <summary>
@@ -284,6 +572,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableFloat32(string fieldname, float?[]? value);
 
     /// <summary>
@@ -292,6 +589,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfNullableFloat64(string fieldname, double?[]? value);
 
     /// <summary>
@@ -300,6 +606,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfDecimal(string fieldname, HBigDecimal?[]? value);
 
     /// <summary>
@@ -308,6 +623,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfTime(string fieldname, HLocalTime?[]? value);
 
     /// <summary>
@@ -316,6 +640,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfDate(string fieldname, HLocalDate?[]? value);
 
     /// <summary>
@@ -324,6 +657,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfTimeStamp(string fieldname, HLocalDateTime?[]? value);
 
     /// <summary>
@@ -332,6 +674,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfTimeStampWithTimeZone(string fieldname, HOffsetDateTime?[]? value);
 
     /// <summary>
@@ -340,6 +691,15 @@ public partial interface IGenericRecordBuilder
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
     /// <returns>This <see cref="IGenericRecordBuilder"/>.</returns>
+    /// <remarks>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal 
+    /// to set to the same field twice.</para>
+    /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfString(string fieldname, string?[]? value);
 
     // </generated>

@@ -25,6 +25,11 @@ public partial interface IGenericRecordBuilder
     /// Build the <see cref="IGenericRecord"/>.
     /// </summary>
     /// <returns>The <see cref="IGenericRecord"/>.</returns>
+    /// <remarks>
+    /// <para>In case the record was created with a schema, then all fields declared in the schema
+    /// must have been assigned a value before the record can be built. Trying to build the record
+    /// before all fields have been assigned a value triggers a <see cref="SerializationException"/>.</para>
+    /// </remarks>
     IGenericRecord Build();
 
     /// <summary>
@@ -38,18 +43,22 @@ public partial interface IGenericRecordBuilder
     /// type of builder. For instance, a compact generic record can only accept a
     /// compact generic record. Trying to set a different kind of generic record
     /// results in a exception.</para>
-    /// <para>It is legal to set the field again only when builder is created with
-    /// created with <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise
-    /// illegal to set to the same field twice.</para>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal
+    /// to set to the same field twice.</para>
     /// <para>This method allows nested structures; subclasses should also be
     /// created as <see cref="IGenericRecord"/> of the same nature of the nesting one.
     /// I.e. compact records can only nest compact records.
     ///</para>
     /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetGenericRecord(string fieldname, IGenericRecord? value);
 
     /// <summary>
-    /// Adds a array of  <see cref="IGenericRecord"/> objects field to the record.
+    /// Adds an array of <see cref="IGenericRecord"/> objects field to the record.
     /// </summary>
     /// <param name="fieldname">The name of the field.</param>
     /// <param name="value">The value of the field.</param>
@@ -59,13 +68,17 @@ public partial interface IGenericRecordBuilder
     /// type of builder. For instance, a compact generic record can only accept a
     /// compact generic record. Trying to set a different kind of generic record
     /// results in a exception.</para>
-    /// <para>It is legal to set the field again only when builder is created with
-    /// created with <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise
-    /// illegal to set to the same field twice.</para>
+    /// <para>It is legal to set the field again only when the builder is created with
+    /// <see cref="IGenericRecord.NewBuilderWithClone()"/>; it is otherwise illegal
+    /// to set to the same field twice.</para>
     /// <para>This method allows nested structures; subclasses should also be
     /// created as <see cref="IGenericRecord"/> of the same nature of the nesting one.
     /// I.e. compact records can only nest compact records.
     ///</para>
     /// </remarks>
+    /// <exception cref="SerializationException">The build has been initialized with a
+    /// schema, and <paramref name="fieldname"/> is not the name of field of that schema, or
+    /// the type of the field does not match the specified value, or the field value is set
+    /// multiple times.</exception>
     IGenericRecordBuilder SetArrayOfGenericRecord(string fieldname, IGenericRecord?[]? value);
 }

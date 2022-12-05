@@ -26,98 +26,98 @@ internal partial class CompactDictionaryGenericRecord
     public bool GetBoolean(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Boolean, FieldKind.NullableBoolean);
-        return _fieldValues[fieldname] is bool value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<bool>(_fieldValues[fieldname], fieldname, FieldKind.Boolean, FieldKind.NullableBoolean);
     }
 
     /// <inheritdoc />
     public sbyte GetInt8(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Int8, FieldKind.NullableInt8);
-        return _fieldValues[fieldname] is sbyte value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<sbyte>(_fieldValues[fieldname], fieldname, FieldKind.Int8, FieldKind.NullableInt8);
     }
 
     /// <inheritdoc />
     public short GetInt16(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Int16, FieldKind.NullableInt16);
-        return _fieldValues[fieldname] is short value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<short>(_fieldValues[fieldname], fieldname, FieldKind.Int16, FieldKind.NullableInt16);
     }
 
     /// <inheritdoc />
     public int GetInt32(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Int32, FieldKind.NullableInt32);
-        return _fieldValues[fieldname] is int value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<int>(_fieldValues[fieldname], fieldname, FieldKind.Int32, FieldKind.NullableInt32);
     }
 
     /// <inheritdoc />
     public long GetInt64(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Int64, FieldKind.NullableInt64);
-        return _fieldValues[fieldname] is long value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<long>(_fieldValues[fieldname], fieldname, FieldKind.Int64, FieldKind.NullableInt64);
     }
 
     /// <inheritdoc />
     public float GetFloat32(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Float32, FieldKind.NullableFloat32);
-        return _fieldValues[fieldname] is float value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<float>(_fieldValues[fieldname], fieldname, FieldKind.Float32, FieldKind.NullableFloat32);
     }
 
     /// <inheritdoc />
     public double GetFloat64(string fieldname)
     {
         ValidateField(fieldname, FieldKind.Float64, FieldKind.NullableFloat64);
-        return _fieldValues[fieldname] is double value ? value : throw new SerializationException($"Null value for field '{fieldname}'.");
+        return GetValueOf<double>(_fieldValues[fieldname], fieldname, FieldKind.Float64, FieldKind.NullableFloat64);
     }
 
     /// <inheritdoc />
     public bool[]? GetArrayOfBoolean(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfBoolean, FieldKind.ArrayOfNullableBoolean);
-        return GetArrayOf<bool>(_fieldValues[fieldname]);
+        return GetArrayOf<bool>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfBoolean, FieldKind.ArrayOfNullableBoolean);
     }
 
     /// <inheritdoc />
     public sbyte[]? GetArrayOfInt8(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfInt8, FieldKind.ArrayOfNullableInt8);
-        return GetArrayOf<sbyte>(_fieldValues[fieldname]);
+        return GetArrayOf<sbyte>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfInt8, FieldKind.ArrayOfNullableInt8);
     }
 
     /// <inheritdoc />
     public short[]? GetArrayOfInt16(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfInt16, FieldKind.ArrayOfNullableInt16);
-        return GetArrayOf<short>(_fieldValues[fieldname]);
+        return GetArrayOf<short>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfInt16, FieldKind.ArrayOfNullableInt16);
     }
 
     /// <inheritdoc />
     public int[]? GetArrayOfInt32(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfInt32, FieldKind.ArrayOfNullableInt32);
-        return GetArrayOf<int>(_fieldValues[fieldname]);
+        return GetArrayOf<int>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfInt32, FieldKind.ArrayOfNullableInt32);
     }
 
     /// <inheritdoc />
     public long[]? GetArrayOfInt64(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfInt64, FieldKind.ArrayOfNullableInt64);
-        return GetArrayOf<long>(_fieldValues[fieldname]);
+        return GetArrayOf<long>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfInt64, FieldKind.ArrayOfNullableInt64);
     }
 
     /// <inheritdoc />
     public float[]? GetArrayOfFloat32(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfFloat32, FieldKind.ArrayOfNullableFloat32);
-        return GetArrayOf<float>(_fieldValues[fieldname]);
+        return GetArrayOf<float>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfFloat32, FieldKind.ArrayOfNullableFloat32);
     }
 
     /// <inheritdoc />
     public double[]? GetArrayOfFloat64(string fieldname)
     {
         ValidateField(fieldname, FieldKind.ArrayOfFloat64, FieldKind.ArrayOfNullableFloat64);
-        return GetArrayOf<double>(_fieldValues[fieldname]);
+        return GetArrayOf<double>(_fieldValues[fieldname], fieldname, FieldKind.ArrayOfFloat64, FieldKind.ArrayOfNullableFloat64);
     }
 
     /// <inheritdoc />

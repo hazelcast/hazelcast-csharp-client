@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Serialization.Compact;
 public class CompactReaderWriterExtensionsTests
 {
     [Test]
-    public void WriteAny()
+    public void ReadWriteAny()
     {
         var kinds = (FieldKind[])Enum.GetValues(typeof(FieldKind));
         Assert.That(kinds[0], Is.EqualTo(FieldKind.NotAvailable));
@@ -49,30 +49,6 @@ public class CompactReaderWriterExtensionsTests
         }
 
         Assert.Throws<NotSupportedException>(() => writer.WriteAny("field", FieldKind.NotAvailable, 1234));
-    }
-
-    [Test]
-    public void ReadAny()
-    {
-        var kinds = (FieldKind[])Enum.GetValues(typeof(FieldKind));
-        Assert.That(kinds[0], Is.EqualTo(FieldKind.NotAvailable));
-
-        var schemaBuilder = SchemaBuilder.For("test");
-        for (var i = 1; i < kinds.Length; i++)
-        {
-            schemaBuilder = schemaBuilder.WithField($"field-{kinds[i]}", kinds[i]);
-        }
-        var schema = schemaBuilder.Build();
-
-        var orw = new ReflectionSerializerTests.ObjectReaderWriter(new ReflectionSerializer());
-        var output = new ObjectDataOutput(1024, orw, Endianness.LittleEndian);
-        var writer = new CompactWriter(orw, output, schema);
-
-        for (var i = 1; i < kinds.Length; i++)
-        {
-            if (kinds[i] == FieldKind.Compact || kinds[i] == FieldKind.ArrayOfCompact) continue;
-            writer.WriteAny($"field-{kinds[i]}", kinds[i], ReflectionDataSource.GetValueOfKind(kinds[i]));
-        }
 
         writer.Complete();
 

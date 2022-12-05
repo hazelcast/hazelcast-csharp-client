@@ -475,18 +475,18 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.Throws<SerializationException>(() => serializer.Read(compactReader));
 
-            Assert.That(ReflectionSerializer.UnboxNonNull<int>(33), Is.EqualTo(33));
+            Assert.That(ConvertEx.UnboxNonNull<int>(33), Is.EqualTo(33));
             Assert.Throws<InvalidOperationException>(() =>
             {
                 // defensive coding, that should never happen in our code
-                _ = ReflectionSerializer.UnboxNonNull<int>(null);
+                _ = ConvertEx.UnboxNonNull<int>(null);
             });
 
-            Assert.That(ReflectionSerializer.ValueNonNull<int>(33), Is.EqualTo(33));
+            Assert.That(ConvertEx.ValueNonNull<int>(33), Is.EqualTo(33));
             Assert.Throws<InvalidOperationException>(() =>
             {
                 // defensive coding, that should never happen in our code
-                _ = ReflectionSerializer.ValueNonNull<int>(null);
+                _ = ConvertEx.ValueNonNull<int>(null);
             });
         }
 

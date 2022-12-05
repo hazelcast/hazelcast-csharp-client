@@ -34,6 +34,12 @@ public partial interface IGenericRecord
     /// <see cref="GenericRecordBuilder.Compact(string)"/> for creating a generic record
     /// in compact form, with a new schema.</para>
     /// </remarks>
+    /// <example>
+    /// var rec2 = rec1.NewBuilder()
+    ///   .SetBoolean("field-bool", true)
+    ///   .SetInt32("field-int", 1234)
+    ///   .Build();
+    /// </example>
     public IGenericRecordBuilder NewBuilder();
 
     /// <summary>
@@ -45,6 +51,12 @@ public partial interface IGenericRecord
     /// <para>This method produces an exact copy of this generic record, which can
     /// then be updated.</para>
     /// </remarks>
+    /// <example>
+    /// var rec2 = rec1.NewBuilderWithClone()
+    ///   .SetBoolean("field-bool", true)
+    ///   .SetInt32("field-int", 1234)
+    ///   .Build();
+    /// </example>
     public IGenericRecordBuilder NewBuilderWithClone();
 
     /// <summary>

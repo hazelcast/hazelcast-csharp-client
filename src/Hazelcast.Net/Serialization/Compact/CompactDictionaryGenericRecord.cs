@@ -47,8 +47,13 @@ internal partial class CompactDictionaryGenericRecord : CompactGenericRecordBase
 
     private void ValidateField(string fieldname, FieldKind kind, FieldKind altKind = FieldKind.NotAvailable)
     {
-        if (!Schema.TryGetField(fieldname, out var field) || (field.Kind != kind && field.Kind != altKind)) 
-            throw new SerializationException($"Record does not contain a field named '{fieldname}' of the requested {kind} kind.");
+        if (!Schema.TryGetField(fieldname, out var field))
+                throw new SerializationException($"Record with schema {Schema} does not contain a field named '{fieldname}'");
+
+        if (field.Kind != kind && field.Kind != altKind) 
+            throw new SerializationException(
+                $"Record with schema {Schema} has field '{fieldname}' of type {field.Kind}, not" +
+                $" {kind}{(altKind == FieldKind.NotAvailable ? "" : $" nor {altKind}")}.");
     }
 
     /// <inheritdoc />
@@ -68,14 +73,29 @@ internal partial class CompactDictionaryGenericRecord : CompactGenericRecordBase
         return (IGenericRecord?[]?)_fieldValues[fieldname];
     }
 
-    private static T[]? GetArrayOf<T>(object? obj) 
+    private static T GetValueOf<T>(object? obj, string fieldname, FieldKind kind, FieldKind altKind)
+        where T : struct
+    {
+        if (obj is T value) return value;
+
+        throw new SerializationException(
+            $"Get{kind} cannot return the value of field '{fieldname}' because value is null." +
+            $"Use the Get{altKind} method instead.");
+    }
+
+    private static T[]? GetArrayOf<T>(object? obj, string fieldname, FieldKind kind, FieldKind altKind) 
         where T : struct
     {
         if (obj == null) return null;
         if (obj is T[] array) return array;
         var convertible = HasToBe<T?[]>(obj);
         array = new T[convertible.Length];
-        for (var i = 0; i < convertible.Length; i++) array[i] = convertible[i] ?? throw new SerializationException("Null value in array.");
+        for (var i = 0; i < convertible.Length; i++)
+        {
+            array[i] = convertible[i] ?? throw new SerializationException(
+                $"Get{kind} cannot return the value of field '{fieldname}' because the array contains a null value." +
+                $"Use the Get{altKind} method instead.");
+        }
         return array;
     }
 

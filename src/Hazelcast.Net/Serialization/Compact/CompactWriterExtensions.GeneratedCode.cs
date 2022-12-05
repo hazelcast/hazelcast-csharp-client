@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using Hazelcast.Core;
 using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact;
@@ -27,13 +28,13 @@ internal static class CompactWriterExtensions
         {
             // <generated>
 
-            case FieldKind.Boolean: writer.WriteBoolean(fieldname, (bool) value); break;
-            case FieldKind.Int8: writer.WriteInt8(fieldname, (sbyte) value); break;
-            case FieldKind.Int16: writer.WriteInt16(fieldname, (short) value); break;
-            case FieldKind.Int32: writer.WriteInt32(fieldname, (int) value); break;
-            case FieldKind.Int64: writer.WriteInt64(fieldname, (long) value); break;
-            case FieldKind.Float32: writer.WriteFloat32(fieldname, (float) value); break;
-            case FieldKind.Float64: writer.WriteFloat64(fieldname, (double) value); break;
+            case FieldKind.Boolean: writer.WriteBoolean(fieldname, ConvertEx.UnboxNonNull<bool>(value)); break;
+            case FieldKind.Int8: writer.WriteInt8(fieldname, ConvertEx.UnboxNonNull<sbyte>(value)); break;
+            case FieldKind.Int16: writer.WriteInt16(fieldname, ConvertEx.UnboxNonNull<short>(value)); break;
+            case FieldKind.Int32: writer.WriteInt32(fieldname, ConvertEx.UnboxNonNull<int>(value)); break;
+            case FieldKind.Int64: writer.WriteInt64(fieldname, ConvertEx.UnboxNonNull<long>(value)); break;
+            case FieldKind.Float32: writer.WriteFloat32(fieldname, ConvertEx.UnboxNonNull<float>(value)); break;
+            case FieldKind.Float64: writer.WriteFloat64(fieldname, ConvertEx.UnboxNonNull<double>(value)); break;
             case FieldKind.ArrayOfBoolean: writer.WriteArrayOfBoolean(fieldname, (bool[]?) value); break;
             case FieldKind.ArrayOfInt8: writer.WriteArrayOfInt8(fieldname, (sbyte[]?) value); break;
             case FieldKind.ArrayOfInt16: writer.WriteArrayOfInt16(fieldname, (short[]?) value); break;
