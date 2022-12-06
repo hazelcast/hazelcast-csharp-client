@@ -146,7 +146,8 @@ namespace Hazelcast.Tests.Networking
         {
             static async ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
             {
-                await c.SendAsync(new ClientMessage(new Frame(new byte[64])));
+                await Task.Delay(200).CfAwait();
+                await c.SendAsync(new ClientMessage(new Frame(new byte[64]))).CfAwait();
             }
 
             var now = DateTime.Now;
