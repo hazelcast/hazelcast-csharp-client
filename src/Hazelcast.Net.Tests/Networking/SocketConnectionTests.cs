@@ -25,8 +25,11 @@ using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Networking;
+using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
+
+using Server = Hazelcast.Testing.TestServer.Server;
 
 namespace Hazelcast.Tests.Networking
 {
@@ -144,27 +147,35 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task SendReceive()
         {
-            static async ValueTask ServerHandler(Hazelcast.Testing.TestServer.Server s, ClientMessageConnection c, ClientMessage m)
-            {
-                await Task.Delay(200).CfAwait();
-                await c.SendAsync(new ClientMessage(new Frame(new byte[64]))).CfAwait();
-            }
+            //using var console = HConsoleForTest();
 
             var now = DateTime.Now;
             await Task.Delay(100);
 
-            var address = NetworkAddress.Parse("127.0.0.1:11000");
-            await using var server = new Hazelcast.Testing.TestServer.Server(address, ServerHandler, new NullLoggerFactory());
+            var address = NetworkAddress.Parse("127.0.0.1").WithTestEndPointPort();
+
+            await using var server = new Server(address)
+                .HandleFallback(async request =>
+                {
+                    await Task.Delay(200).CfAwait();
+                    await request.Connection.SendAsync(new ClientMessage(new Frame(new byte[64]))).CfAwait();
+                });
+
             await server.StartAsync();
 
-            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), new NullLoggerFactory());
-            var m = new ClientMessageConnection(socket, new NullLoggerFactory());
+            await using var socket = new ClientSocketConnection(Guid.NewGuid(), address.IPEndPoint, new NetworkingOptions(), new SslOptions(), NullLoggerFactory.Instance);
+            var m = new ClientMessageConnection(socket, NullLoggerFactory.Instance);
+            var s = new SemaphoreSlim(0, 1);
+            m.OnReceiveMessage += (_, _) =>
+            {
+                s.Release();
+            };
             await socket.ConnectAsync(default);
 
             await Task.Delay(100);
-            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length);
-            await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented)));
-            await Task.Delay(100);
+            await socket.SendAsync(MemberConnection.ClientProtocolInitBytes, MemberConnection.ClientProtocolInitBytes.Length).CfAwait();
+            await m.SendAsync(new ClientMessage(new Frame(new byte[64], (FrameFlags) ClientMessageFlags.Unfragmented))).CfAwait();
+            await s.WaitAsync(TimeSpan.FromSeconds(10)).CfAwait(); // wait for reply
 
             Assert.That(socket.CreateTime, Is.GreaterThan(now));
             Assert.That(socket.LastWriteTime, Is.GreaterThan(socket.CreateTime));
