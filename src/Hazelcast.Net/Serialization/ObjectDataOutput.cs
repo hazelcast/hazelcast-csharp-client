@@ -13,16 +13,21 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Security.Policy;
 using Hazelcast.Core;
+using Hazelcast.Models;
+using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
-    internal partial class ObjectDataOutput : IObjectDataOutput, IDisposable
+    internal partial class ObjectDataOutput : IObjectDataOutput, ICanHaveSchemas, IDisposable
     {
         private readonly int _initialBufferSize;
         private readonly IWriteObjectsToObjectDataOutput _objectsWriter;
         private byte[] _buffer;
         private int _position;
+        private HashSet<long> _schemaIds;
 
         internal ObjectDataOutput(int initialBufferSize, IWriteObjectsToObjectDataOutput objectsReaderWriter, Endianness endianness)
         {
@@ -43,6 +48,11 @@ namespace Hazelcast.Serialization
             get => _position;
             private set => _position = value;
         }
+
+        // no need for thread-safety because we don't parallel-serialize
+        public HashSet<long> SchemaIds => _schemaIds ??= new HashSet<long>();
+
+        public bool HasSchemas => _schemaIds != null;
 
         public void WriteInt(int position, int value)
         {

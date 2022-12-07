@@ -115,12 +115,14 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schema1 == schema2);
             Assert.That(schema1.Equals(schema2));
             Assert.That(schema1, Is.EqualTo(schema2));
+            Assert.That(schema1.GetHashCode(), Is.EqualTo(schema2.GetHashCode()));
 
             var schema3 = SchemaBuilder.For("different").Build();
 
             Assert.That(schema1 != schema3);
             Assert.That(!schema1.Equals(schema3));
             Assert.That(schema1, Is.Not.EqualTo(schema3));
+            Assert.That(schema1.GetHashCode(), Is.Not.EqualTo(schema3.GetHashCode()));
 
             Assert.That(Equals(schema1, schema2));
             Assert.That(!Equals(schema1, schema3));
