@@ -32,13 +32,14 @@ namespace Hazelcast.Core
         /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the array.</param>
         /// <param name="formatted">Whether to format the output.</param>
         /// <returns>A readable string representation of the array of bytes.</returns>
-        public static string Dump(this byte[] bytes, int length = 0, bool formatted = true)
+        public static string Dump(this byte[] bytes, long length = 0, bool formatted = true)
         {
             if (bytes == null) throw new ArgumentNullException(nameof(bytes));
             if (length > bytes.Length)
                 throw new InvalidOperationException(ExceptionMessages.NotEnoughBytes);
 
             if (length == 0) length = bytes.Length;
+            if (length == 0) return string.Empty;
 
             var text = new StringBuilder();
 
@@ -72,11 +73,13 @@ namespace Hazelcast.Core
         /// <param name="bytes">The sequence of bytes.</param>
         /// <param name="length">The number of bytes to dump, or zero to dump all bytes in the sequence.</param>
         /// <returns>A readable string representation of the sequence of bytes.</returns>
-        public static string Dump(this ReadOnlySequence<byte> bytes, int length = 0)
+        public static string Dump(this ReadOnlySequence<byte> bytes, long length = 0)
         {
-            var a = new byte[bytes.Length];
+            if (length == 0) length = bytes.Length;
+            if (length == 0) return string.Empty;
+            var a = new byte[length];
             bytes.CopyTo(a);
-            return a.Dump(length);
+            return a.Dump();
         }
     }
 }

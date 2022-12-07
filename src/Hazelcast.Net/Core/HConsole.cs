@@ -296,8 +296,9 @@ namespace Hazelcast.Core
         {
 #if HZ_CONSOLE
             if (source == null) throw new ArgumentNullException(nameof(source));
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
             var info = Options.GetOptions(source);
-            if (info.Ignore(level)) return "";
+            if (info.Ignore(level)) return string.Empty;
             var prefix = new string(' ', info.FormattedPrefix.Length);
             text = "\n" + text;
             return text.Replace("\n", "\n" + prefix, StringComparison.Ordinal);
