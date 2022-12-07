@@ -25,12 +25,12 @@ internal static class SetUUIDCodec
     public static void Encode(ClientMessage clientMessage, IEnumerable<Guid> collection)
     {
         var itemCount = collection.Count();
-        var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfGuid]);
+        var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfCodecGuid]);
 
         var i = 0;
         foreach (var guid in collection)
         {
-            frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfGuid, guid);
+            frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfCodecGuid, guid);
             i++;
         }
 
@@ -44,11 +44,11 @@ internal static class SetUUIDCodec
 
     public static HashSet<Guid> Decode(Frame frame)
     {
-        var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfGuid;
+        var itemCount = frame.Bytes.Length / BytesExtensions.SizeOfCodecGuid;
         var result = new HashSet<Guid>();
         for (var i = 0; i < itemCount; i++)
         {
-            result.Add(frame.Bytes.ReadGuidL(i * BytesExtensions.SizeOfGuid));
+            result.Add(frame.Bytes.ReadGuidL(i * BytesExtensions.SizeOfCodecGuid));
         }
         return result;
     }
