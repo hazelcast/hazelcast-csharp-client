@@ -1536,7 +1536,6 @@ function hz-build {
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
 
-    $buildArgs += "-p:SolutionDir=`"$slnRoot`""
     $buildArgs += "-p:ReleaseBranch=$isReleaseBranch"
 
     $projs | foreach {

@@ -1,9 +1,20 @@
 ﻿<Project>
 
+  <PropertyGroup>
+    <!-- 
+      the supposedly built-in $(SolutionDir) macro in MSBuild is confusing,
+      not always defined, there are issues with IDE vs command-line, etc so
+      we define our own alternative
+
+      this file is in ~/src and the solution is one level up
+    -->
+    <SolutionDirectory>$(MSBuildThisFileDirectory)/..</SolutionDirectory>
+  </PropertyGroup>
+
   <!-- import our targets (once) -->
   <PropertyGroup><HazelcastTargets>true</HazelcastTargets></PropertyGroup>
   <Import Project="Directory.Build.targets" Condition="'$(HazelcastTargets)' == ''"/>
-  <Import Project="$(SolutionDir)/build/AnalysisRules.props" />
+  <Import Project="$(SolutionDirectory)/build/AnalysisRules.props" />
 
   <PropertyGroup>
     <GitRepositoryRemoteName></GitRepositoryRemoteName>
