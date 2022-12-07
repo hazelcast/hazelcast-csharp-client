@@ -30,7 +30,6 @@ using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Accessors;
 using Hazelcast.Testing.Networking;
-using Hazelcast.Testing.Protocol;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -70,10 +69,10 @@ namespace Hazelcast.Tests.Clustering
                 Address = address
             };
 
-            await using var server = new Server(address, ServerHandler, loggerFactory, state, "0")
-            {
-                MemberId = state.MemberId,
-            };
+            await using var server = new Server(address, loggerFactory, "0")
+                .WithMemberId(state.MemberId)
+                .WithState(state)
+                .HandleFallback(ServerHandler);
             await server.StartAsync();
 
             var messaging = Mock.Of<IClusterMessaging>();
@@ -264,10 +263,10 @@ namespace Hazelcast.Tests.Clustering
                 MemberId = Guid.NewGuid(),
                 Address = address
             };
-            await using var server = new Server(address, ServerHandler, loggerFactory, state, "0")
-            {
-                MemberId = state.MemberId,
-            };
+            await using var server = new Server(address, loggerFactory, "0")
+                .WithMemberId(state.MemberId)
+                .WithState(state)
+                .HandleFallback(ServerHandler);
             await server.StartAsync();
 
             var options = new HazelcastOptionsBuilder().Build();
@@ -312,58 +311,31 @@ namespace Hazelcast.Tests.Clustering
             public NetworkAddress Address { get; set; }
         }
 
-        private async ValueTask ServerHandler(Server s, ClientMessageConnection conn, ClientMessage msg)
+        private async ValueTask ServerHandler(ClientRequest<ServerState> request)
         {
-            async Task SendResponseAsync(ClientMessage response)
-            {
-                response.CorrelationId = msg.CorrelationId;
-                response.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await conn.SendAsync(response).CfAwait();
-            }
-
-            async Task SendEventAsync(ClientMessage eventMessage, long correlationId)
-            {
-                eventMessage.CorrelationId = correlationId;
-                eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-                await conn.SendAsync(eventMessage).CfAwait();
-            }
-
-            async Task SendErrorAsync(RemoteError error, string message)
-            {
-                var errorHolders = new List<ErrorHolder>
-                    {
-                        new ErrorHolder(error, "?", message, Enumerable.Empty<StackTraceElement>())
-                    };
-                var response = ErrorsServerCodec.EncodeResponse(errorHolders);
-                await SendResponseAsync(response).CfAwait();
-            }
-
-            var state = (ServerState)s.State;
-            var address = s.Address;
-
             const int partitionsCount = 2;
 
-            switch (msg.MessageType)
+            switch (request.Message.MessageType)
             {
                 // must handle auth
                 case ClientAuthenticationServerCodec.RequestMessageType:
                     {
-                        HConsole.WriteLine(this, $"(server{state.Id}) Authentication");
-                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(msg);
+                        HConsole.WriteLine(this, $"(server{request.State.Id}) Authentication");
+                        var authRequest = ClientAuthenticationServerCodec.DecodeRequest(request.Message);
                         var authResponse = ClientAuthenticationServerCodec.EncodeResponse(
-                            0, address, s.MemberId, SerializationService.SerializerVersion,
-                            "4.0", partitionsCount, s.ClusterId, false);
-                        await SendResponseAsync(authResponse).CfAwait();
+                            0, request.State.Address, request.State.MemberId, SerializationService.SerializerVersion,
+                            "4.0", partitionsCount, request.Server.ClusterId, false);
+                        await request.RespondAsync(authResponse).CfAwait();
                         break;
                     }
 
                 // must handle events
                 case ClientAddClusterViewListenerServerCodec.RequestMessageType:
                     {
-                        HConsole.WriteLine(this, $"(server{state.Id}) AddClusterViewListener");
-                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(msg);
+                        HConsole.WriteLine(this, $"(server{request.State.Id}) AddClusterViewListener");
+                        var addRequest = ClientAddClusterViewListenerServerCodec.DecodeRequest(request.Message);
                         var addResponse = ClientAddClusterViewListenerServerCodec.EncodeResponse();
-                        await SendResponseAsync(addResponse).CfAwait();
+                        await request.RespondAsync(addResponse).CfAwait();
 
                         _ = Task.Run(async () =>
                         {
@@ -374,19 +346,19 @@ namespace Hazelcast.Tests.Clustering
                             var memberAttributes = new Dictionary<string, string>();
                             var membersEventMessage = ClientAddClusterViewListenerServerCodec.EncodeMembersViewEvent(membersVersion, new[]
                             {
-                                new MemberInfo(state.MemberId, state.Address, memberVersion, false, memberAttributes)
+                                new MemberInfo(request.State.MemberId, request.State.Address, memberVersion, false, memberAttributes)
                             });
-                            await SendEventAsync(membersEventMessage, msg.CorrelationId).CfAwait();
+                            await request.RaiseAsync(membersEventMessage).CfAwait();
 
                             await Task.Delay(500).CfAwait();
 
                             const int partitionsVersion = 1;
                             var partitionsEventMessage = ClientAddClusterViewListenerServerCodec.EncodePartitionsViewEvent(partitionsVersion, new[]
                             {
-                                new KeyValuePair<Guid, IList<int>>(state.MemberId, new List<int> { 0 }),
-                                new KeyValuePair<Guid, IList<int>>(state.MemberId, new List<int> { 1 }),
+                                new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 0 }),
+                                new KeyValuePair<Guid, IList<int>>(request.State.MemberId, new List<int> { 1 }),
                             });
-                            await SendEventAsync(partitionsEventMessage, msg.CorrelationId).CfAwait();
+                            await request.RaiseAsync(partitionsEventMessage).CfAwait();
                         });
 
                         break;
@@ -395,8 +367,8 @@ namespace Hazelcast.Tests.Clustering
                 // create object
                 case ClientPingServerCodec.RequestMessageType:
                     {
-                        HConsole.WriteLine(this, $"(server{state.Id}) Ping");
-                        var pingRequest = ClientPingServerCodec.DecodeRequest(msg);
+                        HConsole.WriteLine(this, $"(server{request.State.Id}) Ping");
+                        var pingRequest = ClientPingServerCodec.DecodeRequest(request.Message);
 
                         // no response, will timeout
 
@@ -407,8 +379,8 @@ namespace Hazelcast.Tests.Clustering
                 default:
                     {
                         // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
-                        var messageName = MessageTypeConstants.GetMessageTypeName(msg.MessageType);
-                        await SendErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{msg.MessageType:X}) not implemented.").CfAwait();
+                        var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
+                        await request.ErrorAsync(RemoteError.Hazelcast, $"MessageType {messageName} (0x{request.Message.MessageType:X}) not implemented.").CfAwait();
                         break;
                     }
             }

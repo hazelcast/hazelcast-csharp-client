@@ -260,7 +260,7 @@ namespace Hazelcast.Tests.Core
 
             // the original task has been cancelled but does not leak
             // an unobserved exception, because its exceptions are NoThrow.
-            Assert.That(e.Task.IsCanceled);
+            await AssertEx.SucceedsEventually(() => Assert.That(e.Task.IsCanceled), 10_000, 500);
         }
 
         [Test]
@@ -285,7 +285,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(cancellation.IsCancellationRequested, Is.True);
 
             // the task is faulted, and has thrown an exception!
-            Assert.That(e.Task.IsFaulted);
+            await AssertEx.SucceedsEventually(() => Assert.That(e.Task.IsFaulted), 10_000, 500);
 
             // the exception has been observed, thus not leaking here.
         }
@@ -312,7 +312,7 @@ namespace Hazelcast.Tests.Core
             Assert.That(cancellation.IsCancellationRequested, Is.True);
 
             // the task is faulted, and has thrown an exception!
-            Assert.That(e.Task.IsFaulted);
+            await AssertEx.SucceedsEventually(() => Assert.That(e.Task.IsFaulted), 10000, 500);
 
             // the exception has been observed, and would not leak
             // now, assuming we want to handle it, we can await the

@@ -1140,24 +1140,26 @@ function hz-generate-certs {
         Write-Output "Download test certificates (using GitHub clone)"
         if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
         mkdir "$tmpDir/certx" >$null 2>&1
+        rm -recurse -force "$tmpDir/certx/*"
         git init "$tmpDir/certx"
         git -C "$tmpDir/certx" config core.sparseCheckout true
         $repo = "https://github.com/hazelcast/private-test-artifacts.git"
-        git -C "$tmpDir/certx" remote add -f origin $repo
+        git -C "$tmpDir/certx" remote add origin $repo
         if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
         echo "certs.zip" >> "$tmpDir/certx/.git/info/sparse-checkout"
-        git -C "$tmpDir/certx" pull origin master
+        git -C "$tmpDir/certx" pull --depth=1 --no-tags origin data
         if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
+        rm "$tmpDir/certs.zip" >$null 2>&1
         mv "$tmpDir/certx/certs.zip" "$tmpDir"
         rm -recurse -force "$tmpDir/certx"
     }
     else {
         # a token was provided, use it
         Write-Output "Download test certificates (using GitHub token)"
-        $zipUrl = "https://raw.githubusercontent.com/hazelcast/private-test-artifacts/master/certs.zip"
+        $zipUrl = "https://api.github.com/repos/hazelcast/private-test-artifacts/contents/certs.zip?ref=data"
         #$token64 = [Convert]::ToBase64String([System.Text.Encoding]::UTF8.GetBytes($token))
         #$headers = @{ "Authorization" = "Basic $token64" }
-        $headers = @{ "Authorization" = "Token $token" }
+        $headers = @{ Authorization = "Token $token"; Accept = "application/vnd.github.v4.raw" }
         $response = invoke-web-request $zipUrl "$tmpDir/certs.zip" $headers
         if ($response.StatusCode -ne 200) {
             Write-Output "Url:      $zipUrl"
@@ -1166,7 +1168,8 @@ function hz-generate-certs {
         }
     }
 
-    if (test-path "$tmpDir/certs") { rm -recurse -force "$tmpDir/certs" }
+    mkdir "$tmpDir/certs" >$null 2>&1
+    rm -recurse -force "$tmpDir/certs/*"
     Expand-Archive "$tmpDir/certs.zip" -DestinationPath "$tmpDir/certs"
     rm "$tmpDir/certs.zip"
     Write-Output ""

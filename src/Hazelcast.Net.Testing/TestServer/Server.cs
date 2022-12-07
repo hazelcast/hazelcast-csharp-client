@@ -12,8 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Buffers;
+using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Net;
@@ -21,192 +24,288 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Networking;
+using Hazelcast.Protocol.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 
-namespace Hazelcast.Testing.TestServer
+namespace Hazelcast.Testing.TestServer;
+
+/// <summary>
+/// Represents a test server.
+/// </summary>
+internal class Server : IAsyncDisposable
 {
+    private readonly object _openLock = new();
+    private readonly ConcurrentDictionary<Guid, ServerSocketConnection> _connections = new();
+    private readonly Dictionary<int, Func<ClientRequest, ValueTask>> _handlers = new();
+    private readonly ILoggerFactory _loggerFactory;
+    private readonly IPEndPoint _endpoint;
+    private readonly object _handlerLock = new();
+    private readonly string _hcName;
+    private Func<ClientRequest, ValueTask>? _handler;
+    private Task? _handling;
+    private ServerSocketListener? _listener;
+    private bool _open;
+
     /// <summary>
-    /// Represents a test server.
+    /// Initializes a new instance of the <see cref="Server"/> class.
     /// </summary>
-    internal class Server : IAsyncDisposable
+    /// <param name="address">The socket network address.</param>
+    /// <param name="hcName">An HConsole name complement.</param>
+    /// <param name="loggerFactory">A logger factory.</param>
+    public Server(NetworkAddress address, ILoggerFactory? loggerFactory = null, string hcName = "")
     {
-        private readonly object _openLock = new object();
-        private readonly ConcurrentDictionary<Guid, ServerSocketConnection> _connections = new ConcurrentDictionary<Guid, ServerSocketConnection>();
-        private readonly Func<Server, ClientMessageConnection, ClientMessage, ValueTask> _handler;
-        private readonly ILoggerFactory _loggerFactory;
-        private readonly IPEndPoint _endpoint;
-        private readonly object _handlerLock = new object();
-        private readonly string _hcname;
-        private Task _handlerTask;
-        private ServerSocketListener _listener;
-        private bool _open;
+        Address = address;
+        _endpoint = address.IPEndPoint;
+        _loggerFactory = loggerFactory ?? NullLoggerFactory.Instance;
+        _hcName = hcName;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Server"/> class.
-        /// </summary>
-        /// <param name="address">The socket network address.</param>
-        /// <param name="handler">A handler for incoming messages.</param>
-        /// <param name="state">A server-state object.</param>
-        /// <param name="hcname">An HConsole name complement.</param>
-        /// <param name="loggerFactory">A logger factory.</param>
-        public Server(NetworkAddress address, Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory loggerFactory, object state = null, string hcname = "")
+        ClusterId = Guid.NewGuid();
+        MemberId = Guid.NewGuid();
+
+        HConsole.Configure(x => x.Configure(this).SetIndent(20).SetPrefix("SERVER".Dot(_hcName)));
+    }
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Server"/> class.
+    /// </summary>
+    /// <param name="address">The socket network address.</param>
+    /// <param name="handler">A handler for incoming messages.</param>
+    /// <param name="hcName">An HConsole name complement.</param>
+    /// <param name="loggerFactory">A logger factory.</param>
+    [Obsolete("Use the other public constructor.", false)]
+    public Server(NetworkAddress address, Func<Server, ClientMessageConnection, ClientMessage, ValueTask> handler, ILoggerFactory? loggerFactory = null, string hcName = "")
+        : this(address, loggerFactory, hcName)
+    {
+        _handler = request => handler(request.Server, request.Connection, request.Message);
+    }
+
+    /// <summary>
+    /// Assigns the handler for a request message type.
+    /// </summary>
+    /// <param name="messageType">The type of the request message.</param>
+    /// <param name="handler">The handler function.</param>
+    /// <returns>This server.</returns>
+    public Server Handle(int messageType, Func<ClientRequest, ValueTask> handler)
+    {
+        _handlers[messageType] = handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Assigns the fallback handler. 
+    /// </summary>
+    /// <param name="handler">The handler function.</param>
+    /// <returns>This server.</returns>
+    public Server HandleFallback(Func<ClientRequest, ValueTask> handler)
+    {
+        _handler = handler;
+        return this;
+    }
+
+    /// <summary>
+    /// Gets the address of the server.
+    /// </summary>
+    public NetworkAddress Address { get; }
+
+    /// <summary>
+    /// Gets the member identifier of the server.
+    /// </summary>
+    public Guid MemberId { get; set; }
+
+    /// <summary>
+    /// Sets the member identifier of the server.
+    /// </summary>
+    /// <param name="memberId">The member identifier of the server.</param>
+    /// <returns>This server.</returns>
+    public Server WithMemberId(Guid memberId)
+    {
+        MemberId = memberId;
+        return this;
+    }
+
+    /// <summary>
+    /// Gets the cluster identifier of the server.
+    /// </summary>
+    public Guid ClusterId { get; set; }
+
+    /// <summary>
+    /// Sets the cluster identifier of the server.
+    /// </summary>
+    /// <param name="clusterId">The cluster identifier of the server.</param>
+    public Server WithClusterId(Guid clusterId)
+    {
+        ClusterId = clusterId;
+        return this;
+    }
+
+    /// <summary>
+    /// Assigns a state object to the server.
+    /// </summary>
+    /// <typeparam name="TState">The type of the state object.</typeparam>
+    /// <param name="state">The state object.</param>
+    /// <returns>A server with a state.</returns>
+    public Server<TState> WithState<TState>(TState state) => new(this, state);
+
+    /// <summary>
+    /// Starts the server.
+    /// </summary>
+    /// <returns>A task that will complete when the server has started.</returns>
+    public async Task<Server> StartAsync()
+    {
+        HConsole.WriteLine(this, $"Start server at {_endpoint}");
+
+        _listener = new ServerSocketListener(_endpoint, _hcName)
         {
-            Address = address;
-            State = state;
-            _endpoint = address.IPEndPoint;
-            _handler = handler;
-            _loggerFactory = loggerFactory;
-            _hcname = hcname;
+            OnAcceptConnection = AcceptConnection, 
+            OnShutdown = ListenerShutdown
+        };
 
-            ClusterId = Guid.NewGuid();
-            MemberId = Guid.NewGuid();
+        _open = true;
+        await _listener.StartAsync().CfAwait();
 
-            HConsole.Configure(x => x.Configure(this).SetIndent(20).SetPrefix("SERVER".Dot(_hcname)));
+        HConsole.WriteLine(this, "Server started");
+        return this;
+    }
+
+    /// <summary>
+    /// Handles the <see cref="ServerSocketListener"/> shutting down.
+    /// </summary>
+    /// <param name="arg">The <see cref="ServerSocketListener"/>.</param>
+    private async ValueTask ListenerShutdown(ServerSocketListener arg)
+    {
+        HConsole.WriteLine(this, "Listener is down");
+
+        lock (_openLock)
+        {
+            _open = false;
         }
 
-        /// <summary>
-        /// Gets the address of the server.
-        /// </summary>
-        public NetworkAddress Address { get; }
-
-        /// <summary>
-        /// Gets the server state object.
-        /// </summary>
-        public object State { get; }
-
-        /// <summary>
-        /// Gets the member identifier of the server.
-        /// </summary>
-        public Guid MemberId { get; set; }
-
-        /// <summary>
-        /// Gets the cluster identifier of the server.
-        /// </summary>
-        public Guid ClusterId { get; set; }
-
-        /// <summary>
-        /// Starts the server.
-        /// </summary>
-        /// <returns>A task that will complete when the server has started.</returns>
-        public async Task StartAsync()
+        // shutdown all existing connections
+        foreach (var connection in _connections.Values.ToList())
         {
-            HConsole.WriteLine(this, $"Start server at {_endpoint}");
-
-            _listener = new ServerSocketListener(_endpoint, _hcname) { OnAcceptConnection = AcceptConnection, OnShutdown = ListenerShutdown};
-
-            _open = true;
-            await _listener.StartAsync().CfAwait();
-
-            HConsole.WriteLine(this, "Server started");
-        }
-
-        private async ValueTask ListenerShutdown(ServerSocketListener arg)
-        {
-            HConsole.WriteLine(this, "Listener is down");
-
-            lock (_openLock)
+            try
             {
-                _open = false;
+                await connection.DisposeAsync().CfAwait();
             }
+            catch { /* ignore */ }
+        }
 
-            // shutdown all existing connections
-            foreach (var connection in _connections.Values.ToList())
+        HConsole.WriteLine(this, "Connections are down");
+    }
+
+    /// <summary>
+    /// Stops the server.
+    /// </summary>
+    /// <returns>A task that will complete when the server has stopped.</returns>
+    public async Task StopAsync()
+    {
+        var listener = _listener;
+        _listener = null;
+
+        if (listener == null) return;
+
+        HConsole.WriteLine(this, "Stop server");
+
+        // stop accepting new connections
+        await listener.DisposeAsync().CfAwait();
+
+        HConsole.WriteLine(this, "Server stopped");
+    }
+
+    /// <summary>
+    /// Handles new connections.
+    /// </summary>
+    /// <param name="serverConnection">The new connection.</param>
+    private void AcceptConnection(ServerSocketConnection serverConnection)
+    {
+        // the connection we receive is not wired yet
+        // must wire it properly before accepting
+
+        lock (_openLock)
+        {
+            if (!_open) throw new InvalidOperationException("Cannot accept connections (closed).");
+
+            var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
+            HConsole.Configure(x => x.Configure(messageConnection).SetIndent(28).SetPrefix("SVR.MSG".Dot(_hcName)));
+            serverConnection.OnShutdown = SocketShutdown;
+            serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
+            serverConnection.Accept();
+            _connections[serverConnection.Id] = serverConnection;
+        }
+    }
+
+    private void ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+    {
+        lock (_handlerLock)
+        {
+            if (_handling == null)
             {
-                try
-                {
-                    await connection.DisposeAsync().CfAwait();
-                }
-                catch { /* ignore */ }
+                _handling = HandleClientRequest(new ClientRequest(this, connection, requestMessage)).AsTask();
             }
-
-            HConsole.WriteLine(this, "Connections are down");
-        }
-
-        /// <summary>
-        /// Stops the server.
-        /// </summary>
-        /// <returns>A task that will complete when the server has stopped.</returns>
-        public async Task StopAsync()
-        {
-            var listener = _listener;
-            _listener = null;
-
-            if (listener == null) return;
-
-            HConsole.WriteLine(this, "Stop server");
-
-            // stop accepting new connections
-            await listener.DisposeAsync().CfAwait();
-
-            HConsole.WriteLine(this, "Server stopped");
-        }
-
-        /// <summary>
-        /// Handles new connections.
-        /// </summary>
-        /// <param name="serverConnection">The new connection.</param>
-        private void AcceptConnection(ServerSocketConnection serverConnection)
-        {
-            // the connection we receive is not wired yet
-            // must wire it properly before accepting
-
-            lock (_openLock)
+            else
             {
-                if (!_open) throw new InvalidOperationException("Cannot accept connections (closed).");
-
-                var messageConnection = new ClientMessageConnection(serverConnection, _loggerFactory) { OnReceiveMessage = ReceiveMessage };
-                HConsole.Configure(x => x.Configure(messageConnection).SetIndent(28).SetPrefix("SVR.MSG".Dot(_hcname)));
-                serverConnection.OnShutdown = SocketShutdown;
-                serverConnection.ExpectPrefixBytes(3, ReceivePrefixBytes);
-                serverConnection.Accept();
-                _connections[serverConnection.Id] = serverConnection;
+                _handling = _handling.ContinueWith(_ =>
+                    HandleClientRequest(new ClientRequest(this, connection, requestMessage)).AsTask()).Unwrap();
             }
         }
+    }
 
-        protected async Task SendAsync(ClientMessageConnection connection, ClientMessage eventMessage, long correlationId)
-        {
-            eventMessage.CorrelationId = correlationId;
-            eventMessage.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
-            await connection.SendAsync(eventMessage).CfAwait();
-        }
+    /*
+    private AsyncQueue<ClientRequest> _queue = new();
 
-        private void ReceiveMessage(ClientMessageConnection connection, ClientMessage requestMessage)
+    private async ValueTask HandleClientRequests(CancellationToken cancellationToken)
+    {
+        await foreach (var request in _queue.WithCancellation(cancellationToken))
         {
-            lock (_handlerLock)
-            {
-                if (_handlerTask == null)
-                {
-                    _handlerTask = _handler(this, connection, requestMessage).AsTask();
-                }
-                else
-                {
-                    _handlerTask = _handlerTask.ContinueWith(_ => _handler(this, connection, requestMessage).AsTask()).Unwrap();
-                }
-            }
+            if (request == null) continue; // should not happen, better be safe
+            await HandleClientRequest(request).CfAwait();
         }
+    }
+    */
 
-        private static ValueTask ReceivePrefixBytes(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
-        {
-            // do nothing for now - just accept them
-            return new ValueTask();
-        }
+    private async ValueTask HandleClientRequest(ClientRequest request)
+    {
+        HConsole.WriteLine(this, $"Handle {MessageTypeConstants.GetMessageTypeName(request.Message.MessageType)} message.");
 
-        /// <summary>
-        /// Handles a connection shutdown.
-        /// </summary>
-        /// <param name="connection">The connection.</param>
-        /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
-        private ValueTask SocketShutdown(SocketConnectionBase connection)
+        if (_handlers.TryGetValue(request.Message.MessageType, out var handler))
         {
-            HConsole.WriteLine(this, "Removing connection " + connection.Id);
-            _connections.TryRemove(connection.Id, out _);
-            return default;
+            await handler(request).CfAwait();
         }
+        else if (_handler != null)
+        {
+            await _handler(request).CfAwait();
+        }
+        else
+        {
+            // RemoteError.Hazelcast or RemoteError.RetryableHazelcast
+            var messageName = MessageTypeConstants.GetMessageTypeName(request.Message.MessageType);
+            var errorMessage = $"Received unsupported {messageName} (0x{request.Message.MessageType:X}).";
+            await request.ErrorAsync(RemoteError.Hazelcast, errorMessage).CfAwait();
+        }
+    }
 
-        /// <inheritdoc />
-        public async ValueTask DisposeAsync()
-        {
-            await StopAsync().CfAwait();
-        }
+    private static ValueTask ReceivePrefixBytes(SocketConnectionBase connection, ReadOnlySequence<byte> bytes)
+    {
+        // do nothing for now - just accept them
+        return new ValueTask();
+    }
+
+    /// <summary>
+    /// Handles a connection shutdown.
+    /// </summary>
+    /// <param name="connection">The connection.</param>
+    /// <returns>A task that will complete when the connection shutdown has been handled.</returns>
+    private ValueTask SocketShutdown(SocketConnectionBase connection)
+    {
+        HConsole.WriteLine(this, "Removing connection " + connection.Id);
+        _connections.TryRemove(connection.Id, out _);
+        return default;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask DisposeAsync()
+    {
+        await StopAsync().CfAwaitNoThrow();
     }
 }
