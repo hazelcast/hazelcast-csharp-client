@@ -17,17 +17,19 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Impl;
+using Hazelcast.Core;
 
 namespace Hazelcast.Linq
 {
     // It represents the queryable part of HMap.
-    internal class QueryableMap<TElement> : IAsyncQueryable<TElement>,IQueryableMap
+    internal class QueryableMap<TElement> : IAsyncQueryable<TElement>, IQueryableMap
     {
         private readonly QueryProvider _queryProvider;
         private readonly Expression _expression;
+        private IAsyncEnumerator<TElement> _enumerator;
 
+        // Called via activator at QueryProvider.
+        // ReSharper disable once UnusedMember.Global
         public QueryableMap(QueryProvider provider, Expression expression, string name) : this(provider, name)
         {
             _expression = expression ?? throw new ArgumentNullException(nameof(expression));
@@ -40,18 +42,29 @@ namespace Hazelcast.Linq
             Name = name;
         }
 
+        /// <inheritdoc />
         public Type ElementType => typeof(TElement);
 
+        // ReSharper disable once ConvertToAutoPropertyWhenPossible
+        /// <inheritdoc />
         public Expression Expression => _expression;
 
         public string Name { get; }
 
+        /// <inheritdoc />
         public IAsyncQueryProvider Provider => _queryProvider;
 
+        /// <inheritdoc />
         public IAsyncEnumerator<TElement> GetAsyncEnumerator(CancellationToken token)
         {
             token.ThrowIfCancellationRequested();
-            return _queryProvider.Execute<IAsyncEnumerator<TElement>>(_expression);
+
+            if (_enumerator is not null)
+                throw new InvalidOperationException("Cannot enumerate more than once.");
+            
+            _enumerator = _queryProvider.Execute<IAsyncEnumerator<TElement>>(_expression, token);
+
+            return _enumerator;
         }
     }
 }

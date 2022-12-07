@@ -99,7 +99,7 @@ namespace Hazelcast.Linq.Visitors
                 switch (m.Method.Name)
                 {
                     case "Where":
-                        //the arguments respectivly->type of entry, source e, predicate
+                        //the arguments respectively->type of entry, source e, predicate
                         return BindWhere(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
                     case "Select":
                         return BindSelect(m.Type, m.Arguments[0], GetLambda(m.Arguments[1]));
@@ -211,14 +211,20 @@ namespace Hazelcast.Linq.Visitors
             return hMap.Name;
         }
 
-        private string GetColumnName(MemberInfo member)
+        private string GetColumnName(HMemberInfo member)
         {
-            if (member.DeclaringType == _rootType)
+            if (IsRootType(member.MemberInfo.DeclaringType!)) //be sure we don't interrupt for anything else.
             {
-                return member.Name == "Key" ? "__key" : "this";
+                switch (member.MemberInfo.Name)
+                {
+                    case "Key" when member.IsKey:
+                        return "__key";
+                    case "Value" when !member.IsKey:
+                        return "this";
+                }
             }
 
-            return member.Name;
+            return member.MemberInfo.Name;
         }
 
         private Type GetColumnType(MemberInfo member)
@@ -236,22 +242,40 @@ namespace Hazelcast.Linq.Visitors
         /// Gets members of the entry type.
         /// </summary>
         /// <param name="entryType">The type of the object that will be queried from the map.</param>
-        /// <returns>List of fields</returns>
-        private IEnumerable<MemberInfo> GetMappedMembers(Type entryType)
+        /// <param name="isKey">Whether entryType is Key of the HMap.</param>
+        /// <returns>List of properties of the type.</returns>
+        private IEnumerable<HMemberInfo> GetMappedMembers(Type entryType, bool isKey = false)
         {
-            var fields = entryType
-                .GetFields(bindingFlags)
-                .Cast<MemberInfo>()
-                .Concat(entryType.GetProperties(bindingFlags))
-                .ToArray();
+            var memberInfos = new List<HMemberInfo>();
 
-            //Strip KeyValuePair if it matches
-            if (entryType == _rootType)
+            // Stripe underlying complex type of root HKeyValuePair
+            if (IsRootType(entryType))
             {
-                //fields[0] = fields[0].
+                var piKey = entryType.GetProperty("Key");
+                var piValue = entryType.GetProperty("Value");
+
+                if (piKey!.PropertyType.IsPrimitiveType())
+                    memberInfos.Add(new HMemberInfo(piKey, true, true));
+                else
+                    memberInfos.AddRange(GetMappedMembers(piKey.PropertyType, true));
+
+
+                if (piValue!.PropertyType.IsPrimitiveType())
+                    memberInfos.Add(new HMemberInfo(piValue, true, false));
+                else
+                    memberInfos.AddRange(GetMappedMembers(piValue.PropertyType, false));
+            }
+            else
+            {
+                memberInfos.AddRange(entryType.GetProperties(bindingFlags).Select(p => new HMemberInfo(p, p.GetType().IsPrimitiveType(), isKey)));
             }
 
-            return fields;
+            return memberInfos;
+        }
+
+        private bool IsRootType(Type entryType)
+        {
+            return entryType == _rootType && entryType.IsGenericType && entryType.GetGenericTypeDefinition() == typeof(HKeyValuePair<,>);
         }
 
         /// <summary>
@@ -266,25 +290,54 @@ namespace Hazelcast.Linq.Visitors
             var mapAlias = GetNextAlias();
             var selectAlias = GetNextAlias();
 
-            var bindings = new List<MemberBinding>();
+            var bindings = new List<(MemberBinding, bool)>();
             var columns = new List<ColumnDefinition>();
 
             foreach (var mi in GetMappedMembers(map.ElementType))
             {
                 var columnName = GetColumnName(mi);
-                var columnType = GetColumnType(mi);
-                // TODO: handle key value
-                bindings.Add(Expression.Bind(mi,
-                    new ColumnExpression(columnType, selectAlias, columnName, columns.Count)));
+                var columnType = GetColumnType(mi.MemberInfo);
+                bindings.Add((Expression.Bind(mi.MemberInfo,
+                    new ColumnExpression(columnType, selectAlias, columnName, columns.Count, mi.IsKey)), mi.IsKey));
                 columns.Add(new ColumnDefinition(columnName,
-                    new ColumnExpression(columnType, mapAlias, columnName, columns.Count)));
+                    new ColumnExpression(columnType, mapAlias, columnName, columns.Count, mi.IsKey)));
             }
 
-            var projector = Expression.MemberInit(Expression.New(map.ElementType), bindings);
+            MemberInitExpression projector;
+
+            // Here we do some special bindings for HKeyValuePair. In primitive type usage, field name can be __key or
+            // this. Also, HKeyValuePair can have complex type in its Key or Value fields. That should be breakdown into
+            // underlying column/field names because server doesn't know Key or Value fields. It's just synthetic sugar
+            // for LINQ provider.
+            if (IsRootType(map.ElementType))
+            {
+                MemberBinding valueBinding;
+                MemberBinding keyBinding;
+
+                if (map.ElementType.GetProperty("Value")!.PropertyType.IsPrimitiveType())
+                    valueBinding = bindings.FirstOrDefault(p => !p.Item2).Item1;
+                else
+                    valueBinding = Expression.Bind(map.ElementType.GetProperty("Value")!,
+                        Expression.MemberInit(Expression.New(map.ElementType.GetProperty("Value")!.PropertyType),
+                            bindings.Where(p => !p.Item2).Select(p => p.Item1)));
+
+                if (map.ElementType.GetProperty("Key")!.PropertyType.IsPrimitiveType())
+                    keyBinding = bindings.FirstOrDefault(p => p.Item2).Item1;
+                else
+                    keyBinding = Expression.Bind(map.ElementType.GetProperty("Key")!,
+                        Expression.MemberInit(Expression.New(map.ElementType.GetProperty("Key")!.PropertyType),
+                            bindings.Where(p => p.Item2).Select(p => p.Item1)));
+
+                projector = Expression.MemberInit(Expression.New(map.ElementType), keyBinding, valueBinding);
+            }
+            else
+                projector = Expression.MemberInit(Expression.New(map.ElementType), bindings.Select(p => p.Item1));
+
             var entryType = typeof(IEnumerable<>).MakeGenericType(map.ElementType);
 
             var selectExp = new SelectExpression(selectAlias, entryType, columns.AsReadOnly(),
                 new MapExpression(entryType, GetMapName(map), mapAlias));
+
             return new ProjectionExpression(selectExp, projector, entryType);
         }
 

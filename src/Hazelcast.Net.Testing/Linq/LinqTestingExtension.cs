@@ -12,28 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Linq
-{
-    /// <summary>
-    /// A key value pair for <see cref="IHMap"/> entries on LINQ.
-    /// </summary>
-    /// <typeparam name="TKey">Type of Key</typeparam>
-    /// <typeparam name="TValue">Type of Value</typeparam>
-    public struct HKeyValuePair<TKey, TValue>
-    {
-        public HKeyValuePair(TKey key, TValue value)
-        {
-            Key = key;
-            Value = value;
-        }
+using System.Collections.Generic;
+using System.Linq;
+using Hazelcast.Linq;
+using Hazelcast.Sql;
+using Microsoft.Extensions.Logging.Abstractions;
+using Moq;
 
-        /// <summary>
-        /// Key of the entry.
-        /// </summary>
-        public TKey Key { get; set; }
-        /// <summary>
-        /// Value of the entry.
-        /// </summary>
-        public TValue Value { get; set; }
+namespace Hazelcast.Testing.Linq
+{
+    public static class LinqTestingExtension
+    {
+        public static IAsyncQueryable<T> AsTestingAsyncQueryable<T>(this List<T> list)
+        {
+            return new QueryableMap<T>(new QueryProvider(Mock.Of<ISqlService>(), typeof(T), NullLoggerFactory.Instance), typeof(T).Name);
+        }
     }
 }

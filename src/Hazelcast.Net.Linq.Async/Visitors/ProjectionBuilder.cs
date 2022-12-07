@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
@@ -27,10 +28,16 @@ namespace Hazelcast.Linq.Visitors
 
         public ProjectionBuilder()
         {
+            // Use GetColumn by column name method to reach value.
             var genericMethods = typeof(SqlRow).GetMethods()
                 .FirstOrDefault(m =>
                     m.Name == nameof(SqlRow.GetColumn) &&
                     m.GetParameters().Any(ga => ga.ParameterType == typeof(string)));
+            
+            if (genericMethods is null) 
+                throw new MissingMethodException("SqlRow doesn't have proper GetColumn method to proceed.");
+            
+            // Sql service does type casting, object should be enough.
             _miGetColumn = genericMethods.MakeGenericMethod(typeof(object));
             _row = Expression.Parameter(typeof(SqlRow), "row");
         }

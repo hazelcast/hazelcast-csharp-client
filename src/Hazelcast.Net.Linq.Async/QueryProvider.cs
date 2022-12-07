@@ -13,15 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
-using Hazelcast.Linq.Evaluation;
 using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 
@@ -32,35 +29,34 @@ namespace Hazelcast.Linq
     /// </summary>
     internal class QueryProvider : IAsyncQueryProvider
     {
-        internal readonly ISqlService SqlService;
+        private readonly ISqlService _sqlService;
         private readonly QueryTranslator _translator;
-        private readonly Type _rootType;
         private readonly ILogger _logger;
 
         public QueryProvider(ISqlService sqlService, Type rootElementType, ILoggerFactory loggerFactory)
         {
-            SqlService = sqlService;
+            _sqlService = sqlService ?? throw new ArgumentNullException(nameof(sqlService));
             _translator = new QueryTranslator(rootElementType);
-            _rootType = rootElementType;
             _logger = loggerFactory.CreateLogger<QueryProvider>();
         }
 
-        public (Task<ISqlQueryResult>, LambdaExpression) ExecuteQuery(Expression expression)
+        public (Task<ISqlQueryResult>, LambdaExpression) ExecuteQuery(Expression expression, CancellationToken token = default)
         {
             var (sql, values, projector) = GetQuery(expression);
-            _logger?.IfDebug()?.LogDebug(sql);
-            var result = SqlService.ExecuteQueryAsync(sql, values);
+            _logger?.IfDebug()?.LogDebug("SQL Statement: \"{Sql}\"", sql);
+            HConsole.WriteLine(this, sql);
+            var result = _sqlService.ExecuteQueryAsync(sql, values, cancellationToken: token);
             return (result, projector);
         }
 
-        public (string, object[], LambdaExpression) GetQuery(Expression expression)
+        private (string, object[], LambdaExpression) GetQuery(Expression expression)
         {
             return _translator.Translate(expression);
         }
 
         // Create Query is called when a new query is build existing one. So, each step may
         // do query on different type of object.
-        // map.Select(...).[HERE]Where(...);
+        // map.Select(...).[HERE CreateQuery Called]Where(...);
         IAsyncQueryable<TElement> IAsyncQueryProvider.CreateQuery<TElement>(Expression expression)
         {
             try
@@ -70,7 +66,7 @@ namespace Hazelcast.Linq
                 var itemType = typeof(TElement);
                 var mapQ = Activator.CreateInstance(typeof(QueryableMap<>)
                     .MakeGenericType(itemType), this, expression, nameof(TElement))!;
-                return ((IAsyncQueryable<TElement>) mapQ);
+                return (IAsyncQueryable<TElement>) mapQ;
             }
             catch (TargetInvocationException ex)
             {
@@ -78,13 +74,13 @@ namespace Hazelcast.Linq
             }
         }
 
-        public TResult Execute<TResult>(Expression expression)
+        public TResult Execute<TResult>(Expression expression, CancellationToken token = default)
         {
             try
             {
                 var itemType = typeof(TResult).GenericTypeArguments[0];
                 return (TResult) Activator.CreateInstance(typeof(ObjectReader<>)
-                    .MakeGenericType(itemType), this, expression)!;
+                    .MakeGenericType(itemType), this, expression, token)!;
             }
             catch (TargetInvocationException ex)
             {
@@ -94,7 +90,7 @@ namespace Hazelcast.Linq
 
         public ValueTask<TResult> ExecuteAsync<TResult>(Expression expression, CancellationToken token)
         {
-            return new ValueTask<TResult>(Execute<TResult>(expression));
+            return new ValueTask<TResult>(Execute<TResult>(expression, token));
         }
     }
 }

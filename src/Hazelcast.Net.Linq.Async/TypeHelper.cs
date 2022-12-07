@@ -18,7 +18,7 @@ using System.Reflection;
 
 namespace Hazelcast.Linq
 {
-    public static class TypeHelper
+    internal static class TypeHelper
     {
         public static Type GetUnderlyingType(this MemberInfo member)
         {
@@ -85,6 +85,11 @@ namespace Hazelcast.Linq
             }
 
             return null;
+        }
+
+        public static bool IsPrimitiveType(this Type t)
+        {
+            return t.IsPrimitive || t == typeof(Decimal) || t == typeof(String);
         }
     }
     

@@ -26,21 +26,21 @@ namespace Hazelcast.Linq.Visitors
     /// The inner query is redundant here. So we can remove it if it's 
     /// a really simple projection layer.
     /// </summary>
-    internal class RedundantSubqueryProcessor : HzExpressionVisitor
+    internal class RedundantSubQueryProcessor : HzExpressionVisitor
     {
         /// <summary>
-        /// Reduces the redundant subqueries which has no semantic value, and combined their conditions.
+        /// Reduces the redundant subQueries which has no semantic value, and combined their conditions.
         /// </summary>
         /// <param name="select">Expression to be cleaned.</param>
         /// <returns>Cleaned expression</returns>
-        internal Expression CleanInternal(Expression select)
+        private Expression CleanInternal(Expression select)
         {
             return Visit(select);
         }
 
         public static Expression Clean(Expression expression)
         {
-            return new RedundantSubqueryProcessor().CleanInternal(expression);
+            return new RedundantSubQueryProcessor().CleanInternal(expression);
         }
 
         internal override Expression VisitProjection(ProjectionExpression node)
@@ -50,7 +50,7 @@ namespace Hazelcast.Linq.Visitors
             if (visitedProj.Source.From is SelectExpression)
             {
                 if (RedundantCollector.TryCollect(visitedProj.Source, out var redundants))
-                    return SubqueryRemover.Remove(visitedProj.Source, redundants);
+                    return SubQueryRemover.Remove(visitedProj.Source, redundants);
             }
 
             return visitedProj;
@@ -60,9 +60,9 @@ namespace Hazelcast.Linq.Visitors
         {
             var visitedSelect = (SelectExpression)base.VisitSelect(node);
 
-            // Try to find and clean redundant subqueries.
+            // Try to find and clean redundant subQueries.
             if (RedundantCollector.TryCollect(visitedSelect.From, out var redundants))
-                visitedSelect = (SelectExpression)SubqueryRemover.Remove(visitedSelect, redundants);
+                visitedSelect = (SelectExpression)SubQueryRemover.Remove(visitedSelect, redundants);
 
             //There could be a queries on the same level but different nodes,
             // they can be merged it they are also a simple select expression.
@@ -74,7 +74,7 @@ namespace Hazelcast.Linq.Visitors
             if (RedundantCollector.HasSimpleProjection(from))
             {
                 // From part of the projection is a simple projection, remove it.
-                visitedSelect = (SelectExpression)SubqueryRemover.Remove(visitedSelect, from);
+                visitedSelect = (SelectExpression)SubQueryRemover.Remove(visitedSelect, from);
 
                 // Try to combine conditions since projections cleaned.            
                 var where = visitedSelect.Where;

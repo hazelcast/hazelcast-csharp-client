@@ -15,6 +15,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Sql;
@@ -22,44 +23,50 @@ using Hazelcast.Sql;
 namespace Hazelcast.Linq
 {
     // Implements IAsyncEnumerator and reads result.
-    internal class ObjectReader<TResult> : IAsyncEnumerator<TResult>, IAsyncDisposable
+    internal class ObjectReader<TResult> : IAsyncEnumerator<TResult>
     {
         private readonly QueryProvider _queryProvider;
-        private IAsyncEnumerator<SqlRow>? _enumerator;
-        private ISqlQueryResult? _queryResult;
         private readonly Expression _expression;
+        private IAsyncEnumerator<SqlRow>? _sqlEnumerator;
+        private ISqlQueryResult? _queryResult;
         private Func<SqlRow, TResult>? _projector;
+        private readonly CancellationToken _cancellationToken;
 
-        public ObjectReader(QueryProvider queryProvider, Expression expression)
+#pragma warning disable 8618 Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.
+        public ObjectReader(QueryProvider queryProvider, Expression expression, CancellationToken token)
+#pragma warning restore 8618 Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.
         {
             _queryProvider = queryProvider;
+            _cancellationToken = token;
             _expression = expression;
         }
 
+        /// <inheritdoc />
         public TResult Current { get; private set; }
 
+        /// <inheritdoc />
         public ValueTask DisposeAsync()
         {
-            if (_queryResult is not null)
-                return _queryResult.DisposeAsync();
-
-            return default;
+            return _queryResult?.DisposeAsync() ?? default;
         }
 
+        /// <inheritdoc />
         public async ValueTask<bool> MoveNextAsync()
         {
-            if (_enumerator is null)
+            if (_sqlEnumerator is null)
             {
+                _cancellationToken.ThrowIfCancellationRequested();
                 // execute sql
-                var (result, projector) = _queryProvider.ExecuteQuery(_expression);
+                var (result, projector) = _queryProvider.ExecuteQuery(_expression, token: _cancellationToken);
                 _queryResult = await result.CfAwait();
                 _projector = (Func<SqlRow, TResult>) projector.Compile();
-                _enumerator = _queryResult.GetAsyncEnumerator();
+                _sqlEnumerator = _queryResult.GetAsyncEnumerator(cancellationToken: _cancellationToken);
             }
 
-            if (await _enumerator.MoveNextAsync().CfAwait())
+            // ReSharper disable once InvertIf
+            if (await _sqlEnumerator.MoveNextAsync().CfAwait())
             {
-                Current = _projector!(_enumerator.Current);
+                Current = _projector!(_sqlEnumerator.Current);
                 return true;
             }
 

@@ -13,14 +13,10 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Linq.Expressions;
-using Hazelcast.Core;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
-using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Linq
 {
@@ -38,7 +34,7 @@ namespace Hazelcast.Linq
             var evaluated = ExpressionEvaluator.EvaluatePartially(root);
             var boundExp = new QueryBinder().Bind(evaluated, _rootElementType);
             boundExp = UnusedColumnProcessor.Clean(boundExp);
-            boundExp = RedundantSubqueryProcessor.Clean(boundExp!);
+            boundExp = RedundantSubQueryProcessor.Clean(boundExp!);
             var projector = new ProjectionBuilder().Build(((ProjectionExpression) boundExp).Projector);
             var (sql, values) = QueryFormatter.Format(boundExp);
             return (sql, values, projector);

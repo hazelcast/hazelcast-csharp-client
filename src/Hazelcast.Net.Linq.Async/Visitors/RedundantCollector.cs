@@ -27,10 +27,11 @@ namespace Hazelcast.Linq.Visitors
         private List<SelectExpression> _redundants = new();
 
         /// <summary>
-        /// Collects redundant subqueries.
+        /// Collects redundant subQueries.
         /// </summary>
         /// <param name="expression">Expression to be looked</param>
-        /// <returns>Redundant subqueries</returns>
+        /// <param name="redundants">Redundant subQueries</param>
+        /// <returns></returns>
         public static bool TryCollect(Expression expression, out SelectExpression[] redundants)
         {
             var list = new RedundantCollector().CollectInternal(expression);
@@ -52,7 +53,7 @@ namespace Hazelcast.Linq.Visitors
             return node;
         }
 
-        public static bool IsRedundant(SelectExpression select)
+        private static bool IsRedundant(SelectExpression select)
         {
             return (select.Where is null && HasSimpleProjection(select))
                 || IsWrapperOfFrom(select);
@@ -62,27 +63,23 @@ namespace Hazelcast.Linq.Visitors
         {
             foreach (var item in select.Columns)
             {
-                var column = item.Expression as ColumnExpression;
                 //If column name is changed, so projection too.
-                if (column is null || column.Name != item.Name) return false;
+                if (item.Expression is not ColumnExpression column || column.Name != item.Name) return false;
             }
             return true;
         }
 
-        internal static bool IsWrapperOfFrom(SelectExpression node)
+        private static bool IsWrapperOfFrom(SelectExpression node)
         {
             if (node.From is MapExpression) return false;
 
-            var from = node.From as SelectExpression;
-
             // to be redundant, current node should be pure wrapper of its from node.
-            if (from is null || node.Columns.Count != from.Columns.Count) return false;
+            if (node.From is not SelectExpression from || node.Columns.Count != from.Columns.Count) return false;
 
             for (int i = 0, n = node.Columns.Count; i < n; i++)
             {
-                var col = node.Columns[i].Expression as ColumnExpression;
                 //check order of the columns between select and from.
-                if (col is null || !(col.Name == from.Columns[i].Name)) return false;
+                if (node.Columns[i].Expression is not ColumnExpression col || col.Name != from.Columns[i].Name) return false;
             }
 
             return true;

@@ -20,6 +20,7 @@ using Hazelcast.Linq.Visitors;
 using System.Linq.Expressions;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
+using Hazelcast.Testing.Linq;
 
 namespace Hazelcast.Tests.Linq
 {
@@ -59,7 +60,8 @@ namespace Hazelcast.Tests.Linq
         {
             var dummyData = new List<DummyType>();
             var val = 0;
-            var exp = dummyData.AsQueryable().Where(p => p.ColumnInteger == val);
+            var exp = dummyData.AsTestingAsyncQueryable();
+            exp = exp.Where(p => p.ColumnInteger == val);
 
             //Overcome the referenced values, such as `val` in the where clause
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
@@ -71,7 +73,7 @@ namespace Hazelcast.Tests.Linq
             var projection = projectedExp.Source as SelectExpression;
             Assert.That(projection.Columns.Count, Is.EqualTo(2));
             Assert.AreEqual(projection.Columns.Select(p => p.Name).Intersect(columnNames), columnNames);
-            Assert.AreEqual(((MapExpression) ((SelectExpression) projection.From).From).Alias,
+            Assert.AreEqual(((MapExpression) ((SelectExpression) projection.From).From).Name,
                 nameof(DummyType)); //redundant queries are another PR's deal.
 
             var where = projectedExp.Source.Where as BinaryExpression;
@@ -84,7 +86,7 @@ namespace Hazelcast.Tests.Linq
         public void TestQuerySelectBinderBindsCorrecytly()
         {
             var dummyData = new List<DummyType>();
-            var exp = dummyData.AsQueryable().Select(p => p.ColumnInteger);
+            var exp = dummyData.AsTestingAsyncQueryable().Select(p => p.ColumnInteger);
 
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
 
@@ -106,11 +108,11 @@ namespace Hazelcast.Tests.Linq
             var dummyData2 = new List<DummyType>();
             Expression<Func<DummyType, DummyType, string>> tempPredicate = (DummyType o, DummyType i) => i.ColumnString;
             var query = dummyData
-                .AsQueryable()
+                .AsTestingAsyncQueryable()
                 // the other data source must be also Querable. Otherwise, it will be interpred as a (constant)value on expression tree which
                 // doesn't work for us. Note: HMap is Querable. It will be used as joined data source in normal usage. Current usage 
                 // is only for testing.
-                .Join(dummyData2.AsQueryable(),
+                .Join(dummyData2.AsTestingAsyncQueryable(),
                     o => o.ColumnInteger,
                     i => i.ColumnInteger,
                     tempPredicate);

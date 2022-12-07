@@ -12,28 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
+using System.Reflection;
+
 namespace Hazelcast.Linq
 {
-    /// <summary>
-    /// A key value pair for <see cref="IHMap"/> entries on LINQ.
-    /// </summary>
-    /// <typeparam name="TKey">Type of Key</typeparam>
-    /// <typeparam name="TValue">Type of Value</typeparam>
-    public struct HKeyValuePair<TKey, TValue>
+    internal class HMemberInfo
     {
-        public HKeyValuePair(TKey key, TValue value)
+        public HMemberInfo(MemberInfo memberInfo, bool isPrimitive, bool isKey)
         {
-            Key = key;
-            Value = value;
+            MemberInfo = memberInfo;
+            IsPrimitive = isPrimitive;
+            IsKey = isKey;
         }
 
-        /// <summary>
-        /// Key of the entry.
-        /// </summary>
-        public TKey Key { get; set; }
-        /// <summary>
-        /// Value of the entry.
-        /// </summary>
-        public TValue Value { get; set; }
+        public MemberInfo MemberInfo { get; }
+        public bool IsPrimitive { get;  }
+        public bool IsKey { get;  }
     }
 }

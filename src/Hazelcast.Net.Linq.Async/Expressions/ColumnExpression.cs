@@ -40,13 +40,19 @@ namespace Hazelcast.Linq.Expressions
         /// <inheritdoc />
         public override Type Type { get; }
 
-        public ColumnExpression(Type type, string alias, string name, int ordinal)
+        /// <summary>
+        /// It holds value whether Column is part of the Key part of HMap.
+        /// </summary>
+        public bool IsKey { get; }
+
+        public ColumnExpression(Type type, string alias, string name, int ordinal, bool isKey = false)
         {
             Name = name ?? throw new ArgumentNullException(nameof(name));
             Alias = alias ?? throw new ArgumentNullException(nameof(alias));
             Ordinal = ordinal;
             Type = type ?? throw new ArgumentNullException(nameof(type));
-            NodeType = (ExpressionType)HzExpressionType.Column;
+            NodeType = (ExpressionType) HzExpressionType.Column;
+            IsKey = isKey;
         }
     }
 }
