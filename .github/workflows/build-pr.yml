@@ -83,19 +83,23 @@ jobs:
     name: Get Refs
     runs-on: ubuntu-latest
     outputs:
-      ref: ${{ steps.get-refs.ref }}
-      merged-ref: ${{ steps.get-refs.merged-ref }}
+      ref: ${{ steps.get-refs.outputs.ref }}
+      merged-ref: ${{ steps.get-refs.outputs.merged-ref }}
 
     steps:
       - name: Get Refs
         id: get-refs
         shell: bash
         run: |
+          echo "EVENT: ${{ github.event_name }}"
           if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "PR_NUMBER: ${{ inputs.pr_number }}"
+            echo "PR_COMMIT: ${{ inputs.pr_commit }}"
             echo "ref=refs/pull/${{ inputs.pr_number }}/merge" >> $GITHUB_OUTPUT
             echo "merged-ref=${{ inputs.pr_commit }}" >> $GITHUB_OUTPUT
           else
-            echo "ref=''" >> $GITHUB_OUTPUT
+            echo "PR_NUMBER: ${{ github.event.pull_request.number }}"
+            echo "ref=refs/pull/${{ github.event.pull_request.number }}/merge" >> $GITHUB_OUTPUT
             echo "merged-ref=''" >> $GITHUB_OUTPUT
           fi
 
@@ -114,8 +118,8 @@ jobs:
     with:
       os: ${{ matrix.os }}
       fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
-      ref: ${{ needs.get-refs.ref }}
-      merged-ref: ${{ needs.get-refs.merged-ref }}
+      ref: ${{ needs.get-refs.outputs.ref }}
+      merged-ref: ${{ needs.get-refs.outputs.merged-ref }}
 
   # create the result check
   report:
