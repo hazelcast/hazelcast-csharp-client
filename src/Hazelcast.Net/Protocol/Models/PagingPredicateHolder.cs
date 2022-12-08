@@ -35,8 +35,11 @@ namespace Hazelcast.Protocol.Models
 
         internal IData PartitionKeyData { get; }
 
+        internal ICollection<IData> PartitionKeysData { get; }
+
         public PagingPredicateHolder(AnchorDataListHolder anchorDataListHolder, IData predicateData, IData comparatorData,
-            int pageSize, int page, byte iterationTypeId, IData partitionKeyData)
+            int pageSize, int page, byte iterationTypeId, IData partitionKeyData,
+            bool partitionKeysDataExists, ICollection<IData> partitionKeysData)
         {
             AnchorDataListHolder = anchorDataListHolder;
             PredicateData = predicateData;
@@ -45,6 +48,7 @@ namespace Hazelcast.Protocol.Models
             Page = page;
             IterationTypeId = iterationTypeId;
             PartitionKeyData = partitionKeyData;
+            if (partitionKeysDataExists) PartitionKeysData = partitionKeysData;
         }
 
         public static PagingPredicateHolder Of(IPredicate predicate, SerializationService serializationService)
@@ -92,7 +96,7 @@ namespace Hazelcast.Protocol.Models
                 throw new InvalidOperationException("The paging predicate does not specify an iteration type.");
 
             return new PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pagingPredicate.PageSize,
-                pagingPredicate.Page, (byte) pagingPredicate.IterationType, partitionKeyData);
+                pagingPredicate.Page, (byte) pagingPredicate.IterationType, partitionKeyData, false, null);
         }
     }
 }

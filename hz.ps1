@@ -1433,6 +1433,33 @@ function hz-generate-codecs {
 
     Write-Output "Generate codecs"
     python $slnRoot/protocol/generator.py -l cs --no-binary -r $slnRoot
+
+    Write-Output "Cleanup codecs"
+
+    $totalCount = 0
+    $fixedCount = 0
+
+    $files = get-childitem -recurse -file -path "$srcDir/Hazelcast.Net/Protocol/Codecs/*" -include "*.cs"
+    foreach ($file in $files) {
+
+        $totalCount += 1
+        if (cleanup-code-file $file) {
+            write-output $file.FullName.SubString($srcDir.Length-3)
+            $fixedCount += 1
+        }
+    }
+
+    $files = get-childitem -recurse -file -path "$srcDir/Hazelcast.Net/Protocol/CustomCodecs/*" -include "*.cs"
+    foreach ($file in $files) {
+
+        $totalCount += 1
+        if (cleanup-code-file $file) {
+            write-output $file.FullName.SubString($srcDir.Length-3)
+            $fixedCount += 1
+        }
+    }
+
+    Write-Output "Cleaned $fixedCount out of $totalCount files."
 }
 
 # builds the solution
@@ -2417,6 +2444,47 @@ function hz-completion-initialize {
     register-argumentCompleter -CommandName hz -ScriptBlock $scriptBlock
 }
 
+function cleanup-code-file ($file) {
+
+    $nl = [Environment]::NewLine
+
+    # detect if the file is UTF8+BOM
+    $contents = new-object byte[] 3
+    $stream = [System.IO.File]::OpenRead($file)
+    $stream.Read($contents, 0, 3) | Out-Null
+    $stream.Close()
+    $isUtf8BOM = $contents[0] -eq 0xEF -and $contents[1] -eq 0xBB -and $contents[2] -eq 0xBF
+
+    # -raw ignores newline characters and returns the entire contents of a file in one string with the newlines preserved
+    $text = get-content -path $file -raw
+
+    # regex:
+    # see https://docs.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions
+    # - \s matches any whitespace characters and is equivalent to [^\f\n\r\t\v\x85\p{Z}]
+    # - \S matches any non-whitespace characters and is equivalent to [\f\n\r\t\v\x85\p{Z}]
+    # replacements:
+    # - tab -> 4 spaces
+    # - (not cr) + lf -> nl
+    # - cr + (not lf) -> nl
+    # - non-whitespace + whitespaces (but not nl) + nl -> non-whitespace + nl
+    # - whitespaces (incl. cr or lf) at end of file -> one single nl
+    $fixed = $text `
+        -replace "`t", "    " `
+        -replace "([^`r])`n", "`${1}$nl" `
+        -replace "`r([^`n])", "$nl`${1}" `
+        -replace "(\S)[`f`t`v\x85\p{Z}]+$nl", "`${1}$nl" `
+        -replace "\s+$", "$nl"
+
+        # -replace "[^\S`r`n]+([`r`n])", "`${1}" `
+
+    if (-not $isUtf8BOM -or $fixed -ne $text) {
+        set-content -path $file -value $fixed -encoding utf8BOM -noNewLine
+        return $true
+    }
+
+    return $false
+}
+
 # cleanup code
 function hz-cleanup-code {
 
@@ -2440,38 +2508,13 @@ function hz-cleanup-code {
         $_.FullName -inotmatch "$($sc)bin$($sc)" `
     }
 
-    $nl = [Environment]::NewLine
-
     $totalCount = 0
     $fixedCount = 0
     foreach ($file in $files) {
 
-        # -raw ignores newline characters and returns the entire contents of a file in one string with the newlines preserved
-        $text = get-content -path $file -raw
         $totalCount += 1
-
-        # regex:
-        # see https://docs.microsoft.com/en-us/dotnet/standard/base-types/character-classes-in-regular-expressions
-        # - \s matches any whitespace characters and is equivalent to [^\f\n\r\t\v\x85\p{Z}]
-        # - \S matches any non-whitespace characters and is equivalent to [\f\n\r\t\v\x85\p{Z}]
-        # replacements:
-        # - tab -> 4 spaces
-        # - (not cr) + lf -> nl
-        # - cr + (not lf) -> nl
-        # - non-whitespace + whitespaces (but not nl) + nl -> non-whitespace + nl
-        # - whitespaces (incl. cr or lf) at end of file -> one single nl
-        $fixed = $text `
-            -replace "`t", "    " `
-            -replace "([^`r])`n", "`${1}$nl" `
-            -replace "`r([^`n])", "$nl`${1}" `
-            -replace "(\S)[`f`t`v\x85\p{Z}]+$nl", "`${1}$nl" `
-            -replace "\s+$", "$nl"
-
-            # -replace "[^\S`r`n]+([`r`n])", "`${1}" `
-
-        if ($fixed -ne $text) {
+        if (cleanup-code-file $file) {
             write-output $file.FullName.SubString($srcDir.Length-3)
-            set-content -path $file -value $fixed -encoding utf8BOM -noNewLine
             $fixedCount += 1
         }
     }

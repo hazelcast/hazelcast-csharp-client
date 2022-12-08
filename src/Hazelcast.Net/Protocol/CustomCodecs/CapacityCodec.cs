@@ -36,48 +36,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class IndexConfigCodec
+    internal static class CapacityCodec
     {
-        private const int TypeFieldOffset = 0;
-        private const int InitialFrameSize = TypeFieldOffset + BytesExtensions.SizeOfInt;
+        private const int ValueFieldOffset = 0;
+        private const int UnitFieldOffset = ValueFieldOffset + BytesExtensions.SizeOfLong;
+        private const int InitialFrameSize = UnitFieldOffset + BytesExtensions.SizeOfInt;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.IndexOptions indexConfig)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.Capacity capacity)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(TypeFieldOffset, indexConfig.Type);
+            initialFrame.Bytes.WriteLongL(ValueFieldOffset, capacity.Value);
+            initialFrame.Bytes.WriteIntL(UnitFieldOffset, capacity.Unit);
             clientMessage.Append(initialFrame);
-
-            CodecUtil.EncodeNullable(clientMessage, indexConfig.Name, StringCodec.Encode);
-            ListMultiFrameCodec.Encode(clientMessage, indexConfig.Attributes, StringCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, indexConfig.BitmapIndexOptions, BitmapIndexOptionsCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, indexConfig.BTreeIndexOptions, BTreeIndexConfigCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Models.IndexOptions Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.Capacity Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var type = initialFrame.Bytes.ReadIntL(TypeFieldOffset);
+            var @value = initialFrame.Bytes.ReadLongL(ValueFieldOffset);
 
-            var name = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            var attributes = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
-            var bitmapIndexOptions = CodecUtil.DecodeNullable(iterator, BitmapIndexOptionsCodec.Decode);
-            var isBTreeIndexConfigExists = false;
-            Hazelcast.Models.BTreeIndexOptions bTreeIndexConfig = default;
-            if (iterator.NextIsNotTheEnd())
-            {
-                bTreeIndexConfig = CodecUtil.DecodeNullable(iterator, BTreeIndexConfigCodec.Decode);
-                isBTreeIndexConfigExists = true;
-            }
-
+            var unit = initialFrame.Bytes.ReadIntL(UnitFieldOffset);
             iterator.SkipToStructEnd();
-            return CustomTypeFactory.CreateIndexConfig(name, type, attributes, bitmapIndexOptions, isBTreeIndexConfigExists, bTreeIndexConfig);
+            return CustomTypeFactory.CreateCapacity(@value, unit);
         }
     }
 }

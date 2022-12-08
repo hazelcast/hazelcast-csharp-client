@@ -55,7 +55,8 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestSkipUpdateStatisticsFieldOffset = RequestExpectedResultTypeFieldOffset + BytesExtensions.SizeOfByte;
         private const int RequestInitialFrameSize = RequestSkipUpdateStatisticsFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseUpdateCountFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseUpdateCountFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseIsInfiniteRowsFieldOffset = ResponseUpdateCountFieldOffset + BytesExtensions.SizeOfLong;
+        private const int ResponseInitialFrameSize = ResponseIsInfiniteRowsFieldOffset + BytesExtensions.SizeOfBool;
 
 #if SERVER_CODEC
         public sealed class RequestParameters
@@ -179,15 +180,27 @@ namespace Hazelcast.Protocol.Codecs
             /// Error object.
             ///</summary>
             public Hazelcast.Sql.SqlError Error { get; set; }
+
+            /// <summary>
+            /// Is the result set unbounded.
+            ///</summary>
+            public bool IsInfiniteRows { get; set; }
+
+            /// <summary>
+            /// <c>true</c> if the isInfiniteRows is received from the member, <c>false</c> otherwise.
+            /// If this is false, isInfiniteRows has the default value for its type.
+            /// </summary>
+            public bool IsIsInfiniteRowsExists { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(IList<Hazelcast.Sql.SqlColumnMetadata> rowMetadata, Hazelcast.Sql.SqlPage rowPage, long updateCount, Hazelcast.Sql.SqlError error)
+        public static ClientMessage EncodeResponse(IList<Hazelcast.Sql.SqlColumnMetadata> rowMetadata, Hazelcast.Sql.SqlPage rowPage, long updateCount, Hazelcast.Sql.SqlError error, bool isInfiniteRows)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, ResponseMessageType);
             initialFrame.Bytes.WriteLongL(ResponseUpdateCountFieldOffset, updateCount);
+            initialFrame.Bytes.WriteBoolL(ResponseIsInfiniteRowsFieldOffset, isInfiniteRows);
             clientMessage.Append(initialFrame);
             ListMultiFrameCodec.EncodeNullable(clientMessage, rowMetadata, SqlColumnMetadataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, rowPage, SqlPageCodec.Encode);
@@ -202,6 +215,12 @@ namespace Hazelcast.Protocol.Codecs
             var response = new ResponseParameters();
             var initialFrame = iterator.Take();
             response.UpdateCount = initialFrame.Bytes.ReadLongL(ResponseUpdateCountFieldOffset);
+            if (initialFrame.Bytes.Length >= ResponseIsInfiniteRowsFieldOffset + BytesExtensions.SizeOfBool)
+            {
+                response.IsInfiniteRows = initialFrame.Bytes.ReadBoolL(ResponseIsInfiniteRowsFieldOffset);
+                response.IsIsInfiniteRowsExists = true;
+            }
+            else response.IsIsInfiniteRowsExists = false;
             response.RowMetadata = ListMultiFrameCodec.DecodeNullable(iterator, SqlColumnMetadataCodec.Decode);
             response.RowPage = CodecUtil.DecodeNullable(iterator, SqlPageCodec.Decode);
             response.Error = CodecUtil.DecodeNullable(iterator, SqlErrorCodec.Decode);

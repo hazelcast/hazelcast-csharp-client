@@ -36,28 +36,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class SchemaCodec
+    internal static class MemoryTierConfigCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Serialization.Compact.Schema schema)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemoryTierOptions memoryTierConfig)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
-            StringCodec.Encode(clientMessage, schema.TypeName);
-            ListMultiFrameCodec.Encode(clientMessage, schema.Fields, FieldDescriptorCodec.Encode);
+            CapacityCodec.Encode(clientMessage, memoryTierConfig.Capacity);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Serialization.Compact.Schema Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.MemoryTierOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
-            var typeName = StringCodec.Decode(iterator);
-            var fields = ListMultiFrameCodec.Decode(iterator, FieldDescriptorCodec.Decode);
+            var capacity = CapacityCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return CustomTypeFactory.CreateSchema(typeName, fields);
+            return CustomTypeFactory.CreateMemoryTierConfig(capacity);
         }
     }
 }

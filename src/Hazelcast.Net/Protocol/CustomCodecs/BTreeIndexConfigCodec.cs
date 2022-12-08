@@ -36,28 +36,28 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class SchemaCodec
+    internal static class BTreeIndexConfigCodec
     {
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Serialization.Compact.Schema schema)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.BTreeIndexOptions bTreeIndexConfig)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
-            StringCodec.Encode(clientMessage, schema.TypeName);
-            ListMultiFrameCodec.Encode(clientMessage, schema.Fields, FieldDescriptorCodec.Encode);
+            CapacityCodec.Encode(clientMessage, bTreeIndexConfig.PageSize);
+            MemoryTierConfigCodec.Encode(clientMessage, bTreeIndexConfig.MemoryTierOptions);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Serialization.Compact.Schema Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.BTreeIndexOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
-            var typeName = StringCodec.Decode(iterator);
-            var fields = ListMultiFrameCodec.Decode(iterator, FieldDescriptorCodec.Decode);
+            var pageSize = CapacityCodec.Decode(iterator);
+            var memoryTierConfig = MemoryTierConfigCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return CustomTypeFactory.CreateSchema(typeName, fields);
+            return CustomTypeFactory.CreateBTreeIndexConfig(pageSize, memoryTierConfig);
         }
     }
 }
