@@ -53,9 +53,9 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int EventDistributedObjectSourceFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
-        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventDistributedObjectInitialFrameSize = EventDistributedObjectSourceFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int EventDistributedObjectMessageType = 2306; // 0x000902
 
 #if SERVER_CODEC

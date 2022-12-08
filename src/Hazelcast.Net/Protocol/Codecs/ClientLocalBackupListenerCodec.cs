@@ -51,7 +51,7 @@ namespace Hazelcast.Protocol.Codecs
         public const int ResponseMessageType = 3841; // 0x000F01
         private const int RequestInitialFrameSize = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int EventBackupSourceInvocationCorrelationIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventBackupInitialFrameSize = EventBackupSourceInvocationCorrelationIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int EventBackupMessageType = 3842; // 0x000F02

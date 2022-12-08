@@ -21,58 +21,30 @@ namespace Hazelcast.Serialization.ConstantSerializers
     {
         public override int TypeId => SerializationConstants.ConstantTypeUuid;
 
-        /// <exception cref="System.IO.IOException"></exception>
         public override Guid Read(IObjectDataInput input)
         {
-            var order = default(JavaUuidOrder);
+            if (input is ObjectDataInput concrete)
+            {
+                var guid = concrete.Buffer.ReadGuid(concrete.Position, concrete.Endianness, false);
+                concrete.Position += BytesExtensions.SizeOfGuid;
+                return guid;
+            }
 
-            order.X0 = input.ReadByte();
-            order.X1 = input.ReadByte();
-            order.X2 = input.ReadByte();
-            order.X3 = input.ReadByte();
-
-            order.X4 = input.ReadByte();
-            order.X5 = input.ReadByte();
-            order.X6 = input.ReadByte();
-            order.X7 = input.ReadByte();
-
-            order.X8 = input.ReadByte();
-            order.X9 = input.ReadByte();
-            order.XA = input.ReadByte();
-            order.XB = input.ReadByte();
-
-            order.XC = input.ReadByte();
-            order.XD = input.ReadByte();
-            order.XE = input.ReadByte();
-            order.XF = input.ReadByte();
-
-            return order.Value;
+            // that should never happens, and if it happens one day, we'll deal with it
+            throw new NotSupportedException("Input is not ObjectDataInput.");
         }
 
-        /// <exception cref="System.IO.IOException"></exception>
         public override void Write(IObjectDataOutput output, Guid obj)
         {
-            var order = default(JavaUuidOrder);
-            order.Value = obj;
-            output.WriteByte(order.X0);
-            output.WriteByte(order.X1);
-            output.WriteByte(order.X2);
-            output.WriteByte(order.X3);
+            if (output is ObjectDataOutput concrete)
+            {
+                concrete.Buffer.WriteGuid(concrete.Position, obj, concrete.Endianness, false);
+                concrete.Position += BytesExtensions.SizeOfGuid;
+                return;
+            }
 
-            output.WriteByte(order.X4);
-            output.WriteByte(order.X5);
-            output.WriteByte(order.X6);
-            output.WriteByte(order.X7);
-
-            output.WriteByte(order.X8);
-            output.WriteByte(order.X9);
-            output.WriteByte(order.XA);
-            output.WriteByte(order.XB);
-
-            output.WriteByte(order.XC);
-            output.WriteByte(order.XD);
-            output.WriteByte(order.XE);
-            output.WriteByte(order.XF);
+            // that should never happens, and if it happens one day, we'll deal with it
+            throw new NotSupportedException("Output is not ObjectDataOutput.");
         }
     }
 }
