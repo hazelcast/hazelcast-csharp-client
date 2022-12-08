@@ -52,8 +52,14 @@ public partial interface IGenericRecord
     /// then be updated.</para>
     /// </remarks>
     /// <example>
-    /// var rec2 = rec1.NewBuilderWithClone()
+    /// // this requires you to specify all properties
+    /// var rec2 = rec1.NewBuilder()
     ///   .SetBoolean("field-bool", true)
+    ///   .SetInt32("field-int", 1234)
+    ///   .Build();
+    /// 
+    /// // this allows you to only specified the modify properties
+    /// var rec3 = rec1.NewBuilderWithClone()
     ///   .SetInt32("field-int", 1234)
     ///   .Build();
     /// </example>

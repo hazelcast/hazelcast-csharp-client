@@ -88,10 +88,6 @@ namespace Hazelcast.Serialization.Compact
 
         /// <inheritdoc cref="IStreamSerializer{T}.Read"/>
         public object Read(IObjectDataInput input)
-            // NOTE: we *have* to support this method because of IStreamSerializer<object>,
-            // but then we have to pass typeof(object) as the expected object type, which
-            // means that we cannot specify that we want a IGenericRecord. We'll get what
-            // we can.
             => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), typeof(object));
 
         public object Read(IObjectDataInput input, Type type)

@@ -89,7 +89,7 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
 
         var mapOfGenericRecord = await Client.GetMapAsync<int, IGenericRecord>("generic-record-map");
 
-        // cat set the IGenericRecord value
+        // can set the IGenericRecord value
         await mapOfGenericRecord.SetAsync(0, rec0);
 
         // can get the value as an IGenericRecord
@@ -157,6 +157,7 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         Assert.Throws<ArgumentException>(() => _ = new CompactGenericRecordBuilder((string) null!));
         Assert.Throws<ArgumentException>(() => _ = new CompactGenericRecordBuilder(""));
         Assert.Throws<ArgumentNullException>(() => _ = new CompactGenericRecordBuilder((Schema)null!));
+        Assert.Throws<ArgumentNullException>(() => _ = new CompactGenericRecordBuilder(null!, new Dictionary<string, object?>()));
         Assert.Throws<ArgumentNullException>(() => _ = new CompactGenericRecordBuilder(schema, null!));
 
         var builder = new CompactGenericRecordBuilder(schema);
