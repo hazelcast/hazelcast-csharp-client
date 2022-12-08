@@ -399,74 +399,108 @@ namespace Hazelcast.Serialization.Compact
             );
 
         /// <inheritdoc />
-        public virtual object Read(ICompactReader reader)
+        public virtual object Read(ICompactReader ireader)
         {
-            if (!(reader is CompactReader r))
-                throw new ArgumentException($"Reader is not of type {nameof(CompactReader)}.", nameof(reader));
+            var reader = ireader.MustBe<CompactReader>(nameof(ireader));
 
-            var typeOfObj = r.ObjectType;
+            var obj = ConstructObject(reader.ObjectType, reader, out var ctorFields);
 
-            object? obj;
-            HashSet<string>? ctorProperties = null;
-
-            var ctors = typeOfObj.GetConstructors();
-            var emptyCtor = ctors
-                .FirstOrDefault(ctor => ctor.GetParameters().Length == 0);
-            if (emptyCtor != null)
-            {
-                try
-                {
-                    obj = emptyCtor.Invoke(Array.Empty<object>());
-                }
-                catch (Exception e)
-                {
-                    throw new SerializationException($"Failed to create an instance of type {typeOfObj}.", e);
-                }
-            }
-            else
-            {
-                var applicableCtors = ctors
-                    .Where(ctor => ctor.GetParameters().All(x => r.ValidateFieldName(x.Name)));
-                var ctor = applicableCtors.OrderBy(x => x.GetParameters()).LastOrDefault();
-                if (ctor== null)
-                    throw new SerializationException($"Failed to create an instance of type {typeOfObj}.");
-
-                var parameters = ctor.GetParameters();
-                var p = new object[parameters.Length];
-                ctorProperties = new HashSet<string>();
-                for (var i = 0; i < parameters.Length; i++)
-                {
-                    var name = parameters[i].Name;
-                    ctorProperties.Add(name);
-                    p[i] = GetPropertyValue(reader, parameters[i].ParameterType, name);
-                }
-
-                try
-                {
-                    obj = ctor.Invoke(p);
-                }
-                catch (Exception e)
-                {
-                    throw new SerializationException($"Failed to create an instance of type {typeOfObj}.", e);
-                }
-            }
 
             // TODO: consider emitting the property setters
 
-            foreach (var property in GetProperties(typeOfObj))
+            foreach (var property in GetProperties(obj.GetType()))
             {
-                if (ctorProperties != null && ctorProperties.Contains(property.Name))
+                // exclude properties that correspond to fields that have
+                // already been initialized by the constructor
+                if (ctorFields != null && ctorFields.Contains(property.Name))
                     continue;
 
-                if (!r.ValidateFieldNameInvariant(property.Name, out var fieldName)) 
+                // exclude properties that no not correspond to a field (case-
+                // insensitive) and for those that are not excluded, get the
+                // properly-cased field name
+                if (!reader.ValidateFieldNameInvariant(property.Name, out var fieldName)) 
                     continue;
 
+                // read the field value and set the property value accordingly
                 property.SetValue(obj, GetPropertyValue(reader, property.PropertyType, fieldName));
             }
 
             return obj;
         }
 
+        // constructs an object of a specified type, using the empty constructor if possible,
+        // otherwise using the constructor with most (and all) parameters matching field names
+        // (case-sensitive) - and then ctorFields contains the fields that have been consumed
+        private static object ConstructObject(Type type, CompactReader reader, out HashSet<string>? ctorFields)
+        {
+            // value types can always be created by the activator regardless of their constructors
+            // and, they don't implicitly implement an empty constructor - so we *want* to use the activator
+            if (type.IsValueType)
+            {
+                ctorFields = null;
+                try
+                {
+                    var obj = Activator.CreateInstance(type);
+                    if (obj == null)
+                        throw new SerializationException($"Failed to create an instance of type {type}.");
+                    return obj;
+                }
+                catch (Exception e)
+                {
+                    throw new SerializationException($"Failed to create an instance of type {type}.", e);
+                }
+            }
+
+            var ctors = type.GetConstructors();
+
+            // look for the empty constructor and use it
+            var emptyCtor = ctors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0);
+            if (emptyCtor != null)
+            {
+                try
+                {
+                    ctorFields = null;
+                    return emptyCtor.Invoke(Array.Empty<object>());
+                }
+                catch (Exception e)
+                {
+                    throw new SerializationException($"Failed to create an instance of type {type}.", e);
+                }
+            }
+
+            // look for the constructor with most (and all) parameters matching field names (case-sensitive)
+            // ReSharper disable once SimplifyLinqExpressionUseMinByAndMaxBy
+            var ctor = ctors
+                .Where(ctor => ctor.GetParameters().All(x => x.Name != null && reader.ValidateFieldName(x.Name)))
+                .OrderBy(x => x.GetParameters())
+                .LastOrDefault();
+
+            if (ctor == null)
+                throw new SerializationException($"Failed to create an instance of type {type}.");
+
+            // read the values for the constructor parameters
+            var parameters = ctor.GetParameters();
+            var values = new object?[parameters.Length];
+            ctorFields = new HashSet<string>();
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                var fieldName = parameters[i].Name!;
+                var fieldType = parameters[i].ParameterType;
+                ctorFields.Add(fieldName);
+                values[i] = GetPropertyValue(reader, fieldType, fieldName);
+            }
+
+            // and invoke the constructor with the parameters
+            try
+            {
+                return ctor.Invoke(values);
+            }
+            catch (Exception e)
+            {
+                throw new SerializationException($"Failed to create an instance of type {type}.", e);
+            }
+        }
+    
         private static object? GetPropertyValue(ICompactReader reader, Type type, string fieldName)
         {
             Type? t1 = null;
