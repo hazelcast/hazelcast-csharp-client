@@ -351,11 +351,11 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         var a = rec.GetArrayOfInt32("field");
         Assert.That(a, Is.Not.Null);
         Assert.That(a!.Length, Is.EqualTo(3));
-        Assert.That(a, Is.EquivalentTo(new int[] { 1, 2, 3 }));
+        Assert.That(a, Is.EquivalentTo(new[] { 1, 2, 3 }));
         var an = rec.GetArrayOfNullableInt32("field");
         Assert.That(an, Is.Not.Null);
         Assert.That(an!.Length, Is.EqualTo(3));
-        Assert.That(a, Is.EquivalentTo(new int[] { 1, 2, 3 }));
+        Assert.That(a, Is.EquivalentTo(new[] { 1, 2, 3 }));
     }
 
     [Test]
@@ -372,11 +372,11 @@ public class GenericRecordTests : SingleMemberClientRemoteTestBase
         var a = rec.GetArrayOfInt32("field");
         Assert.That(a, Is.Not.Null);
         Assert.That(a!.Length, Is.EqualTo(3));
-        Assert.That(a, Is.EquivalentTo(new int?[] { 1, 2, 3 }));
+        Assert.That(a, Is.EquivalentTo(new[] { 1, 2, 3 }));
         var an = rec.GetArrayOfNullableInt32("field");
         Assert.That(an, Is.Not.Null);
         Assert.That(an!.Length, Is.EqualTo(3));
-        Assert.That(a, Is.EquivalentTo(new int?[] { 1, 2, 3 }));
+        Assert.That(a, Is.EquivalentTo(new[] { 1, 2, 3 }));
     }
 
     [Test]
