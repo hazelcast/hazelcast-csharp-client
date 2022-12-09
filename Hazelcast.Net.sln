@@ -27,6 +27,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{25300DF5-472C-4D9B-898A-820577F2F9C7}"
 	ProjectSection(SolutionItems) = preProject
 		build\build.proj = build\build.proj
+		build\AnalysisRules.props = build\AnalysisRules.props
 		build\certs-root-ca.conf = build\certs-root-ca.conf
 		build\certs-sub-ca.conf = build\certs-sub-ca.conf
 		build\certs.ps1 = build\certs.ps1

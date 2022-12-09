@@ -1471,14 +1471,31 @@ function hz-build {
         $options.constants = $options.constants.Replace(";", "%3B") # escape ';'
     }
 
+    $branchName = git symbolic-ref --short HEAD
+    $isReleaseBranch = $branchName.StartsWith("release/")
+
     Write-Output "Build"
     Write-Output "  Platform       : $platform"
     Write-Output "  Configuration  : $($options.configuration)"
+    Write-Output "  Release Branch : $isReleaseBranch"
     Write-Output "  Define         : $($options.constants)"
     Write-Output "  Building to    : $outDir"
     Write-Output "  Sign code      : $($options.sign)"
     Write-Output "  Version        : $($options.version)"
     Write-Output ""
+
+    if ($isReleaseBranch) {
+        $files = ls -recurse -path $srcDir -filter PublicAPI.Unshipped.txt
+        $files | Foreach-Object {
+            $text = get-content $_ -raw
+            if ($text.Length -gt 0) {
+                $filename = $_.Fullname.Substring($slnRoot.Length)
+                Write-Output "Found non-empty file $filename."
+                Write-Output "'Unshipped' files must be merged before building release branches."
+                Die "Failed to build release branch."
+            }
+        }
+    }
 
     Write-Output "Resolve projects..."
     $projs = Get-ChildItem -path $srcDir -recurse -depth 1 -include *.csproj
@@ -1546,9 +1563,11 @@ function hz-build {
         $buildArgs += "-p:VersionSuffix=$versionSuffix"
     }
 
+    $buildArgs += "-p:ReleaseBranch=$isReleaseBranch"
+
     $projs | foreach {
         Write-Output ""
-        Write-Output "> dotnet build $srcDir/$_ $buildArgs"
+        Write-Output "> dotnet build `"$srcDir/$_`" $buildArgs"
         dotnet build "$srcDir/$_" $buildArgs
 
         # if it failed, we can stop here
