@@ -74,4 +74,33 @@ Different versions of the schema with different identifiers are replicated in th
 
 This means that for one *type name*, there can be several schemas.
 
-In addition, the `ICompactReader` interface exposes methods such as `FieldKind GetFieldKind(string name)` which returns the *kind* (i.e. the actual type) of the field. 
+In addition, the `ICompactReader` interface exposes methods such as `FieldKind GetFieldKind(string name)` which returns the *kind* (i.e. the actual type) of the field.
+
+## Generic Record
+
+Compact serialization introduces the `IGenericRecord` interface, which represents a container object that can be use in place of domain classes. The client always knows how to (de) serialize `IGenericRecord` instances and therefore does not require any configuration in order to handle them.
+
+A new record can be created as such:
+
+```csharp
+var rec = GenericRecordBuilder.Compact("type-name")
+    .SetBoolean("field-name-1", true)
+    .SetInt32("field-name-2", 123)
+    .SetString("field-name-3", "hello")
+    .Build();
+
+// assuming map is IHMap<int, IGenericRecord>
+await map.PutAsync(1234, rec);
+```
+
+A generic record can be used as such:
+
+```csharp
+// assuming map is IHMap<int, IGenericRecord>
+var rec = await map.GetAsync(1234);
+var field1 = rec.GetBoolean("field-name-1")
+var field2 = rec.GetInt32("field-name-2")
+var field3 = rec.GetString("field-name-3")
+```
+
+Refer to the general documentation for more details on how to [access domain objects without domain classes](https://docs.hazelcast.com/hazelcast/latest/clusters/accessing-domain-objects).
