@@ -21,7 +21,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class EntryListIntegerUUIDCodec
     {
-        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfGuid;
+        private const int EntrySizeInBytes = BytesExtensions.SizeOfInt + BytesExtensions.SizeOfCodecGuid;
 
         public static void Encode(ClientMessage clientMessage, ICollection<KeyValuePair<int, Guid>> collection)
         {

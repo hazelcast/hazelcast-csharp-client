@@ -52,6 +52,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             CodecUtil.EncodeNullable(clientMessage, indexConfig.Name, StringCodec.Encode);
             ListMultiFrameCodec.Encode(clientMessage, indexConfig.Attributes, StringCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, indexConfig.BitmapIndexOptions, BitmapIndexOptionsCodec.Encode);
+            CodecUtil.EncodeNullable(clientMessage, indexConfig.BTreeIndexOptions, BTreeIndexConfigCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
@@ -67,9 +68,16 @@ namespace Hazelcast.Protocol.CustomCodecs
             var name = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
             var attributes = ListMultiFrameCodec.Decode(iterator, StringCodec.Decode);
             var bitmapIndexOptions = CodecUtil.DecodeNullable(iterator, BitmapIndexOptionsCodec.Decode);
+            var isBTreeIndexConfigExists = false;
+            Hazelcast.Models.BTreeIndexOptions bTreeIndexConfig = default;
+            if (iterator.NextIsNotTheEnd())
+            {
+                bTreeIndexConfig = CodecUtil.DecodeNullable(iterator, BTreeIndexConfigCodec.Decode);
+                isBTreeIndexConfigExists = true;
+            }
 
             iterator.SkipToStructEnd();
-            return CustomTypeFactory.CreateIndexConfig(name, type, attributes, bitmapIndexOptions);
+            return CustomTypeFactory.CreateIndexConfig(name, type, attributes, bitmapIndexOptions, isBTreeIndexConfigExists, bTreeIndexConfig);
         }
     }
 }

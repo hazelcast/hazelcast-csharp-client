@@ -36,47 +36,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class SqlErrorCodec
+    internal static class MemoryTierConfigCodec
     {
-        private const int CodeFieldOffset = 0;
-        private const int OriginatingMemberIdFieldOffset = CodeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int InitialFrameSize = OriginatingMemberIdFieldOffset + BytesExtensions.SizeOfCodecGuid;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Sql.SqlError sqlError)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemoryTierOptions memoryTierConfig)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
-            var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(CodeFieldOffset, sqlError.Code);
-            initialFrame.Bytes.WriteGuidL(OriginatingMemberIdFieldOffset, sqlError.OriginatingMemberId);
-            clientMessage.Append(initialFrame);
-
-            CodecUtil.EncodeNullable(clientMessage, sqlError.Message, StringCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, sqlError.Suggestion, StringCodec.Encode);
+            CapacityCodec.Encode(clientMessage, memoryTierConfig.Capacity);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Sql.SqlError Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.MemoryTierOptions Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
-
-            var initialFrame = iterator.Take();
-            var code = initialFrame.Bytes.ReadIntL(CodeFieldOffset);
-
-            var originatingMemberId = initialFrame.Bytes.ReadGuidL(OriginatingMemberIdFieldOffset);
-            var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            var isSuggestionExists = false;
-            string suggestion = default;
-            if (iterator.NextIsNotTheEnd())
-            {
-                suggestion = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-                isSuggestionExists = true;
-            }
+            var capacity = CapacityCodec.Decode(iterator);
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId, isSuggestionExists, suggestion);
+            return CustomTypeFactory.CreateMemoryTierConfig(capacity);
         }
     }
 }

@@ -39,7 +39,7 @@ namespace Hazelcast.Protocol.CustomCodecs
     internal static class MemberInfoCodec
     {
         private const int UuidFieldOffset = 0;
-        private const int LiteMemberFieldOffset = UuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int LiteMemberFieldOffset = UuidFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int InitialFrameSize = LiteMemberFieldOffset + BytesExtensions.SizeOfBool;
 
         public static void Encode(ClientMessage clientMessage, Hazelcast.Models.MemberInfo memberInfo)

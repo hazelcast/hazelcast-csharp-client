@@ -60,7 +60,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestDeltaFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestGetBeforeUpdateFieldOffset = RequestDeltaFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestTargetReplicaUUIDFieldOffset = RequestGetBeforeUpdateFieldOffset + BytesExtensions.SizeOfBool;
-        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int RequestInitialFrameSize = RequestTargetReplicaUUIDFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int ResponseValueFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseReplicaCountFieldOffset = ResponseValueFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseInitialFrameSize = ResponseReplicaCountFieldOffset + BytesExtensions.SizeOfInt;

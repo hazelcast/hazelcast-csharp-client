@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
@@ -134,7 +135,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             {
                 Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
                 Interlocked.Increment(ref count);
-                return Task.FromResult(ClientSendSchemaServerCodec.EncodeResponse());
+                return Task.FromResult(ClientSendSchemaServerCodec.EncodeResponse(new HashSet<Guid>()));
             }));
 
             var schema = GetSchema();
@@ -215,7 +216,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Interlocked.Increment(ref count);
                 Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
                 await semaphore.WaitAsync();
-                return ClientSendAllSchemasServerCodec.EncodeResponse();
+                return ClientSendSchemaServerCodec.EncodeResponse(new HashSet<Guid>());
             }));
 
             // add a schema that needs to be pushed to the cluster
@@ -250,7 +251,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Interlocked.Increment(ref count);
                 Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
                 await semaphore.WaitAsync();
-                return ClientSendAllSchemasServerCodec.EncodeResponse();
+                return ClientSendSchemaServerCodec.EncodeResponse(new HashSet<Guid>());
             }));
 
             // add a schema that needs to be pushed to the cluster
@@ -294,7 +295,7 @@ namespace Hazelcast.Tests.Serialization.Compact
                 if (Interlocked.Increment(ref count) == 1)
                     throw new Exception("bang!");
                 Assert.That(requestMessage.MessageType, Is.EqualTo(ClientSendSchemaCodec.RequestMessageType));
-                return Task.FromResult(ClientSendAllSchemasServerCodec.EncodeResponse());
+                return Task.FromResult(ClientSendSchemaServerCodec.EncodeResponse(new HashSet<Guid>()));
             }));
 
             // add a schema that needs to be pushed to the cluster

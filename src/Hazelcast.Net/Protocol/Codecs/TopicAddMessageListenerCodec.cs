@@ -53,10 +53,10 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestLocalOnlyFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestInitialFrameSize = RequestLocalOnlyFieldOffset + BytesExtensions.SizeOfBool;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
-        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int EventTopicPublishTimeFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int EventTopicUuidFieldOffset = EventTopicPublishTimeFieldOffset + BytesExtensions.SizeOfLong;
-        private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int EventTopicInitialFrameSize = EventTopicUuidFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int EventTopicMessageType = 262658; // 0x040202
 
 #if SERVER_CODEC

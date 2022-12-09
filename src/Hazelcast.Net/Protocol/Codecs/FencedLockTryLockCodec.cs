@@ -59,7 +59,7 @@ namespace Hazelcast.Protocol.Codecs
         private const int RequestSessionIdFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestThreadIdFieldOffset = RequestSessionIdFieldOffset + BytesExtensions.SizeOfLong;
         private const int RequestInvocationUidFieldOffset = RequestThreadIdFieldOffset + BytesExtensions.SizeOfLong;
-        private const int RequestTimeoutMsFieldOffset = RequestInvocationUidFieldOffset + BytesExtensions.SizeOfGuid;
+        private const int RequestTimeoutMsFieldOffset = RequestInvocationUidFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int RequestInitialFrameSize = RequestTimeoutMsFieldOffset + BytesExtensions.SizeOfLong;
         private const int ResponseResponseFieldOffset = Messaging.FrameFields.Offset.ResponseBackupAcks + BytesExtensions.SizeOfByte;
         private const int ResponseInitialFrameSize = ResponseResponseFieldOffset + BytesExtensions.SizeOfLong;
