@@ -43,6 +43,7 @@
 # [Extensions](extensions.md)
 ## [Dependency Injection](extensions/dependency-injection.md)
 ## [Caching](extensions/caching.md)
+## [LINQ](extensions/linq.md)
 # [Migrating From v3](migratingFrom3.md)
 # [Contributing](contrib.md)
 ## [Sources](contrib/sources.md)
