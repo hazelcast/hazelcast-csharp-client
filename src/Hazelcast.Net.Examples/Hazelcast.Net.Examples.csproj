@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Hazelcast.Net.DependencyInjection\Hazelcast.Net.DependencyInjection.csproj" />
+    <ProjectReference Include="..\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj" />
     <ProjectReference Include="..\Hazelcast.Net\Hazelcast.Net.csproj" />
   </ItemGroup>
 
