@@ -14,6 +14,8 @@
 
 #nullable enable
 
+using System;
+
 namespace Hazelcast.Serialization.Compact
 {
     /// <summary>
@@ -44,12 +46,13 @@ namespace Hazelcast.Serialization.Compact
         /// Tries to read an object.
         /// </summary>
         /// <param name="input">Input data.</param>
+        /// <param name="type">The expected type of the object.</param>
         /// <param name="obj">The object, if successful; otherwise <c>null</c>.</param>
         /// <param name="state">The state, containing the missing schema identifier, if not successful; otherwise default.</param>
         /// <returns><c>true</c> if the object was deserialized; <c>false</c> if a schema was missing..</returns>
-        public bool TryRead(IObjectDataInput input, out object? obj, out SerializationService.ToObjectState state)
+        public bool TryRead(IObjectDataInput input, Type type, out object? obj, out SerializationService.ToObjectState state)
         {
-            var result = _serializer.TryRead(input, out obj, out var missingSchemaId);
+            var result = _serializer.TryRead(input, type, out obj, out var missingSchemaId);
             state = new SerializationService.ToObjectState { SchemaId = missingSchemaId };
             return result;
         } 

@@ -98,7 +98,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "install", "install", "{7A5D
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Linq.Async", "src\Hazelcast.Net.Linq.Async\Hazelcast.Net.Linq.Async.csproj", "{1E7F4AE0-25A0-4C8C-9C0C-4C89DCB193F5}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hazelcast.Net.Caching", "src\Hazelcast.Net.Caching\Hazelcast.Net.Caching.csproj", "{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hazelcast.Net.CodeGenerator", "src\Hazelcast.Net.CodeGenerator\Hazelcast.Net.CodeGenerator.csproj", "{91211959-EC26-4FC9-84A8-E8C924300BF7}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -150,6 +153,10 @@ Global
 		{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{21FAFF1E-B0D6-46E0-8EE3-1D7D1C67CBC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{91211959-EC26-4FC9-84A8-E8C924300BF7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

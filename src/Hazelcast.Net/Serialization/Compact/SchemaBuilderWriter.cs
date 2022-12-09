@@ -31,7 +31,7 @@ namespace Hazelcast.Serialization.Compact
             _typeName = typeName;
         }
 
-        private void AddField(string name, FieldKind kind)
+        public void AddField(string name, FieldKind kind)
         {
             if (!_names.Add(name)) 
                 throw new SerializationException($"Field '{name}' has already been written, fields can only be written once.");
