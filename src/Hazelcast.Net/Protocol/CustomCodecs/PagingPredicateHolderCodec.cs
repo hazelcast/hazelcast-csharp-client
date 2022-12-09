@@ -57,6 +57,7 @@ namespace Hazelcast.Protocol.CustomCodecs
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PredicateData, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.ComparatorData, DataCodec.Encode);
             CodecUtil.EncodeNullable(clientMessage, pagingPredicateHolder.PartitionKeyData, DataCodec.Encode);
+            ListMultiFrameCodec.EncodeNullable(clientMessage, pagingPredicateHolder.PartitionKeysData, DataCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
@@ -75,9 +76,16 @@ namespace Hazelcast.Protocol.CustomCodecs
             var predicateData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             var comparatorData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
             var partitionKeyData = CodecUtil.DecodeNullable(iterator, DataCodec.Decode);
+            var isPartitionKeysDataExists = false;
+            ICollection<IData> partitionKeysData = default;
+            if (iterator.NextIsNotTheEnd())
+            {
+                partitionKeysData = ListMultiFrameCodec.DecodeNullable(iterator, DataCodec.Decode);
+                isPartitionKeysDataExists = true;
+            }
 
             iterator.SkipToStructEnd();
-            return new Hazelcast.Protocol.Models.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData);
+            return new Hazelcast.Protocol.Models.PagingPredicateHolder(anchorDataListHolder, predicateData, comparatorData, pageSize, page, iterationTypeId, partitionKeyData, isPartitionKeysDataExists, partitionKeysData);
         }
     }
 }

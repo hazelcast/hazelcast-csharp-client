@@ -36,47 +36,35 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Protocol.CustomCodecs
 {
-    internal static class SqlErrorCodec
+    internal static class CapacityCodec
     {
-        private const int CodeFieldOffset = 0;
-        private const int OriginatingMemberIdFieldOffset = CodeFieldOffset + BytesExtensions.SizeOfInt;
-        private const int InitialFrameSize = OriginatingMemberIdFieldOffset + BytesExtensions.SizeOfCodecGuid;
+        private const int ValueFieldOffset = 0;
+        private const int UnitFieldOffset = ValueFieldOffset + BytesExtensions.SizeOfLong;
+        private const int InitialFrameSize = UnitFieldOffset + BytesExtensions.SizeOfInt;
 
-        public static void Encode(ClientMessage clientMessage, Hazelcast.Sql.SqlError sqlError)
+        public static void Encode(ClientMessage clientMessage, Hazelcast.Models.Capacity capacity)
         {
             clientMessage.Append(Frame.CreateBeginStruct());
 
             var initialFrame = new Frame(new byte[InitialFrameSize]);
-            initialFrame.Bytes.WriteIntL(CodeFieldOffset, sqlError.Code);
-            initialFrame.Bytes.WriteGuidL(OriginatingMemberIdFieldOffset, sqlError.OriginatingMemberId);
+            initialFrame.Bytes.WriteLongL(ValueFieldOffset, capacity.Value);
+            initialFrame.Bytes.WriteIntL(UnitFieldOffset, capacity.Unit);
             clientMessage.Append(initialFrame);
-
-            CodecUtil.EncodeNullable(clientMessage, sqlError.Message, StringCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, sqlError.Suggestion, StringCodec.Encode);
 
             clientMessage.Append(Frame.CreateEndStruct());
         }
 
-        public static Hazelcast.Sql.SqlError Decode(IEnumerator<Frame> iterator)
+        public static Hazelcast.Models.Capacity Decode(IEnumerator<Frame> iterator)
         {
             // begin frame
             iterator.Take();
 
             var initialFrame = iterator.Take();
-            var code = initialFrame.Bytes.ReadIntL(CodeFieldOffset);
+            var @value = initialFrame.Bytes.ReadLongL(ValueFieldOffset);
 
-            var originatingMemberId = initialFrame.Bytes.ReadGuidL(OriginatingMemberIdFieldOffset);
-            var message = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            var isSuggestionExists = false;
-            string suggestion = default;
-            if (iterator.NextIsNotTheEnd())
-            {
-                suggestion = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-                isSuggestionExists = true;
-            }
-
+            var unit = initialFrame.Bytes.ReadIntL(UnitFieldOffset);
             iterator.SkipToStructEnd();
-            return new Hazelcast.Sql.SqlError(code, message, originatingMemberId, isSuggestionExists, suggestion);
+            return CustomTypeFactory.CreateCapacity(@value, unit);
         }
     }
 }

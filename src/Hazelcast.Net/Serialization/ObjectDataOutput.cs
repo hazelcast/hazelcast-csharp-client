@@ -41,7 +41,7 @@ namespace Hazelcast.Serialization
         internal int Position
         {
             get => _position;
-            private set => _position = value;
+            set => _position = value;
         }
 
         public void WriteInt(int position, int value)

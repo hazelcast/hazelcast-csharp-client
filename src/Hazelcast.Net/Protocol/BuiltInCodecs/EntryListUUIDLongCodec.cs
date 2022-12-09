@@ -22,7 +22,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 {
     internal static class EntryListUUIDLongCodec
     {
-        private const int EntrySizeInBytes = BytesExtensions.SizeOfGuid + BytesExtensions.SizeOfLong;
+        private const int EntrySizeInBytes = BytesExtensions.SizeOfCodecGuid + BytesExtensions.SizeOfLong;
 
         public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<Guid, long>> collection)
         {
@@ -32,7 +32,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             foreach (var kvp in collection)
             {
                 frame.Bytes.WriteGuidL(i * EntrySizeInBytes, kvp.Key);
-                frame.Bytes.WriteLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfGuid, kvp.Value);
+                frame.Bytes.WriteLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfCodecGuid, kvp.Value);
                 i++;
             }
             clientMessage.Append(frame);
@@ -46,7 +46,7 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             for (var i = 0; i < itemCount; i++)
             {
                 var key = frame.Bytes.ReadGuidL(i * EntrySizeInBytes);
-                var value = frame.Bytes.ReadLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfGuid);
+                var value = frame.Bytes.ReadLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfCodecGuid);
                 result.Add(new KeyValuePair<Guid, long>(key, value));
             }
             return result;
