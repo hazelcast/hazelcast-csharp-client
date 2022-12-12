@@ -89,6 +89,16 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
+        public void TestLockContextResetSequence()
+        {
+            var c1 = new LockContext();
+            Assert.Greater(c1.Id, 0);
+            LockContext.ResetSequence();
+            var c2 = new LockContext();
+            Assert.LessOrEqual(c2.Id, c1.Id);
+        }
+
+        [Test]
         public async Task TestReentrantLock()
         {
             var lockName = CreateUniqueName() + "@group1";
