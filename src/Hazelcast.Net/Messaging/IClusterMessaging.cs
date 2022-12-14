@@ -13,8 +13,10 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Models;
 
 namespace Hazelcast.Messaging
 {
@@ -26,7 +28,7 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Triggers before a message is sent.
         /// </summary>
-        Func<ValueTask> SendingMessage { get; set; }
+        Func<ClientMessage, ValueTask> SendingMessage { get; set; }
 
         /// <summary>
         /// Sends a message to a random member.
@@ -44,5 +46,10 @@ namespace Hazelcast.Messaging
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
         Task<ClientMessage> SendAsync(ClientMessage requestMessage, bool raiseEvents, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Gets the identifiers of the connected members.
+        /// </summary>
+        IEnumerable<Guid> GetConnectedMembers();
     }
 }

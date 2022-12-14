@@ -20,6 +20,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -206,17 +207,29 @@ namespace Hazelcast.Serialization.Compact
                     // assumes that the serializer is not "clever" and does not omit fields for
                     // optimization reasons.
                     schema = BuildSchema(registration, obj);
-                    _schemasMap[typeOfObj] = schema;
 
-                    // now that we know the schema identifier, we can update our registrations map
+                    if (!registration.IsClusterSchema)
+                    {
+                        // if the schema is not supposed to exist on the cluster...
+                        // that schema will need to be published before we can send any data that is
+                        // using it - so we register it with the data output - and magic will happen
+                        output.SchemaIds.Add(schema.Id);
+                    }
+
+                    // update our maps with the schema and its identifier
+                    _schemasMap[typeOfObj] = schema;
                     _registrationsById.TryAdd(schema.Id, registration);
 
-                    // now that we have a new schema, we need to publish it, unless specified
-                    // otherwise by the registration.
+                    // and register it with the schema service
                     _schemas.Add(schema, registration.IsClusterSchema);
                 }
-
-                serializer = registration.Serializer;
+                else if (!_schemas.IsPublished(schema.Id))
+                {
+                    serializer = registration.Serializer;
+                    // code above and not published yet, or publication failed... anyways, it still
+                    // needs to be published, so register it too
+                    output.SchemaIds.Add(schema.Id);
+                }
             }
 
             WriteSchema(output, schema);
@@ -403,5 +416,8 @@ namespace Hazelcast.Serialization.Compact
             return (input, start, index) =>
                 input.ReadInt(start + index * BytesExtensions.SizeOfInt, _endianness); // specs say "otherwise offset are i32"
         }
+
+        public ValueTask BeforeSendingMessage(ClientMessage message)
+            => message.HasSchemas ? Schemas.PublishAsync(message.SchemaIds) : default;
     }
 }
