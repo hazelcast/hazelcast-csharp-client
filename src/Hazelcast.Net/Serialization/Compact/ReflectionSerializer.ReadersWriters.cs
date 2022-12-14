@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using Hazelcast.Core;
 using Hazelcast.Models;
 
 namespace Hazelcast.Serialization.Compact;
@@ -32,16 +33,16 @@ internal partial class ReflectionSerializer
 
             // first, register some non-generated writers for convenient .NET types
 
-            { typeof (HBigDecimal), (w, n, o) => w.WriteDecimal(n, UnboxNonNull<HBigDecimal>(o)) },
-            { typeof (HBigDecimal[]), (w, n, o) => w.WriteArrayOfDecimal(n, ToArray(o, UnboxNonNull<HBigDecimal>)) },
-            { typeof (HLocalTime), (w, n, o) => w.WriteTime(n, UnboxNonNull<HLocalTime>(o)) },
-            { typeof (HLocalTime[]), (w, n, o) => w.WriteArrayOfTime(n, ToArray(o, UnboxNonNull<HLocalTime>)) },
-            { typeof (HLocalDate), (w, n, o) => w.WriteDate(n, UnboxNonNull<HLocalDate>(o)) },
-            { typeof (HLocalDate[]), (w, n, o) => w.WriteArrayOfDate(n, ToArray(o, UnboxNonNull<HLocalDate>)) },
-            { typeof (HLocalDateTime), (w, n, o) => w.WriteTimeStamp(n, UnboxNonNull<HLocalDateTime>(o)) },
-            { typeof (HLocalDateTime[]), (w, n, o) => w.WriteArrayOfTimeStamp(n, ToArray(o, UnboxNonNull<HLocalDateTime>)) },
-            { typeof (HOffsetDateTime), (w, n, o) => w.WriteTimeStampWithTimeZone(n, UnboxNonNull<HOffsetDateTime>(o)) },
-            { typeof (HOffsetDateTime[]), (w, n, o) => w.WriteArrayOfTimeStampWithTimeZone(n, ToArray(o, UnboxNonNull<HOffsetDateTime>)) },
+            { typeof (HBigDecimal), (w, n, o) => w.WriteDecimal(n, ConvertEx.UnboxNonNull<HBigDecimal>(o)) },
+            { typeof (HBigDecimal[]), (w, n, o) => w.WriteArrayOfDecimal(n, ToArray(o, ConvertEx.UnboxNonNull<HBigDecimal>)) },
+            { typeof (HLocalTime), (w, n, o) => w.WriteTime(n, ConvertEx.UnboxNonNull<HLocalTime>(o)) },
+            { typeof (HLocalTime[]), (w, n, o) => w.WriteArrayOfTime(n, ToArray(o, ConvertEx.UnboxNonNull<HLocalTime>)) },
+            { typeof (HLocalDate), (w, n, o) => w.WriteDate(n, ConvertEx.UnboxNonNull<HLocalDate>(o)) },
+            { typeof (HLocalDate[]), (w, n, o) => w.WriteArrayOfDate(n, ToArray(o, ConvertEx.UnboxNonNull<HLocalDate>)) },
+            { typeof (HLocalDateTime), (w, n, o) => w.WriteTimeStamp(n, ConvertEx.UnboxNonNull<HLocalDateTime>(o)) },
+            { typeof (HLocalDateTime[]), (w, n, o) => w.WriteArrayOfTimeStamp(n, ToArray(o, ConvertEx.UnboxNonNull<HLocalDateTime>)) },
+            { typeof (HOffsetDateTime), (w, n, o) => w.WriteTimeStampWithTimeZone(n, ConvertEx.UnboxNonNull<HOffsetDateTime>(o)) },
+            { typeof (HOffsetDateTime[]), (w, n, o) => w.WriteArrayOfTimeStampWithTimeZone(n, ToArray(o, ConvertEx.UnboxNonNull<HOffsetDateTime>)) },
 
             { typeof (decimal), (w, n, o) => w.WriteDecimal(n, DecimalToBigDecimal(o)) },
             { typeof (decimal?), (w, n, o) => w.WriteDecimal(n, DecimalToBigDecimal(o)) },
@@ -85,13 +86,13 @@ internal partial class ReflectionSerializer
             // do NOT remove nor alter the <generated></generated> lines!
             // <generated>
 
-            { typeof (bool), (w, n, o) => w.WriteBoolean(n, UnboxNonNull<bool>(o)) },
-            { typeof (sbyte), (w, n, o) => w.WriteInt8(n, UnboxNonNull<sbyte>(o)) },
-            { typeof (short), (w, n, o) => w.WriteInt16(n, UnboxNonNull<short>(o)) },
-            { typeof (int), (w, n, o) => w.WriteInt32(n, UnboxNonNull<int>(o)) },
-            { typeof (long), (w, n, o) => w.WriteInt64(n, UnboxNonNull<long>(o)) },
-            { typeof (float), (w, n, o) => w.WriteFloat32(n, UnboxNonNull<float>(o)) },
-            { typeof (double), (w, n, o) => w.WriteFloat64(n, UnboxNonNull<double>(o)) },
+            { typeof (bool), (w, n, o) => w.WriteBoolean(n, ConvertEx.UnboxNonNull<bool>(o)) },
+            { typeof (sbyte), (w, n, o) => w.WriteInt8(n, ConvertEx.UnboxNonNull<sbyte>(o)) },
+            { typeof (short), (w, n, o) => w.WriteInt16(n, ConvertEx.UnboxNonNull<short>(o)) },
+            { typeof (int), (w, n, o) => w.WriteInt32(n, ConvertEx.UnboxNonNull<int>(o)) },
+            { typeof (long), (w, n, o) => w.WriteInt64(n, ConvertEx.UnboxNonNull<long>(o)) },
+            { typeof (float), (w, n, o) => w.WriteFloat32(n, ConvertEx.UnboxNonNull<float>(o)) },
+            { typeof (double), (w, n, o) => w.WriteFloat64(n, ConvertEx.UnboxNonNull<double>(o)) },
             { typeof (bool[]), (w, n, o) => w.WriteArrayOfBoolean(n, (bool[]?)o) },
             { typeof (sbyte[]), (w, n, o) => w.WriteArrayOfInt8(n, (sbyte[]?)o) },
             { typeof (short[]), (w, n, o) => w.WriteArrayOfInt16(n, (short[]?)o) },
@@ -145,35 +146,35 @@ internal partial class ReflectionSerializer
 
                 // first, register some non-generated readers for convenient .NET types
 
-                { typeof (HBigDecimal), (r, n) => (HBigDecimal)ValueNonNull(r.ReadDecimal(n)) },
-                { typeof (HBigDecimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (HBigDecimal)ValueNonNull(x)) },
-                { typeof (HLocalTime), (r, n) => (HLocalTime)ValueNonNull(r.ReadTime(n)) },
-                { typeof (HLocalTime[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (HLocalTime)ValueNonNull(x)) },
-                { typeof (HLocalDate), (r, n) => (HLocalDate)ValueNonNull(r.ReadDate(n)) },
-                { typeof (HLocalDate[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (HLocalDate)ValueNonNull(x)) },
-                { typeof (HLocalDateTime), (r, n) => (HLocalDateTime)ValueNonNull(r.ReadTimeStamp(n)) },
-                { typeof (HLocalDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (HLocalDateTime)ValueNonNull(x)) },
-                { typeof (HOffsetDateTime), (r, n) => (HOffsetDateTime)ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
-                { typeof (HOffsetDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (HOffsetDateTime)ValueNonNull(x)) },
+                { typeof (HBigDecimal), (r, n) => (HBigDecimal)ConvertEx.ValueNonNull(r.ReadDecimal(n)) },
+                { typeof (HBigDecimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (HBigDecimal)ConvertEx.ValueNonNull(x)) },
+                { typeof (HLocalTime), (r, n) => (HLocalTime)ConvertEx.ValueNonNull(r.ReadTime(n)) },
+                { typeof (HLocalTime[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (HLocalTime)ConvertEx.ValueNonNull(x)) },
+                { typeof (HLocalDate), (r, n) => (HLocalDate)ConvertEx.ValueNonNull(r.ReadDate(n)) },
+                { typeof (HLocalDate[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (HLocalDate)ConvertEx.ValueNonNull(x)) },
+                { typeof (HLocalDateTime), (r, n) => (HLocalDateTime)ConvertEx.ValueNonNull(r.ReadTimeStamp(n)) },
+                { typeof (HLocalDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (HLocalDateTime)ConvertEx.ValueNonNull(x)) },
+                { typeof (HOffsetDateTime), (r, n) => (HOffsetDateTime)ConvertEx.ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
+                { typeof (HOffsetDateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (HOffsetDateTime)ConvertEx.ValueNonNull(x)) },
 
-                { typeof (decimal), (r, n) => (decimal)ValueNonNull(r.ReadDecimal(n)) },
+                { typeof (decimal), (r, n) => (decimal)ConvertEx.ValueNonNull(r.ReadDecimal(n)) },
                 { typeof (decimal?), (r, n) => (decimal?)r.ReadDecimal(n) },
-                { typeof (decimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (decimal)ValueNonNull(x)) },
+                { typeof (decimal[]), (r, n) => ToArray(r.ReadArrayOfDecimal(n), x => (decimal)ConvertEx.ValueNonNull(x)) },
                 { typeof (decimal?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDecimal(n), x => (decimal?)x) },
 
-                { typeof (TimeSpan), (r, n) => (TimeSpan)ValueNonNull(r.ReadTime(n)) },
+                { typeof (TimeSpan), (r, n) => (TimeSpan)ConvertEx.ValueNonNull(r.ReadTime(n)) },
                 { typeof (TimeSpan?), (r, n) => (TimeSpan?)r.ReadTime(n) },
-                { typeof (TimeSpan[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeSpan)ValueNonNull(x)) },
+                { typeof (TimeSpan[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeSpan)ConvertEx.ValueNonNull(x)) },
                 { typeof (TimeSpan?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeSpan?)x) },
 
-                { typeof (DateTime), (r, n) => (DateTime)ValueNonNull(r.ReadTimeStamp(n)) },
+                { typeof (DateTime), (r, n) => (DateTime)ConvertEx.ValueNonNull(r.ReadTimeStamp(n)) },
                 { typeof (DateTime?), (r, n) => (DateTime?)r.ReadTimeStamp(n) },
-                { typeof (DateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (DateTime)ValueNonNull(x)) },
+                { typeof (DateTime[]), (r, n) => ToArray(r.ReadArrayOfTimeStamp(n), x => (DateTime)ConvertEx.ValueNonNull(x)) },
                 { typeof (DateTime?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStamp(n), x => (DateTime?)x) },
 
-                { typeof (DateTimeOffset), (r, n) => (DateTimeOffset)ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
+                { typeof (DateTimeOffset), (r, n) => (DateTimeOffset)ConvertEx.ValueNonNull(r.ReadTimeStampWithTimeZone(n)) },
                 { typeof (DateTimeOffset?), (r, n) => (DateTimeOffset?)r.ReadTimeStampWithTimeZone(n) },
-                { typeof (DateTimeOffset[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset)ValueNonNull(x)) },
+                { typeof (DateTimeOffset[]), (r, n) => ToArray(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset)ConvertEx.ValueNonNull(x)) },
                 { typeof (DateTimeOffset?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTimeStampWithTimeZone(n), x => (DateTimeOffset?)x) },
 
                 { typeof (char), (r, n) => (char)r.ReadInt16(n) },
@@ -182,14 +183,14 @@ internal partial class ReflectionSerializer
                 { typeof (char?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfNullableInt16(n), x => (char?)(short?)x) },
 
 #if NET6_0_OR_GREATER
-                { typeof (TimeOnly), (r, n) => (TimeOnly)ValueNonNull(r.ReadTime(n)) },
+                { typeof (TimeOnly), (r, n) => (TimeOnly)ConvertEx.ValueNonNull(r.ReadTime(n)) },
                 { typeof (TimeOnly?), (r, n) => (TimeOnly?)r.ReadTime(n) },
-                { typeof (TimeOnly[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeOnly)ValueNonNull(x)) },
+                { typeof (TimeOnly[]), (r, n) => ToArray(r.ReadArrayOfTime(n), x => (TimeOnly)ConvertEx.ValueNonNull(x)) },
                 { typeof (TimeOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfTime(n), x => (TimeOnly?)x) },
 
-                { typeof (DateOnly), (r, n) => (DateOnly)ValueNonNull(r.ReadDate(n)) },
+                { typeof (DateOnly), (r, n) => (DateOnly)ConvertEx.ValueNonNull(r.ReadDate(n)) },
                 { typeof (DateOnly?), (r, n) => (DateOnly?)r.ReadDate(n) },
-                { typeof (DateOnly[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (DateOnly)ValueNonNull(x)) },
+                { typeof (DateOnly[]), (r, n) => ToArray(r.ReadArrayOfDate(n), x => (DateOnly)ConvertEx.ValueNonNull(x)) },
                 { typeof (DateOnly?[]), (r, n) => ToArrayOfNullable(r.ReadArrayOfDate(n), x => (DateOnly?)x) },
 #endif
 
