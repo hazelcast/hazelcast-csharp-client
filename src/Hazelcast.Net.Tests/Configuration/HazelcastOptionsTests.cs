@@ -54,6 +54,21 @@ namespace Hazelcast.Tests.Configuration
             var options = new HazelcastOptions { ServiceProvider = serviceProvider };
             Assert.That(options.ServiceProvider, Is.SameAs(serviceProvider));
         }
+        
+        [Test]
+        public void BuildOptionsWith()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var obj = "cName";
+            var options = hzBuilder
+                .With("hazelcast.labels.0", "label1")
+                .Bind("hazelcast.clientName",obj)
+                .Build();
+
+            Assert.True(options.Labels.Contains("label1"));
+            Assert.AreEqual(obj, options.ClientName);
+            Assert.Throws<ArgumentException>(() => hzBuilder.With("", "").Build());
+        }
 
         [Test]
         public void BuildOptionsWithDefault()
@@ -61,9 +76,12 @@ namespace Hazelcast.Tests.Configuration
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
                 .WithDefault("hazelcast.labels.0", "label1")
+                .WithDefault((opt)=>opt.ClientName = "cName" )
                 .Build();
 
             Assert.True(options.Labels.Contains("label1"));
+            Assert.AreEqual("cName",options.ClientName);
+            Assert.Throws<ArgumentNullException>(() => hzBuilder.WithDefault(null).Build());
         }
 
         [Test]
@@ -74,6 +92,7 @@ namespace Hazelcast.Tests.Configuration
                 .WithFileName(_optionsPath+"/HazelcastOptions.json")
                 .Build();
             Assert.True(options.Labels.Contains("label_1"));
+            Assert.Throws<ArgumentException>(() => hzBuilder.WithFileName(null).Build());
         }
 
         [Test]
@@ -84,10 +103,11 @@ namespace Hazelcast.Tests.Configuration
                 .WithFilePath(_optionsPath)
                 .Build();
             Assert.True(options.Labels.Contains("label41"));
+            Assert.Throws<ArgumentException>(() => hzBuilder.WithFilePath(null).Build());
         }
 
         [Test]
-        public void BuildOptionsWithEnviorment()
+        public void BuildOptionsWithEnvironment()
         {
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
@@ -95,6 +115,7 @@ namespace Hazelcast.Tests.Configuration
                 .WithFilePath(_optionsPath)
                 .Build();
             Assert.True(options.Labels.Contains("label42"));
+            Assert.Throws<ArgumentException>(() => hzBuilder.WithEnvironment(null).Build());
         }
 
         [Test]
@@ -243,6 +264,15 @@ namespace Hazelcast.Tests.Configuration
 #pragma warning disable SYSLIB0039 // 'SslProtocols.Tls11' is obsolete
             // using only testing purposes
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
+            sslOptions.Protocol = SslProtocols.None;
+            Assert.AreEqual(SslProtocols.None, sslOptions.Protocol);
+            sslOptions.Protocol = SslProtocols.Tls;
+            Assert.AreEqual(SslProtocols.Tls, sslOptions.Protocol);
+            sslOptions.Protocol = SslProtocols.Tls12;
+            Assert.AreEqual(SslProtocols.Tls12, sslOptions.Protocol);
+            sslOptions.Protocol = SslProtocols.Tls11;
+            Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
+            
 #pragma warning restore SYSLIB0039
             Console.WriteLine(sslOptions.ToString());
 

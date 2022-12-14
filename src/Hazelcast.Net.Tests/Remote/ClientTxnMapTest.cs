@@ -222,9 +222,10 @@ namespace Hazelcast.Tests.Remote
             await dictionary.SetAsync(key, value);
             await using var context = await Client.BeginTransactionAsync();
             var txDictionary = await context.GetMapAsync<string, string>(dictionary.Name);
-            await txDictionary.DeleteAsync(key);
+            var removed = await txDictionary.RemoveAsync(key);
             await context.CommitAsync();
             Assert.That(await dictionary.GetAsync(key), Is.Null);
+            Assert.AreEqual(value, removed);
         }
 
         [Test]

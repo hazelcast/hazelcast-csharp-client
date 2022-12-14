@@ -66,6 +66,13 @@ namespace Hazelcast.Tests.Serialization
             builder.AddIntField("myint");
             return builder.Build();
         }
+        
+        internal static IClassDefinition CreateNamedInvalidPortableClassDefinition(int portableVersion)
+        {
+            var builder = new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
+                0, portableVersion);
+            return builder.Build();
+        }
 
         private static void AssertRepeatedSerialisationGivesSameByteArrays(SerializationService ss, IPortable p)
         {
@@ -280,6 +287,26 @@ namespace Hazelcast.Tests.Serialization
 
             serializationConfig.ValidateClassDefinitions = false;
             new SerializationServiceBuilder(serializationConfig, new NullLoggerFactory()).Build();
+            
+            Assert.Throws<ArgumentNullException>(()=> new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
+                    SerializationTestsConstants.RAW_DATA_PORTABLE, 1)
+                .AddPortableField(null, null)
+                .Build());
+            
+            Assert.Throws<ArgumentException>(()=> new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
+                    SerializationTestsConstants.RAW_DATA_PORTABLE, 1)
+                .AddPortableField("p", CreateNamedInvalidPortableClassDefinition(0))
+                .Build());
+            
+            Assert.Throws<ArgumentNullException>(()=> new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
+                    SerializationTestsConstants.RAW_DATA_PORTABLE, 1)
+                .AddPortableArrayField("p", null)
+                .Build());
+            
+            Assert.Throws<ArgumentException>(()=> new ClassDefinitionBuilder(SerializationTestsConstants.PORTABLE_FACTORY_ID,
+                    SerializationTestsConstants.RAW_DATA_PORTABLE, 1)
+                .AddPortableArrayField("p", CreateNamedInvalidPortableClassDefinition(0))
+                .Build());
         }
 
         [Test]

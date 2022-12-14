@@ -102,7 +102,8 @@ namespace Hazelcast.Tests.CP
         public async Task TestReentrantLock()
         {
             var lockName = CreateUniqueName() + "@group1";
-            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+            var cpSubSystem = (CPSubsystem) Client.CPSubsystem;
+            _lock = await cpSubSystem.GetLockAsync(lockName);
 
             var lockContext = new LockContext();
             await _lock.LockAsync(lockContext);
@@ -124,6 +125,38 @@ namespace Hazelcast.Tests.CP
             await _lock.UnlockAsync(lockContext);
         }
 
+        [Test]
+        public async Task TestTryLockThrows()
+        {
+            var lockName = CreateUniqueName() + "@group1";
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+            Assert.ThrowsAsync<ArgumentNullException>(async ()=> await _lock.TryLockAsync(null));
+        }
+        
+        [Test]
+        public async Task TestGetFenceThrows()
+        {
+            var lockName = CreateUniqueName() + "@group1";
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+            Assert.ThrowsAsync<ArgumentNullException>(async ()=> await _lock.GetFenceAsync(null));
+        }
+        
+        [Test]
+        public async Task TestUnlockThrows()
+        {
+            var lockName = CreateUniqueName() + "@group1";
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+            Assert.ThrowsAsync<ArgumentNullException>(async ()=> await _lock.UnlockAsync(null));
+        }
+        
+        [Test]
+        public async Task TestLockAndGetFenceThrows()
+        {
+            var lockName = CreateUniqueName() + "@group1";
+            _lock = await Client.CPSubsystem.GetLockAsync(lockName);
+            Assert.ThrowsAsync<ArgumentNullException>(async ()=> await _lock.LockAndGetFenceAsync(null));
+        }
+        
         [Test]
         public async Task TestReentrantTryLockTimeout()
         {
@@ -870,6 +903,8 @@ namespace Hazelcast.Tests.CP
             await _lock.LockAsync(lockContext);
             await _lock.DestroyAsync();
 
+            await AssertEx.ThrowsAsync<RemoteException>(async () => await _lock.LockAsync(lockContext));
+            await _lock.DestroyAsync();
             await AssertEx.ThrowsAsync<RemoteException>(async () => await _lock.LockAsync(lockContext));
         }
     }

@@ -39,7 +39,10 @@ namespace Hazelcast.Tests.Sql
             var map = await Client.GetMapAsync<int, string>(GenerateMapName());
 
             await map.AddIndexAsync(IndexType.Sorted, "__key");
-            await map.AddIndexAsync(IndexType.Sorted, "this");
+            var io = new IndexOptions();
+            io.AddAttribute("this");
+            io.Type = IndexType.Sorted;
+            await map.AddIndexAsync(io);
 
             await map.SetAllAsync(entries);
 

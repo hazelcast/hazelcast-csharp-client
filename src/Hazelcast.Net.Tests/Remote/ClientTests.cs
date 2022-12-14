@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -37,6 +38,35 @@ namespace Hazelcast.Tests.Remote
 
             await client.DisposeAsync();
         }
+        
+        [Test]
+        public async Task ClientCanConnectWithNoConfig()
+        {
+            // most basic test just to ensure that a client can connect
+
+            //using var _ = HConsole.Capture(options => options
+            //    .Set(x => x.SetLevel(1)));
+
+            var client = await HazelcastClientFactory.StartNewClientAsync();
+
+            await client.DisposeAsync();
+        }
+        
+        [Test]
+        public async Task ClientStaringClient()
+        {
+            var clientStarting =  HazelcastClientFactory.GetNewStartingClient();
+            await clientStarting.Task;
+            await clientStarting.Client.DisposeAsync();
+        }
+        
+        [Test]
+        public async Task ClientStaringClientWithConfig()
+        {
+            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
+            await clientStarting.Task;
+            await clientStarting.Client.DisposeAsync();
+        }
 
         [Test]
         public async Task ClientCanConnectAsync()
@@ -45,6 +75,8 @@ namespace Hazelcast.Tests.Remote
 
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
+            
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingClient((HazelcastOptions)null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
             var client = clientStart.Client;
@@ -94,6 +126,8 @@ namespace Hazelcast.Tests.Remote
 
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
+
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingFailoverClient((HazelcastFailoverOptions)null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
             var client = clientStart.Client;
