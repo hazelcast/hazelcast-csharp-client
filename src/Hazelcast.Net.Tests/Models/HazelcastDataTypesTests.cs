@@ -16,6 +16,7 @@ using System;
 using System.Globalization;
 using System.Numerics;
 using Hazelcast.Models;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Models
@@ -47,13 +48,19 @@ namespace Hazelcast.Tests.Models
         public void BigDecimal(string stringValue)
         {
             var bigDecimalValue = HBigDecimal.Parse(stringValue, Culture);
-
+           
+                
             if (decimal.TryParse(stringValue, NumberStyles.Float, Culture, out var decimalValue)
                 && decimalValue.ToString(Culture) == stringValue) // parsed and no value loss
             {
+                var refBigDecimalVal = new HBigDecimal(13);
                 Assert.AreEqual(decimalValue, (decimal)bigDecimalValue);
                 Assert.AreEqual((HBigDecimal)decimalValue, bigDecimalValue);
                 Assert.AreEqual(decimalValue.ToString(Culture), bigDecimalValue.ToString(Culture));
+                Assert.True(bigDecimalValue != refBigDecimalVal);
+                // ReSharper disable once EqualExpressionComparison
+                Assert.True(bigDecimalValue == bigDecimalValue);
+                Assert.True(HBigDecimal.TryParse(stringValue, out var _));
             }
             else
             {
@@ -230,9 +237,16 @@ namespace Hazelcast.Tests.Models
 
             if (DateTime.TryParse(stringValue, Culture, DateTimeStyles.None, out var dateTimeValue))
             {
+                var refLocalDateVal = new HLocalDate(localDateValue.ToDateTime());
+                
                 Assert.AreEqual(dateTimeValue, (DateTime)localDateValue);
                 Assert.AreEqual((HLocalDate)dateTimeValue, localDateValue);
                 Assert.AreEqual(dateTimeValue.ToString("yyyy-MM-dd"), localDateValue.ToString());
+                Assert.False(refLocalDateVal!= localDateValue);
+                // ReSharper disable once EqualExpressionComparison
+                Assert.True(localDateValue == localDateValue);
+                Assert.True(localDateValue.Equals(refLocalDateVal));
+                Assert.True(localDateValue.Equals((object)refLocalDateVal));
             }
             else
             {
@@ -247,11 +261,17 @@ namespace Hazelcast.Tests.Models
         public void LocalTime(string stringValue)
         {
             var localTimeValue = HLocalTime.Parse(stringValue);
+            var reflocalTime = HLocalTime.Parse(stringValue);
             var timeSpanValue = TimeSpan.Parse(stringValue, Culture);
 
             Assert.AreEqual(timeSpanValue, (TimeSpan)localTimeValue);
             Assert.AreEqual((HLocalTime)timeSpanValue, localTimeValue);
             Assert.AreEqual(timeSpanValue.ToString(@"hh\:mm\:ss"), localTimeValue.ToString());
+            Assert.True(localTimeValue == reflocalTime);
+            Assert.False(localTimeValue != reflocalTime);
+            Assert.True(localTimeValue.Equals(localTimeValue));
+            Assert.True(localTimeValue.Equals((object) localTimeValue));
+
         }
 
         [TestCase("2020-07-15T07:11:42")]
@@ -263,12 +283,17 @@ namespace Hazelcast.Tests.Models
         public void LocalDateTime(string stringValue)
         {
             var localDateTimeValue = HLocalDateTime.Parse(stringValue);
+            
 
             if (DateTime.TryParse(stringValue, Culture, DateTimeStyles.None, out var dateTimeValue))
             {
+                var refLocalDateTimeValue = HLocalDateTime.Parse(stringValue);
                 Assert.AreEqual(dateTimeValue, (DateTime)localDateTimeValue);
                 Assert.AreEqual((HLocalDateTime)dateTimeValue, localDateTimeValue);
                 Assert.AreEqual(dateTimeValue.ToString("yyyy-MM-ddTHH:mm:ss"), localDateTimeValue.ToString());
+                Assert.True(localDateTimeValue == refLocalDateTimeValue);
+                Assert.False(localDateTimeValue != refLocalDateTimeValue);
+                Assert.True(localDateTimeValue.Equals(refLocalDateTimeValue));
             }
             else
             {
@@ -303,6 +328,13 @@ namespace Hazelcast.Tests.Models
                         : dateTimeOffsetValue.ToString("yyyy-MM-ddTHH:mm:ssK"),
                     offsetDateTimeValue.ToString()
                 );
+                
+                // ReSharper disable once EqualExpressionComparison
+                Assert.False(offsetDateTimeValue != offsetDateTimeValue);
+                // ReSharper disable once EqualExpressionComparison
+                Assert.True(offsetDateTimeValue == offsetDateTimeValue);
+                Assert.True(offsetDateTimeValue.Equals(offsetDateTimeValue));
+                Assert.True(offsetDateTimeValue.Equals((object)offsetDateTimeValue));
             }
             else
             {

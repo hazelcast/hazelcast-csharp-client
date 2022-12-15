@@ -107,8 +107,12 @@ namespace Hazelcast.Examples.Client
             {
                 _logger.LogInformation("Starting...");
 
+                // Assume, Hazelcast is running on local.
+                var options = new HazelcastOptionsBuilder()
+                    .With(opt => opt.Networking.Addresses.Add("127.0.0.1"))
+                    .Build();
                 // open a client
-                var client = await HazelcastClientFactory.StartNewClientAsync(cancellationToken);
+                var client = await HazelcastClientFactory.StartNewClientAsync(options, cancellationToken);
 
                 // start the running task
                 _cancel = new CancellationTokenSource();

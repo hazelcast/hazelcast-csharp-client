@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
@@ -140,6 +141,14 @@ namespace Hazelcast.Tests.Networking
             var result = await dictionary.GetAsync("x");
             Assert.That(result, Is.Not.Null);
             Assert.AreEqual(user.Name, result.Name);
+        }
+        
+        [Test]
+        public void TestConfigureKerberosCredentials()
+        {
+            var opt = new AuthenticationOptions();
+            opt.ConfigureKerberosCredentials("server/spn");
+            Assert.AreEqual(opt.CredentialsFactory.Service.NewCredentials(), "<token>");
         }
 
         public class User

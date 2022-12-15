@@ -84,9 +84,12 @@ namespace Hazelcast.Tests.Query
             AssertPredicate(Predicates.In("name", 1, 2, 3), PredicateDataSerializerHook.InPredicate);
 
             AssertPredicate(Predicates.Sql("sql"), PredicateDataSerializerHook.SqlPredicate);
+            AssertPredicate(Predicates.Page(1), PredicateDataSerializerHook.PagingPredicate);
 
             AssertPredicate(Predicates.Key("property").IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
+            Assert.Throws<ArgumentException>(() => Predicates.Key(""));
             AssertPredicate(Predicates.Value().IsILike("expression"), PredicateDataSerializerHook.ILikePredicate);
+            Assert.Throws<ArgumentException>(() => Predicates.Value(""));
         }
 
         [Test]
@@ -114,10 +117,10 @@ namespace Hazelcast.Tests.Query
         [Test]
         public void PagingPredicateTest()
         {
-            AssertPredicate(new PagingPredicate(3, Predicates.True()), PredicateDataSerializerHook.PagingPredicate);
-            AssertPredicate(new PagingPredicate(3, Predicates.True(), new PredicateComparer()), PredicateDataSerializerHook.PagingPredicate);
+            AssertPredicate(Predicates.Page(3, Predicates.True()), PredicateDataSerializerHook.PagingPredicate);
+            AssertPredicate(Predicates.Page(3, Predicates.True(), new PredicateComparer()), PredicateDataSerializerHook.PagingPredicate);
 
-            var paging = new PagingPredicate(3, Predicates.True());
+            var paging = (PagingPredicate) Predicates.Page(3, Predicates.True());
             paging.AnchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(0, new KeyValuePair<object, object>("a", "b")));
             paging.AnchorList.Add(new KeyValuePair<int, KeyValuePair<object, object>>(1, new KeyValuePair<object, object>("c", "d")));
             AssertPredicate(paging, PredicateDataSerializerHook.PagingPredicate);

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +50,8 @@ namespace Hazelcast
         /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
+        [Obsolete("The method is obsolete. Use other overloads.",true)]
+        [ExcludeFromCodeCoverage]
         public static ValueTask<IHazelcastClient> StartNewClientAsync(CancellationToken cancellationToken = default)
             => StartNewClientAsync(new HazelcastOptionsBuilder().Build(), cancellationToken);
 
@@ -169,6 +172,8 @@ namespace Hazelcast
         /// forever. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds
         /// configuration option.</para>
         /// </remarks>
+        [Obsolete("The method is obsolete. Use other overloads.",true)]
+        [ExcludeFromCodeCoverage]
         public static HazelcastClientStart GetNewStartingClient(CancellationToken cancellationToken = default)
             => GetNewStartingClient(new HazelcastOptionsBuilder().Build(), cancellationToken);
 

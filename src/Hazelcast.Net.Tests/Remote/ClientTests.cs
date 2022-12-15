@@ -38,28 +38,7 @@ namespace Hazelcast.Tests.Remote
 
             await client.DisposeAsync();
         }
-        
-        [Test]
-        public async Task ClientCanConnectWithNoConfig()
-        {
-            // most basic test just to ensure that a client can connect
 
-            //using var _ = HConsole.Capture(options => options
-            //    .Set(x => x.SetLevel(1)));
-
-            var client = await HazelcastClientFactory.StartNewClientAsync();
-
-            await client.DisposeAsync();
-        }
-        
-        [Test]
-        public async Task ClientStaringClient()
-        {
-            var clientStarting =  HazelcastClientFactory.GetNewStartingClient();
-            await clientStarting.Task;
-            await clientStarting.Client.DisposeAsync();
-        }
-        
         [Test]
         public async Task ClientStaringClientWithConfig()
         {
@@ -100,6 +79,15 @@ namespace Hazelcast.Tests.Remote
             await client.DisposeAsync();
         }
 
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task StartingFailoverClientCanConnect()
+        {
+            var startingClient = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
+            await startingClient.Task;
+            await startingClient.Client.DisposeAsync();
+        }
+        
         [Test]
         [Category("enterprise")] // Failover is an Enterprise feature
         public async Task FailoverClientCanConnect2()

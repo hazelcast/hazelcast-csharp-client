@@ -19,6 +19,7 @@ using System.Linq;
 using System.Reflection;
 using System.Security.Authentication;
 using System.Text;
+using Hazelcast.Clustering;
 using Hazelcast.Clustering.LoadBalancing;
 using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
@@ -42,7 +43,7 @@ namespace Hazelcast.Tests.Configuration
         public void BuildExceptions()
         {
             Assert.Throws<ArgumentNullException>(() =>
-                new HazelcastOptionsBuilder().Build((Action<IConfigurationBuilder>)null));
+                new HazelcastOptionsBuilder().Build((Action<IConfigurationBuilder>) null));
             Assert.Throws<ArgumentNullException>(() => new HazelcastOptionsBuilder().Build(null, null, null, "key"));
         }
 
@@ -51,23 +52,35 @@ namespace Hazelcast.Tests.Configuration
         {
             var services = new ServiceCollection();
             var serviceProvider = services.BuildServiceProvider();
-            var options = new HazelcastOptions { ServiceProvider = serviceProvider };
+            var options = new HazelcastOptions {ServiceProvider = serviceProvider};
             Assert.That(options.ServiceProvider, Is.SameAs(serviceProvider));
         }
-        
+
         [Test]
         public void BuildOptionsWith()
         {
             var hzBuilder = new HazelcastOptionsBuilder();
-            var obj = "cName";
             var options = hzBuilder
                 .With("hazelcast.labels.0", "label1")
-                .Bind("hazelcast.clientName",obj)
                 .Build();
 
             Assert.True(options.Labels.Contains("label1"));
-            Assert.AreEqual(obj, options.ClientName);
             Assert.Throws<ArgumentException>(() => hzBuilder.With("", "").Build());
+        }
+
+        [Test]
+        public void BuildOptionsBind()
+        {
+            var hzBuilder = new HazelcastOptionsBuilder();
+            var obj = hzBuilder
+                .With("hazelcast.clientName", "cName")
+                .Build();
+
+            var options = hzBuilder
+                .Bind("hazelcast", obj)
+                .Build();
+
+            Assert.AreEqual(obj.ClientName, options.ClientName);
         }
 
         [Test]
@@ -76,11 +89,11 @@ namespace Hazelcast.Tests.Configuration
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
                 .WithDefault("hazelcast.labels.0", "label1")
-                .WithDefault((opt)=>opt.ClientName = "cName" )
+                .WithDefault((opt) => opt.ClientName = "cName")
                 .Build();
 
             Assert.True(options.Labels.Contains("label1"));
-            Assert.AreEqual("cName",options.ClientName);
+            Assert.AreEqual("cName", options.ClientName);
             Assert.Throws<ArgumentNullException>(() => hzBuilder.WithDefault(null).Build());
         }
 
@@ -89,7 +102,7 @@ namespace Hazelcast.Tests.Configuration
         {
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
-                .WithFileName(_optionsPath+"/HazelcastOptions.json")
+                .WithFileName(_optionsPath + "/HazelcastOptions.json")
                 .Build();
             Assert.True(options.Labels.Contains("label_1"));
             Assert.Throws<ArgumentException>(() => hzBuilder.WithFileName(null).Build());
@@ -123,7 +136,7 @@ namespace Hazelcast.Tests.Configuration
         {
             var hzBuilder = new HazelcastOptionsBuilder();
             var options = hzBuilder
-                .With(new string[] { "hazelcast.labels.0=label0" })
+                .With(new string[] {"hazelcast.labels.0=label0"})
                 .Build();
 
             Assert.True(options.Labels.Contains("label0"));
@@ -272,7 +285,7 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(SslProtocols.Tls12, sslOptions.Protocol);
             sslOptions.Protocol = SslProtocols.Tls11;
             Assert.AreEqual(SslProtocols.Tls11, sslOptions.Protocol);
-            
+
 #pragma warning restore SYSLIB0039
             Console.WriteLine(sslOptions.ToString());
 
@@ -315,7 +328,7 @@ namespace Hazelcast.Tests.Configuration
             var credentialsFactory = options.CredentialsFactory.Service;
             Assert.IsInstanceOf<TestCredentialsFactory>(credentialsFactory);
 
-            var testCredentialsFactory = (TestCredentialsFactory)credentialsFactory;
+            var testCredentialsFactory = (TestCredentialsFactory) credentialsFactory;
             Assert.AreEqual("arg", testCredentialsFactory.Arg1);
             Assert.AreEqual(1000, testCredentialsFactory.Arg2);
         }
@@ -521,6 +534,25 @@ namespace Hazelcast.Tests.Configuration
             AssertSameOptions(clone, options);
         }
 
+        [Test]
+        public void TestConfigureCredentials()
+        {
+            var opt = new AuthenticationOptions();
+            opt.ConfigureCredentials(new UsernamePasswordCredentials() {Name = "1", Password = "2"});
+            Assert.AreEqual(opt.CredentialsFactory.Service.NewCredentials().Name, "1");
+            Assert.AreEqual(((UsernamePasswordCredentials) opt.CredentialsFactory.Service.NewCredentials()).Password, "2");
+        }
+
+        [Test]
+        public void TestConfigureTokenCredentials()
+        {
+            var token = Encoding.UTF8.GetBytes("1");
+            var opt = new AuthenticationOptions();
+            opt.ConfigureTokenCredentials(token);
+            Assert.AreEqual(opt.CredentialsFactory.Service.NewCredentials().Name, "<token>");
+            Assert.AreEqual(((TokenCredentials) opt.CredentialsFactory.Service.NewCredentials()).GetToken(), token);
+        }
+
         // this is a poor man's objects comparison
         // we used to depend on the ExpectedObjects library, but let's try to keep things simple
         // (see https://github.com/derekgreer/expectedObjects)
@@ -558,8 +590,8 @@ namespace Hazelcast.Tests.Configuration
                 }
                 else if (property.PropertyType.GetInterfaces().Contains(typeof(System.Collections.IEnumerable)))
                 {
-                    var oValues = ((System.Collections.IEnumerable)oValue).Cast<object>().ToList();
-                    var eValues = ((System.Collections.IEnumerable)eValue).Cast<object>().ToList();
+                    var oValues = ((System.Collections.IEnumerable) oValue).Cast<object>().ToList();
+                    var eValues = ((System.Collections.IEnumerable) eValue).Cast<object>().ToList();
                     Assert.That(oValues.Count, Is.EqualTo(eValues.Count), $"{type}::{property.Name}");
                     for (var i = 0; i < oValues.Count; i++) AssertSameOptions(oValues[i], eValues[i]);
                 }
@@ -587,9 +619,9 @@ namespace Hazelcast.Tests.Configuration
 
             Assert.That(options.Subscribers.Count, Is.EqualTo(5));
 
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type)null));
-            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string)null));
-            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber)null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((Type) null));
+            Assert.Throws<ArgumentException>(() => options.AddSubscriber((string) null));
+            Assert.Throws<ArgumentNullException>(() => options.AddSubscriber((IHazelcastClientEventSubscriber) null));
         }
 
         public class TestSubscriber : IHazelcastClientEventSubscriber
