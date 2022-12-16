@@ -442,12 +442,12 @@ namespace Hazelcast.Serialization.Compact
                 {
                     var obj = Activator.CreateInstance(type);
                     if (obj == null)
-                        throw new SerializationException($"Failed to create an instance of type {type}.");
+                        throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance returned null).");
                     return obj;
                 }
                 catch (Exception e)
                 {
-                    throw new SerializationException($"Failed to create an instance of type {type}.", e);
+                    throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance has thrown, see inner exception).", e);
                 }
             }
 
@@ -464,7 +464,7 @@ namespace Hazelcast.Serialization.Compact
                 }
                 catch (Exception e)
                 {
-                    throw new SerializationException($"Failed to create an instance of type {type}.", e);
+                    throw new SerializationException($"Failed to create an instance of type {type} (Invoking the empty constructor has thrown, see inner exception).", e);
                 }
             }
 
@@ -476,7 +476,7 @@ namespace Hazelcast.Serialization.Compact
                 .LastOrDefault();
 
             if (ctor == null)
-                throw new SerializationException($"Failed to create an instance of type {type}.");
+                throw new SerializationException($"Failed to create an instance of type {type} (Could not find a constructor with parameters matching fields).");
 
             // read the values for the constructor parameters
             var parameters = ctor.GetParameters();
@@ -497,7 +497,7 @@ namespace Hazelcast.Serialization.Compact
             }
             catch (Exception e)
             {
-                throw new SerializationException($"Failed to create an instance of type {type}.", e);
+                throw new SerializationException($"Failed to create an instance of type {type} (Invoking the constructor with '{string.Join(", ", parameters.Select(x => x.ParameterType))}' parameters has thrown, see inner exception).", e);
             }
         }
     
