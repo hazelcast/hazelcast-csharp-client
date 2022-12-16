@@ -526,8 +526,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
         private static readonly object[] ExceptionObjects = 
         {
-            PoisonClass1.CreateInstance("duh"),
-            PoisonClass2.CreateInstance("duh")
+            ReflectionDataSource.PoisonClass1.CreateInstance("duh"),
+            ReflectionDataSource.PoisonClass2.CreateInstance("duh")
         };
 
         [TestCaseSource(nameof(ExceptionObjects))]
