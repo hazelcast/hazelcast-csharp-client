@@ -50,7 +50,13 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task ClientStaringClientWithConfig2()
         {
-            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(opt=> CreateHazelcastOptions());
+            var o = CreateHazelcastOptions();
+            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(options=>
+            {
+                options.Networking.Addresses.Clear();
+                options.Networking.Addresses.Add("127.0.0.1:5701");
+                options.ClusterName = o.ClusterName;
+            });
             await clientStarting.Task;
             await clientStarting.Client.DisposeAsync();
         }
@@ -100,7 +106,12 @@ namespace Hazelcast.Tests.Remote
         [Category("enterprise")] // Failover is an Enterprise feature
         public async Task StartingFailoverClientCanConnect2()
         {
-            var startingClient = HazelcastClientFactory.GetNewStartingFailoverClient(opt=> CreateHazelcastFailoverOptions());
+            var o = CreateHazelcastFailoverOptions();
+            var startingClient = HazelcastClientFactory.GetNewStartingFailoverClient(options =>
+            {
+                options.TryCount = o.TryCount;
+                options.Clients.Add(o.Clients[0]);
+            });
             await startingClient.Task;
             await startingClient.Client.DisposeAsync();
         }
