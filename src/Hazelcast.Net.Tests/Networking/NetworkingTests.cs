@@ -338,12 +338,15 @@ namespace Hazelcast.Tests.Networking
         }
 
         [Test]
-        [Timeout(10_000)]
+        [Timeout(20_000)]
         public async Task CanRetryAndSucceed()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            HConsole.Configure(x => x.Configure(this).SetIndent(0).SetPrefix("TEST"));
+            //using var console = HConsoleForTest(x => x
+            //    .Configure(this).SetIndent(0).SetMaxLevel().SetPrefix("TEST")
+            //    .Configure().SetMaxLevel());
+
             HConsole.WriteLine(this, "Begin");
 
             HConsole.WriteLine(this, "Start server");
@@ -379,7 +382,7 @@ namespace Hazelcast.Tests.Networking
             HConsole.WriteLine(this, "Send message");
             var message = ClientPingServerCodec.EncodeRequest();
 
-            var token = new CancellationTokenSource(3_000).Token;
+            var token = new CancellationTokenSource(10_000).Token;
             await client.Cluster.Messaging.SendAsync(message, token); // default is 120s
 
             Assert.AreEqual(4, count);
