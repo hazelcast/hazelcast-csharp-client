@@ -200,17 +200,18 @@ namespace Hazelcast.Serialization.Compact
             {
                 var typeOfObj = obj.GetType();
                 var registration = GetOrCreateRegistration(obj);
+                serializer = registration.Serializer;
                 if (!_schemasMap.TryGetValue(typeOfObj, out schema))
                 {
                     // no schema was registered for this type, so we are going to serialize the
                     // object, capture the fields, and generate a schema for it - this requires and
                     // assumes that the serializer is not "clever" and does not omit fields for
                     // optimization reasons.
-                    schema = BuildSchema(registration, obj);
+                    schema = registration.HasSchema ? registration.Schema! : BuildSchema(registration, obj);
 
                     if (!registration.IsClusterSchema)
                     {
-                        // if the schema is not supposed to exist on the cluster...
+                        // if the schema is not supposed to exist on the cluster, yet...
                         // that schema will need to be published before we can send any data that is
                         // using it - so we register it with the data output - and magic will happen
                         output.SchemaIds.Add(schema.Id);
@@ -225,8 +226,7 @@ namespace Hazelcast.Serialization.Compact
                 }
                 else if (!_schemas.IsPublished(schema.Id))
                 {
-                    serializer = registration.Serializer;
-                    // code above and not published yet, or publication failed... anyways, it still
+                    // schema is registered but not published yet, maybe publication failed,
                     // needs to be published, so register it too
                     output.SchemaIds.Add(schema.Id);
                 }
