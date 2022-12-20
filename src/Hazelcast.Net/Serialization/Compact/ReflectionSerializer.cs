@@ -506,17 +506,19 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
                 var obj = Activator.CreateInstance(type);
                 if (obj == null)
                     throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance returned null).");
-                    obj = ctor.Invoke(p);
+                return obj;
             }
             catch (Exception e)
             {
                 throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance has thrown, see inner exception).", e);
+            }
         }
+
         var ctors = type.GetConstructors();
 
-            // TODO: consider emitting the property setters
-            foreach (var property in GetProperties(typeOfObj))
+        var emptyCtor = ctors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0);
         if (emptyCtor != null)
+        {
             try
             {
                 ctorFields = null;
