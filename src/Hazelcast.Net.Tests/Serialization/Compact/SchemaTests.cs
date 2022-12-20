@@ -50,6 +50,12 @@ namespace Hazelcast.Tests.Serialization.Compact
                 new SchemaField("field1", FieldKind.Boolean) // duplicate name
             }));
 
+            Assert.Throws<ArgumentException>(() => new Schema("thing", new[]
+            {
+                new SchemaField("field1", FieldKind.Boolean),
+                null // null field
+            }));
+
             Assert.Throws<ArgumentNullException>(() => new Schema().ReadData(null));
             Assert.Throws<ArgumentNullException>(() => new Schema().WriteData(null));
         }

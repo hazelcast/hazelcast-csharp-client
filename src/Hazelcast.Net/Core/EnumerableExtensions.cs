@@ -143,6 +143,7 @@ namespace Hazelcast.Core
             return list;
         }
 
+        /// <summary>
         /// Deconstructs an <see cref="IEnumerable{T}"/> into its items.
         /// </summary>
         /// <typeparam name="T">The type of the items.</typeparam>
@@ -255,5 +256,17 @@ namespace Hazelcast.Core
         /// <returns>An <see cref="IEnumerable{T}"/> of <see cref="KeyValuePair{TKey,TValue}"/> whose elements are the result of the transform function on each element of the source.</returns>
         public static IEnumerable<TResult> SelectPair<TKey, TValue, TResult>(this IEnumerable<KeyValuePair<TKey, TValue>> source, Func<TKey, TValue, int, TResult> selector)
             => source.Select((pair, index) => selector(pair.Key, pair.Value, index));
+
+        /// <summary>
+        /// Adds an index to a sequence of values.
+        /// </summary>
+        /// <typeparam name="TValue">The type of the values.</typeparam>
+        /// <param name="source">A sequence of <typeparamref name="TValue"/>.</param>
+        /// <returns>A sequence of <typeparamref name="TValue"/> with an index.</returns>
+        public static IEnumerable<(TValue, int)> WithIndex<TValue>(this IEnumerable<TValue> source)
+        {
+            var i = 0;
+            foreach (var item in source) yield return (item, i++);
+        }
     }
 }

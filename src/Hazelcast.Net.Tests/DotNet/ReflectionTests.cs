@@ -99,6 +99,48 @@ namespace Hazelcast.Tests.DotNet
             throw new Exception("failed");
         }
 
+        [Test]
+        public void Constructors()
+        {
+            // a class has, by default, an empty constructor
+            Assert.That(typeof (SimpleClass).GetConstructors().Length, Is.EqualTo(1));
+            Activator.CreateInstance(typeof (SimpleClass)); // and can be created
+
+            // a class cannot be activated without an (explicit or implicit) empty constructor
+            Assert.Throws<MissingMethodException>(() => Activator.CreateInstance(typeof (SimpleClass2)));
+
+            // a struct does not, by default, have an empty constructor
+            Assert.That(typeof (SimpleStruct).GetConstructors().Length, Is.EqualTo(0));
+            Activator.CreateInstance(typeof (SimpleStruct)); // still, it *can* be created
+
+            // unless explicitly defined
+            Assert.That(typeof (SimpleStruct2).GetConstructors().Length, Is.EqualTo(1));
+            Activator.CreateInstance(typeof (SimpleStruct2)); // then of course it can be created
+
+            // and not if another ctor exists
+            Assert.That(typeof (SimpleStruct3).GetConstructors().Length, Is.EqualTo(1));
+            Activator.CreateInstance(typeof (SimpleStruct3)); // and it *still* can be created
+        }
+
+        public class SimpleClass { }
+
+        public class SimpleClass2
+        {
+            public SimpleClass2(int i) {}
+        }
+
+        public struct SimpleStruct { }
+
+        public struct SimpleStruct2
+        {
+            public SimpleStruct2 () { }
+        }
+
+        public struct SimpleStruct3
+        {
+            public SimpleStruct3(int i) { }
+        }
+
         public class TestClass
         {
             public TestClass()
