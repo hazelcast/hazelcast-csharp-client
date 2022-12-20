@@ -399,80 +399,153 @@ namespace Hazelcast.Serialization.Compact
             );
 
         /// <inheritdoc />
-        public virtual object Read(ICompactReader reader)
+        public virtual object Read(ICompactReader ireader)
         {
-            if (!(reader is CompactReader r))
-                throw new ArgumentException($"Reader is not of type {nameof(CompactReader)}.", nameof(reader));
+            var reader = ireader.MustBe<CompactReader>(nameof(ireader));
 
-            var typeOfObj = r.ObjectType;
+            var obj = ConstructObject(reader.ObjectType, reader, out var ctorFields);
 
-            object? obj;
-            try
-            {
-                obj = Activator.CreateInstance(typeOfObj);
-            }
-            catch (Exception e)
-            {
-                throw new SerializationException($"Failed to create an instance of type {typeOfObj}.", e);
-            }
-
-            if (obj == null)
-                throw new SerializationException($"Failed to create an instance of type {typeOfObj}.");
 
             // TODO: consider emitting the property setters
 
-            foreach (var property in GetProperties(typeOfObj))
+            foreach (var property in GetProperties(obj.GetType()))
             {
-                if (r.ValidateFieldNameInvariant(property.Name, out var fieldName))
-                {
-                    Type? t0 = null;
-                    Type? t1 = null;
-                    var isEnum = property.PropertyType.IsEnum;
-                    var isNullableEnum = property.PropertyType.IsNullableOfT(out t0) && t0.IsEnum;
-                    var isArray = property.PropertyType.IsArray && property.PropertyType.GetArrayRank() == 1;
-                    var isArrayOfEnum = isArray && property.PropertyType.GetElementType()!.IsEnum;
-                    var isArrayOfNullableEnum = isArray && property.PropertyType.GetElementType().IsNullableOfT(out t1) && t1.IsEnum;
+                // exclude properties that correspond to fields that have
+                // already been initialized by the constructor
+                if (ctorFields != null && ctorFields.Contains(property.Name))
+                    continue;
 
-                    object? value = null;
-                    if (isEnum || isNullableEnum)
-                    {
-                        var enumType = isEnum ? property.PropertyType : t0;
-                        var o = GetReader(typeof (string))(reader, fieldName);
-                        if (o is string s)
-                        {
-                            var parsed = Enum.Parse(enumType, s);
-                            value = isEnum ? parsed : typeof(Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType })!.Invoke(new[] { parsed });
-                        }
-                    }
-                    else if (isArrayOfEnum || isArrayOfNullableEnum)
-                    {
-                        var enumType = isArrayOfEnum ? property.PropertyType.GetElementType()! : t1!;
+                // exclude properties that no not correspond to a field (case-
+                // insensitive) and for those that are not excluded, get the
+                // properly-cased field name
+                if (!reader.ValidateFieldNameInvariant(property.Name, out var fieldName)) 
+                    continue;
 
-                        var o = GetReader(typeof (string[]))(reader, fieldName);
-                        if (o is Array a)
-                        {
-                            var elementType = isArrayOfNullableEnum ? typeof (Nullable<>).MakeGenericType(enumType) : enumType;
-                            var elementCtor = isArrayOfNullableEnum ? elementType.GetConstructor(new[] { enumType }) : null;
-                            var valueArray = Array.CreateInstance(elementType, a.Length);
-                            value = valueArray;
-                            for (var i = 0; i < a.Length; i++)
-                                if (a.GetValue(i) is string s)
-                                {
-                                    var parsed = Enum.Parse(enumType, s);
-                                    valueArray.SetValue(isArrayOfEnum ? parsed : elementCtor!.Invoke(new[] { parsed }), i);
-                                }
-                        }
-                    }
-                    else
-                    {
-                        value = GetReader(property.PropertyType)(reader, fieldName);
-                    }
-
-                    property.SetValue(obj, value);
-                }
+                // read the field value and set the property value accordingly
+                property.SetValue(obj, GetPropertyValue(reader, property.PropertyType, fieldName));
             }
 
             return obj;
+        }
+
+        // constructs an object of a specified type, using the empty constructor if possible,
+        // otherwise using the constructor with most (and all) parameters matching field names
+        // (case-sensitive) - and then ctorFields contains the fields that have been consumed
+        private static object ConstructObject(Type type, CompactReader reader, out HashSet<string>? ctorFields)
+        {
+            // value types can always be created by the activator regardless of their constructors
+            // and, they don't implicitly implement an empty constructor - so we *want* to use the activator
+            if (type.IsValueType)
+            {
+                ctorFields = null;
+                try
+                {
+                    var obj = Activator.CreateInstance(type);
+                    if (obj == null)
+                        throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance returned null).");
+                    return obj;
+                }
+                catch (Exception e)
+                {
+                    throw new SerializationException($"Failed to create an instance of type {type} (Activator.CreateInstance has thrown, see inner exception).", e);
+                }
+            }
+
+            var ctors = type.GetConstructors();
+
+            // look for the empty constructor and use it
+            var emptyCtor = ctors.FirstOrDefault(ctor => ctor.GetParameters().Length == 0);
+            if (emptyCtor != null)
+            {
+                try
+                {
+                    ctorFields = null;
+                    return emptyCtor.Invoke(Array.Empty<object>());
+                }
+                catch (Exception e)
+                {
+                    throw new SerializationException($"Failed to create an instance of type {type} (Invoking the empty constructor has thrown, see inner exception).", e);
+                }
+            }
+
+            // look for the constructor with most (and all) parameters matching field names (case-sensitive)
+            // ReSharper disable once SimplifyLinqExpressionUseMinByAndMaxBy
+            var ctor = ctors
+                .Where(ctor => ctor.GetParameters().All(x => x.Name != null && reader.ValidateFieldName(x.Name)))
+                .OrderBy(x => x.GetParameters())
+                .LastOrDefault();
+
+            if (ctor == null)
+                throw new SerializationException($"Failed to create an instance of type {type} (Could not find a constructor with parameters matching fields).");
+
+            // read the values for the constructor parameters
+            var parameters = ctor.GetParameters();
+            var values = new object?[parameters.Length];
+            ctorFields = new HashSet<string>();
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                var fieldName = parameters[i].Name!;
+                var fieldType = parameters[i].ParameterType;
+                ctorFields.Add(fieldName);
+                values[i] = GetPropertyValue(reader, fieldType, fieldName);
+            }
+
+            // and invoke the constructor with the parameters
+            try
+            {
+                return ctor.Invoke(values);
+            }
+            catch (Exception e)
+            {
+                throw new SerializationException($"Failed to create an instance of type {type} (Invoking the constructor with '{string.Join(", ", parameters.Select(x => x.ParameterType))}' parameters has thrown, see inner exception).", e);
+            }
+        }
+    
+        private static object? GetPropertyValue(ICompactReader reader, Type type, string fieldName)
+        {
+            Type? t1 = null;
+            var isEnum = type.IsEnum;
+            var isNullableEnum = type.IsNullableOfT(out var t0) && t0.IsEnum;
+            var isArray = type.IsArray && type.GetArrayRank() == 1;
+            var isArrayOfEnum = isArray && type.GetElementType()!.IsEnum;
+            var isArrayOfNullableEnum = isArray && type.GetElementType().IsNullableOfT(out t1) && t1.IsEnum;
+
+            object? value = null;
+            if (isEnum || isNullableEnum)
+            {
+                var enumType = isEnum ? type : t0;
+                var o = GetReader(typeof(string))(reader, fieldName);
+                if (o is string s)
+                {
+                    var parsed = Enum.Parse(enumType, s);
+                    value = isEnum ? parsed : typeof(Nullable<>).MakeGenericType(enumType).GetConstructor(new[] { enumType })!.Invoke(new[] { parsed });
+                }
+            }
+            else if (isArrayOfEnum || isArrayOfNullableEnum)
+            {
+                var enumType = isArrayOfEnum ? type.GetElementType()! : t1!;
+
+                var o = GetReader(typeof(string[]))(reader, fieldName);
+                if (o is Array a)
+                {
+                    var elementType = isArrayOfNullableEnum ? typeof(Nullable<>).MakeGenericType(enumType) : enumType;
+                    var elementCtor = isArrayOfNullableEnum ? elementType.GetConstructor(new[] { enumType }) : null;
+                    var valueArray = Array.CreateInstance(elementType, a.Length);
+                    value = valueArray;
+                    for (var i = 0; i < a.Length; i++)
+                        if (a.GetValue(i) is string s)
+                        {
+                            var parsed = Enum.Parse(enumType, s);
+                            valueArray.SetValue(isArrayOfEnum ? parsed : elementCtor!.Invoke(new[] { parsed }), i);
+                        }
+                }
+            }
+            else
+            {
+                value = GetReader(type)(reader, fieldName);
+            }
+
+            return value;
         }
 
         private static bool GetValidFieldName(ICompactWriter writer, string propertyName, [NotNullWhen(true)] out string? fieldName)
