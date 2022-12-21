@@ -23,14 +23,14 @@ namespace Hazelcast.Linq.Visitors
 {
     internal class UnusedColumnProcessor : HzExpressionVisitor
     {
-        private Dictionary<string, HashSet<string>> _columnsInUseByAlias = new();
+        private readonly Dictionary<string, HashSet<string>> _columnsInUseByAlias = new();
 
         public static Expression? Clean(Expression expression)
         {
             return new UnusedColumnProcessor().CleanInternal(expression) as ProjectionExpression;
         }
 
-        internal Expression CleanInternal(Expression expression)
+        private Expression CleanInternal(Expression expression)
         {
             return Visit(expression);
         }

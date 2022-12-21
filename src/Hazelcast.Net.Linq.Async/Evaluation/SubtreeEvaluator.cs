@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using Hazelcast.Linq.Visitors;
 
 namespace Hazelcast.Linq.Evaluation
 {
@@ -22,7 +23,7 @@ namespace Hazelcast.Linq.Evaluation
     /// </summary>
     internal class SubtreeEvaluator : ExpressionVisitor
     {
-        private HashSet<Expression> _markedNodes;
+        private readonly HashSet<Expression> _markedNodes;
 
         public SubtreeEvaluator(HashSet<Expression> markedNodes)
         {
@@ -42,6 +43,11 @@ namespace Hazelcast.Linq.Evaluation
             }
 
             return base.Visit(node);
+        }
+
+        protected override Expression VisitMemberInit(MemberInitExpression node)
+        {
+            return node;
         }
 
         /// <summary>

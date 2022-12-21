@@ -28,12 +28,6 @@ namespace Hazelcast.Tests.Sql
 {
     public abstract class SqlTestBase : SingleMemberClientRemoteTestBase
     {
-        protected virtual bool EnableJet => false;
-
-        protected override string RcClusterConfiguration => EnableJet
-            ? Resources.jet_enabled
-            : base.RcClusterConfiguration;
-
         protected async Task<IHMap<int, string>> CreateIntMapAsync(IDictionary<int, string> entries)
         {
             var map = await Client.GetMapAsync<int, string>(GenerateMapName());

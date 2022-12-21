@@ -58,5 +58,5 @@
     <capacity>10</capacity>
     <time-to-live-seconds>180</time-to-live-seconds>
   </ringbuffer>
-
+  <jet enabled="true"/>
 </hazelcast>
