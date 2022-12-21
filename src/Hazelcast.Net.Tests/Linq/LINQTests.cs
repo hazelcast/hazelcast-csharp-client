@@ -20,6 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Linq;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
@@ -28,6 +29,7 @@ namespace Hazelcast.Tests.Linq
     /// Tests the IHMap using LINQ APIs. It focuses the results mainly.
     /// For query tests, please see other linq test suites.
     /// </summary>
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class LinqTests : SingleMemberClientRemoteTestBase
     {
         public class Person

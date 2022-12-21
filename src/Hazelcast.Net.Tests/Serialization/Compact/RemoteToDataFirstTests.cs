@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Serialization.Compact
     internal class RemoteToDataFirstTests : ClusterRemoteTestBase
     {
         // needed for SQL
-        protected override string RcClusterConfiguration => Resources.jet_enabled;
+        protected override string RcClusterConfiguration => Resources.Cluster_Default;
 
         // we have to have 1 member per test else the schemas may end up being cached
         private Hazelcast.Testing.Remote.Member _rcMember;
