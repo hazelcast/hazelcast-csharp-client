@@ -12,16 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.DistributedObjects;
+
 namespace Hazelcast.Linq
 {
     /// <summary>
-    /// A key value pair for <see cref="IHMap"/> entries on LINQ.
+    /// A key value pair for <see cref="IHMap{TKey,TValue}"/> entries on LINQ.
     /// </summary>
     /// <typeparam name="TKey">Type of Key</typeparam>
     /// <typeparam name="TValue">Type of Value</typeparam>
-    public struct HKeyValuePair<TKey, TValue>
+    public struct MapEntry<TKey, TValue>
     {
-        public HKeyValuePair(TKey key, TValue value)
+        public MapEntry(TKey key, TValue value)
         {
             Key = key;
             Value = value;

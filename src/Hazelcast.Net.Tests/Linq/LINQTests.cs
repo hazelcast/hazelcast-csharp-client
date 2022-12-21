@@ -88,7 +88,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 count++;
             }
 
@@ -103,7 +103,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 count++;
             }
 
@@ -125,7 +125,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in myMap.AsAsyncQueryable())
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, string>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, string>>(entry);
                 count++;
             }
 
@@ -142,7 +142,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 Assert.AreEqual(entry.Key, entry.Value.Id);
                 count++;
             }
@@ -160,7 +160,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 Assert.AreEqual(entry.Key, entry.Value.Id);
                 count++;
             }
@@ -250,7 +250,7 @@ namespace Hazelcast.Tests.Linq
         [Test]
         public async Task TestFullComplexTypeMapping()
         {
-            async Task AssertSqlResult(IAsyncEnumerable<HKeyValuePair<Address, Person>> queryable)
+            async Task AssertSqlResult(IAsyncEnumerable<MapEntry<Address, Person>> queryable)
             {
                 await foreach (var e in queryable)
                     Assert.AreEqual(e.Key.PostCode, 33090);
