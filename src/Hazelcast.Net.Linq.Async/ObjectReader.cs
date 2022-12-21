@@ -32,13 +32,12 @@ namespace Hazelcast.Linq
         private Func<SqlRow, TResult>? _projector;
         private readonly CancellationToken _cancellationToken;
 
-#pragma warning disable 8618 Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.
         public ObjectReader(QueryProvider queryProvider, Expression expression, CancellationToken token)
-#pragma warning restore 8618 Non-nullable variable must contain a non-null value when exiting constructor. Consider declaring it as nullable.
         {
             _queryProvider = queryProvider;
             _cancellationToken = token;
             _expression = expression;
+            Current = default!;
         }
 
         /// <inheritdoc />
