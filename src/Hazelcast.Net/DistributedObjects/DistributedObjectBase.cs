@@ -128,7 +128,7 @@ namespace Hazelcast.DistributedObjects
         /// <summary>
         /// Gets the logger factory.
         /// </summary>
-        protected ILoggerFactory LoggerFactory { get; }
+        internal ILoggerFactory LoggerFactory { get; }
 
         /// <inheritdoc />
         public async ValueTask DestroyAsync()

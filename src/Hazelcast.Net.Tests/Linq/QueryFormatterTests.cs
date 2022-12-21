@@ -23,6 +23,7 @@ using System.Xml.Xsl;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
+using Hazelcast.Testing.Linq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
@@ -149,7 +150,7 @@ namespace Hazelcast.Tests.Linq
             var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
 
             boundExp = UnusedColumnProcessor.Clean(boundExp);
-            boundExp = RedundantSubqueryProcessor.Clean(boundExp);
+            boundExp = RedundantSubQueryProcessor.Clean(boundExp);
             var (query, values) = QueryFormatter.Format(boundExp);
 
             if (val != null && !val.GetType().IsEnum)
@@ -382,10 +383,10 @@ namespace Hazelcast.Tests.Linq
 #endif
         }
 
-        private static IQueryable<DummyType> GetQuery()
+        private static IAsyncQueryable<DummyType> GetQuery()
         {
             var dummyData = new List<DummyType>();
-            var exp = dummyData.AsQueryable();
+            var exp = dummyData.AsTestingAsyncQueryable();
             return exp;
         }
 
@@ -423,13 +424,13 @@ namespace Hazelcast.Tests.Linq
             return exp;
         }
 
-        private static Expression HandleExpression(IQueryable exp)
+        private static Expression HandleExpression(IAsyncQueryable exp)
         {
             var evaluated = ExpressionEvaluator.EvaluatePartially(exp.Expression);
             var boundExp = (ProjectionExpression) new QueryBinder().Bind(evaluated) as Expression;
 
             boundExp = UnusedColumnProcessor.Clean(boundExp);
-            boundExp = RedundantSubqueryProcessor.Clean(boundExp);
+            boundExp = RedundantSubQueryProcessor.Clean(boundExp);
             return boundExp;
         }
 

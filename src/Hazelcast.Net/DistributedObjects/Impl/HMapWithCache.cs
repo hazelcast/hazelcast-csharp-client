@@ -17,6 +17,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -39,8 +40,8 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="cache">A cache.</param>
         /// <param name="loggerFactory">A logger factory.</param>
-        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory)
-            : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory)
+        public HMapWithCache(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, NearCache<TValue> cache, ILoggerFactory loggerFactory,ISqlService sqlService)
+            : base(name, factory, cluster, serializationService, lockReferenceIdSequence, loggerFactory,sqlService)
         {
             _cache = cache;
         }

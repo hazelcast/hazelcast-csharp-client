@@ -24,27 +24,27 @@ namespace Hazelcast.Linq.Visitors
     /// <summary>
     /// Removes(stripes) the provided portions of the given expression.
     /// </summary>
-    internal class SubqueryRemover : HzExpressionVisitor
+    internal class SubQueryRemover : HzExpressionVisitor
     {
-        HashSet<SelectExpression> _subqueriesToRemove;
+        private HashSet<SelectExpression> _subQueriesToRemove;
         /// <summary>
         /// Map alias to columns and columns to its expressions
         /// </summary>
-        Dictionary<string, Dictionary<string, Expression>> _subqueries;
+        private Dictionary<string, Dictionary<string, Expression>> _subQueries;
 
 #pragma warning disable 8618
-        private SubqueryRemover() { }
+        private SubQueryRemover() { }
 #pragma warning restore 8618
 
         public static Expression Remove(SelectExpression root, params SelectExpression[] toBeRemoved)
         {
-            return new SubqueryRemover().RemoveInternal(root, toBeRemoved);
+            return new SubQueryRemover().RemoveInternal(root, toBeRemoved);
         }
 
         private Expression RemoveInternal(SelectExpression root, params SelectExpression[] toBeRemoved)
         {
-            _subqueriesToRemove = new HashSet<SelectExpression>(toBeRemoved);
-            _subqueries = _subqueriesToRemove.ToDictionary(p => p.Alias,
+            _subQueriesToRemove = new HashSet<SelectExpression>(toBeRemoved);
+            _subQueries = _subQueriesToRemove.ToDictionary(p => p.Alias,
                 p => p.Columns.ToDictionary(c => c.Name, c => c.Expression));
             return Visit(root);
         }
@@ -53,17 +53,14 @@ namespace Hazelcast.Linq.Visitors
         internal override Expression VisitSelect(SelectExpression node)
         {
             // Cut it from `From` expression as requested. 
-            if (_subqueriesToRemove.Contains(node))
-                return Visit(node.From);
-
-            return base.VisitSelect(node);
+            return _subQueriesToRemove.Contains(node) ? Visit(node.From) : base.VisitSelect(node);
         }
         
         // internal for testing
         internal override Expression VisitColumn(ColumnExpression node)
         {
             //Check whether `node` is in the provided remove list.
-            if (_subqueries.TryGetValue(node.Alias, out var map))
+            if (_subQueries.TryGetValue(node.Alias, out var map))
                 if (map.TryGetValue(node.Name, out var expression))
                     return Visit(expression);
                 else

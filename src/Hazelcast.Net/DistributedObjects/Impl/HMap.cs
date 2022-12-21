@@ -15,6 +15,7 @@
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl
@@ -27,6 +28,10 @@ namespace Hazelcast.DistributedObjects.Impl
     internal partial class HMap<TKey, TValue> : DistributedObjectBase, IHMap<TKey, TValue>
     {
         private readonly ISequence<long> _lockReferenceIdSequence;
+        /// <summary>
+        /// Sql Service for Linq Provider.
+        /// </summary>
+        internal ISqlService SqlService { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HMap{TKey,TValue}"/> class.
@@ -37,10 +42,13 @@ namespace Hazelcast.DistributedObjects.Impl
         /// <param name="serializationService">A serialization service.</param>
         /// <param name="lockReferenceIdSequence">A lock reference identifiers sequence.</param>
         /// <param name="logggerFactory">A logger factory.</param>
-        public HMap(string name, DistributedObjectFactory factory, Cluster cluster, SerializationService serializationService, ISequence<long> lockReferenceIdSequence, ILoggerFactory logggerFactory)
+        public HMap(string name, DistributedObjectFactory factory, Cluster cluster,
+            SerializationService serializationService, ISequence<long> lockReferenceIdSequence,
+            ILoggerFactory logggerFactory, ISqlService sqlService)
             : base(ServiceNames.Map, name, factory, cluster, serializationService, logggerFactory)
         {
             _lockReferenceIdSequence = lockReferenceIdSequence;
+            SqlService = sqlService;
         }
     }
 }

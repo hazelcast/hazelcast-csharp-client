@@ -44,18 +44,18 @@ namespace Hazelcast.Linq.Visitors
         /// </summary>
         /// <param name="expression">tree</param>
         /// <returns>(SQL statement, Value of variables)</returns>
-        public static (string, IEnumerable<object>) Format(Expression expression)
+        public static (string, object[]) Format(Expression expression)
         {
             var f = new QueryFormatter();
             f.Visit(expression);
-            return (f.ToString(), f._values);
+            return (f.ToString(), f._values.ToArray());
         }
 
         public override string ToString()
         {
             return _sb.ToString();
         }
-        
+
         public override Expression Visit(Expression? node)
         {
 #pragma warning disable CS8603 // Possible null reference return.
@@ -85,6 +85,7 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.NegateChecked:
                 case ExpressionType.Call:
                 case ExpressionType.UnaryPlus:
+                case ExpressionType.MemberAccess:
                 case (ExpressionType) HzExpressionType.Map:
                 case (ExpressionType) HzExpressionType.Column:
                 case (ExpressionType) HzExpressionType.Projection:
@@ -165,7 +166,7 @@ namespace Hazelcast.Linq.Visitors
             Write("?");
             _values.Add(v);
         }
-        
+
         protected override Expression VisitMethodCall(MethodCallExpression node)
         {
             if (node.Method.Name == "ToString" && node.Object?.Type == typeof(string))
@@ -325,6 +326,7 @@ namespace Hazelcast.Linq.Visitors
                 case ExpressionType.MultiplyChecked:
                 case ExpressionType.Divide:
                 case ExpressionType.Modulo:
+                case ExpressionType.MemberAccess:
                     VisitAndWriteInOrder(left, right, op);
                     break;
                 default:
@@ -365,7 +367,7 @@ namespace Hazelcast.Linq.Visitors
 
             return from;
         }
-        
+
         protected virtual Expression VisitPredicate(Expression predicate)
         {
             Visit(predicate);
@@ -374,6 +376,11 @@ namespace Hazelcast.Linq.Visitors
                 Write(" != FALSE");
 
             return predicate;
+        }
+
+        protected override Expression VisitMember(MemberExpression node)
+        {
+            return node;
         }
 
         #region Helpers

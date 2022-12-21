@@ -25,8 +25,8 @@ namespace Hazelcast.Linq.Evaluation
     internal class ExpressionNominator : HzExpressionVisitor
     {
         private bool _cannotBeEvaluated;
-        private Func<Expression, bool> _canBeEvaluatedFunc;
-        private HashSet<Expression> _canditateNodes;
+        private readonly Func<Expression, bool> _canBeEvaluatedFunc;
+        private readonly HashSet<Expression> _canditateNodes;
 
         public ExpressionNominator(Func<Expression, bool> canBeEvaluated)
         {
@@ -56,12 +56,12 @@ namespace Hazelcast.Linq.Evaluation
 
             var copyOfEvaluationState = _cannotBeEvaluated;
 
-            _cannotBeEvaluated = false;// Initially, accept everthing can be evaluated.
+            _cannotBeEvaluated = false;// Initially, accept everything can be evaluated.
 
             base.Visit(node);// Travers to bottom.
 
             //We are at the bottom,
-            //if we can evalute the child, parent can also be checked for evaluation.
+            //if we can evaluate the child, parent can also be checked for evaluation.
             //If we can't, no need to check the parent.
             if (!_cannotBeEvaluated)
             {

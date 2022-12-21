@@ -20,7 +20,7 @@ namespace Hazelcast.Linq.Evaluation
     /// <summary>
     /// Travers and evaluates the expression tree.
     /// </summary>
-    internal class ExpressionEvaluator
+    internal static class ExpressionEvaluator
     {
         /// <summary>
         /// Travers and evaluates the expression tree.
