@@ -94,11 +94,12 @@ namespace Hazelcast.Examples.Client
 
             private Task _running;
             private CancellationTokenSource _cancel;
+            private HazelcastOptions _options;
 
             public Worker(ILogger<Worker> logger, IOptions<HazelcastOptions> options)
             {
                 _logger = logger;
-
+                _options = options.Value;
                 // just to show how to get and log options
                 _logger.LogInformation($"Create worker (client name: \"{options.Value.ClientName}\", cluster name: \"{options.Value.ClusterName}\")");
             }
@@ -107,12 +108,8 @@ namespace Hazelcast.Examples.Client
             {
                 _logger.LogInformation("Starting...");
 
-                // Assume, Hazelcast is running on local.
-                var options = new HazelcastOptionsBuilder()
-                    .With(opt => opt.Networking.Addresses.Add("127.0.0.1"))
-                    .Build();
                 // open a client
-                var client = await HazelcastClientFactory.StartNewClientAsync(options, cancellationToken);
+                var client = await HazelcastClientFactory.StartNewClientAsync(_options, cancellationToken);
 
                 // start the running task
                 _cancel = new CancellationTokenSource();

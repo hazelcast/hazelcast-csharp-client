@@ -14,7 +14,6 @@
 
 using System;
 using System.Runtime.InteropServices;
-using Hazelcast.Core;
 
 namespace Hazelcast.Core;
 

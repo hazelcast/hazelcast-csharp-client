@@ -34,7 +34,7 @@ namespace Hazelcast.Models
     {
         public static readonly IndexType DefaultType = IndexType.Sorted;
 
-        /// <summary>   
+        /// <summary>
         /// Initializes a new instance of the <see cref="IndexOptions"/> class.
         /// </summary>
         public IndexOptions()
