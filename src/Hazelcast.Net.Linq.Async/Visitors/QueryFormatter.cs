@@ -380,18 +380,6 @@ namespace Hazelcast.Linq.Visitors
 
         protected override Expression VisitMember(MemberExpression node)
         {
-            /*if (node.Expression != null && node.Expression.Type.IsGenericType && node.Expression.Type.GetGenericTypeDefinition() == typeof(HKeyValuePair<,>))
-            {
-                if (node.Member.Name == "Key")
-                    Write("__key");
-            }
-            else
-            {
-                Visit(node.Expression);
-                Write(".");
-                Write(node.Member.Name);
-            }*/
-
             return node;
         }
 

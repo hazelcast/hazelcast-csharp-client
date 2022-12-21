@@ -41,7 +41,7 @@ namespace Hazelcast.Linq.Expressions
         public override Type Type { get; }
 
         /// <summary>
-        /// It holds value whether Column is part of the Key part of HMap.
+        /// Whether Column is part of the Key part of HMap.
         /// </summary>
         public bool IsKey { get; }
 
