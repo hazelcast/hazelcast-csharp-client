@@ -28,6 +28,9 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     public sealed class CompactOptions
     {
+        private int _schemaReplicationRetries = 100;
+        private TimeSpan _schemaReplicationDelay;
+
         // we have, by design:
         //   serializer -(unique)-> type_name
         //   schema -(unique)-> type_name
@@ -80,6 +83,35 @@ namespace Hazelcast.Serialization.Compact
             _typeName_isClusterSchema = new Dictionary<string, bool>(other._typeName_isClusterSchema);
             ReflectionSerializer = other.ReflectionSerializer;
         }
+
+        /// <summary>
+        /// Gets or sets the maximum number of retries for schema publication.
+        /// </summary>
+        /// <remarks>
+        /// <para>When a schema is published to the cluster, the client ensures that it is
+        /// replicated to all known members, thus protecting against split-brain situations
+        /// where only some members would receive the schema. Should some members not receive
+        /// the schema, publication is retried.</para>
+        /// <para>The default value is 100.</para>
+        /// </remarks>
+        public int SchemaReplicationRetries
+        {
+            get => _schemaReplicationRetries;
+            set
+            {
+                if (value <= 0) throw new ArgumentException("Value must be greater than zero.", nameof(value));
+                _schemaReplicationRetries = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the amount of time to wait between each schema publication retries.
+        /// </summary>
+        /// <remarks>
+        /// <para>See <see cref="SchemaReplicationRetries"/>.</para>
+        /// <para>The default value is 1 second.</para>
+        /// </remarks>
+        public TimeSpan SchemaReplicationDelay { get; set; } = TimeSpan.FromSeconds(1);
 
         private void EnsureUniqueTypeNamePerSerializedType(Type serializedType, string typeName)
         {

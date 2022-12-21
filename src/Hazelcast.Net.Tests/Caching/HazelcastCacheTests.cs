@@ -268,6 +268,7 @@ public class HazelcastCacheTests : SingleMemberRemoteTestBase
     }
 
     [Test]
+    [Category("enterprise")]
     [Timeout(10000)]
     public async Task TestCacheProvided_ExplicitFailoverOptions()
     {

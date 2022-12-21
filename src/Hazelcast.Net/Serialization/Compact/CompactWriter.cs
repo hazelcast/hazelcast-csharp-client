@@ -15,6 +15,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using Hazelcast.Core;
@@ -189,7 +190,7 @@ namespace Hazelcast.Serialization.Compact
             _output.WriteInt(arrayDataLength);
         }
 
-        private void WriteArrayOfReference<T>(string name, FieldKind kind, T?[]? value, Action<ObjectDataOutput, T> write)
+        public void WriteArrayOfReference<T>(string name, FieldKind kind, ICollection<T?>? value, Action<ObjectDataOutput, T> write)
         {
             var field = GetValidField(name, kind);
 
@@ -202,17 +203,16 @@ namespace Hazelcast.Serialization.Compact
             _offsets![field.Index] = _dataPosition - DataStartPosition;
             _output.MoveTo(_dataPosition);
 
-            var offsets = new int[value.Length];
+            var offsets = new int[value.Count];
             var arrayStartPosition = _output.Position;
 
             _output.WriteInt(0);
-            _output.WriteInt(value.Length);
+            _output.WriteInt(value.Count);
 
             var arrayDataPosition = _output.Position;
 
-            for (var i = 0; i < value.Length; i++)
+            foreach (var (v, i) in value.WithIndex())
             {
-                var v = value[i];
                 if (v != null) // boxes structs = works with T being Nullable<>
                 {
                     offsets[i] = _output.Position - arrayDataPosition;
@@ -226,7 +226,7 @@ namespace Hazelcast.Serialization.Compact
 
             var arrayDataLength = _output.Position - arrayDataPosition;
             var offsetWriter = GetOffsetWriter(arrayDataLength);
-            for (var i = 0; i < value.Length; i++) offsetWriter(_output, offsets[i]);
+            for (var i = 0; i < value.Count; i++) offsetWriter(_output, offsets[i]);
 
             _dataPosition = _output.Position;
             _output.MoveTo(arrayStartPosition);

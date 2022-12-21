@@ -295,7 +295,7 @@ namespace Hazelcast
         // (internal for tests only) creates the default serialization service
         internal static SerializationService CreateSerializationService(SerializationOptions options, IClusterMessaging messaging, ILoggerFactory loggerFactory)
         {
-            var schemas = new Schemas(messaging);
+            var schemas = new Schemas(messaging, options.Compact);
 
             return new SerializationServiceBuilder(options, loggerFactory)
 

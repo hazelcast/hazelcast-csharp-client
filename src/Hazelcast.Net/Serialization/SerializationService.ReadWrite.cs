@@ -62,7 +62,7 @@ namespace Hazelcast.Serialization
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
                 WriteObject(output, obj, true);
-                return new HeapData(output.ToByteArray());
+                return new HeapData(output.ToByteArray(), output.HasSchemas ? output.SchemaIds : null);
             }
             catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
             {

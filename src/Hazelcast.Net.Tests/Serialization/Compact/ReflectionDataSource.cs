@@ -565,6 +565,49 @@ public static class ReflectionDataSource
         public override string ToString() => $"SomeStruct2(Value={Value})";
     }
 
+    public class PoisonClass1
+    {
+        private static bool _throw = true;
+
+        public PoisonClass1()
+        {
+            if (_throw) throw new Exception("bang");
+        }
+
+        public string? Value { get; set; }
+
+        public static PoisonClass1 CreateInstance(string value)
+        {
+            _throw = false;
+            var instance = new PoisonClass1();
+            instance.Value = value;
+            _throw = true;
+            return instance;
+        }
+    }
+
+    public class PoisonClass2
+    {
+        private static bool _throw = true;
+
+        // ReSharper disable once InconsistentNaming
+        public PoisonClass2(string Value)
+        {
+            if (_throw) throw new Exception("bang");
+            this.Value = Value;
+        }
+
+        public string? Value { get; set; }
+
+        public static PoisonClass2 CreateInstance(string value)
+        {
+            _throw = false;
+            var instance = new PoisonClass2(value);
+            _throw = true;
+            return instance;
+        }
+    }
+
     public interface ISomeInterface { }
 
     public enum SByteEnum : sbyte { A = 1, B = 2 }
