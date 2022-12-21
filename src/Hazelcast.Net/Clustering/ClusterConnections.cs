@@ -557,9 +557,9 @@ namespace Hazelcast.Clustering
 
                         tried.Add(address);
 
-                        HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to server at {address}");
+                        HConsole.WriteLine(this, $"Try to connect {_clusterState.ClientName} to member at {address}");
 
-                        _logger.IfDebug()?.LogDebug("Try to connect {ClientName} to cluster {ClusterName} server at {MemberAddress}", _clusterState.ClientName, _clusterState.ClusterName, address);
+                        _logger.IfDebug()?.LogDebug("Try to connect {ClientName} to cluster {ClusterName} member at {MemberAddress}", _clusterState.ClientName, _clusterState.ClusterName, address);
 
                         var attempt = await ConnectFirstAsync(address, cancellationToken).CfAwait(); // does not throw
 
@@ -656,7 +656,7 @@ namespace Hazelcast.Clustering
             // other exception
             throw new ConnectionException($"Unable to connect to the cluster \"{_clusterState.ClusterName}\". " +
                 $"The following addresses where tried: {string.Join(", ", tried)}." +
-                $"{msgSomeThingWentWrong}");
+                $" {msgSomeThingWentWrong}");
         }
 
 

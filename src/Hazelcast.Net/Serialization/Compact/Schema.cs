@@ -32,6 +32,7 @@ namespace Hazelcast.Serialization.Compact
     {
         private Dictionary<string, SchemaField> _fieldsMap;
         private Dictionary<string, SchemaField>? _fieldsMapInvariant;
+        private IReadOnlyList<string>? _fieldNames;
 
         /// <inheritdoc />
         public int FactoryId => CompactSerializationHook.Constants.FactoryId;
@@ -75,6 +76,12 @@ namespace Hazelcast.Serialization.Compact
         /// Gets the ordered schema fields.
         /// </summary>
         public IReadOnlyList<SchemaField> Fields { get; private set; } = null!; // null! else warning in ctor, property set in Initialize()
+
+        /// <summary>
+        /// Gets the ordered names of the fields.
+        /// </summary>
+        /// <remarks>Optimizes and caches the enumeration of fields.</remarks>
+        public IReadOnlyList<string> FieldNames => _fieldNames ??= Fields.Select(x => x.FieldName).ToList();
 
         /// <summary>
         /// Tries to get a field.

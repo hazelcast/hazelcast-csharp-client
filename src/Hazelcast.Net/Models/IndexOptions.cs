@@ -69,6 +69,11 @@ namespace Hazelcast.Models
         public BitmapIndexOptions BitmapIndexOptions { get; set; } = new BitmapIndexOptions();
 
         /// <summary>
+        /// Gets or sets the btree index options.
+        /// </summary>
+        internal BTreeIndexOptions BTreeIndexOptions { get; set; } = new();
+
+        /// <summary>
         /// Adds an indexed attribute.
         /// </summary>
         /// <param name="attribute">The name of the attribute.</param>

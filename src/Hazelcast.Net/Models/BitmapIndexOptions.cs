@@ -12,22 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Models
+namespace Hazelcast.Models;
+
+/// <summary>
+/// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
+/// </summary>
+public class BitmapIndexOptions
 {
     /// <summary>
-    /// Configures indexing options for <see cref="IndexType.Bitmap"/> indexes.
+    /// Gets or sets the unique key.
     /// </summary>
-    public class BitmapIndexOptions
-    {
-        /// <summary>
-        /// Gets or sets the unique key.
-        /// </summary>
-        public string UniqueKey { get; set; } = Query.Predicates.KeyName;
+    public string UniqueKey { get; set; } = Query.Predicates.KeyName;
 
-        /// <summary>
-        /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
-        /// applied to the <see cref="UniqueKey"/> value.
-        /// </summary>
-        public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
-    }
+    /// <summary>
+    /// Gets or sets the <see cref="UniqueKeyTransformation"/> which will be
+    /// applied to the <see cref="UniqueKey"/> value.
+    /// </summary>
+    public UniqueKeyTransformation UniqueKeyTransformation { get; set; } = UniqueKeyTransformation.Object;
 }

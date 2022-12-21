@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
@@ -22,10 +23,6 @@ using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
-
-#if NETSTANDARD2_0
-using System.Collections.Generic;
-#endif
 
 namespace Hazelcast.DistributedObjects
 {
@@ -42,7 +39,7 @@ namespace Hazelcast.DistributedObjects
         private readonly ILogger _logger;
         private readonly SemaphoreSlim _createAllMutex = new(1, 1);
 
-        private bool _isNewCluster;
+        private bool _mustCreateAllOnCluster;
         private volatile int _disposed;
 
         /// <summary>
@@ -133,20 +130,23 @@ namespace Hazelcast.DistributedObjects
         /// </remarks>
         public async ValueTask CreateAllAsync(MemberConnection connection)
         {
+            var proxies = new Dictionary<string, string>();
             await foreach (var (key, _) in _objects)
-            {
-                // if the connection goes down, stop
-                if (!connection.Active) return;
+                proxies[key.Name] = key.ServiceName;
 
-                try
-                {
-                    var requestMessage = ClientCreateProxyCodec.EncodeRequest(key.Name, key.ServiceName);
-                    await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
-                }
-                catch (Exception e)
-                {
-                    _logger.LogError(e, $"Failed to create ({key}) distributed object on new cluster.");
-                }
+            var requestMessage = ClientCreateProxiesCodec.EncodeRequest(proxies);
+
+            // if the connection goes down, stop
+            if (!connection.Active) return;
+
+            // else create objects on cluster
+            try
+            {
+                await _cluster.Messaging.SendToMemberAsync(requestMessage, connection).CfAwait();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, $"Failed to create distributed objects on cluster.");
             }
         }
 
@@ -190,7 +190,7 @@ namespace Hazelcast.DistributedObjects
         }
 
         /// <summary>
-        /// Handles a connection to a new cluster.
+        /// Handles a new connection.
         /// </summary>
 #pragma warning disable IDE0060 // Remove unused parameters
 #pragma warning disable CA1801 // Review unused parameters
@@ -199,26 +199,28 @@ namespace Hazelcast.DistributedObjects
 #pragma warning restore CA1801
 #pragma warning restore IDE0060
         {
-            // when connecting to a new cluster, re-create the distributed objects there.
+            // when the first connection to a cluster is opened, regardless of whether it's a "new"
+            // cluster (first time the client connects, or cluster ID change) or not, make sure we
+            // recreate all objects (because, in case of split-brain, maybe the cluster ID does not
+            // change and yet we are connecting to a "fresh" cluster).
+            //
             // this *may* take time, but we cannot really use a new cluster before everything
             // has been set up correctly (so we cannot really run this in a background task).
             //
-            // if this is a new cluster, then this is a "first" connection and there are
-            // no other connections yet. we should be able to run CreateAllAsync on the
-            // connection, else something is wrong - CreateAllAsync stops if the connection
-            // becomes non-active (and does not throw)
-            
+            // since this is a "first" connection, there are no other connections yet. we should be
+            // able to run CreateAllAsync on the connection, else something is wrong - CreateAllAsync
+            // stops if the connection becomes non-active (and does not throw)
+
             // defensive coding - in case something's wrong with the rest of our code and we
             // happen to end up here multiple concurrent times, prevent weird things from happening.
             await _createAllMutex.WaitAsync().CfAwait();
             try
             {
-                // if this connection is a new cluster, or we previously registered a new cluster
-                // but failed to complete CreateAllAsync (and then, this connection may not be a
-                // new cluster yet we still need to CreateAllAsync), run CreateAllAsync.
-                _isNewCluster |= isNewCluster;
-                if (_isNewCluster) await CreateAllAsync(connection).CfAwait();
-                _isNewCluster = false;
+                // if this connection is first, or we previously registered a first connection
+                // but failed to complete CreateAllAsync, run CreateAllAsync.
+                _mustCreateAllOnCluster |= isNewCluster;
+                if (_mustCreateAllOnCluster && _objects.Count > 0) await CreateAllAsync(connection).CfAwait();
+                _mustCreateAllOnCluster = false;
             }
             finally
             {

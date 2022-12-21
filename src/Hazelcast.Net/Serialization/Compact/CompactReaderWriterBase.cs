@@ -22,7 +22,6 @@ namespace Hazelcast.Serialization.Compact
 {
     internal abstract class CompactReaderWriterBase
     {
-        protected readonly Schema Schema;
         protected readonly int StartPosition;
         protected readonly int DataStartPosition;
 
@@ -36,6 +35,8 @@ namespace Hazelcast.Serialization.Compact
                 ? StartPosition + BytesExtensions.SizeOfInt
                 : StartPosition;
         }
+
+        public Schema Schema { get; init; }
 
         /// <summary>
         /// Tries to get a field with the specified name (case-insensitive) and kind.
@@ -54,6 +55,14 @@ namespace Hazelcast.Serialization.Compact
             fieldName = null;
             return false;
         }
+
+        /// <summary>
+        /// Determines whether a name is a valid field name (case-sensitive).
+        /// </summary>
+        /// <param name="name">The name.</param>
+        /// <returns>Whether a field with the specified name (case-sensitive) was found.</returns>
+        public bool ValidateFieldName(string name)
+            => Schema.TryGetField(name, out _, caseSensitive: true);
 
         /// <summary>
         /// Gets the schema field with the specified name (case-sensitive).

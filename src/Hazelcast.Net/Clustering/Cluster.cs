@@ -81,7 +81,8 @@ namespace Hazelcast.Clustering
         {
             // beware! assigning multicast handlers *must* use +=
 
-            Messaging.SendingMessage += SerializationService.PrepareForSendingMessage;
+            // wire compact serializer
+            Messaging.SendingMessage += SerializationService.CompactSerializer.BeforeSendingMessage;
 
             // wire members
             Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { Members.AddConnection(conn, isNewCluster); return default; };

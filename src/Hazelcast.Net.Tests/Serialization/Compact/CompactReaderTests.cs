@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
@@ -712,6 +713,12 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             Assert.That(writer.ValidateFieldNameInvariant("duh", out validated), Is.False);
             Assert.That(validated, Is.Null);
+
+            var input = new ObjectDataInput(new byte[64], orw, Endianness.LittleEndian);
+            var reader = new CompactReader(orw, input, schema, typeof (object));
+
+            Assert.That(reader.GetFieldKind("field"), Is.EqualTo(FieldKind.String));
+            Assert.That(reader.GetFieldKind("no-field"), Is.EqualTo(FieldKind.NotAvailable));
         }
     }
 }

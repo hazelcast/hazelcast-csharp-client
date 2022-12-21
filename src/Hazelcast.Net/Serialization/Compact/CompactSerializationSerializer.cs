@@ -16,10 +16,11 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -28,6 +29,7 @@ namespace Hazelcast.Serialization.Compact
     /// </summary>
     internal sealed class CompactSerializationSerializer : IStreamSerializer<object>, IReadObjectsFromObjectDataInput, IWriteObjectsToObjectDataOutput
     {
+        private readonly CompactSerializerAdapter _genericRecordSerializer;
         private readonly ConcurrentDictionary<Type, CompactRegistration> _registrationsByType = new();
         private readonly ConcurrentDictionary<long, CompactRegistration> _registrationsById = new();
         private readonly ConcurrentDictionary<Type, Schema> _schemasMap = new();
@@ -46,6 +48,8 @@ namespace Hazelcast.Serialization.Compact
             _options = options;
             _schemas = schemas;
             _endianness = endianness;
+
+            _genericRecordSerializer = CompactSerializerAdapter.Create(new CompactGenericRecordSerializer());
 
             foreach (var registration in options.GetRegistrations())
             {
@@ -74,7 +78,7 @@ namespace Hazelcast.Serialization.Compact
         public bool TryGetSerializer(Type type, out ICompactSerializer? serializer)
         {
             var hasSerializer = _registrationsByType.TryGetValue(type, out var registration);
-            serializer = hasSerializer ? registration!.Serializer?.Serializer : null;
+            serializer = hasSerializer ? registration!.Serializer.Serializer : null;
             return hasSerializer;
         }
 
@@ -83,12 +87,14 @@ namespace Hazelcast.Serialization.Compact
             // note: ISchemas is IDisposable but is owned by the global SerializationService
         }
 
+        /// <inheritdoc cref="IStreamSerializer{T}.Read"/>
         public object Read(IObjectDataInput input)
-            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)));
+            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), typeof(object));
 
         public object Read(IObjectDataInput input, Type type)
-            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)));
+            => SerializationService.CastObject(ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), type), type, true);
 
+        /// <inheritdoc cref="IStreamSerializer{T}.Read"/>
         public T Read<T>(IObjectDataInput input)
             => SerializationService.CastObject<T>(Read(input, typeof(T)), true);
 
@@ -182,28 +188,53 @@ namespace Hazelcast.Serialization.Compact
 
         public void WriteObject(ObjectDataOutput output, object obj)
         {
-            var typeOfObj = obj.GetType();
-            var registration = GetOrCreateRegistration(obj);
-            if (!_schemasMap.TryGetValue(typeOfObj, out var schema))
+            Schema? schema;
+            CompactSerializerAdapter serializer;
+
+            if (obj is CompactGenericRecordBase genericRecord)
             {
-                // no schema was registered for this type, so we are going to serialize the
-                // object, capture the fields, and generate a schema for it - this requires and
-                // assumes that the serializer is not "clever" and does not omit fields for
-                // optimization reasons.
-                schema = BuildSchema(registration, obj);
-                _schemasMap[typeOfObj] = schema;
+                _schemas.Add(schema = genericRecord.Schema, false);
+                serializer = _genericRecordSerializer;
+            }
+            else
+            {
+                var typeOfObj = obj.GetType();
+                var registration = GetOrCreateRegistration(obj);
+                serializer = registration.Serializer;
+                if (!_schemasMap.TryGetValue(typeOfObj, out schema))
+                {
+                    // no schema was registered for this type, so we are going to serialize the
+                    // object, capture the fields, and generate a schema for it - this requires and
+                    // assumes that the serializer is not "clever" and does not omit fields for
+                    // optimization reasons.
+                    schema = registration.HasSchema ? registration.Schema! : BuildSchema(registration, obj);
 
-                // now that we know the schema identifier, we can update our registrations map
-                _registrationsById.TryAdd(schema.Id, registration);
+                    if (!registration.IsClusterSchema)
+                    {
+                        // if the schema is not supposed to exist on the cluster, yet...
+                        // that schema will need to be published before we can send any data that is
+                        // using it - so we register it with the data output - and magic will happen
+                        output.SchemaIds.Add(schema.Id);
+                    }
 
-                // now that we have a new schema, we need to publish it, unless specified
-                // otherwise by the registration.
-                _schemas.Add(schema, registration.IsClusterSchema);
+                    // update our maps with the schema and its identifier
+                    _schemasMap[typeOfObj] = schema;
+                    _registrationsById.TryAdd(schema.Id, registration);
+
+                    // and register it with the schema service
+                    _schemas.Add(schema, registration.IsClusterSchema);
+                }
+                else if (!_schemas.IsPublished(schema.Id))
+                {
+                    // schema is registered but not published yet, maybe publication failed,
+                    // needs to be published, so register it too
+                    output.SchemaIds.Add(schema.Id);
+                }
             }
 
             WriteSchema(output, schema);
             var writer = new CompactWriter(this, output, schema);
-            registration.Serializer.Write(writer, obj);
+            serializer.Write(writer, obj);
             writer.Complete();
         }
 
@@ -244,15 +275,16 @@ namespace Hazelcast.Serialization.Compact
             return builder.Build();
         }
 
-        public bool TryRead(IObjectDataInput input, out object? obj, out long missingSchemaId)
+        public bool TryRead(IObjectDataInput input, Type type, out object? obj, out long missingSchemaId)
         {
-            if (!(input is ObjectDataInput inputInstance))
+            if (input is not ObjectDataInput inputInstance)
                 throw new ArgumentException("Input must be an ObjectDataInput instance.", nameof(input));
+            if (type == null) throw new ArgumentNullException(nameof(type));
 
-            return TryReadObject(inputInstance, out obj, out missingSchemaId);
+            return TryReadObject(inputInstance, type, out obj, out missingSchemaId);
         }
 
-        private bool TryReadObject(ObjectDataInput input, out object? obj, out long missingSchemaId)
+        private bool TryReadObject(ObjectDataInput input, Type type, [NotNullWhen(true)] out object? obj, out long missingSchemaId)
         {
             var schemaId = input.ReadLong();
             if (!_schemas.TryGet(schemaId, out var schema))
@@ -262,27 +294,35 @@ namespace Hazelcast.Serialization.Compact
                 return false;
             }
 
-            var registration = GetOrCreateRegistration(schema);
-
-            var reader = new CompactReader(this, input, schema, registration.SerializedType);
-            obj = registration.Serializer.Read(reader);
             missingSchemaId = 0;
+            ICompactReader reader;
+            CompactSerializerAdapter serializer;
+
+            if (type == typeof(IGenericRecord))
+            {
+                reader = new CompactReader(this, input, schema, typeof(IGenericRecord));
+                serializer = _genericRecordSerializer;
+            }
+            else
+            {
+                var registration = GetOrCreateRegistration(schema);
+                reader = new CompactReader(this, input, schema, registration.SerializedType);
+                serializer = registration.Serializer;
+            }
+
+            obj = serializer.Read(reader);
+
             return true;
         }
 
-        private object ReadObject(ObjectDataInput input)
+        private object ReadObject(ObjectDataInput input, Type type)
         {
-            var schemaId = input.ReadLong();
+            if (TryReadObject(input, type, out var obj, out var missingSchemaId))
+                return obj;
 
             // trying to de-serialize an unknown schema - nothing we can do here, the
             // situation should have been handled previously by TryReadObject etc.
-            if (!_schemas.TryGet(schemaId, out var schema))
-                throw new UnknownCompactSchemaException(schemaId);
-
-            var registration = GetOrCreateRegistration(schema);
-
-            var reader = new CompactReader(this, input, schema, registration.SerializedType);
-            return registration.Serializer.Read(reader);
+            throw new UnknownCompactSchemaException(missingSchemaId);
         }
 
         public async Task<bool> FetchSchema(long schemaId)
@@ -376,5 +416,8 @@ namespace Hazelcast.Serialization.Compact
             return (input, start, index) =>
                 input.ReadInt(start + index * BytesExtensions.SizeOfInt, _endianness); // specs say "otherwise offset are i32"
         }
+
+        public ValueTask BeforeSendingMessage(ClientMessage message)
+            => message.HasSchemas ? Schemas.PublishAsync(message.SchemaIds) : default;
     }
 }

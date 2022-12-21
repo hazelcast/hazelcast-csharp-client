@@ -1,0 +1,64 @@
+<Project>
+
+  <!--
+    define the analysis rules for the entire solution
+  
+    see https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/PublicApiAnalyzers.Help.md
+    see https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/Microsoft.CodeAnalysis.PublicApiAnalyzers.md
+
+    these rules are kept here, having them in an editorconfig file is buggy
+  -->
+
+  <PropertyGroup>
+    <!--
+      RS0041: Symbol uses some oblivious reference types
+      got to ignore that one as long as our public API is not fully nullable-annotated
+	  -->
+	  <NoWarn>$(NoWarn);RS0041</NoWarn>
+	  <!--
+      RS0026: Do not add multiple public overloads with optional parameters
+      unfortunately our API already exposes public signatures with optional parameters
+	  -->
+    <NoWarn>$(NoWarn);RS0026</NoWarn>
+	  <!--
+      NETSDK1138: The target framework is out of support
+      yes - but we may still want to build for this framework for a while
+	  -->
+	  <NoWarn>$(NoWarn);NETSDK1138</NoWarn>
+	  <!--
+      NU1803: You are running the 'restore' operation with an 'HTTP' source
+      may happen on some dev machine (localhost source), accept it
+	  -->
+    <NoWarn>$(NoWarn);NU1803</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <!--
+      misc. C# rules:
+      CA1303: Do not pass literals as localized parameters
+      CA1031: Do not catch general exception types
+      CA1040: Avoid empty interfaces
+      CA2225: Operator overloads have named alternates
+    -->
+    <NoWarn>$(NoWarn);CA1303;CA1031;CA1040;CA2225</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <!-- do NOT treat warning ZB1002 (FIXME! in code) as an error-->
+    <WarningsNotAsErrors>$(WarningsAsErrors);ZB1002</WarningsNotAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)'=='Release'">
+    <!-- DO treat warning ZB1002 (FIXME! in code) as an error-->
+    <WarningsAsErrors>$(WarningsAsErrors);ZB1002</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(ReleaseBranch)'=='True'">
+    <!-- 
+      treat all documented Roslyn Public Analyzer warnings as errors 
+      source: https://github.com/dotnet/roslyn-analyzers/blob/main/src/PublicApiAnalyzers/Microsoft.CodeAnalysis.PublicApiAnalyzers.md
+    -->
+    <WarningsAsErrors>$(WarningsAsErrors);RS0016;RS0017;RS0022;RS0024;RS0025;RS0026;RS0027;RS0036;RS0037;RS0041;RS0048;RS0050;RS0051;RS0052;RS0053;RS0054;RS0055;RS0056;RS0057;RS0058;RS0059;RS0060;RS0061</WarningsAsErrors>
+  </PropertyGroup>
+
+</Project>
