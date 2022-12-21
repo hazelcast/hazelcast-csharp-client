@@ -14,6 +14,7 @@
 
 using System;
 using System.Linq;
+using Hazelcast.Serialization.Compact;
 using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Serialization
@@ -99,6 +100,9 @@ namespace Hazelcast.Serialization
         private ISerializerAdapter LookupKnownSerializer(Type type)
         {
             // fast path for some known serializers
+
+            if (typeof(CompactGenericRecordBase).IsAssignableFrom(type))
+                return _compactSerializerAdapter;
 
             if (_compactSerializer.HasRegistrationForType(type))
                 return _compactSerializerAdapter;

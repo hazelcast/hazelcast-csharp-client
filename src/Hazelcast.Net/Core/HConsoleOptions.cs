@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Concurrent;
 #if HZ_CONSOLE
 using System.Collections.Generic;
 #else
@@ -34,8 +35,8 @@ namespace Hazelcast.Core
     class HConsoleOptions
     {
 #if HZ_CONSOLE
-        private readonly Dictionary<object, HConsoleTargetOptions> _targetConfigs = new Dictionary<object, HConsoleTargetOptions>();
-        private readonly Dictionary<Type, HConsoleTargetOptions> _typeConfigs = new Dictionary<Type, HConsoleTargetOptions>();
+        private readonly ConcurrentDictionary<object, HConsoleTargetOptions> _targetConfigs = new();
+        private readonly ConcurrentDictionary<Type, HConsoleTargetOptions> _typeConfigs = new();
 #endif
 
         // Configure methods are not conditional (since they have a non-void return type)
@@ -126,7 +127,7 @@ namespace Hazelcast.Core
         public HConsoleOptions Clear<TSource>()
         {
 #if HZ_CONSOLE
-            _typeConfigs.Remove(typeof(TSource));
+            ((IDictionary<Type, HConsoleTargetOptions>)_typeConfigs).Remove(typeof(TSource));
 #endif
             return this;
         }
@@ -139,7 +140,7 @@ namespace Hazelcast.Core
         public HConsoleOptions Clear(Type sourceType)
         {
 #if HZ_CONSOLE
-            _typeConfigs.Remove(sourceType ?? throw new ArgumentNullException(nameof(sourceType)));
+            ((IDictionary<Type, HConsoleTargetOptions>)_typeConfigs).Remove(sourceType ?? throw new ArgumentNullException(nameof(sourceType)));
 #endif
             return this;
         }
@@ -152,7 +153,7 @@ namespace Hazelcast.Core
         public HConsoleOptions Clear(string sourceTypeName)
         {
 #if HZ_CONSOLE
-            _typeConfigs.Remove(Type.GetType(sourceTypeName) ?? throw new ArgumentException($"Could not find type {sourceTypeName}.", nameof(sourceTypeName)));
+            ((IDictionary<Type, HConsoleTargetOptions>)_typeConfigs).Remove(Type.GetType(sourceTypeName) ?? throw new ArgumentException($"Could not find type {sourceTypeName}.", nameof(sourceTypeName)));
 #endif
             return this;
         }
@@ -165,7 +166,7 @@ namespace Hazelcast.Core
         public HConsoleOptions Clear(object target)
         {
 #if HZ_CONSOLE
-            _targetConfigs.Remove(target ?? throw new ArgumentNullException(nameof(target)));
+            ((IDictionary<object, HConsoleTargetOptions>)_targetConfigs).Remove(target ?? throw new ArgumentNullException(nameof(target)));
 #endif
             return this;
         }

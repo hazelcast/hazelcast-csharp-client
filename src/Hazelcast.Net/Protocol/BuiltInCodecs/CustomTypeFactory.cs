@@ -68,9 +68,11 @@ namespace Hazelcast.Protocol.BuiltInCodecs
             return new HazelcastJsonValue(value);
         }
 
-        public static IndexOptions CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions)
+        public static IndexOptions CreateIndexConfig(string name, int indexType, List<string> attributes, BitmapIndexOptions bitmapIndexOptions, bool bTreeIndexConfigExists, BTreeIndexOptions bTreeIndexConfig)
         {
-            return new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
+            var options = new IndexOptions(attributes) { Name = name, Type = (IndexType) indexType, BitmapIndexOptions = bitmapIndexOptions };
+            if (bTreeIndexConfigExists) options.BTreeIndexOptions = bTreeIndexConfig;
+            return options;
         }
 
         public static BitmapIndexOptions CreateBitmapIndexOptions(string uniqueKey, int uniqueKeyTransformation)
@@ -102,5 +104,13 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static Schema CreateSchema(string typename, IEnumerable<SchemaField> fields)
           => new Schema(typename, fields.ToArray());
+
+        public static Capacity CreateCapacity(long value, int unit) => new(value, (MemoryUnit) unit);
+
+        public static MemoryTierOptions CreateMemoryTierConfig(Capacity capacity)
+            => new() { Capacity = capacity };
+
+        public static BTreeIndexOptions CreateBTreeIndexConfig(Capacity pageSize, MemoryTierOptions options)
+            => new() { PageSize = pageSize, MemoryTierOptions = options };
     }
 }

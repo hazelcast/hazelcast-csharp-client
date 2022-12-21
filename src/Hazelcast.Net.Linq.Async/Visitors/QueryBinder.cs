@@ -275,7 +275,7 @@ namespace Hazelcast.Linq.Visitors
 
         private bool IsRootType(Type entryType)
         {
-            return entryType == _rootType && entryType.IsGenericType && entryType.GetGenericTypeDefinition() == typeof(HKeyValuePair<,>);
+            return entryType == _rootType && entryType.IsGenericType && entryType.GetGenericTypeDefinition() == typeof(MapEntry<,>);
         }
 
         /// <summary>

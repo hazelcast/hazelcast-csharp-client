@@ -315,6 +315,9 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // serializer for that name cannot serialize that type!
             Assert.Throws<ConfigurationException>(() => options.SetTypeName<DifferentThing>("thing"));
+
+            // must be >0!
+            Assert.Throws<ArgumentException>(() => options.SchemaReplicationRetries = 0);
         }
 
         private class Serializer1 : ICompactSerializer<Thing>

@@ -13,15 +13,19 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Tests.Serialization.Compact.SchemasRemoteTestsLocal;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact
@@ -40,7 +44,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             
             public int SentMessageCount => _count;
 
-            public Func<ValueTask> SendingMessage
+            public Func<ClientMessage, ValueTask> SendingMessage
             {
                 get => _messaging.SendingMessage;
                 set => _messaging.SendingMessage = value;
@@ -52,6 +56,8 @@ namespace Hazelcast.Tests.Serialization.Compact
                 Interlocked.Increment(ref _count);
                 return _messaging.SendAsync(requestMessage, triggerEvents, cancellationToken);
             }
+
+            public IEnumerable<Guid> GetConnectedMembers() => _messaging.GetConnectedMembers();
 
             public Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)
             {
@@ -77,11 +83,77 @@ namespace Hazelcast.Tests.Serialization.Compact
         private readonly ISequence<int> _ids = new Int32Sequence();
 
         [Test]
+        public void NewSchemasGoToSerializationOutput()
+        {
+            var obj = new SomeClass { Value = 12 };
+
+            var options = new CompactOptions();
+            var messaging = Mock.Of<IClusterMessaging>();
+            var schemas = new Schemas(messaging, options);
+            const Endianness endianness = Endianness.LittleEndian;
+            var ss = new CompactSerializationSerializer(options, schemas, endianness);
+            var output = new ObjectDataOutput(1024, ss, endianness);
+
+            ss.Write(output, obj);
+
+            // serialize = output references the schema
+            Assert.That(output.HasSchemas);
+            Assert.That(output.SchemaIds.Count, Is.EqualTo(1));
+
+            // and schemas know the schema, as unpublished
+            var schemaId = output.SchemaIds.First();
+            Assert.That(schemas.TryGet(schemaId, out var schema));
+            Assert.That(schemas.IsPublished(schemaId), Is.False);
+
+            // serialize again = output still references the schema
+            output = new ObjectDataOutput(1024, ss, endianness);
+            ss.Write(output, obj);
+            Assert.That(output.HasSchemas);
+            Assert.That(output.SchemaIds.Count, Is.EqualTo(1));
+            Assert.That(output.SchemaIds, Does.Contain(schemaId));
+
+            // add the schema, as published
+            schemas.Add(schema, true);
+            Assert.That(schemas.IsPublished(schemaId));
+
+            // serialize again = output does not reference the schema anymore
+            output = new ObjectDataOutput(1024, ss, endianness);
+            ss.Write(output, obj);
+            Assert.That(output.HasSchemas, Is.False);
+        }
+
+        [Test]
+        public void SerializationOutputSchemasGoToClientMessage()
+        {
+            var obj = new SomeClass { Value = 12 };
+
+            var options = new CompactOptions();
+            var messaging = Mock.Of<IClusterMessaging>();
+            var schemas = new Schemas(messaging, options);
+            const Endianness endianness = Endianness.LittleEndian;
+            var ss = new CompactSerializationSerializer(options, schemas, endianness);
+            var output = new ObjectDataOutput(1024, ss, endianness);
+
+            ss.Write(output, obj);
+
+            // serialize = output references the schema
+            Assert.That(output.HasSchemas);
+            var schemaId = output.SchemaIds.First();
+
+            // and schema bubbles up in the message
+            var data = new HeapData(output.ToByteArray(), output.HasSchemas ? output.SchemaIds : null);
+            var message = ListAddCodec.EncodeRequest("list-name", data);
+            Assert.That(message.HasSchemas);
+            Assert.That(message.SchemaIds.Count, Is.EqualTo(1));
+            Assert.That(message.SchemaIds, Does.Contain(schemaId));
+        }
+
+        [Test]
         public async Task CanPublishAndFetchSchemas()
         {
             // create a schema cache (don't use the client's one)
             var messaging = Client.GetMessaging();
-            var schemas = new Schemas(messaging);
+            var schemas = new Schemas(messaging, new CompactOptions());
 
             var schema = new Schema($"sometype{_ids.GetNext()}", new[]
             {
@@ -100,7 +172,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(messaging.SentMessageCount, Is.EqualTo(2)); // published
 
             // create another (empty) schema cache
-            var schemas2 = new Schemas(messaging);
+            var schemas2 = new Schemas(messaging, new CompactOptions());
             Assert.That(schemas2.TryGet(schema.Id, out _), Is.False);
             Assert.That(messaging.SentMessageCount, Is.EqualTo(2)); // TryGet is local-only
 
@@ -116,7 +188,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             // create a schema cache (don't use the client's one)
             var messaging = Client.GetMessaging();
-            var schemas = new Schemas(messaging);
+            var schemas = new Schemas(messaging, new CompactOptions());
 
             var schema = new Schema($"sometype{_ids.GetNext()}", new[]
             {
@@ -150,7 +222,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             await AssertCanPublishAndFetchSchema(schemas, schema);
         }
 
-        private async Task AssertCanPublishAndFetchSchema(Schemas schemas, Schema schema, bool succeeds = true)
+        private async Task AssertCanPublishAndFetchSchema(Schemas schemas, Schema schema)
         {
             Assert.That(schemas.TryGet(schema.Id, out _), Is.False); // it's not there
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Null); // and not on the cluster either
@@ -161,10 +233,14 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.That(schemas.TryGet(schema.Id, out _), Is.True); // it's there
             Assert.That(await schemas.GetOrFetchAsync(schema.Id), Is.Not.Null); // so returned immediately
 
-            // GetOrFetchAsync returned from memory but FetchAsync wants to talk to the cluster,
-            // which means that first we'll check for unpublished schemas an publish them - always.
-            // and thus, FetchAsync immediately succeeds
-            Assert.That(await schemas.FetchAsync(schema.Id), succeeds ? Is.Not.Null : Is.Null);
+            // but it's not yet on the cluster and cannot be fetched
+            Assert.That(await schemas.FetchAsync(schema.Id), Is.Null);
+
+            // publish that one schema
+            await schemas.PublishAsync(new HashSet<long> { schema.Id });
+
+            // now it can be fetched
+            Assert.That(await schemas.FetchAsync(schema.Id), Is.Not.Null);
         }
 
         [Test]
@@ -179,6 +255,11 @@ namespace Hazelcast.Tests.Serialization.Compact
                 .Build();
 
             await AssertCanPublishAndFetchSchema(schemas, schema);
+        }
+
+        public class SomeClass
+        {
+            public int Value { get; set; }
         }
     }
 }

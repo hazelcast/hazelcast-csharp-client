@@ -14,7 +14,9 @@
 
 #nullable enable
 
+using Hazelcast.Clustering;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 
@@ -48,17 +50,24 @@ namespace Hazelcast.Serialization.Compact
         ValueTask<Schema?> GetOrFetchAsync(long id);
 
         /// <summary>
-        /// Publishes all known non-published schemas.
+        /// Determines whether a schema is published.
         /// </summary>
-        /// <returns>A <see cref="ValueTask"/>that will complete when all known non-published schemas have been published.</returns>
-        ValueTask PublishAsync();
+        /// <param name="schemaId">The identifier of the schema.</param>
+        /// <returns><c>true</c> if the schema is known and published, otherwise <c>false</c>.</returns>
+        bool IsPublished(long schemaId);
 
         /// <summary>
-        /// Marks all schemas for republication.
+        /// Publishes all or selected schemas.
         /// </summary>
+        /// <param name="ids">An optional set of schema identifiers.</param>
         /// <remarks>
-        /// <para>This method can always be invoked when the client is in the disconnected state.</para>
+        /// <para>If <paramref name="ids"/> is <c>null</c> then all known schemas are published.</para>
         /// </remarks>
-        void MarkAllForRepublication();
+        ValueTask PublishAsync(HashSet<long>? ids = null);
+
+        /// <summary>
+        /// Handles a new connection.
+        /// </summary>
+        ValueTask OnConnectionOpened(MemberConnection connection, bool isFirstEver, bool isFirst, bool isNewCluster);
     }
 }

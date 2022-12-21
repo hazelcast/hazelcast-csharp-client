@@ -13,15 +13,18 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using Hazelcast.Core;
+using Hazelcast.Models;
+using Hazelcast.Serialization.Compact;
 
 namespace Hazelcast.Serialization
 {
     /// <summary>
     /// Implements <see cref="IData"/> on the heap.
     /// </summary>
-    internal sealed class HeapData : IData
+    internal sealed class HeapData : IData, ICanHaveSchemas
     {
         // structure is:
         // partition-hash (4 bytes) | type (4 bytes) | data (byte[])
@@ -35,6 +38,7 @@ namespace Hazelcast.Serialization
         private const int ArrayHeaderSizeInBytes = 16;
 
         private readonly byte[] _bytes;
+        private HashSet<long> _schemaIds;
 
         /// <summary>
         /// Initializes a new empty instance of the <see cref="HeapData"/> class.
@@ -46,7 +50,8 @@ namespace Hazelcast.Serialization
         /// Initializes a new instance of the <see cref="HeapData"/> class.
         /// </summary>
         /// <param name="bytes">The data bytes.</param>
-        public HeapData(byte[] bytes)
+        /// <param name="schemaIds">Schema identifiers.</param>
+        public HeapData(byte[] bytes, HashSet<long> schemaIds = null)
         {
             //??
             // will use a byte to store partition_hash bit
@@ -60,7 +65,14 @@ namespace Hazelcast.Serialization
             // TODO: HeapData bytes should in fact never be null, we can simplify all this
 
             _bytes = bytes;
+            _schemaIds = schemaIds;
         }
+
+        /// <inheritdoc />
+        public bool HasSchemas => _schemaIds != null;
+
+        /// <inheritdoc />
+        public HashSet<long> SchemaIds => _schemaIds ??= new HashSet<long>();
 
         /// <inheritdoc />
         public int DataSize => Math.Max(TotalSize - HeapDataOverHead, 0);

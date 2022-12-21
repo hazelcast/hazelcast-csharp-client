@@ -193,16 +193,6 @@ namespace Hazelcast.Serialization
         }
 
         /// <summary>
-        /// Gets the serialization service ready to send a message.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public ValueTask PrepareForSendingMessage()
-        {
-            // the only serializer that needs attention for now is compact
-            return _compactSerializer.Schemas.PublishAsync();
-        }
-
-        /// <summary>
         /// Ensures that the serialization service can deserialize data.
         /// </summary>
         /// <param name="data">Data to deserialize.</param>

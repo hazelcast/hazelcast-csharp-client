@@ -16,6 +16,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using Hazelcast.Core;
+using Hazelcast.Models;
 
 namespace Hazelcast.Messaging
 {
@@ -34,8 +35,10 @@ namespace Hazelcast.Messaging
     /// <see cref="LastFrame"/>. The last frame always has the <see cref="FrameFlags.Final"/>
     /// flag set.</para>
     /// </remarks>
-    internal partial class ClientMessage : IEnumerable<Frame>
+    internal partial class ClientMessage : IEnumerable<Frame>, ICanHaveSchemas
     {
+        private HashSet<long> _schemaIds;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ClientMessage"/> class.
         /// </summary>
@@ -92,6 +95,12 @@ namespace Hazelcast.Messaging
             get => (ClientMessageFlags) FirstFrameOrThrow.Flags;
             set => FirstFrameOrThrow.Flags = (FrameFlags) value;
         }
+
+        /// <inheritdoc />
+        public bool HasSchemas => _schemaIds != null;
+
+        /// <inheritdoc />
+        public HashSet<long> SchemaIds => _schemaIds ??= new HashSet<long>();
 
         /// <summary>
         /// Appends a single frame to the message.

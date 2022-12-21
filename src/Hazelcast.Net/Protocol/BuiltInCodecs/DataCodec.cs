@@ -14,6 +14,7 @@
 
 using System.Collections.Generic;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Protocol.BuiltInCodecs
@@ -23,13 +24,20 @@ namespace Hazelcast.Protocol.BuiltInCodecs
         public static void Encode(ClientMessage clientMessage, IData data)
         {
             clientMessage.Append(new Frame(data.ToByteArray()));
+
+            if (data is ICanHaveSchemas { HasSchemas: true } canHaveSchemas)
+            {
+                var messageSchemas = clientMessage.SchemaIds;
+                foreach (var id in canHaveSchemas.SchemaIds)
+                    messageSchemas.Add(id);
+            }
+
         }
 
         public static void EncodeNullable(ClientMessage clientMessage, IData data)
         {
-            clientMessage.Append(data == null
-                ? Frame.CreateNull()
-                : new Frame(data.ToByteArray()));
+            if (data == null) clientMessage.Append(Frame.CreateNull());
+            else Encode(clientMessage, data);
         }
 
         public static IData Decode(Frame frame)

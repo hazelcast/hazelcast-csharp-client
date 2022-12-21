@@ -27,10 +27,12 @@ namespace Hazelcast.Linq
         /// <typeparam name="TKey">Type of key of the <see cref="IHMap"/></typeparam>
         /// <typeparam name="TValue">Type of value of the <see cref="IHMap"/></typeparam>
         /// <returns></returns>
-        public static IAsyncQueryable<HKeyValuePair<TKey, TValue>> AsAsyncQueryable<TKey, TValue>(this IHMap<TKey, TValue> hMap)
+        // Async LINQ is provided as an extension package - so IHMap cannot directly expose async LINQ otherwise it should implement
+        // the interface - so we have to go with an extension method to provide async-queryable.
+        public static IAsyncQueryable<MapEntry<TKey, TValue>> AsAsyncQueryable<TKey, TValue>(this IHMap<TKey, TValue> hMap)
         {
             var mapInternal = (HMap<TKey, TValue>) hMap;
-            return new QueryableMap<HKeyValuePair<TKey, TValue>>(new QueryProvider(mapInternal.SqlService, typeof(HKeyValuePair<TKey, TValue>), mapInternal.LoggerFactory), mapInternal.Name);
+            return new QueryableMap<MapEntry<TKey, TValue>>(new QueryProvider(mapInternal.SqlService, typeof(MapEntry<TKey, TValue>), mapInternal.LoggerFactory), mapInternal.Name);
         }
     }
 }

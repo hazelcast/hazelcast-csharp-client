@@ -413,37 +413,38 @@ namespace Hazelcast.Tests.Core
         }
 
         [Test]
-        public void WriteGuid()
+        public void WriteEmptyGuid()
         {
             var bytes = new byte[24];
-
-            var guid = Guid.NewGuid();
-            var values = guid.ToByteArray();
-
-            // endianness is not an option for guids
+            for (var i = 0; i < bytes.Length; i++) bytes[i] = 0xff;
+            var guid = Guid.Empty;
             bytes.WriteGuidL(2, guid);
-            AssertBytes(bytes, 0, 0, 0,
-                values[3], values[2], values[1], values[0],
-                values[5], values[4], values[7], values[6],
-                values[8], values[9], values[10], values[11],
-                values[12], values[13], values[14], values[15]);
+            AssertBytes(bytes, 0xff, 0xff, 0x01, 0xff, 0xff);
         }
 
         [Test]
-        public void ReadGuid()
+        public void ReadEmptyGuid()
         {
-            var guid = Guid.NewGuid();
-            var values = guid.ToByteArray();
-            var bytes = new byte[] { 0, 0, 0,
-                values[3], values[2], values[1], values[0],
-                values[5], values[4], values[7], values[6],
-                values[8], values[9], values[10], values[11],
-                values[12], values[13], values[14], values[15] };
-            Assert.That(bytes.ReadGuidL(2), Is.EqualTo(guid));
-
-            bytes = new byte[] { 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            var bytes = new byte[24];
+            for (var i = 0; i < bytes.Length; i++) bytes[i] = 0xff;
+            bytes[2] = 1;
             Assert.That(bytes.ReadGuidL(2), Is.EqualTo(Guid.Empty));
         }
+
+        [TestCase(true)]
+        [TestCase(false)]
+        public void ReadWriteGuid(bool withEmptyFlag)
+        {
+            // we don't test the actual byte representation of the serialized guid here,
+            // this is done in the GuidPolyglotTests as we need to ensure it conforms with Java
+
+            var guid = Guid.NewGuid();
+            var bytes = new byte[24];
+            for (var i = 0; i < bytes.Length; i++) bytes[i] = 0xff;
+            bytes.WriteGuidL(2, guid, withEmptyFlag);
+            Assert.That(bytes.ReadGuidL(2, withEmptyFlag), Is.EqualTo(guid));
+        }
+
 
         [Test]
         [TestCase(new byte[] { 0x00, 0xE5, 0x07, 0x00, 0x00, 0x07, 0x0B }, 1, "2021-07-11")]

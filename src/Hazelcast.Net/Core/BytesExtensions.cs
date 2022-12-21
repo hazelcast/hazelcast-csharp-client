@@ -75,9 +75,16 @@ namespace Hazelcast.Core
         public const int SizeOfChar = 2;
 
         /// <summary>
+        /// Gets the size of a <see cref="Guid"/> value in arrays or sequences of bytes,
+        /// when used in a codec (includes a leading byte flag indicating empty values,
+        /// in which case the value actually only uses 1 byte in the array or sequence).
+        /// </summary>
+        public const int SizeOfCodecGuid = (1 + 16) * SizeOfByte;
+
+        /// <summary>
         /// Gets the size of a <see cref="Guid"/> value in arrays or sequences of bytes.
         /// </summary>
-        public const int SizeOfGuid = (1 + 16) * SizeOfByte;
+        public const int SizeOfGuid = 16 * SizeOfByte;
 
         /// <summary>
         /// Gets the size of a Java LocalDate value in arrays or sequences of bytes.

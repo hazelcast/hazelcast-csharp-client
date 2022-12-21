@@ -20,6 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Linq;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
@@ -28,6 +29,7 @@ namespace Hazelcast.Tests.Linq
     /// Tests the IHMap using LINQ APIs. It focuses the results mainly.
     /// For query tests, please see other linq test suites.
     /// </summary>
+    [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class LinqTests : SingleMemberClientRemoteTestBase
     {
         public class Person
@@ -86,7 +88,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 count++;
             }
 
@@ -101,7 +103,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 count++;
             }
 
@@ -123,7 +125,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in myMap.AsAsyncQueryable())
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, string>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, string>>(entry);
                 count++;
             }
 
@@ -140,7 +142,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 Assert.AreEqual(entry.Key, entry.Value.Id);
                 count++;
             }
@@ -158,7 +160,7 @@ namespace Hazelcast.Tests.Linq
 
             await foreach (var entry in result)
             {
-                Assert.IsAssignableFrom<HKeyValuePair<int, Person>>(entry);
+                Assert.IsAssignableFrom<MapEntry<int, Person>>(entry);
                 Assert.AreEqual(entry.Key, entry.Value.Id);
                 count++;
             }
@@ -248,7 +250,7 @@ namespace Hazelcast.Tests.Linq
         [Test]
         public async Task TestFullComplexTypeMapping()
         {
-            async Task AssertSqlResult(IAsyncEnumerable<HKeyValuePair<Address, Person>> queryable)
+            async Task AssertSqlResult(IAsyncEnumerable<MapEntry<Address, Person>> queryable)
             {
                 await foreach (var e in queryable)
                     Assert.AreEqual(e.Key.PostCode, 33090);

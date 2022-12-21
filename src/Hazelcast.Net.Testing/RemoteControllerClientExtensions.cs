@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -93,8 +94,9 @@ namespace Hazelcast.Testing
             var clientInternal = (HazelcastClient) client;
             var added = new SemaphoreSlim(0);
             var partitions = new SemaphoreSlim(0);
+            var membersCount = client.Members.Count;
 
-            var subscriptionId = await clientInternal.SubscribeAsync(on => on
+            var subscriptionId = await client.SubscribeAsync(on => on
                     .MembersUpdated((sender, args) =>
                     {
                         if (args.AddedMembers.Count > 0) added.Release();
@@ -106,11 +108,15 @@ namespace Hazelcast.Testing
                 .CfAwait();
 
             var member = await rc.StartMemberAsync(cluster).CfAwait();
-            await added.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
+
+            await AssertEx.SucceedsEventually(() =>
+            {
+                Assert.That(client.Members.Count == membersCount+1 && client.Members.All(x => x.IsConnected));
+            }, 10_000, 1_000);
 
             await client.TriggerPartitionTableAsync().CfAwait();
-
             await partitions.WaitAsync(TimeSpan.FromSeconds(120)).CfAwait();
+
             await clientInternal.UnsubscribeAsync(subscriptionId).CfAwait();
 
             var partitioner = clientInternal.Cluster.Partitioner;
