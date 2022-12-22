@@ -1,4 +1,6 @@
-﻿# LINQ Provider (BETA)
+﻿# LINQ Provider 
+> NOTE [WARNING] - LINQ support is currently in BETA version. There may be breaking changes on further releases.
+
 Hazelcast .Net Client provides a LINQ provider over `IHMap`. Provider is currently in BETA version.
 You can use programmatic LINQ functions instead string SQL statements to query over your distributed map.
 To benefit from LINQ support, `Hazelcast.Net.Linq.Async` package should be added your dependency. The package is an
@@ -11,9 +13,9 @@ extension of `Hazelcast.Net`. It depends on it. The provider uses Hazelcast .Net
 
 #### Remarks
 Linq provider translates your expression to SQL statements, and send it to server via SQL Service of the Client. 
-It requires same steps as SQL. The map should be mapped on the server side, and your property names should match 
+It requires the same steps as SQL. The map should be mapped on the server side, and your property names should match 
 with configured column names on mapping. For primitive types `__key` and `this` keywords will be used. For complex types,
-property name will be used as it is. Also, note that properties should be set publicly. Otherwise, the result object cannot be
+property name will be used as it is. Also, note that properties should be publicly-settable. Otherwise, the result object cannot be
 reconstructed. To reach the provider, `AsAsyncQueryable()` should be invoked. You can async enumerate over the query object. `ToXXXAsync()`
 extensions are not supported at the moment.
 

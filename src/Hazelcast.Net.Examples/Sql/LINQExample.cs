@@ -46,15 +46,15 @@ namespace Hazelcast.Examples.Sql
             var map = await client.GetMapAsync<City, Mayor>("cityMayor");
 
             // Put some data into it.
-            var cityAnkara = new City() {Code = 1, CityName = "Ankara", IsCapital = true};
+            var cityAnkara = new City(1,"Ankara",true);
             var mayorAnkara = new Mayor() {MayorName = "Zeki Müren", Age = 35};
             await map.PutAsync(cityAnkara, mayorAnkara);
 
-            var cityDC = new City() {Code = 2, CityName = "Washington, DC", IsCapital = true};
+            var cityDC = new City(2,  "Washington, DC", true);
             var mayorDC = new Mayor() {MayorName = "Marvin Gaye", Age = 45};
             await map.PutAsync(cityDC, mayorDC);
 
-            var cityCA = new City() {Code = 3, CityName = "California", IsCapital = false};
+            var cityCA = new City( 3,  "California", false);
             var mayorCA = new Mayor() {MayorName = "Dave Brubeck", Age = 92};
             await map.PutAsync(cityCA, mayorCA);
 
@@ -112,12 +112,12 @@ namespace Hazelcast.Examples.Sql
             // Mayor: Zeki Müren
         }
 
-        public class City
+
+        public record City(int Code, string CityName, bool IsCapital)
         {
-            public string CityName { get; set; }
-            public int Code { get; set; }
-            public bool IsCapital { get; set; }
-        }
+            // To construct the City object, there is need for a default constructor.
+            public City() : this(0, "", false){} 
+        };
 
         public class Mayor
         {
@@ -125,4 +125,11 @@ namespace Hazelcast.Examples.Sql
             public int Age { get; set; }
         }
     }
+}
+
+// It's fix for versions < .Net5. 
+// https://developercommunity.visualstudio.com/t/error-cs0518-predefined-type-systemruntimecompiler/1244809
+namespace System.Runtime.CompilerServices
+{
+    internal static class IsExternalInit {}
 }
