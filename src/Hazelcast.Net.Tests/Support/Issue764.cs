@@ -14,12 +14,16 @@
 
 using NUnit.Framework;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Linq;
 using Hazelcast.Query;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
-using Hazelcast.Testing.Remote;
+using Hazelcast.Testing.Logging;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Tests.Support;
 
@@ -27,16 +31,20 @@ namespace Hazelcast.Tests.Support;
 [TestFixture]
 public class Issue764 : SingleMemberClientRemoteTestBase
 {
-    protected override HazelcastOptions CreateHazelcastOptions()
+    protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
     {
-        var options = base.CreateHazelcastOptions();
-        options.Serialization.Compact.AddSerializer(new TradeSerializer());
-        return options;
+        return base.CreateHazelcastOptionsBuilder()
+            .WithHConsoleLogger()
+            .With("Logging:LogLevel:Hazelcast", "Debug") // To see SQL statement on logs.
+            .With("Logging:LogLevel:Hazelcast.Examples", "Information")
+            .With(options => options.Serialization.Compact.AddSerializer(new TradeSerializer()));
     }
 
     [Test]
-    public async Task Reproduce()
+    public async Task ReproduceIssue()
     {
+        using var _ = HConsole.Capture(o => o.Configure<HConsoleLoggerProvider>().SetMaxLevel());
+
         var serverVersion = ServerVersion.GetVersion("5.0");
         Console.WriteLine($"Server Version: {serverVersion}");
 
@@ -72,7 +80,7 @@ public class Issue764 : SingleMemberClientRemoteTestBase
         Console.WriteLine();
 
         Console.WriteLine("Query from .NET with predicate...");
-        var result = await map.GetValuesAsync(Predicates.Sql("id=1234"));
+        var result = await map.GetValuesAsync(Predicates.Sql("ID=1234"));
         Assert.That(result, Is.Not.Null);
         Assert.That(result.Count, Is.EqualTo(1));
         foreach (var resultTrade in result)
@@ -83,9 +91,42 @@ public class Issue764 : SingleMemberClientRemoteTestBase
         Console.WriteLine();
 
         // NOTE! in the predicate, the casing of fields matters
-        result = await map.GetValuesAsync(Predicates.Sql("ID=1234"));
+        result = await map.GetValuesAsync(Predicates.Sql("id=1234"));
         Assert.That(result, Is.Not.Null);
-        Assert.That(result.Count, Is.EqualTo(0)); // no result with 'ID', has to be 'id'
+        Assert.That(result.Count, Is.EqualTo(0)); // no result with 'ID', has to be 'id' in predicate
+
+        // NOTE! we have Linq now!
+
+        // but that first requires that we define a mapping
+        // Linq will use the natural dotnet property names as column names -> use them
+        // and map them to EXTERNAL NAME matching the compact field names (used internally
+        // by the cluster)
+        await Client.Sql.ExecuteCommandAsync($@"CREATE MAPPING ""{mapName}"" (
+  ""Id"" INTEGER EXTERNAL NAME ""ID"",
+  ""Action"" VARCHAR EXTERNAL NAME ""action"",
+  ""SourceTradeId"" VARCHAR EXTERNAL NAME ""sourceTradeId""
+)
+TYPE IMap
+OPTIONS (
+  'keyFormat' = 'java',
+  'keyJavaClass' = 'java.lang.String',
+  'valueFormat' = 'compact',
+  'valueCompactTypeName' = 'Trade'
+)");
+
+        // and then Linq and SQL work
+        // note: the SQL statement will show in the log (at debug level)
+        var linqQuery = map.AsAsyncQueryable().Where(x => x.Value.Id == 1234);
+        var count = 0;
+        await foreach (var (id, resultTrade) in linqQuery)
+        {
+            Assert.That(resultTrade, Is.Not.Null);
+            Console.WriteLine($"TRADE: {resultTrade.Id} {resultTrade.Action} {resultTrade.SourceTradeId}");
+            count++;
+        }
+
+        Assert.That(count, Is.EqualTo(1));
+        Console.WriteLine();
     }
 }
 
@@ -171,6 +212,7 @@ public class Main {
         ClientConfig config = new ClientConfig();
         config.setClusterName(""%%CLUSTERNAME%%"");
         config.getNetworkConfig().addAddress(""127.0.0.1:5701"");
+        config.getSerializationConfig().getCompactSerializationConfig().addSerializer(new TradeSerializer());
         HazelcastInstance client = HazelcastClient.newHazelcastClient(config);
 
         IMap<String, Trade> map = client.getMap(""%%MAPNAME%%"");
@@ -205,7 +247,7 @@ public /*file*/ class TradeSerializer : ICompactSerializer<Trade>
     {
         return new Trade
         {
-            Id = reader.ReadInt32("id"),
+            Id = reader.ReadInt32("ID"),
             Action = reader.ReadString("action"),
             SourceTradeId = reader.ReadString("sourceTradeId")
         };
@@ -213,7 +255,7 @@ public /*file*/ class TradeSerializer : ICompactSerializer<Trade>
 
     public void Write(ICompactWriter writer, Trade value)
     {
-        writer.WriteInt32("id", value.Id);
+        writer.WriteInt32("ID", value.Id);
         writer.WriteString("action", value.Action);
         writer.WriteString("sourceTradeId", value.SourceTradeId);
     }
