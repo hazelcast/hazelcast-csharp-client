@@ -12,6 +12,7 @@
     - [Enumerating query result](#enumerating-query-result)
     - [Disposing query result](#disposing-query-result)
     - [Cancelling query enumeration](#cancelling-query-enumeration)
+    - [LINQ Provider](extensions/linq.md)
   - [Data Types](#data-types)
     - [Decimal String Format](#decimal-string-format)
     - [Date String Format](#date-string-format)
