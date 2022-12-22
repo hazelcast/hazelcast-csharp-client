@@ -232,6 +232,17 @@ namespace Hazelcast.Tests.Serialization
             AssertSerialization(javaClass, order);
         }
 
+        [Test]
+        public void TestJavaClassOverrides()
+        {
+            var jc = new JavaClass("myClass");
+            var jc2 = new JavaClass("");
+            Assert.True(jc.ToString().Contains("myClass"));
+            Assert.True(JavaClass.Equals(jc, jc));
+            Assert.False(JavaClass.Equals(jc, jc2));
+            Assert.AreEqual("myClass".GetHashCode(), jc.GetHashCode());
+        }
+
         [Serializable]
         public class SerializableClass
         {

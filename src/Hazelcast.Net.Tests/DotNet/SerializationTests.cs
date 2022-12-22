@@ -17,6 +17,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Formatters.Binary;
 using Hazelcast.Core;
+using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.DotNet
@@ -62,6 +63,14 @@ namespace Hazelcast.Tests.DotNet
 
             Assert.That(result, Is.Not.Null);
             Assert.That(result.GuidValue, Is.EqualTo(thing.GuidValue));
+        }
+
+        [Test]
+        public void TestSerializationInfoExtension()
+        {
+            SerializationInfo si = null;
+            // ReSharper disable once ExpressionIsAlwaysNull
+            Assert.Throws<ArgumentNullException>(() => si.GetGuid("someField"));
         }
 
         // this is a test, it's OK to use BinaryFormatter here

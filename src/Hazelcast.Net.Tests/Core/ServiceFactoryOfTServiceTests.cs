@@ -66,6 +66,21 @@ namespace Hazelcast.Tests.Core
             Assert.That(s, Is.InstanceOf<Thing>());
             Assert.That(f.Service, Is.SameAs(s));
         }
+        
+        [Test]
+        public void AddProviderToSingleton()
+        {
+            var f = new SingletonServiceFactory<IThing>
+            {
+                Creator = () => new Thing()
+            };
+
+            var s = f.Service;
+            
+            Assert.That(s, Is.Not.Null);
+            Assert.That(s, Is.InstanceOf<Thing>());
+            Assert.That(f.Service, Is.SameAs(s));
+        }
 
         [Test]
         public void ShallowCloneSingleton()
@@ -161,7 +176,7 @@ namespace Hazelcast.Tests.Core
             serviceProvider.Dispose();
             Assert.That(s.Disposed, Is.True);
         }
-
+     
         private interface IThing : IDisposable
         {
             bool Disposed { get; }

@@ -49,6 +49,34 @@ namespace Hazelcast.Tests.Projections
 
             Assert.That(p.AttributePath, Is.EqualTo("attribute"));
         }
+        
+        [Test]
+        public void MultipleAttributeProjectionTest()
+        {
+            Assert.Throws<ArgumentException>(() => _ = Hazelcast.Projection.Projections.MultipleAttribute(""));
+
+            var x = Hazelcast.Projection.Projections.MultipleAttribute("attribute1","attribute2");
+
+            Assert.That(x, Is.InstanceOf<MultiAttributeProjection>());
+            var p = (MultiAttributeProjection) x;
+
+            Assert.That(p.FactoryId, Is.EqualTo(FactoryIds.ProjectionDsFactoryId));
+            Assert.That(p.ClassId, Is.EqualTo(ProjectionDataSerializerHook.MultiAttribute));
+
+            Assert.Throws<ArgumentNullException>(() => p.WriteData(null));
+            Assert.Throws<ArgumentNullException>(() => p.ReadData(null));
+
+            using var output = new ObjectDataOutput(256, null, Endianness.BigEndian);
+            p.WriteData(output);
+
+            using var input = new ObjectDataInput(output.Buffer, null, Endianness.BigEndian);
+
+            p = new MultiAttributeProjection();
+            p.ReadData(input);
+
+            Assert.That(p.AttributePaths[0], Is.EqualTo("attribute1"));
+            Assert.That(p.AttributePaths[1], Is.EqualTo("attribute2"));
+        }
 
         [Test]
         public void SerializerHookTest()

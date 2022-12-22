@@ -554,6 +554,13 @@ namespace Hazelcast.Tests.NearCache
             }, 8000, 1000);
         }
 
+        [Test]
+        public void TestOptionsToString()
+        {
+            var opt = new NearCacheOptions();
+            Assert.That(opt.ToString().StartsWith("NearCacheConfig"));
+        }
+
         private async Task TestInvalidateAsync(Func<IHMap<string, string>, string, Task> invalidatingAction)
         {
             var dictionary = await _client.GetMapAsync<string, string>("nc-invalidate-" + TestUtils.RandomString());

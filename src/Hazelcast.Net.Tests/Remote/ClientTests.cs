@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
@@ -39,12 +40,36 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
+        public async Task ClientStaringClientWithConfig()
+        {
+            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
+            await clientStarting.Task;
+            await clientStarting.Client.DisposeAsync();
+        }
+        
+        [Test]
+        public async Task ClientStaringClientWithConfig2()
+        {
+            var o = CreateHazelcastOptions();
+            var clientStarting =  HazelcastClientFactory.GetNewStartingClient(options=>
+            {
+                options.Networking.Addresses.Clear();
+                options.Networking.Addresses.Add("127.0.0.1:5701");
+                options.ClusterName = o.ClusterName;
+            });
+            await clientStarting.Task;
+            await clientStarting.Client.DisposeAsync();
+        }
+
+        [Test]
         public async Task ClientCanConnectAsync()
         {
             // most basic test just to ensure that a client can connect
 
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
+            
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingClient((HazelcastOptions)null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
             var client = clientStart.Client;
@@ -68,6 +93,29 @@ namespace Hazelcast.Tests.Remote
             await client.DisposeAsync();
         }
 
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task StartingFailoverClientCanConnect()
+        {
+            var startingClient = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
+            await startingClient.Task;
+            await startingClient.Client.DisposeAsync();
+        }
+        
+        [Test]
+        [Category("enterprise")] // Failover is an Enterprise feature
+        public async Task StartingFailoverClientCanConnect2()
+        {
+            var o = CreateHazelcastFailoverOptions();
+            var startingClient = HazelcastClientFactory.GetNewStartingFailoverClient(options =>
+            {
+                options.TryCount = o.TryCount;
+                options.Clients.Add(o.Clients[0]);
+            });
+            await startingClient.Task;
+            await startingClient.Client.DisposeAsync();
+        }
+        
         [Test]
         [Category("enterprise")] // Failover is an Enterprise feature
         public async Task FailoverClientCanConnect2()
@@ -94,6 +142,8 @@ namespace Hazelcast.Tests.Remote
 
             //using var _ = HConsole.Capture(options => options
             //    .Set(x => x.SetLevel(1)));
+
+            Assert.Throws<ArgumentNullException>(() => HazelcastClientFactory.GetNewStartingFailoverClient((HazelcastFailoverOptions)null));
 
             var clientStart = HazelcastClientFactory.GetNewStartingFailoverClient(CreateHazelcastFailoverOptions());
             var client = clientStart.Client;

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Threading.Tasks;
 using Hazelcast.CP;
 using NUnit.Framework;
 
@@ -41,6 +42,28 @@ namespace Hazelcast.Tests.CP
             Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@"));
             Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@@bar"));
             Assert.Throws<ArgumentException>(() => CPSubsystem.ParseName("foo@bar@bar"));
+        }
+
+        [Test]
+        public async Task TestCPSession()
+        {
+            var session = new CPSession(1, 1_000);
+            
+            Assert.False(session.IsExpired);
+            Assert.That(session.AcquireCount, Is.Zero);
+            Assert.That(session.Acquire(1), Is.EqualTo(1));
+            Assert.True(session.IsValid);
+            Assert.True(session.IsInUse);
+            session.Release(1);
+            Assert.That(session.AcquireCount, Is.Zero);
+            Assert.That(session.GetHashCode(), Is.EqualTo(1));
+            Assert.That(session.Id, Is.EqualTo(1));
+            Assert.True(session.Equals(session));
+            var s2 = new CPSession(2, 10);
+            Assert.False(session.Equals(s2));
+            await Task.Delay(50);
+            Assert.True(s2.IsExpired);
+            
         }
     }
 }

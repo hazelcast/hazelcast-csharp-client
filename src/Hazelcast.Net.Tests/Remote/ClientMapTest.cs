@@ -1131,7 +1131,7 @@ namespace Hazelcast.Tests.Remote
             const string newValue = "newValue";
 
             await dictionary.SetAsync(key, value);
-            var result = await dictionary.PutIfAbsentAsync(key, newValue, TimeSpan.FromSeconds(5));
+            var result = await dictionary.PutIfAbsentAsync(key, newValue, TimeSpan.FromSeconds(5), TimeSpanExtensions.MinusOneMillisecond);
 
             Assert.AreEqual(value, result);
             Assert.AreEqual(value, await dictionary.GetAsync(key));
@@ -1209,7 +1209,7 @@ namespace Hazelcast.Tests.Remote
             await using var _ = DestroyAndDispose(dictionary);
 
             Assert.AreEqual(0, await dictionary.GetSizeAsync());
-            await dictionary.PutTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(1000));
+            await dictionary.PutTransientAsync("key1", "value1", TimeSpan.FromMilliseconds(1000),TimeSpanExtensions.MinusOneMillisecond);
             Assert.AreEqual("value1", await dictionary.GetAsync("key1"));
 
             await AssertEx.SucceedsEventually(async () =>

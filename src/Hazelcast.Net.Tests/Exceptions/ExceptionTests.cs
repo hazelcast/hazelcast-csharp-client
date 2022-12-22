@@ -14,6 +14,9 @@
 
 using System;
 using Hazelcast.Exceptions;
+using Hazelcast.Protocol;
+using Hazelcast.Serialization;
+using Hazelcast.Sql;
 using Hazelcast.Testing;
 using NUnit.Framework;
 
@@ -58,6 +61,75 @@ namespace Hazelcast.Tests.Exceptions
             Assert.That(e.Message, Is.EqualTo("exception"));
             Assert.That(e.InnerException, Is.Not.Null);
             Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+        }
+        
+        [Test]
+        public void ClientNotAllowedInClusterExceptionConstructors()
+        {
+            _ = new ClientNotAllowedInClusterException();
+            _ = new ClientNotAllowedInClusterException("exception");
+            _ = new ClientNotAllowedInClusterException(new Exception("bang"));
+            var e = new ClientNotAllowedInClusterException("exception", new Exception("bang"));
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+
+            e = e.SerializeAndDeSerialize();
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+        }
+        
+        [Test]
+        public void RemoteExceptionConstructors()
+        {
+            _ = new RemoteException();
+            _ = new RemoteException("exception");
+            var e = new RemoteException("exception", new Exception("bang"));
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+
+            e = e.SerializeAndDeSerialize();
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+        }
+
+        [Test]
+        public void TargetUnreachableExceptionConstructors()
+        {
+            _ = new TargetUnreachableException();
+            _ = new TargetUnreachableException("exception");
+            _ = new TargetUnreachableException(new Exception("bang"));
+            var e = new TargetUnreachableException("exception", new Exception("bang"));
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+
+            e = e.SerializeAndDeSerialize();
+
+            Assert.That(e.Message, Is.EqualTo("exception"));
+            Assert.That(e.InnerException, Is.Not.Null);
+            Assert.That(e.InnerException.Message, Is.EqualTo("bang"));
+        }
+        
+        [Test]
+        public void UnknownCompactSchemaExceptionConstructors()
+        {
+            var e = new UnknownCompactSchemaException(1);
+
+            Assert.True(e.Message.StartsWith("Unknown compact"));
+            Assert.AreEqual(1, e.SchemaId);
+            e = e.SerializeAndDeSerialize();
+
+            Assert.True(e.Message.StartsWith("Unknown compact"));
+            Assert.AreEqual(1, e.SchemaId);
         }
 
         [Test]

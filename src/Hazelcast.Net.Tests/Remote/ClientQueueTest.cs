@@ -55,7 +55,7 @@ namespace Hazelcast.Tests.Remote
 
             //configured max capacity in server config.
             const int maxCapacity = 6;
-            await FillCollection(queue, maxCapacity-1);
+            await FillCollection(queue, maxCapacity - 1);
 
             Assert.True(await queue.OfferAsync("item6"));
             Assert.False(await queue.OfferAsync("item6"));
@@ -151,12 +151,25 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task TestGetElementAsync()
+        public async Task TestGetElementAsyncThrows()
         {
             var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
             await using var _ = DestroyAndDispose(queue);
 
-            await AssertEx.ThrowsAsync<InvalidOperationException>(async() => await queue.GetElementAsync());
+            await AssertEx.ThrowsAsync<InvalidOperationException>(async () => await queue.GetElementAsync());
+        }
+
+        [Test]
+        public async Task TestGetElementAsync()
+        {
+            var queue = await Client.GetQueueAsync<string>(QueueNameBase + CreateUniqueName());
+            await queue.PutAsync("queue-item");
+
+            Assert.That(await queue.GetSizeAsync(), Is.EqualTo(1));
+            var item = await queue.GetElementAsync();
+            Assert.That(await queue.GetSizeAsync(), Is.EqualTo(1));
+            Assert.AreEqual("queue-item", item);
+            await using var _ = DestroyAndDispose(queue);
         }
 
         [Test]
