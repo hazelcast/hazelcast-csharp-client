@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System.Threading.Tasks;
+using Hazelcast.CP;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Testing;
@@ -26,7 +27,8 @@ namespace Hazelcast.Tests.CP
         [Test]
         public async Task Get()
         {
-            await using var along = await Client.CPSubsystem.GetAtomicLongAsync(CreateUniqueName());
+            var cpSubSystem = (CPSubsystem) Client.CPSubsystem;
+            await using var along = await cpSubSystem.GetAtomicLongAsync(CreateUniqueName());
 
             Assert.That(await along.GetAsync(), Is.EqualTo(0));
 

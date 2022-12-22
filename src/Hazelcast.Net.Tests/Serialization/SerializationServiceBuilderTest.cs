@@ -105,7 +105,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.Throws<ArgumentException>(() =>
             {
                 var options = new SerializationOptions();
-                options.AddDataSerializableFactoryClass(-1, typeof(MyDataSerializableFactory));
+                options.AddDataSerializableFactoryClass(-1, nameof(MyDataSerializableFactory));
                 var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
             });
         }
@@ -192,7 +192,7 @@ namespace Hazelcast.Tests.Serialization
             Assert.Throws<ServiceFactoryException>(() =>
             {
                 var options = new SerializationOptions();
-                options.AddPortableFactory(1, typeof (SerializableFactory));
+                options.AddPortableFactory(1, nameof (SerializableFactory));
 
                 var service = new SerializationServiceBuilder(options, new NullLoggerFactory()).Build();
             });

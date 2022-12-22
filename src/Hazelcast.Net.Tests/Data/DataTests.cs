@@ -57,12 +57,24 @@ namespace Hazelcast.Tests.Data
         public void MemberVersionTest()
         {
             var x = new MemberVersion(1, 2, 3);
+            var y = new MemberVersion(1, 3, 4);
 
             Assert.That(x.Major, Is.EqualTo(1));
             Assert.That(x.Minor, Is.EqualTo(2));
             Assert.That(x.Patch, Is.EqualTo(3));
 
             Assert.That(x.ToString(), Is.EqualTo("1.2.3"));
+            
+            Assert.True(y>x);
+            Assert.True(y>=x);
+            Assert.True(x<y);
+            Assert.True(x<=y);
+            Assert.True(y!=x);
+            Assert.False(x.Equals(y));
+            Assert.False(x.Equals((object)y));
+            Assert.AreEqual(-1, x.CompareTo(y));
+            Assert.AreEqual(0, x.CompareTo(x));
+            Assert.AreEqual(1, y.CompareTo(x));
         }
 
         [Test]
@@ -106,6 +118,7 @@ namespace Hazelcast.Tests.Data
             Assert.That(x.Version, Is.SameAs(version));
             Assert.That(x.IsLiteMember, Is.True);
             Assert.That(x.IsLiteMember, Is.True);
+            Assert.That(x.HasPublicAddress, Is.False);
             var a = x.Attributes;
             Assert.That(a.Count, Is.EqualTo(1));
             Assert.That(a["attribute"], Is.EqualTo("value"));

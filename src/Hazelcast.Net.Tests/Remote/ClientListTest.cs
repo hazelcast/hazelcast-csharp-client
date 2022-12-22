@@ -134,6 +134,7 @@ namespace Hazelcast.Tests.Remote
 
             Assert.False(await list.RemoveAsync("item33"));
             Assert.True(await list.RemoveAsync("item3"));
+            Assert.AreEqual("item0", await list.RemoveAsync(0));
         }
     }
 }

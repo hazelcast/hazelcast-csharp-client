@@ -170,6 +170,9 @@ namespace Hazelcast.Tests.Networking
             Assert.That(address1 != address2, Is.True);
 
             Assert.That(address1 == address3, Is.True);
+            Assert.That(address1.Equals((object)address1), Is.True);
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            Assert.That(address1.Equals("not address object"), Is.False);
             Assert.That(address1 != address3, Is.False);
         }
 

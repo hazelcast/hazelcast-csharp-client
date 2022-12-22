@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Sql;
@@ -62,6 +63,18 @@ namespace Hazelcast.Tests.Sql
             var resultValues = await result.ToDictionaryAsync(r => r.GetKey<int>(), r => r.GetValue<string>());
 
             CollectionAssert.AreEquivalent(expectedValues, resultValues);
+        }
+
+        [Test]
+        public void TestSqlStatementOption()
+        {
+            var opt = new SqlStatementOptions() {CursorBufferSize = 1, Schema = "myTable", Timeout = TimeSpan.FromSeconds(1)};
+            
+            Assert.AreEqual(TimeSpan.FromSeconds(1),opt.Timeout);
+            Assert.AreEqual(1, opt.CursorBufferSize);
+            Assert.AreEqual("myTable", opt.Schema);
+
+            Assert.Throws<ArgumentException>(() => opt.Timeout = TimeSpan.FromSeconds(-1));
         }
     }
 }

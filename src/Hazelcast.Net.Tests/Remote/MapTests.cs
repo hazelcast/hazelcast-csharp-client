@@ -131,7 +131,7 @@ namespace Hazelcast.Tests.Remote
             // and returns the existing value, or the default value
             // NOTE: no way to know if the default value existed (eg zero)?
 
-            Assert.That(await map.PutAsync("key", 42), Is.Zero);
+            Assert.That(await map.PutAsync("key", 42, TimeSpanExtensions.MinusOneMillisecond), Is.Zero);
 
             Assert.That(await map.PutAsync("key", 43), Is.EqualTo(42));
 

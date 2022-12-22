@@ -25,12 +25,12 @@ namespace Hazelcast.CP
         private readonly long _id;
         private int _acquireCount;
         private readonly long _creationTime;
-        private readonly long _ttlMiliseconds;
+        private readonly long _ttlMilliseconds;
 
-        public CPSession(long id, long ttlMiliseconds)
+        public CPSession(long id, long ttlMilliseconds)
         {
             _id = id;
-            _ttlMiliseconds = ttlMiliseconds;
+            _ttlMilliseconds = ttlMilliseconds;
             _creationTime = Clock.Milliseconds;
         }
 
@@ -62,11 +62,11 @@ namespace Hazelcast.CP
         /// <summary>
         /// Checks session is expired to given milliseconds
         /// </summary>
-        /// <param name="timestamp">milliseonds</param>
+        /// <param name="timestamp">milliseconds</param>
         /// <returns>Is session expired</returns>
         private bool IsSessionExpired(long timestamp)
         {
-            long expiration = _creationTime + _ttlMiliseconds;
+            long expiration = _creationTime + _ttlMilliseconds;
 
             if (expiration < 0)
                 expiration = long.MaxValue;
@@ -75,9 +75,9 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Increases number of aquisitions
+        /// Increases number of acquisitions
         /// </summary>
-        /// <param name="count">The number of aquisitions to increase.</param>
+        /// <param name="count">The number of acquisitions to increase.</param>
         /// <returns>Session Id</returns>
         public long Acquire(int count)
         {
@@ -86,9 +86,9 @@ namespace Hazelcast.CP
         }
 
         /// <summary>
-        /// Releases lock aquisitions.
+        /// Releases lock acquisitions.
         /// </summary>
-        /// <param name="count">The number of aquisitions to release.</param>
+        /// <param name="count">The number of acquisitions to release.</param>
         public void Release(int count)
         {
             Interlocked.Add(ref _acquireCount, -count);

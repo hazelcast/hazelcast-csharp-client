@@ -133,6 +133,16 @@ namespace Hazelcast.Tests.Remote
             {
                 await rb.ReadManyAsync(0, 2, 1);
             });
+                        
+            await AssertEx.ThrowsAsync<ArgumentException>(async () =>
+            {
+                await rb.ReadManyAsync(-1, 0, rb.MaxBatchSize + 1);
+            });
+            
+            await AssertEx.ThrowsAsync<ArgumentException>(async () =>
+            {
+                await rb.ReadManyAsync(0, -1, rb.MaxBatchSize + 1);
+            });
         }
 
         [Test]

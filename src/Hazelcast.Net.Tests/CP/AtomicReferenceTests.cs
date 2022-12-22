@@ -25,7 +25,7 @@ namespace Hazelcast.Tests.CP
     public class AtomicReferenceTests: SingleMemberClientRemoteTestBase
     {
         [Test]
-        public async Task Name()
+        public async Task TestName()
         {
             var name = CreateUniqueName();
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(name);
@@ -36,7 +36,7 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
-        public async Task Get()
+        public async Task TestGet()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 
@@ -44,9 +44,32 @@ namespace Hazelcast.Tests.CP
 
             await aref.DestroyAsync();
         }
+        
+        [Test]
+        public async Task TestContains()
+        {
+            await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
+
+            await aref.SetAsync("val");
+            Assert.True(await aref.ContainsAsync("val"));
+            await aref.DestroyAsync();
+        }
+        
+        [Test]
+        public async Task TestClear()
+        {
+            await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
+
+            await aref.SetAsync("val");
+            Assert.AreEqual("val",await aref.GetAsync());
+            await aref.ClearAsync();
+            Assert.That(await aref.GetAsync(), Is.Null.Or.Empty);
+            Assert.True(await aref.IsNullAsync());
+            await aref.DestroyAsync();
+        }
 
         [Test]
-        public async Task SetAndGet()
+        public async Task TestSetAndGet()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
             var value = RandomString();
@@ -58,7 +81,7 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
-        public async Task SetAndGetNull()
+        public async Task TestSetAndGetNull()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 
@@ -73,7 +96,7 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
-        public async Task GetAndSet()
+        public async Task TestGetAndSet()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
             var (value1, value2) = (RandomString(), RandomString());
@@ -88,7 +111,7 @@ namespace Hazelcast.Tests.CP
 
         [TestCase("1", "22", "333", false)]
         [TestCase("1", "1", "333", true)]
-        public async Task CompareAndSet(string initial, string comparand, string value, bool result)
+        public async Task TestCompareAndSet(string initial, string comparand, string value, bool result)
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 
@@ -101,7 +124,7 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
-        public async Task MultipleDestroy()
+        public async Task TestMultipleDestroy()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 
@@ -110,7 +133,7 @@ namespace Hazelcast.Tests.CP
         }
 
         [Test]
-        public async Task AfterDestroy()
+        public async Task TestAfterDestroy()
         {
             await using var aref = await Client.CPSubsystem.GetAtomicReferenceAsync<string>(CreateUniqueName());
 

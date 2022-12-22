@@ -71,7 +71,7 @@ namespace Hazelcast.Tests.Security
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
 
-            var typed = (TokenCredentials)credentials;
+            var typed = (TokenCredentials) credentials;
             Assert.That(typed.GetToken(), Is.SameAs(token));
         }
 
@@ -97,7 +97,7 @@ namespace Hazelcast.Tests.Security
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
 
-            var typed = (TokenCredentials)credentials;
+            var typed = (TokenCredentials) credentials;
             Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
         }
 
@@ -110,7 +110,7 @@ namespace Hazelcast.Tests.Security
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
 
-            var typed = (TokenCredentials)credentials;
+            var typed = (TokenCredentials) credentials;
             Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
         }
 
@@ -123,7 +123,7 @@ namespace Hazelcast.Tests.Security
             Assert.That(credentials.Name, Is.EqualTo("<token>"));
             Assert.That(credentials, Is.InstanceOf<TokenCredentials>());
 
-            var typed = (TokenCredentials)credentials;
+            var typed = (TokenCredentials) credentials;
             Assert.That(typed.GetToken(), Is.EqualTo(Encoding.UTF8.GetBytes("token")));
         }
 
@@ -157,6 +157,9 @@ namespace Hazelcast.Tests.Security
             Assert.That(factory.NewCredentials(), Is.SameAs(credentials));
             factory.Reset();
             Assert.That(factory.NewCredentials(), Is.Not.SameAs(credentials));
+
+            var kc = new KerberosCredentials(((KerberosCredentials) credentials).GetToken());
+            Assert.True(kc.ToString().Contains($"{kc.GetToken().Length} bytes"));
         }
     }
 }
