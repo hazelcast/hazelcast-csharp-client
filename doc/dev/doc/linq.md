@@ -43,7 +43,7 @@ You can reach key and value of the entry.
 Execution and data fetching will be invoked when enumeration is started. The provider generate the query and execute it 
 with client's configuration.
 
->__Note:__ In future, we are planning to have options that can configure LINQ provider, such as SQL cursor size of query or naming convention of properties.
+>__Note:__ In future, we are planning to have options that can configure LINQ provider, such as cursor size of a SQL query or naming convention of properties.
 
 Please, visit for other examples to `Hazelcast.Net.Examples` on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql). 
 
