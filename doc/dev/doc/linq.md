@@ -1,5 +1,6 @@
 ﻿# LINQ Provider 
-> NOTE [WARNING] - LINQ support is currently in BETA version. There may be breaking changes on further releases.
+> [!WARNING]
+> LINQ support is currently in BETA version. There may be breaking changes on further releases.
 
 Hazelcast .Net Client provides a LINQ provider over `IHMap`. Provider is currently in BETA version.
 You can use programmatic LINQ functions instead string SQL statements to query over your distributed map.
@@ -41,6 +42,8 @@ You can reach key and value of the entry.
 
 Execution and data fetching will be invoked when enumeration is started. The provider generate the query and execute it 
 with client's configuration.
+
+>__Note:__ In future, we are planning to have options that can configure LINQ provider, such as SQL cursor size of query or naming convention of properties.
 
 Please, visit for other examples to `Hazelcast.Net.Examples` on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql). 
 
