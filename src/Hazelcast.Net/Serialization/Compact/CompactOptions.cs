@@ -29,7 +29,6 @@ namespace Hazelcast.Serialization.Compact
     public sealed class CompactOptions
     {
         private int _schemaReplicationRetries = 100;
-        private TimeSpan _schemaReplicationDelay;
 
         // we have, by design:
         //   serializer -(unique)-> type_name
@@ -82,6 +81,8 @@ namespace Hazelcast.Serialization.Compact
             _serializedType_isClusterSchema = new Dictionary<Type, bool>(other._serializedType_isClusterSchema);
             _typeName_isClusterSchema = new Dictionary<string, bool>(other._typeName_isClusterSchema);
             ReflectionSerializer = other.ReflectionSerializer;
+            _schemaReplicationRetries = other._schemaReplicationRetries;
+            SchemaReplicationDelay = other.SchemaReplicationDelay;
         }
 
         /// <summary>

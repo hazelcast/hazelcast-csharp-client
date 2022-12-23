@@ -19,6 +19,10 @@ Hazelcast.Serialization.Compact.CompactOptions.AddSerializer<TSerializerSerializ
 Hazelcast.Serialization.Compact.CompactOptions.AddType(System.Type! type) -> void
 Hazelcast.Serialization.Compact.CompactOptions.AddType<T>() -> void
 Hazelcast.Serialization.Compact.CompactOptions.CompactOptions() -> void
+Hazelcast.Serialization.Compact.CompactOptions.SchemaReplicationDelay.get -> System.TimeSpan
+Hazelcast.Serialization.Compact.CompactOptions.SchemaReplicationDelay.set -> void
+Hazelcast.Serialization.Compact.CompactOptions.SchemaReplicationRetries.get -> int
+Hazelcast.Serialization.Compact.CompactOptions.SchemaReplicationRetries.set -> void
 Hazelcast.Serialization.Compact.CompactSerializerBase<T>
 Hazelcast.Serialization.Compact.CompactSerializerBase<T>.CompactSerializerBase() -> void
 Hazelcast.Serialization.Compact.ICompactReader
@@ -157,6 +161,98 @@ Hazelcast.Serialization.FieldKind.String = 17 -> Hazelcast.Serialization.FieldKi
 Hazelcast.Serialization.FieldKind.Time = 21 -> Hazelcast.Serialization.FieldKind
 Hazelcast.Serialization.FieldKind.TimeStamp = 25 -> Hazelcast.Serialization.FieldKind
 Hazelcast.Serialization.FieldKind.TimeStampWithTimeZone = 27 -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.GenericRecordBuilder
+Hazelcast.Serialization.IGenericRecord
+Hazelcast.Serialization.IGenericRecord.FieldNames.get -> System.Collections.Generic.IReadOnlyCollection<string!>!
+Hazelcast.Serialization.IGenericRecord.GetArrayOfBoolean(string! fieldname) -> bool[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfDate(string! fieldname) -> Hazelcast.Models.HLocalDate?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfDecimal(string! fieldname) -> Hazelcast.Models.HBigDecimal?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat32(string! fieldname) -> float[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat64(string! fieldname) -> double[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfGenericRecord(string! fieldname) -> Hazelcast.Serialization.IGenericRecord?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfInt16(string! fieldname) -> short[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfInt32(string! fieldname) -> int[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfInt64(string! fieldname) -> long[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfInt8(string! fieldname) -> sbyte[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableBoolean(string! fieldname) -> bool?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableFloat32(string! fieldname) -> float?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableFloat64(string! fieldname) -> double?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableInt16(string! fieldname) -> short?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableInt32(string! fieldname) -> int?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableInt64(string! fieldname) -> long?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfNullableInt8(string! fieldname) -> sbyte?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfString(string! fieldname) -> string?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfTime(string! fieldname) -> Hazelcast.Models.HLocalTime?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfTimeStamp(string! fieldname) -> Hazelcast.Models.HLocalDateTime?[]?
+Hazelcast.Serialization.IGenericRecord.GetArrayOfTimeStampWithTimeZone(string! fieldname) -> Hazelcast.Models.HOffsetDateTime?[]?
+Hazelcast.Serialization.IGenericRecord.GetBoolean(string! fieldname) -> bool
+Hazelcast.Serialization.IGenericRecord.GetDate(string! fieldname) -> Hazelcast.Models.HLocalDate?
+Hazelcast.Serialization.IGenericRecord.GetDecimal(string! fieldname) -> Hazelcast.Models.HBigDecimal?
+Hazelcast.Serialization.IGenericRecord.GetFieldKind(string! fieldname) -> Hazelcast.Serialization.FieldKind
+Hazelcast.Serialization.IGenericRecord.GetFloat32(string! fieldname) -> float
+Hazelcast.Serialization.IGenericRecord.GetFloat64(string! fieldname) -> double
+Hazelcast.Serialization.IGenericRecord.GetGenericRecord(string! fieldname) -> Hazelcast.Serialization.IGenericRecord?
+Hazelcast.Serialization.IGenericRecord.GetInt16(string! fieldname) -> short
+Hazelcast.Serialization.IGenericRecord.GetInt32(string! fieldname) -> int
+Hazelcast.Serialization.IGenericRecord.GetInt64(string! fieldname) -> long
+Hazelcast.Serialization.IGenericRecord.GetInt8(string! fieldname) -> sbyte
+Hazelcast.Serialization.IGenericRecord.GetNullableBoolean(string! fieldname) -> bool?
+Hazelcast.Serialization.IGenericRecord.GetNullableFloat32(string! fieldname) -> float?
+Hazelcast.Serialization.IGenericRecord.GetNullableFloat64(string! fieldname) -> double?
+Hazelcast.Serialization.IGenericRecord.GetNullableInt16(string! fieldname) -> short?
+Hazelcast.Serialization.IGenericRecord.GetNullableInt32(string! fieldname) -> int?
+Hazelcast.Serialization.IGenericRecord.GetNullableInt64(string! fieldname) -> long?
+Hazelcast.Serialization.IGenericRecord.GetNullableInt8(string! fieldname) -> sbyte?
+Hazelcast.Serialization.IGenericRecord.GetString(string! fieldname) -> string?
+Hazelcast.Serialization.IGenericRecord.GetTime(string! fieldname) -> Hazelcast.Models.HLocalTime?
+Hazelcast.Serialization.IGenericRecord.GetTimeStamp(string! fieldname) -> Hazelcast.Models.HLocalDateTime?
+Hazelcast.Serialization.IGenericRecord.GetTimeStampWithTimeZone(string! fieldname) -> Hazelcast.Models.HOffsetDateTime?
+Hazelcast.Serialization.IGenericRecord.NewBuilder() -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecord.NewBuilderWithClone() -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder
+Hazelcast.Serialization.IGenericRecordBuilder.Build() -> Hazelcast.Serialization.IGenericRecord!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfBoolean(string! fieldname, bool[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfDate(string! fieldname, Hazelcast.Models.HLocalDate?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfDecimal(string! fieldname, Hazelcast.Models.HBigDecimal?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfFloat32(string! fieldname, float[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfFloat64(string! fieldname, double[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfGenericRecord(string! fieldname, Hazelcast.Serialization.IGenericRecord?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt16(string! fieldname, short[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt32(string! fieldname, int[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt64(string! fieldname, long[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt8(string! fieldname, sbyte[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableBoolean(string! fieldname, bool?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableFloat32(string! fieldname, float?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableFloat64(string! fieldname, double?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt16(string! fieldname, short?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt32(string! fieldname, int?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt64(string! fieldname, long?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt8(string! fieldname, sbyte?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfString(string! fieldname, string?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTime(string! fieldname, Hazelcast.Models.HLocalTime?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTimeStamp(string! fieldname, Hazelcast.Models.HLocalDateTime?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTimeStampWithTimeZone(string! fieldname, Hazelcast.Models.HOffsetDateTime?[]? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetBoolean(string! fieldname, bool value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetDate(string! fieldname, Hazelcast.Models.HLocalDate? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetDecimal(string! fieldname, Hazelcast.Models.HBigDecimal? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetFloat32(string! fieldname, float value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetFloat64(string! fieldname, double value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetGenericRecord(string! fieldname, Hazelcast.Serialization.IGenericRecord? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetInt16(string! fieldname, short value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetInt32(string! fieldname, int value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetInt64(string! fieldname, long value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetInt8(string! fieldname, sbyte value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableBoolean(string! fieldname, bool? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableFloat32(string! fieldname, float? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableFloat64(string! fieldname, double? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt16(string! fieldname, short? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt32(string! fieldname, int? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt64(string! fieldname, long? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt8(string! fieldname, sbyte? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetString(string! fieldname, string? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetTime(string! fieldname, Hazelcast.Models.HLocalTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStamp(string! fieldname, Hazelcast.Models.HLocalDateTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
+Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStampWithTimeZone(string! fieldname, Hazelcast.Models.HOffsetDateTime? value) -> Hazelcast.Serialization.IGenericRecordBuilder!
 Hazelcast.Serialization.SerializationException.SerializationException(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.get -> bool
 Hazelcast.Serialization.SerializationOptions.EnableClrSerialization.set -> void
@@ -166,11 +262,16 @@ Hazelcast.Serialization.UnknownCompactSchemaException.UnknownCompactSchemaExcept
 override Hazelcast.Serialization.UnknownCompactSchemaException.GetObjectData(System.Runtime.Serialization.SerializationInfo! info, System.Runtime.Serialization.StreamingContext context) -> void
 static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset value) -> Hazelcast.Models.HOffsetDateTime
 static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime value) -> System.DateTimeOffset
+static Hazelcast.Serialization.GenericRecordBuilder.Compact(string! typename) -> Hazelcast.Serialization.IGenericRecordBuilder!
 virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get -> string!
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.AddConfiguration(Microsoft.Extensions.Configuration.IConfiguration configuration) -> TBuilder
 ~Hazelcast.Serialization.SerializationOptions.Compact.get -> Hazelcast.Serialization.Compact.CompactOptions
 ~Hazelcast.Sql.ISqlService.ExecuteCommandAsync(string sql, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), params object[] parameters) -> System.Threading.Tasks.Task<long>
 ~Hazelcast.Sql.ISqlService.ExecuteQueryAsync(string sql, Hazelcast.Sql.SqlStatementOptions options = null, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken), params object[] parameters) -> System.Threading.Tasks.Task<Hazelcast.Sql.ISqlQueryResult>
+~override Hazelcast.HazelcastFailoverOptions.ServiceProvider.get -> System.IServiceProvider
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService, TActual>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
+*REMOVED*~Hazelcast.HazelcastOptionsBase.ServiceProvider.get -> System.IServiceProvider
+~virtual Hazelcast.HazelcastOptionsBase.ServiceProvider.get -> System.IServiceProvider

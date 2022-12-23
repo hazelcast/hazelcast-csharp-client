@@ -162,7 +162,7 @@ internal class Schemas : ISchemas
             // verifying that each schema has been correctly replicated to all members,
             // this is accepted and Java does the same
             var schemaInfos = _schemas.Values; // capture
-            await PublishAsync(schemaInfos.Select(x => x.Schema).ToList());
+            await PublishAsync(schemaInfos.Select(x => x.Schema).ToList()).CfAwait();
 
             // and mark them all published
             foreach (var schemaInfo in schemaInfos) schemaInfo.IsPublished = true;
