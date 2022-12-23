@@ -76,7 +76,7 @@ jobs:
 
       # validate code
       - name: Validate code
-        if: inputs.release == 'false' && inputs.merged-ref != ''
+        if: inputs.release == false && inputs.merged-ref != ''
         shell: bash
         run: |
           git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
@@ -90,14 +90,14 @@ jobs:
 
       # verify the code version (release only)
       - name: Verify the code version
-        if: inputs.release == 'true'
+        if: inputs.release == true
         shell: pwsh
         run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
 
       # obtain the snk file required to sign assemblies (release only)
       # the snk is avail as secrets.HAZELCAST_SNK as a Base64 string
       - name: Obtain assembly signature key
-        if: inputs.release == 'true'
+        if: inputs.release == true
         id: getsnk
         shell: bash
         run: |
@@ -175,13 +175,13 @@ jobs:
 
       # create nuget packages
       - name: Pack NuGet packages
-        if: inputs.release == 'true'
+        if: inputs.release == true
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
       - name: Upload NuGet packages artifact
-        if: inputs.release == 'true'
+        if: inputs.release == true
         uses: actions/upload-artifact@v3
         with:
           name: NuGet-Packages (${{ matrix.os }})
@@ -189,13 +189,13 @@ jobs:
 
       # publish examples (inc. soak tests) (windows only so we have framework too)
       - name: Publish examples
-        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        if: inputs.release == true && matrix.os == 'windows-latest'
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore publish-examples
 
       # archive examples (windows only)
       - name: Archive examples artifact
-        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        if: inputs.release == true && matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v3
         with:
           name: Examples
@@ -203,7 +203,7 @@ jobs:
 
       # git the docs, create the patch
       - name: Create docs patch
-        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        if: inputs.release == true && matrix.os == 'windows-latest'
         shell: pwsh
         run: |
           ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
@@ -215,7 +215,7 @@ jobs:
 
       # archive docs patch
       - name: Upload docs patch artifact
-        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        if: inputs.release == true && matrix.os == 'windows-latest'
         uses: actions/upload-artifact@v3
         with:
           name: Docs-Patch
