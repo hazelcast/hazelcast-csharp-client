@@ -1486,13 +1486,14 @@ function hz-build {
 
     if ($isReleaseBranch) {
         $files = ls -recurse -path $srcDir -filter PublicAPI.Unshipped.txt
-        $files | Foreach-Object {
-            $text = get-content $_ -raw
-            if ($text.Length -gt 0) {
-                $filename = $_.Fullname.Substring($slnRoot.Length)
-                Write-Output "Found non-empty file $filename."
-                Write-Output "'Unshipped' files must be merged before building release branches."
-                Die "Failed to build release branch."
+        foreach ($file in $files) {
+            foreach ($line in get-content $file) {
+                if ($line.Length -gt 0 -and -not $line.StartsWith('#')) {
+                    $filename = $_.Fullname.Substring($slnRoot.Length)
+                    Write-Output "Found non-empty file $filename."
+                    Write-Output "'Unshipped' files must be merged before building release branches."
+                    Die "Failed to build release branch."
+                }
             }
         }
     }
