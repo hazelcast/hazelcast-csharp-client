@@ -226,12 +226,18 @@ namespace Hazelcast.Testing
         /// </summary>
         /// <param name="rc">The remote controller.</param>
         /// <returns>The detected server version.</returns>
-        public static async Task<NuGetVersion> DetectServerVersionAsync(this IRemoteControllerClient rc)
+        public static async Task<(NuGetVersion, NuGetVersion)> DetectServerVersionAsync(this IRemoteControllerClient rc)
         {
-            const string script = "result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;";
+            //const string script = "result=com.hazelcast.instance.GeneratedBuildProperties.VERSION;";
+            const string script = "result=\"\" + com.hazelcast.instance.GeneratedBuildProperties.VERSION + \",\" + com.hazelcast.instance.GeneratedEnterpriseBuildProperties.VERSION;";
             var response = await rc.ExecuteOnControllerAsync(null, script, Lang.JAVASCRIPT).CfAwait();
             var result = response.Result;
-            return result == null ? default : NuGetVersion.Parse(Encoding.UTF8.GetString(result));
+            if (result == null) return default;
+            var resultString = Encoding.UTF8.GetString(result);
+            var resultValues = resultString.Split(',');
+            var ossVersion = resultValues.Length > 0 ? NuGetVersion.Parse(resultValues[0]) : null;
+            var enterpriseVersion = resultValues.Length > 1 ? NuGetVersion.Parse(resultValues[1]) : null;
+            return (ossVersion, enterpriseVersion);
         }
     }
 }

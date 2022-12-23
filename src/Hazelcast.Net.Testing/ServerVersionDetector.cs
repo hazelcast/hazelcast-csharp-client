@@ -27,6 +27,7 @@ namespace Hazelcast.Testing
     internal static class ServerVersionDetector
     {
         private static NuGetVersion _version;
+        private static bool _enterprise;
         private static bool _forced;
 
         /// <summary>
@@ -37,25 +38,44 @@ namespace Hazelcast.Testing
             get
             {
                 if (_version != null || _forced) return _version;
-                
-                // in the rare occasion where we haven't connected to the remote controller
-                // even once, and yet someone want the version, we have to detect it here.
-                // bearing in mind that that "someone" may be an attribute that CANNOT do
-                // an async call - hence this property HAS to remain a synchronous thing.
-                // and this is why we end up with the ugly .Result thing below :(
-                
-                try
-                {
-                    _version = DetectServerVersionAsync().Result; // yes - see above
-                }
-                catch (AggregateException ae)
-                {
-                    // this weird thing here is to avoid breaking the NUnit test runner
-                    if (ae.InnerExceptions.Count != 1) throw;
-                    ExceptionDispatchInfo.Capture(ae.InnerExceptions[0]).Throw();
-                }
-                
+                RunDetection();
                 return _version;
+            }
+        }
+
+        /// <summary>
+        /// Whether the detected server on the cluster runs an enterprise server.
+        /// </summary>
+        /// <remarks>
+        /// <para>This property being <c>true</c> does not automatically imply that a valid enterprise license has been provided.</para>
+        /// </remarks>
+        public static bool DetectedEnterprise
+        {
+            get
+            {
+                if (_version != null || _forced) return _enterprise;
+                RunDetection();
+                return _enterprise;
+            }
+        }
+
+        private static void RunDetection()
+        {
+            // in the rare occasion where we haven't connected to the remote controller
+            // even once, and yet someone want the version, we have to detect it here.
+            // bearing in mind that that "someone" may be an attribute that CANNOT do
+            // an async call - hence this property HAS to remain a synchronous thing.
+            // and this is why we end up with the ugly thing below :(
+
+            try
+            {
+                (_version, _enterprise) = DetectServerVersionAsync().GetAwaiter().GetResult(); // yes - see above
+            }
+            catch (AggregateException ae)
+            {
+                // this weird thing here is to avoid breaking the NUnit test runner
+                if (ae.InnerExceptions.Count != 1) throw;
+                ExceptionDispatchInfo.Capture(ae.InnerExceptions[0]).Throw();
             }
         }
 
@@ -94,13 +114,14 @@ namespace Hazelcast.Testing
         }
 
         // this method is invoked synchronously (!) by the DetectedServerVersion property above
-        private static async Task<NuGetVersion> DetectServerVersionAsync()
+        private static async Task<(NuGetVersion, bool)> DetectServerVersionAsync()
         {
             IRemoteControllerClient client = null;
             try
             {
                 client = await RemoteControllerClient.CreateAsync().CfAwait();
-                return await client.DetectServerVersionAsync().CfAwait();
+                var (ossVersion, enterpriseVersion) = await client.DetectServerVersionAsync().CfAwait();
+                return (ossVersion, enterpriseVersion != null);
             }
             finally
             {
@@ -117,7 +138,9 @@ namespace Hazelcast.Testing
         {
             static async ValueTask SetVersionAsync(IRemoteControllerClient client)
             {
-                _version = await client.DetectServerVersionAsync().CfAwait();
+                var (ossVersion, enterpriseVersion) = await client.DetectServerVersionAsync().CfAwait();
+                _version = ossVersion;
+                _enterprise = enterpriseVersion != null;
             }
 
             return _version != null || _forced

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using Hazelcast.DistributedObjects;
+using System.Collections.Generic;
 
 namespace Hazelcast.Linq
 {
@@ -33,9 +34,20 @@ namespace Hazelcast.Linq
         /// Key of the entry.
         /// </summary>
         public TKey Key { get; set; }
+
         /// <summary>
         /// Value of the entry.
         /// </summary>
         public TValue Value { get; set; }
+
+
+        /// <summary>
+        /// Deconstructs the current <see cref="MapEntry{TKey,TValue}."/>
+        /// </summary>
+        public void Deconstruct(out TKey key, out TValue value)
+        {
+            key = Key;
+            value = Value;
+        }
     }
 }

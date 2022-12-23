@@ -142,8 +142,9 @@ namespace Hazelcast.Serialization.Compact
             // the sorted set of fields, which will be used for fingerprinting - needs to be ordered
             // exactly in the same way as Java, which uses Comparator.naturalOrder() i.e. "natural
             // order", and good luck finding a definition for this, apart from it being case-sensitive,
-            // so we're going with whatever seems best in C# and hope it works.
-            Fields = _fieldsMap.Values.OrderBy(x => x.FieldName, StringComparer.InvariantCulture).ToArray();
+            // so we're going with whatever seems best in C# and hope it works - and that would be
+            // Ordinal. See also FingerprintTests which tests Java vs .NET comparisons.
+            Fields = _fieldsMap.Values.OrderBy(x => x.FieldName, StringComparer.Ordinal).ToArray();
 
             foreach (var field in Fields)
             {
