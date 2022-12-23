@@ -60,6 +60,21 @@ namespace Hazelcast.Testing.Conditions
         }
 
         /// <summary>
+        /// Determines whether the detected server is enterprise code.
+        /// </summary>
+        /// <returns><c>true</c> if a server is detected and reports it is an enterprise server; otherwise <c>false</c>.</returns>
+        /// <remarks>
+        /// <para>This property being <c>true</c> does not automatically imply that a valid enterprise license has been provided.</para>
+        /// </remarks>
+        public static bool IsEnterprise()
+        {
+            var detectedVersion = ServerVersionDetector.DetectedServerVersion;
+            if (detectedVersion == null) return false;
+
+            return ServerVersionDetector.DetectedEnterprise;
+        }
+
+        /// <summary>
         /// Gets the server version indicated by test attributes, or the detected server version, or the default 0.0 version.
         /// </summary>
         /// <param name="test"></param>

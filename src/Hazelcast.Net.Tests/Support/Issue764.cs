@@ -15,6 +15,7 @@
 using NUnit.Framework;
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Linq;
@@ -23,7 +24,9 @@ using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
+using NuGet.Versioning;
 
 namespace Hazelcast.Tests.Support;
 
@@ -46,13 +49,15 @@ public class Issue764 : SingleMemberClientRemoteTestBase
         using var _ = HConsole.Capture(o => o.Configure<HConsoleLoggerProvider>().SetMaxLevel());
 
         var serverVersion = ServerVersion.GetVersion("5.0");
-        Console.WriteLine($"Server Version: {serverVersion}");
+        Console.WriteLine($"Server Version: {serverVersion}{(ServerVersion.IsEnterprise() ? " enterprise" : "")}");
 
         var clusterName = Client.ClusterName;
         var mapName = CreateUniqueName();
 
+        var enterprise = ServerVersion.IsEnterprise() ? "enterprise-" : "";
+
         using var run = new JavaRun()
-            .WithLib($"hazelcast-{serverVersion}.jar")
+            .WithLib($"hazelcast-{enterprise}{serverVersion}.jar")
             .WithSourceText("ActionType", JavaCode.ActionType)
             .WithSourceText("Trade", JavaCode.Trade)
             .WithSourceText("TradeSerializer", JavaCode.TradeSerializer)
