@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-
-//Using the same key for the hazelcast.net.linq.dll
+using System.Runtime.CompilerServices;
 
 #if ASSEMBLY_SIGNING
 
@@ -27,9 +26,8 @@ using Hazelcast;
 // see https://github.com/Moq/moq4/wiki/Quickstart and https://stackoverflow.com/questions/30089042
 // we need the full public key here in order to be able to use Moq when our assemblies are signed
 [assembly: InternalsVisibleTo("DynamicProxyGenAssembly2,PublicKey=0024000004800000940000000602000000240000525341310004000001000100c547cac37abd99c8db225ef2f6c8a3602f3b3606cc9891605d02baa56104f4cfc0734aa39b93bf7852f7d9266654753cc297e7d2edfe0bac1cdcf9f717241550e0a7b191195b7667bb4f64bcb8e2121380fd1d9d46ad2d92d2d15605093924cceaf74c4861eff62abf69b9291ed0a340e113be11e6a7d3113e92484cf7045cc7")]
-#else
 
-using System.Runtime.CompilerServices;
+#else
 
 [assembly: InternalsVisibleTo("Hazelcast.Net.Tests")]
 [assembly: InternalsVisibleTo("Hazelcast.Net.Testing")]
