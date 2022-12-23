@@ -1,10 +1,1 @@
 #nullable enable
-Hazelcast.Models.HLocalDate.HLocalDate(System.DateOnly dateOnly) -> void
-Hazelcast.Models.HLocalDate.ToDateOnly() -> System.DateOnly
-Hazelcast.Models.HLocalDate.TryToDateOnly(out System.DateOnly dateOnly) -> bool
-Hazelcast.Models.HLocalTime.HLocalTime(System.TimeOnly timeOnly) -> void
-Hazelcast.Models.HLocalTime.ToTimeOnly() -> System.TimeOnly
-static Hazelcast.Models.HLocalDate.explicit operator Hazelcast.Models.HLocalDate(System.DateOnly dateOnly) -> Hazelcast.Models.HLocalDate
-static Hazelcast.Models.HLocalDate.explicit operator System.DateOnly(Hazelcast.Models.HLocalDate localDate) -> System.DateOnly
-static Hazelcast.Models.HLocalTime.explicit operator Hazelcast.Models.HLocalTime(System.TimeOnly timeOnly) -> Hazelcast.Models.HLocalTime
-static Hazelcast.Models.HLocalTime.explicit operator System.TimeOnly(Hazelcast.Models.HLocalTime localTime) -> System.TimeOnly
