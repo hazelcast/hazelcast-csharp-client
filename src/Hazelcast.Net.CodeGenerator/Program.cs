@@ -19,6 +19,7 @@ using Hazelcast.CodeGenerator;
 var slnPath = Directory.GetCurrentDirectory();
 while (Path.GetFileName(slnPath) != "src") slnPath = Path.GetDirectoryName(slnPath);
 slnPath = Path.GetDirectoryName(slnPath);
+if (slnPath == null) throw new Exception("Could not determine solution path.");
 Console.WriteLine($"SolutionPath: {slnPath}");
 
 var fileEditor = new FileEditor(slnPath);

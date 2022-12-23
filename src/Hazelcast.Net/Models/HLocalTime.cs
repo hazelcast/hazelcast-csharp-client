@@ -93,12 +93,12 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the smallest possible value of a <see cref="HLocalTime"/>.
         /// </summary>
-        public static readonly HLocalTime Min = new HLocalTime(0, 0, 0, 0);
+        public static readonly HLocalTime Min = new(0, 0, 0, 0);
 
         /// <summary>
         /// Gets the largest possible value of a <see cref="HLocalTime"/>.
         /// </summary>
-        public static readonly HLocalTime Max = new HLocalTime(23, 59, 59, 999_999_999);
+        public static readonly HLocalTime Max = new(23, 59, 59, 999_999_999);
         
         /// <summary>
         /// Gets a value that represents midnight, i.e. "00:00:00".
@@ -108,7 +108,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets a value that represents noon, i.e. "12:00:00".
         /// </summary>
-        public static readonly HLocalTime Noon = new HLocalTime(12, 0, 0, 0);
+        public static readonly HLocalTime Noon = new(12, 0, 0, 0);
 
         /// <summary>
         /// Gets the hour value.
@@ -134,7 +134,7 @@ namespace Hazelcast.Models
         /// Converts the value of this <see cref="HLocalTime"/> to its <see cref="TimeSpan"/> equivalent.
         /// </summary>
         /// <returns>The <see cref="TimeSpan"/> representation of this instance.</returns>
-        public TimeSpan ToTimeSpan() => new TimeSpan(0, Hour, Minute, Second, Nanosecond / 1000);
+        public TimeSpan ToTimeSpan() => new(0, Hour, Minute, Second, Nanosecond / 1000);
 
 #if NET6_0_OR_GREATER
         public TimeOnly ToTimeOnly() => new TimeOnly(Hour, Minute, Second, Nanosecond / 1000);
@@ -148,12 +148,12 @@ namespace Hazelcast.Models
         /// <summary>
         /// Implements the <see cref="TimeSpan"/> to <see cref="HLocalTime"/> conversion.
         /// </summary>
-        public static explicit operator HLocalTime(TimeSpan timeSpan) => new HLocalTime(timeSpan);
+        public static explicit operator HLocalTime(TimeSpan timeSpan) => new(timeSpan);
         
         /// <summary>
         /// Implements the <see cref="DateTime"/> to <see cref="HLocalTime"/> conversion.
         /// </summary>
-        public static explicit operator HLocalTime(DateTime dateTime) => new HLocalTime(dateTime);
+        public static explicit operator HLocalTime(DateTime dateTime) => new(dateTime);
 
 #if NET6_0_OR_GREATER
         /// <summary>

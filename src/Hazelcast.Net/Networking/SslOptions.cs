@@ -117,9 +117,15 @@ namespace Hazelcast.Networking
                 {
                     SslProtocols.None => value,
 #pragma warning disable CA5397 // Do not use deprecated SslProtocols values - but, we still support them
+#if NET7_0_OR_GREATER
+#pragma warning disable SYSLIB0039 // Required for .NET 7
+#endif
                     SslProtocols.Tls => value,
                     SslProtocols.Tls11 => value,
 #pragma warning restore CA5397
+#if NET7_0_OR_GREATER
+#pragma warning restore SYSLIB0039
+#endif
 #pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
                     SslProtocols.Tls12 => value,
 #pragma warning restore CA5398

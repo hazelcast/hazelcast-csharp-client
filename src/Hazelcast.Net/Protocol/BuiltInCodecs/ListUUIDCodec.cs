@@ -24,11 +24,12 @@ namespace Hazelcast.Protocol.BuiltInCodecs
     {
         public static void Encode(ClientMessage clientMessage, IEnumerable<Guid> collection)
         {
-            var itemCount = collection.Count();
+            var items = collection.ToList();
+            var itemCount = items.Count;
             var frame = new Frame(new byte[itemCount * BytesExtensions.SizeOfCodecGuid]);
 
             var i = 0;
-            foreach (var guid in collection)
+            foreach (var guid in items)
             {
                 frame.Bytes.WriteGuidL(i * BytesExtensions.SizeOfCodecGuid, guid);
                 i++;

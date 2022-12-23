@@ -290,7 +290,7 @@ namespace Hazelcast.Core
         private static async Task WaitAsync(this Task task, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<bool>();
-            using (new Timer(s => ((TaskCompletionSource<bool>)s).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
+            using (new Timer(s => ((TaskCompletionSource<bool>)s!).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
             {
                 await (await Task.WhenAny(task, tcs.Task).ConfigureAwait(false)).ConfigureAwait(false);
             }
@@ -299,7 +299,7 @@ namespace Hazelcast.Core
         private static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<TResult>();
-            using (new Timer(s => ((TaskCompletionSource<bool>)s).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
+            using (new Timer(s => ((TaskCompletionSource<bool>)s!).TrySetException(new TimeoutException()), tcs, timeout, Timeout.InfiniteTimeSpan))
             {
                 return await (await Task.WhenAny(task, tcs.Task).ConfigureAwait(false)).ConfigureAwait(false);
             }

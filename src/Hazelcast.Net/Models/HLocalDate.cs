@@ -29,7 +29,7 @@ namespace Hazelcast.Models
     /// </remarks>
     public readonly struct HLocalDate : IEquatable<HLocalDate>
     {
-        private static readonly Regex ParseRegex = new Regex(
+        private static readonly Regex ParseRegex = new(
             @"^(?'year'-?\d+)-(?'month'\d+)-(?'day'\d+)$",
             RegexOptions.Compiled | RegexOptions.ExplicitCapture
         );
@@ -89,12 +89,12 @@ namespace Hazelcast.Models
         /// <summary>
         /// Gets the largest possible value of a <see cref="HLocalDate"/>.
         /// </summary>
-        public static readonly HLocalDate Max = new HLocalDate(MinYear, 12, 31);
+        public static readonly HLocalDate Max = new(MinYear, 12, 31);
         
         /// <summary>
         /// Gets the smallest possible value of a <see cref="HLocalDate"/>.
         /// </summary>
-        public static readonly HLocalDate Min = new HLocalDate(MaxYear, 1, 1);
+        public static readonly HLocalDate Min = new(MaxYear, 1, 1);
 
         /// <summary>
         /// Gets the year value.
@@ -115,7 +115,7 @@ namespace Hazelcast.Models
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateTime"/> equivalent.
         /// </summary>
         /// <returns>The <see cref="DateTime"/> representation of this instance.</returns>
-        public DateTime ToDateTime() => new DateTime(Year, Month, Day, 0, 0, 0, DateTimeKind.Local);
+        public DateTime ToDateTime() => new(Year, Month, Day, 0, 0, 0, DateTimeKind.Local);
 
         /// <summary>
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateTime"/> equivalent.
@@ -140,7 +140,7 @@ namespace Hazelcast.Models
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
         /// </summary>
         /// <returns>The <see cref="DateOnly"/> representation of this instance.</returns>
-        public DateOnly ToDateOnly() => new DateOnly(Year, Month, Day);
+        public DateOnly ToDateOnly() => new(Year, Month, Day);
 
         /// <summary>
         /// Converts the value of this <see cref="HLocalDate"/> to its <see cref="DateOnly"/> equivalent.
@@ -153,7 +153,7 @@ namespace Hazelcast.Models
         {
             dateOnly = default;
 
-            if (Year < 1 || Year > 9999)
+            if (Year is < 1 or > 9999)
                 return false;
 
             dateOnly = ToDateOnly();
@@ -169,7 +169,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Implements the <see cref="DateTime"/> to <see cref="HLocalDate"/> conversion.
         /// </summary>
-        public static explicit operator HLocalDate(DateTime dateTime) => new HLocalDate(dateTime);
+        public static explicit operator HLocalDate(DateTime dateTime) => new(dateTime);
 
 #if NET6_0_OR_GREATER
         /// <summary>
@@ -180,7 +180,7 @@ namespace Hazelcast.Models
         /// <summary>
         /// Implements the <see cref="DateOnly"/> to <see cref="HLocalDate"/> conversion.
         /// </summary>
-        public static explicit operator HLocalDate(DateOnly dateOnly) => new HLocalDate(dateOnly);
+        public static explicit operator HLocalDate(DateOnly dateOnly) => new(dateOnly);
 #endif
         
         /// <inheritdoc />
