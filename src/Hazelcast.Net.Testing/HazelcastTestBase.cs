@@ -25,7 +25,7 @@ namespace Hazelcast.Testing
     public abstract class HazelcastTestBase : ObservingTestBase
     {
         private static readonly ISequence<int> UniqueNameSequence = new Int32Sequence();
-        private static readonly string UniqueNamePrefix = DateTime.Now.ToString("HHmmss_");
+        private static readonly string UniqueNamePrefix = "x_" + DateTime.Now.ToString("HHmmss_");
 
         [OneTimeSetUp]
         public void HazelcastTestBaseOneTimeRootSetUp()

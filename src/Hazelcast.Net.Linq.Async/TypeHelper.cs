@@ -25,7 +25,7 @@ namespace Hazelcast.Linq
             switch (member.MemberType)
             {
                 case MemberTypes.Event:
-                    return ((EventInfo)member).EventHandlerType;
+                    return ((EventInfo)member).EventHandlerType ?? throw new ArgumentException("EventInfo.EventHandlerType is null.", nameof(member));
                 case MemberTypes.Field:
                     return ((FieldInfo)member).FieldType;
                 case MemberTypes.Method:

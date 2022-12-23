@@ -30,6 +30,50 @@ namespace Hazelcast.Tests.Serialization.Compact
     [ServerCondition("[5.2,)")]
     public class FingerprintTests : SingleMemberClientRemoteTestBase
     {
+        [TestCase("a,b,c")]
+        [TestCase("A,b,c")]
+        [TestCase("I,b,c")]
+        [TestCase("I,ô,c")]
+        [TestCase("I,$,c,_,e45,F34,é,ç,à")]
+        [TestCase("É,Ç,À,é,ç,à")]
+        public async Task CanOrderSameAsJava(string valuesString)
+        {
+            const string scriptTemplate = @"
+// import types
+var Comparator = Java.type(""java.util.Comparator"")
+
+// Java generic are magic, just ignore them
+var ArrayList = Java.type(""java.util.ArrayList"")
+
+function f(x) { return x }
+
+// create a schema & fingerprint it
+var values = new ArrayList()
+$$VALUES$$
+var comparator = Comparator.comparing(f);
+values.sort(comparator);
+result = """" + values // as a string
+";
+            var values = valuesString.Split(',').Select(x => x.Trim()).ToList();
+            var script = scriptTemplate.Replace("$$VALUES$$", string.Join("\n", values.Select(x => $"values.add(\"{x}\")")));
+            var response = await RcClient.ExecuteOnControllerAsync(RcCluster.Id, script, Lang.JAVASCRIPT);
+            Assert.That(response.Success, $"message: {response.Message}");
+            Assert.That(response.Result, Is.Not.Null);
+            var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length).Trim();
+            var resultValues = resultString.TrimStart('[').TrimEnd(']').Split(',').Select(x => x.Trim()).ToList();
+
+            // Ordinal is what works, InvariantCulture does not work, even for the most basic cases
+            // e.g. Java "I, b, c" is "b, c, I" for dotnet
+            var dotnetValues = values.OrderBy(x => x, StringComparer.Ordinal).ToList();
+
+            Assert.That(resultValues.Count, Is.EqualTo(values.Count));
+            Assert.That(dotnetValues.Count, Is.EqualTo(values.Count));
+            Console.WriteLine($"Java:   {string.Join(",", resultValues)}");
+            Console.WriteLine($"Dotnet: {string.Join(",", dotnetValues)}");
+            for (var i = 0; i < values.Count; i++)
+                Assert.That(resultValues[i], Is.EqualTo(dotnetValues[i]));
+        }
+
         [Test]
         public void CannotFingerprintNullString()
         {
@@ -110,6 +154,39 @@ result = """" + fingerprint
                     .WithField("value", FieldKind.Int32)
                     .Build(),
                 "name,STRING;value,INT32"
+            };
+
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("Trade")
+                    .WithField("ID", FieldKind.Int32)
+                    .WithField("action", FieldKind.String)
+                    .WithField("sourceTradeId", FieldKind.String)
+                    .Build(),
+                "ID,INT32;action,STRING;sourceTradeId,STRING"
+            };
+
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("xxx")
+                    .WithField("i", FieldKind.Int32)
+                    .WithField("b", FieldKind.String)
+                    .WithField("c", FieldKind.String)
+                    .Build(),
+                "i,INT32;b,STRING;c,STRING"
+            };
+
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("xxx")
+                    .WithField("I", FieldKind.Int32)
+                    .WithField("b", FieldKind.String)
+                    .WithField("c", FieldKind.String)
+                    .Build(),
+                "I,INT32;b,STRING;c,STRING"
             };
         }
 

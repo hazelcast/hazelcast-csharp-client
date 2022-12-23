@@ -58,7 +58,9 @@ namespace Hazelcast
 #pragma warning disable CA5350 // Do Not Use Weak Cryptographic Algorithms - well, that's what PublicKeyToken uses
             using var csp = SHA1.Create();
 #pragma warning restore CA5350 // Do Not Use Weak Cryptographic Algorithms
+#pragma warning disable CA1850 // Prefer static 'HashData' method over 'ComputeHash' - since .NET 7 TODO consider it?
             var hash = csp.ComputeHash(bytes);
+#pragma warning restore CA1850 // Prefer static 'HashData' method over 'ComputeHash'
             var text = new StringBuilder();
             for (var i = 0; i < 8; i++)
                 //token[i] = hash[^(i + 1)];

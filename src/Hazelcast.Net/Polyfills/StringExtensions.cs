@@ -18,7 +18,9 @@ namespace System
     internal static class StringExtensions
     {
         public static string TrimEnd(this string s, string trim)
+#pragma warning disable CA1310 // Specify StringComparison for correctness
             => s.EndsWith(trim) ? s.Substring(0, s.Length - trim.Length) : s;
+#pragma warning restore CA1310 // Specify StringComparison for correctness
 
 #if NETFRAMEWORK || NETSTANDARD2_0
 #pragma warning disable CA1801 // Review unused parameters - we need them

@@ -15,7 +15,6 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
@@ -240,8 +239,8 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
                 var valuesProperty = value.GetType().GetProperty("Values");
                 Verify.Condition<HazelcastException>(valuesProperty != null, "Internal error: cannot get {0}.Values property.", type);
 
-                WriteAsArray(writer, name + "!keys", keyType, keysProperty!.GetValue(value));
-                WriteAsArray(writer, name + "!values", valueType, valuesProperty!.GetValue(value));
+                WriteAsArray(writer, name + "!keys", keyType, keysProperty.GetValue(value));
+                WriteAsArray(writer, name + "!values", valueType, valuesProperty.GetValue(value));
             }
 
             return true;
@@ -532,7 +531,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
 
         // look for the constructor with most (and all) parameters matching field names (case-sensitive)
         var ctor = ctors
-            .Where(ctor => ctor.GetParameters().All(x => reader.ValidateFieldName(x.Name)))
+            .Where(ctor => ctor.GetParameters().All(x => reader.ValidateFieldName(x.Name!)))
             .OrderBy(x => x.GetParameters())
             .LastOrDefault();
 
@@ -545,7 +544,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
         ctorFields = new HashSet<string>();
         for (var i = 0; i < parameters.Length; i++)
         {
-            var fieldName = parameters[i].Name;
+            var fieldName = parameters[i].Name!;
             var fieldType = parameters[i].ParameterType;
             ctorFields.Add(fieldName);
             values[i] = GetReader(fieldType)(reader, fieldName);

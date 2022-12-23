@@ -17,7 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading;
-using Hazelcast.Core;
 
 namespace Hazelcast.Linq
 {
@@ -26,7 +25,7 @@ namespace Hazelcast.Linq
     {
         private readonly QueryProvider _queryProvider;
         private readonly Expression _expression;
-        private IAsyncEnumerator<TElement> _enumerator;
+        private IAsyncEnumerator<TElement>? _enumerator;
 
         // Called via activator at QueryProvider.
         // ReSharper disable once UnusedMember.Global

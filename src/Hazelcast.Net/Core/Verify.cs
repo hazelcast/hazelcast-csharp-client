@@ -82,7 +82,9 @@ internal static class Verify
         }
         else
         {
+#pragma warning disable CA1305 // Specify IFormatProvider - since .NET 7
             if (args.Length > 0) message = string.Format(message, args);
+#pragma warning restore CA1305 // Specify IFormatProvider
 
             var ctor = typeof(TException).GetConstructor(new[] { typeof(string) });
 

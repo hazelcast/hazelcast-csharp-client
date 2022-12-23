@@ -94,7 +94,9 @@
     <AdditionalFiles Include="PublicAPI/PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI/PublicAPI.Unshipped.txt" />
     <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
+    <AdditionalFiles Include="PublicAPI/net7.0/PublicAPI.Shipped.txt" Condition=" '$(TargetFramework)' == 'net7.0' " />
     <AdditionalFiles Include="PublicAPI/net6.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net6.0' " />
+    <AdditionalFiles Include="PublicAPI/net7.0/PublicAPI.Unshipped.txt" Condition=" '$(TargetFramework)' == 'net7.0' " />
   </ItemGroup>
 
   <ItemGroup>

@@ -25,11 +25,12 @@ namespace Hazelcast.Protocol.BuiltInCodecs
 
         public static void Encode(ClientMessage clientMessage, IEnumerable<KeyValuePair<int,long>> collection)
         {
-            var itemCount = collection.Count();
+            var items = collection.ToList();
+            var itemCount = items.Count;
 
             var frame = new Frame(new byte[itemCount * EntrySizeInBytes]);
             var i = 0;
-            foreach (var kvp in collection)
+            foreach (var kvp in items)
             {
                 frame.Bytes.WriteIntL(i * EntrySizeInBytes, kvp.Key);
                 frame.Bytes.WriteLongL(i * EntrySizeInBytes + BytesExtensions.SizeOfInt, kvp.Value);
