@@ -37,6 +37,12 @@ on:
         type: string
         default: ''
 
+      # whether this is a release build
+      release:
+        required: false
+        type: boolean
+        default: false
+
 jobs:
 
   # build and test
@@ -70,7 +76,7 @@ jobs:
 
       # validate code
       - name: Validate code
-        if: inputs.merged-ref != ''
+        if: inputs.release == 'false' && inputs.merged-ref != ''
         shell: bash
         run: |
           git rev-list --parents -n 1 HEAD | grep -q ${{ inputs.merged-ref }}
@@ -82,11 +88,43 @@ jobs:
             exit 1
           fi
 
+      # verify the code version (release only)
+      - name: Verify the code version
+        if: inputs.release == 'true'
+        shell: pwsh
+        run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
+
+      # obtain the snk file required to sign assemblies (release only)
+      # the snk is avail as secrets.HAZELCAST_SNK as a Base64 string
+      - name: Obtain assembly signature key
+        if: inputs.release == 'true'
+        id: getsnk
+        shell: bash
+        run: |
+          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
+          ls -l ./build/hazelcast.snk
+
       # build
       - name: Build
         id: build
         shell: pwsh
-        run: ./hz.ps1 -localRestore build #,docs,pubdocs
+        run: |
+          $release = ("${{ inputs.release }}" -eq "true")
+          $cmd = "build"
+          if ($release) { $cmd += ",build-docs" }
+          $a = @( $cmd, "-localRestore" )
+          if ($release) { 
+            $a += "-sign"
+            $a += "-repro"
+          }
+          ./hz.ps1 @a
+
+      # clear the snk file (release only)
+      - name: Clear assembly signature key
+        if: (success() || failure()) && steps.getsnk.conclusion == 'success'
+        shell: bash
+        run: |
+          if [ -f ./build/hazelcast.snk ]; then rm ./build/hazelcast.snk; fi
 
       # test (with coverage)
       # -enterprise only if the key is available, we do not share it outside of the HZ org
@@ -97,8 +135,11 @@ jobs:
           GITHUB_TOKEN_DEVOPS: ${{ secrets.HAZELCAST_GITHUB_TOKEN_DEVOPS }}
         shell: pwsh
         run: |
+          $release = ("${{ inputs.release }}" -eq "true")
+          $cmd = "test"
+          if ($release) { $cmd += ",cover-to-docs" }
           $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
-          if (-not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
+          if ($release -or -not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
             if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
               $a += $env:GITHUB_TOKEN_DEVOPS
@@ -126,3 +167,56 @@ jobs:
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
+
+
+
+      # and then, everything below is for releases only
+
+
+      # create nuget packages
+      - name: Pack NuGet packages
+        if: inputs.release == 'true'
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore pack-nuget
+
+      # upload nuget packages
+      - name: Upload NuGet packages artifact
+        if: inputs.release == 'true'
+        uses: actions/upload-artifact@v3
+        with:
+          name: NuGet-Packages (${{ matrix.os }})
+          path: './temp/output/Hazelcast.Net.*pkg'
+
+      # publish examples (inc. soak tests) (windows only so we have framework too)
+      - name: Publish examples
+        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        shell: pwsh
+        run: ./hz.ps1 -noRestore -localRestore publish-examples
+
+      # archive examples (windows only)
+      - name: Archive examples artifact
+        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Examples
+          path: './temp/examples/*.zip'
+
+      # git the docs, create the patch
+      - name: Create docs patch
+        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
+          mkdir ./temp/gh-pages-patches >$null 2>&1
+          echo "Create git patch"
+          git -C ./temp/gh-pages format-patch -1 -o ../gh-pages-patches
+          echo "Patch files:"
+          ls ./temp/gh-pages-patches/
+
+      # archive docs patch
+      - name: Upload docs patch artifact
+        if: inputs.release == 'true' && matrix.os == 'windows-latest'
+        uses: actions/upload-artifact@v3
+        with:
+          name: Docs-Patch
+          path: './temp/gh-pages-patches/*.patch'
