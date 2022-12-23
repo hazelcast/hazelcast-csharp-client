@@ -43,6 +43,12 @@ on:
         type: boolean
         default: false
 
+      # the release version, when release is true
+      version:
+        required: false
+        type: string
+        default: ""
+
 jobs:
 
   # build and test
@@ -92,7 +98,7 @@ jobs:
       - name: Verify the code version
         if: inputs.release == true
         shell: pwsh
-        run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
+        run: ./hz.ps1 -version ${{ inputs.version }} -localRestore verify-version
 
       # obtain the snk file required to sign assemblies (release only)
       # the snk is avail as secrets.HAZELCAST_SNK as a Base64 string

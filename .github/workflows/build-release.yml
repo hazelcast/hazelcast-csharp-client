@@ -146,6 +146,7 @@ jobs:
     with:
       os: ${{ matrix.os }}
       fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
+      version: ${{ needs.analyze.outputs.version }}
       release: true
 
 
