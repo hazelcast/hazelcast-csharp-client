@@ -38,19 +38,19 @@ The SQL service provided by Hazelcast .NET client allows you to query data store
 
 ## Example: How to Query an IHMap using SQL
 
-This SQL query returns map entries whose values are more than 1:
+This SQL query returns map entries whose key are more than 2:
 
 ```csharp
 await using var map = await client.GetMapAsync<int, string>("MyMap");
 
-await client.Sql.ExecuteCommandAsync($"CREATE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')");
+await client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')");
 
-await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"{v}"));
+await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"val-{v}"));
 
-await using var result = client.Sql.ExecuteQuery($"SELECT __key, this FROM {map.Name} WHERE this > 2");
+await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name} WHERE __key > 2");
 
-await foreach (var row in result.EnumerateOnceAsync())
-    Console.WriteLine($"{row.GetKey<int>()}: {row.GetValue<string>()}");
+await foreach (var row in result)
+      Console.WriteLine($"{row.GetKey<int>()}: {row.GetValue<string>()}");
 ```
 
 > **NOTE: The column value is deserialized but NOT cached. Each column is deserialized on demand. Avoid getting the value of a column multiple times. Cache it in a local variable.**
@@ -162,7 +162,7 @@ SELECT * FROM "2map"
 `ISqlService.ExecuteQuery` returns `Hazelcast.Sql.ISqlQueryResult` which provides methods to manage current query:
 
 ```csharp
-await using var result = client.Sql.ExecuteQuery("SELECT Name, Age FROM employee");
+await using var result = await client.Sql.ExecuteQueryAsync("SELECT Name, Age FROM employee");
 ```
 
 It implements `IAsyncEnumerable<SqlRow>` as one-off stream of rows and can be enumerated via regular `foreach` cycle:
@@ -175,6 +175,7 @@ await foreach (var row in result)
 Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package. See [SqlLinqEnumerationExample](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs) as an example.
 
 > **NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.**
+> [!Warning] - Give attention that filtering and projection is done in local of client in the example. To use LINQ which runs all query on server, please see [LINQ Provider](linq.md).
 
 ### Disposing query result
 
@@ -183,7 +184,7 @@ Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing [
 Because of this, it is recommended to wrap operations with query into `await using` statement. This will ensure to send Cancel request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:
 
 ```csharp
-await using (var result = client.Sql.ExecuteQuery("SELECT * FROM MyMap"))
+await using (var result = await client.Sql.ExecuteQueryAsync("SELECT * FROM MyMap"))
 {
     //...
 }
@@ -287,7 +288,7 @@ When comparing a column with a parameter, your parameter must be of a compatible
 In the example below, Age column is of type `INTEGER`. We pass parameters as shorts (`TINYINT`) and they are automatically casted to `INTEGER` for comparison.
 
 ```csharp
-await using var result = client.Sql.ExecuteQuery(
+await using var result = await client.Sql.ExecuteQueryAsync(
     $"SELECT Name FROM {map.Name} WHERE Age > ? AND Age < ?",
     (short)20, (short)30
 );
@@ -298,7 +299,7 @@ await using var result = client.Sql.ExecuteQuery(
 In the example below, Age column is of type `INTEGER`. We pass parameters as strings (`VARCHAR`) and cast them to `INTEGER` for comparison.
 
 ```csharp
-await using var result = client.Sql.ExecuteQuery(
+await using var result = await client.Sql.ExecuteQueryAsync(
     $"SELECT Name FROM {map.Name} WHERE Age > CAST(? AS INTEGER) AND Age < CAST(? AS INTEGER)",
     "20", "30"
 );
