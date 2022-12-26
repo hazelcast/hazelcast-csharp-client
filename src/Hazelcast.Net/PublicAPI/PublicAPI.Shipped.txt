@@ -602,7 +602,6 @@ Hazelcast.HazelcastOptions.HazelcastOptions() -> void
 ~Hazelcast.HazelcastOptions.Subscribers.get -> System.Collections.Generic.IList<Hazelcast.IHazelcastClientEventSubscriber>
 Hazelcast.HazelcastOptionsBase
 Hazelcast.HazelcastOptionsBase.HazelcastOptionsBase() -> void
-~Hazelcast.HazelcastOptionsBase.ServiceProvider.get -> System.IServiceProvider
 Hazelcast.HazelcastOptionsBuilder
 Hazelcast.HazelcastOptionsBuilder.HazelcastOptionsBuilder() -> void
 ~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>
@@ -1280,10 +1279,6 @@ Hazelcast.Serialization.IPortableWriter
 ~Hazelcast.Serialization.IPortableWriter.WriteStringArray(string fieldName, string[] strings) -> void
 Hazelcast.Serialization.ISerializer
 Hazelcast.Serialization.ISerializer.TypeId.get -> int
-Hazelcast.Serialization.ISerializerHook<T>
-Hazelcast.Serialization.ISerializerHook<T>.CreateSerializer() -> Hazelcast.Serialization.ISerializer
-Hazelcast.Serialization.ISerializerHook<T>.GetSerializationType() -> System.Type
-Hazelcast.Serialization.ISerializerHook<T>.IsOverwritable() -> bool
 Hazelcast.Serialization.IStreamSerializer<T>
 ~Hazelcast.Serialization.IStreamSerializer<T>.Read(Hazelcast.Serialization.IObjectDataInput input) -> T
 ~Hazelcast.Serialization.IStreamSerializer<T>.Write(Hazelcast.Serialization.IObjectDataOutput output, T obj) -> void
@@ -1487,9 +1482,6 @@ static Hazelcast.Core.EndiannessExtensions.NativeEndianness.get -> Hazelcast.Cor
 ~static Hazelcast.Core.SerializationInfoExtensions.GetGuid(this System.Runtime.Serialization.SerializationInfo info, string name) -> System.Guid
 ~static Hazelcast.Core.ServiceFactory.CreateInstance(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
 ~static Hazelcast.Core.ServiceFactory.CreateInstance(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> object
-static Hazelcast.Core.ServiceFactory.CreateInstance<T>(string typeName, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
-static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
-static Hazelcast.Core.ServiceFactory.CreateInstance<T>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> T
 ~static Hazelcast.HazelcastClientFactory.GetNewStartingClient(Hazelcast.HazelcastOptions options, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
 ~static Hazelcast.HazelcastClientFactory.GetNewStartingClient(System.Action<Hazelcast.HazelcastOptions> configure, System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
 static Hazelcast.HazelcastClientFactory.GetNewStartingClient(System.Threading.CancellationToken cancellationToken = default(System.Threading.CancellationToken)) -> Hazelcast.HazelcastClientStart
@@ -1527,8 +1519,6 @@ static Hazelcast.Models.HLocalTime.operator !=(Hazelcast.Models.HLocalTime left,
 static Hazelcast.Models.HLocalTime.operator ==(Hazelcast.Models.HLocalTime left, Hazelcast.Models.HLocalTime right) -> bool
 static Hazelcast.Models.HLocalTime.Parse(string! s) -> Hazelcast.Models.HLocalTime
 static Hazelcast.Models.HLocalTime.TryParse(string! s, out Hazelcast.Models.HLocalTime localTime) -> bool
-static Hazelcast.Models.HOffsetDateTime.explicit operator Hazelcast.Models.HOffsetDateTime(System.DateTimeOffset dateTimeOffset) -> Hazelcast.Models.HOffsetDateTime
-static Hazelcast.Models.HOffsetDateTime.explicit operator System.DateTimeOffset(Hazelcast.Models.HOffsetDateTime offsetDateTime) -> System.DateTimeOffset
 static Hazelcast.Models.HOffsetDateTime.operator !=(Hazelcast.Models.HOffsetDateTime left, Hazelcast.Models.HOffsetDateTime right) -> bool
 static Hazelcast.Models.HOffsetDateTime.operator ==(Hazelcast.Models.HOffsetDateTime left, Hazelcast.Models.HOffsetDateTime right) -> bool
 static Hazelcast.Models.HOffsetDateTime.Parse(string! s) -> Hazelcast.Models.HOffsetDateTime

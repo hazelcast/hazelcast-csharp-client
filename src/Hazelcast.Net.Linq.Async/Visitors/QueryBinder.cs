@@ -33,7 +33,7 @@ namespace Hazelcast.Linq.Visitors
         private Dictionary<ParameterExpression, Expression> _map;
         private int _aliasCount;
         private const BindingFlags bindingFlags = BindingFlags.Public | BindingFlags.Instance;
-        private Type _rootType;
+        private Type? _rootType;
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public QueryBinder()

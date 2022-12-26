@@ -119,13 +119,21 @@ jobs:
 
 
 
+# get frameworks
+  get-fwks:
+    name: Get Frameworks
+    needs: analyze
+    uses: ./.github/workflows/get-frameworks.yml
+    secrets: inherit
+
+
+
   # build and test the release
   build-release:
 
-    name: Build Release (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    name: Build Release / ${{ matrix.os }}
 
-    needs: analyze
+    needs: [ analyze, get-fwks ]
     if: needs.analyze.outputs.todo != 'nothing'
 
     strategy:
@@ -133,149 +141,13 @@ jobs:
       matrix:
         os: [ ubuntu-latest, windows-latest ]
 
-    steps:
-
-      # checkout the hazelcast/hazelcast-csharp-client repository
-      # including all submodules, we are going to need them
-      - name: Checkout code
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          submodules: true
-
-      # Install our environment
-      - name: Install environment
-        uses: ./.github/actions/install
-        with:
-          os: ${{ inputs.os }}
-          dotnet: true
-          java: true
-
-      # configure Git so that we can commit
-      - name: Configure repository
-        shell: bash
-        run: |
-          git config user.email "github-actions@hazelcast.com"
-          git config user.name "GitHub Actions"
-          dotnet --version
-
-      # verify the code version
-      - name: Verify the code version
-        shell: pwsh
-        run: ./hz.ps1 -version ${{ needs.analyze.outputs.version }} -localRestore verify-version
-
-      # obtain the snk file required to sign assemblies
-      # the snk is avail as secrets.HAZELCAST_SNK as a Base64 string
-      - name: Obtain assembly signature key
-        id: getsnk
-        shell: bash
-        run: |
-          echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
-          ls -l ./build/hazelcast.snk
-
-      # build signed and reproducible assemblies + docs (skipped on Linux)
-      - name: Build
-        id: build
-        shell: pwsh
-        run: ./hz.ps1 -localRestore -sign -repro build,build-docs
-
-      # clear the snk file
-      - name: Clear assembly signature key
-        if: (success() || failure()) && steps.getsnk.conclusion == 'success'
-        shell: bash
-        run: |
-          if [ -f ./build/hazelcast.snk ]; then rm ./build/hazelcast.snk; fi
-
-      # test (with coverage)
-      - name: Test
-        id: test
-        env:
-          HAZELCAST_ENTERPRISE_KEY: ${{ secrets.HAZELCAST_ENTERPRISE_KEY }}
-        shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore -cover -enterprise test,cover-to-docs
-
-      # report tests results
-      - name: Report tests results
-        uses: dorny/test-reporter@v1
-        if: (success() || failure()) && steps.build.conclusion == 'success'
-        with:
-          name: Test Results (${{ matrix.os }})
-          path: temp/tests/results/results-*.trx
-          reporter: dotnet-trx
-          list-suites: failed
-          list-tests: failed
-          fail-on-error: false
-
-      # report tests coverage
-      # same note as above
-      - name: Report tests coverage
-        uses: ./.github/actions/dotcover-report
-        with:
-          name: Test Coverage (${{ matrix.os }})
-          path: temp/tests/cover
-          version: ${{ needs.analyze.outputs.version }}
-          sha: ${{ github.sha }}
-
-      # upload test results artifact
-      - name: Upload test results artifact
-        if: (success() || failure()) && steps.build.conclusion == 'success'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Results (${{ matrix.os }})
-          path: './temp/tests/results/*.trx'
-
-      # upload test coverage artifact
-      - name: Upload test coverage artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: Test-Coverage (${{ matrix.os }})
-          path: './temp/tests/cover/' # entire directory
-
-      # create nuget packages
-      - name: Pack NuGet packages
-        shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore pack-nuget
-
-      # upload nuget packages
-      - name: Upload NuGet packages artifact
-        uses: actions/upload-artifact@v2
-        with:
-          name: NuGet-Packages (${{ matrix.os }})
-          path: './temp/output/Hazelcast.Net.*pkg'
-
-      # publish examples (inc. soak tests) (windows only so we have framework too)
-      - name: Publish examples
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: ./hz.ps1 -noRestore -localRestore publish-examples
-
-      # archive examples (windows only)
-      - name: Archive examples artifact
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Examples
-          path: './temp/examples/*.zip'
-
-      # git the docs, create the patch
-      - name: Create docs patch
-        if: matrix.os == 'windows-latest'
-        shell: pwsh
-        run: |
-          ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
-          mkdir ./temp/gh-pages-patches >$null 2>&1
-          echo "Create git patch"
-          git -C ./temp/gh-pages format-patch -1 -o ../gh-pages-patches
-          echo "Patch files:"
-          ls ./temp/gh-pages-patches/
-
-      # archive docs patch
-      - name: Upload docs patch artifact
-        if: matrix.os == 'windows-latest'
-        uses: actions/upload-artifact@v2
-        with:
-          name: Docs-Patch
-          path: './temp/gh-pages-patches/*.patch'
+    uses: ./.github/workflows/build-and-test.yml
+    secrets: inherit
+    with:
+      os: ${{ matrix.os }}
+      fwks: ${{ needs.get-fwks.outputs[format('fwks-{0}', matrix.os)] }}
+      version: ${{ needs.analyze.outputs.version }}
+      release: true
 
 
 
