@@ -55,7 +55,7 @@ jobs:
           if($isW){
              $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
              echo $arr[-1]
-             echo "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
+             "LATEST_FRAMEWORK={0}" -f $arr[-1] >> $env:GITHUB_ENV
           }
           else{
              echo "LATEST_FRAMEWORK=NA" >> $env:GITHUB_ENV
