@@ -51,8 +51,8 @@ jobs:
       - name: Detect Latest Framework
         shell: pwsh
         run: |
-        $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
-        "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
+          $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
+          "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
 
       # get frameworks
       - name: Get Frameworks
