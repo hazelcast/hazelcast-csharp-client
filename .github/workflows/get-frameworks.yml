@@ -47,6 +47,12 @@ jobs:
           os: ${{ inputs.os }}
           dotnet: false
           java: false
+      
+      - name: Detect Latest Framework
+        shell: pwsh
+        run: |
+        $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
+        "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
 
       # get frameworks
       - name: Get Frameworks
@@ -54,5 +60,6 @@ jobs:
         shell: bash
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
-          echo "fwks-${{ matrix.os }}=$FWKS"
+          echo "fwks-${{ matrix.os }}=$FWKS"          
           echo "fwks-${{ matrix.os }}=$FWKS" >> $GITHUB_OUTPUT
+          

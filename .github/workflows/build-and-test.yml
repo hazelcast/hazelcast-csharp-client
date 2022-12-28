@@ -179,16 +179,19 @@ jobs:
       # and then, everything below is for releases only
       # and need only be done on 1 environment (windows-latest + latest fwk)
 
+      - name: Detect Latest Framework
+        shell: pwsh
+        run: $env:LATEST_FRAMEWORK= ./hz.ps1   
 
       # create nuget packages
       - name: Pack NuGet packages
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
       - name: Upload NuGet packages artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         uses: actions/upload-artifact@v3
         with:
           name: NuGet-Packages (${{ matrix.os }})
@@ -196,13 +199,13 @@ jobs:
 
       # publish examples (inc. soak tests) (windows only so we have framework too)
       - name: Publish examples
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore publish-examples
 
       # archive examples (windows only)
       - name: Archive examples artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         uses: actions/upload-artifact@v3
         with:
           name: Examples
@@ -210,7 +213,7 @@ jobs:
 
       # git the docs, create the patch
       - name: Create docs patch
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         shell: pwsh
         run: |
           ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
@@ -222,7 +225,7 @@ jobs:
 
       # archive docs patch
       - name: Upload docs patch artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == $LATEST_FRAMEWORK
         uses: actions/upload-artifact@v3
         with:
           name: Docs-Patch
