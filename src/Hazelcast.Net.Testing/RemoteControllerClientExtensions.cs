@@ -235,8 +235,13 @@ namespace Hazelcast.Testing
             if (result == null) return default;
             var resultString = Encoding.UTF8.GetString(result);
             var resultValues = resultString.Split(',');
-            var ossVersion = resultValues.Length > 0 ? NuGetVersion.Parse(resultValues[0]) : null;
-            var enterpriseVersion = resultValues.Length > 1 ? NuGetVersion.Parse(resultValues[1]) : null;
+            
+            NuGetVersion ossVersion = null;
+            NuGetVersion enterpriseVersion = null;
+            
+            if(resultValues.Length > 0) NuGetVersion.TryParseStrict(resultValues[0], out ossVersion);
+            if(resultValues.Length > 1) NuGetVersion.TryParseStrict(resultValues[1], out enterpriseVersion);
+            
             return (ossVersion, enterpriseVersion);
         }
     }
