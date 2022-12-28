@@ -174,14 +174,8 @@ jobs:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
 
-
-
       # and then, everything below is for releases only
-      # and need only be done on 1 environment (windows-latest + latest fwk)
-
-      - name: Detect Latest Framework
-        shell: pwsh
-        run: $env:LATEST_FRAMEWORK= ./hz.ps1   
+      # and need only be done on 1 environment (windows-latest + latest fwk) 
 
       # create nuget packages
       - name: Pack NuGet packages
