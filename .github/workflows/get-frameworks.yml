@@ -51,8 +51,8 @@ jobs:
       - name: Detect Latest Framework
         shell: pwsh
         run: |
-          $isWindows = ("${{ matrix.os }}" -eq "windows-latest")
-          if($isWindows){
+          $isW = ("${{ matrix.os }}" -eq "windows-latest")
+          if($isW){
              $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
              echo $arr[-1]
              echo "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
