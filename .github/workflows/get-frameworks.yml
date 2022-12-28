@@ -52,11 +52,12 @@ jobs:
         shell: pwsh
         run: |
           $isWindows = ("${{ matrix.os }}" -eq "windows-latest")
-          if($isWindows){}
+          if($isWindows){
              $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
              echo $arr[-1]
              echo "LATEST_FRAMEWORK=$arr[-1]" >> $env:GITHUB_ENV
-          }else{
+          }
+          else{
              echo "LATEST_FRAMEWORK=NA" >> $env:GITHUB_ENV
           }
 
