@@ -32,6 +32,8 @@ namespace Hazelcast.Tests.Linq
     [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class LinqTests : SingleMemberClientRemoteTestBase
     {
+        protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
+
         public class Person
         {
             public int Id { get; set; }
