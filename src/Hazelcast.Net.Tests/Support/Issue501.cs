@@ -33,6 +33,8 @@ namespace Hazelcast.Tests.Support
         protected override ILoggerFactory CreateLoggerFactory() =>
             Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddHConsole());
 
+        protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
+
         [TestCase(true)]
         [TestCase(false)]
         [Timeout(20_000)]

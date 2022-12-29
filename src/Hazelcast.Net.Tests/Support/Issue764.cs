@@ -34,6 +34,7 @@ namespace Hazelcast.Tests.Support;
 [TestFixture]
 public class Issue764 : SingleMemberClientRemoteTestBase
 {
+    protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
     protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
     {
         return base.CreateHazelcastOptionsBuilder()
