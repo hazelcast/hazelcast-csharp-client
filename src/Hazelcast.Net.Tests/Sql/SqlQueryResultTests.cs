@@ -32,7 +32,8 @@ namespace Hazelcast.Tests.Sql
     [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlQueryResultTests : SqlTestBase
     {
-
+        protected override bool EnableJet => true;
+        
         [Test]
         public async Task EnumerateAfterDisposeThrows()
         {
