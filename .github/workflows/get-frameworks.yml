@@ -48,26 +48,12 @@ jobs:
           dotnet: false
           java: false
       
-      - name: Detect Latest Framework
-        shell: pwsh
-        run: |
-          $isW = ("${{ matrix.os }}" -eq "windows-latest")
-          if($isW){
-             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
-             $arr[-1]
-             "LATEST_FRAMEWORK={0}" -f $arr[-1] >> $env:GITHUB_ENV
-          }
-          else{
-             "LATEST_FRAMEWORK=NA" >> $env:GITHUB_ENV
-          }
-
       # get frameworks
       - name: Get Frameworks
         id: get-fwks
         shell: bash
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
-          echo ${{ env.LATEST_FRAMEWORK }}
           echo "fwks-${{ matrix.os }}=$FWKS"          
           echo "fwks-${{ matrix.os }}=$FWKS" >> $GITHUB_OUTPUT
           
