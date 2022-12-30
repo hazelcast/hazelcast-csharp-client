@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Support;
 
 
 [TestFixture]
-[ServerCondition("[5.0,)")] // only on server 5.0 and above
+[ServerCondition("[5.2,)")] // only on server 5.2 and above
 public class Issue764 : SingleMemberClientRemoteTestBase
 {
     protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
