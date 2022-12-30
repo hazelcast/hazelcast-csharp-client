@@ -110,6 +110,19 @@ jobs:
           echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
           ls -l ./build/hazelcast.snk
 
+      - name: Detect Latest Framework
+        shell: pwsh
+        run: |
+          $isW = ("${{ matrix.os }}" -eq "windows-latest")
+          if($isW){
+             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
+             $arr[-1]
+             "LATEST_FRAMEWORK={0}" -f $arr[-1] >> $env:GITHUB_ENV
+          }
+          else{
+             "LATEST_FRAMEWORK=NA" >> $env:GITHUB_ENV
+          }
+
       # build
       - name: Build
         id: build
