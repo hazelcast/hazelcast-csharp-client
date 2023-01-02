@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ namespace Hazelcast.Tests.Sql
     [ServerCondition("[5.0,)")] // only on server 5.0 and above
     public class SqlJetTests : SqlTestBase
     {
+        protected override bool EnableJet => true;
+
         [Test]
         public async Task GenerateSeries()
         {
