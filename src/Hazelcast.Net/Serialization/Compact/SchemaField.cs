@@ -51,16 +51,16 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Gets the index of the reference-type field.
         /// </summary>
-        internal int Index { get; set; }
+        internal int Index { get; set; } = -1;
 
         /// <summary>
         /// Gets the offset of the value-type field.
         /// </summary>
-        internal int Offset { get; set; }
+        internal int Offset { get; set; } = -1;
 
         /// <summary>
         /// Gets the bit-offset of the boolean value-type field.
         /// </summary>
-        internal byte BitOffset { get; set; }
+        internal sbyte BitOffset { get; set; } = -1;
     }
 }

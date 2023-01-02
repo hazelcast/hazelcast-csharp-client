@@ -162,9 +162,9 @@ namespace Hazelcast.Serialization.Compact
             {
                 // value fields come first, ordered by size DESC then by name ASC
                 var fields = valueFields
-                    .Select(x => (x, x.Kind.GetValueTypeSize()))
-                    .OrderByDescending(x => x.Item2)
-                    .ThenBy(x => x.Item1.FieldName);
+                    .Select(x => (Field: x, Size: x.Kind.GetValueTypeSize()))
+                    .OrderByDescending(x => x.Size)
+                    .ThenBy(x => x.Field.FieldName, StringComparer.Ordinal);
                 foreach (var (field, size) in fields)
                 {
                     field.Offset = offset;
@@ -175,8 +175,8 @@ namespace Hazelcast.Serialization.Compact
             if (booleanFields != null)
             {
                 // boolean fields come next, ordered by name ASC
-                byte bitOffset = 0;
-                var fields = booleanFields.OrderBy(x => x.FieldName);
+                sbyte bitOffset = 0;
+                var fields = booleanFields.OrderBy(x => x.FieldName, StringComparer.Ordinal);
                 foreach (var field in fields)
                 {
                     field.Offset = offset;
@@ -196,7 +196,7 @@ namespace Hazelcast.Serialization.Compact
             {
                 // reference fields come last, ordered by name ASC
                 var index = 0;
-                var fields = referenceFields.OrderBy(x => x.FieldName);
+                var fields = referenceFields.OrderBy(x => x.FieldName, StringComparer.Ordinal);
                 foreach (var field in fields)
                 {
                     field.Index = index++;
