@@ -53,14 +53,17 @@ namespace Hazelcast.Tests.Models
             if (decimal.TryParse(stringValue, NumberStyles.Float, Culture, out var decimalValue)
                 && decimalValue.ToString(Culture) == stringValue) // parsed and no value loss
             {
-                var refBigDecimalVal = new HBigDecimal(13);
                 Assert.AreEqual(decimalValue, (decimal)bigDecimalValue);
                 Assert.AreEqual((HBigDecimal)decimalValue, bigDecimalValue);
                 Assert.AreEqual(decimalValue.ToString(Culture), bigDecimalValue.ToString(Culture));
-                Assert.True(bigDecimalValue != refBigDecimalVal);
+
+                var otherBigDecimalValue = new HBigDecimal(13); // random different value
+                Assert.True(bigDecimalValue != otherBigDecimalValue);
+#pragma warning disable CS1718 // Comparison made to same variable
                 // ReSharper disable once EqualExpressionComparison
                 Assert.True(bigDecimalValue == bigDecimalValue);
-                Assert.True(HBigDecimal.TryParse(stringValue, out var _));
+#pragma warning restore CS1718 // Comparison made to same variable
+                Assert.True(HBigDecimal.TryParse(stringValue, Culture, out _));
             }
             else
             {
