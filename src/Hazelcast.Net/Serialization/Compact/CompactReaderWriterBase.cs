@@ -87,7 +87,7 @@ namespace Hazelcast.Serialization.Compact
             throw new SerializationException($"Invalid kind \"{kind}\" for field \"{name}\" of schema {Schema}, which is of kind \"{field.Kind}\".");
         }
 
-        protected (int, byte) GetBooleanFieldPosition(string name)
+        protected (int, sbyte) GetBooleanFieldPosition(string name)
         {
             var field = GetValidField(name, FieldKind.Boolean);
             return (DataStartPosition + field.Offset, field.BitOffset);
