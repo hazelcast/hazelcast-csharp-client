@@ -29,7 +29,7 @@ namespace Hazelcast.Tests.Linq
     /// Tests the IHMap using LINQ APIs. It focuses the results mainly.
     /// For query tests, please see other linq test suites.
     /// </summary>
-    [ServerCondition("[5.0,)")] // only on server 5.0 and above
+    [ServerCondition("[5.2,)")] // only on server 5.2 and above
     public class LinqTests : SingleMemberClientRemoteTestBase
     {
         public class Person

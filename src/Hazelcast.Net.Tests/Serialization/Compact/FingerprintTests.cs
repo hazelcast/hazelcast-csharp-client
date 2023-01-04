@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
@@ -188,12 +189,34 @@ result = """" + fingerprint
                     .Build(),
                 "I,INT32;b,STRING;c,STRING"
             };
+
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("xxx")
+                    .WithField("a", FieldKind.String)
+                    .WithField("b", FieldKind.String)
+                    .WithField("c", FieldKind.String)
+                    .Build(),
+                "a,STRING;b,STRING;c,STRING"
+            };
+
+            yield return new object[]
+            {
+                SchemaBuilder
+                    .For("xxx")
+                    .WithField("I", FieldKind.String)
+                    .WithField("b", FieldKind.String)
+                    .WithField("c", FieldKind.String)
+                    .Build(),
+                "I,STRING;b,STRING;c,STRING"
+            };
         }
 
         [TestCaseSource(nameof(CanFingerprintSchemaSameAsJavaSource))]
         public async Task CanFingerprintSchemaSameAsJava(object schemaObject, string javaFields)
         {
-            var schema = schemaObject as Schema;
+            var schema = schemaObject.MustBe<Schema>();
 
             const string scriptTemplate = @"
 // import types
@@ -209,6 +232,10 @@ var fields = new ArrayList()
 $$FIELDS$$
 var schema = new Schema(""$$TYPENAME$$"", fields)
 result = """" + schema.getSchemaId() // as a string
+result += ""|""
+for each (var fd in schema.getFields()) {
+  result += fd.getFieldName() + "","" + fd.getOffset() + "","" + fd.getIndex() + "";""
+}
 ";
             
             var fingerprint = schema.Id;
@@ -230,9 +257,32 @@ result = """" + schema.getSchemaId() // as a string
             var resultString = Encoding.UTF8.GetString(response.Result, 0, response.Result.Length).Trim();
             Console.WriteLine($"Parse >{resultString}<");
 
+            var resultStringParts = resultString.Split('|');
+            Assert.That(resultStringParts.Length, Is.EqualTo(2));
             // beware! Java fingerprints are long, not ulong
-            Assert.That(long.TryParse(resultString, out var javaFingerprint));
+            Assert.That(long.TryParse(resultStringParts[0], out var javaFingerprint));
             Assert.That(javaFingerprint, Is.EqualTo(fingerprint));
+
+            var resultFields = resultStringParts[1].Split(';');
+            var resultOffsets = new Dictionary<string, int>();
+            var resultIndexes = new Dictionary<string, int>();
+            foreach (var fp in resultFields)
+            {
+                var fpp = fp.Split(',');
+                if (fpp.Length != 3) continue;
+                Assert.That(int.TryParse(fpp[1], out var o));
+                resultOffsets[fpp[0]] = o;
+                Assert.That(int.TryParse(fpp[2], out var i));
+                resultIndexes[fpp[0]] = i;
+            }
+
+            foreach (var field in schema.Fields)
+            {
+                Assert.That(resultOffsets.TryGetValue(field.FieldName, out var offset));
+                Assert.That(resultIndexes.TryGetValue(field.FieldName, out var index));
+                Assert.That(field.Offset, Is.EqualTo(offset), $"Field {field.FieldName} offset error.");
+                Assert.That(field.Index, Is.EqualTo(index), $"Field {field.FieldName} index error.");
+            }
         }
     }
 }
