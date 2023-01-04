@@ -186,6 +186,13 @@ namespace Hazelcast.Serialization.Compact
             return registration;
         }
 
+        public string GetTypeName(Type type)
+        {
+            return _registrationsByType.TryGetValue(type, out var registration)
+                ? registration.TypeName
+                : CompactOptions.GetDefaultTypeName(type);
+        }
+
         public void WriteObject(ObjectDataOutput output, object obj)
         {
             Schema? schema;

@@ -34,6 +34,8 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
         }
 
+        internal SerializationService SerializationService => _serializationService;
+
         /// <inheritdoc/>
         public async Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
