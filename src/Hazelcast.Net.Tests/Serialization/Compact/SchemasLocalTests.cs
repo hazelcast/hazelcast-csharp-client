@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
@@ -50,6 +51,11 @@ public class SchemasLocalTests
         {
             if (triggerEvents && SendingMessage != null) await SendingMessage.AwaitEach(requestMessage).CfAwait();
             return await _respond(requestMessage);
+        }
+
+        public Task<ClientMessage> SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default)
+        {
+            throw new NotImplementedException();
         }
 
         public async Task<ClientMessage> SendAsync(ClientMessage requestMessage, CancellationToken cancellationToken)

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
@@ -55,6 +56,11 @@ namespace Hazelcast.Tests.Serialization.Compact
 
                 Interlocked.Increment(ref _count);
                 return _messaging.SendAsync(requestMessage, triggerEvents, cancellationToken);
+            }
+
+            public Task<ClientMessage> SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default)
+            {
+                throw new NotImplementedException();
             }
 
             public IEnumerable<Guid> GetConnectedMembers() => _messaging.GetConnectedMembers();
