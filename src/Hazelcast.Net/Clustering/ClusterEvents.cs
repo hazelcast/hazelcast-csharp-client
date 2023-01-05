@@ -538,6 +538,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
+            _ = connection ?? throw new ArgumentNullException(nameof(connection));
+
             // aka subscribe to member/partition view events
             _logger.IfDebug()?.LogDebug("Subscribe to cluster views on connection {ConnectionId}.", connection.Id.ToShortString());
 

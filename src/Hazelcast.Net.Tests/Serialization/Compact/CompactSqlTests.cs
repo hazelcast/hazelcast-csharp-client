@@ -49,6 +49,9 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         // that does not work yet for compact objects
         //await client1.Sql.CreateMapping(map1);
 
+        // note that we underscore the Thing.Value property as Value is an illegal name here
+        // 
+
         var mappingCommand = $@"
             CREATE MAPPING {map1.Name}
             (

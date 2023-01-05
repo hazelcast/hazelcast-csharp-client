@@ -32,7 +32,7 @@ namespace Hazelcast.Tests.Serialization.Compact
         public void SerializerConstants()
         {
             var serializer = new CompactSerializationSerializer(new CompactOptions(), Mock.Of<ISchemas>(), Endianness.BigEndian);
-            var adapter = new CompactSerializationSerializerAdapter(serializer);
+            var adapter = new CompactSerializationSerializerAdapter(serializer, false);
 
             Assert.That(adapter.Serializer, Is.SameAs(serializer));
             Assert.That(serializer.TypeId, Is.EqualTo(SerializationConstants.ConstantTypeCompact));
@@ -44,13 +44,13 @@ namespace Hazelcast.Tests.Serialization.Compact
         {
             var serializer = new CompactSerializationSerializer(new CompactOptions(), Mock.Of<ISchemas>(), Endianness.BigEndian);
 
-            Assert.Throws<ArgumentException>(() => serializer.TryRead(null!, typeof(object), out _, out _));
+            Assert.Throws<ArgumentException>(() => serializer.TryRead(null!, typeof(object), false, out _, out _));
 
             var bogusObjectDataInput = Mock.Of<IObjectDataInput>();
-            Assert.Throws<ArgumentException>(() => serializer.TryRead(bogusObjectDataInput, typeof(object), out _, out _));
+            Assert.Throws<ArgumentException>(() => serializer.TryRead(bogusObjectDataInput, typeof(object), false, out _, out _));
 
             var objectDataInput = new ObjectDataInput(Array.Empty<byte>(), Mock.Of<IReadObjectsFromObjectDataInput>(), Endianness.LittleEndian);
-            Assert.Throws<ArgumentNullException>(() => serializer.TryRead(objectDataInput, null, out _, out _));
+            Assert.Throws<ArgumentNullException>(() => serializer.TryRead(objectDataInput, null, false, out _, out _));
         }
 
         [Test]
