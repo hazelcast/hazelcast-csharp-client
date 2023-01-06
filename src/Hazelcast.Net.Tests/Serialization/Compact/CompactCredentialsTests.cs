@@ -24,6 +24,11 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact;
 
+// explicit test for now - requires that the RC be started with an additional JAR
+// eg: hz run-remote-controller -cp java/lib/compact-custom-credentials-1.0-SNAPSHOT.jar
+// TODO: consider renaming csharp-tests-<version>.jar
+[Explicit]
+
 [TestFixture]
 [Category("enterprise")] // security requires enterprise
 [ServerCondition("[5.2,)")] // compact is n/a before 5.2
