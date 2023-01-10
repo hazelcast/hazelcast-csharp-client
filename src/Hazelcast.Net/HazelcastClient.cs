@@ -123,11 +123,12 @@ namespace Hazelcast
             // when a connection is closed, notify the heartbeat service
             Cluster.Connections.ConnectionClosed += conn => { Cluster.Heartbeat.RemoveConnection(conn); return default; };
 
-            // when a connection is closed, clears the associated subscriptions + ensure there is a cluster views connection
-            Cluster.Connections.ConnectionClosed += Cluster.Events.OnConnectionClosed;
-
             // when a connection is closed, notify the members service (may change the client state)
             Cluster.Connections.ConnectionClosed += async conn => { await Cluster.Members.RemoveConnectionAsync(conn).CfAwait(); };
+
+            // when a connection is closed, clears the associated subscriptions + ensure there is a cluster views connection
+            // 
+            Cluster.Connections.ConnectionClosed += Cluster.Events.OnConnectionClosed;
 
             // when a connection is closed, trigger the user-level event
             Cluster.Connections.ConnectionClosed += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
