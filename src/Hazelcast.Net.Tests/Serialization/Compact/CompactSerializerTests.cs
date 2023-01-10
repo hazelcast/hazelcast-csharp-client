@@ -77,7 +77,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // validate a few basic things
             // note: type-id of root object is *always* big-endian, whereas schema-id depends on options
-            Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(SerializationConstants.ConstantTypeCompact));
+            var type = withSchemas ? SerializationConstants.ConstantTypeCompactWithSchema : SerializationConstants.ConstantTypeCompact;
+            Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(type));
             Assert.That(bytes.ReadLong(8, endianness), Is.EqualTo(thingSchema.Id));
 
             // schema id: -6514273721777083925

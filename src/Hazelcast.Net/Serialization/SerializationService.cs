@@ -124,6 +124,7 @@ namespace Hazelcast.Serialization
             _compactSerializerAdapter = Using(new CompactSerializationSerializerAdapter(_compactSerializer, false));
             _compactSerializerWithSchemasAdapter = Using(new CompactSerializationSerializerAdapter(_compactSerializer, true));
             RegisterConstantSerializer(_compactSerializerAdapter);
+            RegisterConstantSerializer(_compactSerializerWithSchemasAdapter);
 
             // Registers the constant 'serializable serializer', which implements CLR BinaryFormatter
             // serialization of objects marked with the [Serializable] attributes.

@@ -19,10 +19,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Linq;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
-using Hazelcast.DistributedObjects.Impl;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Sql
@@ -162,6 +160,7 @@ namespace Hazelcast.Sql
                     if (first) first = false;
                     else command.Append(", ");
 
+                    // 'value' would be an illegal name and we escape it to '_value'
                     if (name.Equals("value", StringComparison.OrdinalIgnoreCase)) name = "_" + name;
 
                     command.Append(name);
@@ -172,15 +171,21 @@ namespace Hazelcast.Sql
             }
             else
             {
-                command.Append('(');
                 var first = true;
                 foreach (var property in typeof (TValue).GetProperties(BindingFlags.Instance | BindingFlags.Public))
                 {
                     if (!property.CanRead || !property.CanWrite || !TypesMap.TryToSql(property.PropertyType, out var sqlType))
                         continue;
 
-                    if (first) first = false;
-                    else command.Append(", ");
+                    if (first)
+                    {
+                        command.Append('(');
+                        first = false;
+                    }
+                    else
+                    {
+                        command.Append(", ");
+                    }
 
                     var name = property.Name;
                     if (name.Equals("value", StringComparison.OrdinalIgnoreCase)) name = "_" + name;
@@ -192,7 +197,7 @@ namespace Hazelcast.Sql
                     // TODO but for compact we are missing the 'EXTERNAL NAME' thing
                     // it should match the field name but we don't have a way to get field names?
                 }
-                command.Append(") ");
+                if (!first) command.Append(") ");
             }
             command.Append("TYPE IMAP OPTIONS(");
             command.Append(keyMapping);

@@ -333,7 +333,15 @@ namespace Hazelcast.Serialization.Compact
             missingSchemaId = 0;
 
             var schemaId = input.ReadLong();
-            if (_schemas.TryGet(schemaId, out schema)) return true;
+            if (_schemas.TryGet(schemaId, out schema))
+            {
+                if (withSchemas) // skip the schema if provided
+                {
+                    var schemaSize = input.ReadInt();
+                    input.Position += schemaSize;
+                }
+                return true;
+            }
 
             if (!withSchemas)
             {
@@ -345,7 +353,8 @@ namespace Hazelcast.Serialization.Compact
 
             // except... see note in WriteSchema
 
-            schema = input.ReadObject<Schema>();
+            input.ReadInt(); // skip the size
+            schema = input.ReadObject<Schema>(); // read the schema
 
             //var typeName = input.ReadString();
             //var fieldCount = input.ReadInt();

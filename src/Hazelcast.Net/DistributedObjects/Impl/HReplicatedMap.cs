@@ -99,7 +99,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ReplicatedMapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TKey>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TKey>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public async Task<IReadOnlyCollection<TValue>> GetValuesAsync()
@@ -107,7 +109,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ReplicatedMapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId).CfAwait();
             var response = ReplicatedMapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TValue>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public Task<IReadOnlyDictionary<TKey, TValue>> GetEntriesAsync() => GetEntriesAsync(CancellationToken.None);
@@ -117,7 +121,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = ReplicatedMapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, _partitionId, cancellationToken).CfAwait();
             var response = ReplicatedMapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
+            var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public async Task<int> GetSizeAsync()

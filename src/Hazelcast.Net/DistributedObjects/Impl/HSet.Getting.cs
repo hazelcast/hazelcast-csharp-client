@@ -27,7 +27,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = SetGetAllCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = SetGetAllCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<T>(response, SerializationService);
+            var result = new ReadOnlyLazyList<T>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public override async Task<bool> ContainsAsync(T item)

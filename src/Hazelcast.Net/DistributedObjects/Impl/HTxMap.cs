@@ -78,7 +78,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapKeySetCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TKey>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TKey>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public async Task<IReadOnlyList<TKey>> GetKeysAsync(IPredicate predicate)
@@ -87,7 +89,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapKeySetWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TKey>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TKey>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public async Task SetAsync(TKey key, TValue value)
@@ -173,7 +177,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapValuesCodec.EncodeRequest(Name, TransactionId, ContextId);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapValuesCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TValue>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         public async Task<IReadOnlyCollection<TValue>> GetValuesAsync(IPredicate predicate)
@@ -182,7 +188,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = TransactionalMapValuesWithPredicateCodec.EncodeRequest(Name, TransactionId, ContextId, predicateData);
             var responseMessage = await Cluster.Messaging.SendToMemberAsync(requestMessage, TransactionClientConnection).CfAwait();
             var response = TransactionalMapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TValue>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
     }
 }

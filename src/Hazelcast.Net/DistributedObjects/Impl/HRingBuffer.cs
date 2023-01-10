@@ -106,7 +106,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
             var response = RingbufferReadManyCodec.DecodeResponse(responseMessage).Items;
-            return new ReadOnlyLazyList<TItem>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TItem>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         /// <inheritdoc />
