@@ -29,7 +29,6 @@ namespace Hazelcast.Clustering
         private static readonly ISequence<int> ClusterIdSequence = new Int32Sequence();
 
         private readonly TerminateConnections _terminateConnections;
-        private readonly Heartbeat _heartbeat;
 
         private volatile int _disposed; // disposed flag
 
@@ -69,36 +68,9 @@ namespace Hazelcast.Clustering
             Events = new ClusterEvents(State, Messaging, _terminateConnections, Members);
             SerializationService = serializationServiceFactory(Messaging);
             Connections = new ClusterConnections(State, Members, SerializationService);
-            _heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
-
-            // wire components
-            WireComponents();
+            Heartbeat = new Heartbeat(State, Messaging, options.Heartbeat, _terminateConnections);
 
             HConsole.Configure(x => x.Configure<Cluster>().SetIndent(2).SetPrefix("CLUSTER"));
-        }
-
-        private void WireComponents()
-        {
-            // beware! assigning multicast handlers *must* use +=
-
-            // wire compact serializer
-            Messaging.SendingMessage += SerializationService.CompactSerializer.BeforeSendingMessage;
-
-            // wire members
-            Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { Members.AddConnection(conn, isNewCluster); return default; };
-            Connections.ConnectionClosed += async conn => { await Members.RemoveConnectionAsync(conn).CfAwait(); };
-
-            // wire events
-            // connection created = wire connection.ReceivedEvent -> Events.OnReceivedEvent in order to handle events
-            // connection opened = install subscriptions on new connection + ensure there is a cluster views connection
-            // connection closed = clears subscriptions + ensure there is a cluster views connection
-            Connections.ConnectionCreated += Events.OnConnectionCreated;
-            Connections.ConnectionOpened += Events.OnConnectionOpened;
-            Connections.ConnectionClosed += Events.OnConnectionClosed;
-
-            // wire heartbeat
-            Connections.ConnectionOpened += (conn, isFirstEver, isFirst, isNewCluster) => { _heartbeat.AddConnection(conn); return default; };
-            Connections.ConnectionClosed += conn => { _heartbeat.RemoveConnection(conn); return default; };
         }
 
         /// <summary>
@@ -150,6 +122,11 @@ namespace Hazelcast.Clustering
         /// Gets the cluster events service.
         /// </summary>
         public ClusterEvents Events { get; }
+
+        /// <summary>
+        /// Gets the cluster heartbeat service.
+        /// </summary>
+        public Heartbeat Heartbeat { get; }
 
         /// <summary>
         /// Determines whether the cluster is using smart routing.
@@ -222,7 +199,7 @@ namespace Hazelcast.Clustering
             HConsole.WriteLine(this, "Dispose TerminateConnections");
             await _terminateConnections.DisposeAsync().CfAwait();
             HConsole.WriteLine(this, "Dispose Heartbeat");
-            await _heartbeat.DisposeAsync().CfAwait();
+            await Heartbeat.DisposeAsync().CfAwait();
 
             // these elements below *will* talk to the cluster when shutting down,
             // as they will want to unsubscribe in order to shutdown as nicely

@@ -79,51 +79,93 @@ namespace Hazelcast
 
         private void WireComponents()
         {
+            // this is the *only* place where independent components are wired together
+            //
             // assigning multi-cast handlers *must* use +=
+            // and then, handlers will run in the order they have been assigned
+            //
+            // this order is *important* for instance when a connection is opened we *must*
+            // publish compact schemas (if it is the first connection to a cluster) *before*
+            // notifying ClusterMembers, i.e. before the client state turns to 'connected'
+            // and client-level invocations (e.g. map.put) are allowed.
+            //
+            // the .NET client does not implement "urgent" invocations - properly ordering
+            // handlers here achieve the same result: separating "system-level" invocations
+            // from "user-level" invocations -- which require the client to be in the
+            // 'connected' state to run.
 
-            // when an object is created/destroyed, trigger the user-level events
-            Cluster.Events.ObjectCreated
-                += Trigger<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>;
+            // before sending a message, ensure we send the required compact schemas, if any
+            Cluster.Messaging.SendingMessage += SerializationService.CompactSerializer.BeforeSendingMessage;
 
-            Cluster.Events.ObjectDestroyed
-                += Trigger<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>;
+            // when a connection is created, wire its ReceivedEvent -> Events.OnReceivedEvent in order to handle events
+            Cluster.Connections.ConnectionCreated += Cluster.Events.OnConnectionCreated;
+
+            // when a distributed object is created, trigger the user-level event
+            Cluster.Events.ObjectCreated += Trigger<DistributedObjectCreatedEventHandler, DistributedObjectCreatedEventArgs>;
+
+            // when a distributed object is destroyed, trigger the user-level event
+            Cluster.Events.ObjectDestroyed += Trigger<DistributedObjectDestroyedEventHandler, DistributedObjectDestroyedEventArgs>;
 
             // when client/cluster state changes, trigger user-level events
-            Cluster.State.StateChanged
-                += state => Trigger<StateChangedEventHandler, StateChangedEventArgs>(new StateChangedEventArgs(state));
+            Cluster.State.StateChanged += state => Trigger<StateChangedEventHandler, StateChangedEventArgs>(new StateChangedEventArgs(state));
 
             // when partitions are updated, trigger the user-level event
-            Cluster.Events.PartitionsUpdated
-                += Trigger<PartitionsUpdatedEventHandler>;
+            Cluster.Events.PartitionsUpdated += Trigger<PartitionsUpdatedEventHandler>;
 
             // when a partition is lost, trigger the user-level event
-            Cluster.Events.PartitionLost
-                += Trigger<PartitionLostEventHandler, PartitionLostEventArgs>;
+            Cluster.Events.PartitionLost += Trigger<PartitionLostEventHandler, PartitionLostEventArgs>;
 
             // when members are updated, trigger the user-level event
-            Cluster.Events.MembersUpdated
-                += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
+            Cluster.Events.MembersUpdated += Trigger<MembersUpdatedEventHandler, MembersUpdatedEventArgs>;
+
+            // -- ConnectionClosed -- order is *important* --
+
+            // when a connection is closed, notify the heartbeat service
+            Cluster.Connections.ConnectionClosed += conn => { Cluster.Heartbeat.RemoveConnection(conn); return default; };
+
+            // when a connection is closed, notify the members service (may change the client state)
+            Cluster.Connections.ConnectionClosed += async conn => { await Cluster.Members.RemoveConnectionAsync(conn).CfAwait(); };
+
+            // when a connection is closed, clears the associated subscriptions + ensure there is a cluster views connection
+            // 
+            Cluster.Connections.ConnectionClosed += Cluster.Events.OnConnectionClosed;
 
             // when a connection is closed, trigger the user-level event
-            Cluster.Connections.ConnectionClosed
-                += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
+            Cluster.Connections.ConnectionClosed += conn => Trigger<ConnectionClosedEventHandler, ConnectionClosedEventArgs>(new ConnectionClosedEventArgs(conn));
 
-            // when a connection is opened, DistributedObjects.OnConnectionOpened checks whether it is the first
-            // connection to a new cluster, and then re-creates all the known distributed object so far on the
-            // new cluster. it does so by using the new connection, which should be stable: the only reason why
-            // a new connection could be teared down by ClusterMembers is if there already are known connections,
-            // which cannot be the case if this is the first connection. So we are not going to, like, jump to
-            // another connection while this runs - there's one and only connection for now.
-            Cluster.Connections.ConnectionOpened
-                += _distributedOjects.OnConnectionOpened;
+            // -- ConnectionOpened -- order is *important* --
+
+            // when the first connection to a cluster is opened, distributed objects may be re-created, compact
+            // schemas may be published, etc. this is all performed using the new connection, which should be
+            // stable. if it dies, then the client ends up disconnected again, and everything starts from scratch.
+            //
+            // while attempting the first connection, there is no members-connection task running, so there cannot
+            // be any other connection: it is not possible that this new connection dies and the client ends up
+            // running with other connections, but not fully initialized.
+            //
+            // note: because event subscriptions are installed before Cluster.Members is notified of the connection
+            // and can change the client state to 'connected', the client can potentially receive events before
+            // it is considered 'connected' and can issue user-level invocations. This happens too in Java.
+
+            // when the first connection to a cluster is opened, make sure we recreate the distributed objects
+            Cluster.Connections.ConnectionOpened += _distributedOjects.OnConnectionOpened;
 
             // when the first connection to a cluster is opened, make sure we republish all schemas
-            Cluster.Connections.ConnectionOpened
-                += Cluster.SerializationService.CompactSerializer.Schemas.OnConnectionOpened;
+            Cluster.Connections.ConnectionOpened += Cluster.SerializationService.CompactSerializer.Schemas.OnConnectionOpened;
+
+            // when a connection is opened, install event subscriptions + ensure there is a cluster views connection
+            Cluster.Connections.ConnectionOpened += Cluster.Events.OnConnectionOpened;
+            
+            // when a connection is opened, notify the heartbeat service
+            Cluster.Connections.ConnectionOpened += (conn, _, _, _) => { Cluster.Heartbeat.AddConnection(conn); return default; };
+
+            // and now, we can change the client state and let user-level invocations go through
+
+            // when a connection is opened, notify the members service (may change the client state)
+            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster) => { Cluster.Members.AddConnection(conn, isNewCluster); return default; };
 
             // when a connection is opened, trigger the user-level event.
-            Cluster.Connections.ConnectionOpened
-                += (conn, _, _, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
+            Cluster.Connections.ConnectionOpened += (conn, _, _, isNewCluster) => Trigger<ConnectionOpenedEventHandler, ConnectionOpenedEventArgs>(new ConnectionOpenedEventArgs(conn, isNewCluster));
         }
 
         /// <summary>

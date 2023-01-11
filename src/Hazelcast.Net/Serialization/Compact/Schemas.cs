@@ -154,7 +154,10 @@ internal class Schemas : ISchemas
     }
 
     /// <inheritdoc />
-    public async ValueTask PublishAsync(HashSet<long>? ids = null)
+    public ValueTask PublishAsync(HashSet<long>? ids = null)
+        => PublishAsync(ids, null);
+
+    private async ValueTask PublishAsync(HashSet<long>? ids, MemberConnection? connection)
     {
         if (ids == null)
         {
@@ -162,7 +165,7 @@ internal class Schemas : ISchemas
             // verifying that each schema has been correctly replicated to all members,
             // this is accepted and Java does the same
             var schemaInfos = _schemas.Values; // capture
-            await PublishAsync(schemaInfos.Select(x => x.Schema).ToList()).CfAwait();
+            await PublishSchemasAsync(schemaInfos.Select(x => x.Schema).ToList(), connection).CfAwait();
 
             // and mark them all published
             foreach (var schemaInfo in schemaInfos) schemaInfo.IsPublished = true;
@@ -190,10 +193,10 @@ internal class Schemas : ISchemas
         // republish all schemas (because, in case of split-brain, maybe the cluster ID does not
         // change and yet we are connecting to a "fresh" cluster).
 
-        return isFirst ? PublishAsync() : default;
+        return isFirst ? PublishAsync(null, connection) : default;
     }
 
-    private async Task PublishAsync(IList<Schema> schemas)
+    private async Task PublishSchemasAsync(IList<Schema> schemas, MemberConnection? connection = null)
     {
         // NOTE
         // it is important to use the SendAsync overload that accepts a raiseEvents boolean
@@ -211,7 +214,10 @@ internal class Schemas : ISchemas
             {
                 var schema = schemas[0];
                 var requestMessage = ClientSendSchemaCodec.EncodeRequest(schema);
-                var response = await _messaging.SendAsync(requestMessage, false, CancellationToken.None).CfAwait();
+                var sending = connection == null
+                    ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
+                    : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
+                var response = await sending.CfAwait();
                 _ = ClientSendSchemaCodec.DecodeResponse(response);
                 break;
             }
