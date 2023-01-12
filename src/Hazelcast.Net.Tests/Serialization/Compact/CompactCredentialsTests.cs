@@ -29,18 +29,32 @@ namespace Hazelcast.Tests.Serialization.Compact;
 [ServerCondition("[5.2,)")] // compact is n/a before 5.2
 public class CompactCredentialsTests : RemoteTestBase
 {
-    private static string GetClusterConfiguration(bool withSerializer)
+    // note: it is not possible to configure the serializer on the cluster when
+    // using the implementations provided in the Remote Controller, because the
+    // Remote Controller cannot reference Compact Serialization for backward
+    // compatibility reasons. for the same reason, the login module cannot accept
+    // generic-record credentials. we keep the code here for reference, but
+    // comment it out.
+
+    //private const string LoginModuleClassName = "org.example.CustomLoginModule";
+    //private const string SerializerClassName = "org.example.CustomCredentialsSerializer";
+    //private const string CompactTypeName = "org.example.CustomCredentials";
+
+    private const string LoginModuleClassName = "com.hazelcast.security.CompactCredentialsLoginModule";
+    private const string CompactTypeName = "com.hazelcast.security.CompactCredentials";
+
+    private static string GetClusterConfiguration(/*bool withSerializer = false*/)
     {
         var configuration = Resources.Cluster_Default;
 
         // the configuration in default.xml has no <security> tag, adding
-        configuration = configuration.Replace("</hazelcast>", @"
+        configuration = configuration.Replace("</hazelcast>", $@"
   <security enabled=""true"">
     <realms>
       <realm name=""realm"">
         <authentication>
           <jaas>
-            <login-module class-name=""org.example.CustomLoginModule"" usage=""REQUIRED"">
+            <login-module class-name=""{LoginModuleClassName}"" usage=""REQUIRED"">
               <properties>
                 <property name=""key2"">xyz</property>
                 <property name=""key1"">abc</property>
@@ -57,15 +71,17 @@ public class CompactCredentialsTests : RemoteTestBase
 ");
 
         // the configuration in default.xml has a <serialization> tag, no <compact-serialization> tag, adding
+        /*
         if (withSerializer)
-            configuration = configuration.Replace("</serialization>", @"
+            configuration = configuration.Replace("</serialization>", $@"
     <compact-serialization>
       <serializers>
-        <serializer>org.example.CustomCredentialsSerializer</serializer>
+        <serializer>{SerializerClassName}</serializer>
       </serializers>
     </compact-serialization>
   </serialization>
 ");
+        */
 
         return configuration;
     }
@@ -73,7 +89,7 @@ public class CompactCredentialsTests : RemoteTestBase
     [Test]
     public async Task FailsWithBareCustomCredentials()
     {
-        var clusterConfiguration = GetClusterConfiguration(withSerializer: false);
+        var clusterConfiguration = GetClusterConfiguration();
 
         var rcClient = await ConnectToRemoteControllerAsync().CfAwait();
         var rcCluster = await rcClient.CreateClusterAsync(clusterConfiguration).CfAwait();
@@ -96,6 +112,8 @@ public class CompactCredentialsTests : RemoteTestBase
         }
     }
 
+    // see note at top of file
+    /*
     [Test]
     public async Task SucceedsWithClusterSerializer()
     {
@@ -127,12 +145,13 @@ public class CompactCredentialsTests : RemoteTestBase
             await rcClient.ExitAsync().CfAwait();
         }
     }
+    */
 
     [Test]
     public async Task SucceedsWithoutClusterSerializer()
     {
         // the cluster will zero-config deserialize the credentials
-        var clusterConfiguration = GetClusterConfiguration(withSerializer: false);
+        var clusterConfiguration = GetClusterConfiguration();
 
         var rcClient = await ConnectToRemoteControllerAsync().CfAwait();
         var rcCluster = await rcClient.CreateClusterAsync(clusterConfiguration).CfAwait();
@@ -146,7 +165,7 @@ public class CompactCredentialsTests : RemoteTestBase
             options.Authentication.ConfigureCredentials(new CustomCredentials("user", "abc", "xyz"));
 
             // configure a compact serializer and ensure we use the type name expected by Java
-            options.Serialization.Compact.AddSerializer(new CustomCredentialsCompactSerializer("org.example.CustomCredentials"));
+            options.Serialization.Compact.AddSerializer(new CustomCredentialsCompactSerializer(CompactTypeName));
 
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
         }
@@ -162,7 +181,7 @@ public class CompactCredentialsTests : RemoteTestBase
     public async Task FailsWithoutClusterSerializerWithoutClientSerializer()
     {
         // the cluster will zero-config deserialize the credentials
-        var clusterConfiguration = GetClusterConfiguration(withSerializer: false);
+        var clusterConfiguration = GetClusterConfiguration();
 
         var rcClient = await ConnectToRemoteControllerAsync().CfAwait();
         var rcCluster = await rcClient.CreateClusterAsync(clusterConfiguration).CfAwait();
@@ -177,7 +196,7 @@ public class CompactCredentialsTests : RemoteTestBase
 
             // let the client zero-config serialize the credentials, but ensure it uses the type name expected by Java
             // note: this is specific to .NET and internal (not available for general public usage)
-            options.Serialization.Compact.SetTypeName<CustomCredentials>("org.example.CustomCredentials");
+            options.Serialization.Compact.SetTypeName<CustomCredentials>(CompactTypeName);
 
             // alas - that will not work because the property names don't match the field names :(
             // in other words, we *have* to use the client-side serializer if the property and field names don't match
@@ -196,7 +215,7 @@ public class CompactCredentialsTests : RemoteTestBase
     [Test]
     public async Task FailsWithCompactButInvalidCustomCredentials()
     {
-        var clusterConfiguration = GetClusterConfiguration(withSerializer: true);
+        var clusterConfiguration = GetClusterConfiguration();
         Console.WriteLine(clusterConfiguration);
 
         var rcClient = await ConnectToRemoteControllerAsync().CfAwait();
@@ -209,7 +228,7 @@ public class CompactCredentialsTests : RemoteTestBase
             options.ClusterName = rcCluster.Id;
             options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 1000; // fail fast
             options.Authentication.ConfigureCredentials(new CustomCredentials("user", "abc", "boo"));
-            options.Serialization.Compact.AddSerializer(new CustomCredentialsCompactSerializer("org.example.CustomCredentials"));
+            options.Serialization.Compact.AddSerializer(new CustomCredentialsCompactSerializer(CompactTypeName));
 
             await AssertEx.ThrowsAsync<HazelcastException>(async () => await HazelcastClientFactory.StartNewClientAsync(options));
         }
@@ -221,12 +240,14 @@ public class CompactCredentialsTests : RemoteTestBase
         }
     }
 
+    // see note at top of file
+    /*
     [Test]
     public async Task SucceedsWithCompactButGenericCredentials()
     {
         // the cluster will zero-config deserialize the credentials
         // but, because the schema type name is not the Java class name, it will produce a GenericRecord
-        var clusterConfiguration = GetClusterConfiguration(withSerializer: false);
+        var clusterConfiguration = GetClusterConfiguration();
         Console.WriteLine(clusterConfiguration);
 
         var rcClient = await ConnectToRemoteControllerAsync().CfAwait();
@@ -253,6 +274,7 @@ public class CompactCredentialsTests : RemoteTestBase
             await rcClient.ExitAsync().CfAwait();
         }
     }
+    */
 
     private class CustomCredentialsCompactSerializer : ICompactSerializer<CustomCredentials>
     {
