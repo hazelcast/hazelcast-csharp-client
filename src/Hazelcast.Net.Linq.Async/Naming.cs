@@ -20,9 +20,15 @@ namespace Hazelcast.Linq
     {
         public static string EscapeColumnName(string s)
         {
+            return s;
+
+            // issue: if name is 'value' then the SQL query will fail
+
+            /*
             return s.Equals("value", StringComparison.OrdinalIgnoreCase)
                 ? "_" + s
                 : s;
+            */
         }
     }
 }

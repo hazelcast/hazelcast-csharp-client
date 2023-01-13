@@ -34,7 +34,7 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
     public async Task CompactSqlTest(string nameFieldName, string valueFieldName)
     {
         nameFieldName ??= nameof(Thing.Name).ToLowerInvariant();
-        valueFieldName ??= nameof(Thing.Value).ToLowerInvariant();
+        valueFieldName ??= nameof(Thing.Xalue).ToLowerInvariant();
 
         await using var client1 = await CreateAndStartClientAsync(options =>
         {
@@ -44,19 +44,16 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         await using var map1 = await client1.GetMapAsync<string, Thing>(CreateUniqueName());
 
         for (var i = 0; i < 32; i++)
-            await map1.SetAsync($"entry-{i}", new Thing { Name = $"thing-{i}", Value = i });
+            await map1.SetAsync($"entry-{i}", new Thing { Name = $"thing-{i}", Xalue = i });
 
         // that does not work yet for compact objects
         //await client1.Sql.CreateMapping(map1);
-
-        // note that we underscore the Thing.Value property as Value is an illegal name here
-        // 
 
         var mappingCommand = $@"
             CREATE MAPPING {map1.Name}
             (
               {nameof(Thing.Name)} VARCHAR EXTERNAL NAME ""{nameFieldName}"",
-              _{nameof(Thing.Value)} INT EXTERNAL NAME ""{valueFieldName}""
+              {nameof(Thing.Xalue)} INT EXTERNAL NAME ""{valueFieldName}""
             )
             TYPE IMAP
             OPTIONS (
@@ -71,7 +68,7 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         {
             var key = x.GetKey<string>();
             var thing = x.GetValue<Thing>();
-            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Value)}={thing.Value} )");
+            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Xalue)}={thing.Xalue} )");
         }
 
         Console.WriteLine("--");
@@ -79,7 +76,7 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         var linqResult = map1.AsAsyncQueryable();
         await foreach (var (key, thing) in linqResult)
         {
-            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Value)}={thing.Value} )");
+            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Xalue)}={thing.Xalue} )");
         }
 
         Console.WriteLine("--");
@@ -98,7 +95,7 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         {
             var key = x.GetKey<string>();
             var thing = x.GetValue<Thing>();
-            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Value)}={thing.Value} )");
+            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Xalue)}={thing.Xalue} )");
         }
 
         Console.WriteLine("--");
@@ -115,14 +112,14 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
         await using var map3 = await client3.GetMapAsync<string, Thing>(map1.Name);
         await foreach (var (key, thing) in map3.AsAsyncQueryable())
         {
-            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Value)}={thing.Value} )");
+            Console.WriteLine($"{key}: ( {nameof(Thing.Name)}='{thing.Name}', {nameof(Thing.Xalue)}={thing.Xalue} )");
         }
     }
 
     private class Thing
     {
         public string Name { get; set; }
-        public int Value { get; set; }
+        public int Xalue { get; set; }
     }
 
     private class ThingSerializer : ICompactSerializer<Thing>
@@ -143,14 +140,14 @@ public class CompactSqlTests : SingleMemberRemoteTestBase
             return new Thing
             {
                 Name = reader.ReadString(_nameFieldName),
-                Value = reader.ReadInt32(_valueFieldName)
+                Xalue = reader.ReadInt32(_valueFieldName)
             };
         }
 
         public void Write(ICompactWriter writer, Thing value)
         {
             writer.WriteString(_nameFieldName, value.Name);
-            writer.WriteInt32(_valueFieldName, value.Value);
+            writer.WriteInt32(_valueFieldName, value.Xalue);
         }
     }
 }
