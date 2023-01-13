@@ -50,8 +50,7 @@ namespace Hazelcast.Linq.Visitors
 
         internal override Expression VisitColumn(ColumnExpression column)
         {
-            var columnName = Naming.EscapeColumnName(column.Name);
-            return Expression.Convert(Expression.Call(_row, _miGetColumn, Expression.Constant(columnName)), column.Type);
+            return Expression.Convert(Expression.Call(_row, _miGetColumn, Expression.Constant(column.Name)), column.Type);
         }
     }
 }

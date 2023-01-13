@@ -107,7 +107,10 @@ namespace Hazelcast.Linq.Visitors
                 Write(".");
             }
 
-            Write(Naming.EscapeColumnName(column.Name));
+            // escape the column name in case of keywords such as 'Value'
+            Write("\"");
+            Write(column.Name);
+            Write("\"");
             return column;
         }
 
