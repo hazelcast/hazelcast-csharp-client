@@ -328,7 +328,7 @@ namespace Hazelcast.Tests.Linq
                 yield return ((DummyType p) => p.ColumnInt != 0, CreateQuery("m0.\"ColumnInt\" != ?"), new object[] {0});
                 yield return ((DummyType p) => p.ColumnString != null, CreateQuery("m0.\"ColumnString\" IS NOT NULL"), new object[] { });
                 yield return ((DummyType p) => null != p.ColumnString, CreateQuery("m0.\"ColumnString\" IS NOT NULL"), new object[] { });
-                yield return ((DummyType p) => p.ColumnInt != 0 && p.ColumnString != 7.ToString(), CreateQuery("(m0.\"ColumnString\" != ?) AND (m0.\"ColumnString\" != ?)"), new object[] {0, "7"});
+                yield return ((DummyType p) => p.ColumnInt != 0 && p.ColumnString != 7.ToString(), CreateQuery("(m0.\"ColumnInt\" != ?) AND (m0.\"ColumnString\" != ?)"), new object[] {0, "7"});
             }
         }
 
