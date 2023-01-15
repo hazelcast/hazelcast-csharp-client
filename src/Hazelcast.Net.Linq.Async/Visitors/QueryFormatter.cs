@@ -14,13 +14,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Linq.Expressions;
 using System.Text;
 using Hazelcast.Core;
 using Hazelcast.Linq.Expressions;
-using Ionic.Zip;
 
 namespace Hazelcast.Linq.Visitors
 {
@@ -109,7 +107,10 @@ namespace Hazelcast.Linq.Visitors
                 Write(".");
             }
 
+            // escape the column name in case of keywords such as 'Value'
+            Write("\"");
             Write(column.Name);
+            Write("\"");
             return column;
         }
 

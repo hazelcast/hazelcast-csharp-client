@@ -14,6 +14,8 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Collections
 {
@@ -29,7 +31,7 @@ namespace Hazelcast.Serialization.Collections
     /// </remarks>
     internal sealed class ReadOnlyLazyList<TValue> : IReadOnlyList<TValue>
     {
-        private readonly List<ReadOnlyLazyEntry<TValue>> _content = new List<ReadOnlyLazyEntry<TValue>>();
+        private readonly List<ReadOnlyLazyEntry<TValue>> _content = new();
         private readonly SerializationService _serializationService;
 
         /// <summary>
@@ -42,24 +44,26 @@ namespace Hazelcast.Serialization.Collections
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyList{TValue}"/> class.
-        /// </summary>
-        /// <param name="valueData">Value data items.</param>
-        /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyList(IEnumerable<IData> valueData, SerializationService serializationService)
-        {
-            _serializationService = serializationService;
-            foreach (var valueObject in valueData)
-                _content.Add(new ReadOnlyLazyEntry<TValue>(valueObject));
-        }
-
-        /// <summary>
         /// Adds a value.
         /// </summary>
         /// <param name="valueData">The value data.</param>
-        public void Add(IData valueData)
+        public async ValueTask AddAsync(IData valueData)
         {
+            await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
             _content.Add(new ReadOnlyLazyEntry<TValue>(valueData));
+        }
+
+        /// <summary>
+        /// Adds values.
+        /// </summary>
+        /// <param name="valueData">Value data.</param>
+        public async ValueTask AddAsync(IEnumerable<IData> valueData)
+        {
+            foreach (var data in valueData)
+            {
+                await _serializationService.EnsureCanDeserialize(data).CfAwait();
+                _content.Add(new ReadOnlyLazyEntry<TValue>(data));
+            }
         }
 
         /// <summary>

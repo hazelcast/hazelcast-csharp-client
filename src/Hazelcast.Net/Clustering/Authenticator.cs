@@ -124,7 +124,7 @@ namespace Hazelcast.Clustering
                     break;
 
                 default:
-                    var bytes = _serializationService.ToData(credentials).ToByteArray();
+                    var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
                     requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
                     break;
             }
