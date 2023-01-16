@@ -1640,7 +1640,7 @@ function hz-build-docs-on-windows {
     mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
 
     # copy our plugin dll
-    $target = "netstandard2.0"
+    $target = "net48" # must match DocAsCode project framework
     $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target/Hazelcast.Net.DocAsCode.dll"
     if (-not (test-path $pluginDll)) {
         Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target"
