@@ -31,7 +31,7 @@ namespace Hazelcast.Tests.Support;
 [ServerCondition("[5.2,)")] // only on server 5.2 and above
 public class Issue764 : SingleMemberClientRemoteTestBase
 {
-    protected override string RcClusterConfiguration => Resources.Cluster_Jet;
+    protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
 
     protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
     {

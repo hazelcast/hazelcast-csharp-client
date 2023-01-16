@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Serialization.Compact;
 [TestFixture]
 public class CompactSqlTests : SingleMemberRemoteTestBase
 {
-    protected override string RcClusterConfiguration => Resources.jet_enabled;
+    protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
 
     [TestCase(null, null)]
     [TestCase("aaaa", "bbbb")]
