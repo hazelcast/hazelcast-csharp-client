@@ -89,17 +89,23 @@ namespace Hazelcast.Serialization.Compact
 
         /// <inheritdoc cref="IStreamSerializer{T}.Read"/>
         public object Read(IObjectDataInput input)
-            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), typeof(object));
+            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), typeof(object), false);
+
+        public object Read(IObjectDataInput input, bool withSchemas)
+            => ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), typeof(object), withSchemas);
 
         public object Read(IObjectDataInput input, Type type)
-            => SerializationService.CastObject(ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), type), type, true);
+            => SerializationService.CastObject(ReadObject(input.MustBe<ObjectDataInput>(nameof(input)), type, false), type, true);
 
         /// <inheritdoc cref="IStreamSerializer{T}.Read"/>
         public T Read<T>(IObjectDataInput input)
             => SerializationService.CastObject<T>(Read(input, typeof(T)), true);
 
         public void Write(IObjectDataOutput output, object obj)
-            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj);
+            => Write(output, obj, false);
+
+        public void Write(IObjectDataOutput output, object obj, bool withSchemas)
+            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, withSchemas);
 
         // invoked when writing out an object and we need its registration, ie its serializer
         // either a serializer has been registered already for the type, or we need to fall back
@@ -186,7 +192,14 @@ namespace Hazelcast.Serialization.Compact
             return registration;
         }
 
-        public void WriteObject(ObjectDataOutput output, object obj)
+        public string GetTypeName(Type type)
+        {
+            return _registrationsByType.TryGetValue(type, out var registration)
+                ? registration.TypeName
+                : CompactOptions.GetDefaultTypeName(type);
+        }
+
+        public void WriteObject(ObjectDataOutput output, object obj, bool withSchemas)
         {
             Schema? schema;
             CompactSerializerAdapter serializer;
@@ -232,40 +245,42 @@ namespace Hazelcast.Serialization.Compact
                 }
             }
 
-            WriteSchema(output, schema);
+            WriteSchema(output, schema, withSchemas);
             var writer = new CompactWriter(this, output, schema);
             serializer.Write(writer, obj);
             writer.Complete();
         }
 
-        private static void WriteSchema(ObjectDataOutput output, Schema schema)
+        private static void WriteSchema(ObjectDataOutput output, Schema schema, bool withSchemas)
         {
             output.WriteLong(schema.Id);
 
-            // note: this is the code we would use if we were to send the schema alongside
-            // the data, and we keep it here for reference only, just in case one day...
-
-            /*
-            if (!withSchema) return;
+            if (!withSchemas) return;
 
             var startPosition = output.Position;
             output.WriteInt(0);
             var schemaPosition = output.Position;
 
             // note: don't output.WriteObject(schema) else it's serialized as identified serializable
-            output.WriteString(schema.TypeName);
-            output.WriteInt(schema.Fields.Count);
-            foreach (var field in schema.Fields)
-            {
-                output.WriteString(field.FieldName);
-                output.WriteInt((int)field.Kind);
-            }
+            //
+            // except, Java does 'output.WriteObject(schema)' and serializes as identified
+            // serializable, ignoring the originally specified way of embedding a schema. so,
+            // we do the same here.
+
+            output.WriteObject(schema);
+
+            //output.WriteString(schema.TypeName);
+            //output.WriteInt(schema.Fields.Count);
+            //foreach (var field in schema.Fields)
+            //{
+            //    output.WriteString(field.FieldName);
+            //    output.WriteInt((int)field.Kind);
+            //}
 
             var position = output.Position;
             output.MoveTo(startPosition);
             output.WriteInt(position - schemaPosition);
             output.MoveTo(position);
-            */
         }
 
         private static Schema BuildSchema(CompactRegistration registration, object obj)
@@ -275,22 +290,20 @@ namespace Hazelcast.Serialization.Compact
             return builder.Build();
         }
 
-        public bool TryRead(IObjectDataInput input, Type type, out object? obj, out long missingSchemaId)
+        public bool TryRead(IObjectDataInput input, Type type, bool withSchemas, out object? obj, out long missingSchemaId)
         {
             if (input is not ObjectDataInput inputInstance)
                 throw new ArgumentException("Input must be an ObjectDataInput instance.", nameof(input));
             if (type == null) throw new ArgumentNullException(nameof(type));
 
-            return TryReadObject(inputInstance, type, out obj, out missingSchemaId);
+            return TryReadObject(inputInstance, type, withSchemas, out obj, out missingSchemaId);
         }
 
-        private bool TryReadObject(ObjectDataInput input, Type type, [NotNullWhen(true)] out object? obj, out long missingSchemaId)
+        private bool TryReadObject(ObjectDataInput input, Type type, bool withSchemas, [NotNullWhen(true)] out object? obj, out long missingSchemaId)
         {
-            var schemaId = input.ReadLong();
-            if (!_schemas.TryGet(schemaId, out var schema))
+            if (!TryReadSchema(input, withSchemas, out var schema, out missingSchemaId))
             {
                 obj = null;
-                missingSchemaId = schemaId;
                 return false;
             }
 
@@ -315,9 +328,53 @@ namespace Hazelcast.Serialization.Compact
             return true;
         }
 
-        private object ReadObject(ObjectDataInput input, Type type)
+        private bool TryReadSchema(ObjectDataInput input, bool withSchemas, [NotNullWhen(true)] out Schema? schema, out long missingSchemaId)
         {
-            if (TryReadObject(input, type, out var obj, out var missingSchemaId))
+            missingSchemaId = 0;
+
+            var schemaId = input.ReadLong();
+            if (_schemas.TryGet(schemaId, out schema))
+            {
+                if (withSchemas) // skip the schema if provided
+                {
+                    var schemaSize = input.ReadInt();
+                    input.Position += schemaSize;
+                }
+                return true;
+            }
+
+            if (!withSchemas)
+            {
+                missingSchemaId = schemaId;
+                return false;
+            }
+
+            // note: don't input.ReadObject<Schema>() else it's serialized as identified serializable
+
+            // except... see note in WriteSchema
+
+            input.ReadInt(); // skip the size
+            schema = input.ReadObject<Schema>(); // read the schema
+
+            //var typeName = input.ReadString();
+            //var fieldCount = input.ReadInt();
+            //var fields = new SchemaField[fieldCount];
+            //for (var i = 0; i < fieldCount; i++)
+            //{
+            //    var fieldName = input.ReadString();
+            //    var kind = FieldKindEnum.Parse(input.ReadInt());
+            //    fields[i] = new SchemaField(fieldName, kind);
+            //}
+
+            //schema = new Schema(typeName, fields);
+
+            _schemas.Add(schema, true);
+            return true;
+        }
+
+        private object ReadObject(ObjectDataInput input, Type type, bool withSchemas)
+        {
+            if (TryReadObject(input, type, withSchemas, out var obj, out var missingSchemaId))
                 return obj;
 
             // trying to de-serialize an unknown schema - nothing we can do here, the

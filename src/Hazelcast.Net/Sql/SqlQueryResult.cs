@@ -106,7 +106,18 @@ namespace Hazelcast.Sql
                     _result._currentRow = null;
 
                     // try to increment index within the current page, return if successful
-                    if (++_result._currentRowIndex < _result._page.RowCount) return true;
+                    if (++_result._currentRowIndex < _result._page.RowCount)
+                    {
+                        // prepare lazy de-serialization of current row
+                        for (var columnIndex = 0; columnIndex < _result._page.ColumnCount; columnIndex++)
+                        {
+                            var columnObject = _result._page[_result._currentRowIndex, columnIndex];
+                            if (columnObject is IData data)
+                                await _result._serializationService.EnsureCanDeserialize(data).CfAwait();
+                        }
+
+                        return true;
+                    }
 
                     // reached end of current page, if there is no further page stop enumerating
                     if (_result._page.IsLast)

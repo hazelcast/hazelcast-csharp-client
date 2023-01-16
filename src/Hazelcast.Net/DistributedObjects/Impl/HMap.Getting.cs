@@ -145,14 +145,7 @@ namespace Hazelcast.DistributedObjects.Impl
             {
                 var responseMessage = await task.CfAwait();
                 var response = MapGetAllCodec.DecodeResponse(responseMessage).Response;
-                result.Add(response);
-            }
-
-            // prepare lazy de-serialization
-            foreach (var entry in result.Entries.Values)
-            {
-                await SerializationService.EnsureCanDeserialize(entry.KeyData).CfAwait();
-                await SerializationService.EnsureCanDeserialize(entry.ValueData).CfAwait();
+                await result.AddAsync(response).CfAwait();
             }
 
             return result;
@@ -198,7 +191,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapEntrySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapEntrySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
+            var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         /// <inheritdoc />
@@ -218,7 +213,9 @@ namespace Hazelcast.DistributedObjects.Impl
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapEntriesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response.Response };
+                var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
+                await result.AddAsync(response.Response).CfAwait();
+                return result;
             }
 
             {
@@ -228,7 +225,9 @@ namespace Hazelcast.DistributedObjects.Impl
                     : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapEntriesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService) { response };
+                var result = new ReadOnlyLazyDictionary<TKey, TValue>(SerializationService);
+                await result.AddAsync(response).CfAwait();
+                return result;
             }
         }
 
@@ -241,7 +240,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapKeySetCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapKeySetCodec.DecodeResponse(responseMessage).Response;
-            return new ReadOnlyLazyList<TKey>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TKey>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         /// <inheritdoc />
@@ -261,7 +262,9 @@ namespace Hazelcast.DistributedObjects.Impl
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapKeySetWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyList<TKey>(response.Response, SerializationService);
+                var result = new ReadOnlyLazyList<TKey>(SerializationService);
+                await result.AddAsync(response.Response).CfAwait();
+                return result;
             }
 
             {
@@ -271,7 +274,9 @@ namespace Hazelcast.DistributedObjects.Impl
                     : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapKeySetWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TKey>(response, SerializationService);
+                var result = new ReadOnlyLazyList<TKey>(SerializationService);
+                await result.AddAsync(response).CfAwait();
+                return result;
             }
         }
 
@@ -284,11 +289,9 @@ namespace Hazelcast.DistributedObjects.Impl
             var requestMessage = MapValuesCodec.EncodeRequest(Name);
             var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = MapValuesCodec.DecodeResponse(responseMessage).Response;
-
-            // prepare lazy deserialization
-            foreach (var data in response) await SerializationService.EnsureCanDeserialize(data).CfAwait();
-
-            return new ReadOnlyLazyList<TValue>(response, SerializationService);
+            var result = new ReadOnlyLazyList<TValue>(SerializationService);
+            await result.AddAsync(response).CfAwait();
+            return result;
         }
 
         /// <inheritdoc />
@@ -308,7 +311,9 @@ namespace Hazelcast.DistributedObjects.Impl
                 var responseMessage = await Cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
                 var response = MapValuesWithPagingPredicateCodec.DecodeResponse(responseMessage);
                 pagingPredicate.UpdateAnchors(response.AnchorDataList.AsAnchorIterator(SerializationService));
-                return new ReadOnlyLazyList<TValue>(response.Response, SerializationService);
+                var result = new ReadOnlyLazyList<TValue>(SerializationService);
+                await result.AddAsync(response.Response).CfAwait();
+                return result;
             }
 
             {
@@ -318,7 +323,9 @@ namespace Hazelcast.DistributedObjects.Impl
                     : Cluster.Messaging.SendAsync(requestMessage, cancellationToken))
                     .CfAwait();
                 var response = MapValuesWithPredicateCodec.DecodeResponse(responseMessage).Response;
-                return new ReadOnlyLazyList<TValue>(response, SerializationService);
+                var result = new ReadOnlyLazyList<TValue>(SerializationService);
+                await result.AddAsync(response).CfAwait();
+                return result;
             }
         }
 

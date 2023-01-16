@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Collections.Generic;
 using Hazelcast.Serialization;
 
@@ -72,7 +73,13 @@ namespace Hazelcast.Sql
         /// <typeparam name="T">The expected type of the value.</typeparam>
         /// <param name="name">The name of the column.</param>
         /// <returns>The value of the column with the specified name.</returns>
-        public T GetColumn<T>(string name) => GetColumn<T>(Metadata.GetColumnIndexByName(name));
+        public T GetColumn<T>(string name)
+        {
+            var index = Metadata.GetColumnIndexByName(name);
+            if (index == -1) 
+                throw new InvalidOperationException($"Could not find a column with name '{name}'.");
+            return GetColumn<T>(index);
+        }
 
         /// <summary>
         /// Gets the key of the row.

@@ -136,6 +136,14 @@ namespace Hazelcast.Sql
         public static string ToJava<T>() => ToJava(typeof (T));
 
         /// <summary>
+        /// Tries to map a C# type to Java.
+        /// </summary>
+        /// <typeparam name="T">The type to map.</typeparam>
+        /// <param name="javaType">The Java type name.</param>
+        /// <returns>Whether the type could be mapped to a Java type.</returns>
+        public static bool TryToJava<T>(out string javaType) => TryToJava(typeof (T), out javaType);
+
+        /// <summary>
         /// Maps a C# type to Java.
         /// </summary>
         /// <param name="type">The type to map.</param>
@@ -149,11 +157,28 @@ namespace Hazelcast.Sql
         }
 
         /// <summary>
+        /// Tries to map a C# type to Java.
+        /// </summary>
+        /// <param name="type">The type to map.</param>
+        /// <param name="javaType">The Java type name.</param>
+        /// <returns>Whether the type could be mapped to a Java type.</returns>
+        public static bool TryToJava(Type type, out string javaType)
+            => CSharpToJavaMap.TryGetValue(type, out javaType);
+
+        /// <summary>
         /// Maps a C# type to Sql.
         /// </summary>
         /// <typeparam name="T">The type to map.</typeparam>
         /// <returns>The name of the Sql type.</returns>
         public static string ToSql<T>() => ToSql(typeof (T));
+
+        /// <summary>
+        /// Tries to map a C# type to Sql.
+        /// </summary>
+        /// <typeparam name="T">The type to map.</typeparam>
+        /// <param name="sqlType">The Sql type name.</param>
+        /// <returns>Whether the type could be mapped to a Sql type.</returns>
+        public static bool TryToSql<T>(out string sqlType) => TryToSql(typeof (T), out sqlType);
 
         /// <summary>
         /// Maps a C# type to Sql.
@@ -167,5 +192,14 @@ namespace Hazelcast.Sql
 
             throw new NotSupportedException($"Failed to map C# type {type.Name} to a SQL type.");
         }
+
+        /// <summary>
+        /// Tries to map a C# type to Sql.
+        /// </summary>
+        /// <param name="type">The type to map.</param>
+        /// <param name="sqlType">The Sql type name.</param>
+        /// <returns>Whether the type could be mapped to a Sql type.</returns>
+        public static bool TryToSql(Type type, out string sqlType)
+            => CSharpToSqlMap.TryGetValue(type, out sqlType);
     }
 }

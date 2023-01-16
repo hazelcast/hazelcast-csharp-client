@@ -59,6 +59,7 @@ namespace Hazelcast.DistributedObjects.Impl
                 }
             }
 
+            // the readonly lazy dictionary that is returned has already had all its entries verified for deserialization
             var entries = await base.GetAllAsync(ownersKeys, cancellationToken).CfAwait();
 
             // 'entries' is a ReadOnlyLazyDictionary that contains values that are lazily
@@ -66,11 +67,12 @@ namespace Hazelcast.DistributedObjects.Impl
             // yet - so entry.ValueObject here is not null, and is an IData that we can pass
             // to the cache - which will either deserialized or not depending on InMemoryFormat
 
-            // cache retrieved entries
+            // cache retrieved entries - which *have* been verified for deserialization
             foreach (var (key, entry) in entries.Entries)
                 await _cache.TryAddAsync(key, entry.ValueData).CfAwait();
 
             // merge cached entries and retrieved entries
+            // sync-add because entries have already been verified for deserialization
             foreach (var (keyData, valueObject) in cachedValues)
                 entries.Add(keyData, valueObject);
 

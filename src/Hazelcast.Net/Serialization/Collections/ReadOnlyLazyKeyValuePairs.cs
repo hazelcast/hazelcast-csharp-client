@@ -14,6 +14,8 @@
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Collections
 {
@@ -33,7 +35,7 @@ namespace Hazelcast.Serialization.Collections
     {
         private readonly SerializationService _serializationService;
 
-        private readonly List<ReadOnlyLazyEntry<TKey, TValue>> _entries = new List<ReadOnlyLazyEntry<TKey, TValue>>();
+        private readonly List<ReadOnlyLazyEntry<TKey, TValue>> _entries = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
@@ -45,17 +47,6 @@ namespace Hazelcast.Serialization.Collections
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
-        /// </summary>
-        /// <param name="entries"></param>
-        /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyKeyValuePairs(IEnumerable<KeyValuePair<IData, IData>> entries, SerializationService serializationService)
-        {
-            _serializationService = serializationService;
-            Add(entries);
-        }
-
-        /// <summary>
         /// Gets the entries.
         /// </summary>
         public List<ReadOnlyLazyEntry<TKey, TValue>> Entries => _entries;
@@ -64,20 +55,14 @@ namespace Hazelcast.Serialization.Collections
         /// Adds entries.
         /// </summary>
         /// <param name="entries">Entries.</param>
-        public void Add(IEnumerable<KeyValuePair<IData, IData>> entries)
+        public async ValueTask AddAsync(IEnumerable<KeyValuePair<IData, IData>> entries)
         {
-            foreach (var (keyData, valueObject) in entries)
-                _entries.Add(new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
-        }
-
-        /// <summary>
-        /// Adds a key-value pair.
-        /// </summary>
-        /// <param name="keyData">The key data.</param>
-        /// <param name="value">The value.</param>
-        public void Add(IData keyData, TValue value)
-        {
-            _entries.Add(new ReadOnlyLazyEntry<TKey, TValue>(keyData, value));
+            foreach (var (keyData, valueData) in entries)
+            {
+                await _serializationService.EnsureCanDeserialize(keyData).CfAwait();
+                await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
+                _entries.Add(new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueData));
+            }
         }
 
         /// <summary>

@@ -21,6 +21,8 @@ namespace Hazelcast.Sql
     /// </summary>
     public class SqlColumnMetadata
     {
+        private static readonly char[] Quotes = {'"', '\''};
+
         /// <summary>
         /// Column name.
         /// </summary>
@@ -41,7 +43,7 @@ namespace Hazelcast.Sql
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentNullException(nameof(name));
 
-            Name = name;
+            Name = name.Trim(Quotes);
             Type = type;
             IsNullable = isNullable;
         }

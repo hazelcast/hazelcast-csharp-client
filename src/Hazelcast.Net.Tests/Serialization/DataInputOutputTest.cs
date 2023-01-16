@@ -111,7 +111,7 @@ namespace Hazelcast.Tests.Serialization
                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, null, true);
+            ss.WriteObject(output, null, true, false);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             Assert.IsNull(ss.ReadObject<object>(input));
@@ -126,7 +126,7 @@ namespace Hazelcast.Tests.Serialization
                .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, null, true);
+            ss.WriteObject(output, null, true, false);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             ss.ReadObject<int>(input);
@@ -141,8 +141,8 @@ namespace Hazelcast.Tests.Serialization
                 .Build();
 
             var output = ss.CreateObjectDataOutput(1024);
-            ss.WriteObject(output, 1, true);
-            ss.WriteObject(output, null, true);
+            ss.WriteObject(output, 1, true, false);
+            ss.WriteObject(output, null, true, false);
 
             var input = ss.CreateObjectDataInput(output.ToByteArray());
             Assert.AreEqual(1, ss.ReadObject<int?>(input));
