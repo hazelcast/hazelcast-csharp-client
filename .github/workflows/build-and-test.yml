@@ -114,8 +114,8 @@ jobs:
         id: test-latest-fwk
         shell: pwsh
         run: |
-          $isWindows = ("${{ matrix.os }}" -eq "windows-latest")
-          if($isWindows) {
+          #$isWindows = ("${{ inputs.os }}" -eq "windows-latest")
+          if ($isWindows) {
              $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
              $is_latest = ("${{ matrix.os}}" -eq $arr[-1])
              write-output "is-latest='$is_latest'" >> $env:GITHUB_OUTPUT
