@@ -85,10 +85,15 @@ namespace Hazelcast.Sql
         // TODO: finalize these methods and make them public (when doing Linq?)
         // https://docs.hazelcast.com/hazelcast/latest/sql/mapping-to-maps.html
 
-        private static string GetMapping<T>(string name)
+        private static string GetMapping<T>(string name, SerializationService serializationService)
         {
             var type = typeof(T);
-            string mapping;
+
+            // Java objects
+            if (TypesMap.TryToJava<T>(out var javaType))
+            {
+                return $"'{name}Format' = 'java', '{name}JavaClass' = '{javaType}'";
+            }
 
             // portable objects
             if (typeof(IPortable).IsAssignableFrom(type))
@@ -96,7 +101,7 @@ namespace Hazelcast.Sql
                 try
                 {
                     var p = Activator.CreateInstance<T>() as IPortable;
-                    mapping = $"'{name}Format' = 'portable', '{name}PortableFactoryId' = '{p.FactoryId}', '{name}PortableClassId' = '{p.ClassId}'";
+                    return $"'{name}Format' = 'portable', '{name}PortableFactoryId' = '{p.FactoryId}', '{name}PortableClassId' = '{p.ClassId}'";
                     // optional: "'{name}PortableVersion' = '0'";
                 }
                 catch
@@ -105,15 +110,9 @@ namespace Hazelcast.Sql
                 }
             }
 
-            // TODO: compact? json?
-
-            // Java objects
-            else
-            {
-                mapping = $"'{name}Format' = 'java', '{name}JavaClass' = '{TypesMap.ToJava<T>()}'";
-            }
-
-            return mapping;
+            // assume compact
+            var typeName = serializationService.CompactSerializer.GetTypeName(typeof (T));
+            return $"'{name}Format' = 'compact', '{name}CompactTypeName' = '{typeName}'";
         }
 
         /// <summary>
@@ -130,8 +129,9 @@ namespace Hazelcast.Sql
             if (sql == null) throw new ArgumentNullException(nameof(sql));
             if (map == null) throw new ArgumentNullException(nameof(map));
 
-            var keyMapping = GetMapping<TKey>("key");
-            var valueMapping = GetMapping<TValue>("value");
+            var serializationService = sql.MustBe<SqlService>().SerializationService;
+            var keyMapping = GetMapping<TKey>("key", serializationService);
+            var valueMapping = GetMapping<TValue>("value", serializationService);
 
             var command = new StringBuilder();
             command.Append("CREATE MAPPING \"");
@@ -160,11 +160,44 @@ namespace Hazelcast.Sql
                     if (first) first = false;
                     else command.Append(", ");
 
+                    // 'value' would be an illegal name and we escape it to '_value'
+                    if (name.Equals("value", StringComparison.OrdinalIgnoreCase)) name = "_" + name;
+
                     command.Append(name);
                     command.Append(' ');
                     command.Append(TypesMap.ToSql(type));
                 }
                 command.Append(") ");
+            }
+            else
+            {
+                var first = true;
+                foreach (var property in typeof (TValue).GetProperties(BindingFlags.Instance | BindingFlags.Public))
+                {
+                    if (!property.CanRead || !property.CanWrite || !TypesMap.TryToSql(property.PropertyType, out var sqlType))
+                        continue;
+
+                    if (first)
+                    {
+                        command.Append('(');
+                        first = false;
+                    }
+                    else
+                    {
+                        command.Append(", ");
+                    }
+
+                    var name = property.Name;
+                    if (name.Equals("value", StringComparison.OrdinalIgnoreCase)) name = "_" + name;
+
+                    command.Append(name);
+                    command.Append(' ');
+                    command.Append(sqlType);
+
+                    // TODO but for compact we are missing the 'EXTERNAL NAME' thing
+                    // it should match the field name but we don't have a way to get field names?
+                }
+                if (!first) command.Append(") ");
             }
             command.Append("TYPE IMAP OPTIONS(");
             command.Append(keyMapping);
@@ -172,6 +205,7 @@ namespace Hazelcast.Sql
             command.Append(valueMapping);
             command.Append(')');
 
+            Console.WriteLine(command.ToString());
             return sql.ExecuteCommandAsync(command.ToString());
         }
 

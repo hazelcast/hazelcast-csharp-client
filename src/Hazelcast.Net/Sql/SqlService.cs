@@ -34,6 +34,8 @@ namespace Hazelcast.Sql
             _serializationService = serializationService;
         }
 
+        internal SerializationService SerializationService => _serializationService;
+
         /// <inheritdoc/>
         public async Task<ISqlQueryResult> ExecuteQueryAsync(string sql, object[] parameters = null, SqlStatementOptions options = null, CancellationToken cancellationToken = default)
         {
@@ -121,7 +123,8 @@ namespace Hazelcast.Sql
             var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
+            if (response.Error != null) 
+                throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
             return response;
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,9 +27,11 @@ namespace Hazelcast.Tests.Serialization.Compact
     [TestFixture]
     public class CompactSerializerTests
     {
-        [TestCase(Endianness.BigEndian)]
-        [TestCase(Endianness.LittleEndian)]
-        public void SerializationServiceCanToDataThenToObject(Endianness endianness)
+        [TestCase(Endianness.BigEndian, false)]
+        [TestCase(Endianness.LittleEndian, false)]
+        [TestCase(Endianness.BigEndian, true)]
+        [TestCase(Endianness.LittleEndian, true)]
+        public void SerializationServiceCanToDataThenToObject(Endianness endianness, bool withSchemas)
         {
             // define a schema for the Thing class - at that point, schemas must be defined
             // explicitly via code, we don't support any other mean of configuring schemas
@@ -66,7 +68,7 @@ namespace Hazelcast.Tests.Serialization.Compact
             };
 
             Console.WriteLine("ToData:");
-            var data = service.ToData(thing);
+            var data = service.ToData(thing, withSchemas);
 
             // dump bytes
             var bytes = data.ToByteArray();
@@ -75,7 +77,8 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             // validate a few basic things
             // note: type-id of root object is *always* big-endian, whereas schema-id depends on options
-            Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(SerializationConstants.ConstantTypeCompact));
+            var type = withSchemas ? SerializationConstants.ConstantTypeCompactWithSchema : SerializationConstants.ConstantTypeCompact;
+            Assert.That(bytes.ReadInt(4, Endianness.BigEndian), Is.EqualTo(type));
             Assert.That(bytes.ReadLong(8, endianness), Is.EqualTo(thingSchema.Id));
 
             // schema id: -6514273721777083925

@@ -142,7 +142,7 @@
   <data name="HazelcastOptions" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>Resources\Options\HazelcastOptions.json;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;Windows-1252</value>
   </data>
-  <data name="Cluster_JetEnabled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-      <value>Resources\Cluster\jet-enabled.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
+  <data name="Cluster_Jet" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>Resources\Cluster\jet-enabled.xml;System.String, mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089;utf-8</value>
   </data>
 </root>

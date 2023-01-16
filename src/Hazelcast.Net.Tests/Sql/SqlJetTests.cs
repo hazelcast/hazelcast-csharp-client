@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Sql
     public class SqlJetTests : SqlTestBase
     {
         protected override bool EnableJet => true;
-        
+
         [Test]
         public async Task GenerateSeries()
         {

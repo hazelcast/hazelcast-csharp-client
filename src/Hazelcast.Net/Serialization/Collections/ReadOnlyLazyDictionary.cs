@@ -15,6 +15,8 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Serialization.Collections
 {
@@ -34,8 +36,8 @@ namespace Hazelcast.Serialization.Collections
     {
         private readonly SerializationService _serializationService;
 
-        private readonly Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> _entries = new Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>>();
-        private readonly Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>> _keyEntries = new Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>>();
+        private readonly Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> _entries = new();
+        private readonly Dictionary<TKey, ReadOnlyLazyEntry<TKey, TValue>> _keyEntries = new();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
@@ -47,40 +49,33 @@ namespace Hazelcast.Serialization.Collections
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ReadOnlyLazyDictionary{TKey,TValue}"/> class.
+        /// Adds entries to the dictionary and ensure they can be deserialized.
         /// </summary>
-        /// <param name="entries"></param>
-        /// <param name="serializationService">The serialization service.</param>
-        public ReadOnlyLazyDictionary(IEnumerable<KeyValuePair<IData, IData>> entries, SerializationService serializationService)
+        /// <param name="entries">The serialized dictionary entries.</param>
+        public async ValueTask AddAsync(IEnumerable<KeyValuePair<IData, IData>> entries)
         {
-            _serializationService = serializationService;
-            Add(entries);
+            foreach (var (keyData, valueData) in entries)
+            {
+                await _serializationService.EnsureCanDeserialize(keyData).CfAwait();
+                await _serializationService.EnsureCanDeserialize(valueData).CfAwait();
+                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueData));
+            }
+        }
+
+        /// <summary>
+        /// Adds an entry WITHOUT ensuring it can be deserialized.
+        /// </summary>
+        /// <param name="keyData">Key.</param>
+        /// <param name="valueObject">Value.</param>
+        public void Add(IData keyData, TValue valueObject)
+        {
+            _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
         }
 
         /// <summary>
         /// Gets the entries.
         /// </summary>
         public Dictionary<IData, ReadOnlyLazyEntry<TKey, TValue>> Entries => _entries;
-
-        /// <summary>
-        /// Adds entries.
-        /// </summary>
-        /// <param name="entries">Entries.</param>
-        public void Add(IEnumerable<KeyValuePair<IData, IData>> entries)
-        {
-            foreach (var (keyData, valueObject) in entries)
-                _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, valueObject));
-        }
-
-        /// <summary>
-        /// Adds a key-value pair.
-        /// </summary>
-        /// <param name="keyData">The key data.</param>
-        /// <param name="value">The value.</param>
-        public void Add(IData keyData, TValue value)
-        {
-            _entries.Add(keyData, new ReadOnlyLazyEntry<TKey, TValue>(keyData, value));
-        }
 
         /// <summary>
         /// Ensures that an entry has a key.

@@ -41,13 +41,13 @@ namespace Hazelcast.Clustering
         private readonly DistributedEventScheduler _scheduler;
         private readonly ILogger _logger;
 
-        private readonly CancellationTokenSource _cancel = new CancellationTokenSource();
-        private readonly object _mutex = new object(); // subscriptions and connections
+        private readonly CancellationTokenSource _cancel = new();
+        private readonly object _mutex = new(); // subscriptions and connections
 
         private Func<ValueTask> _partitionsUpdated;
         private Func<MembersUpdatedEventArgs, ValueTask> _membersUpdated;
 
-        private readonly object _clusterViewsMutex = new object();
+        private readonly object _clusterViewsMutex = new();
         private MemberConnection _clusterViewsConnection; // the connection which supports the view event
         private long _clusterViewsCorrelationId; // the correlation id of the view event subscription
         private Task _clusterViewsTask; // the task that assigns a connection to support the view event
@@ -55,26 +55,26 @@ namespace Hazelcast.Clustering
         private volatile int _disposed;
 
         // connections
-        private readonly HashSet<MemberConnection> _connections = new HashSet<MemberConnection>();
-        private TaskCompletionSource<object> _connectionOpened;
+        private readonly HashSet<MemberConnection> _connections = new();
+        private TaskCompletionSource<MemberConnection> _connectionOpened;
 
         // subscription id -> subscription
         // the master subscriptions list
-        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _subscriptions = new ConcurrentDictionary<Guid, ClusterSubscription>();
+        private readonly ConcurrentDictionary<Guid, ClusterSubscription> _subscriptions = new();
 
         // subscribe tasks
-        private readonly object _subscribeTasksMutex = new object();
-        private Dictionary<MemberConnection, Task> _subscribeTasks = new Dictionary<MemberConnection, Task>(); // the tasks that subscribe new connections
+        private readonly object _subscribeTasksMutex = new();
+        private Dictionary<MemberConnection, Task> _subscribeTasks = new(); // the tasks that subscribe new connections
 
         // correlation id -> subscription
         // used to match a subscription to an incoming event message
         // each connection has its own correlation id, so there can be many entries per cluster subscription
-        private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new ConcurrentDictionary<long, ClusterSubscription>();
+        private readonly ConcurrentDictionary<long, ClusterSubscription> _correlatedSubscriptions = new();
 
         // ghost subscriptions, to be collected
         // subscriptions that have failed to properly unsubscribe and now we need to take care of them
-        private readonly HashSet<MemberSubscription> _collectSubscriptions = new HashSet<MemberSubscription>();
-        private readonly object _collectMutex = new object();
+        private readonly HashSet<MemberSubscription> _collectSubscriptions = new();
+        private readonly object _collectMutex = new();
         private Task _collectTask; // the task that collects ghost subscriptions
 
         static ClusterEvents()
@@ -462,6 +462,28 @@ namespace Hazelcast.Clustering
             }
         }
 
+        private ValueTask<MemberConnection> WaitForConnection(CancellationToken cancellationToken)
+        {
+            var c = _clusterMembers.GetRandomConnection();
+            return c == null
+                ? WaitForConnectionAsync(cancellationToken)
+                : new ValueTask<MemberConnection>(c);
+
+            async ValueTask<MemberConnection> WaitForConnectionAsync(CancellationToken token)
+            {
+                MemberConnection c = null;
+                while (!token.IsCancellationRequested && ((c = _clusterMembers.GetRandomConnection()) == null || !c.Active))
+                {
+                    lock (_mutex) _connectionOpened = new TaskCompletionSource<MemberConnection>();
+                    using var reg = token.Register(() => _connectionOpened.TrySetCanceled());
+                    c = await _connectionOpened.Task.CfAwait();
+                    lock (_mutex) _connectionOpened = null;
+                    if (c is { Active: true }) break; // return the connection that was opened
+                }
+                return c;
+            }
+        }
+
         /// <summary>
         /// Assigns a connection to support the cluster view event.
         /// </summary>
@@ -472,33 +494,11 @@ namespace Hazelcast.Clustering
         {
             // TODO: consider throttling
 
-            ValueTask<MemberConnection> WaitRandomConnection(CancellationToken token)
-            {
-                var c = _clusterMembers.GetRandomConnection();
-                return c == null
-                    ? WaitRandomConnection2(token)
-                    : new ValueTask<MemberConnection>(c);
-            }
-
-            async ValueTask<MemberConnection> WaitRandomConnection2(CancellationToken token)
-            {
-                MemberConnection c = null;
-                while (!token.IsCancellationRequested &&
-                       ((c = _clusterMembers.GetRandomConnection()) == null || !c.Active))
-                {
-                    lock (_mutex) _connectionOpened = new TaskCompletionSource<object>();
-                    using var reg = token.Register(() => _connectionOpened.TrySetCanceled());
-                    await _connectionOpened.Task.CfAwait();
-                    lock (_mutex) _connectionOpened = null;
-                }
-                return c;
-            }
-
             // this will only exit once a connection is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
             while (!cancellationToken.IsCancellationRequested)
             {
-                connection ??= await WaitRandomConnection(cancellationToken).CfAwait();
+                connection ??= await WaitForConnection(cancellationToken).CfAwait();
 
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
@@ -538,6 +538,8 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the subscription has been processed, and represent whether it was successful.</returns>
         private async Task<bool> SubscribeToClusterViewsAsync(MemberConnection connection, long correlationId, CancellationToken cancellationToken)
         {
+            _ = connection ?? throw new ArgumentNullException(nameof(connection));
+
             // aka subscribe to member/partition view events
             _logger.IfDebug()?.LogDebug("Subscribe to cluster views on connection {ConnectionId}.", connection.Id.ToShortString());
 
@@ -788,7 +790,7 @@ namespace Hazelcast.Clustering
             {
                 _connections.Add(connection);
                 subscriptions = _subscriptions.Values.ToList();
-                _connectionOpened?.TrySetResult(null);
+                _connectionOpened?.TrySetResult(connection);
             }
 
             // in case we don't have one already...

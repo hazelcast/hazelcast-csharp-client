@@ -47,10 +47,31 @@ namespace Hazelcast.Serialization
         /// Serializes an object to an <see cref="IData"/> blob.
         /// </summary>
         /// <param name="obj">The object.</param>
+        /// <param name="withSchemas">Whether to embed all schemas in the serialized data.</param>
+        /// <returns>The <see cref="IData"/> blob.</returns>
+        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
+        public IData ToData(object obj, bool withSchemas)
+            => ToData(obj, _globalPartitioningStrategy, withSchemas);
+
+        /// <summary>
+        /// Serializes an object to an <see cref="IData"/> blob.
+        /// </summary>
+        /// <param name="obj">The object.</param>
         /// <param name="strategy">A partitioning strategy.</param>
         /// <returns>The <see cref="IData"/> blob.</returns>
         /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
         public IData ToData(object obj, IPartitioningStrategy strategy)
+            => ToData(obj, strategy, false);
+
+        /// <summary>
+        /// Serializes an object to an <see cref="IData"/> blob.
+        /// </summary>
+        /// <param name="obj">The object.</param>
+        /// <param name="strategy">A partitioning strategy.</param>
+        /// <param name="withSchemas">Whether to embed all schemas in the serialized data.</param>
+        /// <returns>The <see cref="IData"/> blob.</returns>
+        /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
+        public IData ToData(object obj, IPartitioningStrategy strategy, bool withSchemas)
         {
             if (obj == null) return null;
             if (obj is IData data) return data;
@@ -61,7 +82,7 @@ namespace Hazelcast.Serialization
             {
                 var partitionHash = CalculatePartitionHash(obj, strategy);
                 output.WriteIntBigEndian(partitionHash); // partition hash is always big-endian
-                WriteObject(output, obj, true);
+                WriteObject(output, obj, true, withSchemas);
                 return new HeapData(output.ToByteArray(), output.HasSchemas ? output.SchemaIds : null);
             }
             catch (Exception e) when (e is not OutOfMemoryException && e is not SerializationException)
@@ -236,19 +257,20 @@ namespace Hazelcast.Serialization
         /// <exception cref="ArgumentNullException">The <paramref name="output"/> is <c>null</c>.</exception>
         /// <exception cref="SerializationException">Failed to serialize the object (see inner exception).</exception>
         /// <param name="isRootObject">Whether the object is the root object or an inner object.</param>
+        /// <param name="withSchemas">Whether to embed all schemas in the serialized data.</param>
         /// <remarks>
         /// <para>The <paramref name="isRootObject"/> determines how the type-id of the object is written.
         /// Root object type-id is always written out as big-endian, whereas inner object type-ids are
         /// written out using the configured endianness.</para>
         /// </remarks>
-        public void WriteObject(ObjectDataOutput output, object obj, bool isRootObject)
+        public void WriteObject(ObjectDataOutput output, object obj, bool isRootObject, bool withSchemas)
         {
             if (output == null) throw new ArgumentNullException(nameof(output));
             if (obj is IData) throw new SerializationException("Cannot write IData. Use WriteData instead.");
 
             try
             {
-                var serializer = LookupSerializer(obj);
+                var serializer = LookupSerializer(obj, withSchemas);
 
                 // root object (from ToData) type-id is always big-endian, whereas
                 // nested objects type-id uses whatever is the default endianness
@@ -317,7 +339,7 @@ namespace Hazelcast.Serialization
 
         /// <inheritdoc />
         void IWriteObjectsToObjectDataOutput.Write(IObjectDataOutput output, object obj)
-            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, false);
+            => WriteObject(output.MustBe<ObjectDataOutput>(nameof(output)), obj, false, false);
 
         /// <inheritdoc />
         T IReadObjectsFromObjectDataInput.Read<T>(IObjectDataInput input)

@@ -16,6 +16,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Models;
 
 namespace Hazelcast.Messaging
@@ -46,6 +47,15 @@ namespace Hazelcast.Messaging
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The response message.</returns>
         Task<ClientMessage> SendAsync(ClientMessage requestMessage, bool raiseEvents, CancellationToken cancellationToken);
+
+        /// <summary>
+        /// Sends a message to a member.
+        /// </summary>
+        /// <param name="message">The message to send.</param>
+        /// <param name="memberConnection">The member connection.</param>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>A task that will complete when the response is received, and represent the response message.</returns>
+        Task<ClientMessage> SendToMemberAsync(ClientMessage message, MemberConnection memberConnection, CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Gets the identifiers of the connected members.

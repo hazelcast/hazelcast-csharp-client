@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,16 +51,16 @@ namespace Hazelcast.Serialization.Compact
         /// <summary>
         /// Gets the index of the reference-type field.
         /// </summary>
-        internal int Index { get; set; }
+        internal int Index { get; set; } = -1;
 
         /// <summary>
         /// Gets the offset of the value-type field.
         /// </summary>
-        internal int Offset { get; set; }
+        internal int Offset { get; set; } = -1;
 
         /// <summary>
         /// Gets the bit-offset of the boolean value-type field.
         /// </summary>
-        internal byte BitOffset { get; set; }
+        internal sbyte BitOffset { get; set; } = -1;
     }
 }

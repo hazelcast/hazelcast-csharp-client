@@ -30,7 +30,9 @@ namespace Hazelcast.Tests.Sql
     {
         protected virtual bool EnableJet => false;
 
-        protected override string RcClusterConfiguration => EnableJet ? Resources.Cluster_JetEnabled : Resources.Cluster_Default;
+        protected override string RcClusterConfiguration => EnableJet
+            ? Resources.Cluster_Jet
+            : base.RcClusterConfiguration;
 
         protected async Task<IHMap<int, string>> CreateIntMapAsync(IDictionary<int, string> entries)
         {

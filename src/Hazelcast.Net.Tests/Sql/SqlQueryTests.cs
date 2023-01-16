@@ -26,7 +26,7 @@ namespace Hazelcast.Tests.Sql
     public class SqlQueryTests : SqlTestBase
     {
         protected override bool EnableJet => true;
-        
+
         [Test]
         [TestCase(3, 1)]
         [TestCase(3, 3)]

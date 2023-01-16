@@ -73,20 +73,21 @@ namespace Hazelcast.Serialization
         /// Looks up a serializer for an object.
         /// </summary>
         /// <param name="obj">The object.</param>
+        /// <param name="withSchemas">Whether to embed all schemas in the serialized data.</param>
         /// <returns>The serializer for the object.</returns>
         /// <exception cref="SerializationException">Cannot find a custom serializer for the <paramref name="obj"/>.</exception>
-        private ISerializerAdapter LookupSerializer(object obj)
+        private ISerializerAdapter LookupSerializer(object obj, bool withSchemas)
         {
             if (obj == null) return _nullSerializerAdapter;             // 1. NULL serializer
 
             var typeOfObj = obj.GetType();
 
-            var serializer = LookupKnownSerializer(typeOfObj) ??        // 2a. compact, identified, portable
-                             LookupConstantSerializer(typeOfObj) ??     // 2b. primitive, string, etc
-                             LookupCustomSerializer(typeOfObj) ??       // 3.  custom, registered by user
-                             LookupSerializableSerializer(typeOfObj) ?? // 4.  .NET BinaryFormatter for [Serializable] types
-                             LookupGlobalSerializer(typeOfObj) ??       // 5.  global, if registered by user
-                             LookupCompactSerializer(typeOfObj);        // 6.  compact
+            var serializer = LookupKnownSerializer(typeOfObj, withSchemas) ??   // 2a. compact, identified, portable
+                             LookupConstantSerializer(typeOfObj) ??             // 2b. primitive, string, etc
+                             LookupCustomSerializer(typeOfObj) ??               // 3.  custom, registered by user
+                             LookupSerializableSerializer(typeOfObj) ??         // 4.  .NET BinaryFormatter for [Serializable] types
+                             LookupGlobalSerializer(typeOfObj) ??               // 5.  global, if registered by user
+                             LookupCompactSerializer(typeOfObj, withSchemas);   // 6.  compact
 
             // NOTE:
             // for 4, _enableClrSerialization must be true
@@ -97,15 +98,15 @@ namespace Hazelcast.Serialization
             throw new SerializationException($"Could not find a serializer for type {typeOfObj}.");
         }
 
-        private ISerializerAdapter LookupKnownSerializer(Type type)
+        private ISerializerAdapter LookupKnownSerializer(Type type, bool withSchemas)
         {
             // fast path for some known serializers
 
             if (typeof(CompactGenericRecordBase).IsAssignableFrom(type))
-                return _compactSerializerAdapter;
+                return withSchemas ? _compactSerializerWithSchemasAdapter : _compactSerializerAdapter;
 
             if (_compactSerializer.HasRegistrationForType(type))
-                return _compactSerializerAdapter;
+                return withSchemas ? _compactSerializerWithSchemasAdapter : _compactSerializerAdapter;
 
             if (typeof(IIdentifiedDataSerializable).IsAssignableFrom(type))
                 return _dataSerializerAdapter;
@@ -176,14 +177,14 @@ namespace Hazelcast.Serialization
             return serializer;
         }
 
-        private ISerializerAdapter LookupCompactSerializer(Type type)
+        private ISerializerAdapter LookupCompactSerializer(Type type, bool withSchemas)
         {
-            var serializer = _compactSerializerAdapter;
+            // don't register when using withSchemas
+            if (withSchemas) return _compactSerializerWithSchemasAdapter;
 
             // register so we find it faster next time
-            if (serializer != null) _ = TryRegisterConstantSerializer(serializer, type);
-
-            return serializer;
+            _ = TryRegisterConstantSerializer(_compactSerializerAdapter, type);
+            return _compactSerializerAdapter;
         }
     }
 }

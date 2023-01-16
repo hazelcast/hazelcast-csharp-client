@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
 // 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ namespace Hazelcast.Tests.Serialization.Compact
     internal class RemoteToDataFirstTests : ClusterRemoteTestBase
     {
         // needed for SQL
-        protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
+        protected override string RcClusterConfiguration => Resources.Cluster_Jet;
 
         // we have to have 1 member per test else the schemas may end up being cached
         private Hazelcast.Testing.Remote.Member _rcMember;

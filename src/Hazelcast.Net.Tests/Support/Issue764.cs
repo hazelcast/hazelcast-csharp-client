@@ -15,7 +15,6 @@
 using NUnit.Framework;
 using System;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Linq;
@@ -24,9 +23,6 @@ using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Logging;
-using Hazelcast.Testing.Remote;
-using Microsoft.Extensions.Logging;
-using NuGet.Versioning;
 
 namespace Hazelcast.Tests.Support;
 
@@ -35,7 +31,8 @@ namespace Hazelcast.Tests.Support;
 [ServerCondition("[5.2,)")] // only on server 5.2 and above
 public class Issue764 : SingleMemberClientRemoteTestBase
 {
-    protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
+    protected override string RcClusterConfiguration => Resources.Cluster_Jet;
+
     protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
     {
         return base.CreateHazelcastOptionsBuilder()
