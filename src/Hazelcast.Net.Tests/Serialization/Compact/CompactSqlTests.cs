@@ -19,11 +19,13 @@ using Hazelcast.Linq;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Sql;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact;
 
 [TestFixture]
+[ServerCondition("[5.2,)")]
 public class CompactSqlTests : SingleMemberRemoteTestBase
 {
     protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
