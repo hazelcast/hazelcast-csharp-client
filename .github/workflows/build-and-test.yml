@@ -110,21 +110,25 @@ jobs:
           echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
           ls -l ./build/hazelcast.snk
 
+        # detect whether we are building for the latest framework version
+        # assumes that frameworks obtained by getfwks-json are ordered with latest last
       - name: Detect Latest Framework
         id: test-latest-fwk
         shell: pwsh
         run: |
-          #$isWindows = ("${{ inputs.os }}" -eq "windows-latest")
-          if ($isWindows) {
-             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
-             $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1]).ToString().ToLower()
-             write-output "is-latest='$is_latest'"
-             write-output "is-latest='$is_latest'" >> $env:GITHUB_OUTPUT
-          }
-          else {
-             write-output "is-latest=''"
-             write-output "is-latest=''" >> $env:GITHUB_OUTPUT
-          }
+            $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
+            $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1]).ToString().ToLower()
+            write-output "is-latest='$is_latest'"
+            write-output "is-latest='$is_latest'" >> $env:GITHUB_OUTPUT
+
+      # debugging
+      - name: Report Latest Framework
+        shell: bash
+        run: |
+            echo "IS-LATEST=${{ steps.test-latest-fwk.outputs.is-latest }}"
+            echo "INPUTS.OS=${{ inputs.os }} == ${{ inputs.os == 'windows-latest' }}"
+            echo "INPUTS.RELEASE=${{ inputs.release }} == ${{ inputs.release == true }}"
+            echo "INPUTS.RELEASE=${{ inputs.release }} == ${{ inputs.release == 'true' }}"
 
       # build
       - name: Build
