@@ -504,8 +504,8 @@ namespace Hazelcast.Clustering
                 // so this is not going to last forever - we know it will end
                 var correlationId = _clusterState.GetNextCorrelationId();
                 
-                // Check once before subscription, state could be changed while waiting for a connection.
-                if(cancellationToken.IsCancellationRequested) break;
+                // We can't use null connection here. Cancellation could be requested if it's null.
+                if(connection == null) break;
                 
                 if (!await SubscribeToClusterViewsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
                 {
