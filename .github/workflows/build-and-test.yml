@@ -110,25 +110,24 @@ jobs:
           echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
           ls -l ./build/hazelcast.snk
 
-        # detect whether we are building for the latest framework version
+        # determine whether to build the release artifacts (need only to do it once)
+        # ie whether we are building for the latest framework version on windows
         # assumes that frameworks obtained by getfwks-json are ordered with latest last
-      - name: Detect Latest Framework
-        id: test-latest-fwk
+      - name: Determine Build Release Artifacts
+        id: release-artifacts
         shell: pwsh
         run: |
             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
-            $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1]).ToString().ToLower()
-            write-output "is-latest='$is_latest'"
-            write-output "is-latest='$is_latest'" >> $env:GITHUB_OUTPUT
+            $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1])
+            $build = $isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")
+            write-output "build=$build"
+            write-output "build=$build" >> $env:GITHUB_OUTPUT
 
       # debugging
-      - name: Report Latest Framework
+      - name: Report Build Release Artifacts
         shell: bash
         run: |
-            echo "IS-LATEST=${{ steps.test-latest-fwk.outputs.is-latest }}"
-            echo "INPUTS.OS=${{ inputs.os }} == ${{ inputs.os == 'windows-latest' }}"
-            echo "INPUTS.RELEASE=${{ inputs.release }} == ${{ inputs.release == true }}"
-            echo "INPUTS.RELEASE=${{ inputs.release }} == ${{ inputs.release == 'true' }}"
+            echo "RELEASE-ARTIFACTS=${{ steps.release-artifacts.outputs.build }}"
 
       # build
       - name: Build
@@ -199,13 +198,13 @@ jobs:
 
       # create nuget packages
       - name: Pack NuGet packages
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
       - name: Upload NuGet packages artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         uses: actions/upload-artifact@v3
         with:
           name: NuGet-Packages (${{ matrix.os }})
@@ -213,13 +212,13 @@ jobs:
 
       # publish examples (inc. soak tests) (windows only so we have framework too)
       - name: Publish examples
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore publish-examples
 
       # archive examples (windows only)
       - name: Archive examples artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         uses: actions/upload-artifact@v3
         with:
           name: Examples
@@ -227,7 +226,7 @@ jobs:
 
       # git the docs, create the patch
       - name: Create docs patch
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         shell: pwsh
         run: |
           ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
@@ -239,7 +238,7 @@ jobs:
 
       # archive docs patch
       - name: Upload docs patch artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && steps.test-latest-fwk.outputs.is-latest == 'true'
+        if: steps.release-artifacts.outputs.build
         uses: actions/upload-artifact@v3
         with:
           name: Docs-Patch

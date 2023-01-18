@@ -785,6 +785,19 @@ namespace Hazelcast.Tests.Serialization.Compact
         public readonly record struct RecordStruct(string StringValue)
         { }
 
+        [Test]
+        public void SerializeObjectProperty1()
+        {}
+
+        [Test]
+        public void SerializeObjectProperty2()
+        {}
+
+        private class ClassWithObjectProperty
+        {
+            public Thing 
+        }
+
         private class ActivatorKiller
         {
             private ActivatorKiller()
