@@ -207,7 +207,7 @@ jobs:
         if: steps.release-artifacts.outputs.build
         uses: actions/upload-artifact@v3
         with:
-          name: NuGet-Packages (${{ matrix.os }})
+          name: NuGet-Packages
           path: './temp/output/Hazelcast.Net.*pkg'
 
       # publish examples (inc. soak tests) (windows only so we have framework too)

@@ -205,21 +205,13 @@ jobs:
           mkdir ./temp
           mkdir ./temp/gh-pages-patches
           mkdir ./temp/tests
-          mkdir ./temp/tests/cover
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
-
-      # download test coverage artifact
-      - name: Download test coverage artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: Test-Coverage (windows-latest)
-          path: ./temp/tests/cover
 
       # verify downloads
       - name: Verify downloads
@@ -227,8 +219,6 @@ jobs:
         run: |
           echo "docs patch:"
           ls ./temp/gh-pages-patches
-          echo "test coverage:"
-          ls ./temp/tests/cover
 
       # checkout documentation
       - name: Checkout documentation
@@ -253,15 +243,6 @@ jobs:
           cat temp/gh-pages-patches/*.patch | git -C ./temp/gh-pages am
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
-
-      # publish to codecov
-      - name: Publish to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/tests/cover/cover-net6.0.xml
-
-
 
   # publish the release
   # if the build and tests were successful
@@ -338,14 +319,14 @@ jobs:
 
       # download nuget packages
       - name: Download NuGet packages artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: NuGet-Packages (windows-latest)
+          name: NuGet-Packages
           path: ./temp/output
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
