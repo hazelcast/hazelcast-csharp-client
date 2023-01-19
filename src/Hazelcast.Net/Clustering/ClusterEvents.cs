@@ -503,6 +503,10 @@ namespace Hazelcast.Clustering
                 // try to subscribe, relying on the default invocation timeout,
                 // so this is not going to last forever - we know it will end
                 var correlationId = _clusterState.GetNextCorrelationId();
+                
+                // We can't use null connection here. Cancellation could be requested if it's null.
+                if(connection == null) break;
+                
                 if (!await SubscribeToClusterViewsAsync(connection, correlationId, cancellationToken).CfAwait()) // does not throw
                 {
                     // failed => try another connection
