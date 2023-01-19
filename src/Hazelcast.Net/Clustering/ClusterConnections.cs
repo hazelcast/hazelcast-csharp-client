@@ -600,7 +600,7 @@ namespace Hazelcast.Clustering
                         }
                         else
                         {
-                            _logger.IfDebug()?.LogDebug("Failed to connect to address {Address}.", address);
+                            _logger.IfWarning()?.LogWarning("Failed to connect to address {Address}.", address);
                         }
                     }
                 }
