@@ -50,7 +50,7 @@ namespace Hazelcast.Core
         /// <summary>
         /// Gets or sets the multiplier.
         /// </summary>
-        public double Multiplier { get; set; } = 1;
+        public double Multiplier { get; set; } = 1.05;
 
         /// <summary>
         /// Gets or sets the timeout in milliseconds.
