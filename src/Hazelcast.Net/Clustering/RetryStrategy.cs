@@ -132,7 +132,7 @@ namespace Hazelcast.Clustering
 
             var delay = GetDelay(elapsed);
 
-            _logger.IfDebug()?.LogDebug("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, will retry in {Delay}ms", _action, _attempts, elapsed, delay);
+            _logger.IfWarning()?.LogWarning("Unable to {Action} after {Attempts} attempts and {Elapsed}ms, will retry in {Delay}ms", _action, _attempts, elapsed, delay);
 
             try
             {
