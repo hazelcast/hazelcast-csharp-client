@@ -6,10 +6,14 @@
     
   <Import Project="AnalysisRules.props" />
 
-  <ItemGroup>
+  <PropertyGroup>
 
     <!-- bundle XML doc in NuGet package-->
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+  </PropertyGroup>
+
+  <ItemGroup>
 
     <!-- documentation -->
     <PackageReference Include="DocFX.Console" Version="2.59.4" />
