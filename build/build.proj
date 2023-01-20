@@ -8,6 +8,9 @@
 
   <ItemGroup>
 
+    <!-- bundle XML doc in NuGet package-->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
     <!-- documentation -->
     <PackageReference Include="DocFX.Console" Version="2.59.4" />
     <PackageReference Include="memberpage" Version="2.59.4" />
