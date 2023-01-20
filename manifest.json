@@ -1001,30 +1001,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.AddAndGetAsync.html",
-          "hash": "8ir6Q/A5okDjUEAhj9pum7XJ6Iwqs3waukDAnmWWMyk="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.CompareAndSetAsync.html",
-          "hash": "f0j0HvSCU9PN3QyAnZqc8mohVgc5M6vEK96x0UqbbNw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.DecrementAndGetAsync.html",
           "hash": "DlIfrTs+9FJw8eBwyY9YGiswEaysyyzHwrdvg/hxs74="
         }
@@ -1123,6 +1099,30 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.html",
           "hash": "JFUQNWN2YDs8GasoOd8ac7adSnZPJ1RWZ26IJ3iqr3Y="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.AddAndGetAsync.html",
+          "hash": "8ir6Q/A5okDjUEAhj9pum7XJ6Iwqs3waukDAnmWWMyk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IAtomicLong.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.CP.IAtomicLong.CompareAndSetAsync.html",
+          "hash": "f0j0HvSCU9PN3QyAnZqc8mohVgc5M6vEK96x0UqbbNw="
         }
       },
       "is_incremental": false,
@@ -1337,6 +1337,42 @@
       "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.GetLockCountAsync.html",
+          "hash": "m2E+0SVDQhTLfQJsgU+lw/Qd2Ns1yt6QkjBR5IgN4AY="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.IsLockedByContextAsync.html",
+          "hash": "ONlGiPdnHKsRnhnGINM4TjFQQeuFgLZHaE2alQ5v2Rk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.html",
+          "hash": "FN/eht1RlAoAAejFf6TwIp2NnHS+1KEislTJhOMAh4M="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.InvalidFence.html",
           "hash": "h6MT2hfgKtX2j5v8YjxXuQ0jJkEdmx5AgZBE//De0NQ="
         }
@@ -1423,42 +1459,6 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.GetFenceAsync.html",
           "hash": "qbCwI6VWOxHlLKNeYPq4Wr5iLL6kKybYe4GQEwFLtpU="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.GetLockCountAsync.html",
-          "hash": "m2E+0SVDQhTLfQJsgU+lw/Qd2Ns1yt6QkjBR5IgN4AY="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.IsLockedByContextAsync.html",
-          "hash": "ONlGiPdnHKsRnhnGINM4TjFQQeuFgLZHaE2alQ5v2Rk="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.CP.IFencedLock.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.CP.IFencedLock.html",
-          "hash": "FN/eht1RlAoAAejFf6TwIp2NnHS+1KEislTJhOMAh4M="
         }
       },
       "is_incremental": false,
@@ -3101,18 +3101,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHList-1.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.IHList-1.html",
-          "hash": "s/kALlkDquEexBj8k5MN0ffvdQBPp8REGIlPastZu4g="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHList-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.IHList-1.AddAsync.html",
           "hash": "/hwKqvD8UXcrAwM2PdnnGIjgObOb6vYa3ObnqcH347k="
         }
@@ -3199,6 +3187,18 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.IHList-1.RemoveAsync.html",
           "hash": "KQu2PylCj+hAeA3goVETzl+A+XXbZ7s4NBC3x6cAlLU="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.IHList-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.IHList-1.html",
+          "hash": "s/kALlkDquEexBj8k5MN0ffvdQBPp8REGIlPastZu4g="
         }
       },
       "is_incremental": false,
@@ -5009,18 +5009,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.html",
-          "hash": "mz1+dUT7BJmJ4JnavRyzgze7voPSQlPSe2+01L9oohg="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.-ctor.html",
           "hash": "EaI/k0FwtU9xX/QOSjMbcb8uD8CvSkULbkaFwHuX/AQ="
         }
@@ -5035,6 +5023,18 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.OldValue.html",
           "hash": "RJc9mtAeA2XvbWZ1EJ3lgO3EgA/g1+/fFBLsO4qxZRo="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryExpiredEventArgs-2.html",
+          "hash": "mz1+dUT7BJmJ4JnavRyzgze7voPSQlPSe2+01L9oohg="
         }
       },
       "is_incremental": false,
@@ -6869,54 +6869,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.AddConfiguration.html",
-          "hash": "fwMXzgsDIDK8Dl7eG4XQDqGm7w1fkpBmZJF5hwRM3+4="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.Bind.html",
-          "hash": "trXZsrUbKAPzbZhToy2zXJRfKP95hO3UhhEGmBPve4s="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.Build.html",
-          "hash": "Uq00O2NaCKLN8F6KBT6Ov7oMnvKoDQMe0g6P1rceYMk="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.html",
-          "hash": "DmGnzI6o57GHD3b0BVguBpGxWY+cpWjjnXL0uLHFnlY="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.ThisBuilder.html",
           "hash": "G5mlSlfwv0sLDBG7dUpaVeKQVRiFwXuiv/dnmyeQOvw="
         }
@@ -7003,6 +6955,54 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.ConfigureBuilder.html",
           "hash": "IgzthdkT1FfMb+GtdvRrg6KXhFh+AuYtYC+lZ7RUKyM="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.AddConfiguration.html",
+          "hash": "fwMXzgsDIDK8Dl7eG4XQDqGm7w1fkpBmZJF5hwRM3+4="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.Bind.html",
+          "hash": "trXZsrUbKAPzbZhToy2zXJRfKP95hO3UhhEGmBPve4s="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.Build.html",
+          "hash": "Uq00O2NaCKLN8F6KBT6Ov7oMnvKoDQMe0g6P1rceYMk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.HazelcastOptionsBuilderBase-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.html",
+          "hash": "DmGnzI6o57GHD3b0BVguBpGxWY+cpWjjnXL0uLHFnlY="
         }
       },
       "is_incremental": false,
@@ -8321,102 +8321,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.ToString.html",
-          "hash": "KODhJRBbmQ2nT1w05n+X4+h6jpN1z7qghefneUAH3yo="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.TryParse.html",
-          "hash": "ZZ/WxITCdtGK9PMsOd8AcfsS0kDzcKGVte8Pu0Ry52k="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.Parse.html",
-          "hash": "Stn4LlNd0F3UDM/bvaEaEKP8aUJyu5S7ntjKMmn8NqI="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.Equals.html",
-          "hash": "3ywFzQMqdiCQ+3hysIV38rZJVmGnbwfFlTeqm3wVvvg="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.GetHashCode.html",
-          "hash": "m+Almp9WHSS4f5W6Yf8KcPu0s7ldwwoTv/7qxOl9Nac="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.op_Equality.html",
-          "hash": "LPslr6Ou1GGwaqa8dCIaLPhl1+w7RFZq4RslYOglHzk="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.op_Inequality.html",
-          "hash": "stPkKRwuXa46RDwtXUcEuthivE9jbCjZFFD11nuwZr0="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.html",
-          "hash": "0FSB767uKvi8Oyp4NFF9YLXKu0l5Ddlr3F3Eu7Y+dzw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.-ctor.html",
           "hash": "3TVH5O7gIKwdvBAdsTThbUw/0cNwHD7EWcro1jteL1w="
         }
@@ -8539,6 +8443,102 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.op_Explicit.html",
           "hash": "IC/SJ6kyLItzXYNpIEhW9SNN1BfDcNjUQ0lPLg9d1qA="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.ToString.html",
+          "hash": "KODhJRBbmQ2nT1w05n+X4+h6jpN1z7qghefneUAH3yo="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.TryParse.html",
+          "hash": "ZZ/WxITCdtGK9PMsOd8AcfsS0kDzcKGVte8Pu0Ry52k="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.Parse.html",
+          "hash": "Stn4LlNd0F3UDM/bvaEaEKP8aUJyu5S7ntjKMmn8NqI="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.Equals.html",
+          "hash": "3ywFzQMqdiCQ+3hysIV38rZJVmGnbwfFlTeqm3wVvvg="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.GetHashCode.html",
+          "hash": "m+Almp9WHSS4f5W6Yf8KcPu0s7ldwwoTv/7qxOl9Nac="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.op_Equality.html",
+          "hash": "LPslr6Ou1GGwaqa8dCIaLPhl1+w7RFZq4RslYOglHzk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.op_Inequality.html",
+          "hash": "stPkKRwuXa46RDwtXUcEuthivE9jbCjZFFD11nuwZr0="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.HLocalTime.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Models.HLocalTime.html",
+          "hash": "0FSB767uKvi8Oyp4NFF9YLXKu0l5Ddlr3F3Eu7Y+dzw="
         }
       },
       "is_incremental": false,
@@ -13481,282 +13481,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.NewBuilder.html",
-          "hash": "7hHqhxJ7DMQNiHuSpDYnxZ+Rtg40JECpnx1MO0Z4g2I="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.NewBuilderWithClone.html",
-          "hash": "rM5wI/DnpH3wTzRwQXQeUPlUjcUUMVAQvTXWtEyDWBo="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.FieldNames.html",
-          "hash": "PyC4ZsOHYGkRkh4ASe+Ki89e6lmPFl1J3TOGRhXmoR8="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFieldKind.html",
-          "hash": "iilhMFWEFMVuFwIVK2IrpiQeBUYhDXhmaHZIRxWw4tE="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetGenericRecord.html",
-          "hash": "ZJZ1XSD600qf57cQf+FiFQkCIw5y8yNKFWVJaO0v9Jg="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfGenericRecord.html",
-          "hash": "aFiVek8BrmI+9vYJFrQ1Qmi7NDQ2zFDumqKBZOztzA8="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetBoolean.html",
-          "hash": "hQ+yFUi5LoL3MO+oRlH+w4UVUQKhz/2neKxEIvrLskA="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt8.html",
-          "hash": "iEeMGSyAV7IlrRQUvMCmeDG6VTsFgVaQbmX40VLPOCE="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt16.html",
-          "hash": "x0pY2hsH9f5tpTVRu3/x9Am1Wtypr6Etw3JjJ2TVLSI="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt32.html",
-          "hash": "2fBGt54lt0zcZtV2Z5sVJ7jCttDGnXm9HyNuwWeHH2w="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt64.html",
-          "hash": "2sDEX2E692wA+dcHsikX7e9eLiekhwZCJ2+ayNZZC20="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFloat32.html",
-          "hash": "3qvD1hw3V9aTjw0RoN+SK1E562GmvVyVK+kXDO9lYjs="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFloat64.html",
-          "hash": "4qW7abajL4JU2ZingOjnDKZ2YBjvGe02zX4pNlySuWg="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfBoolean.html",
-          "hash": "iRf3wwDbFDhBk+bKhWCKaDsd90f3/f8clCbJr9xFZ40="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt8.html",
-          "hash": "l7rLocdwfvfISARkKZzJNR6mBZe6QfUD/EaLaHtdNTw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt16.html",
-          "hash": "lx/9DFrpfm9HPMnzI+hI2y5ysiVCBtWbqdPUNIMK0MA="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt32.html",
-          "hash": "4GP4BGtxJ7F45AzBrzKdPqajNnKChRP1N7bEUAnquBY="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt64.html",
-          "hash": "czaUdeDYOU4TwSKKx7GMASbZz0bEJHxlH9Li8HbpMS4="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat32.html",
-          "hash": "3fgp7ilWOnSvq7kzydbGMC8IX6IbAmNSVmthqsUvI90="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat64.html",
-          "hash": "GlvGABOjuEpem/kjEcJo1DJa+uqnzu6CeL/+MeAHEBk="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableBoolean.html",
-          "hash": "0SzmSeEv3HYj9acCRQ33+KETGAjGfbi6IMcR8aLx588="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableInt8.html",
-          "hash": "T/kXV2RuBptVM7rKcbzFZzx1K4w7X2TvE3tbL0kEDGA="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableInt16.html",
-          "hash": "yMKnP3/kxbM2kW86NyBIEZ6udqMHo1khs+gN9WNTMzM="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableInt32.html",
           "hash": "eM5iRkQOvljz8hRkzCwPhtscQpsocNhzyb58IER3RQM="
         }
@@ -14042,6 +13766,282 @@
     },
     {
       "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.NewBuilder.html",
+          "hash": "7hHqhxJ7DMQNiHuSpDYnxZ+Rtg40JECpnx1MO0Z4g2I="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.NewBuilderWithClone.html",
+          "hash": "rM5wI/DnpH3wTzRwQXQeUPlUjcUUMVAQvTXWtEyDWBo="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.FieldNames.html",
+          "hash": "PyC4ZsOHYGkRkh4ASe+Ki89e6lmPFl1J3TOGRhXmoR8="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFieldKind.html",
+          "hash": "iilhMFWEFMVuFwIVK2IrpiQeBUYhDXhmaHZIRxWw4tE="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetGenericRecord.html",
+          "hash": "ZJZ1XSD600qf57cQf+FiFQkCIw5y8yNKFWVJaO0v9Jg="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfGenericRecord.html",
+          "hash": "aFiVek8BrmI+9vYJFrQ1Qmi7NDQ2zFDumqKBZOztzA8="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetBoolean.html",
+          "hash": "hQ+yFUi5LoL3MO+oRlH+w4UVUQKhz/2neKxEIvrLskA="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt8.html",
+          "hash": "iEeMGSyAV7IlrRQUvMCmeDG6VTsFgVaQbmX40VLPOCE="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt16.html",
+          "hash": "x0pY2hsH9f5tpTVRu3/x9Am1Wtypr6Etw3JjJ2TVLSI="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt32.html",
+          "hash": "2fBGt54lt0zcZtV2Z5sVJ7jCttDGnXm9HyNuwWeHH2w="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetInt64.html",
+          "hash": "2sDEX2E692wA+dcHsikX7e9eLiekhwZCJ2+ayNZZC20="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFloat32.html",
+          "hash": "3qvD1hw3V9aTjw0RoN+SK1E562GmvVyVK+kXDO9lYjs="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetFloat64.html",
+          "hash": "4qW7abajL4JU2ZingOjnDKZ2YBjvGe02zX4pNlySuWg="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfBoolean.html",
+          "hash": "iRf3wwDbFDhBk+bKhWCKaDsd90f3/f8clCbJr9xFZ40="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt8.html",
+          "hash": "l7rLocdwfvfISARkKZzJNR6mBZe6QfUD/EaLaHtdNTw="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt16.html",
+          "hash": "lx/9DFrpfm9HPMnzI+hI2y5ysiVCBtWbqdPUNIMK0MA="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt32.html",
+          "hash": "4GP4BGtxJ7F45AzBrzKdPqajNnKChRP1N7bEUAnquBY="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfInt64.html",
+          "hash": "czaUdeDYOU4TwSKKx7GMASbZz0bEJHxlH9Li8HbpMS4="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat32.html",
+          "hash": "3fgp7ilWOnSvq7kzydbGMC8IX6IbAmNSVmthqsUvI90="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetArrayOfFloat64.html",
+          "hash": "GlvGABOjuEpem/kjEcJo1DJa+uqnzu6CeL/+MeAHEBk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableBoolean.html",
+          "hash": "0SzmSeEv3HYj9acCRQ33+KETGAjGfbi6IMcR8aLx588="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableInt8.html",
+          "hash": "T/kXV2RuBptVM7rKcbzFZzx1K4w7X2TvE3tbL0kEDGA="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecord.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecord.GetNullableInt16.html",
+          "hash": "yMKnP3/kxbM2kW86NyBIEZ6udqMHo1khs+gN9WNTMzM="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
       "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IGenericRecordBuilder.yml",
       "output": {
         ".html": {
@@ -14082,7 +14082,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetBoolean.html",
-          "hash": "MKMSf1KP9ckJFzrEnLG5FZ3cgX69E9J9DvPAt/6KtwU="
+          "hash": "W9E1z4YvLjEVi/JTWIVWTVrzBiDdtZhDgfkuiTCIlA0="
         }
       },
       "is_incremental": false,
@@ -14094,7 +14094,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetInt8.html",
-          "hash": "mdE8roL0ANHwwTACqY8o70qoqJV4vhf5RukOOkJAtmE="
+          "hash": "ue7ylekggVl1Cp2W5p0gFsryPHXwVyvHY3A4bJzFEEM="
         }
       },
       "is_incremental": false,
@@ -14106,7 +14106,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetInt16.html",
-          "hash": "JNTS5esZ5IW3o1eQZ2Jc4i4Bvjo2em9uKZZxZrtJsgM="
+          "hash": "KFV9Om3JBUd421WYYxNIUAOCqJK9IJwa/4tGHGCd8sM="
         }
       },
       "is_incremental": false,
@@ -14118,7 +14118,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetInt32.html",
-          "hash": "RzLRFcCccG7WmbsBadxjj6uEIZh4/Ftf44cQv49laIQ="
+          "hash": "IK88/uiBu10DzLBtlm1EdAuE3ZJo8mdvKs0J5FGgCpg="
         }
       },
       "is_incremental": false,
@@ -14130,7 +14130,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetInt64.html",
-          "hash": "FZNA5M3gvJnDuxn/EVKrz52fFMfhUAD8YWm9b0GnRJ8="
+          "hash": "ncQSJmGa1HyaQHw8e8PHDJHYAlV48bojzKZy6y/S9CI="
         }
       },
       "is_incremental": false,
@@ -14142,7 +14142,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetFloat32.html",
-          "hash": "wlJ5Ts5o1nGxQ2aXU9Og7uqmVd9hV2JqqcJboKLQZqE="
+          "hash": "MoPj7cmS2CtH+JP3NkGlz4mCNROm//qWPxPXguKzGQI="
         }
       },
       "is_incremental": false,
@@ -14154,7 +14154,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetFloat64.html",
-          "hash": "zDUyjzfOMVXaYSxFIWnDJKlO1wpok1UE+TwY1NrFtM8="
+          "hash": "h1N/aTEmNLJo//FUQHEejSP/cC4MQCt2X2FCGDZe1sI="
         }
       },
       "is_incremental": false,
@@ -14166,7 +14166,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfBoolean.html",
-          "hash": "fWlClsf/DUuYWSMBqf56nvQLnev08aDWRodRNf07MDY="
+          "hash": "BxdfsiydSXE9fbo8IR4qkjczwyE86hy02OjsbEAsT1E="
         }
       },
       "is_incremental": false,
@@ -14178,7 +14178,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt8.html",
-          "hash": "5918vLmqDq/+s1tVjA+xbWR5fH6k6ZxCxtYWEBIRxVU="
+          "hash": "s2Eymp1yNE8I1uJC/hW2JGpP57cTZL+QGVeFNpEiIDk="
         }
       },
       "is_incremental": false,
@@ -14190,7 +14190,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt16.html",
-          "hash": "fNTf/bqpnQ6TkTmt7L7pa84qyzs+LNWY4nbdooRcEEk="
+          "hash": "BRF2fYgnVrLpsIdgEvw4iBLZa/n+kpHqXoqmNrKdIsM="
         }
       },
       "is_incremental": false,
@@ -14202,7 +14202,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt32.html",
-          "hash": "UymTEJADmvIWXj0wIoQKNKOyhVX7DFySV0WifourFcU="
+          "hash": "H+DypU/0v4AhLhGFWxfdgo62q2QL/0Cv+/95p28TF80="
         }
       },
       "is_incremental": false,
@@ -14214,7 +14214,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfInt64.html",
-          "hash": "ARzOxG1UPPJ0Sex3boh6/qIemzDJEmhV2jUXN3BBCF0="
+          "hash": "9D7C2OGUkLWpXcV+1aPYRxuTYNlsZ598YE4QQJbnM3A="
         }
       },
       "is_incremental": false,
@@ -14226,7 +14226,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfFloat32.html",
-          "hash": "7CmHPtN8Hi6segMpmofFxTLTF5448Si5xVwz37hl+d4="
+          "hash": "KvTp20Djf4RTapCqX1/EHMZMi2uSw8XNnjOk1cd54wk="
         }
       },
       "is_incremental": false,
@@ -14238,7 +14238,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfFloat64.html",
-          "hash": "ae1mJHgKNJ8SKzU5ZRSlOr0Vo+YqVjfSQRpj8iBWQFs="
+          "hash": "PNX5z2+UxCr8/T7dyM0e0SwX1XmQRb4K8F2c1zz7iWw="
         }
       },
       "is_incremental": false,
@@ -14250,7 +14250,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableBoolean.html",
-          "hash": "1t1R8RqldtdU1dvwY5PS5aqhlp3hp7m/fKevE314T6E="
+          "hash": "qp/iNOIR/IiN3rNwfkGhfrceoEJTHYwwSD5mPfmMq4g="
         }
       },
       "is_incremental": false,
@@ -14262,7 +14262,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt8.html",
-          "hash": "Oe3f/nTkZAYvMPUvoUyvGU8P23WG+mbr6YwHtXdRkP4="
+          "hash": "bdzPopu05wQw3BsfF6pwJSWlv12Vc4A+LfWdo/G7piI="
         }
       },
       "is_incremental": false,
@@ -14274,7 +14274,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt16.html",
-          "hash": "EWyxeiSwvIdUF9krtK7GGGJQZmP8JsSrwMl3A0MBgl0="
+          "hash": "48f2tMoGhk79MF+8hJE3tKGVS5gHMXD+QykOWmKVgeE="
         }
       },
       "is_incremental": false,
@@ -14286,7 +14286,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt32.html",
-          "hash": "BT828cm1QMvTkYP3Gt75z7tjvMlRS6C0LQm0UQYzJVI="
+          "hash": "Ckvz4400w99a381kr0wo4Fm0iTd0UI1hk4QtG4pP5oE="
         }
       },
       "is_incremental": false,
@@ -14298,7 +14298,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableInt64.html",
-          "hash": "nnuOJw7EjRcnrgA+sUW3r9tnugu1DKpqoBYpqbRyAZ8="
+          "hash": "CTx6tDiOLmX6W5fdkcZ2e03tn2QhzM4sWFA0Wc9setk="
         }
       },
       "is_incremental": false,
@@ -14310,7 +14310,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableFloat32.html",
-          "hash": "/vFvdsr/GenBr/jalcwPZRorDJFDgBdtbwTJhWqtRD0="
+          "hash": "KU9S9sa8RiGW0R/EU9LlIXjnAOhw8S3bq4em6+YVsf4="
         }
       },
       "is_incremental": false,
@@ -14322,7 +14322,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetNullableFloat64.html",
-          "hash": "P+iCuurNHhHk2cd73aA6InLkDpqif+oJGjNCel81AzQ="
+          "hash": "WkkyGTM3WO9eGaZMHgRKsvy1Q0qqNfs7ZXxnkBsmh/M="
         }
       },
       "is_incremental": false,
@@ -14334,7 +14334,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetDecimal.html",
-          "hash": "PBhUBqy4O6zKEjxJaDJsq+Je3UQXw84EBuM+2TKVZOI="
+          "hash": "JgZuiQltFZCHLd6A1kuGCrnvfFFEKuce6XJN/h0jOQk="
         }
       },
       "is_incremental": false,
@@ -14346,7 +14346,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetString.html",
-          "hash": "mmT5je9+xtO9xrAn/B3sDqnE+H1IPg/2GG2t7+WGhlI="
+          "hash": "RODlDjlMhc+pXGDWaqptESMhNxZ0PkHQuDxW5+ibv7k="
         }
       },
       "is_incremental": false,
@@ -14358,7 +14358,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetTime.html",
-          "hash": "BN+RlIq2aj0XMHkENl71ch1OndCW2beGJg5fWeLjJow="
+          "hash": "28EOYSy1MzHd9XkGoBP/VkAZfh+lsun+Vh2WoBTdFk4="
         }
       },
       "is_incremental": false,
@@ -14370,7 +14370,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetDate.html",
-          "hash": "qfIYepIfkvkPSBHmgmu9xrHRiKQMhyq+UAsfE8Ie2sw="
+          "hash": "/p+pA1wMDwK9IvP3zXcXXJuGDw90HF9YerWSkhG16vA="
         }
       },
       "is_incremental": false,
@@ -14382,7 +14382,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStamp.html",
-          "hash": "f4ulzOJdwNMpVZd/JRz+4yMzFoouiXDpcKq+NtwFqck="
+          "hash": "Ch+k3NN57X1p8VNdh9NJK84WACz2oBlCjyLAxAGYOK8="
         }
       },
       "is_incremental": false,
@@ -14394,7 +14394,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetTimeStampWithTimeZone.html",
-          "hash": "wcvwohWPEFBU1AuTlfQaXNRqd89h24oUczOgD8dK1Eg="
+          "hash": "muB4iaRQSASjngH4uV80awuQTIkxCmnZX24YuaG2sPE="
         }
       },
       "is_incremental": false,
@@ -14406,7 +14406,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableBoolean.html",
-          "hash": "4h55FJ4Wq9R2pfyg60Su26rVADgqVWcHttfrpSFIoPs="
+          "hash": "r8yMXH/z0GY0X0IxczhLSgutdLQ+GpnDWUP285ocbhQ="
         }
       },
       "is_incremental": false,
@@ -14418,7 +14418,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt8.html",
-          "hash": "V/8+KZlMhzVvMEqe0s/1LZOWsMGlCyceDRd+ovIqDb0="
+          "hash": "VpqC+ISlZf1/8qJCq5Rodn2qBTWBe5a7vXgr40PiTKY="
         }
       },
       "is_incremental": false,
@@ -14430,7 +14430,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt16.html",
-          "hash": "gZtrNb4RoCAmT0L1JIyMqT49CuL/RzAEutQe8XD4gaw="
+          "hash": "W1tkTLuacFsg5UKTIHsoB/9lSQiwWvYXYb9I5gkUcgA="
         }
       },
       "is_incremental": false,
@@ -14442,7 +14442,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt32.html",
-          "hash": "4ybsy92WxZVw1uvOM+E5Fnmdh7gQu1oAjlvQBNfuQZA="
+          "hash": "0DYQbBBW3xiCPogtbE9MQ0y5mFO3sYrY+wHqzd42Q5Q="
         }
       },
       "is_incremental": false,
@@ -14454,7 +14454,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableInt64.html",
-          "hash": "q+cStzGWuFXpCZl3gI2LrwcKUn50itol8X7aWjelUt4="
+          "hash": "cRieZF05KNBEIWEiXPdEM5chfQlKfC/bnKEvNOS0OyI="
         }
       },
       "is_incremental": false,
@@ -14466,7 +14466,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableFloat32.html",
-          "hash": "hUwEFeXwK0lw0NBH+I/JuQTF3WtcdPfDyq2psTMSMo4="
+          "hash": "MQAxIIq1QIJEQ/XrL4foaC/9oizyo37GOK7htmSbUUs="
         }
       },
       "is_incremental": false,
@@ -14478,7 +14478,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfNullableFloat64.html",
-          "hash": "8akIxMyJiE5KF6zfTfx3Yws0TMxOj/K6ucX76ACzy5k="
+          "hash": "/MZ0c7dgKl3YAUZRXTvICwLDBcy4/0DRwfHNaeERJYg="
         }
       },
       "is_incremental": false,
@@ -14490,7 +14490,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfDecimal.html",
-          "hash": "7OoiMRGv82rsX9XZZKw7HzEHBrvNKU+4mVVPDSN6I8c="
+          "hash": "+iN/jsGk27IVfp6W6/klhjFbU48z4J5QXWTfh2LGvbs="
         }
       },
       "is_incremental": false,
@@ -14502,7 +14502,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTime.html",
-          "hash": "WGZ1HJFMDBojTSg5OGNOzs11AB2kUGl4xX9SUOQqSUM="
+          "hash": "GAv9YpGy+iqgjDsI9SDz+G/RqmSKT3irJHAAqZ9ct6w="
         }
       },
       "is_incremental": false,
@@ -14514,7 +14514,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfDate.html",
-          "hash": "q/E1mpKf9SNG7cP2/hDL1FVihK96C3mWoLsIlECLrZY="
+          "hash": "8FKM9Dz9FVKZ7WMX9JL8pcdndfa9l8rbdIaVB6NQDsE="
         }
       },
       "is_incremental": false,
@@ -14526,7 +14526,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTimeStamp.html",
-          "hash": "1GgzFyZ1aWWh43+jF18Obu8msFPtv9arZpn7U5q1cKw="
+          "hash": "qMvNhvySh+8r8uN2snrCzvnazPouxhcxujmr/nDTMPM="
         }
       },
       "is_incremental": false,
@@ -14538,7 +14538,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfTimeStampWithTimeZone.html",
-          "hash": "XvL7aaqca/oahRdCyGMrj0Bbn3ryEk2oIGYnWudBWmI="
+          "hash": "Y+Hine5vtR6ElZGooVfdP+HT0O6zVD7kYnOLy7Ptt50="
         }
       },
       "is_incremental": false,
@@ -14550,7 +14550,7 @@
       "output": {
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IGenericRecordBuilder.SetArrayOfString.html",
-          "hash": "7BNuGyTq0nICmgatRlrUQRSQtKJG3YXim+zivxKdjAI="
+          "hash": "CeJQnk6j50HeFuyRy82MLcD93AU7TubvPaX77E5fd+A="
         }
       },
       "is_incremental": false,
@@ -14933,102 +14933,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.Endianness.html",
-          "hash": "hwXuwgZ85oaw42la3nBS/nLt1ExEZyWg5z6g5xgPDH4="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteBoolean.html",
-          "hash": "h9jrDC4O9lpMq4wxHP3s693Fl14D34loyWLcEO3csys="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteByte.html",
-          "hash": "q7FJIDhkAZLKpUylXwbNZvntqJPm2VuLgioZeATv6No="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteSByte.html",
-          "hash": "uQN4dFvJcVjPauJMd90r4SNo4QKKdSqgVYijl5EE/10="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteChar.html",
-          "hash": "TlMFBD0izANEIacGXRK0Dcj0TReGTjo3ZiFcpp5Qu4Y="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteShort.html",
-          "hash": "tQm6Kc+0ETFp/wU1QCowJynUM37mHUQq6Q+lTwyin0k="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteUShort.html",
-          "hash": "UTvFopX7awQXyV7OdAn7E6aPKgeyuWoPgBz7WjehRn8="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteInt.html",
-          "hash": "CzsjkqBoLlSW+11kGHetVNKNaBzGum2LbTjjY67vz6A="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteLong.html",
           "hash": "gT0qbW1dqUnYVjgtAPke6Ld1EBKnW297vMsufjEO9FM="
         }
@@ -15221,6 +15125,102 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.Endianness.html",
+          "hash": "hwXuwgZ85oaw42la3nBS/nLt1ExEZyWg5z6g5xgPDH4="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteBoolean.html",
+          "hash": "h9jrDC4O9lpMq4wxHP3s693Fl14D34loyWLcEO3csys="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteByte.html",
+          "hash": "q7FJIDhkAZLKpUylXwbNZvntqJPm2VuLgioZeATv6No="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteSByte.html",
+          "hash": "uQN4dFvJcVjPauJMd90r4SNo4QKKdSqgVYijl5EE/10="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteChar.html",
+          "hash": "TlMFBD0izANEIacGXRK0Dcj0TReGTjo3ZiFcpp5Qu4Y="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteShort.html",
+          "hash": "tQm6Kc+0ETFp/wU1QCowJynUM37mHUQq6Q+lTwyin0k="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteUShort.html",
+          "hash": "UTvFopX7awQXyV7OdAn7E6aPKgeyuWoPgBz7WjehRn8="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.WriteInt.html",
+          "hash": "CzsjkqBoLlSW+11kGHetVNKNaBzGum2LbTjjY67vz6A="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IObjectDataOutput.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IObjectDataOutput.Write.html",
           "hash": "FhwYv65eJBSsglP2/Wf5k8mre6wLcP5dswHq2uhQBh4="
         }
@@ -15331,126 +15331,6 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableFactory.html",
           "hash": "HBifYYT/mMMdh7+9mhgMYvGk7QRM4xQA/dPmj7BpSUw="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldClassId.html",
-          "hash": "zunIZpEoDzoLpFzLNvbvqZezFiUBRgEsLGMRG2muj6Y="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldNames.html",
-          "hash": "ZaGYbaV0OT9Gj5358n5bUl8+vJgqTl4JTY4m/VjrL90="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldType.html",
-          "hash": "PMgtsaaaTXRtDV3ByZ3DM4IyDkl2QYbFBfDDhU17zic="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetRawDataInput.html",
-          "hash": "xHCK8Jn85jxdnJXIwZndXwYWPr7hcmOtww43kkHB4Z4="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.Version.html",
-          "hash": "aWC7u/NMTIDxo4jSiy/9NqAQIKN7SGq6sNu5ZIEvLgc="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.HasField.html",
-          "hash": "VZcFEzVOCXqNqoy7MCaIX3cN+AmP0Segf7lucn7ho6s="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadBoolean.html",
-          "hash": "T2hFRduds1SNZvZ0p36LSMHvtlHzW3qIiLgaD5DdNTY="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadBooleanArray.html",
-          "hash": "BM5UT4UO3LKe6TH2sL6U8sVmqysEfNj+KtLOcFYRUS0="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadByte.html",
-          "hash": "xKdj0i5YnysCtHtj1axdalUfDZO+zaXuW58mAioGZsU="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadByteArray.html",
-          "hash": "e7tkJXbmjzb1iZwQ2LfZNUIYW9bNc6rMzZhBQkMDXuM="
         }
       },
       "is_incremental": false,
@@ -15653,8 +15533,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.html",
-          "hash": "8UEvQuukoI1Ifk8M23Y2MYR1zBv1e/+bwifQd7Ygu60="
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldClassId.html",
+          "hash": "zunIZpEoDzoLpFzLNvbvqZezFiUBRgEsLGMRG2muj6Y="
         }
       },
       "is_incremental": false,
@@ -15662,11 +15542,119 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableWriter.yml",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableWriter.GetRawDataOutput.html",
-          "hash": "MaENa0INM+C9leXDC5cgJ/CVYS5SA5Ot762+QGgstVg="
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldNames.html",
+          "hash": "ZaGYbaV0OT9Gj5358n5bUl8+vJgqTl4JTY4m/VjrL90="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetFieldType.html",
+          "hash": "PMgtsaaaTXRtDV3ByZ3DM4IyDkl2QYbFBfDDhU17zic="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.GetRawDataInput.html",
+          "hash": "xHCK8Jn85jxdnJXIwZndXwYWPr7hcmOtww43kkHB4Z4="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.Version.html",
+          "hash": "aWC7u/NMTIDxo4jSiy/9NqAQIKN7SGq6sNu5ZIEvLgc="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.HasField.html",
+          "hash": "VZcFEzVOCXqNqoy7MCaIX3cN+AmP0Segf7lucn7ho6s="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadBoolean.html",
+          "hash": "T2hFRduds1SNZvZ0p36LSMHvtlHzW3qIiLgaD5DdNTY="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadBooleanArray.html",
+          "hash": "BM5UT4UO3LKe6TH2sL6U8sVmqysEfNj+KtLOcFYRUS0="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadByte.html",
+          "hash": "xKdj0i5YnysCtHtj1axdalUfDZO+zaXuW58mAioGZsU="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.ReadByteArray.html",
+          "hash": "e7tkJXbmjzb1iZwQ2LfZNUIYW9bNc6rMzZhBQkMDXuM="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableReader.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableReader.html",
+          "hash": "8UEvQuukoI1Ifk8M23Y2MYR1zBv1e/+bwifQd7Ygu60="
         }
       },
       "is_incremental": false,
@@ -15859,6 +15847,18 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableWriter.WritePortable.html",
           "hash": "mCaW9lNdbpGDKXg2j73h5Yr/Faw2CUUKt/Ip541lcGg="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Serialization.IPortableWriter.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Serialization.IPortableWriter.GetRawDataOutput.html",
+          "hash": "MaENa0INM+C9leXDC5cgJ/CVYS5SA5Ot762+QGgstVg="
         }
       },
       "is_incremental": false,
@@ -16757,6 +16757,18 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Sql.SqlStatementOptions.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Sql.SqlStatementOptions.html",
+          "hash": "RnEGihu2vkuB/1Ld4vA9QgR+WlAH8IGDJX8axZWinEw="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Sql.SqlStatementOptions.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Sql.SqlStatementOptions.Default.html",
           "hash": "bpF4yyDazlWppekFxnhb6tfnTYIOz/e0tjh26yoJM5Q="
         }
@@ -16795,18 +16807,6 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Sql.SqlStatementOptions.CursorBufferSize.html",
           "hash": "IIlA60nUlZJIZ7Wok3Ghv0Ru1TmcpYYK5e+rkvWopJU="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Sql.SqlStatementOptions.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Sql.SqlStatementOptions.html",
-          "hash": "RnEGihu2vkuB/1Ld4vA9QgR+WlAH8IGDJX8axZWinEw="
         }
       },
       "is_incremental": false,
