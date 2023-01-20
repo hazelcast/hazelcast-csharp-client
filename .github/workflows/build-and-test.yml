@@ -162,8 +162,8 @@ jobs:
         run: |
           $release = ("${{ inputs.release }}" -eq "true")
           $cmd = "test"
-          if ($release) { $cmd += ",cover-to-docs" }
-          $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
+          #if ($release) { $cmd += ",cover-to-docs" }
+          $a = @( "$cmd", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
           if ($release -or -not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
             if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {

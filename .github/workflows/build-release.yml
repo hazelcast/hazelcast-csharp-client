@@ -151,37 +151,70 @@ jobs:
 
 
 
+  # upload test coverage
+  upload-codecov:
+
+    name: Upload to Codecov
+    runs-on: ubuntu-latest
+    needs: [ analyze, build-release ]
+
+    steps:
+
+      # download the tests coverage artifacts
+      - name: Download tests coverage artifacts
+        uses: actions/download-artifact@v3
+        with:
+          # only net6.0 on windows-latest, that's what goes to codecov
+          path: ./temp/artifacts
+          name: 'Test-Coverage windows-latest-net6.0'
+
+      # move artifacts to their right place
+      - name: Move tests coverage artifacts
+        id: move
+        shell: bash
+        run: |
+          found=0
+          for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
+            echo "Move $i"
+            found=1
+            mv "$i/"* "./temp/test-coverage/windows/"
+          done
+          if [ $found -eq 1 ]; then
+            echo "coverage=true" >> $GITHUB_OUTPUT
+          else
+            echo "coverage=false" >> $GITHUB_OUTPUT
+            echo "(missing)"
+          fi
+          
+      # publish to codecov - if build&test was successful
+      # see https://github.com/marketplace/actions/codecov
+      - name: Publish to Codecov
+        if: steps.move.outputs.coverage == 'true'
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./temp/test-coverage/windows/cover-net6.0.xml
+
+
+
   # publish the work-in-progress release
   publish-wip:
 
     name: Publish Work-In-Progress
     runs-on: ubuntu-latest
 
-    needs: [ analyze, build-release ]
+    needs: [ analyze, build-release, upload-codecov ]
     if: needs.analyze.outputs.todo == 'build'
 
     steps:
 
-      - name: Install Utilities (Linux only)
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: false
+          java: false
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
@@ -244,6 +277,8 @@ jobs:
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
+
+
   # publish the release
   # if the build and tests were successful
   publish-release:
@@ -256,35 +291,15 @@ jobs:
 
     steps:
 
-      - name: Install Utilities (Linux only)
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # Install .NET (minimal, latest, for pushing to NuGet)
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
         with:
-          dotnet-version: 6.0.x
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: false
 
       # checkout the hazelcast/hazelcast-csharp-client repository
-      # including all submodules, we are going to need them
       - name: Checkout code
         uses: actions/checkout@v3
         with:
@@ -377,7 +392,6 @@ jobs:
         shell: bash
         run: |
           git push origin :release/${{ needs.analyze.outputs.version }}
-
           
       # publish the release page, close the milestone
       - name: Publish GitHub Release
