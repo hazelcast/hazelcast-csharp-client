@@ -185,6 +185,66 @@ namespace Hazelcast.Tests.Serialization.Compact
             Assert.Throws<ArgumentNullException>(() => ((Type)null).IsICompactSerializerOfTSerialized(out _));
         }
 
+        [Test]
+        public void ZeroConfigContainsExplicit()
+        {
+            var options = new SerializationOptions();
+            options.Compact.AddSerializer(new ThingCompactSerializer()); // Thing is explicit
+
+            // create the entire serialization service
+            var messaging = Mock.Of<IClusterMessaging>();
+            var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
+
+            var inner = new Thing
+            {
+                Name = "thingName",
+                Value = 42
+            };
+
+            var outer = new ThingNest
+            {
+                Name = "nestName",
+                Thing = inner
+            };
+
+            Console.WriteLine("ToData:");
+            var data = service.ToData(outer, false);
+            var obj = service.ToObject<ThingNest>(data);
+
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.Thing.Value, Is.EqualTo(42));
+        }
+
+        [Test]
+        public void ExplicitContainsZeroConfig()
+        {
+            var options = new SerializationOptions();
+            options.Compact.AddSerializer(new ThingNestCompactSerializer()); // ThingNest is explicit
+
+            // create the entire serialization service
+            var messaging = Mock.Of<IClusterMessaging>();
+            var service = HazelcastClientFactory.CreateSerializationService(options, messaging, new NullLoggerFactory());
+
+            var inner = new Thing
+            {
+                Name = "thingName",
+                Value = 42
+            };
+
+            var outer = new ThingNest
+            {
+                Name = "nestName",
+                Thing = inner
+            };
+
+            Console.WriteLine("ToData:");
+            var data = service.ToData(outer, false);
+            var obj = service.ToObject<ThingNest>(data);
+
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj.Thing.Value, Is.EqualTo(42));
+        }
+
         private class DefaultNameThingSerializer : CompactSerializerBase<Thing>
         {
             public override Thing Read(ICompactReader reader) => throw new NotSupportedException();
