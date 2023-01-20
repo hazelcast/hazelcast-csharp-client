@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 using System;
 #if HZ_CONSOLE
 using System.Globalization;
-using System.Threading;
+
 #else
 #pragma warning disable CA1801 // Review unused parameters0
 #pragma warning disable CA1822 // Mark members as static

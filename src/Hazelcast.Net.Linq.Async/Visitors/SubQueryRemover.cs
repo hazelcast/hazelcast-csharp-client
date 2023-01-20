@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -52,7 +51,7 @@ namespace Hazelcast.Linq.Visitors
         // internal for testing
         internal override Expression VisitSelect(SelectExpression node)
         {
-            // Cut it from `From` expression as requested. 
+            // Cut it from `From` expression as requested.
             return _subQueriesToRemove.Contains(node) ? Visit(node.From) : base.VisitSelect(node);
         }
         

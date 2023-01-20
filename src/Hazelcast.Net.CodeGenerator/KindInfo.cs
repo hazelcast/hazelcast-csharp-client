@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -49,7 +49,7 @@ public class KindInfo
 
     /// <summary>
     /// Indicates whether the FieldKind entry must support <c>null</c> values,
-    /// 
+    ///
     /// </summary>
     public bool IsNullableOnly { get; init; }
 
@@ -79,7 +79,7 @@ public class KindInfo
     public string ClrType { get; init; }
 
     /// <summary>
-    /// Gets the map from FieldKind entry underlying types to CLR types. 
+    /// Gets the map from FieldKind entry underlying types to CLR types.
     /// </summary>
     /// <remarks>
     /// <para>Every FieldKind entry must have an entry in this map.</para>
@@ -152,7 +152,7 @@ public class KindInfo
         if (clrType is null)
         {
             kindInfo = null;
-            return false; 
+            return false;
         }
 
         var isValueType = ValueTypes.TryGetValue(clrType, out var supportsNonNullable);

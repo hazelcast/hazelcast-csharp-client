@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Configuration;
-using Hazelcast.Core;
 using Hazelcast.Testing;
 using Microsoft.Extensions.Configuration;
 using NUnit.Framework;
@@ -126,7 +125,7 @@ namespace Hazelcast.Tests.Remote
             //    .Set(x => x.SetLevel(1)));
 
             var client = await HazelcastClientFactory.StartNewFailoverClientAsync(opt =>
-            {                
+            {
                 opt.Clients.Add(CreateHazelcastOptions());
                 opt.TryCount=1;
             });

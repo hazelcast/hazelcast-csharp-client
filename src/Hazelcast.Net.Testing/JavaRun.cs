@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -169,7 +169,7 @@ namespace Hazelcast.Testing
             var outputAndError = new StringBuilder();
 
             // perform async reads, sync reads can hang if output is too big
-            process.OutputDataReceived += (_, a) => 
+            process.OutputDataReceived += (_, a) =>
             {
                 output.Append(a.Data);
                 output.Append(Environment.NewLine);

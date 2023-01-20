@@ -1,18 +1,17 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Linq;
@@ -60,7 +59,7 @@ namespace Hazelcast.Examples.Sql
 
             // Create mapping to be able to run SQL queries over the map.
             // More details: https://docs.hazelcast.com/hazelcast/latest/sql/mapping-to-maps
-            // Note: Column names are case sensitive. Hazelcast Linq provider passes property names as it is. 
+            // Note: Column names are case sensitive. Hazelcast Linq provider passes property names as it is.
             await client.Sql.ExecuteCommandAsync(
                 "CREATE OR REPLACE MAPPING cityMayor (" +
                 "Code INT EXTERNAL NAME \"__key.Code\"," +
@@ -116,7 +115,7 @@ namespace Hazelcast.Examples.Sql
         public record City(int Code, string CityName, bool IsCapital)
         {
             // To construct the City object, there is need for a default constructor.
-            public City() : this(0, "", false){} 
+            public City() : this(0, "", false){}
         };
 
         public class Mayor
@@ -127,7 +126,7 @@ namespace Hazelcast.Examples.Sql
     }
 }
 
-// It's fix for versions < .Net5. 
+// It's fix for versions < .Net5.
 // https://developercommunity.visualstudio.com/t/error-cs0518-predefined-type-systemruntimecompiler/1244809
 namespace System.Runtime.CompilerServices
 {
