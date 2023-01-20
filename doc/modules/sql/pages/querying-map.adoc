@@ -106,7 +106,7 @@ SELECT * FROM "2map"
 
 [source,csharp]
 ----
-await using var result = client.Sql.ExecuteQuery("SELECT Name, Age FROM employee");
+await using var result = await client.Sql.ExecuteQueryAsync("SELECT Name, Age FROM employee");
 ----
 
 It implements `IAsyncEnumerable<SqlRow>` as one-off stream of rows and can be enumerated via regular `foreach` cycle:
@@ -121,6 +121,8 @@ Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing h
 
 NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.
 
+WARNING: Pay attention that filtering and projection are done in local of client in the example. To use LINQ, which runs all query on server, see <<linq-provider, LINQ Provider>>.
+
 == Disposing query result
 
 `ISqlQueryResult` implements `IAsyncDisposable`. Its `DisposeAsync` implementation will make sure to cancel the query and free the used server resources.
@@ -129,7 +131,7 @@ Because of this, it is recommended to wrap operations with query into `await usi
 
 [source,csharp]
 ----
-await using (var result = client.Sql.ExecuteQuery("SELECT * FROM MyMap"))
+await using (var result = await client.Sql.ExecuteQueryAsync("SELECT * FROM MyMap"))
 {
     //...
 }
@@ -142,3 +144,54 @@ You can cancel enumeration of `ISqlQueryResult`, via the https://docs.microsoft.
 If you're using `System.Linq.Async` package, you can also pass `CancellationToken` to `ToListAsync`, `ToArrayAsync` and related methods.
 
 NOTE: At the moment cancellation doesn't work during server query itself. Cancellation will stop the enumeration before fetching next page or switching to the next row of the current page, but won't stop executing request. This will be fixed in the later versions.
+
+== LINQ Provider
+
+WARNING: LINQ support is currently in BETA stage. There may be breaking changes on further releases.
+
+You can use the programmatic LINQ functions instead of string SQL statements to query over your distributed map.
+To benefit from LINQ support, you should add the `Hazelcast.Net.Linq.Async` package as a dependency. The package is an
+extension of `Hazelcast.Net`; it depends on it. The provider uses Hazelcast .Net Client underneath. Both packages are in NuGet. 
+
+=== Supported LINQ Operations
+
+- Where
+- Select
+
+=== Remarks
+
+LINQ provider translates your expression to SQL statements, and send it to server via SQL Service of the Client. 
+It requires the same steps as SQL. The map should be mapped on the server side, and your property names should match 
+with configured column names on mapping. For primitive types `__key` and `this` keywords will be used. For complex types,
+property name will be used as it is. Also, note that properties should be publicly-settable. Otherwise, the result object cannot be
+reconstructed. To reach the provider, `AsAsyncQueryable()` should be invoked. You can async enumerate over the query object. `ToXXXAsync()`
+extensions are not supported at the moment.
+
+https://docs.hazelcast.com/hazelcast/latest/sql/mapping-to-maps[More details about mapping].
+
+=== Example
+
+[source,csharp]
+----
+var map2 = await client.GetMapAsync<int, string>("simpleMap");
+var query = map2.AsAsyncQueryable() // Access to LINQ provider of the map.
+                .Where(p => p.Key > 10); // Query entries by key is bigger than 10.
+await foreach (var entry in query)
+      Console.WriteLine($"Key: {entry.Key}, Value: {entry.Value}");
+      
+// The SQL statement that will be produced for the query above.      
+// SELECT m0.__key, m0.this FROM simpleMap m0 WHERE (m0.__key > ?)"
+----
+
+Here, `AsAsyncQueryable()` extension method comes with `Hazelcast.Net.Linq.Async`, and it returns the LINQ provider.
+You can add your queries over `query` object. You can execute and consume the query result with `await foreach`. 
+In this context, we did not project over the original type. So, the `entry` will be `HKeyValuePair` struct. 
+You can reach key and value of the entry. 
+
+Execution and data fetching will be invoked when enumeration is started. The provider generate the query and execute it 
+with client's configuration.
+
+NOTE: In the future, we are planning to have options that can configure LINQ provider, such as the cursor size of a SQL query or naming convention of properties.
+
+Visit for other examples to `Hazelcast.Net.Examples` on https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql[GitHub].
+
