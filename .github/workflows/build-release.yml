@@ -203,7 +203,7 @@ jobs:
     name: Publish Work-In-Progress
     runs-on: ubuntu-latest
 
-    needs: [ analyze, build-release, upload-codecov ]
+    needs: [ analyze, build-release ]
     if: needs.analyze.outputs.todo == 'build'
 
     steps:
