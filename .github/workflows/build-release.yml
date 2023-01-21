@@ -174,6 +174,8 @@ jobs:
         shell: bash
         run: |
           found=0
+          ls ./temp/artifacts
+          ls ./temp/artifacts/Test-Coverage\ windows-latest-*
           for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
             echo "Move $i"
             found=1
@@ -207,6 +209,12 @@ jobs:
     if: needs.analyze.outputs.todo == 'build'
 
     steps:
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Install our environment
       - name: Install environment
@@ -290,6 +298,12 @@ jobs:
     if: needs.analyze.outputs.todo == 'release'
 
     steps:
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Install our environment
       - name: Install environment
