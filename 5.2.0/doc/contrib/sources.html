@@ -92,7 +92,9 @@
 <p>The solution can be opened with Microsoft <a href="https://visualstudio.microsoft.com/">Visual Studio</a> 2019 or JetBrains <a href="https://www.jetbrains.com/rider/">Rider</a>, but can also be fully built via our custom PowerShell script (see the <a href="building.html">Building</a> page).</p>
 <p>The main Hazelcast.Net project (which builds the library) is covered by Microsoft&#39;s <a href="https://docs.microsoft.com/en-us/visualstudio/code-quality/roslyn-analyzers-overview">Roslyn analyzers</a> (installed via the <a href="https://www.nuget.org/packages/Microsoft.CodeAnalysis.FxCopAnalyzers/">Microsoft.CodeAnalysis.FxCopAnalyzers</a> NuGet package) which can detect and warn about many code issues. The whole solution is also regularly analyzed with the <a href="https://www.ndepend.com/">NDepend</a> tool, which detects all sorts of anti-patterns (circular dependencies, naming inconsistencies...).</p>
 <p>Tests rely on the <a href="https://nunit.org/">NUnit</a> solution. Test coverage is provided by
- <a href="https://www.jetbrains.com/dotcover/">JetBrains dotCover</a> and results are published <a href="../../cover/index.html">here</a>. Benchmarks are powered by <a href="https://benchmarkdotnet.org/">BenchmarkDotNet</a>, documentation is built with Microsoft&#39;s <a href="https://dotnet.github.io/docfx/">DocFX</a> tool.</p>
+ <a href="https://www.jetbrains.com/dotcover/">JetBrains dotCover</a> 
+ and results are published on <a href="https://app.codecov.io/gh/hazelcast/hazelcast-csharp-client">Codecov</a>. 
+ Benchmarks are powered by <a href="https://benchmarkdotnet.org/">BenchmarkDotNet</a>, documentation is built with Microsoft&#39;s <a href="https://dotnet.github.io/docfx/">DocFX</a> tool.</p>
 <p>The client uses the <a href="http://github.com/hazelcast/hazelcast-client-protocol/">Hazelcast Open Binary Client Protocol</a>. The protocol repository is included in the client repository as a Git <a href="https://git-scm.com/book/en/v2/Git-Tools-Submodules">submodule</a> in order to keep track of <em>which</em> exact version of the protocol was used to build the codec files in the client.</p>
 </article>
           </div>
