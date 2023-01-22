@@ -1793,18 +1793,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html",
-          "hash": "wwjR96mwOc4UrUnaIzjhXUEgMyOWajFKWfitziBrkdU="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.Count.html",
           "hash": "ju8DNaBCcWZuPSktAoLmPJPqO9AcnLQPD2YzXgykrjU="
         }
@@ -1843,6 +1831,18 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.html",
           "hash": "6/z6f2bpbMZS8U/pgYg398D90jCsnKIxWiwTUhlz0Wk="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Clustering.LoadBalancing.StaticLoadBalancer.-ctor.html",
+          "hash": "wwjR96mwOc4UrUnaIzjhXUEgMyOWajFKWfitziBrkdU="
         }
       },
       "is_incremental": false,
@@ -2213,30 +2213,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Core.EventHandlersBase-1.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.Add.html",
-          "hash": "Gb2xytJzWc3cAhJBvAbXlr53j40gtpJqP4Yax1k7G5c="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Core.EventHandlersBase-1.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.GetEnumerator.html",
-          "hash": "Mz/sZxaQPf85FO6xE1KTBHh3KOFM0dAfkpkz06BC1H8="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Core.EventHandlersBase-1.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.System-Collections-IEnumerable-GetEnumerator.html",
           "hash": "ysXmz2lQBNJ02usJvI24VGUGJkpfDshaTu0PxK2MT4I="
         }
@@ -2263,6 +2239,30 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.html",
           "hash": "KgmUmjvuOsLDj5zqQuedVNbEDAjkFU/I1/2zoMkDGMw="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Core.EventHandlersBase-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.Add.html",
+          "hash": "Gb2xytJzWc3cAhJBvAbXlr53j40gtpJqP4Yax1k7G5c="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Core.EventHandlersBase-1.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Core.EventHandlersBase-1.GetEnumerator.html",
+          "hash": "Mz/sZxaQPf85FO6xE1KTBHh3KOFM0dAfkpkz06BC1H8="
         }
       },
       "is_incremental": false,
@@ -16385,18 +16385,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Sql.HazelcastSqlException.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.Sql.HazelcastSqlException.html",
-          "hash": "ZFC2D85XHoY1a6JTpeUZiSkUvZrwXTYJFT/rKJwKXj0="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Sql.HazelcastSqlException.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Sql.HazelcastSqlException.-ctor.html",
           "hash": "wuwKllqS0jsybbuDG0BwgmmXB1L4UbXHdQhgKXi5oQg="
         }
@@ -16447,6 +16435,18 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.Sql.HazelcastSqlException.Suggestion.html",
           "hash": "8E49y/nxzSxKgLS7ZcFRCgHASd5YQUA/ScV5HU+Vswg="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Sql.HazelcastSqlException.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.Sql.HazelcastSqlException.html",
+          "hash": "ZFC2D85XHoY1a6JTpeUZiSkUvZrwXTYJFT/rKJwKXj0="
         }
       },
       "is_incremental": false,
