@@ -174,7 +174,7 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/artifact/test-coverage/cover-net6.0.xml
+          files: ./temp/artifacts/test-coverage/cover-net6.0.xml
 
 
 
