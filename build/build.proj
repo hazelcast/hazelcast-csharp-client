@@ -6,13 +6,6 @@
     
   <Import Project="AnalysisRules.props" />
 
-  <PropertyGroup>
-
-    <!-- bundle XML doc in NuGet package-->
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
-  </PropertyGroup>
-
   <ItemGroup>
 
     <!-- documentation -->

@@ -165,37 +165,16 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           # only net6.0 on windows-latest, that's what goes to codecov
-          path: ./temp/artifacts
+          path: ./temp/artifacts/test-coverage
           name: 'Test-Coverage windows-latest-net6.0'
 
-      # move artifacts to their right place
-      - name: Move tests coverage artifacts
-        id: move
-        shell: bash
-        run: |
-          found=0
-          ls ./temp/artifacts
-          ls ./temp/artifacts/Test-Coverage\ windows-latest-*
-          for i in ./temp/artifacts/Test-Coverage\ windows-latest-*; do
-            echo "Move $i"
-            found=1
-            mv "$i/"* "./temp/test-coverage/windows/"
-          done
-          if [ $found -eq 1 ]; then
-            echo "coverage=true" >> $GITHUB_OUTPUT
-          else
-            echo "coverage=false" >> $GITHUB_OUTPUT
-            echo "(missing)"
-          fi
-          
       # publish to codecov - if build&test was successful
       # see https://github.com/marketplace/actions/codecov
       - name: Publish to Codecov
-        if: steps.move.outputs.coverage == 'true'
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/test-coverage/windows/cover-net6.0.xml
+          files: ./temp/artifact/test-coverage/cover-net6.0.xml
 
 
 
