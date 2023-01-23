@@ -4877,6 +4877,18 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.html",
+          "hash": "+uK84EuJmnAyS+skYVMSPM2ONHwfeNHk2ka/9aCI/7k="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.-ctor.html",
           "hash": "uGYSQISd9Y0eMk5EhM9NUfKgwozmrrcZypI2dFp9bYk="
         }
@@ -4891,18 +4903,6 @@
         ".html": {
           "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.Value.html",
           "hash": "vKQZiei2gTffkqH2EjAEne9AcUHTBUGhX7hmvbvDPsU="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryAddedEventArgs-2.html",
-          "hash": "+uK84EuJmnAyS+skYVMSPM2ONHwfeNHk2ka/9aCI/7k="
         }
       },
       "is_incremental": false,
@@ -5201,8 +5201,20 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.-ctor.html",
-          "hash": "rXW+T82DgfMc04vMoMUd/fgYoX3Y4dFa+2RteGiA0U0="
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.Value.html",
+          "hash": "2fnnJHAg6pf9DUliIZLBsawvBH8e9oPxkOHykfWkPtQ="
+        }
+      },
+      "is_incremental": false,
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.html",
+          "hash": "7OM4IW0apNPlw+zU2QLzzBF8xJTFA0HCFyfxwSR/+mE="
         }
       },
       "is_incremental": false,
@@ -5225,20 +5237,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.Value.html",
-          "hash": "2fnnJHAg6pf9DUliIZLBsawvBH8e9oPxkOHykfWkPtQ="
-        }
-      },
-      "is_incremental": false,
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.html",
-          "hash": "7OM4IW0apNPlw+zU2QLzzBF8xJTFA0HCFyfxwSR/+mE="
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEntryUpdatedEventArgs-2.-ctor.html",
+          "hash": "rXW+T82DgfMc04vMoMUd/fgYoX3Y4dFa+2RteGiA0U0="
         }
       },
       "is_incremental": false,
@@ -5441,8 +5441,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.html",
-          "hash": "gLYNFkTw8uS5wz8MLotQ8tzs9XAvQZUnIPC0t90xEZ4="
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.-ctor.html",
+          "hash": "1FKxW3SeJH+ZIhQ1bAPtI/RsEDq/91Cz7/9GwoPpKPw="
         }
       },
       "is_incremental": false,
@@ -5453,8 +5453,8 @@
       "source_relative_path": "obj/dev/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.-ctor.html",
-          "hash": "1FKxW3SeJH+ZIhQ1bAPtI/RsEDq/91Cz7/9GwoPpKPw="
+          "relative_path": "5.2.0/api/Hazelcast.DistributedObjects.MapEvictedEventArgs.html",
+          "hash": "gLYNFkTw8uS5wz8MLotQ8tzs9XAvQZUnIPC0t90xEZ4="
         }
       },
       "is_incremental": false,
