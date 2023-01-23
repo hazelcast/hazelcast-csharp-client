@@ -180,9 +180,8 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          directory: ./temp/artifacts/test-coverage/
+          files: ./temp/artifacts/test-coverage/cover-net6.0.xml
           fail_ci_if_error: true
-          files: ./cover-net6.0.xml
 
 
 
