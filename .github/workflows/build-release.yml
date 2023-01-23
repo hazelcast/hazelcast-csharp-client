@@ -160,6 +160,12 @@ jobs:
 
     steps:
 
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       # download the tests coverage artifacts
       - name: Download tests coverage artifacts
         uses: actions/download-artifact@v3
@@ -174,7 +180,9 @@ jobs:
         uses: codecov/codecov-action@v3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/artifacts/test-coverage/cover-net6.0.xml
+          directory: ./temp/artifacts/test-coverage/
+          fail_ci_if_error: true
+          files: ./cover-net6.0.xml
 
 
 
