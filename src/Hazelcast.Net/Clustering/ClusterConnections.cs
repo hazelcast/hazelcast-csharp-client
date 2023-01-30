@@ -193,11 +193,14 @@ namespace Hazelcast.Clustering
 
             try
             {
+                _logger.IfDebug()?.LogDebug("Raise ConnectionOpened");
                 await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+                _logger.IfDebug()?.LogDebug("Raised ConnectionOpened");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Caught exception while raising ConnectionOpened.");
+                throw;
             }
         }
 
@@ -220,11 +223,15 @@ namespace Hazelcast.Clustering
 
             try
             {
+                _logger.IfDebug()?.LogDebug("Raise ConnectionClosed");
                 await _connectionClosed.AwaitEach(connection).CfAwait();
+                _logger.IfDebug()?.LogDebug("Raised ConnectionClosed");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Caught exception while raising ConnectionClosed.");
+
+                // the connection is going down, there is little we can do here
             }
         }
 
@@ -889,7 +896,23 @@ namespace Hazelcast.Clustering
             // about it if adding support for parallel connections!
 
             // connection is opened
-            await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+            try
+            {
+                await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+            }
+            catch
+            {
+                // we cannot keep using this connection which has not been properly opened, tear it down
+                // and rethrow - but before we dispose the connection, complete/remove its completion,
+                // else dispose leads to OnConnectionClosed which would wait on the completion and thus
+                // would hang - the completion is here to prevent the closed event from triggering before
+                // the opened even, but only if we manage to open properly.
+                // there is always a completion, but we have to TryRemove from concurrent dictionaries
+                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
+                // now it's safe to dispose
+                await connection.DisposeAsync().CfAwait();
+                throw;
+            }
 
             lock (_mutex)
             {
@@ -897,6 +920,7 @@ namespace Hazelcast.Clustering
                 if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
             }
 
+            connection.EnableEvents();
             return connection;
         }
 

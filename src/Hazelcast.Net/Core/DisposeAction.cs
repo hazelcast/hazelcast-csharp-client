@@ -14,28 +14,27 @@
 
 using System;
 
-namespace Hazelcast.Core
+namespace Hazelcast.Core;
+
+/// <summary>
+/// Represents an <see cref="IDisposable"/> that executes an <see cref="Action"/> when disposed.
+/// </summary>
+internal class DisposeAction : IDisposable
 {
+    private readonly Action _action;
+
     /// <summary>
-    /// Represents an <see cref="IDisposable"/> that executes an <see cref="Action"/> when disposed.
+    /// Initializes a new instance of the <see cref="DisposeAction"/> class with an action.
     /// </summary>
-    internal class DisposeAction : IDisposable
+    /// <param name="action">The action to execute when this instance is disposed.</param>
+    public DisposeAction(Action action)
     {
-        private readonly Action _action;
+        _action = action;
+    }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DisposeAction"/> class with an action.
-        /// </summary>
-        /// <param name="action"></param>
-        public DisposeAction(Action action)
-        {
-            _action = action;
-        }
-
-        /// <inheritdoc />
-        public void Dispose()
-        {
-            _action();
-        }
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        _action();
     }
 }
