@@ -62,14 +62,7 @@ namespace Hazelcast.Clustering
 
         private readonly object _mutex = new();
         private volatile bool _disposed;
-
-        // _connected indicates whether the connection is "connected" ie went through auth successfully
-        // and returned from ConnectAsync. then, "things" will happen (mostly, the ConnectionOpened
-        // event) and then, _eventsEnabled will switch to true to indicate that the connection is fully
-        // operational an can raise events. if "things" fail, then the connection may reveive events,
-        // but should not raise them as they are not valid.
         private volatile bool _connected;
-        private volatile bool _eventsEnabled;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
@@ -124,16 +117,6 @@ namespace Hazelcast.Clustering
                     throw new InvalidOperationException(ExceptionMessages.PropertyIsNowReadOnly);
                 _closed = value;
             }
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void EnableEvents()
-        {
-            lock (_mutex)
-                if (_connected && !_disposed)
-                    _eventsEnabled = true;
         }
 
         #endregion
@@ -332,15 +315,8 @@ namespace Hazelcast.Clustering
         {
             try
             {
-                if (!_eventsEnabled)
-                {
-                    HConsole.WriteLine(this, $"Ignore event {Id.ToShortString()}:{message.CorrelationId}");
-                }
-                else
-                {
-                    HConsole.WriteLine(this, $"Raise event {Id.ToShortString()}:{message.CorrelationId}");
-                    _receivedEvent(message);
-                }
+                HConsole.WriteLine(this, $"Raise event {Id.ToShortString()}:{message.CorrelationId}");
+                _receivedEvent(message);
             }
             catch (Exception e)
             {

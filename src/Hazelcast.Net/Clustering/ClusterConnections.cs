@@ -920,7 +920,6 @@ namespace Hazelcast.Clustering
                 if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
             }
 
-            connection.EnableEvents();
             return connection;
         }
 
