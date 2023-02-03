@@ -70,6 +70,15 @@ public class CompactQaTests : ClusterRemoteTestBase
     {
         using var _ = UseHConsole();
 
+        // in case a test times out, NUnit just reports that it failed, without further
+        // details - in fact, it does not even say that the test timed out - so by wrapping
+        // the actual test method this way, we make sure that the test "fails" instead of
+        // timing out, and we get proper output (eg HConsole output)
+        await ExceptionPreventsClientFromReconnectingTask(recover).CfAwait(TimeSpan.FromSeconds(60));
+    }
+
+    private async Task ExceptionPreventsClientFromReconnectingTask(bool recover)
+    {
         var throwException = false;
 
         // start a member
@@ -164,6 +173,11 @@ public class CompactQaTests : ClusterRemoteTestBase
         };
         await client.StartAsync(CancellationToken.None);
 
+        var clientMembers = client.Members;
+        Assert.That(clientMembers.Count, Is.EqualTo(1));
+        Assert.That(clientMembers.First().Member.Id, Is.EqualTo(Guid.Parse(member.Uuid)));
+        HConsole.WriteLine(this, $"CONNECTED TO MEMBER {member.Uuid}");
+
         var map = await client.GetMapAsync<int, IGenericRecord>("bar");
 
         // add values = will publish the corresponding schemas
@@ -178,11 +192,23 @@ public class CompactQaTests : ClusterRemoteTestBase
         // start another member
         member = await RcClient.StartMemberAsync(RcCluster);
 
+        // ensure that, eventually, the client is going to connect to *that* other member
+        // and not, because of some timing issues, on the previous one that would not stop
+        // fast enough - StopMemberWaitRemoved waits for the client to lose its connection
+        // to the member but the remote controller has no wait of notifying us that the
+        // member is actually dead for real and not going to accept connections anymore.
+        await AssertEx.SucceedsEventually(() =>
+        {
+            clientMembers = client.Members;
+            Assert.That(clientMembers.Count, Is.EqualTo(1));
+            Assert.That(clientMembers.First().Member.Id, Is.EqualTo(Guid.Parse(member.Uuid)));
+        }, 60_000, 1_000);
+
         // new member, values are lost
         var value1 = await map.GetAsync(1);
         Assert.That(value1, Is.Null);
 
-        // if we've been reconnected, schemas have been republished
+        // yet we've been reconnected, schemas have been republished
         Assert.That(messages.Any(x => x.MessageType == ClientSendAllSchemasCodec.RequestMessageType));
 
         await RcClient.StopMemberAsync(RcCluster, member).CfAwait();

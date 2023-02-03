@@ -273,10 +273,11 @@ namespace Hazelcast.Clustering
 
             while (true)
             {
+                MemberConnection connection = null;
                 try
                 {
-                    HConsole.WriteLine(this, "Trying...");
-                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
+                    HConsole.WriteLine(this, $"Trying :{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)}...");
+                    connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     return await connection.SendAsync(invocation, cancellationToken).CfAwait();
                 }
                 catch (TaskCanceledException)
@@ -286,7 +287,7 @@ namespace Hazelcast.Clustering
                 }
                 catch (Exception exception)
                 {
-                    HConsole.WriteLine(this, "Exception.");
+                    HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");
 
                     // if the client is not active, die - an active client is starting, started, connected or
                     // disconnected - but attempting to reconnect - whereas a non-active client is down and
@@ -350,8 +351,7 @@ namespace Hazelcast.Clustering
 
             // fall over to random client
             connection = _clusterMembers.GetRandomConnection();
-            if (connection != null)
-                return connection;
+            if (connection != null) return connection;
 
             // fail
             throw _clusterState.ThrowClientOfflineException();

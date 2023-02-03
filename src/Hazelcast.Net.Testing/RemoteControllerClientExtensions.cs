@@ -167,7 +167,7 @@ namespace Hazelcast.Testing
                     })
                     .MembersUpdated((sender, args) =>
                     {
-                        // removing one member amongst others triggers this event
+                        // removing one member amongst others triggers this event (but does not disconnect the client)
                         if (args.RemovedMembers.Count > 0) removed.Release();
                     }))
                 .CfAwait();

@@ -396,9 +396,9 @@ namespace Hazelcast.Clustering
             // PublicAddress don't matter much for what we do
 
             // replace the table
-            var previous = _members;
-            var table = new MemberTable(version, members);
-            lock (_mutex) _members = table;
+            var previousMembers = _members;
+            var newMembers = new MemberTable(version, members);
+            lock (_mutex) _members = newMembers;
 
             // notify the load balancer of the new list of members
             // (the load balancer can always return a member that is not a member
@@ -422,10 +422,10 @@ namespace Hazelcast.Clustering
             // - if enough (sample size) members respond only on their public address, use public addresses
             // for performance reasons (and this is what the Java client does) we determine this
             // once when getting the first members view, and don't change our mind later on, ever.
-            if (previous.Count == 0) // first members view
+            if (previousMembers.Count == 0) // first members view
             {
                 var resolver = new ConnectAddressResolver(_clusterState.Options.Networking, _clusterState.LoggerFactory);
-                if (!(members is IReadOnlyCollection<MemberInfo> mro)) throw new HazelcastException("panic"); // TODO: not exactly pretty
+                if (members is not IReadOnlyCollection<MemberInfo> mro) throw new HazelcastException("panic"); // TODO: not exactly pretty
                 _usePublicAddresses = await resolver.DetermineUsePublicAddresses(mro).CfAwaitNoThrow(false);
             }
 
@@ -433,61 +433,7 @@ namespace Hazelcast.Clustering
             foreach (var member in members) member.UsePublicAddress = _usePublicAddresses;
 
             // compute changes
-            // count 1 for old members, 2 for new members, and then the result is
-            // 1=removed, 2=added, 3=unchanged
-            // MemberInfo overrides GetHashCode and can be used as a key here
-            var diff = new Dictionary<MemberInfo, int>();
-            if (previous == null)
-            {
-                foreach (var m in members)
-                    diff[m] = 2;
-            }
-            else
-            {
-                foreach (var m in previous.Members)
-                    diff[m] = 1;
-
-                foreach (var m in members)
-                    if (diff.ContainsKey(m)) diff[m] += 2;
-                    else diff[m] = 2;
-            }
-
-            // log
-            if (_logger.IsEnabled(LogLevel.Information))
-                LogDiffs(table, diff);
-
-            // process changes, gather events
-            var added = new List<MemberInfo>();
-            var removed = new List<MemberInfo>();
-            foreach (var (member, status) in diff) // all members, old and new
-            {
-                switch (status)
-                {
-                    case 1: // old but not new = removed
-                        HConsole.WriteLine(this, $"Removed {member}");
-                        removed.Add(member);
-
-                        // dequeue the member
-                        _memberConnectionQueue?.Remove(member.Id);
-
-                        break;
-
-                    case 2: // new but not old = added
-                        HConsole.WriteLine(this, $"Added {member}");
-                        added.Add(member);
-
-                        // queue the member for connection
-                        _memberConnectionQueue?.Add(member);
-
-                        break;
-
-                    case 3: // old and new = no change
-                        break;
-
-                    default:
-                        throw new NotSupportedException();
-                }
-            }
+            var (added, removed) = ComputeChanges(previousMembers, newMembers, members);
 
             var maybeDisconnected = false;
             lock (_mutex)
@@ -495,12 +441,11 @@ namespace Hazelcast.Clustering
                 // removed members need to have their connection removed and terminated
                 foreach (var member in removed)
                 {
-                    if (_connections.TryGetValue(member.Id, out var c))
-                    {
-                        _logger.IfDebug()?.LogDebug("Set members: remove obsolete connection {ConnectionId} to {MemberId} at {Address}.", c.Id.ToShortString(), c.MemberId.ToShortString(), c.Address);
-                        _connections.Remove(member.Id);
-                        _terminateConnections.Add(c);
-                    }
+                    if (!_connections.TryGetValue(member.Id, out var c)) continue;
+
+                    _logger.IfDebug()?.LogDebug("Set members: remove obsolete connection {ConnectionId} to {MemberId} at {Address}.", c.Id.ToShortString(), c.MemberId.ToShortString(), c.Address);
+                    _connections.Remove(member.Id);
+                    _terminateConnections.Add(c);
                 }
 
                 // remove connections that don't match a member
@@ -545,6 +490,7 @@ namespace Hazelcast.Clustering
                         }
 
                         _connected = true;
+                        _memberConnectionQueue?.Resume(); // connected -> resume (ok even if not suspended)
                     }
                     else
                     {
@@ -552,28 +498,22 @@ namespace Hazelcast.Clustering
                         _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none is connected, remain disconnected.", removed.Count, added.Count, members.Count);
                     }
                 }
+                else if (isAnyMemberConnected)
+                {
+                    // remain connected
+                    _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, remain connected.", removed.Count, added.Count, members.Count);
+                }
                 else
                 {
-                    if (isAnyMemberConnected)
-                    {
-                        // remain connected
-                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and at least one is connected, remain connected.", removed.Count, added.Count, members.Count);
-                    }
-                    else
-                    {
-                        // we probably are disconnected now
-                        // but the connection queue is running and might have re-added a member
-                        maybeDisconnected = true;
-                    }
+                    // we probably are disconnected now
+                    // but the connection queue is running and might have re-added a member
+                    maybeDisconnected = true;
                 }
             }
 
             // if we cannot be disconnected, we can return immediately
             if (!maybeDisconnected)
-            {
-                _memberConnectionQueue?.Resume(); // just to be sure it's running when needed
                 return new MembersUpdatedEventArgs(added, removed, members.ToList());
-            }
 
             // else, suspend the queue - we need stable connections before we can make a decision
             if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
@@ -606,6 +546,68 @@ namespace Hazelcast.Clustering
             }
 
             return new MembersUpdatedEventArgs(added, removed, members.ToList());
+        }
+
+        private (List<MemberInfo> Added, List<MemberInfo> Removed) ComputeChanges(MemberTable previousTable, MemberTable currentTable, ICollection<MemberInfo> members)
+        {
+            // compute changes
+            // count 1 for old members, 2 for new members, and then the result is
+            // 1=removed, 2=added, 3=unchanged
+            // MemberInfo overrides GetHashCode and can be used as a key here
+            var diff = new Dictionary<MemberInfo, int>();
+            if (previousTable == null)
+            {
+                foreach (var m in members)
+                    diff[m] = 2;
+            }
+            else
+            {
+                foreach (var m in previousTable.Members)
+                    diff[m] = 1;
+
+                foreach (var m in members)
+                    if (diff.ContainsKey(m)) diff[m] += 2;
+                    else diff[m] = 2;
+            }
+
+            // log
+            if (_logger.IsEnabled(LogLevel.Information))
+                LogDiffs(currentTable, diff);
+
+            // process changes, gather events
+            var added = new List<MemberInfo>();
+            var removed = new List<MemberInfo>();
+            foreach (var (member, status) in diff) // all members, old and new
+            {
+                switch (status)
+                {
+                    case 1: // old but not new = removed
+                        HConsole.WriteLine(this, $"Removed {member}");
+                        removed.Add(member);
+
+                        // dequeue the member
+                        _memberConnectionQueue?.Remove(member.Id);
+
+                        break;
+
+                    case 2: // new but not old = added
+                        HConsole.WriteLine(this, $"Added {member}");
+                        added.Add(member);
+
+                        // queue the member for connection
+                        _memberConnectionQueue?.Add(member);
+
+                        break;
+
+                    case 3: // old and new = no change
+                        break;
+
+                    default:
+                        throw new NotSupportedException();
+                }
+            }
+
+            return (added, removed);
         }
 
         #endregion
