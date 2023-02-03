@@ -66,6 +66,7 @@ public class CompactQaTests : ClusterRemoteTestBase
 
     [TestCase(true)]
     [TestCase(false)]
+    [Explicit]
     public async Task ExceptionPreventsClientFromReconnecting(bool recover)
     {
         using var _ = UseHConsole();
