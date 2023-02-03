@@ -111,7 +111,7 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets or sets the <see cref="ReconnectMode"/> in case the client is disconnected.
         /// </summary>
-        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.DoNotReconnect;
+        public ReconnectMode ReconnectMode { get; set; } = ReconnectMode.ReconnectSync;
 
         /// <summary>
         /// Whether to attempt to automatically reconnect a client that has been disconnected.
