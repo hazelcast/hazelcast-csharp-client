@@ -53,7 +53,9 @@ namespace Hazelcast.Core
         /// <returns></returns>
         public HConsoleOptions WithFilename(string filename)
         {
+#if HZ_CONSOLE
             Filename = filename;
+#endif
             return this;
         }
 
