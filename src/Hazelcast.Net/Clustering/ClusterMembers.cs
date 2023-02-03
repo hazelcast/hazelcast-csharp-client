@@ -235,8 +235,7 @@ namespace Hazelcast.Clustering
                         }
 
                         _connected = true;
-                        // resume, if connected (ok even if not suspended)
-                        _memberConnectionQueue?.Resume();
+                        _memberConnectionQueue?.Resume(); // connected -> resume (ok even if not suspended)
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
                     {
@@ -570,7 +569,11 @@ namespace Hazelcast.Clustering
             }
 
             // if we cannot be disconnected, we can return immediately
-            if (!maybeDisconnected) return new MembersUpdatedEventArgs(added, removed, members.ToList());
+            if (!maybeDisconnected)
+            {
+                _memberConnectionQueue?.Resume(); // just to be sure it's running when needed
+                return new MembersUpdatedEventArgs(added, removed, members.ToList());
+            }
 
             // else, suspend the queue - we need stable connections before we can make a decision
             if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
@@ -598,7 +601,8 @@ namespace Hazelcast.Clustering
             finally
             {
                 // if we are now disconnected, make sure to drain the queue
-                _memberConnectionQueue?.Resume(drain: disconnected);
+                if (disconnected) _memberConnectionQueue?.Clear(); // clear and leave suspended
+                else _memberConnectionQueue?.Resume(); // make sure we resume the queue
             }
 
             return new MembersUpdatedEventArgs(added, removed, members.ToList());
