@@ -86,7 +86,9 @@ public class CompactQaTests : ClusterRemoteTestBase
         await using var cleanup = new DisposeAsyncAction(async () => await RcClient.StopMemberAsync(RcCluster, member));
 
         // use a clean client + hook into cluster messaging to capture messages (before client starts)
-        await using var client = HazelcastClientFactory.CreateClient(CreateHazelcastOptions());
+        var options = CreateHazelcastOptions();
+        options.Messaging.RetryTimeoutSeconds = 20;
+        await using var client = HazelcastClientFactory.CreateClient(options);
         // use an internal-level handler, exceptions in user-level handlers are caught
         client.Cluster.Connections.ConnectionOpened += (_, _, _, _) =>
         {
@@ -126,8 +128,7 @@ public class CompactQaTests : ClusterRemoteTestBase
         if (recover)
         {
             // this will eventually complete once we're able to reconnect
-
-            await AssertEx.SucceedsEventually(async () => await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait(), 10_000, 1_000);
+            await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait();
         }
         else
         {
