@@ -123,11 +123,15 @@ namespace Hazelcast.Clustering
         // the old logic for non-smart routing -> we choose the second option and implement a
         // switch feature in MatchMemberAddress
 
-        // see notes above, determines whether to match members addresses
-        // - we want to match for smart routing
-        // - and also for Cloud?
+        // more notes:
+        // the "match" logic assumes that the connect queue is always running and this is a bad
+        // idea - it should only run once one connection has been fully established and the client
+        // is considered connected - but then, the "match" logic cannot work and must be refactored.
+        // but, it's something that no other client offers - decision = disable it entirely for now.
+
         private bool MatchMemberAddress
-            => _clusterState.Options.Networking.SmartRouting || _clusterState.Options.Networking.Cloud.Enabled;
+            //=> _clusterState.Options.Networking.SmartRouting || _clusterState.Options.Networking.Cloud.Enabled;
+            => false;
 
         // see notes above, if matching then addresses must match, else anything matches
         private bool IsMemberAddress(MemberInfo member, NetworkAddress address)
@@ -231,6 +235,8 @@ namespace Hazelcast.Clustering
                         }
 
                         _connected = true;
+                        // resume, if connected (ok even if not suspended)
+                        _memberConnectionQueue?.Resume();
                     }
                     else if (_logger.IsEnabled(LogLevel.Debug))
                     {
@@ -328,8 +334,9 @@ namespace Hazelcast.Clustering
             }
             finally
             {
-                // don't forget to resume the queue
-                _memberConnectionQueue?.Resume(drain);
+                // don't forget to resume the queue - but only if connected
+                if (drain) _memberConnectionQueue?.Clear();
+                if (_connected) _memberConnectionQueue?.Resume();
             }
         }
 
@@ -649,15 +656,15 @@ namespace Hazelcast.Clustering
 
                     lock (_mutex)
                     {
-                        if (_connections.TryGetValue(memberId, out connection))
+                        if (_connections.TryGetValue(memberId, out connection) && connection.Active)
                             return connection;
                     }
                 }
             }
 
             // either "smart" mode but the load balancer did not return a member,
-            // or "uni-socket" mode where there should only be once connection
-            lock (_mutex) connection = _connections.Values.FirstOrDefault();
+            // or "uni-socket" mode where there should only be one connection
+            lock (_mutex) connection = _connections.Values.FirstOrDefault(x => x.Active);
 
             // may be null
             return connection;

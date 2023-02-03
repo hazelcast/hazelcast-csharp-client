@@ -496,7 +496,7 @@ namespace Hazelcast.Clustering
 
             // this will only exit once a connection is assigned, or the task is
             // cancelled, when the cluster goes down (and never up again)
-            while (!cancellationToken.IsCancellationRequested)
+            while (!cancellationToken.IsCancellationRequested && _disposed == 0)
             {
                 connection ??= await WaitForConnection(cancellationToken).CfAwait();
 
@@ -563,12 +563,13 @@ namespace Hazelcast.Clustering
                 _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}.", connection.Id.ToShortString());
                 return true;
             }
-            catch (TargetDisconnectedException)
+            catch (Exception e) when (e is TargetDisconnectedException or ClientOfflineException)
             {
                 _correlatedSubscriptions.TryRemove(correlationId, out _);
                 // if the connection has died... and that can happen when switching members... no need to worry the
                 // user with a warning, a debug message should be enough
-                _logger.IfDebug()?.LogDebug("Failed to subscribe to cluster views on connection {ConnectionId)} (disconnected), may retry.", connection.Id.ToShortString());
+                _logger.IfDebug()?.LogDebug("Failed to subscribe to cluster views on connection {ConnectionId)} ({Reason}), may retry.", connection.Id.ToShortString(),
+                    e is ClientOfflineException o ? ("offline, " + o.State) : "disconnected");
                 return false;
             }
             catch (Exception e)

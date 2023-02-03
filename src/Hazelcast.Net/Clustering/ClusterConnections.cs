@@ -935,7 +935,18 @@ namespace Hazelcast.Clustering
             // ended by now
             _cancel.Cancel();
             if (_connectMembers != null)
-                await _connectMembers.CfAwaitCanceled();
+            {
+                try
+                {
+                    await _connectMembers.CfAwait(120_000); // give it 2 mins
+                }
+                catch (OperationCanceledException)
+                { }
+                catch (Exception e)
+                {
+                    _logger.IfWarning()?.LogWarning(e, "Caught exception when waiting for ConnectMembers to terminate.");
+                }
+            }
             _cancel.Dispose();
 
             // stop and dispose the reconnect task if it's running

@@ -34,7 +34,8 @@ namespace Hazelcast.Tests.Serialization.Compact;
 public class CompactQaTests : ClusterRemoteTestBase
 {
     private IDisposable UseHConsole() => HConsole.Capture(o => o
-        .Configure().SetMaxLevel()
+        //.WithFilename("console.out")
+        .Configure().SetMaxLevel().EnableTimeStamp(origin: DateTime.Now)
         .Configure(this).SetPrefix("TEST")
         .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET").SetLevel(0)
         .Configure<ClientMessageConnection>().SetMinLevel()
@@ -42,7 +43,30 @@ public class CompactQaTests : ClusterRemoteTestBase
         .Configure<Partitioner>().SetLevel(1));
 
     [Test]
-    public async Task ClientGoesOffline()
+    [Explicit("See comment in test.")]
+    public async Task MemberAddressMatch()
+    {
+        using var _ = UseHConsole();
+
+        var member = await RcClient.StartMemberAsync(RcCluster).CfAwait();
+        await using var cleanup = new DisposeAsyncAction(async () => await RcClient.StopMemberAsync(RcCluster, member));
+
+        var options = CreateHazelcastOptions();
+        options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 10_000;
+        options.Networking.Addresses.Clear();
+        options.Networking.Addresses.Add("127.0.0.2:5701");
+
+        // this relies on the connect queue running all the time, but we have now disabled
+        // the queue when disconnected - so this test cannot work anymore, we will need to
+        // find a different way to do address re-routing in the future, if other clients
+        // do it too.
+
+        await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+    }
+
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ExceptionPreventsClientFromReconnecting(bool recover)
     {
         using var _ = UseHConsole();
 
@@ -65,30 +89,59 @@ public class CompactQaTests : ClusterRemoteTestBase
         var map = await client.GetMapAsync<int, IGenericRecord>("bar");
         await map.PutAsync(1, GenericRecordBuilder.Compact("bar1").Build());
 
+        HConsole.WriteLine(this, "-------- STOP MEMBER --------");
+
         // stop the member, wait until it is actually removed (else we might reconnect to it)
         await RcClient.StopMemberWaitRemovedAsync(client, RcCluster, member).CfAwait();
 
         // trigger exceptions
         throwException = true;
+        if (recover)
+        {
+            async Task RecoverAfter(int delayMilliseconds)
+            {
+                await Task.Delay(delayMilliseconds);
+                throwException = false;
+            }
+
+            var recoverTask = RecoverAfter(5000); // fire-and-forget
+        }
+
+        HConsole.WriteLine(this, "-------- START MEMBER --------");
 
         // start another member
         member = await RcClient.StartMemberAsync(RcCluster).CfAwait();
 
-        // this will never complete because we'll never be able to reconnect
-        //
-        // Java: ReconnectMode can be OFF, ON (blocking invocations) or ASYNC (not blocking, triggers HazelcastClientOfflineException)
-        // .NET: ReconnectMode can be DoNotReconnect = OFF, ReconnectSync or ReconnectAsync - but these two have the same effect
-        //
-        // In Java, ASYNC causes any invocation to *immediately* fail with HazelcastClientOfflineException if the client is
-        // reconnecting, whereas ON causes the invocation to be retried, and it may eventually fail with OperationTimeoutException.
-        //
-        // In .NET, invocations are tried (and retried) while the client is reconnecting, until either the client reconnects and
-        // the invocation succeeds, or it times out. So, essentially, .NET is ON and it makes sense that we get a TaskTimeoutException
-        // below.
+        HConsole.WriteLine(this, "-------- PUT ASYNC --------");
 
-        await AssertEx.ThrowsAsync<TaskTimeoutException>(async () => await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait());
+        if (recover)
+        {
+            // this will eventually complete once we're able to reconnect
+
+            await AssertEx.SucceedsEventually(async () => await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait(), 10_000, 1_000);
+        }
+        else
+        {
+            // this will never complete because we'll never be able to reconnect
+            //
+            // Java: ReconnectMode can be OFF, ON (blocking invocations) or ASYNC (not blocking, triggers HazelcastClientOfflineException)
+            // .NET: ReconnectMode can be DoNotReconnect = OFF, ReconnectSync or ReconnectAsync - but these two have the same effect
+            //
+            // In Java, ASYNC causes any invocation to *immediately* fail with HazelcastClientOfflineException if the client is
+            // reconnecting, whereas ON causes the invocation to be retried, and it may eventually fail with OperationTimeoutException.
+            //
+            // In .NET, invocations are tried (and retried) while the client is reconnecting, until either the client reconnects and
+            // the invocation succeeds, or it times out. So, essentially, .NET is ON and it makes sense that we get a TaskTimeoutException
+            // below.
+
+            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () => await map.PutAsync(2, GenericRecordBuilder.Compact("bar2").Build()).CfAwait());
+        }
+
+        HConsole.WriteLine(this, "-------- STOP MEMBER --------");
 
         await RcClient.StopMemberAsync(RcCluster, member).CfAwait();
+
+        HConsole.WriteLine(this, "-------- END --------");
     }
 
     [Test]
