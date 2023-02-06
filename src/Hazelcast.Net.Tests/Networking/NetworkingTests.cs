@@ -529,10 +529,11 @@ namespace Hazelcast.Tests.Networking
                     options.Preview.EnableNewReconnectOptions = true;
                     options.Preview.EnableNewRetryOptions = true;
                     options.Networking.Reconnect = reconnect;
+                    options.Networking.ReconnectMode = reconnect ? ReconnectMode.ReconnectSync : ReconnectMode.DoNotReconnect;
                 }
                 else
                 {
-                    if (reconnect) options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                    if (!reconnect) options.Networking.ReconnectMode = ReconnectMode.DoNotReconnect;
                 }
 
                 options.Networking.Addresses.Add("127.0.0.1:11000");
