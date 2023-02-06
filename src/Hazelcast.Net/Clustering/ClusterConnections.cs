@@ -895,6 +895,11 @@ namespace Hazelcast.Clustering
             // isFirst connection will indeed trigger before any other connection is created - think
             // about it if adding support for parallel connections!
 
+            void RemoveCompletion()
+            {
+                if (_completions.TryRemove(connection, out var completion)) completion.TrySetResult(null);
+            }
+
             // connection is opened
             try
             {
@@ -907,19 +912,12 @@ namespace Hazelcast.Clustering
                 // else dispose leads to OnConnectionClosed which would wait on the completion and thus
                 // would hang - the completion is here to prevent the closed event from triggering before
                 // the opened even, but only if we manage to open properly.
-                // there is always a completion, but we have to TryRemove from concurrent dictionaries
-                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
-                // now it's safe to dispose
+                RemoveCompletion();
                 await connection.DisposeAsync().CfAwait();
                 throw;
             }
 
-            lock (_mutex)
-            {
-                // there is always a completion, but we have to TryRemove from concurrent dictionaries
-                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
-            }
-
+            RemoveCompletion();
             return connection;
         }
 
