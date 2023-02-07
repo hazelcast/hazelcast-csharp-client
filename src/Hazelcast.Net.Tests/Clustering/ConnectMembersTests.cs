@@ -61,6 +61,7 @@ namespace Hazelcast.Tests.Clustering
             var cancellation = new CancellationTokenSource();
             var connecting = ConnectMembers(queue, cancellation.Token);
 
+            queue.Resume(); // the queue is initially suspended, resume
 
             // -- connects
 
@@ -210,6 +211,8 @@ namespace Hazelcast.Tests.Clustering
 
             var cancellation = new CancellationTokenSource();
             var connecting = ConnectMembers(queue, cancellation.Token);
+
+            queue.Resume(); // the queue is initially suspended, resume
 
             // -- connects
 

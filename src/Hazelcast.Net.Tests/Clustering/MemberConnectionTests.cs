@@ -397,7 +397,7 @@ namespace Hazelcast.Tests.Clustering
                 new SslOptions(), new Int64Sequence(), loggerFactory
             );
 
-            connection.Accessor().Active = true;
+            connection.Accessor().Connected = true;
             connection.Accessor().MemberId = member.Id;
 
             return connection;

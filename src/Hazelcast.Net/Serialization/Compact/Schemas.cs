@@ -83,7 +83,7 @@ internal class Schemas : ISchemas
     {
         _schemas.AddOrUpdate(schema.Id,
             _ => new SchemaInfo(schema, isClusterSchema),
-            (_, schemaInfo) => { schemaInfo.IsPublished = true; return schemaInfo; });
+            (_, schemaInfo) => { schemaInfo.IsPublished |= isClusterSchema; return schemaInfo; });
     }
 
     /// <inheritdoc />
@@ -225,7 +225,10 @@ internal class Schemas : ISchemas
             default:
             {
                 var requestMessage = ClientSendAllSchemasCodec.EncodeRequest(schemas);
-                var response = await _messaging.SendAsync(requestMessage, false, CancellationToken.None).CfAwait();
+                var sending = connection == null
+                    ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
+                    : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
+                var response = await sending.CfAwait();
                 _ = ClientSendAllSchemasCodec.DecodeResponse(response);
                 break;
             }

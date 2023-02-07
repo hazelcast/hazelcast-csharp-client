@@ -60,9 +60,9 @@ namespace Hazelcast.Clustering
         private ClientSocketConnection _socketConnection;
         private ClientMessageConnection _messageConnection;
 
-        private readonly object _mutex = new object();
+        private readonly object _mutex = new();
         private volatile bool _disposed;
-        private volatile bool _active;
+        private volatile bool _connected;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MemberConnection"/> class.
@@ -129,7 +129,7 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Whether the connection is active.
         /// </summary>
-        public bool Active => _active;
+        public bool Active => _connected;
 
         /// <summary>
         /// Gets the unique identifier of the cluster member that this connection is connected to.
@@ -231,7 +231,7 @@ namespace Hazelcast.Clustering
             lock (_mutex)
             {
                 disposed = _disposed;
-                _active = !_disposed;
+                _connected = !_disposed;
             }
 
             if (disposed)
@@ -423,7 +423,7 @@ namespace Hazelcast.Clustering
                 HConsole.WriteLine(this, "Exception while sending: " + e);
                 captured = e;
                 _invocations.TryRemove(invocation.CorrelationId, out _);
-                if (_active) throw; // if not active, better throw a disconnected exception below
+                if (_connected) throw; // if not active, better throw a disconnected exception below
                 success = false;
             }
 
@@ -432,7 +432,7 @@ namespace Hazelcast.Clustering
                 _invocations.TryRemove(invocation.CorrelationId, out _);
                 HConsole.WriteLine(this, "Failed to send a message.");
 
-                if (!_active)
+                if (!_connected)
                     throw new TargetDisconnectedException(captured);
 
                 // TODO: we need a better exception
@@ -475,8 +475,8 @@ namespace Hazelcast.Clustering
             {
                 if (_disposed) return;
                 _disposed = true;
-                active = _active;
-                _active = false;
+                active = _connected;
+                _connected = false;
             }
 
             try

@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
@@ -293,6 +294,54 @@ namespace Hazelcast.Tests.Networking
             Assert.AreEqual(2, await map.GetAsync(1));
         }
 
+        
+        [Test]
+        public async Task TestReconnectModes([Values] ReconnectMode mode)
+        {
+  
+            await StartCluster(Hazelcast.Testing.Remote.Resources.hazelcast);
+            var member1 = await AddMember();
+            await using var client = await CreateAndStartClientAsync(options =>
+            {
+                options.Networking.ReconnectMode = mode;
+                options.ClusterName = _cluster.Id;
+            });
+
+            await AssertEx.SucceedsEventually(() =>
+                {
+                    Assert.AreEqual(1, client.Members.Count);
+                    Assert.AreEqual(ClientState.Connected,client.State);
+                }, 
+                120_000, 1000);
+            
+            // Shutdown member
+            await RemoveMember(member1.Uuid);
+
+            if (mode == ReconnectMode.DoNotReconnect)
+            {
+                await AssertEx.SucceedsEventually(() =>
+                    {
+                        //No need to check member count, client will go to shutdown directly.
+                        Assert.AreEqual(ClientState.Shutdown,client.State);
+                        Assert.ThrowsAsync<ClientOfflineException>(async () => await client.GetMapAsync<int, int>("someMap"));
+                    }, 120_000, 1000);
+            }
+            // Client will reconnect. FIXME: Separate sync and async modes when implemented. 
+            else
+            {
+                member1 = await AddMember();
+                await AssertEx.SucceedsEventually(() =>
+                    {
+                        Assert.AreEqual(1, client.Members.Count);
+                        Assert.AreEqual(ClientState.Connected,client.State);
+                    }, 120_000, 1000);
+                
+                await RemoveMember(member1.Uuid);    
+            }
+
+            await client.DisposeAsync();
+        }
+        
         private static string GetMemberConfigWithAddress(string memberAddress)
         {
             if (string.IsNullOrEmpty(memberAddress)) throw new ArgumentNullException(nameof(memberAddress));

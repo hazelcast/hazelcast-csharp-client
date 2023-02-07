@@ -234,8 +234,18 @@ namespace Hazelcast.Tests.Serialization.Compact
 
             var input = new ObjectDataInput(output.ToByteArray(), orw, Endianness.BigEndian);
 
-            // fails because the type cannot be constructed
-            Assert.Throws<SerializationException>(() => serializer.Read(input));
+            // fails because the type cannot be constructed, and therefore we cannot create a
+            // proper compact serialization registration producing an ImpossibleType = we don't
+            // know how to deserialize.
+            Assert.Throws<SerializationException>(() => serializer.Read<ImpossibleType>(input));
+
+            // on the other hand, if we don't specify the type, we indicate that we accept any
+            // object, and therefore since we fail to create a proper registration we fall back
+            // to generic record.
+            input.Position = 0;
+            var obj = serializer.Read(input);
+            Assert.That(obj, Is.Not.Null);
+            Assert.That(obj, Is.InstanceOf<IGenericRecord>());
         }
 
         public class ImpossibleType

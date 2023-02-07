@@ -22,10 +22,10 @@ namespace Hazelcast.Testing.Accessors
         public MemberConnectionAccessor(MemberConnection instance): base(instance)
         { }
 
-        public bool Active
+        public bool Connected
         {
-            get => GetField<bool>("_active");
-            set => SetField("_active", value);
+            get => GetField<bool>("_connected");
+            set => SetField("_connected", value);
         }
 
         public Guid MemberId

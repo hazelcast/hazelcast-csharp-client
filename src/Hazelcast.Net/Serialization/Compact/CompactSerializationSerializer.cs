@@ -121,11 +121,11 @@ namespace Hazelcast.Serialization.Compact
                 => new CompactRegistration(type, _options.ReflectionSerializerAdapter, CompactOptions.GetDefaultTypeName(type), false));
         }
 
-        // invoked when reading an object and we need its registration, ie its serializer, and all
-        // we have is the schema - FIXME JAVA?
+        // invoked when reading an object and we need its registration, ie its serializer,
+        // and all we have is the schema
         // Java does getOrCreateRegistration(schema.getTypeName()) which means it can only handle
         // one single schema per type name and how is this supposed to work at all?!
-        private CompactRegistration GetOrCreateRegistration(Schema schema)
+        private CompactRegistration? GetOrCreateRegistration(Schema schema)
         {
             if (_registrationsById.TryGetValue(schema.Id, out var registration)) return registration;
 
@@ -135,12 +135,7 @@ namespace Hazelcast.Serialization.Compact
             registration = GetOrCreateRegistration_ByTypeName(schema) ??
                            GetOrCreateRegistration_ByClrType(schema);
 
-            // Java supports returning null here, and then falls back to GenericRecord.
-            // we do not support GenericRecord in .NET and therefore can throw here.
-
-            if (registration != null) return registration;
-
-            throw new SerializationException($"Could not find a compact serializer for schema {schema.Id}.");
+            return registration;
         }
 
         private CompactRegistration? GetOrCreateRegistration_ByTypeName(Schema schema)
@@ -221,29 +216,16 @@ namespace Hazelcast.Serialization.Compact
                     // assumes that the serializer is not "clever" and does not omit fields for
                     // optimization reasons.
                     schema = registration.HasSchema ? registration.Schema! : BuildSchema(registration, obj);
-
-                    if (!registration.IsClusterSchema)
-                    {
-                        // if the schema is not supposed to exist on the cluster, yet...
-                        // that schema will need to be published before we can send any data that is
-                        // using it - so we register it with the data output - and magic will happen
-                        output.SchemaIds.Add(schema.Id);
-                    }
+                    _schemas.Add(schema, registration.IsClusterSchema);
 
                     // update our maps with the schema and its identifier
                     _schemasMap[typeOfObj] = schema;
                     _registrationsById.TryAdd(schema.Id, registration);
-
-                    // and register it with the schema service
-                    _schemas.Add(schema, registration.IsClusterSchema);
-                }
-                else if (!_schemas.IsPublished(schema.Id))
-                {
-                    // schema is registered but not published yet, maybe publication failed,
-                    // needs to be published, so register it too
-                    output.SchemaIds.Add(schema.Id);
                 }
             }
+
+            // if the schema is not published yet, register it for publishing before any data is sent
+            if (!_schemas.IsPublished(schema.Id)) output.SchemaIds.Add(schema.Id);
 
             WriteSchema(output, schema, withSchemas);
             var writer = new CompactWriter(this, output, schema);
@@ -319,8 +301,21 @@ namespace Hazelcast.Serialization.Compact
             else
             {
                 var registration = GetOrCreateRegistration(schema);
-                reader = new CompactReader(this, input, schema, registration.SerializedType);
-                serializer = registration.Serializer;
+
+                if (registration != null)
+                {
+                    reader = new CompactReader(this, input, schema, registration.SerializedType);
+                    serializer = registration.Serializer;
+                }
+                else if (type.IsAssignableFrom(typeof(IGenericRecord)))
+                {
+                    reader = new CompactReader(this, input, schema, typeof(IGenericRecord));
+                    serializer = _genericRecordSerializer;
+                }
+                else
+                {
+                    throw new SerializationException($"Could not find a compact serializer for schema {schema.Id}.");
+                }
             }
 
             obj = serializer.Read(reader);

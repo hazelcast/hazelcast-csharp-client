@@ -322,7 +322,7 @@ namespace Hazelcast
         }
 
         // creates the client
-        private static HazelcastClient CreateClient(HazelcastOptionsBase hazelcastOptions)
+        internal static HazelcastClient CreateClient(HazelcastOptionsBase hazelcastOptions)
         {
             if (hazelcastOptions == null) throw new ArgumentNullException(nameof(hazelcastOptions));
 

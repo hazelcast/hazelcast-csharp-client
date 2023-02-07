@@ -22,7 +22,7 @@ using NUnit.Framework;
 namespace Hazelcast.Tests.Remote
 {
     [TestFixture]
-    [Timeout(4_000)]
+    [Timeout(30_000)]
     public class ClientTests : SingleMemberRemoteTestBase
     {
         [Test]
@@ -39,7 +39,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task ClientStaringClientWithConfig()
+        public async Task ClientStartingClientWithConfig()
         {
             var clientStarting =  HazelcastClientFactory.GetNewStartingClient(CreateHazelcastOptions());
             await clientStarting.Task;
@@ -47,7 +47,7 @@ namespace Hazelcast.Tests.Remote
         }
         
         [Test]
-        public async Task ClientStaringClientWithConfig2()
+        public async Task ClientStatringClientWithConfig2()
         {
             var o = CreateHazelcastOptions();
             var clientStarting =  HazelcastClientFactory.GetNewStartingClient(options=>
