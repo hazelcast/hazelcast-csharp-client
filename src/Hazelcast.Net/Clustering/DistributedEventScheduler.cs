@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Microsoft.Extensions.Logging;
 
@@ -198,6 +199,7 @@ namespace Hazelcast.Clustering
             {
                 HConsole.WriteLine(this, $"Handle event, correlation:{eventData.Message.CorrelationId} queue:{eventData.PartitionId}");
                 await eventData.Subscription.HandleAsync(eventData.Message).CfAwait();
+                HConsole.WriteLine(this, $"Handled event, correlation:{eventData.Message.CorrelationId} queue:{eventData.PartitionId}");
             }
             catch (Exception e)
             {
@@ -233,11 +235,22 @@ namespace Hazelcast.Clustering
 
             lock (_mutex)
             {
+                if (_disposed) return;
                 _disposed = true;
                 tasks = _queues.Values.Select(x => x.Task).Where(x => x != null).ToArray();
             }
 
-            await Task.WhenAll(tasks).CfAwait();
+            HConsole.WriteLine(this, $"Waiting for {tasks.Length} task{(tasks.Length>1?"s":"")}...");
+
+            try
+            {
+                await Task.WhenAll(tasks).CfAwait(120_000); // give it 2 mins to complete
+            }
+            catch (Exception e)
+            {
+                _logger.IfWarning()?.LogWarning(e, "Caught exception when disposing DistributedEventScheduler.");
+            }
+            HConsole.WriteLine(this, "Done");
         }
     }
 }

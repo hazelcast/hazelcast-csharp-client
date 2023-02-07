@@ -100,7 +100,11 @@ namespace Hazelcast.Core
             {
                 if (TextBuilder.Length > 0)
                 {
-                    Console.Write(TextBuilder.ToString());
+                    var text = TextBuilder.ToString();
+                    if (!string.IsNullOrWhiteSpace(Options.Filename))
+                        System.IO.File.WriteAllText(Options.Filename, text);
+                    else
+                        Console.Write(text);
                     TextBuilder.Clear();
                 }
             }
