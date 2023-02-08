@@ -160,8 +160,14 @@ namespace Hazelcast.Testing
             var removed = new SemaphoreSlim(0);
 
             var subscriptionId = await clientInternal.SubscribeAsync(on => on
+                    .StateChanged((sender, args) =>
+                    {
+                        // removing the only member disconnects the client and triggers this event
+                        if (args.State == ClientState.Disconnected) removed.Release();
+                    })
                     .MembersUpdated((sender, args) =>
                     {
+                        // removing one member amongst others triggers this event (but does not disconnect the client)
                         if (args.RemovedMembers.Count > 0) removed.Release();
                     }))
                 .CfAwait();

@@ -24,6 +24,7 @@ using Hazelcast.Protocol.Codecs;
 using Hazelcast.Protocol.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.TestServer;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -92,7 +93,9 @@ namespace Hazelcast.Tests.Clustering
 
             HConsole.WriteLine(this, "Start client");
 
-            var options = new HazelcastOptionsBuilder().With(options =>
+            var options = new HazelcastOptionsBuilder()
+                .WithHConsoleLogger()
+                .With(options =>
             {
                 options.Networking.Addresses.Add("127.0.0.1:11001");
                 options.Networking.Addresses.Add("127.0.0.1:11002");

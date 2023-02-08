@@ -47,6 +47,19 @@ namespace Hazelcast.Core
         #region Configure
 
         /// <summary>
+        /// Specifies a filename where to write the console text.
+        /// </summary>
+        /// <param name="filename"></param>
+        /// <returns></returns>
+        public HConsoleOptions WithFilename(string filename)
+        {
+#if HZ_CONSOLE
+            Filename = filename;
+#endif
+            return this;
+        }
+
+        /// <summary>
         /// Configures default options.
         /// </summary>
         /// <returns>The default options to configure.</returns>
@@ -212,6 +225,11 @@ namespace Hazelcast.Core
 
             return config;
         }
+
+        /// <summary>
+        /// Gets a filename where to write the console text.
+        /// </summary>
+        public string Filename { get; private set; }
 #endif
     }
 }

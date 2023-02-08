@@ -193,11 +193,14 @@ namespace Hazelcast.Clustering
 
             try
             {
+                _logger.IfDebug()?.LogDebug("Raise ConnectionOpened");
                 await _connectionOpened.AwaitEach(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+                _logger.IfDebug()?.LogDebug("Raised ConnectionOpened");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Caught exception while raising ConnectionOpened.");
+                throw;
             }
         }
 
@@ -220,11 +223,15 @@ namespace Hazelcast.Clustering
 
             try
             {
+                _logger.IfDebug()?.LogDebug("Raise ConnectionClosed");
                 await _connectionClosed.AwaitEach(connection).CfAwait();
+                _logger.IfDebug()?.LogDebug("Raised ConnectionClosed");
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Caught exception while raising ConnectionClosed.");
+
+                // the connection is going down, there is little we can do here
             }
         }
 
@@ -888,15 +895,29 @@ namespace Hazelcast.Clustering
             // isFirst connection will indeed trigger before any other connection is created - think
             // about it if adding support for parallel connections!
 
-            // connection is opened
-            await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
-
-            lock (_mutex)
+            void RemoveCompletion()
             {
-                // there is always a completion, but we have to TryRemove from concurrent dictionaries
-                if (_completions.TryRemove(connection, out var completion)) completion.SetResult(null);
+                if (_completions.TryRemove(connection, out var completion)) completion.TrySetResult(null);
             }
 
+            // connection is opened
+            try
+            {
+                await RaiseConnectionOpened(connection, isFirstEver, isFirst, isNewCluster).CfAwait();
+            }
+            catch
+            {
+                // we cannot keep using this connection which has not been properly opened, tear it down
+                // and rethrow - but before we dispose the connection, complete/remove its completion,
+                // else dispose leads to OnConnectionClosed which would wait on the completion and thus
+                // would hang - the completion is here to prevent the closed event from triggering before
+                // the opened even, but only if we manage to open properly.
+                RemoveCompletion();
+                await connection.DisposeAsync().CfAwait();
+                throw;
+            }
+
+            RemoveCompletion();
             return connection;
         }
 
@@ -912,7 +933,18 @@ namespace Hazelcast.Clustering
             // ended by now
             _cancel.Cancel();
             if (_connectMembers != null)
-                await _connectMembers.CfAwaitCanceled();
+            {
+                try
+                {
+                    await _connectMembers.CfAwait(120_000); // give it 2 mins
+                }
+                catch (OperationCanceledException)
+                { }
+                catch (Exception e)
+                {
+                    _logger.IfWarning()?.LogWarning(e, "Caught exception when waiting for ConnectMembers to terminate.");
+                }
+            }
             _cancel.Dispose();
 
             // stop and dispose the reconnect task if it's running

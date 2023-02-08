@@ -271,24 +271,24 @@ namespace Hazelcast.Clustering
 
             // NOTE: *every* invocation sent to the cluster goes through the code below
 
-            // if the client is active but not connected, we are going to retry the invocation for a while (assuming it
-            // is retryable) and then timeout and bubble the invocation to the user - and we do *not* have a way to sort
-            // of suspend the whole client waiting for it to reconnect, because... what sense does it make? That would
-            // be the "sync" reconnect mode - TODO: figure this out
-
             while (true)
             {
+                MemberConnection connection = null;
                 try
                 {
-                    var connection = GetInvocationConnection(invocation); // non-null, throws if no connections
+                    HConsole.WriteLine(this, $"Trying :{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)}...");
+                    connection = GetInvocationConnection(invocation); // non-null, throws if no connections
                     return await connection.SendAsync(invocation, cancellationToken).CfAwait();
                 }
                 catch (TaskCanceledException)
                 {
+                    HConsole.WriteLine(this, "Canceled.");
                     throw;
                 }
                 catch (Exception exception)
                 {
+                    HConsole.WriteLine(this, $"Exception ({connection?.Id.ToShortString() ?? "null"}):{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)} {exception}");
+
                     // if the client is not active, die - an active client is starting, started, connected or
                     // disconnected - but attempting to reconnect - whereas a non-active client is down and
                     // will not go back up
@@ -311,11 +311,13 @@ namespace Hazelcast.Clustering
                     if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
                         throw;
 
+                    HConsole.WriteLine(this, "Wait...");
+
                     // else, wait for retrying
                     // this will throw if it cannot retry
                     await invocation.WaitRetryAsync(() => _clusterState.GetNextCorrelationId(), cancellationToken).CfAwait();
 
-                    HConsole.WriteLine(this, "Retrying...");
+                    HConsole.WriteLine(this, "Retry");
                 }
             }
         }
@@ -349,8 +351,7 @@ namespace Hazelcast.Clustering
 
             // fall over to random client
             connection = _clusterMembers.GetRandomConnection();
-            if (connection != null)
-                return connection;
+            if (connection != null) return connection;
 
             // fail
             throw _clusterState.ThrowClientOfflineException();
