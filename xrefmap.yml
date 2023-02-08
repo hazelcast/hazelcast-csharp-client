@@ -7560,6 +7560,21 @@ references:
   commentId: Overload:Hazelcast.HazelcastOptionsBuilder.ThisBuilder
   fullName: Hazelcast.HazelcastOptionsBuilder.ThisBuilder
   nameWithType: HazelcastOptionsBuilder.ThisBuilder
+- uid: Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func{Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILoggerFactory})
+  name: WithLoggerFactory(Func<IConfiguration, ILoggerFactory>)
+  href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory.html#Hazelcast_HazelcastOptionsBuilder_WithLoggerFactory_System_Func_Microsoft_Extensions_Configuration_IConfiguration_Microsoft_Extensions_Logging_ILoggerFactory__
+  commentId: M:Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func{Microsoft.Extensions.Configuration.IConfiguration,Microsoft.Extensions.Logging.ILoggerFactory})
+  name.vb: WithLoggerFactory(Func(Of IConfiguration, ILoggerFactory))
+  fullName: Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func<Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Logging.ILoggerFactory>)
+  fullName.vb: Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func(Of Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Logging.ILoggerFactory))
+  nameWithType: HazelcastOptionsBuilder.WithLoggerFactory(Func<IConfiguration, ILoggerFactory>)
+  nameWithType.vb: HazelcastOptionsBuilder.WithLoggerFactory(Func(Of IConfiguration, ILoggerFactory))
+- uid: Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory*
+  name: WithLoggerFactory
+  href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory.html
+  commentId: Overload:Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory
+  fullName: Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory
+  nameWithType: HazelcastOptionsBuilder.WithLoggerFactory
 - uid: Hazelcast.HazelcastOptionsBuilderBase`2
   name: HazelcastOptionsBuilderBase<TOptions, TBuilder>
   href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.html
@@ -7668,6 +7683,14 @@ references:
   fullName.vb: Hazelcast.HazelcastOptionsBuilderBase(Of TOptions, TBuilder).With(System.Action(Of Microsoft.Extensions.Configuration.IConfiguration, TOptions))
   nameWithType: HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(Action<IConfiguration, TOptions>)
   nameWithType.vb: HazelcastOptionsBuilderBase(Of TOptions, TBuilder).With(Action(Of IConfiguration, TOptions))
+- uid: Hazelcast.HazelcastOptionsBuilderBase`2.With(System.String,System.Object)
+  name: With(String, Object)
+  href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.With.html#Hazelcast_HazelcastOptionsBuilderBase_2_With_System_String_System_Object_
+  commentId: M:Hazelcast.HazelcastOptionsBuilderBase`2.With(System.String,System.Object)
+  fullName: Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(System.String, System.Object)
+  fullName.vb: Hazelcast.HazelcastOptionsBuilderBase(Of TOptions, TBuilder).With(System.String, System.Object)
+  nameWithType: HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(String, Object)
+  nameWithType.vb: HazelcastOptionsBuilderBase(Of TOptions, TBuilder).With(String, Object)
 - uid: Hazelcast.HazelcastOptionsBuilderBase`2.With(System.String,System.String)
   name: With(String, String)
   href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.With.html#Hazelcast_HazelcastOptionsBuilderBase_2_With_System_String_System_String_
@@ -7718,6 +7741,14 @@ references:
   fullName.vb: Hazelcast.HazelcastOptionsBuilderBase(Of TOptions, TBuilder).WithDefault(System.Action(Of TOptions))
   nameWithType: HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(Action<TOptions>)
   nameWithType.vb: HazelcastOptionsBuilderBase(Of TOptions, TBuilder).WithDefault(Action(Of TOptions))
+- uid: Hazelcast.HazelcastOptionsBuilderBase`2.WithDefault(System.String,System.Object)
+  name: WithDefault(String, Object)
+  href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.WithDefault.html#Hazelcast_HazelcastOptionsBuilderBase_2_WithDefault_System_String_System_Object_
+  commentId: M:Hazelcast.HazelcastOptionsBuilderBase`2.WithDefault(System.String,System.Object)
+  fullName: Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(System.String, System.Object)
+  fullName.vb: Hazelcast.HazelcastOptionsBuilderBase(Of TOptions, TBuilder).WithDefault(System.String, System.Object)
+  nameWithType: HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(String, Object)
+  nameWithType.vb: HazelcastOptionsBuilderBase(Of TOptions, TBuilder).WithDefault(String, Object)
 - uid: Hazelcast.HazelcastOptionsBuilderBase`2.WithDefault(System.String,System.String)
   name: WithDefault(String, String)
   href: 5.2.0/api/Hazelcast.HazelcastOptionsBuilderBase-2.WithDefault.html#Hazelcast_HazelcastOptionsBuilderBase_2_WithDefault_System_String_System_String_

@@ -82,23 +82,55 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="getting-started">Getting Started</h1>
 
-<h2 id="download-and-install">Download and Install</h2>
-<p>Refer to the <a href="download-install.html">Download and Install</a> to find out where to download the Hazelcast .NET Client, and how to install it.</p>
-<p>In addition, when installing in a <strong>.NET Framework</strong> project, some binding redirects are currently required. Although we try hard to align all our dependencies, some inconsistencies even within Microsoft&#39;s own packages mean that it is not possible to avoid redirects entirely. You can enable <code>&lt;AutoGenerateBindingRedirects&gt;</code> in your project file, and Visual Studio should populate your application config files with the appropriate binding redirects.</p>
-<p>Alternatively, those redirects <em>should</em> be sufficient at the moment:</p>
-<pre><code class="lang-xml">&lt;assemblyBinding xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot;&gt;
-  &lt;dependentAssembly&gt;
-    &lt;assemblyIdentity name=&quot;System.Buffers&quot; publicKeyToken=&quot;cc7b13ffcd2ddd51&quot; culture=&quot;neutral&quot; /&gt;
-    &lt;bindingRedirect oldVersion=&quot;0.0.0.0-4.0.3.0&quot; newVersion=&quot;4.0.3.0&quot; /&gt;
-  &lt;/dependentAssembly&gt;
-&lt;/assemblyBinding&gt;
-&lt;assemblyBinding xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot;&gt;
-  &lt;dependentAssembly&gt;
-    &lt;assemblyIdentity name=&quot;System.Runtime.CompilerServices.Unsafe&quot; publicKeyToken=&quot;b03f5f7f11d50a3a&quot; culture=&quot;neutral&quot; /&gt;
-   &lt;bindingRedirect oldVersion=&quot;0.0.0.0-5.0.0.0&quot; newVersion=&quot;5.0.0.0&quot; /&gt;
-  &lt;/dependentAssembly&gt;
-&lt;/assemblyBinding&gt;
-</code></pre><h2 id="using-the-client">Using the client</h2>
+<h2 id="quick-start">Quick Start</h2>
+<h4 id="walkthrough">Walkthrough</h4>
+<p>Prepare a .NET console project:</p>
+<pre><code class="lang-shell">mkdir quickstart
+cd quickstart
+dotnet new console
+dotnet add package Hazelcast.Net
+dotnet add package Microsoft.Extensions.Logging.Console
+</code></pre><p>Edit the <code>Program.cs</code> file as you wish. The code below is a minimal example,
+that configures logging to the console, and connects a client to a server running
+on localhost.</p>
+<pre><code class="lang-csharp">public static async Task Main()
+{
+    // create options
+    var options = new HazelcastOptionsBuilder()
+        .WithDefault(&quot;Logging:LogLevel:Default&quot;, LogLevel.None)
+        .WithDefault(&quot;Logging:LogLevel:Hazelcast&quot;, LogLevel.Information)
+        .WithLoggerFactory(configuration =&gt; LoggerFactory.Create(builder =&gt; builder
+            .AddConfiguration(configuration.GetSection(&quot;logging&quot;))
+            .AddSimpleConsole(consoleOptions =&gt; 
+            {
+                consoleOptions.SingleLine = true;
+                consoleOptions.TimestampFormat = &quot;hh:mm:ss.fff &quot;;
+            })))
+        .Build();
+
+    // create and connect a Hazelcast client to a server running on localhost
+    await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+
+    // the client is disposed and thus disconnected on exit
+}
+</code></pre><p>Run the code with:</p>
+<pre><code class="lang-shell">dotnet build
+dotnet run
+</code></pre><p>You should see the log output in the console.</p>
+<h4 id="running-preview">Running Preview</h4>
+<p>Should you want to use a preview version of the Hazelcast .NET Client, built from source at <code>path/to/Hazelcast.Net</code>, drop a <code>nuget.config</code> file in the <code>quickstart</code> directory containing the following:</p>
+<pre><code class="lang-xml">&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;configuration&gt;
+  &lt;packageSources&gt;
+    &lt;add key=&quot;hz&quot; value=&quot;path/to/Hazelcast.Net/temp/output&quot; /&gt;
+  &lt;/packageSources&gt;
+&lt;/configuration&gt;
+</code></pre><p>Then, force the installation of the preview version with:</p>
+<pre><code class="lang-shell">dotnet add package Hazelcast.Net --version 5.3.0-preview.0
+</code></pre><p>You can now run the test program again.</p>
+<h4 id="download-and-install">Download and Install</h4>
+<p>Using the published <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.Net</a> package from NuGet is the prefered way to download and install the client. Refer to the <a href="download-install.html">Download and Install</a> page to learn more about how to download the Hazelcast .NET Client and Server, and how to install it. In addition, this page contains more details about required binding redirects when installing in a <strong>.NET Framework</strong> project.</p>
+<h2 id="using-the-client">Using the client</h2>
 <p>The Hazelcast client is the entry point to all interactions with an Hazelcast cluster. A client is created by the static <a class="xref" href="../api/Hazelcast.HazelcastClientFactory.html">HazelcastClientFactory</a>. After it has been used, it needs to be disposed in order to properly close all connections to servers, and release resources.</p>
 <p>For example:</p>
 <pre><code class="lang-csharp">var client = await HazelcastClientFactory.StartNewClientAsync();

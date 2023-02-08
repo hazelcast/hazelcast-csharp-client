@@ -85,23 +85,36 @@
 <p>Hazelcast is composed of two parts: the server, and the client. The client requires a working Hazelcast cluster, composed of one or more servers, in order to run. This cluster handles storage and manipulation of the user data. The client is a library which connects to the cluster, and gives access to such data.</p>
 <h2 id="hazelcast-client">Hazelcast Client</h2>
 <h3 id="requirements">Requirements</h3>
-<p>The Hazelcast .NET client is distributed as a NuGet package which targets <a href="https://docs.microsoft.com/en-us/dotnet/standard/net-standard">.NET Standard</a> versions 2.0 and 2.1. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:</p>
+<p>The Hazelcast .NET client is distributed as a NuGet package which targets <a href="https://docs.microsoft.com/en-us/dotnet/standard/net-standard">.NET Standard</a> versions 2.0 and 2.1, and specific .NET version starting with 5.0. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:</p>
 <ul>
 <li>.NET Framework 4.6.2 and above, on Windows</li>
-<li>.NET Core 2.1 and 3.1, on Windows, Linux and MacOS</li>
+<li>.NET Core, on Windows, Linux and MacOS</li>
 </ul>
-<p>The upcoming <a href="https://devblogs.microsoft.com/dotnet/introducing-net-5/">.NET 5</a> version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.</p>
+<p>See the <a href="../../versions.html">versions</a> page for details on which exact version are supported by the client.</p>
 <h3 id="distribution">Distribution</h3>
-<p>The .NET client is distributed via NuGet as a package named <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.NET</a>. 
+<p>The .NET client is distributed via NuGet as a package named <a href="https://www.nuget.org/packages/Hazelcast.Net/">Hazelcast.Net</a>. 
 It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager:</p>
-<pre><code>PM&gt; Install-Package Hazelcast.NET
+<pre><code>PM&gt; Install-Package Hazelcast.Net
 </code></pre><p>Or via the .NET CLI:</p>
-<pre><code>&gt; dotnet add package Hazelcast.NET
+<pre><code>&gt; dotnet add package Hazelcast.Net
 </code></pre><p>Or manually added to the project as a package reference:</p>
-<pre><code>&lt;PackageReference Include=&quot;Hazelcast.NET&quot; Version=&quot;4.0.0&quot; /&gt;
+<pre><code>&lt;PackageReference Include=&quot;Hazelcast.Net&quot; Version=&quot;4.0.0&quot; /&gt;
 </code></pre><h3 id="binding-redirects">Binding Redirects</h3>
-<p>When including the <code>Hazelcast.NET</code> package in a <strong>.NET Framework</strong> project, be aware that some binding redirects may be required. Please check the <a href="getting-started.html">Getting Started</a> page for details.</p>
-<h2 id="hazelcast-server">Hazelcast Server</h2>
+<p>When including the <code>Hazelcast.Net</code> package in a <strong>.NET Framework</strong> project, be aware that some binding redirects may be required. Although we try hard to align all our dependencies, some inconsistencies even within Microsoft&#39;s own packages mean that it is not possible to avoid redirects entirely. You can enable <code>&lt;AutoGenerateBindingRedirects&gt;</code> in your project file, and Visual Studio should populate your application config files with the appropriate binding redirects.</p>
+<p>Alternatively, those redirects <em>should</em> be sufficient at the moment:</p>
+<pre><code class="lang-xml">&lt;assemblyBinding xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot;&gt;
+  &lt;dependentAssembly&gt;
+    &lt;assemblyIdentity name=&quot;System.Buffers&quot; publicKeyToken=&quot;cc7b13ffcd2ddd51&quot; culture=&quot;neutral&quot; /&gt;
+    &lt;bindingRedirect oldVersion=&quot;0.0.0.0-4.0.3.0&quot; newVersion=&quot;4.0.3.0&quot; /&gt;
+  &lt;/dependentAssembly&gt;
+&lt;/assemblyBinding&gt;
+&lt;assemblyBinding xmlns=&quot;urn:schemas-microsoft-com:asm.v1&quot;&gt;
+  &lt;dependentAssembly&gt;
+    &lt;assemblyIdentity name=&quot;System.Runtime.CompilerServices.Unsafe&quot; publicKeyToken=&quot;b03f5f7f11d50a3a&quot; culture=&quot;neutral&quot; /&gt;
+   &lt;bindingRedirect oldVersion=&quot;0.0.0.0-5.0.0.0&quot; newVersion=&quot;5.0.0.0&quot; /&gt;
+  &lt;/dependentAssembly&gt;
+&lt;/assemblyBinding&gt;
+</code></pre><h2 id="hazelcast-server">Hazelcast Server</h2>
 <p>Browse to <a href="https://hazelcast.com/products/in-memory-computing/">Hazelcast In-Memory Computing</a> to find out all about the Hazelcast server.</p>
 <p>Hazelcast IMDG cluster consists of one or more cluster members. These members generally run on multiple virtual or physical machines and are connected to each other via network. Any data put on the cluster is partitioned to multiple members transparent to the user. It is therefore very easy to scale the system by adding new members as the data grows. Hazelcast IMDG cluster also offers resilience. Should any hardware or software problem causes a crash to any member, the data on that member is recovered from backups and the cluster continues to operate without any downtime. Hazelcast clients are an easy way to connect to a Hazelcast IMDG cluster and perform tasks on distributed data structures that live on the cluster.</p>
 <p>There are many different ways to run a Hazelcast cluster or member. The <a href="https://docs.hazelcast.com/imdg/latest/installation/installing-upgrading.html">Installing and Upgrading</a> section of the Reference Manual details options to install and run a cluster, while the <a href="https://docs.hazelcast.com/imdg/latest/installation/deploying-in-cloud.html">Deploying in Cloud</a> section details options to run a cluster in the cloud.</p>
@@ -113,7 +126,8 @@ It can be installed like any other NuGet package, either via the Visual Studio G
 <h3 id="powershell-script">Powershell Script</h3>
 <p>The Hazelcast .NET client repository on <a href="https://github.com/hazelcast/hazelcast-csharp-client">GitHub</a> provides a Powershell script which can be used to download and run a test member. For instance, this downloads and starts a member version 4.2:</p>
 <pre><code class="lang-pwsh">PS&gt; ./hz.ps1 run-server -server 4.2
-</code></pre></article>
+</code></pre><p>If the version is not specified (i.e. <code>./hz.ps1 run-server</code>), the latest version supported by the client is used.</p>
+</article>
           </div>
           
           <div class="hidden-sm col-md-2" role="complementary">
