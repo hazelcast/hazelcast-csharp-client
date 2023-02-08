@@ -22,12 +22,14 @@ using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Serialization.Compact;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Moq;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact;
 
 [TestFixture]
+[ServerCondition("[5.2,)")]
 public class GenericRecordTests : SingleMemberClientRemoteTestBase
 {
     [Test]

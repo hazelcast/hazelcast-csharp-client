@@ -25,12 +25,14 @@ using Hazelcast.Partitioning;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Conditions;
 using Hazelcast.Testing.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Serialization.Compact;
 
 [TestFixture]
+[ServerCondition("[5.2,)")]
 public class CompactQaTests : ClusterRemoteTestBase
 {
     private IDisposable UseHConsole() => HConsole.Capture(o => o
