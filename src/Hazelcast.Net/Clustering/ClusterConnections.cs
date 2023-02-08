@@ -718,7 +718,7 @@ namespace Hazelcast.Clustering
             {
                 var active = connection.Active;
 
-                if (connection.Address == member.ConnectAddress)
+                if (_clusterMembers.IsMemberAddress(member, connection.Address))
                 {
                     _logger.IfDebug()?.LogDebug("Found {PrefixActive}active connection {ConnectionId} from client {ClientName} to member {MemberId} at {Address}.", (active ? "" : "non-"), connection.Id.ToShortString(), _clusterState.ClientName, member.Id.ToShortString(), connection.Address);
                     return Attempt.If(active, connection);
