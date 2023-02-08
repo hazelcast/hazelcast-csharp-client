@@ -134,7 +134,7 @@ namespace Hazelcast.Clustering
             => false;
 
         // see notes above, if matching then addresses must match, else anything matches
-        private bool IsMemberAddress(MemberInfo member, NetworkAddress address)
+        public bool IsMemberAddress(MemberInfo member, NetworkAddress address)
             => !MatchMemberAddress || member.ConnectAddress == address;
 
         // determines whether a member is connected.
