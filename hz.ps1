@@ -1489,7 +1489,7 @@ function hz-build {
         foreach ($file in $files) {
             foreach ($line in get-content $file) {
                 if ($line.Length -gt 0 -and -not $line.StartsWith('#')) {
-                    $filename = $_.Fullname.Substring($slnRoot.Length)
+                    $filename = $file.Fullname.Substring($slnRoot.Length+1)
                     Write-Output "Found non-empty file $filename."
                     Write-Output "'Unshipped' files must be merged before building release branches."
                     Die "Failed to build release branch."

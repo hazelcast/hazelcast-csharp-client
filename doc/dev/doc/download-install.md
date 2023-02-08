@@ -6,37 +6,54 @@ Hazelcast is composed of two parts: the server, and the client. The client requi
 
 ### Requirements
 
-The Hazelcast .NET client is distributed as a NuGet package which targets [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) versions 2.0 and 2.1. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:
+The Hazelcast .NET client is distributed as a NuGet package which targets [.NET Standard](https://docs.microsoft.com/en-us/dotnet/standard/net-standard) versions 2.0 and 2.1, and specific .NET version starting with 5.0. It can therefore be used in any application targetting .NET versions that support these .NET Standard versions:
 
 * .NET Framework 4.6.2 and above, on Windows
-* .NET Core 2.1 and 3.1, on Windows, Linux and MacOS
+* .NET Core, on Windows, Linux and MacOS
 
-The upcoming [.NET 5](https://devblogs.microsoft.com/dotnet/introducing-net-5/) version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.
+See the [versions](../../versions.md) page for details on which exact version are supported by the client.
 
 ### Distribution
 
-The .NET client is distributed via NuGet as a package named [Hazelcast.NET](https://www.nuget.org/packages/Hazelcast.Net/). 
+The .NET client is distributed via NuGet as a package named [Hazelcast.Net](https://www.nuget.org/packages/Hazelcast.Net/). 
 It can be installed like any other NuGet package, either via the Visual Studio GUI, or via the package manager:
 
 ```
-PM> Install-Package Hazelcast.NET
+PM> Install-Package Hazelcast.Net
 ```
 
 Or via the .NET CLI:
 
 ```
-> dotnet add package Hazelcast.NET
+> dotnet add package Hazelcast.Net
 ```
 
 Or manually added to the project as a package reference:
 
 ```
-<PackageReference Include="Hazelcast.NET" Version="4.0.0" />
+<PackageReference Include="Hazelcast.Net" Version="4.0.0" />
 ```
 
 ### Binding Redirects
 
-When including the `Hazelcast.NET` package in a **.NET Framework** project, be aware that some binding redirects may be required. Please check the [Getting Started](getting-started.md) page for details.
+When including the `Hazelcast.Net` package in a **.NET Framework** project, be aware that some binding redirects may be required. Although we try hard to align all our dependencies, some inconsistencies even within Microsoft's own packages mean that it is not possible to avoid redirects entirely. You can enable `<AutoGenerateBindingRedirects>` in your project file, and Visual Studio should populate your application config files with the appropriate binding redirects.
+
+Alternatively, those redirects *should* be sufficient at the moment:
+
+```xml
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Buffers" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+    <bindingRedirect oldVersion="0.0.0.0-4.0.3.0" newVersion="4.0.3.0" />
+  </dependentAssembly>
+</assemblyBinding>
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+   <bindingRedirect oldVersion="0.0.0.0-5.0.0.0" newVersion="5.0.0.0" />
+  </dependentAssembly>
+</assemblyBinding>
+```
 
 ## Hazelcast Server
 
@@ -63,5 +80,4 @@ The Hazelcast .NET client repository on [GitHub](https://github.com/hazelcast/ha
 PS> ./hz.ps1 run-server -server 4.2
 ```
 
-
-
+If the version is not specified (i.e. `./hz.ps1 run-server`), the latest version supported by the client is used.

@@ -1,27 +1,77 @@
 # Getting Started
 
-## Download and Install
+## Quick Start
 
-Refer to the [Download and Install](download-install.md) to find out where to download the Hazelcast .NET Client, and how to install it.
+#### Walkthrough
 
-In addition, when installing in a **.NET Framework** project, some binding redirects are currently required. Although we try hard to align all our dependencies, some inconsistencies even within Microsoft's own packages mean that it is not possible to avoid redirects entirely. You can enable `<AutoGenerateBindingRedirects>` in your project file, and Visual Studio should populate your application config files with the appropriate binding redirects.
+Prepare a .NET console project:
 
-Alternatively, those redirects *should* be sufficient at the moment:
+```shell
+mkdir quickstart
+cd quickstart
+dotnet new console
+dotnet add package Hazelcast.Net
+dotnet add package Microsoft.Extensions.Logging.Console
+```
+
+Edit the `Program.cs` file as you wish. The code below is a minimal example,
+that configures logging to the console, and connects a client to a server running
+on localhost.
+
+```csharp
+public static async Task Main()
+{
+    // create options
+    var options = new HazelcastOptionsBuilder()
+        .WithDefault("Logging:LogLevel:Default", LogLevel.None)
+        .WithDefault("Logging:LogLevel:Hazelcast", LogLevel.Information)
+        .WithLoggerFactory(configuration => LoggerFactory.Create(builder => builder
+            .AddConfiguration(configuration.GetSection("logging"))
+            .AddSimpleConsole(consoleOptions => 
+            {
+                consoleOptions.SingleLine = true;
+                consoleOptions.TimestampFormat = "hh:mm:ss.fff ";
+            })))
+        .Build();
+
+    // create and connect a Hazelcast client to a server running on localhost
+    await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
+    
+    // the client is disposed and thus disconnected on exit
+}
+```
+
+Run the code with:
+```shell
+dotnet build
+dotnet run
+```
+
+You should see the log output in the console.
+
+#### Running Preview
+
+Should you want to use a preview version of the Hazelcast .NET Client, built from source at `path/to/Hazelcast.Net`, drop a `nuget.config` file in the `quickstart` directory containing the following:
 
 ```xml
-<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-  <dependentAssembly>
-    <assemblyIdentity name="System.Buffers" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
-    <bindingRedirect oldVersion="0.0.0.0-4.0.3.0" newVersion="4.0.3.0" />
-  </dependentAssembly>
-</assemblyBinding>
-<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
-  <dependentAssembly>
-    <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
-   <bindingRedirect oldVersion="0.0.0.0-5.0.0.0" newVersion="5.0.0.0" />
-  </dependentAssembly>
-</assemblyBinding>
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <add key="hz" value="path/to/Hazelcast.Net/temp/output" />
+  </packageSources>
+</configuration>
 ```
+
+Then, force the installation of the preview version with:
+```shell
+dotnet add package Hazelcast.Net --version 5.3.0-preview.0
+```
+
+You can now run the test program again.
+
+#### Download and Install
+
+Using the published [Hazelcast.Net](https://www.nuget.org/packages/Hazelcast.Net/) package from NuGet is the prefered way to download and install the client. Refer to the [Download and Install](download-install.md) page to learn more about how to download the Hazelcast .NET Client and Server, and how to install it. In addition, this page contains more details about required binding redirects when installing in a **.NET Framework** project.
 
 ## Using the client
 
