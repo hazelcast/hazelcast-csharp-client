@@ -97,8 +97,9 @@ jobs:
                 else
                     HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
                     HZTAGSHA=${{ github.sha }}
-                    if [ "$HZBRANCHSHA" != "$HZTAGSHA" ]; then
-                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGSHA"
+                    HZTAGPARENTSHA=$(git rev-parse ${{ github.sha }}^)
+                    if [ "$HZBRANCHSHA" != "$HZTAGPARENTSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGPARENTSHA"
                       exit 1
                     else
                         echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
