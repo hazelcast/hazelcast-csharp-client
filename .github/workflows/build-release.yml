@@ -45,6 +45,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2 # needed to validate parents
 
       - name: Analyze
         id: analyze
@@ -52,8 +53,9 @@ jobs:
         run: |
           set +e # don't die whenever a command returns non-zero $?
 
-          echo "Triggered by ${{ github.ref }} at ${{ github.sha }}"
           HZREF="${{ github.ref }}"
+          HZSHA="${{ github.sha }}"
+          echo "Triggered by $HZREF at $HZSHA"
           HZBRANCH=${HZREF#refs/heads/}
 
           if [ "$HZBRANCH" != "$HZREF" ]; then # it is a branch push
@@ -89,17 +91,16 @@ jobs:
           if [ "$HZTAG" != "$HZREF" ]; then
             HZVERSION=${HZTAG#v}
             if [ "$HZVERSION" != "$HZTAG" ]; then # it is a version tag
-                echo "Triggered by version tag $HZTAG"
+                echo "Triggered by version tag $HZTAG at $HZSHA"
                 git fetch origin refs/heads/release/$HZVERSION:refs/heads/release/$HZVERSION >/dev/null 2>&1
                 if [ $? -ne 0 ]; then
                     echo "::error::Branch release/$HZVERSION does not exist"
                     exit 1
                 else
-                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
-                    HZTAGSHA=${{ github.sha }}
-                    HZTAGPARENTSHA=$(git rev-parse ${{ github.sha }}^)
-                    if [ "$HZBRANCHSHA" != "$HZTAGPARENTSHA" ]; then
-                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGPARENTSHA"
+                    HZBRANCHSHA=$(git rev-parse origin/release/$HZVERSION 2>&1)
+                    HZPARENTSHA=$(git rev-parse $HZSHA^)
+                    if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZPARENTSHA"
                       exit 1
                     else
                         echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
