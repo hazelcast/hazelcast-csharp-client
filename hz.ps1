@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.2.0"
+$defaultServerVersion="5.3.0-SNAPSHOT"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
