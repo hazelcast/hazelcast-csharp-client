@@ -139,6 +139,12 @@ jobs:
           echo "::error::At least one Build&Test check has failed."
           exit 1
         fi
+    - name: 'Upload RC and Server Logs'
+    uses: actions/upload-artifact@v3
+    with:
+      name: server-logs
+      path: temp/rc/
+      retention-days: 7
       
   # create checks
   create-checks:
