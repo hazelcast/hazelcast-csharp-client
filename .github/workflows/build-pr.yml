@@ -128,14 +128,7 @@ jobs:
     if: always()
     needs: build-test
 
-    steps:
-    - name: 'Upload RC and Server Logs'
-      uses: actions/upload-artifact@v3
-      with:
-          name: server-logs
-          path: temp/rc/
-          retention-days: 7
-          
+    steps:    
     - name: Report
       shell: bash
       run: |

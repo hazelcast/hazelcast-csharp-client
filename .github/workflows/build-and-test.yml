@@ -173,8 +173,12 @@ jobs:
         with:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
-
-
+      - name: 'Upload RC and Server Logs'
+        uses: actions/upload-artifact@v3
+        with:
+          name: server-logs
+          path: temp/rc/
+          retention-days: 7
 
       # and then, everything below is for releases only
       # and need only be done on 1 environment (windows-latest + latest fwk)
