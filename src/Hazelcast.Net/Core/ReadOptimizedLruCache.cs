@@ -21,11 +21,16 @@ using Hazelcast.Models;
 
 namespace Hazelcast.Core;
 
+// LRU cache that can be used on heavy read concurrent operations. Reading and Adding is thread safe.
+// During adding a value to cache, the thread that invoked Add operation can trigger eviction.
+// If a thread already doing a eviction, late invokers won't be blocked. The cache evicts when threshold
+// value is exceeded. No guarantee is given that cache size won't exceed the threshold but will be under eventually.
 internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 {
     // internal only for tests
-    internal readonly ConcurrentDictionary<TKey, TimeBasedEntry<TValue>> dictionary = new();
-    private readonly SemaphoreSlim _cleaningSlim = new (1, 1);
+    internal ConcurrentDictionary<TKey, TimeBasedEntry<TValue>> Cache { get; } = new();
+    // internal only for tests
+    private readonly SemaphoreSlim _cleaningSlim = new(1, 1);
     private readonly int _capacity;
     private readonly int _threshold;
     private int _disposed;
@@ -53,7 +58,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 
         if (key is null) throw new ArgumentNullException(nameof(key));
 
-        if (dictionary.TryGetValue(key, out var entry))
+        if (Cache.TryGetValue(key, out var entry))
         {
             entry.Touch();
             val = entry.Value;
@@ -77,21 +82,24 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         if (key is null) throw new ArgumentNullException(nameof(key));
 
         var entry = new TimeBasedEntry<TValue>(val);
-        var addVal = dictionary.GetOrAdd(key, entry);
+        var addVal = Cache.GetOrAdd(key, entry);
 
-        if (!addVal.Equals(val) && dictionary.Count > _threshold)
+        if (!addVal.Equals(val) && Cache.Count > _threshold)
             DoEviction();
     }
 
     private void DoEviction()
     {
+        // Don't block if a thread already doing eviction.
+        if (_cleaningSlim.CurrentCount == 0) return;
+
         _cleaningSlim.Wait();
 
         try
         {
-            if (dictionary.Count < _threshold) return;
+            if (Cache.Count < _threshold) return;
 
-            var timestamps = dictionary
+            var timestamps = Cache
                 .OrderBy(p => p.Value.LastTouch)
                 .ToArray();
 
@@ -99,7 +107,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 
             for (var i = 0; i <= countOfEntriesToRemoved; i++)
             {
-                dictionary.TryRemove(timestamps[i].Key, timestamps[i].Value);
+                Cache.TryRemove(timestamps[i].Key, timestamps[i].Value);
             }
         }
         finally
@@ -113,7 +121,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         Interlocked.CompareExchange(ref _disposed, 1, 0);
 
         if (_disposed == 1) return;
-        dictionary.Clear();
+        Cache.Clear();
         _cleaningSlim.Dispose();
     }
 }
