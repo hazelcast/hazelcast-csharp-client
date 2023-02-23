@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ namespace Hazelcast.Linq.Evaluation
         /// <summary>
         /// Travers and evaluates <see cref="ExpressionType.Parameter"/> nodes on the expression tree.
         /// </summary>
-        /// <param name="expression">Root node</param>        
+        /// <param name="expression">Root node</param>
         /// <returns>A new Tree which is evaluated partially.</returns>
         public static Expression EvaluatePartially(Expression expression)
         {

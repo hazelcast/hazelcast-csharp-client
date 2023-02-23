@@ -47,12 +47,13 @@ jobs:
           os: ${{ inputs.os }}
           dotnet: false
           java: false
-
+      
       # get frameworks
       - name: Get Frameworks
         id: get-fwks
         shell: bash
         run: |
           FWKS=$(pwsh ./hz.ps1 getfwks-json)
-          echo "fwks-${{ matrix.os }}=$FWKS"
+          echo "fwks-${{ matrix.os }}=$FWKS"          
           echo "fwks-${{ matrix.os }}=$FWKS" >> $GITHUB_OUTPUT
+          

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,6 +32,8 @@ namespace Hazelcast.Tests.Support
         // log to HConsole
         protected override ILoggerFactory CreateLoggerFactory() =>
             Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddHConsole());
+
+        protected override string RcClusterConfiguration => Resources.Cluster_JetEnabled;
 
         [TestCase(true)]
         [TestCase(false)]

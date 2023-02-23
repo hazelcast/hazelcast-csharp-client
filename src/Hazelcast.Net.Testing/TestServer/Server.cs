@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 using System;
 using System.Buffers;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -93,7 +93,7 @@ internal class Server : IAsyncDisposable
     }
 
     /// <summary>
-    /// Assigns the fallback handler. 
+    /// Assigns the fallback handler.
     /// </summary>
     /// <param name="handler">The handler function.</param>
     /// <returns>This server.</returns>
@@ -157,7 +157,7 @@ internal class Server : IAsyncDisposable
 
         _listener = new ServerSocketListener(_endpoint, _hcName)
         {
-            OnAcceptConnection = AcceptConnection, 
+            OnAcceptConnection = AcceptConnection,
             OnShutdown = ListenerShutdown
         };
 

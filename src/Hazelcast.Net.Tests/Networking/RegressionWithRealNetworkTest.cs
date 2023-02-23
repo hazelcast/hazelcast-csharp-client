@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
-using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Networking
@@ -132,7 +131,7 @@ namespace Hazelcast.Tests.Networking
             await using var client = clientStart.Client;
 
             // let the client tries to connect before cluster is ready
-            await AssertEx.SucceedsEventually(() => 
+            await AssertEx.SucceedsEventually(() =>
                 Assert.That(client.State, Is.EqualTo(ClientState.Started)),
                 30_000, 1_000);
 
@@ -234,7 +233,7 @@ namespace Hazelcast.Tests.Networking
             await map.SubscribeAsync(c => c.EntryAdded((sender, args) => Interlocked.Increment(ref countOfEvent)));
 
             await RemoveMember(member.Uuid);
-            await AssertEx.SucceedsEventually(() => 
+            await AssertEx.SucceedsEventually(() =>
                     Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)),
                 120_000, 1000);
 
@@ -270,11 +269,11 @@ namespace Hazelcast.Tests.Networking
             var mapName = "myTestingMap";
             var member2 = await AddMember();
 
-            await AssertEx.SucceedsEventually(() => 
-                Assert.AreEqual(2, client.Members.Count), 
+            await AssertEx.SucceedsEventually(() =>
+                Assert.AreEqual(2, client.Members.Count),
                 120_000, 1000);
-            await AssertEx.SucceedsEventually(() => 
-                Assert.That(client.Members.Count(x => x.IsConnected), Is.EqualTo(smartRouting ? 2 : 1)), 
+            await AssertEx.SucceedsEventually(() =>
+                Assert.That(client.Members.Count(x => x.IsConnected), Is.EqualTo(smartRouting ? 2 : 1)),
                 60_000, 1000); // non-smart: only 1 member is connected
 
             var map = await client.GetMapAsync<int, int>(mapName);

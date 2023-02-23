@@ -1,11 +1,11 @@
-// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -50,7 +50,7 @@ internal partial class CompactDictionaryGenericRecord : CompactGenericRecordBase
         if (!Schema.TryGetField(fieldname, out var field))
                 throw new SerializationException($"Record with schema {Schema} does not contain a field named '{fieldname}'");
 
-        if (field.Kind != kind && field.Kind != altKind) 
+        if (field.Kind != kind && field.Kind != altKind)
             throw new SerializationException(
                 $"Record with schema {Schema} has field '{fieldname}' of type {field.Kind}, not" +
                 $" {kind}{(altKind == FieldKind.NotAvailable ? "" : $" nor {altKind}")}.");
@@ -83,7 +83,7 @@ internal partial class CompactDictionaryGenericRecord : CompactGenericRecordBase
             $"Use the Get{altKind} method instead.");
     }
 
-    private static T[]? GetArrayOf<T>(object? obj, string fieldname, FieldKind kind, FieldKind altKind) 
+    private static T[]? GetArrayOf<T>(object? obj, string fieldname, FieldKind kind, FieldKind altKind)
         where T : struct
     {
         if (obj == null) return null;

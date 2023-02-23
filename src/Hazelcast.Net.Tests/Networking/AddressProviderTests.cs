@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -87,7 +87,7 @@ namespace Hazelcast.Tests.Networking
             Assert.That(primary, Is.EquivalentTo(new[]
             {
                 new NetworkAddress("192.0.0.1", 5701),
-                new NetworkAddress("192.0.0.1", 5702), 
+                new NetworkAddress("192.0.0.1", 5702),
                 new NetworkAddress("192.0.0.1", 5703)
             }));
             Assert.That(secondary, Is.Empty);
@@ -120,7 +120,7 @@ namespace Hazelcast.Tests.Networking
             }));
             Assert.That(secondary, Is.EquivalentTo(new[]
             {
-                new NetworkAddress("192.168.0.1", 5702), 
+                new NetworkAddress("192.168.0.1", 5702),
                 new NetworkAddress("192.168.0.1", 5703),
                 new NetworkAddress("192.168.0.2", 5702),
                 new NetworkAddress("192.168.0.2", 5703)

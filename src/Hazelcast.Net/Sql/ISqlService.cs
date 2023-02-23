@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Executes a SQL query.
         /// </summary>
-        /// <param name="sql">The SQL query text to execute.</param>        
+        /// <param name="sql">The SQL query text to execute.</param>
         /// <param name="options">Options for the SQL query (defaults to <see cref="SqlStatementOptions.Default"/>).</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <param name="parameters">Parameters for the SQL query.</param>
@@ -67,7 +67,7 @@ namespace Hazelcast.Sql
         /// <summary>
         /// Executes a SQL command.
         /// </summary>
-        /// <param name="sql">The SQL command text to execute.</param>        
+        /// <param name="sql">The SQL command text to execute.</param>
         /// <param name="options">Options for the SQL command (defaults to <see cref="SqlStatementOptions.Default"/>).</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <param name="parameters">Parameters for the SQL command.</param>
