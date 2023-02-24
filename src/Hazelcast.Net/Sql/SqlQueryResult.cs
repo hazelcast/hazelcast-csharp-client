@@ -28,9 +28,10 @@ namespace Hazelcast.Sql
         private readonly Func<SqlQueryId, Task> _closeQuery;
         private readonly SerializationService _serializationService;
         private readonly CancellationToken _cancellationToken;
-        private readonly Func<SqlQueryId, int, CancellationToken, Task<SqlPage>> _getNextPage;
+        private readonly Func<SqlQueryId, int, int, CancellationToken, Task<SqlPage>> _getNextPage;
         private readonly SqlRowMetadata _metadata;
         private readonly int _cursorBufferSize;
+        private readonly int _partitionId;
         private CancellationTokenSource _combinedCancellation;
         private bool _disposed;
 
@@ -45,9 +46,10 @@ namespace Hazelcast.Sql
             SerializationService serializationService,
             SqlRowMetadata metadata, SqlPage firstPage,
             int cursorBufferSize,
-            Func<SqlQueryId, int, CancellationToken, Task<SqlPage>> getNextPage,
+            Func<SqlQueryId, int, int, CancellationToken, Task<SqlPage>> getNextPage,
             SqlQueryId queryId,
             Func<SqlQueryId, Task> closeQuery,
+            int partitionId,
             CancellationToken cancellationToken)
         {
             _queryId = queryId;
@@ -58,6 +60,7 @@ namespace Hazelcast.Sql
             _page = firstPage;
             _getNextPage = getNextPage;
             _cancellationToken = cancellationToken;
+            _partitionId = partitionId;
         }
 
         public IAsyncEnumerator<SqlRow> GetAsyncEnumerator(CancellationToken cancellationToken)
@@ -127,7 +130,7 @@ namespace Hazelcast.Sql
                     }
 
                     // otherwise, try to retrieve the next page
-                    _result._page = await _result._getNextPage(_result._queryId, _result._cursorBufferSize, _cancellationToken).CfAwait();
+                    _result._page = await _result._getNextPage(_result._queryId, _result._cursorBufferSize, _result._partitionId, _cancellationToken).CfAwait();
                     _result._currentRowIndex = -1;
                 }
 

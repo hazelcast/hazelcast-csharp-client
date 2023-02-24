@@ -20,6 +20,7 @@ using Hazelcast.Core;
 using Hazelcast.Messaging;
 using Hazelcast.Metrics;
 using Hazelcast.Networking;
+using Hazelcast.Sql;
 
 namespace Hazelcast
 {
@@ -74,7 +75,7 @@ namespace Hazelcast
             Messaging = other.Messaging.Clone(Preview);
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
-            
+            Sql = other.Sql.Clone();
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
 
@@ -107,6 +108,11 @@ namespace Hazelcast
         /// Gets the metrics options.
         /// </summary>
         public MetricsOptions Metrics { get; } = new MetricsOptions();
+
+        /// <summary>
+        /// Gets the <see cref="SqlOptions"/>.
+        /// </summary>
+        public SqlOptions Sql { get; } = new SqlOptions();      
 
         /// <summary>
         /// Clones the options.

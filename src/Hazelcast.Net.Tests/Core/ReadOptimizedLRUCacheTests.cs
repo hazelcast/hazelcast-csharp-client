@@ -192,4 +192,17 @@ public class ReadOptimizedLruCacheTests
         entry.Touch();
         Assert.Greater(entry.LastTouch, firstTouch);
     }
+
+    [Test]
+    public void TestTryRemove()
+    {
+        var cache = new ReadOptimizedLruCache<string, string>(1, 2);
+
+        Assert.Throws<ArgumentNullException>(() => cache.TryRemove(null, out _));
+        Assert.True(!cache.TryRemove("1", out var val) && val == default);
+        cache.Add("1", "1");
+        Assert.True(cache.TryRemove("1", out var val2) && val2 == "1");
+        cache.Dispose();
+        Assert.Throws<ObjectDisposedException>(() => cache.TryRemove("1", out _));
+    }
 }

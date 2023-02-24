@@ -64,7 +64,7 @@ namespace Hazelcast
             _distributedOjects = new DistributedObjectFactory(Cluster, SerializationService, loggerFactory);
             _nearCacheManager = new NearCacheManager(cluster, SerializationService, loggerFactory, options.NearCache);
             CPSubsystem = new CPSubsystem(cluster, SerializationService);
-            Sql = new SqlService(cluster, SerializationService);
+            Sql = new SqlService(options, cluster, SerializationService, loggerFactory);
 
             if (options.Metrics.Enabled)
             {

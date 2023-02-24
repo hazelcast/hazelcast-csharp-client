@@ -29,6 +29,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 {
     // internal only for tests
     internal ConcurrentDictionary<TKey, TimeBasedEntry<TValue>> Cache { get; } = new();
+
     // internal only for tests
     private readonly SemaphoreSlim _cleaningSlim = new(1, 1);
     private readonly int _capacity;
@@ -88,6 +89,30 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
             DoEviction();
     }
 
+    /// <summary>
+    /// Try to remove key value pair by given key.
+    /// </summary>
+    /// <param name="key">Key to be removed</param>
+    /// <param name="value">Value is removed, default value if key not exists.</param>
+    /// <returns>True if key pair removed, otherwise false.</returns>
+    /// <exception cref="ObjectDisposedException">If cache disposed</exception>
+    /// <exception cref="ArgumentNullException">If key null.</exception>
+    public bool TryRemove(TKey key, [MaybeNullWhen(false)] out TValue value)
+    {
+        if (_disposed == 1) throw new ObjectDisposedException("Cache is disposed.");
+
+        if (key is null) throw new ArgumentNullException(nameof(key));
+
+        if (Cache.TryRemove(key, out var entry))
+        {
+            value = entry.Value;
+            return true;
+        }
+
+        value = default;
+        return false;
+    }
+
     private void DoEviction()
     {
         // Don't block if a thread already doing eviction.
@@ -107,7 +132,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 
             for (var i = 0; i <= countOfEntriesToRemoved; i++)
             {
-                Cache.TryRemove(timestamps[i].Key, timestamps[i].Value);
+                Cache.TryRemove(timestamps[i].Key, out _);
             }
         }
         finally

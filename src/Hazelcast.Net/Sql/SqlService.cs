@@ -13,13 +13,16 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Sql
 {
@@ -27,11 +30,17 @@ namespace Hazelcast.Sql
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
+        private readonly ReadOptimizedLruCache<string, int> _queryPartitionArgumentCache;
+        private readonly ILogger<SqlService> _logger;
+        private readonly HazelcastOptions _options;
 
-        internal SqlService(Cluster cluster, SerializationService serializationService)
+        internal SqlService(HazelcastOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
             _serializationService = serializationService;
+            _queryPartitionArgumentCache = new(options.Sql.PartitionArgumentCacheSize, options.Sql.PartitionArgumentCacheThreshold);
+            _logger = loggerFactory.CreateLogger<SqlService>();
+            _options = options;
         }
 
         internal SerializationService SerializationService => _serializationService;
@@ -45,10 +54,11 @@ namespace Hazelcast.Sql
 
             SqlRowMetadata metadata;
             SqlPage firstPage;
+            var partitionId = -1;
 
             try
             {
-                (metadata, firstPage) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
+                (metadata, firstPage, partitionId) = await FetchFirstPageAsync(queryId, sql, parameters, options, cancellationToken).CfAwait();
             }
             catch (TaskCanceledException)
             {
@@ -59,7 +69,7 @@ namespace Hazelcast.Sql
                 throw;
             }
 
-            return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, cancellationToken);
+            return new SqlQueryResult(_serializationService, metadata, firstPage, options.CursorBufferSize, FetchNextPageAsync, queryId, CloseAsync, partitionId, cancellationToken);
         }
 
         /// <inheritdoc/>
@@ -87,7 +97,7 @@ namespace Hazelcast.Sql
             return ExecuteCommandAsync(sql, parameters, options, cancellationToken);
         }
 
-        private async Task<SqlExecuteCodec.ResponseParameters> FetchAndValidateResponseAsync(SqlQueryId queryId,
+        private async Task<(SqlExecuteCodec.ResponseParameters, int)> FetchAndValidateResponseAsync(SqlQueryId queryId,
             string sql, object[] parameters, SqlStatementOptions options, SqlResultType resultType,
             CancellationToken cancellationToken = default)
         {
@@ -112,36 +122,80 @@ namespace Hazelcast.Sql
             var requestMessage = SqlExecuteCodec.EncodeRequest(
                 sql,
                 serializedParameters,
-                (long)options.Timeout.TotalMilliseconds,
+                (long) options.Timeout.TotalMilliseconds,
                 options.CursorBufferSize,
                 options.Schema,
-                (byte)resultType,
+                (byte) resultType,
                 queryId,
                 skipUpdateStatistics: false
             );
 
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var partitionId = GetPartitionIdOfQuery(sql, serializedParameters);
+
+            var responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
 
-            if (response.Error != null) 
+            // todo: argument index will appear here after protocol PR merged.
+            SetArgumentIndex(sql, -1);
+
+            if (response.Error != null)
                 throw new HazelcastSqlException(_cluster.ClientId, response.Error);
 
-            return response;
+            return (response, partitionId);
         }
 
-        private async Task<(SqlRowMetadata rowMetadata, SqlPage page)> FetchFirstPageAsync(SqlQueryId queryId, string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
+        private void SetArgumentIndex(string sql, int argIndexFromServer)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken).CfAwait();
+            if (_options.Networking.SmartRouting &&
+                (!_queryPartitionArgumentCache.TryGetValue(sql, out var argIndex) || argIndexFromServer != argIndex))
+            {
+                if (argIndexFromServer == -1)
+                    _queryPartitionArgumentCache.TryRemove(sql, out _);
+                else
+                    _queryPartitionArgumentCache.Add(sql, argIndexFromServer);
+            }
+        }
+
+        /// <summary>
+        /// Tries to find partition Id for the key if argument index exists for the statement and <see cref="NetworkingOptions.SmartRouting"/> enabled.
+        /// </summary>
+        /// <param name="sql">Sql Statement.</param>
+        /// <param name="serializedParameters">Serialized parameters of the statement.</param>
+        /// <returns>Partition Id if successful, otherwise -1</returns>
+        private int GetPartitionIdOfQuery(string sql, List<IData> serializedParameters)
+        {
+            var partitionId = -1;
+
+            // Todo: Update condition after TPC implementation.
+            if (!_options.Networking.SmartRouting || !_queryPartitionArgumentCache.TryGetValue(sql, out var argIndex)) return partitionId;
+
+            if (argIndex >= 0 && argIndex < serializedParameters.Count)
+            {
+                var serializedKey = serializedParameters[argIndex];
+                partitionId = _cluster.State.Partitioner.GetPartitionId(serializedKey.PartitionHash);
+            }
+            else
+            {
+                _logger.IfDebug().LogDebug("Argument Index ({ArgIndex}) for query is out of range in parameters. SQL statement will send over a random connection.", argIndex);
+            }
+
+            return partitionId;
+        }
+
+        private async Task<(SqlRowMetadata rowMetadata, SqlPage page, int)> FetchFirstPageAsync(SqlQueryId queryId, string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken)
+        {
+            var (result, partitionId) = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.Rows, cancellationToken).CfAwait();
             if (result.RowMetadata == null)
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic, "Expected row set in the response but got update count.");
 
-            return (new SqlRowMetadata(result.RowMetadata), result.RowPage);
+            return (new SqlRowMetadata(result.RowMetadata), result.RowPage, partitionId);
         }
 
-        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, CancellationToken cancellationToken)
+        private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, int partitionId, CancellationToken cancellationToken)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
             if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
@@ -151,7 +205,7 @@ namespace Hazelcast.Sql
 
         private async Task<long> FetchUpdateCountAsync(SqlQueryId queryId, string sql, object[] parameters, SqlStatementOptions options, CancellationToken cancellationToken = default)
         {
-            var result = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken).CfAwait();
+            var (result, _) = await FetchAndValidateResponseAsync(queryId, sql, parameters, options, SqlResultType.UpdateCount, cancellationToken).CfAwait();
             if (result.RowMetadata != null)
                 throw new HazelcastSqlException(_cluster.ClientId, SqlErrorCode.Generic, "Expected update count in the response but got row set.");
 
