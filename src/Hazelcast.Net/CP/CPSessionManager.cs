@@ -18,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AsyncKeyedLock;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ namespace Hazelcast.CP
         /// <seealso  href="https://docs.microsoft.com/en-us/dotnet/api/system.threading.readerwriterlockslim?view=net-6.0#remarks"/>
         /// </summary>
         private readonly SemaphoreSlim _semaphoreReadWrite = new SemaphoreSlim(1, 1);
-        private readonly ConcurrentDictionary<CPGroupId, SemaphoreSlim> _groupIdSemaphores = new ConcurrentDictionary<CPGroupId, SemaphoreSlim>();
+        private AsyncKeyedLocker<CPGroupId> _groupIdSemaphores;
         private readonly ConcurrentDictionary<CPGroupId, CPSession> _sessions = new ConcurrentDictionary<CPGroupId, CPSession>();
         private int _disposed;
         private readonly object _mutex = new object();
@@ -52,6 +53,7 @@ namespace Hazelcast.CP
         #region SessionManagement
         public CPSessionManager(Cluster cluster)
         {
+            Reset();
             _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
             _logger = _cluster.State.LoggerFactory.CreateLogger<CPSessionManager>();
             _cancel = new CancellationTokenSource();
@@ -180,46 +182,23 @@ namespace Hazelcast.CP
                 else
                 {
                     // Wait and lock only for the groupId
-                    var semaphore = GetSemaphoreBy(groupId);
-                    await semaphore.WaitAsync().CfAwait();
-
-                    // check once more after groupId semaphore
-                    if (_sessions.TryGetValue(groupId, out sessionState) && sessionState.IsValid)
+                    using (await _groupIdSemaphores.LockAsync(groupId).CfAwait())
                     {
-                        return sessionState;
-                    }
+                        // check once more after groupId semaphore
+                        if (_sessions.TryGetValue(groupId, out sessionState) && sessionState.IsValid)
+                        {
+                            return sessionState;
+                        }
 
-                    try
-                    {
                         var session = await RequestNewSessionAsync(groupId).CfAwait();
                         _sessions[groupId] = session.Item1;
                         ScheduleHeartbeat(TimeSpan.FromMilliseconds(session.Item2));
                         return session.Item1;
                     }
-                    finally
-                    {
-                        semaphore.Release();
-                    }
                 }
 
             }
             finally { _semaphoreReadWrite.Release(); }
-        }
-
-        /// <summary>
-        /// Gets or create a <see cref="SemaphoreSlim"/> for given group id
-        /// </summary>
-        /// <param name="groupId"></param>
-        /// <returns><see cref="SemaphoreSlim"/></returns>
-        private SemaphoreSlim GetSemaphoreBy(CPGroupId groupId)
-        {
-            if (_groupIdSemaphores.TryGetValue(groupId, out var mutex))
-                return mutex;
-
-            var newMutex = new SemaphoreSlim(1, 1);
-            var mostRecent = _groupIdSemaphores.GetOrAdd(groupId, newMutex);
-            if (mostRecent != newMutex) newMutex.Dispose();
-            return mostRecent;
         }
         #endregion
 
@@ -274,10 +253,11 @@ namespace Hazelcast.CP
         {
             lock (_mutex)
             {
-                foreach (var semaphore in _groupIdSemaphores.Values)
-                    semaphore.Dispose();
-
-                _groupIdSemaphores.Clear();
+                _groupIdSemaphores = new AsyncKeyedLocker<CPGroupId>(o =>
+                {
+                    o.PoolSize = 20;
+                    o.PoolInitialFill = 1;
+                });
 
                 _sessions.Clear();
             }
