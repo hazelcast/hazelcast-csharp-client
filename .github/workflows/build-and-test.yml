@@ -119,7 +119,7 @@ jobs:
         run: |
             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
             $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1])
-            $build = $isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")
+            $build = ()$isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")).ToLower()
             write-output "build=$build"
             write-output "build=$build" >> $env:GITHUB_OUTPUT
 
@@ -198,13 +198,13 @@ jobs:
 
       # create nuget packages
       - name: Pack NuGet packages
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
       - name: Upload NuGet packages artifact
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: NuGet-Packages
@@ -212,13 +212,13 @@ jobs:
 
       # publish examples (inc. soak tests) (windows only so we have framework too)
       - name: Publish examples
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore publish-examples
 
       # archive examples (windows only)
       - name: Archive examples artifact
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: Examples
@@ -226,7 +226,7 @@ jobs:
 
       # git the docs, create the patch
       - name: Create docs patch
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: |
           ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
@@ -238,7 +238,7 @@ jobs:
 
       # archive docs patch
       - name: Upload docs patch artifact
-        if: steps.release-artifacts.outputs.build
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: Docs-Patch
