@@ -119,7 +119,7 @@ jobs:
         run: |
             $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
             $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1])
-            $build = ($isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")).ToLower()
+            $build = ($isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")).ToString().ToLower()
             write-output "build=$build"
             write-output "build=$build" >> $env:GITHUB_OUTPUT
 
