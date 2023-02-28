@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
@@ -124,15 +125,27 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         {
             if (Cache.Count < _threshold) return;
 
-            var timestamps = Cache
+            var countOfEntriesToRemoved = Cache.Count - _capacity;
+#if NET6_0_OR_GREATER
+            var q = new PriorityQueue<long, long>();
+
+            foreach (var val in Cache)
+                q.Enqueue(val.Value.LastTouch, val.Value.LastTouch);
+
+            for (var i = 0; i < countOfEntriesToRemoved; i++)
+                q.Dequeue();
+
+            var cutOff = q.Dequeue();
+#else
+            var cutOff = Cache
                 .OrderBy(p => p.Value.LastTouch)
-                .ToArray();
-
-            var countOfEntriesToRemoved = _threshold - _capacity;
-
-            for (var i = 0; i <= countOfEntriesToRemoved; i++)
+                .ElementAt(countOfEntriesToRemoved)
+                .Value.LastTouch;
+#endif
+            foreach (var t in Cache)
             {
-                Cache.TryRemove(timestamps[i].Key, out _);
+                if (t.Value.LastTouch < cutOff)
+                     Cache.TryRemove(t.Key, out _);
             }
         }
         finally
