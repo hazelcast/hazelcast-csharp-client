@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,9 +17,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Text;
-using Hazelcast.DistributedObjects;
 using Hazelcast.Linq.Expressions;
 
 namespace Hazelcast.Linq.Visitors
@@ -141,7 +138,7 @@ namespace Hazelcast.Linq.Visitors
         }
 
         /// <summary>
-        /// Visit the expressions and bind columns and conditions with SQL equavilent expressions. 
+        /// Visit the expressions and bind columns and conditions with SQL equavilent expressions.
         /// </summary>
         /// <param name="type">Type of the result entry</param>
         /// <param name="source">The source expression</param>
@@ -181,7 +178,7 @@ namespace Hazelcast.Linq.Visitors
             LambdaExpression predicate)
         {
             var projection =
-                (ProjectionExpression) Visit(expression); //DFS and project everything about the entry type          
+                (ProjectionExpression) Visit(expression); //DFS and project everything about the entry type
             _map[predicate.Parameters[0]] = projection.Projector; //map predicate to the projector
             var predicateExp = Visit(predicate.Body); // Visit the body to handle inner expressions.
             return (projection, predicateExp);

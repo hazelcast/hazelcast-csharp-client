@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
 using Hazelcast.Core;
 using Hazelcast.Models;
@@ -474,7 +473,7 @@ namespace Hazelcast.Serialization.Compact
             // in Java this constraint could probably be lifted without problems.
             if (value != null)
             {
-                // typeof(T) would be Nullable<int> not int - same with GetElementType() - and then, 
+                // typeof(T) would be Nullable<int> not int - same with GetElementType() - and then,
                 // when processing each array element, it's going to be boxed to an object so either
                 // be null or int. and so, we need to unwrap the nullable for checks to be valid.
                 var elementType = value.GetType().GetElementType()!;
@@ -491,6 +490,6 @@ namespace Hazelcast.Serialization.Compact
             }
 
             WriteArrayOfReference(name, FieldKind.ArrayOfCompact, value, (output, v) => _objectsWriter.Write(output, v));
-        } 
+        }
     }
 }

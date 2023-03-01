@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -127,7 +127,7 @@ namespace Hazelcast
             Cluster.Connections.ConnectionClosed += async conn => { await Cluster.Members.RemoveConnectionAsync(conn).CfAwait(); };
 
             // when a connection is closed, clears the associated subscriptions + ensure there is a cluster views connection
-            // 
+            //
             Cluster.Connections.ConnectionClosed += Cluster.Events.OnConnectionClosed;
 
             // when a connection is closed, trigger the user-level event

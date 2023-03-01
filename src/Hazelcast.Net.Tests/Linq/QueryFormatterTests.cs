@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,12 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
-using System.Runtime.Remoting;
-using System.Xml.Xsl;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
 using Hazelcast.Linq.Visitors;
@@ -72,7 +68,7 @@ namespace Hazelcast.Tests.Linq
             catch (Exception ex)
             {
                 // We expect that because our dummy node type is too dummy to be visited.
-                // If we got the exception, then means that the type is supported but couldn't be visited. 
+                // If we got the exception, then means that the type is supported but couldn't be visited.
                 if ((ex is ArgumentException && ex.Message == "must be reducible node")
                     || (ex is InvalidCastException &&
                         ex.Message.StartsWith("Unable to cast object of type 'DummyExpression'")))
@@ -278,7 +274,7 @@ namespace Hazelcast.Tests.Linq
             var (query, values) = QueryFormatter.Format(exp);
 
             // + sign doesn't change the sign of the value, so we don't write it.
-            // Also, note that third expression on the where is in another level of parenthesis. 
+            // Also, note that third expression on the where is in another level of parenthesis.
             // That is because of nature of the structure. But it doesn't effect the logical result.
             // Like;
             // BinaryExp(Left: BinaryExp(Left: Expression1, Right: Expression2), Right: Expression3)
@@ -378,7 +374,7 @@ namespace Hazelcast.Tests.Linq
                         .GetMethod(name, new[] {typeof(Expression), typeof(Expression)})
                         ?.Invoke(null, new object[] {Expression.Constant(true), Expression.Constant(true)});
                     break;
-                case true when type is ExpressionType.Quote: // We don't support Quote, using it for testing purposes 
+                case true when type is ExpressionType.Quote: // We don't support Quote, using it for testing purposes
                     exp = Expression.LeftShift(arg1, arg2);
                     break;
                 case true:

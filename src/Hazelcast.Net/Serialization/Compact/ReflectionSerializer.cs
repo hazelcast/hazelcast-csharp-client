@@ -1,4 +1,4 @@
-// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -21,8 +23,6 @@ using System.Reflection;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
-
-#nullable enable
 
 // TODO: consider emitting the property setters (dynamic IL, faster) + caching more things
 
@@ -178,7 +178,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
 
     private static bool TryWriteCustomArray(ICompactWriter writer, string name, Type type, object? value)
     {
-        if (!type.IsArray || type.GetArrayRank() != 1) 
+        if (!type.IsArray || type.GetArrayRank() != 1)
             return false;
 
         // is an array, and not a known builtin array, else we wouldn't be here
@@ -344,7 +344,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
     private static bool TryReadCustomArray(ICompactReader reader, string name, Type type, out object? value)
     {
         value = null;
-        if (!type.IsArray || type.GetArrayRank() != 1) 
+        if (!type.IsArray || type.GetArrayRank() != 1)
             return false;
 
         var elementType = type.GetElementType()!; // cannot be null, type is an array
@@ -358,7 +358,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
 
     private static bool TryReadCustomGeneric(ICompactReader reader, string name, Type type, out object? value)
     {
-        var objGenericType = 
+        var objGenericType =
             IsList(type) ? typeof (List<>) :
             IsSet(type) ? typeof (HashSet<>) :
             null;
@@ -574,7 +574,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
 
         foreach (var property in GetProperties(obj.GetType()))
         {
-            if (!GetValidFieldName(writer, property.PropertyType, property.Name, out var fieldName)) 
+            if (!GetValidFieldName(writer, property.PropertyType, property.Name, out var fieldName))
                 continue;
 
             GetWriter(property.PropertyType)(writer, fieldName, property.GetValue(obj));
@@ -601,7 +601,7 @@ internal partial class ReflectionSerializer : ICompactSerializer<object>
             return rw.ValidateFieldNameInvariant(propertyName, out fieldName);
 
         // special case of dictionaries: the property "Foo" is serialized as *two*
-        // schema fields, "Foo!keys" and "Foo!values" 
+        // schema fields, "Foo!keys" and "Foo!values"
 
         fieldName = null;
         if (!rw.ValidateFieldNameInvariant(propertyName + "!keys", out var keysFieldName))

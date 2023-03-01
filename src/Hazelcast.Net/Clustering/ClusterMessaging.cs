@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
-using Hazelcast.Models;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Clustering
@@ -50,7 +49,7 @@ namespace Hazelcast.Clustering
         #region Events
 
         /// <summary>
-        /// Gets or set an action that will be executed before sending a message. 
+        /// Gets or set an action that will be executed before sending a message.
         /// </summary>
         public Func<ClientMessage, ValueTask> SendingMessage
         {

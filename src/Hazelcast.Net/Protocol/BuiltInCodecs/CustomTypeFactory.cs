@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
 
 using System;
 using System.Collections.Generic;
-using Hazelcast.Core;
 using System.Linq;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
 using Hazelcast.Networking;

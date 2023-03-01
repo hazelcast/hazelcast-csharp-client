@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Hazelcast.Configuration;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
-
-#nullable enable
 
 namespace Hazelcast.Serialization.Compact
 {
@@ -465,7 +465,7 @@ namespace Hazelcast.Serialization.Compact
         /// <returns></returns>
         /// <exception cref="ConfigurationException">No reflection serializer has been configured.</exception>
         internal CompactSerializerAdapter ReflectionSerializerAdapter
-            => _reflectionSerializerAdapter ??= CompactSerializerAdapter.Create(ReflectionSerializer ??= new ReflectionSerializer()); 
+            => _reflectionSerializerAdapter ??= CompactSerializerAdapter.Create(ReflectionSerializer ??= new ReflectionSerializer());
 
         /// <summary>
         /// Gets the default type name used by compact serialization for a type.

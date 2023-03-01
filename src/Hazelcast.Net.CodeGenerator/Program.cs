@@ -1,11 +1,11 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
-// 
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+//
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-// 
+//
 // http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -64,7 +64,7 @@ void GenerateHasFieldOfKind(StringBuilder text)
     }
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/CompactReaderExtensions.HasFieldOfKind.cs", 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/CompactReaderExtensions.HasFieldOfKind.cs",
     GenerateHasFieldOfKind);
 
 void GenerateReadOrDefault(StringBuilder text)
@@ -120,7 +120,7 @@ void GenerateReadOrDefault(StringBuilder text)
     }
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/CompactReaderExtensions.ReadOrDefault.cs", 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/CompactReaderExtensions.ReadOrDefault.cs",
     GenerateReadOrDefault);
 
 void GenerateCompactReader(StringBuilder text)
@@ -171,7 +171,7 @@ void GenerateCompactReader(StringBuilder text)
     }
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ICompactReader.cs", 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ICompactReader.cs",
     GenerateCompactReader);
 
 void GenerateCompactWriter(StringBuilder text)
@@ -203,7 +203,7 @@ void GenerateCompactWriter(StringBuilder text)
     }
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ICompactWriter.cs", 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ICompactWriter.cs",
     GenerateCompactWriter);
 
 void GenerateReflectionWriters(StringBuilder text)
@@ -266,8 +266,8 @@ void GenerateReflectionReaders(StringBuilder text)
     }
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ReflectionSerializer.cs", 
-    GenerateReflectionWriters, 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/ReflectionSerializer.cs",
+    GenerateReflectionWriters,
     GenerateReflectionReaders);
 
 void GenerateSchemaBuilderWriter(StringBuilder text)
@@ -293,7 +293,7 @@ void GenerateSchemaBuilderWriter(StringBuilder text)
 
 }
 
-fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/SchemaBuilderWriter.cs", 
+fileEditor.EditFile("src/Hazelcast.Net/Serialization/Compact/SchemaBuilderWriter.cs",
     GenerateSchemaBuilderWriter);
 
 void GenerateCompactReaderHasFieldOfKindExtensionsTests(StringBuilder text)
@@ -440,7 +440,7 @@ void GenerateIGenericRecordBuilder(StringBuilder text)
     /// <returns>This <see cref=""IGenericRecordBuilder""/>.</returns>
     /// <remarks>
     /// <para>It is legal to set the field again only when the builder is created with
-    /// <see cref=""IGenericRecord.NewBuilderWithClone()""/>; it is otherwise illegal 
+    /// <see cref=""IGenericRecord.NewBuilderWithClone()""/>; it is otherwise illegal
     /// to set to the same field twice.</para>
     /// </remarks>
     /// <exception cref=""SerializationException"">The build has been initialized with a

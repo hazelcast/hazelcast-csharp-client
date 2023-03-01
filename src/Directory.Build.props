@@ -83,15 +83,18 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>5.2.0</AssemblyVersion>
-    <FileVersion>5.2.0</FileVersion>
-    <VersionPrefix>5.2.0</VersionPrefix>
+    <AssemblyVersion>5.3.0</AssemblyVersion>
+    <FileVersion>5.3.0</FileVersion>
+    <VersionPrefix>5.3.0</VersionPrefix>
     <VersionSuffix>preview.0</VersionSuffix>
+
+    <!-- bundle XML doc in NuGet package-->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <Authors>Hazelcast, Inc.</Authors>
     <Product>Hazelcast .NET Client</Product>
     <Company>Hazelcast, Inc.</Company>
-    <Copyright>Copyright (C) 2008-2022 Hazelcast, Inc.</Copyright>
+    <Copyright>Copyright (C) 2008-2023 Hazelcast, Inc.</Copyright>
     <Title>Hazelcast .NET Client</Title>
 
     <!-- https://devblogs.microsoft.com/nuget/managing-package-owners/ -->

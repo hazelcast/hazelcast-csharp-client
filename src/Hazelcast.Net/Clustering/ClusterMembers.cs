@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -319,7 +319,7 @@ namespace Hazelcast.Clustering
 
                         // otherwise, we're really disconnecting: flip _connected, and change the state
                         _connected = false;
-                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());                        
+                        _logger.IfDebug()?.LogDebug("Removed connection {ConnectionId} to member {MemberId}, disconnecting.", connection.Id.ToShortString(), connection.MemberId.ToShortString());
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
 
                         // and drain the queue: stop connecting members, we need to fully reconnect
@@ -527,7 +527,7 @@ namespace Hazelcast.Clustering
                     if (!isAnyMemberConnected)
                     {
                         // no more connected member, we are now disconnected
-                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);                        
+                        _logger.IfDebug()?.LogDebug("Set members: {RemovedCount} removed, {AddedCount} added, {MembersCount} total and none connected, disconnecting.", removed.Count, added.Count, members.Count);
                         _clusterState.ChangeState(ClientState.Disconnected, ClientState.Connected);
                         _connected = false;
                         disconnected = true;

@@ -1870,3 +1870,6 @@ virtual Hazelcast.Serialization.Compact.CompactSerializerBase<T>.TypeName.get ->
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
 ~static Hazelcast.Core.ServiceFactory.CreateInstance<TService>(System.Type type, System.Collections.Generic.IDictionary<string, string> stringArgs = null, params object[] paramArgs) -> TService
 ~virtual Hazelcast.HazelcastOptionsBase.ServiceProvider.get -> System.IServiceProvider
+~Hazelcast.HazelcastOptionsBuilder.WithLoggerFactory(System.Func<Microsoft.Extensions.Configuration.IConfiguration, Microsoft.Extensions.Logging.ILoggerFactory> factory) -> Hazelcast.HazelcastOptionsBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.With(string key, object value) -> TBuilder
+~Hazelcast.HazelcastOptionsBuilderBase<TOptions, TBuilder>.WithDefault(string key, object value) -> TBuilder

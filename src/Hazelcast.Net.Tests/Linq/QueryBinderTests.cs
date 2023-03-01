@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using NUnit.Framework;
-using Hazelcast.Linq.Visitors;
 using System.Linq.Expressions;
 using Hazelcast.Linq.Evaluation;
 using Hazelcast.Linq.Expressions;
+using Hazelcast.Linq.Visitors;
 using Hazelcast.Testing.Linq;
+using NUnit.Framework;
 
 namespace Hazelcast.Tests.Linq
 {
@@ -110,7 +110,7 @@ namespace Hazelcast.Tests.Linq
             var query = dummyData
                 .AsTestingAsyncQueryable()
                 // the other data source must be also Querable. Otherwise, it will be interpred as a (constant)value on expression tree which
-                // doesn't work for us. Note: HMap is Querable. It will be used as joined data source in normal usage. Current usage 
+                // doesn't work for us. Note: HMap is Querable. It will be used as joined data source in normal usage. Current usage
                 // is only for testing.
                 .Join(dummyData2.AsTestingAsyncQueryable(),
                     o => o.ColumnInteger,

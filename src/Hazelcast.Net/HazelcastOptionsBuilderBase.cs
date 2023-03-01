@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ using Hazelcast.Configuration;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 
 namespace Hazelcast
 {
@@ -89,6 +90,22 @@ namespace Hazelcast
         }
 
         /// <summary>
+        /// Adds a default key/value pair to use when building the options.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>This options builder.</returns>
+        public TBuilder WithDefault(string key, object value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+            // assuming value can be null or empty
+
+            _defaults ??= new Dictionary<string, string>();
+            _defaults[key] = value.ToString();
+            return ThisBuilder;
+        }
+
+        /// <summary>
         /// Adds a key/value pair to use when building the options.
         /// </summary>
         /// <param name="key">The key.</param>
@@ -101,6 +118,22 @@ namespace Hazelcast
 
             _keyValues ??= new Dictionary<string, string>();
             _keyValues[key] = value;
+            return ThisBuilder;
+        }
+
+        /// <summary>
+        /// Adds a key/value pair to use when building the options.
+        /// </summary>
+        /// <param name="key">The key.</param>
+        /// <param name="value">The value.</param>
+        /// <returns>This options builder.</returns>
+        public TBuilder With(string key, object value)
+        {
+            if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException(ExceptionMessages.NullOrEmpty, nameof(key));
+            // assuming value can be null or empty
+
+            _keyValues ??= new Dictionary<string, string>();
+            _keyValues[key] = value.ToString();
             return ThisBuilder;
         }
 
