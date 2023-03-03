@@ -20,7 +20,7 @@ using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud;
 
-[Explicit("Requires Hazelcast Viridian Setup.")]
+[TestFixture, Explicit("Requires Hazelcast Viridian Setup."), Timeout(60_000)]
 public class ServerlessCloudTests : ServerlessRemoteTestBase
 {
     private string _hzVersion;
