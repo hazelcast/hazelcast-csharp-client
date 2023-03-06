@@ -65,6 +65,4 @@ var app = builder.Build();
 app.UseSession(); // Session state will be stored in distributed cache provided by AddHazelcastCache()
 ```
 > [!WARNING]
-> While reading `ISession` object, it is strongly advised to use async extensions which are provided with this package under `Hazelcast.Caching.Session` namespace. Otherwise, you may not benefit 
-> from concurrency since the thread will be blocked with `task.GetAwaiter().GetResult()`. It is also deadlock prone.
-
+>  When the ISession object is supported by the Hazelcast client, its synchronous operations should be avoided, as the Hazelcast client is fully asynchronous and therefore calls to task.GetAwaiter().GetResult() may be involved and, potentially, cause threading issues. Prefer the asynchronous operations, such as those provided in the SessionExtensions class.

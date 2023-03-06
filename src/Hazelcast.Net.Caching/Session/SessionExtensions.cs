@@ -14,6 +14,7 @@
 
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Microsoft.AspNetCore.Http;
 
 namespace Hazelcast.Caching.Session;
@@ -33,7 +34,7 @@ public static class SessionExtensions
     /// /// <param name="token">Cancellation Token</param>
     public static async Task<string?> GetStringAsync(this ISession session, string key, CancellationToken token = default)
     {
-        await session.LoadAsync(token);
+        await session.LoadAsync(token).CfAwait();
         return session.GetString(key);
     }
 
@@ -47,7 +48,7 @@ public static class SessionExtensions
     /// <param name="token">Cancellation Token</param>
     public static async Task<int?> GetInt32Async(this ISession session, string key, CancellationToken token = default)
     {
-        await session.LoadAsync(token);
+        await session.LoadAsync(token).CfAwait();
         return session.GetInt32(key);
     }
     
@@ -61,7 +62,7 @@ public static class SessionExtensions
     /// <param name="token">Cancellation Token</param>
     public static async Task<byte[]?> GetAsync(this ISession session, string key, CancellationToken token = default)
     {
-        await session.LoadAsync(token);
+        await session.LoadAsync(token).CfAwait();
         return session.Get(key);
     }
 }
