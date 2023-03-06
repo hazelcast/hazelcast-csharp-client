@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System;
+
 namespace Hazelcast
 {
     /// <summary>
@@ -21,5 +25,18 @@ namespace Hazelcast
     {
         /// <inheritdoc />
         protected override HazelcastOptionsBuilder ThisBuilder => this;
+
+        /// <summary>
+        /// Adds a logger factory.
+        /// </summary>
+        /// <param name="factory">A delegate.</param>
+        /// <returns>This options builder.</returns>
+        public HazelcastOptionsBuilder WithLoggerFactory(Func<IConfiguration, ILoggerFactory> factory)
+        {
+            return With((configuration, options) =>
+            {
+                options.LoggerFactory.Creator = () => factory(configuration);
+            });
+        }
     }
 }

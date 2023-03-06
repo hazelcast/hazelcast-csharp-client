@@ -110,6 +110,25 @@ jobs:
           echo "${{ secrets.HAZELCAST_SNK }}" | base64 -d > ./build/hazelcast.snk
           ls -l ./build/hazelcast.snk
 
+        # determine whether to build the release artifacts (need only to do it once)
+        # ie whether we are building for the latest framework version on windows
+        # assumes that frameworks obtained by getfwks-json are ordered with latest last
+      - name: Determine Build Release Artifacts
+        id: release-artifacts
+        shell: pwsh
+        run: |
+            $arr = ConvertFrom-Json (.\hz.ps1 getfwks-json)
+            $is_latest = ("${{ matrix.fwk }}" -eq $arr[-1])
+            $build = ($isWindows -and $is_latest -and ("${{ inputs.release }}" -eq "true")).ToString().ToLower()
+            write-output "build=$build"
+            write-output "build=$build" >> $env:GITHUB_OUTPUT
+
+      # debugging
+      - name: Report Build Release Artifacts
+        shell: bash
+        run: |
+            echo "RELEASE-ARTIFACTS=${{ steps.release-artifacts.outputs.build }}"
+
       # build
       - name: Build
         id: build
@@ -143,8 +162,8 @@ jobs:
         run: |
           $release = ("${{ inputs.release }}" -eq "true")
           $cmd = "test"
-          if ($release) { $cmd += ",cover-to-docs" }
-          $a = @( "test", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
+          #if ($release) { $cmd += ",cover-to-docs" }
+          $a = @( "$cmd", "-noRestore", "-localRestore", "-cover", "-f", "${{matrix.fwk}}" )
           if ($release -or -not [string]::IsNullOrWhiteSpace($env:HAZELCAST_ENTERPRISE_KEY)) { 
             $a += "-enterprise"
             if (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN_DEVOPS)) {
@@ -174,35 +193,32 @@ jobs:
           name: Test-Coverage ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/cover/' # entire directory
 
-
-
       # and then, everything below is for releases only
-      # and need only be done on 1 environment (windows-latest + latest fwk)
-
+      # and need only be done on 1 environment (windows-latest + latest fwk) 
 
       # create nuget packages
       - name: Pack NuGet packages
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore pack-nuget
 
       # upload nuget packages
       - name: Upload NuGet packages artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
-          name: NuGet-Packages (${{ matrix.os }})
+          name: NuGet-Packages
           path: './temp/output/Hazelcast.Net.*pkg'
 
       # publish examples (inc. soak tests) (windows only so we have framework too)
       - name: Publish examples
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: ./hz.ps1 -noRestore -localRestore publish-examples
 
       # archive examples (windows only)
       - name: Archive examples artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: Examples
@@ -210,7 +226,7 @@ jobs:
 
       # git the docs, create the patch
       - name: Create docs patch
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         shell: pwsh
         run: |
           ./hz.ps1 -noRestore -localRestore git-docs git-docs.user.email="github-actions@hazelcast.com" git-docs.user.name="GitHub Actions"
@@ -222,7 +238,7 @@ jobs:
 
       # archive docs patch
       - name: Upload docs patch artifact
-        if: inputs.release == true && inputs.os == 'windows-latest' && matrix.fwk == inputs.fwks[inputs.fwks.length-1]
+        if: steps.release-artifacts.outputs.build == 'true'
         uses: actions/upload-artifact@v3
         with:
           name: Docs-Patch

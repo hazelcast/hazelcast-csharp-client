@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -718,7 +718,7 @@ namespace Hazelcast.Clustering
             {
                 var active = connection.Active;
 
-                if (connection.Address == member.ConnectAddress)
+                if (_clusterMembers.IsMemberAddress(member, connection.Address))
                 {
                     _logger.IfDebug()?.LogDebug("Found {PrefixActive}active connection {ConnectionId} from client {ClientName} to member {MemberId} at {Address}.", (active ? "" : "non-"), connection.Id.ToShortString(), _clusterState.ClientName, member.Id.ToShortString(), connection.Address);
                     return Attempt.If(active, connection);

@@ -45,6 +45,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 2 # needed to validate parents
 
       - name: Analyze
         id: analyze
@@ -52,8 +53,9 @@ jobs:
         run: |
           set +e # don't die whenever a command returns non-zero $?
 
-          echo "Triggered by ${{ github.ref }} at ${{ github.sha }}"
           HZREF="${{ github.ref }}"
+          HZSHA="${{ github.sha }}"
+          echo "Triggered by $HZREF at $HZSHA"
           HZBRANCH=${HZREF#refs/heads/}
 
           if [ "$HZBRANCH" != "$HZREF" ]; then # it is a branch push
@@ -89,16 +91,16 @@ jobs:
           if [ "$HZTAG" != "$HZREF" ]; then
             HZVERSION=${HZTAG#v}
             if [ "$HZVERSION" != "$HZTAG" ]; then # it is a version tag
-                echo "Triggered by version tag $HZTAG"
+                echo "Triggered by version tag $HZTAG at $HZSHA"
                 git fetch origin refs/heads/release/$HZVERSION:refs/heads/release/$HZVERSION >/dev/null 2>&1
                 if [ $? -ne 0 ]; then
                     echo "::error::Branch release/$HZVERSION does not exist"
                     exit 1
                 else
-                    HZBRANCHSHA=$(git rev-parse release/$HZVERSION 2>&1)
-                    HZTAGSHA=${{ github.sha }}
-                    if [ "$HZBRANCHSHA" != "$HZTAGSHA" ]; then
-                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZTAGSHA"
+                    HZBRANCHSHA=$(git rev-parse origin/release/$HZVERSION 2>&1)
+                    HZPARENTSHA=$(git rev-parse $HZSHA^)
+                    if [ "$HZBRANCHSHA" != "$HZPARENTSHA" ]; then
+                      echo "::error::Tag parent is not HEAD of release/$HZVERSION at $HZBRANCHSHA but $HZPARENTSHA"
                       exit 1
                     else
                         echo "Tag parent is HEAD of release/$HZVERSION at $HZBRANCHSHA, proceed with release"
@@ -151,6 +153,40 @@ jobs:
 
 
 
+  # upload test coverage
+  upload-codecov:
+
+    name: Upload to Codecov
+    runs-on: ubuntu-latest
+    needs: [ analyze, build-release ]
+
+    steps:
+
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # download the tests coverage artifacts
+      - name: Download tests coverage artifacts
+        uses: actions/download-artifact@v3
+        with:
+          # only net6.0 on windows-latest, that's what goes to codecov
+          path: ./temp/artifacts/test-coverage
+          name: 'Test-Coverage windows-latest-net6.0'
+
+      # publish to codecov - if build&test was successful
+      # see https://github.com/marketplace/actions/codecov
+      - name: Publish to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./temp/artifacts/test-coverage/cover-net6.0.xml
+          fail_ci_if_error: true
+
+
+
   # publish the work-in-progress release
   publish-wip:
 
@@ -162,26 +198,19 @@ jobs:
 
     steps:
 
-      - name: Install Utilities (Linux only)
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: false
+          java: false
 
       # checkout the hazelcast/hazelcast-csharp-client repository
       # including all submodules, we are going to need them
@@ -205,21 +234,13 @@ jobs:
           mkdir ./temp
           mkdir ./temp/gh-pages-patches
           mkdir ./temp/tests
-          mkdir ./temp/tests/cover
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
-
-      # download test coverage artifact
-      - name: Download test coverage artifact
-        uses: actions/download-artifact@v2
-        with:
-          name: Test-Coverage (windows-latest)
-          path: ./temp/tests/cover
 
       # verify downloads
       - name: Verify downloads
@@ -227,8 +248,6 @@ jobs:
         run: |
           echo "docs patch:"
           ls ./temp/gh-pages-patches
-          echo "test coverage:"
-          ls ./temp/tests/cover
 
       # checkout documentation
       - name: Checkout documentation
@@ -254,13 +273,6 @@ jobs:
           echo "Push"
           git -C ./temp/gh-pages push origin gh-pages
 
-      # publish to codecov
-      - name: Publish to Codecov
-        uses: codecov/codecov-action@v1
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          files: ./temp/tests/cover/cover-net6.0.xml
-
 
 
   # publish the release
@@ -275,35 +287,21 @@ jobs:
 
     steps:
 
-      - name: Install Utilities (Linux only)
-        shell: bash
-        run: |
-          sudo apt-get update
-          # ubuntu-latest does not have proper git installed so we have to install it
-          sudo apt-get install --yes --no-install-recommends \
-            git
-          # we need various misc stuff
-          sudo apt-get install --yes --no-install-recommends \
-            wget \
-            curl \
-            apt-transport-https \
-            software-properties-common
-          # we need pwsh
-          wget -q https://packages.microsoft.com/config/ubuntu/20.04/packages-microsoft-prod.deb
-          sudo dpkg -i packages-microsoft-prod.deb
-          rm packages-microsoft-prod.deb
-          sudo apt-get update
-          sudo add-apt-repository universe
-          sudo apt-get install -y powershell
-
-      # Install .NET (minimal, latest, for pushing to NuGet)
-      - name: Install .NET
-        uses: actions/setup-dotnet@v1
+      # checkout the hazelcast/hazelcast-csharp-client repository
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
-          dotnet-version: 6.0.x
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Install our environment
+      - name: Install environment
+        uses: ./.github/actions/install
+        with:
+          os: ${{ inputs.os }}
+          dotnet: true
+          java: false
 
       # checkout the hazelcast/hazelcast-csharp-client repository
-      # including all submodules, we are going to need them
       - name: Checkout code
         uses: actions/checkout@v3
         with:
@@ -338,14 +336,14 @@ jobs:
 
       # download nuget packages
       - name: Download NuGet packages artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
-          name: NuGet-Packages (windows-latest)
+          name: NuGet-Packages
           path: ./temp/output
 
       # download docs patch artifact
       - name: Download docs patch artifact
-        uses: actions/download-artifact@v2
+        uses: actions/download-artifact@v3
         with:
           name: Docs-Patch
           path: ./temp/gh-pages-patches
@@ -396,7 +394,6 @@ jobs:
         shell: bash
         run: |
           git push origin :release/${{ needs.analyze.outputs.version }}
-
           
       # publish the release page, close the milestone
       - name: Publish GitHub Release

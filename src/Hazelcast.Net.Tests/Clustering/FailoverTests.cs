@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -153,7 +153,7 @@ namespace Hazelcast.Tests.Clustering
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var options = base.CreateHazelcastOptions();
-            if (_cluster0 != null && !string.IsNullOrWhiteSpace(_cluster0.Id)) 
+            if (_cluster0 != null && !string.IsNullOrWhiteSpace(_cluster0.Id))
                 options.ClusterName = _cluster0.Id;
             return options;
         }

@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -102,8 +102,8 @@ internal class Schemas : ISchemas
     /// <inheritdoc />
     public ValueTask<Schema?> GetOrFetchAsync(long id)
     {
-        return _schemas.TryGetValue(id, out var schemaInfo) 
-            ? new ValueTask<Schema?>(schemaInfo.Schema) 
+        return _schemas.TryGetValue(id, out var schemaInfo)
+            ? new ValueTask<Schema?>(schemaInfo.Schema)
             : FetchAsync(id);
     }
 

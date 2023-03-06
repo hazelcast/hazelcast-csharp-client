@@ -15,7 +15,7 @@
 ## Hazelcast.NET Build Script
 
 # constant
-$defaultServerVersion="5.2.0"
+$defaultServerVersion="5.3.0-SNAPSHOT"
 
 # PowerShell errors can *also* be a pain
 # see https://stackoverflow.com/questions/10666035
@@ -1486,13 +1486,14 @@ function hz-build {
 
     if ($isReleaseBranch) {
         $files = ls -recurse -path $srcDir -filter PublicAPI.Unshipped.txt
-        $files | Foreach-Object {
-            $text = get-content $_ -raw
-            if ($text.Length -gt 0) {
-                $filename = $_.Fullname.Substring($slnRoot.Length)
-                Write-Output "Found non-empty file $filename."
-                Write-Output "'Unshipped' files must be merged before building release branches."
-                Die "Failed to build release branch."
+        foreach ($file in $files) {
+            foreach ($line in get-content $file) {
+                if ($line.Length -gt 0 -and -not $line.StartsWith('#')) {
+                    $filename = $file.Fullname.Substring($slnRoot.Length+1)
+                    Write-Output "Found non-empty file $filename."
+                    Write-Output "'Unshipped' files must be merged before building release branches."
+                    Die "Failed to build release branch."
+                }
             }
         }
     }
@@ -1639,7 +1640,7 @@ function hz-build-docs-on-windows {
     mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
 
     # copy our plugin dll
-    $target = "netstandard2.0"
+    $target = "net48" # must match DocAsCode project framework
     $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target/Hazelcast.Net.DocAsCode.dll"
     if (-not (test-path $pluginDll)) {
         Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target"
@@ -2384,6 +2385,7 @@ function hz-pack-nuget {
     nuget-pack("Hazelcast.Net.Win32")
     nuget-pack("Hazelcast.Net.DependencyInjection")
     nuget-pack("Hazelcast.Net.Caching")
+    nuget-pack("Hazelcast.Net.Linq.Async")
 
     Get-ChildItem "$tmpDir/output" | Foreach-Object { Write-Output "  $_" }
 }

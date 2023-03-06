@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2008-2022, Hazelcast, Inc. All Rights Reserved.
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -76,7 +76,7 @@ namespace Hazelcast.Sql
         public T GetColumn<T>(string name)
         {
             var index = Metadata.GetColumnIndexByName(name);
-            if (index == -1) 
+            if (index == -1)
                 throw new InvalidOperationException($"Could not find a column with name '{name}'.");
             return GetColumn<T>(index);
         }
