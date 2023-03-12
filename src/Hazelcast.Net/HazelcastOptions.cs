@@ -17,9 +17,7 @@ using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Metrics;
-using Hazelcast.Networking;
 
 namespace Hazelcast
 {
@@ -41,13 +39,6 @@ namespace Hazelcast
             Subscribers = new List<IHazelcastClientEventSubscriber>();
             SubscribersBinder = new CollectionBinder<InjectionOptions>(x
                 => Subscribers.Add(new HazelcastClientEventSubscriber(x.TypeName)));
-
-            // initializers are executed prior to executing the constructor, so Preview has a value here,
-            // and we cannot use initializers for these properties these initializers cannot reference
-            // the non-static Preview property + the order of execution of initializers defined in partials
-            // is undefined
-            Networking = new NetworkingOptions(Preview);
-            Messaging = new MessagingOptions(Preview);
         }
 
         /// <summary>
@@ -64,14 +55,13 @@ namespace Hazelcast
 
             ((IClusterOptions)this).ClientNamePrefix = ((IClusterOptions)other).ClientNamePrefix;
 
-            Preview = other.Preview.Clone();
             Core = other.Core.Clone();
             Heartbeat = other.Heartbeat.Clone();
-            Networking = other.Networking.Clone(Preview);
+            Networking = other.Networking.Clone();
             Authentication = other.Authentication.Clone();
             LoadBalancer = other.LoadBalancer.Clone();
             Serialization = other.Serialization.Clone();
-            Messaging = other.Messaging.Clone(Preview);
+            Messaging = other.Messaging.Clone();
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
             
@@ -83,11 +73,6 @@ namespace Hazelcast
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
-
-        /// <summary>
-        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
-        /// </summary>
-        public PreviewOptions Preview { get; } = new PreviewOptions();
 
         /// <summary>
         /// Gets the <see cref="CoreOptions"/>.

@@ -72,9 +72,8 @@ namespace Hazelcast.Tests.Cloud
             Assert.That(Directory.Exists(JdkPath), Is.True, $"JDK directory {JdkPath} does not exist.");
         }
 
-        [TestCase(true)]
-        [TestCase(false)]
-        public async Task SampleClient(bool previewOptions)
+        [Test]
+        public async Task SampleClient()
         {
             using var _ = HConsoleForTest();
 
@@ -95,15 +94,7 @@ namespace Hazelcast.Tests.Cloud
             options.Metrics.Enabled = true;
 
             // enable reconnection
-            if (previewOptions)
-            {
-                options.Preview.EnableNewReconnectOptions = true;
-                options.Preview.EnableNewRetryOptions = true;
-            }
-            else
-            {
-                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-            }
+            options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
 
             // instead of using Visual Studio secrets, configuration via code is
             // possible, by uncommenting some of the blocks below - however, this

@@ -25,6 +25,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 
 namespace Hazelcast.Serialization.Compact;
@@ -165,7 +166,7 @@ internal class Schemas : ISchemas
             // verifying that each schema has been correctly replicated to all members,
             // this is accepted and Java does the same
             var schemaInfos = _schemas.Values; // capture
-            await PublishSchemasAsync(schemaInfos.Select(x => x.Schema).ToList(), connection).CfAwait();
+            await PublishSchemasAsync(schemaInfos.Select(x => x.Schema).ToList(), connection, connecting: true).CfAwait();
 
             // and mark them all published
             foreach (var schemaInfo in schemaInfos) schemaInfo.IsPublished = true;
@@ -196,42 +197,35 @@ internal class Schemas : ISchemas
         return isFirst ? PublishAsync(null, connection) : default;
     }
 
-    private async Task PublishSchemasAsync(IList<Schema> schemas, MemberConnection? connection = null)
+    private async Task PublishSchemasAsync(IList<Schema> schemas, MemberConnection? connection = null, bool connecting = false)
     {
         // NOTE
         // it is important to use the SendAsync overload that accepts a raiseEvents boolean
         // parameter, in order to disable raising events, else we would enter an infinite
         // loop when this method is invoked when handling an event
 
-        switch (schemas.Count)
+        var requestMessage = schemas.Count switch
         {
-            case 0:
-            {
-                break;
-            }
+            0 => null,
+            1 => ClientSendSchemaCodec.EncodeRequest(schemas[0]),
+            _ => ClientSendAllSchemasCodec.EncodeRequest(schemas)
+        };
 
-            case 1:
-            {
-                var schema = schemas[0];
-                var requestMessage = ClientSendSchemaCodec.EncodeRequest(schema);
-                var sending = connection == null
-                    ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
-                    : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
-                var response = await sending.CfAwait();
-                _ = ClientSendSchemaCodec.DecodeResponse(response);
-                break;
-            }
+        if (requestMessage == null) return;
 
-            default:
-            {
-                var requestMessage = ClientSendAllSchemasCodec.EncodeRequest(schemas);
-                var sending = connection == null
-                    ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
-                    : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
-                var response = await sending.CfAwait();
-                _ = ClientSendAllSchemasCodec.DecodeResponse(response);
-                break;
-            }
-        }
+        if (connecting) requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected;
+
+        var sending = connection == null
+            ? _messaging.SendAsync(requestMessage, false, CancellationToken.None)
+            : _messaging.SendToMemberAsync(requestMessage, connection, CancellationToken.None);
+        var response = await sending.CfAwait();
+
+
+        var ignored = schemas.Count switch
+        {
+            0 => null,
+            1 => (object) ClientSendSchemaCodec.DecodeResponse(response),
+            _ => (object) ClientSendAllSchemasCodec.DecodeResponse(response)
+        };
     }
 }

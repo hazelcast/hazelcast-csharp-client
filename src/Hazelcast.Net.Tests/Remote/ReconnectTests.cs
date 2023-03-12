@@ -51,7 +51,7 @@ namespace Hazelcast.Tests.Remote
         }
 
         [Test]
-        public async Task ReconnectAsync([Values] bool previewOptions)
+        public async Task ReconnectAsync([Values] bool reconnectAsync)
         {
             using var _ = HConsoleForTest();
 
@@ -65,15 +65,9 @@ namespace Hazelcast.Tests.Remote
             var options = new HazelcastOptionsBuilder()
                 .With((configuration, o) =>
                 {
-                    if (previewOptions)
-                    {
-                        o.Preview.EnableNewReconnectOptions = true;
-                        o.Preview.EnableNewRetryOptions = true;
-                    }
-                    else
-                    {
-                        o.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
-                    }
+                    // note: default is sync, ie invocations are put on hold waiting for reconnection
+                    // alternatively, with async, invocations immediately throw
+                    o.Networking.ReconnectMode = reconnectAsync ? ReconnectMode.ReconnectAsync : ReconnectMode.ReconnectSync;
 
                     o.ClusterName = RcCluster.Id;
 
@@ -114,10 +108,12 @@ namespace Hazelcast.Tests.Remote
             // and the client is frantically trying to reconnect
 
             HConsole.WriteLine(this, "Use client");
-            await AssertEx.ThrowsAsync<TaskTimeoutException>(async () =>
-            {
-                await map.GetAsync("key");
-            });
+            if (reconnectAsync)
+                // async: throws immediately, does not even try the invocation
+                await AssertEx.ThrowsAsync<ClientOfflineException>(async () => await map.GetAsync("key"));
+            else
+                // sync: tries the invocation, eventually times out
+                await AssertEx.ThrowsAsync<TaskTimeoutException>(async () => await map.GetAsync("key"));
 
             // add a member again
             // at some point, the client will reconnect
@@ -131,14 +127,29 @@ namespace Hazelcast.Tests.Remote
 
             var stopwatch = System.Diagnostics.Stopwatch.StartNew();
             var count = 0;
+            const int max = 60; // try 60 times ie for 30 seconds
 
             HConsole.WriteLine(this, "Use client");
-            await AssertEx.SucceedsEventually(async () =>
+            while (count < max)
             {
                 HConsole.WriteLine(this, $"Attempt {count++} at {stopwatch.ElapsedMilliseconds}ms");
-                // of course the value will be gone, but after a while this should not throw
-                Assert.That(await map.GetAsync("key"), Is.Null);
-            }, 30_000, 500);
+                try
+                {
+                    // of course the value will be gone, but after a while this should not throw
+                    var value = await map.GetAsync("key");
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    // as long as it fails, we'll get the proper exception
+                    Assert.That(ex, reconnectAsync ? Is.InstanceOf<ClientOfflineException>() : Is.InstanceOf<TaskTimeoutException>());
+                }
+
+                await Task.Delay(500);
+            }
+
+            // must break before max tries
+            Assert.That(count, Is.LessThan(max));
 
             // we're done
         }

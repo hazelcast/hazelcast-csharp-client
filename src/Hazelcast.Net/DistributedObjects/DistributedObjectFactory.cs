@@ -135,6 +135,7 @@ namespace Hazelcast.DistributedObjects
                 proxies[key.Name] = key.ServiceName;
 
             var requestMessage = ClientCreateProxiesCodec.EncodeRequest(proxies);
+            requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
 
             // if the connection goes down, stop
             if (!connection.Active) return;

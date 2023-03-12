@@ -358,6 +358,12 @@ namespace Hazelcast.Clustering
 
 #endregion
 
+        public void ThrowIfNotConnectedAndAsyncReconnect()
+        {
+            var clientState = ClientState;
+            if (clientState == ClientState.Disconnected && Options.Networking.ReconnectMode == ReconnectMode.ReconnectAsync)
+                throw new ClientOfflineException(clientState);
+        }
         public Exception ThrowClientOfflineException()
         {
             // due to a race condition between ClusterMembers potentially removing all its connections,

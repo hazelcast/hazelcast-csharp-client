@@ -131,6 +131,7 @@ namespace Hazelcast.Clustering
 
             cancellationToken.ThrowIfCancellationRequested();
 
+            requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
             HConsole.WriteLine(this, "Send auth request");
             var responseMessage = await client.SendAsync(requestMessage).CfAwait();
             HConsole.WriteLine(this, "Rcvd auth response");
