@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -55,6 +56,49 @@ namespace Hazelcast.DistributedObjects
             _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
             _logger = loggerFactory.CreateLogger<DistributedObjectFactory>();
+        }
+
+        /// <summary>
+        /// Gets all distributed objects.
+        /// </summary>
+        /// <param name="cancellationToken">A cancellation token.</param>
+        /// <returns>The distributed objects.</returns>
+        public async Task<ICollection<DistributedObjectInfo>> GetAllAsync(CancellationToken cancellationToken = default)
+        {
+            // note: this method implements the logic from Java HazelcastClientInstanceImpl.getDistributedObjects method
+
+            // gather locally-known objects
+            var objects = new HashSet<DistributedObjectInfo>();
+            await foreach (var (info, _) in _objects) objects.Add(info);
+
+            // fetch remotely-known objects
+            var requestMessage = ClientGetDistributedObjectsCodec.EncodeRequest();
+            var responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            var response = ClientGetDistributedObjectsCodec.DecodeResponse(responseMessage);
+
+            var result = new List<DistributedObjectInfo>();
+
+            foreach (var info in response.Response)
+            {
+                objects.Remove(info); // remove remotely-known objects
+
+                // at that point Java would actually make sure that the client has proxies for
+                // each object that was reported by the cluster - however that *cannot* work in
+                // .NET due to strong generics, because we cannot, for instance, create a
+                // HMap<TKey, TValue> object, since we don't know TKey nor TValue. this is not
+                // an issue really, proxies will be created on-demand.
+
+                result.Add(info); // build result
+            }
+
+            // locally destroy objects that are not remotely-known
+            foreach (var info in objects)
+            {
+                var attempt = await _objects.TryGetAndRemoveAsync(info).CfAwait();
+                if (attempt) await TryDispose(attempt.Value).CfAwait();
+            }
+            
+            return result;
         }
 
         /// <summary>
