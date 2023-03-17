@@ -22,7 +22,7 @@ public class SqlOptions
     /// <summary>
     /// Defines cache size for partition aware SQL queries.
     /// </summary>
-    public int PartitionArgumentCacheSize { get; set; } = 100;
+    public int PartitionArgumentIndexCacheSize { get; set; } = 100;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlOptions"/> class.
@@ -32,12 +32,12 @@ public class SqlOptions
     /// <summary>
     /// Defines threshold to cache for partition aware SQL queries. Eviction is triggered after threshold is exceeded. 
     /// </summary>
-    public int PartitionArgumentCacheThreshold { get; set; } = 150;
+    public int PartitionArgumentIndexCacheThreshold { get; set; } = 150;
 
     private SqlOptions(SqlOptions other)
     {
-        PartitionArgumentCacheSize = other.PartitionArgumentCacheSize;
-        PartitionArgumentCacheThreshold = other.PartitionArgumentCacheThreshold;
+        PartitionArgumentIndexCacheSize = other.PartitionArgumentIndexCacheSize;
+        PartitionArgumentIndexCacheThreshold = other.PartitionArgumentIndexCacheThreshold;
     }
 
     /// <summary>

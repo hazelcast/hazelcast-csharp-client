@@ -40,7 +40,7 @@ namespace Hazelcast.Sql
         {
             _cluster = cluster;
             _serializationService = serializationService;
-            _queryPartitionArgumentCache = new(options.Sql.PartitionArgumentCacheSize, options.Sql.PartitionArgumentCacheThreshold);
+            _queryPartitionArgumentCache = new(options.Sql.PartitionArgumentIndexCacheSize, options.Sql.PartitionArgumentIndexCacheThreshold);
             _logger = loggerFactory.CreateLogger<SqlService>();
             _options = options;
         }
