@@ -144,6 +144,10 @@ $params = @(
     },
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "confirms excution of sensitive actions"
+    },
+    @{
+        name="source"; type = [string];  default = $null;
+        desc = "source folder to be copied"
     }
 )
 
@@ -275,6 +279,10 @@ $actions = @(
     @{ name = "getfwks-json";
        desc = "get frameworks";
        internal = $true; uniq = $true; outputs = $true
+    },
+    @{
+        name = "copy-source";
+        desc= "copies from given --source to current folder by reflecting the folder structure.";        
     }
 )
 
@@ -346,6 +354,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 # set versions and configure
 $serverVersion = $options.server # use specified value by default
 $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
+$isBeta = $options.server.Contains("BETA") 
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
@@ -548,6 +557,12 @@ function determine-server-version {
     # set the actual server version
     # this will be updated below if required
     $script:serverVersion = $version
+
+    # BETA versions should be build and places under temp/lib.
+    if($isBeta){
+        Write-Output "Server: version $version is BETA, using this version"
+        return       
+    }
 
     if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
@@ -812,6 +827,19 @@ function ensure-server-files {
             $found = $true
         }
 
+        # special beta case
+        if ($isBeta) {
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+            if ($response.StatusCode -ne 200) {
+                if (test-path $dest) { rm $dest }
+                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
+            }
+            Write-Output "Found hazelcast-default.xml from branch $v"
+            $found = $true
+        }   
+        
         if (-not $found) {
             # try tag eg 'v4.2.1' or 'v4.3'
             $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
@@ -2560,6 +2588,30 @@ function hz-getfwks-json {
     #else { Die "err: Invalid platform '$platform'" }
 
     ConvertTo-Json -InputObject $frameworks -Compress
+}
+
+## Copies files from given path to project folder with respect to source hierarhcy.
+function hz-copy-source (){
+
+    $source = $options.source
+
+    if(-not (test-path -path $source)){
+        Die "$($source) is not exist."
+    }
+
+    $currentPath = get-location
+    $count = 0
+    foreach ($file in get-childItem -path $source -recurse){
+
+        if(Test-Path -path $file -pathType Leaf){
+            $subPath = "$($file.Directory)".Replace($source,"")    
+            $dest = join-path $currentPath $subPath $file.name
+            Write-Output "-$($dest)"            
+            copy-item $file -destination $dest
+            if($?){$count += 1}
+        }
+    }
+    Write-Output "$($count) item(s) copied."
 }
 
 # ########
