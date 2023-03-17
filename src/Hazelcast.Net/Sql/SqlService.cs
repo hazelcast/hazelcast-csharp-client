@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
+using Hazelcast.Messaging;
 using Hazelcast.Networking;
 using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
@@ -30,7 +31,8 @@ namespace Hazelcast.Sql
     {
         private readonly Cluster _cluster;
         private readonly SerializationService _serializationService;
-        private readonly ReadOptimizedLruCache<string, int> _queryPartitionArgumentCache;
+        // internal for tests only
+        internal readonly ReadOptimizedLruCache<string, int> _queryPartitionArgumentCache;
         private readonly ILogger<SqlService> _logger;
         private readonly HazelcastOptions _options;
 
@@ -132,12 +134,17 @@ namespace Hazelcast.Sql
 
             var partitionId = GetPartitionIdOfQuery(sql, serializedParameters);
 
-            var responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+            ClientMessage responseMessage;
 
+            if (partitionId < 0)
+                responseMessage = await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait();
+            else
+                responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+            
             var response = SqlExecuteCodec.DecodeResponse(responseMessage);
-
-            // todo: argument index will appear here after protocol PR merged.
-            SetArgumentIndex(sql, -1);
+            
+            if(response.IsPartitionArgumentIndexExists)
+                SetArgumentIndex(sql, response.PartitionArgumentIndex);
 
             if (response.Error != null)
                 throw new HazelcastSqlException(_cluster.ClientId, response.Error);
