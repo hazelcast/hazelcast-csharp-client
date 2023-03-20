@@ -202,7 +202,10 @@ namespace Hazelcast.Sql
         private async Task<SqlPage> FetchNextPageAsync(SqlQueryId queryId, int cursorBufferSize, int partitionId, CancellationToken cancellationToken)
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
-            var responseMessage = await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+            var responseMessage = partitionId == -1 ?
+                await _cluster.Messaging.SendAsync(requestMessage, cancellationToken)
+                :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+            
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 
             if (response.Error != null) throw new HazelcastSqlException(_cluster.ClientId, response.Error);
