@@ -12,6 +12,7 @@ The .NET client itself is distributed via NuGet as a package named [Hazelcast.NE
 
 The Hazelcast .NET solution is Open Source, released under the [Apache License 2.0](https://www.apache.org/licenses/LICENSE-2.0), and welcomes contributions. The project lives here on [GitHub](https://github.com/hazelcast/hazelcast-csharp-client), where you can obtain the source code, report issues, and interract with the community. Contributions are welcome!
 
+
 ## Versions
 
 Browse to [this page](http://hazelcast.github.io/hazelcast-csharp-client/versions.html) for details about versions.
