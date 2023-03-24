@@ -30,7 +30,9 @@ In the unisocket client mode, the client will only connect to one of the configu
 
 The client can, at times, become disconnected from the cluster, for instance in case of a brief network issue. What happens then is determined by the `@Hazelcast.Networking.NetworkingOptions.ReconnectMode` configuration option. Its default value is `@Hazelcast.Networking.ReconnectMode.ReconnectSync` which means that the client will try to reconnect transparently, queuing the invocations until the client is reconnected, or the invocations time out.
 
-Alternatively, the option can be set to `@Hazelcast.Networking.ReconnectMode.ReconnectAsync` to let the client try to reconnect, but fail all invocations immediately for as long as the client has not reconnected. Finally, it can be set to `@Hazelcast.Networking.ReconnectMode.DoNotReconnect` to prevent the client from reconnecting and switching it to a non-recoverable error state (i.e. the client must be destroyed and a new client must be recreated).
+Alternatively, the option can be set to `@Hazelcast.Networking.ReconnectMode.ReconnectAsync` to let the client try to reconnect, but fail all invocations immediately for as long as the client has not reconnected.
+
+Finally, it can be set to `@Hazelcast.Networking.ReconnectMode.DoNotReconnect` to prevent the client from reconnecting. The client shuts down, it cannot be used anymore. The client must be destroyed and a new client must be recreated.
 
 ## Connection Timeout
 

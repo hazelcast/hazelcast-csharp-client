@@ -94,7 +94,7 @@ namespace Hazelcast.Tests.Cloud
             options.Metrics.Enabled = true;
 
             // enable reconnection
-            options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+            options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
 
             // instead of using Visual Studio secrets, configuration via code is
             // possible, by uncommenting some of the blocks below - however, this
