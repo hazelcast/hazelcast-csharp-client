@@ -79,7 +79,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     /// <exception cref="ArgumentNullException">If key is null.</exception>
     public void Add(TKey key, TValue val)
     {
-        if (_disposed == 1) throw new ObjectDisposedException("Cache is disposed.");
+        if (_disposed == 1) throw new ObjectDisposedException("Cache has been disposed.");
 
         if (key is null) throw new ArgumentNullException(nameof(key));
 
