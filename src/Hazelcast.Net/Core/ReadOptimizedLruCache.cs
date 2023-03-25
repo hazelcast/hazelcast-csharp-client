@@ -94,7 +94,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     /// Try to remove key value pair by given key.
     /// </summary>
     /// <param name="key">Key to be removed</param>
-    /// <param name="value">Value is removed, default value if key not exists.</param>
+    /// <param name="value">The removed value, if any, otherwise the default value.</param>
     /// <returns>True if key pair removed, otherwise false.</returns>
     /// <exception cref="ObjectDisposedException">If cache disposed</exception>
     /// <exception cref="ArgumentNullException">If key null.</exception>
