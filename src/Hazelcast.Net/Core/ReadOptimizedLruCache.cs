@@ -52,7 +52,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     /// </summary>
     /// <param name="key">Key</param>
     /// <param name="val">Value</param>
-    /// <returns>True if key exists or false.</returns>
+    /// <returns><c>true</c> if a value was found for the specified key, otherwise <c>false</c>.</returns>
     /// <exception cref="ArgumentNullException">If key is null.</exception>
     public bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue val)
     {
