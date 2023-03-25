@@ -91,7 +91,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     }
 
     /// <summary>
-    /// Try to remove key value pair by given key.
+    /// Tries to remove an entry identified by a key.
     /// </summary>
     /// <param name="key">Key to be removed</param>
     /// <param name="value">The removed value, if any, otherwise the default value.</param>
