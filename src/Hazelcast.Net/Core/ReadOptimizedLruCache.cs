@@ -48,7 +48,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 
 
     /// <summary>
-    /// Try get value corresponds to given key.
+    /// Tries to get the value corresponding to a key.
     /// </summary>
     /// <param name="key">Key</param>
     /// <param name="val">Value</param>
