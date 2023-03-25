@@ -125,7 +125,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         {
             if (Cache.Count < _threshold) return;
 
-            var countOfEntriesToRemoved = Cache.Count - _capacity;
+            var countOfEntriesToRemove = Cache.Count - _capacity;
 #if NET6_0_OR_GREATER
             var q = new PriorityQueue<long, long>();
 
