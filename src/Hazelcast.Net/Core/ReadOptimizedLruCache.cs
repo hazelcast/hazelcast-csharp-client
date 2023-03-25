@@ -32,7 +32,7 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     internal ConcurrentDictionary<TKey, TimeBasedEntry<TValue>> Cache { get; } = new();
 
     // internal only for tests
-    private readonly SemaphoreSlim _cleaningSlim = new(1, 1);
+    private readonly SemaphoreSlim _evicting = new(1, 1);
     private readonly int _capacity;
     private readonly int _threshold;
     private int _disposed;
