@@ -146,7 +146,7 @@ $params = @(
        desc = "confirms excution of sensitive actions"
     },
     @{
-        name="source"; type = [string];  default = $null;
+        name="copy-files-source"; type = [string];  default = $null;
         desc = "source folder to be copied"
     }
 )
@@ -281,8 +281,8 @@ $actions = @(
        internal = $true; uniq = $true; outputs = $true
     },
     @{
-        name = "copy-source";
-        desc= "copies from given --source to current folder by reflecting the folder structure.";        
+        name = "copy-files";
+        desc= "copies from given --copy-files-source to current solution folder by reflecting the folder structure.";        
     }
 )
 
@@ -2591,15 +2591,15 @@ function hz-getfwks-json {
 }
 
 ## Copies files from given path to project folder with respect to source hierarhcy.
-function hz-copy-source (){
+function hz-copy-files (){
 
-    $source = $options.source
+    $source = $options.'copy-files-source'
 
     if(-not (test-path -path $source)){
         Die "$($source) is not exist."
     }
 
-    $currentPath = get-location
+    $currentPath = $slnRoot
     $count = 0
     foreach ($file in get-childItem -path $source -recurse){
 
