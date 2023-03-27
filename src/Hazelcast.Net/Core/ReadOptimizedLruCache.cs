@@ -156,9 +156,10 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
 
     public void Dispose()
     {
-        if (_disposed == 1) return;
-        Interlocked.CompareExchange(ref _disposed, 1, 0);
-        Cache.Clear();
-        _evicting.Dispose();
+        if (_disposed.InterlockedZeroToOne())
+        {
+            Cache.Clear();
+            _evicting.Dispose();    
+        }
     }
 }
