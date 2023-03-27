@@ -19,26 +19,26 @@ namespace Hazelcast.Sql;
 /// </summary>
 public class SqlOptions
 {
-    /// <summary>
-    /// Defines cache size for partition aware SQL queries.
-    /// </summary>
-    public int PartitionArgumentIndexCacheSize { get; set; } = 100;
-
+    private SqlOptions(SqlOptions other)
+    {
+        PartitionArgumentIndexCacheSize = other.PartitionArgumentIndexCacheSize;
+        PartitionArgumentIndexCacheThreshold = other.PartitionArgumentIndexCacheThreshold;
+    }
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlOptions"/> class.
     /// </summary>
     public SqlOptions(){}
     
     /// <summary>
+    /// Defines cache size for partition aware SQL queries.
+    /// </summary>
+    public int PartitionArgumentIndexCacheSize { get; set; } = 100;
+
+    /// <summary>
     /// Defines threshold to cache for partition aware SQL queries. Eviction is triggered after threshold is exceeded. 
     /// </summary>
     public int PartitionArgumentIndexCacheThreshold { get; set; } = 150;
-
-    private SqlOptions(SqlOptions other)
-    {
-        PartitionArgumentIndexCacheSize = other.PartitionArgumentIndexCacheSize;
-        PartitionArgumentIndexCacheThreshold = other.PartitionArgumentIndexCacheThreshold;
-    }
 
     /// <summary>
     /// Clone the options.

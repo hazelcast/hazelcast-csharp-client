@@ -203,8 +203,8 @@ namespace Hazelcast.Sql
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
             var responseMessage = partitionId == -1 ?
-                await _cluster.Messaging.SendAsync(requestMessage, cancellationToken)
-                :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+                                                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait()
+                                                    :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
             
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 

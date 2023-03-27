@@ -117,9 +117,9 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
     private void DoEviction()
     {
         // Don't block if a thread already doing eviction.
-        if (_cleaningSlim.CurrentCount == 0) return;
+        if (_evicting.CurrentCount == 0) return;
 
-        _cleaningSlim.Wait();
+        _evicting.Wait();
 
         try
         {
@@ -132,14 +132,14 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
             foreach (var val in Cache)
                 q.Enqueue(val.Value.LastTouch, val.Value.LastTouch);
 
-            for (var i = 0; i < countOfEntriesToRemoved; i++)
+            for (var i = 0; i < countOfEntriesToRemove; i++)
                 q.Dequeue();
 
             var cutOff = q.Dequeue();
 #else
             var cutOff = Cache
                 .OrderBy(p => p.Value.LastTouch)
-                .ElementAt(countOfEntriesToRemoved)
+                .ElementAt(countOfEntriesToRemove)
                 .Value.LastTouch;
 #endif
             foreach (var t in Cache)
@@ -150,16 +150,15 @@ internal class ReadOptimizedLruCache<TKey, TValue> : IDisposable
         }
         finally
         {
-            _cleaningSlim.Release();
+            _evicting.Release();
         }
     }
 
     public void Dispose()
     {
-        Interlocked.CompareExchange(ref _disposed, 1, 0);
-
         if (_disposed == 1) return;
+        Interlocked.CompareExchange(ref _disposed, 1, 0);
         Cache.Clear();
-        _cleaningSlim.Dispose();
+        _evicting.Dispose();
     }
 }
