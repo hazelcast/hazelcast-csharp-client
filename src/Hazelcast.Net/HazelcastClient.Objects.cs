@@ -50,7 +50,7 @@ namespace Hazelcast
         }
 
         /// <inheritdoc />
-        public async Task<ICollection<DistributedObjectInfo>> GetDistributedObjectsAsync()
+        public async Task<IReadOnlyCollection<DistributedObjectInfo>> GetDistributedObjectsAsync()
         {
             return await _distributedOjects.GetAllAsync().CfAwait();
         }

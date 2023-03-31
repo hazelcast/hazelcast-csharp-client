@@ -1,1 +1,2 @@
 ﻿#nullable enable
+~Hazelcast.IHazelcastClient.GetDistributedObjectsAsync() -> System.Threading.Tasks.Task<System.Collections.Generic.IReadOnlyCollection<Hazelcast.Models.DistributedObjectInfo>>

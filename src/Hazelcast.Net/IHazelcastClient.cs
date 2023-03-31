@@ -157,7 +157,7 @@ namespace Hazelcast
         /// Gets information about all distributed objects known to the cluster.
         /// </summary>
         /// <returns>Information about all distributed objects know to the cluster.</returns>
-        Task<ICollection<DistributedObjectInfo>> GetDistributedObjectsAsync();
+        Task<IReadOnlyCollection<DistributedObjectInfo>> GetDistributedObjectsAsync();
 
         /// <summary>
         /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.

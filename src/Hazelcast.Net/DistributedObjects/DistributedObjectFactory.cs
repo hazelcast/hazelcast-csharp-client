@@ -14,7 +14,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -63,7 +62,7 @@ namespace Hazelcast.DistributedObjects
         /// </summary>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns>The distributed objects.</returns>
-        public async Task<ICollection<DistributedObjectInfo>> GetAllAsync(CancellationToken cancellationToken = default)
+        public async Task<IReadOnlyCollection<DistributedObjectInfo>> GetAllAsync(CancellationToken cancellationToken = default)
         {
             // note: this method implements the logic from Java HazelcastClientInstanceImpl.getDistributedObjects method
 
