@@ -2385,6 +2385,7 @@ function hz-pack-nuget {
     nuget-pack("Hazelcast.Net.Win32")
     nuget-pack("Hazelcast.Net.DependencyInjection")
     nuget-pack("Hazelcast.Net.Caching")
+    nuget-pack("Hazelcast.Net.Linq.Async")
 
     Get-ChildItem "$tmpDir/output" | Foreach-Object { Write-Output "  $_" }
 }
