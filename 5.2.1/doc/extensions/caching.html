@@ -112,6 +112,16 @@ services.AddHazelcastCache(withFailover: true); // register cache
 </code></pre><p>With these declarations, the Hazelcast cache implementation would be injected into any service requiring an <code>IDistributedCache</code>.</p>
 <h2 id="cache-functionality">Cache Functionality</h2>
 <p>Hazelcast&#39;s implementation of <code>IDistributedCache</code> supports all functionality of the interface. Note however that, due to the inherently asynchronous nature of the Hazelcast client, all synchronous cache operations have to be implemented over asynchronous operations using the <code>task.GetAwaiter().GetResult()</code> pattern. This pattern can cause potential threading problems, and should be avoided as much as possible. Always use the asynchronous API wherever possible.</p>
+<h2 id="aspnet-core-session-state-provider">ASP.NET Core Session State Provider</h2>
+<p><code>IDistributedCache</code> implementation can be used to store session state in Hazelcast. After registering 
+Hazelcast <code>IDistributedCache</code> implementation to DI (as described above) you can enabled session state management 
+in your ASP.NET Core project. </p>
+<pre><code class="lang-csharp">var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddHazelcastCache();
+var app = builder.Build();
+app.UseSession(); // Session state will be stored in distributed cache provided by AddHazelcastCache()
+</code></pre><div class="WARNING"><h5>Warning</h5><p> When the ISession object is supported by the Hazelcast client, its synchronous operations should be avoided, as the Hazelcast client is fully asynchronous and therefore calls to task.GetAwaiter().GetResult() may be involved and, potentially, cause threading issues. Prefer the asynchronous operations, such as those provided in the SessionExtensions class.</p>
+</div>
 </article>
           </div>
           
