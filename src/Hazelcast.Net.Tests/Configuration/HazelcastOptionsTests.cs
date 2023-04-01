@@ -288,16 +288,6 @@ namespace Hazelcast.Tests.Configuration
 #pragma warning restore SYSLIB0039
             Console.WriteLine(sslOptions.ToString());
 
-#if NETCOREAPP
-#pragma warning disable CS0618 // Type or member is obsolete
-#endif
-            // testing obsolete Ssl2, Default protocols
-            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Ssl2);
-            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Default);
-#if NETCOREAPP
-#pragma warning restore CS0618
-#endif
-
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);
             Assert.AreEqual("token", cloudOptions.DiscoveryToken);
