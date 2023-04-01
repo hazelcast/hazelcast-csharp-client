@@ -12,12 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Collections;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.CP;
 using Hazelcast.DistributedObjects;
 using Hazelcast.DistributedObjects.Impl;
+using Hazelcast.Models;
 using Hazelcast.Serialization;
 using Hazelcast.Sql;
 using Microsoft.Extensions.Logging;
@@ -44,6 +47,12 @@ namespace Hazelcast
         internal async ValueTask DestroyAsync(string serviceName, string name)
         {
             await _distributedOjects.DestroyAsync(serviceName, name).CfAwait();
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyCollection<DistributedObjectInfo>> GetDistributedObjectsAsync()
+        {
+            return await _distributedOjects.GetAllAsync().CfAwait();
         }
 
         /// <inheritdoc />
