@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using Hazelcast.Exceptions;
+
 namespace Hazelcast.Networking
 {
     /// <summary>
@@ -25,12 +27,15 @@ namespace Hazelcast.Networking
         DoNotReconnect,
 
         /// <summary>
-        /// Reconnect while blocking invocations.
+        /// Reconnect while blocking invocations: invocations are retried
+        /// while the client reconnects, until they succeed, or time out.
         /// </summary>
         ReconnectSync,
 
         /// <summary>
-        /// Reconnect without blocking invocations. Invocations will fail.
+        /// Reconnect without blocking invocations: invocations immediately
+        /// fail with a <see cref="ClientOfflineException"/> as long as the
+        /// client has not reconnected.
         /// </summary>
         ReconnectAsync
     }

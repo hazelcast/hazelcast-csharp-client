@@ -241,14 +241,14 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1001, options.TimeoutMilliseconds);
         }
 
-        [Test]
-        public void PreviewOptionsSection()
-        {
-            var options = ReadResource(Resources.HazelcastOptions).Preview;
+        //[Test]
+        //public void PreviewOptionsSection()
+        //{
+        //    var options = ReadResource(Resources.HazelcastOptions).Preview;
 
-            Assert.That(options.EnableNewReconnectOptions, Is.False);
-            Assert.That(options.EnableNewRetryOptions, Is.False);
-        }
+        //    Assert.That(options.EnableNewReconnectOptions, Is.False);
+        //    Assert.That(options.EnableNewRetryOptions, Is.False);
+        //}
 
         [Test]
         public void NetworkingOptionsSection()

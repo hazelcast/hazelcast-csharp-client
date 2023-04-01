@@ -254,33 +254,17 @@ namespace Hazelcast.Clustering
             }
 
             // the cluster is disconnected, but not down
-            bool reconnect;
-            if (_clusterState.Options.Networking.Preview.EnableNewReconnectOptions)
-            {
-                reconnect = _clusterState.Options.Networking.Reconnect;
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-#pragma warning disable CA1308 // Normalize strings to uppercase - we are not normalizing here
-                    var option = _clusterState.Options.Networking.Reconnect.ToString().ToLowerInvariant();
-#pragma warning restore CA1308
-                    var action = reconnect ? "reconnect" : "shut down";
-                    _logger.LogInformation($"Disconnected (reconnect == {option} => {action})");
-                }
-            }
-            else
-            {
-                reconnect = _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectAsync ||
+            var reconnect = _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectAsync ||
                             _clusterState.Options.Networking.ReconnectMode == ReconnectMode.ReconnectSync;
-                _logger.LogInformation("Disconnected (reconnect mode == {ReconnectMode} => {ReconnectAction})",
-                    _clusterState.Options.Networking.ReconnectMode,
-                    _clusterState.Options.Networking.ReconnectMode switch
-                    {
-                        ReconnectMode.DoNotReconnect => "shut down",
-                        ReconnectMode.ReconnectSync => "reconnect (synchronously)",
-                        ReconnectMode.ReconnectAsync => "reconnect (asynchronously)",
-                        _ => "meh?"
-                    });
-            }
+            _logger.LogInformation("Disconnected (reconnect mode == {ReconnectMode} => {ReconnectAction})",
+                _clusterState.Options.Networking.ReconnectMode,
+                _clusterState.Options.Networking.ReconnectMode switch
+                {
+                    ReconnectMode.DoNotReconnect => "shut down",
+                    ReconnectMode.ReconnectSync => "reconnect, synchronously",
+                    ReconnectMode.ReconnectAsync => "reconnect, asynchronously",
+                    _ => "meh?"
+                });
 
             if (reconnect || _clusterState.Failover.Enabled)
             {

@@ -144,7 +144,7 @@ namespace Hazelcast.Tests.Networking
             Assert.AreEqual(ClientState.Connected, client.State);
         }
 
-        // this test validates that a client can lost its connection to a cluster, and then reconnects,
+        // this test validates that a client can lose its connection to a cluster, and then reconnects,
         // and ends up with one only connection (no leak of the previous connection).
         [Test]
         [Timeout(20_000)]
@@ -166,7 +166,7 @@ namespace Hazelcast.Tests.Networking
             {
                 options.Networking.SmartRouting = smartRouting;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = long.MaxValue;
-                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
                 options.Networking.Addresses.Clear();
                 options.Networking.Addresses.Add(clientAddress + ":" + member.Port);
                 options.ClusterName = _cluster.Id;
@@ -220,7 +220,7 @@ namespace Hazelcast.Tests.Networking
                 options.Networking.Addresses.Add(clientAddress);
                 options.Networking.SmartRouting = smartRouting;
                 options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = int.MaxValue;
-                options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
+                options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
                 options.ClusterName = _cluster.Id;
                 options.Heartbeat.TimeoutMilliseconds = 6_000;
             });
@@ -326,6 +326,7 @@ namespace Hazelcast.Tests.Networking
                         Assert.ThrowsAsync<ClientOfflineException>(async () => await client.GetMapAsync<int, int>("someMap"));
                     }, 120_000, 1000);
             }
+
             // Client will reconnect. FIXME: Separate sync and async modes when implemented. 
             else
             {
