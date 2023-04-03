@@ -58,6 +58,11 @@ namespace Hazelcast.Messaging
         }
 
         /// <summary>
+        /// Gets or sets the invocation flags.
+        /// </summary>
+        public InvocationFlags InvocationFlags { get; set; } = InvocationFlags.None;
+
+        /// <summary>
         /// Whether the operation carried by this message can be retried.
         /// </summary>
         public bool IsRetryable { get; set; }

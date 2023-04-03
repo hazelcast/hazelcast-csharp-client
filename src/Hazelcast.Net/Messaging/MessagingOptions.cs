@@ -22,29 +22,20 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingOptions"/> class.
         /// </summary>
-        public MessagingOptions(PreviewOptions preview = null)
-        {
-            Preview = preview ?? new PreviewOptions();
-        }
+        public MessagingOptions()
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MessagingOptions"/> class.
         /// </summary>
-        private MessagingOptions(MessagingOptions other, PreviewOptions preview)
+        private MessagingOptions(MessagingOptions other)
         {
-            Preview = preview;
-
             MaxFastInvocationCount = other.MaxFastInvocationCount;
             MinRetryDelayMilliseconds = other.MinRetryDelayMilliseconds;
             RetryTimeoutSeconds = other.RetryTimeoutSeconds;
             RetryUnsafeOperations = other.RetryUnsafeOperations;
             RetryOnClientReconnecting = other.RetryOnClientReconnecting;
         }
-
-        /// <summary>
-        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
-        /// </summary>
-        internal PreviewOptions Preview { get; }
 
         /// <summary>
         /// Gets or sets the max fast invocation count.
@@ -99,6 +90,6 @@ namespace Hazelcast.Messaging
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal MessagingOptions Clone(PreviewOptions preview = null) => new MessagingOptions(this, preview ?? Preview.Clone());
+        internal MessagingOptions Clone() => new(this);
     }
 }

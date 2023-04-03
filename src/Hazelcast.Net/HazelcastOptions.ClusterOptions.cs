@@ -137,12 +137,12 @@ namespace Hazelcast
         /// <summary>
         /// Gets the <see cref="MessagingOptions"/>.
         /// </summary>
-        public MessagingOptions Messaging { get; } // initialized in ctor
+        public MessagingOptions Messaging { get; } = new();
 
         /// <summary>
         /// Gets the <see cref="NetworkingOptions"/>.
         /// </summary>
-        public NetworkingOptions Networking { get; } // initialized in ctor
+        public NetworkingOptions Networking { get; } = new();
 
         /// <summary>
         /// Gets the <see cref="EventsOptions"/>.

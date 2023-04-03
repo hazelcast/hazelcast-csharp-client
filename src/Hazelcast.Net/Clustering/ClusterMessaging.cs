@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Clustering
@@ -273,6 +274,12 @@ namespace Hazelcast.Clustering
             while (true)
             {
                 MemberConnection connection = null;
+
+                // if not connected and in "async" reconnect mode, don't send and don't retry
+                // unless the invocation has been marked as ok when not connected
+                if ((invocation.Flags & InvocationFlags.InvokeWhenNotConnected) == 0)
+                    _clusterState.ThrowIfNotConnectedAndAsyncReconnect();
+
                 try
                 {
                     HConsole.WriteLine(this, $"Trying :{invocation.CorrelationId} {MessageTypeConstants.GetMessageTypeName(invocation.RequestMessage.MessageType)}...");
@@ -294,19 +301,8 @@ namespace Hazelcast.Clustering
                     _clusterState.ThrowIfNotActive(exception);
 
                     // if the invocation is not retryable, throw
-                    bool retryUnsafeOperations, retryOnClientReconnecting;
-                    if (_clusterState.Options.Messaging.Preview.EnableNewRetryOptions)
-                    {
-                        // use the new set of options
-                        retryUnsafeOperations = _clusterState.Options.Messaging.RetryUnsafeOperations;
-                        retryOnClientReconnecting = _clusterState.Options.Messaging.RetryOnClientReconnecting;
-                    }
-                    else
-                    {
-                        // use the v4 set of options
-                        retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
-                        retryOnClientReconnecting = true;
-                    }
+                    var retryUnsafeOperations = _clusterState.Options.Networking.RedoOperations;
+                    const bool retryOnClientReconnecting = true;
                     if (!invocation.IsRetryable(exception, retryUnsafeOperations, retryOnClientReconnecting))
                         throw;
 
