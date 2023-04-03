@@ -26,18 +26,14 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
         /// </summary>
-        public NetworkingOptions(PreviewOptions preview = null)
-        {
-            Preview = preview ?? new PreviewOptions();
-        }
+        public NetworkingOptions() 
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NetworkingOptions"/> class.
         /// </summary>
-        private NetworkingOptions(NetworkingOptions other, PreviewOptions preview)
+        private NetworkingOptions(NetworkingOptions other)
         {
-            Preview = preview;
-
             Addresses = new List<string>(other.Addresses);
             ShuffleAddresses = other.ShuffleAddresses;
             SmartRouting = other.SmartRouting;
@@ -52,11 +48,6 @@ namespace Hazelcast.Networking
             Socket = other.Socket.Clone();
             ConnectionRetry = other.ConnectionRetry.Clone();
         }
-
-        /// <summary>
-        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
-        /// </summary>
-        internal PreviewOptions Preview { get; }
 
         /// <summary>
         /// Gets the default Hazelcast server port.
@@ -148,17 +139,17 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Gets the <see cref="SslOptions"/>.
         /// </summary>
-        public SslOptions Ssl { get; } = new SslOptions();
+        public SslOptions Ssl { get; } = new();
 
         /// <summary>
         /// Gets the <see cref="CloudOptions"/>.
         /// </summary>
-        public CloudOptions Cloud { get; } = new CloudOptions();
+        public CloudOptions Cloud { get; } = new();
 
         /// <summary>
         /// Gets the <see cref="SocketOptions"/>.
         /// </summary>
-        public SocketOptions Socket { get; } = new SocketOptions();
+        public SocketOptions Socket { get; } = new();
 
         /// <summary>
         /// Gets the connection <see cref="ConnectionRetryOptions"/>.
@@ -169,7 +160,7 @@ namespace Hazelcast.Networking
         /// before failing. See <see cref="SocketOptions"/> for specifying the individual socket parameters,
         /// including the individual socket connection timeout.</para>
         /// </remarks>
-        public ConnectionRetryOptions ConnectionRetry { get; } = new ConnectionRetryOptions();
+        public ConnectionRetryOptions ConnectionRetry { get; } = new();
 
         /// <summary>
         /// Gets or sets the connection timeout.
@@ -183,6 +174,6 @@ namespace Hazelcast.Networking
         /// <summary>
         /// Clones the options.
         /// </summary>
-        internal NetworkingOptions Clone(PreviewOptions preview = null) => new NetworkingOptions(this, preview ?? Preview.Clone());
+        internal NetworkingOptions Clone() => new(this);
     }
 }

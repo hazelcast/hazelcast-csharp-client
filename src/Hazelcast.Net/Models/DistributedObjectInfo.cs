@@ -16,21 +16,37 @@ using System;
 
 namespace Hazelcast.Models
 {
-    internal class DistributedObjectInfo : IEquatable<DistributedObjectInfo>
+    /// <summary>
+    /// Describes a distributed object.
+    /// </summary>
+    public class DistributedObjectInfo : IEquatable<DistributedObjectInfo>
     {
+        /// <summary>
+        /// Initializes a new instance of the <see cref="DistributedObjectInfo"/> class.
+        /// </summary>
+        /// <param name="serviceName">The object service name.</param>
+        /// <param name="name">The object name.</param>
         public DistributedObjectInfo(string serviceName, string name)
         {
             Name = name;
             ServiceName = serviceName;
         }
 
+        /// <summary>
+        /// Gets the name of the object.
+        /// </summary>
         public string Name { get; }
 
+        /// <summary>
+        /// Gets the service name of the object.
+        /// </summary>
         public string ServiceName { get; }
 
+        /// <inheritdoc />
         public override bool Equals(object obj)
             => Equals(obj as DistributedObjectInfo);
 
+        /// <inheritdoc />
         public bool Equals(DistributedObjectInfo other)
         {
             if (other is null) return false;
@@ -41,17 +57,32 @@ namespace Hazelcast.Models
                 ServiceName == other.ServiceName;
         }
 
+        /// <summary>
+        /// Determines whether two <see cref="DistributedObjectInfo"/> instances are equal.
+        /// </summary>
+        /// <param name="left">The left instance.</param>
+        /// <param name="right">The right instance.</param>
+        /// <returns><c>true</c> if the instances are equal; otherwise <c>false</c>.</returns>
         public static bool operator ==(DistributedObjectInfo left, DistributedObjectInfo right)
+            // ReSharper disable once MergeConditionalExpression
             => left is null ? right is null : left.Equals(right);
 
+        /// <summary>
+        /// Determines whether two <see cref="DistributedObjectInfo"/> instances are different.
+        /// </summary>
+        /// <param name="left">The left instance.</param>
+        /// <param name="right">The right instance.</param>
+        /// <returns><c>true</c> if the instances are different; otherwise <c>false</c>.</returns>
         public static bool operator !=(DistributedObjectInfo left, DistributedObjectInfo right)
             => !(left == right);
 
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             return HashCode.Combine(ServiceName, Name);
         }
 
+        /// <inheritdoc />
         public override string ToString()
         {
             return $"ServiceName = '{ServiceName}', Name = '{Name}'";

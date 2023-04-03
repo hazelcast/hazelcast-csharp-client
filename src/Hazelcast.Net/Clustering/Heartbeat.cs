@@ -20,6 +20,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
+using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -232,6 +233,7 @@ namespace Hazelcast.Clustering
                 _logger.IfDebug()?.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
 
                 var requestMessage = ClientPingCodec.EncodeRequest();
+                requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
 
                 try
                 {
