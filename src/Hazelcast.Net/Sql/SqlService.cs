@@ -34,13 +34,13 @@ namespace Hazelcast.Sql
         // internal for tests only
         internal readonly ReadOptimizedLruCache<string, int> _queryPartitionArgumentCache;
         private readonly ILogger<SqlService> _logger;
-        private readonly HazelcastOptions _options;
+        private readonly SqlOptions _options;
 
-        internal SqlService(HazelcastOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
+        internal SqlService(SqlOptions options, Cluster cluster, SerializationService serializationService, ILoggerFactory loggerFactory)
         {
             _cluster = cluster;
             _serializationService = serializationService;
-            _queryPartitionArgumentCache = new(options.Sql.PartitionArgumentIndexCacheSize, options.Sql.PartitionArgumentIndexCacheThreshold);
+            _queryPartitionArgumentCache = new(options.PartitionArgumentIndexCacheSize, options.PartitionArgumentIndexCacheThreshold);
             _logger = loggerFactory.CreateLogger<SqlService>();
             _options = options;
         }
@@ -154,7 +154,7 @@ namespace Hazelcast.Sql
 
         private void SetArgumentIndex(string sql, int argIndexFromServer)
         {
-            if (_options.Networking.SmartRouting &&
+            if (_options.ArgumentIndexCachingEnabled &&
                 (!_queryPartitionArgumentCache.TryGetValue(sql, out var argIndex) || argIndexFromServer != argIndex))
             {
                 if (argIndexFromServer == -1)
@@ -175,7 +175,7 @@ namespace Hazelcast.Sql
             var partitionId = -1;
 
             // Todo: Update condition after TPC implementation.
-            if (!_options.Networking.SmartRouting || !_queryPartitionArgumentCache.TryGetValue(sql, out var argIndex)) return partitionId;
+            if (!_options.ArgumentIndexCachingEnabled || !_queryPartitionArgumentCache.TryGetValue(sql, out var argIndex)) return partitionId;
 
             if (argIndex >= 0 && argIndex < serializedParameters.Count)
             {
@@ -203,8 +203,8 @@ namespace Hazelcast.Sql
         {
             var requestMessage = SqlFetchCodec.EncodeRequest(queryId, cursorBufferSize);
             var responseMessage = partitionId == -1 ?
-                                                    await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait()
-                                                    :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
+                await _cluster.Messaging.SendAsync(requestMessage, cancellationToken).CfAwait()
+                :await _cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, partitionId, cancellationToken).CfAwait();
             
             var response = SqlFetchCodec.DecodeResponse(responseMessage);
 

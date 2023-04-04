@@ -118,6 +118,6 @@ namespace Hazelcast
         /// Clones the options.
         /// </summary>
         /// <returns>A deep clone of the options.</returns>
-        internal HazelcastOptions Clone() => new HazelcastOptions(this);
+        internal HazelcastOptions Clone() => new (this);
     }
 }

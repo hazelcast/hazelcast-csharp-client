@@ -42,13 +42,13 @@ namespace Hazelcast.Protocol.Codecs
     /// Makes an authentication request to the cluster.
     ///</summary>
 #if SERVER_CODEC
-    internal static class ClientAuthenticationServerCodec
+    internal static class ExperimentalAuthenticationServerCodec
 #else
-    internal static class ClientAuthenticationCodec
+    internal static class ExperimentalAuthenticationCodec
 #endif
     {
-        public const int RequestMessageType = 256; // 0x000100
-        public const int ResponseMessageType = 257; // 0x000101
+        public const int RequestMessageType = 16580864; // 0xFD0100
+        public const int ResponseMessageType = 16580865; // 0xFD0101
         private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + BytesExtensions.SizeOfByte;
@@ -118,7 +118,7 @@ namespace Hazelcast.Protocol.Codecs
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = "Client.Authentication"
+                OperationName = "Experimental.Authentication"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -198,10 +198,15 @@ namespace Hazelcast.Protocol.Codecs
             /// Returns true if server supports clients with failover feature.
             ///</summary>
             public bool FailoverSupported { get; set; }
+
+            /// <summary>
+            /// Returns the list of TPC ports or null if TPC is disabled.
+            ///</summary>
+            public IList<int> TpcPorts { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(byte status, Hazelcast.Networking.NetworkAddress address, Guid memberUuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId, bool failoverSupported)
+        public static ClientMessage EncodeResponse(byte status, Hazelcast.Networking.NetworkAddress address, Guid memberUuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId, bool failoverSupported, ICollection<int> tpcPorts)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
@@ -215,6 +220,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, address, AddressCodec.Encode);
             StringCodec.Encode(clientMessage, serverHazelcastVersion);
+            CodecUtil.EncodeNullable(clientMessage, tpcPorts, ListIntegerCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -232,6 +238,7 @@ namespace Hazelcast.Protocol.Codecs
             response.FailoverSupported = initialFrame.Bytes.ReadBoolL(ResponseFailoverSupportedFieldOffset);
             response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
             response.ServerHazelcastVersion = StringCodec.Decode(iterator);
+            response.TpcPorts = CodecUtil.DecodeNullable(iterator, ListIntegerCodec.Decode);
             return response;
         }
 

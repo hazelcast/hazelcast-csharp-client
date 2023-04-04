@@ -39,16 +39,16 @@ using Microsoft.Extensions.Logging;
 namespace Hazelcast.Protocol.Codecs
 {
     /// <summary>
-    /// Makes an authentication request to the cluster.
+    /// Makes an authentication request to the cluster using custom credentials.
     ///</summary>
 #if SERVER_CODEC
-    internal static class ClientAuthenticationServerCodec
+    internal static class ExperimentalAuthenticationCustomServerCodec
 #else
-    internal static class ClientAuthenticationCodec
+    internal static class ExperimentalAuthenticationCustomCodec
 #endif
     {
-        public const int RequestMessageType = 256; // 0x000100
-        public const int ResponseMessageType = 257; // 0x000101
+        public const int RequestMessageType = 16581120; // 0xFD0200
+        public const int ResponseMessageType = 16581121; // 0xFD0201
         private const int RequestUuidFieldOffset = Messaging.FrameFields.Offset.PartitionId + BytesExtensions.SizeOfInt;
         private const int RequestSerializationVersionFieldOffset = RequestUuidFieldOffset + BytesExtensions.SizeOfCodecGuid;
         private const int RequestInitialFrameSize = RequestSerializationVersionFieldOffset + BytesExtensions.SizeOfByte;
@@ -70,16 +70,9 @@ namespace Hazelcast.Protocol.Codecs
             public string ClusterName { get; set; }
 
             /// <summary>
-            /// Name of the user for authentication.
-            /// Used in case Client Identity Config, otherwise it should be passed null.
+            /// Secret byte array for authentication.
             ///</summary>
-            public string Username { get; set; }
-
-            /// <summary>
-            /// Password for the user.
-            /// Used in case Client Identity Config, otherwise it should be passed null.
-            ///</summary>
-            public string Password { get; set; }
+            public byte[] Credentials { get; set; }
 
             /// <summary>
             /// Unique string identifying the connected client uniquely.
@@ -113,12 +106,12 @@ namespace Hazelcast.Protocol.Codecs
         }
 #endif
 
-        public static ClientMessage EncodeRequest(string clusterName, string username, string password, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
+        public static ClientMessage EncodeRequest(string clusterName, byte[] credentials, Guid uuid, string clientType, byte serializationVersion, string clientHazelcastVersion, string clientName, ICollection<string> labels)
         {
             var clientMessage = new ClientMessage
             {
                 IsRetryable = true,
-                OperationName = "Client.Authentication"
+                OperationName = "Experimental.AuthenticationCustom"
             };
             var initialFrame = new Frame(new byte[RequestInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
             initialFrame.Bytes.WriteIntL(Messaging.FrameFields.Offset.MessageType, RequestMessageType);
@@ -127,8 +120,7 @@ namespace Hazelcast.Protocol.Codecs
             initialFrame.Bytes.WriteByteL(RequestSerializationVersionFieldOffset, serializationVersion);
             clientMessage.Append(initialFrame);
             StringCodec.Encode(clientMessage, clusterName);
-            CodecUtil.EncodeNullable(clientMessage, username, StringCodec.Encode);
-            CodecUtil.EncodeNullable(clientMessage, password, StringCodec.Encode);
+            ByteArrayCodec.Encode(clientMessage, credentials);
             StringCodec.Encode(clientMessage, clientType);
             StringCodec.Encode(clientMessage, clientHazelcastVersion);
             StringCodec.Encode(clientMessage, clientName);
@@ -145,8 +137,7 @@ namespace Hazelcast.Protocol.Codecs
             request.Uuid = initialFrame.Bytes.ReadGuidL(RequestUuidFieldOffset);
             request.SerializationVersion = initialFrame.Bytes.ReadByteL(RequestSerializationVersionFieldOffset);
             request.ClusterName = StringCodec.Decode(iterator);
-            request.Username = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
-            request.Password = CodecUtil.DecodeNullable(iterator, StringCodec.Decode);
+            request.Credentials = ByteArrayCodec.Decode(iterator);
             request.ClientType = StringCodec.Decode(iterator);
             request.ClientHazelcastVersion = StringCodec.Decode(iterator);
             request.ClientName = StringCodec.Decode(iterator);
@@ -190,7 +181,7 @@ namespace Hazelcast.Protocol.Codecs
             public int PartitionCount { get; set; }
 
             /// <summary>
-            /// UUID of the cluster that the client authenticated.
+            /// The cluster id of the cluster.
             ///</summary>
             public Guid ClusterId { get; set; }
 
@@ -198,10 +189,15 @@ namespace Hazelcast.Protocol.Codecs
             /// Returns true if server supports clients with failover feature.
             ///</summary>
             public bool FailoverSupported { get; set; }
+
+            /// <summary>
+            /// Returns the list of TPC ports or null if TPC is disabled.
+            ///</summary>
+            public IList<int> TpcPorts { get; set; }
         }
 
 #if SERVER_CODEC
-        public static ClientMessage EncodeResponse(byte status, Hazelcast.Networking.NetworkAddress address, Guid memberUuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId, bool failoverSupported)
+        public static ClientMessage EncodeResponse(byte status, Hazelcast.Networking.NetworkAddress address, Guid memberUuid, byte serializationVersion, string serverHazelcastVersion, int partitionCount, Guid clusterId, bool failoverSupported, ICollection<int> tpcPorts)
         {
             var clientMessage = new ClientMessage();
             var initialFrame = new Frame(new byte[ResponseInitialFrameSize], (FrameFlags) ClientMessageFlags.Unfragmented);
@@ -215,6 +211,7 @@ namespace Hazelcast.Protocol.Codecs
             clientMessage.Append(initialFrame);
             CodecUtil.EncodeNullable(clientMessage, address, AddressCodec.Encode);
             StringCodec.Encode(clientMessage, serverHazelcastVersion);
+            CodecUtil.EncodeNullable(clientMessage, tpcPorts, ListIntegerCodec.Encode);
             return clientMessage;
         }
 #endif
@@ -232,6 +229,7 @@ namespace Hazelcast.Protocol.Codecs
             response.FailoverSupported = initialFrame.Bytes.ReadBoolL(ResponseFailoverSupportedFieldOffset);
             response.Address = CodecUtil.DecodeNullable(iterator, AddressCodec.Decode);
             response.ServerHazelcastVersion = StringCodec.Decode(iterator);
+            response.TpcPorts = CodecUtil.DecodeNullable(iterator, ListIntegerCodec.Decode);
             return response;
         }
 
