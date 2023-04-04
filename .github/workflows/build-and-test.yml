@@ -184,6 +184,16 @@ jobs:
         with:
           name: Test-Results ${{ inputs.os }}-${{ matrix.fwk }}
           path: './temp/tests/results/*.trx'
+      
+      # upload logs
+      - name: Upload server&rc logs
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: Logs-${{ inputs.os }}-${{ matrix.fwk }}
+          path: |
+            './temp/server/'
+            './temp/rc/'
 
       # upload test coverage artifact
       - name: Upload test coverage artifact
