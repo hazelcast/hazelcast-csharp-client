@@ -33,7 +33,7 @@ jobs:
   ensure-repo:
     name: Ensure Repository
     runs-on: ubuntu-latest
-    if: github.repository == 'hazelcast/hazelcast-csharp-client'
+    #if: github.repository == 'hazelcast/hazelcast-csharp-client'
 
     steps:
       - name: Report
