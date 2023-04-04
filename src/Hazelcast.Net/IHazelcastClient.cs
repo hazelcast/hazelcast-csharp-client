@@ -154,6 +154,12 @@ namespace Hazelcast
         ValueTask DestroyAsync(IDistributedObject o);
 
         /// <summary>
+        /// Gets information about all distributed objects known to the cluster.
+        /// </summary>
+        /// <returns>Information about all distributed objects know to the cluster.</returns>
+        Task<IReadOnlyCollection<DistributedObjectInfo>> GetDistributedObjectsAsync();
+
+        /// <summary>
         /// Gets an <see cref="IHMap{TKey,TValue}"/> distributed object.
         /// </summary>
         /// <typeparam name="TKey">The type of the keys.</typeparam>

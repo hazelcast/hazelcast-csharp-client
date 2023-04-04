@@ -17,10 +17,7 @@ using System.Linq;
 using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
-using Hazelcast.Messaging;
 using Hazelcast.Metrics;
-using Hazelcast.Networking;
-using Hazelcast.Sql;
 
 namespace Hazelcast
 {
@@ -42,13 +39,6 @@ namespace Hazelcast
             Subscribers = new List<IHazelcastClientEventSubscriber>();
             SubscribersBinder = new CollectionBinder<InjectionOptions>(x
                 => Subscribers.Add(new HazelcastClientEventSubscriber(x.TypeName)));
-
-            // initializers are executed prior to executing the constructor, so Preview has a value here,
-            // and we cannot use initializers for these properties these initializers cannot reference
-            // the non-static Preview property + the order of execution of initializers defined in partials
-            // is undefined
-            Networking = new NetworkingOptions(Preview);
-            Messaging = new MessagingOptions(Preview);
         }
 
         /// <summary>
@@ -75,7 +65,7 @@ namespace Hazelcast
             Messaging = other.Messaging.Clone(Preview);
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
-            Sql = other.Sql.Clone();
+            
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
 
@@ -84,11 +74,6 @@ namespace Hazelcast
 
         /// <inheritdoc />
         internal override string SectionName => SectionNameConstant;
-
-        /// <summary>
-        /// (unsupported) Gets the <see cref="PreviewOptions"/>.
-        /// </summary>
-        public PreviewOptions Preview { get; } = new PreviewOptions();
 
         /// <summary>
         /// Gets the <see cref="CoreOptions"/>.
@@ -110,14 +95,9 @@ namespace Hazelcast
         public MetricsOptions Metrics { get; } = new MetricsOptions();
 
         /// <summary>
-        /// Gets the <see cref="SqlOptions"/>.
-        /// </summary>
-        public SqlOptions Sql { get; } = new SqlOptions();      
-
-        /// <summary>
         /// Clones the options.
         /// </summary>
         /// <returns>A deep clone of the options.</returns>
-        internal HazelcastOptions Clone() => new (this);
+        internal HazelcastOptions Clone() => new HazelcastOptions(this);
     }
 }

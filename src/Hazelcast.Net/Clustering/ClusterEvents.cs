@@ -558,6 +558,7 @@ namespace Hazelcast.Clustering
             try
             {
                 var subscribeRequest = ClientAddClusterViewListenerCodec.EncodeRequest();
+                subscribeRequest.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
                 _correlatedSubscriptions[correlationId] = new ClusterSubscription(HandleEventAsync);
                 _ = await _clusterMessaging.SendToMemberAsync(subscribeRequest, connection, correlationId, cancellationToken).CfAwait();
                 _logger.IfDebug()?.LogDebug("Subscribed to cluster views on connection {ConnectionId)}.", connection.Id.ToShortString());

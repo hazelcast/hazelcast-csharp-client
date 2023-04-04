@@ -241,14 +241,14 @@ namespace Hazelcast.Tests.Configuration
             Assert.AreEqual(1001, options.TimeoutMilliseconds);
         }
 
-        [Test]
-        public void PreviewOptionsSection()
-        {
-            var options = ReadResource(Resources.HazelcastOptions).Preview;
+        //[Test]
+        //public void PreviewOptionsSection()
+        //{
+        //    var options = ReadResource(Resources.HazelcastOptions).Preview;
 
-            Assert.That(options.EnableNewReconnectOptions, Is.False);
-            Assert.That(options.EnableNewRetryOptions, Is.False);
-        }
+        //    Assert.That(options.EnableNewReconnectOptions, Is.False);
+        //    Assert.That(options.EnableNewRetryOptions, Is.False);
+        //}
 
         [Test]
         public void NetworkingOptionsSection()
@@ -287,16 +287,6 @@ namespace Hazelcast.Tests.Configuration
 
 #pragma warning restore SYSLIB0039
             Console.WriteLine(sslOptions.ToString());
-
-#if NETCOREAPP
-#pragma warning disable CS0618 // Type or member is obsolete
-#endif
-            // testing obsolete Ssl2, Default protocols
-            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Ssl2);
-            Assert.Throws<ConfigurationException>(() => sslOptions.Protocol = SslProtocols.Default);
-#if NETCOREAPP
-#pragma warning restore CS0618
-#endif
 
             var cloudOptions = options.Cloud;
             Assert.IsTrue(cloudOptions.Enabled);

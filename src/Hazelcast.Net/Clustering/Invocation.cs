@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
+using Hazelcast.Models;
 using Hazelcast.Protocol;
 using Hazelcast.Protocol.Models;
 
@@ -102,6 +103,11 @@ namespace Hazelcast.Clustering
         /// Gets the request message.
         /// </summary>
         public ClientMessage RequestMessage { get; }
+
+        /// <summary>
+        /// Gets the flags.
+        /// </summary>
+        public InvocationFlags Flags => RequestMessage.InvocationFlags;
 
         /// <summary>
         /// Gets the target client connection, if any, otherwise <c>null</c>.

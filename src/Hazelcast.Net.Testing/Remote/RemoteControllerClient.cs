@@ -90,6 +90,20 @@ namespace Hazelcast.Testing.Remote
         public static IRemoteControllerClient Create(TProtocol inputProtocol, TProtocol outputProtocol)
             => new RemoteControllerClient(inputProtocol, outputProtocol);
 
+        private async Task WithLock(Func<CancellationToken, Task> action, CancellationToken cancellationToken)
+        {
+            await _lock.WaitAsync(cancellationToken).CfAwait();
+            try
+            {
+                if (!cancellationToken.IsCancellationRequested)
+                    await action(cancellationToken).CfAwait();
+            }
+            finally
+            {
+                _lock.Release();
+            }
+        }
+        
         private async Task<T> WithLock<T>(Func<CancellationToken, Task<T>> action, CancellationToken cancellationToken)
         {
             await _lock.WaitAsync(cancellationToken).CfAwait();
@@ -165,5 +179,33 @@ namespace Hazelcast.Testing.Remote
         /// <inheritdoc />
         public Task<Response> ExecuteOnControllerAsync(string clusterId, string script, Lang lang, CancellationToken cancellationToken = default)
             => WithLock(token => executeOnController(clusterId, script, lang, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task LoginCloudAsync(string baseUrl, string apiKey, string apiSecret, CancellationToken cancellationToken = default)
+            => WithLock(token => loginToCloud(baseUrl, apiKey, apiSecret, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task LoginCloudWithEnvironment(CancellationToken cancellationToken = default)
+            => WithLock(loginToCloudUsingEnvironment, cancellationToken);
+
+        /// <inheritdoc />
+        public Task<CloudCluster> CreateCloudClusterAsync(string hazelcastVersion, bool isTlsEnabled, CancellationToken cancellationToken = default)
+            => WithLock(token => createCloudCluster(hazelcastVersion, isTlsEnabled, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task<CloudCluster> GetCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default)
+            => WithLock(token => getCloudCluster(cloudClusterId, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task<CloudCluster> StopCloudCluster(string cloudClusterId, CancellationToken cancellationToken = default)
+            => WithLock(token => stopCloudCluster(cloudClusterId, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task<CloudCluster> ResumeCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default)
+            => WithLock(token => resumeCloudCluster(cloudClusterId, token), cancellationToken);
+
+        /// <inheritdoc />
+        public Task DeleteCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default)
+            => WithLock(token => deleteCloudCluster(cloudClusterId, token), cancellationToken);
     }
 }

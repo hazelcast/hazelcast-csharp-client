@@ -25,7 +25,6 @@ namespace Hazelcast.Networking
     public class SslOptions
     {
         // default is none, to let the system select the best option
-        private SslProtocols _sslProtocol = SslProtocols.None;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SslOptions"/> class.
@@ -55,7 +54,7 @@ namespace Hazelcast.Networking
             CertificatePath = other.CertificatePath;
             CertificatePassword = other.CertificatePassword;
             KeyStorageFlags = other.KeyStorageFlags;
-            _sslProtocol = other._sslProtocol;
+            Protocol = other.Protocol;
         }
 
         /// <summary>
@@ -98,42 +97,26 @@ namespace Hazelcast.Networking
         /// </summary>
         internal X509KeyStorageFlags KeyStorageFlags { get; set; }
 
+        // notes on TLS 1.3 support
+        //
+        // the SslProtocols.Tls13 value was introduced with .NET 5.0, it is not defined
+        // in netstandard 2.0 nor 2.1, but then it was defined for .NET Framework 4.8 (not 4.6.2).
+        // in order to properly validate the value we'd need to create a dedicated net48 build
+        // of the client, and then we'd lose all the netstandard features. in the end, this
+        // validation is becoming quite complex and is probably useless. from now on, no validation.
+        //
+        // note that the value being defined does *not* mean that the OS will support it
+
         /// <summary>
         /// Gets or sets the SSL protocol.
         /// </summary>
         /// <remarks>
-        /// <para>The protocol must be a member of the <see cref="SslProtocols"/> enum,
-        /// and currently only <c>Tls</c>, <c>Tls11</c> and <c>Tls12</c> are supported,
-        /// though only the latest is recommended.</para>
+        /// <para>The value is passed directly to the underlying <see cref="System.Net.Security.SslStream"/>
+        /// when authenticating the client. It is recommended to leave the value set to <see cref="SslProtocols.None"/>
+        /// in order to let the operating system choose the best option. Alternatively, use one of TLS versions
+        /// (1.1, 1.2 or 1.3 where available). Note that not all operating systems support all versions.</para>
         /// </remarks>
-        public SslProtocols Protocol
-        {
-            get => _sslProtocol;
-            set
-            {
-#pragma warning disable IDE0072
-                // ReSharper disable once SwitchExpressionHandlesSomeKnownEnumValuesWithExceptionInDefault
-                _sslProtocol = value switch
-                {
-                    SslProtocols.None => value,
-#pragma warning disable CA5397 // Do not use deprecated SslProtocols values - but, we still support them
-#if NET7_0_OR_GREATER
-#pragma warning disable SYSLIB0039 // Required for .NET 7
-#endif
-                    SslProtocols.Tls => value,
-                    SslProtocols.Tls11 => value,
-#pragma warning restore CA5397
-#if NET7_0_OR_GREATER
-#pragma warning restore SYSLIB0039
-#endif
-#pragma warning disable CA5398 // Avoid hardcoded SslProtocols values - well, here, yes
-                    SslProtocols.Tls12 => value,
-#pragma warning restore CA5398
-                    _ => throw new ConfigurationException("Invalid value. Value must be None, Tls, Tls11 or Tls12.")
-                };
-#pragma warning restore IDE0072
-            }
-        }
+        public SslProtocols Protocol { get; set; } = SslProtocols.None;
 
         /// <inheritdoc />
         public override string ToString()
