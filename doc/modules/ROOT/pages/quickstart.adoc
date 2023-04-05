@@ -34,8 +34,6 @@ It can therefore be used in any application targeting .NET versions that support
 |https://docs.docker.com/get-docker/[Get Docker]
 |===
 
-WARNING: The upcoming .NET 5 version supports .NET Standard 2.1, and therefore should execute the Hazelcast .NET client without issues, but that is not supported yet.
-
 == Step 1. Installation
 
 The .NET client is distributed via NuGet as a package named https://www.nuget.org/packages/Hazelcast.Net/[Hazelcast.NET].
