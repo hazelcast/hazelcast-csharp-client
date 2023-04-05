@@ -14,9 +14,6 @@ In this tutorial, you will complete the following steps:
 . Install Hazelcast .NET client
 . Start a Hazelcast cluster with single server
 . Connect the client to the cluster
-. Create and manipulate a Hazelcast map
-. Run an SQL query on the map
-. Monitor the client on Hazelcast Management Center
 
 == Before You Begin
 
@@ -176,114 +173,8 @@ if you created a cluster with a name different than the default one, you need to
 
 See the xref:configuration:connections.adoc[configuration] for more options available for the .NET client.
 
-== Step 4. Work with an In-Memory Storage
-
-Let's manipulate a distributed map on a cluster using the client.
-
-Start a client with the following code.
-
-[source,csharp]
-----
-await using var map = await client.GetMapAsync<string, int>("personnel-map");
-
-await map.SetAsync("Alice", "IT"));
-await map.SetAsync("Bob", "IT"));
-await map.SetAsync("Clark", "IT"));
-
-Console.WriteLine("Added IT personnel. Logging all known personnel");
-Console.WriteLine(??? List the staff like "Alice is in IT department" ???);
-----
-
-You will see the following output.
-
-[source,plain]
-----
-Added IT personnel. Logging all known personnel
-Alice is in IT department
-Clark is in IT department
-Bob is in IT department
-----
-
-The example puts all the IT personnel into a cluster-wide `personnel-map` and then prints all the known personnel.
-
-Start another client with the following code.
-
-[source,csharp]
-----
-await using var map = await client.GetMapAsync<string, int>("personnel-map");
-
-await map.SetAsync("Denise", "Sales"));
-await map.SetAsync("Erwing", "Sales"));
-await map.SetAsync("Faith", "Sales"));
-
-
-Console.WriteLine("Added Sales personnel. Logging all known personnel");
-Console.WriteLine(??? List the staff like "Denise is in Sales department" ???);
-----
-
-You will see the following output.
-
-[source,plain]
-----
-Added Sales personnel. Logging all known personnel
-Denise is in Sales department
-Erwing is in Sales department
-Faith is in Sales department
-Alice is in IT department
-Clark is in IT department
-Bob is in IT department
-----
-
-The second client adds only the sales employees to the map, but you get the list of all known employees
-including the ones in IT. That is because `personnelMap` lives in the cluster and no matter which client you use,
-you can access the whole map.
-
-== Step 5. Work with SQL
-
-You can query the entries of a map in your cluster using SQL from your .NET app.
-
-Let's query the people who work in the IT department, using the map you created in Step 4 above.
-
-[source,csharp]
-----
-??? Code to be added ???
-
-??? <1>
-
-??? Query ???
-
-??? <2>
-----
-<1> Before starting to query data, you must create a mapping for the `personnel` map.
-The `CREATE MAPPING` SQL statement is used for this; you can refer to xref:hazelcast:sql:create-mapping.adoc[here] for its details.
-It is enough to create the mapping once per map.
-<2> Prints the names of employees working in IT.
-
-See the https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs[sample codes] for basic SQL usages.
-See xref:sql:overview.adoc[here] to learn Hazelcast's SQL feature in detail.
-
-== Step 6. Monitor with Management Center
-
-Management Center is a user interface for managing and monitoring Hazelcast clusters.
-
-In this step, you start a local instance of Management Center and use it to view the cluster and clients you've created in this tutorial.
-
-. Start Management Center.
-+
-[source,shell,subs="attributes+"]
-----
-docker run \
-    -p 8080:8080 hazelcast/management-center:{server-full-version}
-----
-. In a web browser, go to localhost:8080 and enable "dev" mode.
-. Enter `dev` as the cluster name and IP address/port of the server you've started in Step 2.
-. Click *View Cluster* and go to *Clients*. You should see that three clients are connected to your cluster member: Management Center and your .NET clients.
-. Go to *Storage* > *Maps*.
-+
-You should see that you have a map called `personnel-map` with six entries (keys and values). You'll also see the total amount of memory that those entries are taking up in your cluster.
-
-??? Screenshots to be added ???
-
 == Next Steps
 
 See xref:configuration:overview.adoc[here] on how to configure and fine-tune your client.
+
+See also the https://docs.hazelcast.com/tutorials/csharp-client-getting-started[.NET Client Getting Started Tutorial].
