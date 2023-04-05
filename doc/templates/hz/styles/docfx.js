@@ -82,7 +82,7 @@ $(function () {
   // Enable highlight.js
   function highlight() {
     $('pre code').each(function (i, block) {
-      hljs.highlightBlock(block);
+      hljs.highlightElement(block);
     });
     $('pre code[highlight-lines]').each(function (i, block) {
       if (block.innerHTML === "") return;
@@ -127,7 +127,7 @@ $(function () {
       return;
     }
     try {
-      var worker = new Worker(relHref + 'styles/search-worker.js');
+      var worker = new Worker(relHref + 'styles/search-worker.min.js');
       if (!worker && !window.worker) {
         localSearch();
       } else {
@@ -990,7 +990,7 @@ $(function () {
     }
 
     function readTabsQueryStringParam() {
-      var qs = parseQueryString();
+      var qs = parseQueryString(window.location.search);
       var t = qs.tabs;
       if (t === undefined || t === '') {
         return [];
@@ -999,7 +999,7 @@ $(function () {
     }
 
     function updateTabsQueryStringParam(state) {
-      var qs = parseQueryString();
+      var qs = parseQueryString(window.location.search);
       qs.tabs = state.selectedTabs.join();
       var url = location.protocol + "//" + location.host + location.pathname + "?" + toQueryString(qs) + location.hash;
       if (location.href === url) {
@@ -1143,7 +1143,7 @@ $(function () {
      * If the jQuery element contains tags, this function will not change the element.
      */
     $.fn.breakWord = function () {
-      if (this.html() == this.text()) {
+      if (!this.html().match(/(<\w*)((\s\/>)|(.*<\/\w*>))/g)) {
         this.html(function (index, text) {
           return breakPlainText(text);
         })
