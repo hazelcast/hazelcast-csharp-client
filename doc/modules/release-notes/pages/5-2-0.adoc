@@ -1,0 +1,23 @@
+= 5.2.0 Release Notes
+
+== New Features
+
+* Added BETA support for xref:sql:querying-map.adoc#linq-provider[Linq].
+* Added a Hazelcast-based `IDistributedCache` xref:extensions:caching.adoc[implementation].
+
+== Enhancements
+
+* Added support for xref:serialization:compact.adoc[Compact Serialization].
+* Added support for .NET 7.0.
+
+== Fixes
+
+* Fixed an issue where the client was having troubles while connecting to the server with unisocket mode, if the configured IP address
+is different than the one in the member table.
+https://github.com/hazelcast/hazelcast-csharp-client/pull/608[#608]
+* Fixed an issue where the client hangs with infinite memory leak when there is an invalid configuration.
+https://github.com/hazelcast/hazelcast-csharp-client/pull/555[#555]
+* Fixed an issue where the client could not connect to cloud if SSL is enabled.
+https://github.com/hazelcast/hazelcast-csharp-client/pull/555[#577]
+* Fixed an issue where Hazelcast Management Center was showing an error message for the Near Cache statistics.
+https://github.com/hazelcast/hazelcast-csharp-client/pull/548[#548]

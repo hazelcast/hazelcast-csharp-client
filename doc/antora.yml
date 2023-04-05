@@ -1,21 +1,22 @@
 name: csharp
-title: .NET
+title: Hazelcast .NET Client
+start_page: quickstart.adoc
 # Version in the URL
-version: '5.2-snapshot'
+version: '5.2.1'
 # Version in the version selector (we display only the latest major.minor version)
-display_version: '5.2-SNAPSHOT'
+display_version: '5.2.1'
 # Displays a banner to inform users that this is a prerelease version 
-prerelease: true
+prerelease: false
 asciidoc:
   attributes:
-    server-full-version: '5.2-SNAPSHOT'
-    client-full-version: '5.1-SNAPSHOT'
+    server-full-version: '5.3.0-BETA-1'
+    client-full-version: '5.3.0-BETA-1'
     # Allows us to use UI macros. See https://docs.asciidoctor.org/asciidoc/latest/macros/ui-macros/
     experimental: true
     snapshot: true
     examples: ../src/Hazelcast.Net.Examples
     page-latest-supported-imdg: '4.2'
-    page-latest-supported-hazelcast: '5.1'
+    page-latest-supported-hazelcast: '5.2'
     page-toclevels: 1
     tabsize: 4
     apidocBaseUrl: http://hazelcast.github.io/hazelcast-csharp-client/latest/api

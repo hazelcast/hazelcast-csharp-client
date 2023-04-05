@@ -1,0 +1,9 @@
+= 5.2.1 Release Notes
+
+This version is a minor release and therefore is fully backward-compatible with all 5.x and 4.x versions.
+
+When version 5.2.0 was released, the various NuGet packages were built in two different batches, ending with different signatures, and some packages being incompatible with others.
+
+This release is a re-release of version 5.2.0 which simply rebuilds the NuGet packages so they happily all work together.
+
+The codebase has not change in any way.
