@@ -17,14 +17,14 @@ using System.Composition;
 using System.Threading;
 using Microsoft.DocAsCode.Plugins;
 
-namespace Hazelcast.Net.DocAsCode
-{
-    [Export]
-    [Shared] // singleton
-    public class HazelcastOptionsState
-    {
-        public List<FileModel> OptionFiles { get; } = new List<FileModel>();
+namespace Hazelcast.DocAsCode.Build;
 
-        public ManualResetEventSlim Gathered { get; } = new ManualResetEventSlim();
-    }
+[Export]
+[Shared] // singleton
+public class HazelcastOptionsState
+{
+    public List<FileModel> OptionFiles { get; } = new();
+
+    public ManualResetEventSlim Gathered { get; } = new();
 }
+
