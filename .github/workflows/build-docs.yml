@@ -1,0 +1,17 @@
+# This workflow triggers a build of the production documentation site
+# if a commit is made to the listed branches
+
+name: Build production site
+
+on:
+  push:
+    paths:
+      - 'doc/**'
+    branches: [ main]
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger build
+      run: curl -X POST -d {} 
