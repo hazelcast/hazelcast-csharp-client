@@ -83,9 +83,9 @@
     <Version>4.0.0-alpha.2</Version>
     -->
 
-    <AssemblyVersion>5.2.1</AssemblyVersion>
-    <FileVersion>5.2.1</FileVersion>
-    <VersionPrefix>5.2.1</VersionPrefix>
+    <AssemblyVersion>5.2.2</AssemblyVersion>
+    <FileVersion>5.2.2</FileVersion>
+    <VersionPrefix>5.2.2</VersionPrefix>
     <VersionSuffix></VersionSuffix>
 
     <!-- bundle XML doc in NuGet package-->
