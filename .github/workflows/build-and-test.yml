@@ -192,8 +192,8 @@ jobs:
         with:
           name: Logs-${{ inputs.os }}-${{ matrix.fwk }}
           path: |
-            './temp/server/'
-            './temp/rc/'
+            ./temp/server/
+            ./temp/rc/
 
       # upload test coverage artifact
       - name: Upload test coverage artifact
