@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>ExecuteAsync Method
+ | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="ExecuteAsync Method
+ | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*">
+
+
+
+<h1 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*">ExecuteAsync Method
+</h1>
+<div class="markdown level0 summary"></div>
+<div class="markdown level0 conceptual"></div>
+
+<a id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0})">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;)</h4>
+<div class="markdown level1 summary"><p>Processes all entries.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
+      <td><span class="parametername">processor</span></td>
+      <td><p>An entry processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
+      <td><p>The result of the processing of all entries.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The operation is not lock-aware. The <code data-dev-comment-type="paramref" class="paramref">processor</code> will process the entries
+no matter if the keys are locked or not.</p>
+<p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+<p>
+<p>
+<strong>Interactions with the map store:</strong>
+</p>
+<p>For each entry not found in memory <code>MapLoader.load(Object)</code> is invoked to load the value from
+the <code>MapStore</code> backing the map.
+</p>
+<p>If the entryProcessor updates the entry and write-through
+persistence mode is configured, before the value is stored
+in memory, <code>MapStore.store(Object, Object)</code> is called to
+write the value into the map store.
+</p>
+<p>If the entryProcessor updates the entry&apos;s value to null value and
+write-through persistence mode is configured, before the value is
+removed from the memory, <code>MapStore.delete(Object)</code> is
+called to delete the value from the <code>MapStore</code>.
+</p>
+<p>Any exceptions thrown by the <code>MapStore</code> fail the operation and are
+propagated to the caller. If an exception happened, the operation might
+already succeeded on some of the keys.</p>
+<p>
+If write-behind persistence mode is configured with
+write-coalescing turned off, <code>ReachedMaxSizeException</code> may be thrown
+if the write-behind queue has reached its per-node maximum
+capacity.
+</p>
+
+</div>
+<a id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},`0)">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, TKey)</h4>
+<div class="markdown level1 summary"><p>Processes an entry.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;TResult&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, TKey key)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
+      <td><span class="parametername">processor</span></td>
+      <td><p>An entry processor.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="parametername">key</span></td>
+      <td><p>The key.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;TResult&gt;</td>
+      <td><p>The result of the process.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0___0__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+</div>
+<a id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0__" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},System.Collections.Generic.IEnumerable{`0})">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IEnumerable&lt;TKey&gt;)</h4>
+<div class="markdown level1 summary"><p>Processes entries.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, IEnumerable&lt;TKey&gt; keys)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
+      <td><span class="parametername">processor</span></td>
+      <td><p>An entry processor.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.ienumerable-1">IEnumerable</a>&lt;TKey&gt;</td>
+      <td><span class="parametername">keys</span></td>
+      <td><p>The keys.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
+      <td><p>The result of the processing of each entry.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__System_Collections_Generic_IEnumerable__0___remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+</div>
+<a id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync*"></a>
+<h4 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Query_IPredicate_" data-uid="Hazelcast.DistributedObjects.IHMap`2.ExecuteAsync``1(Hazelcast.DistributedObjects.IEntryProcessor{``0},Hazelcast.Query.IPredicate)">ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt;, IPredicate)</h4>
+<div class="markdown level1 summary"><p>Process entries.</p>
+</div>
+<div class="markdown level1 conceptual"></div>
+<h5 class="declaration">Declaration</h5>
+<div class="codewrapper">
+  <pre><code class="lang-csharp hljs">Task&lt;IDictionary&lt;TKey, TResult&gt;&gt; ExecuteAsync&lt;TResult&gt;(IEntryProcessor&lt;TResult&gt; processor, IPredicate predicate)</code></pre>
+</div>
+<h5 class="parameters">Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.DistributedObjects.IEntryProcessor-1.html">IEntryProcessor</a>&lt;TResult&gt;</td>
+      <td><span class="parametername">processor</span></td>
+      <td><p>An entry processor.</p>
+</td>
+    </tr>
+    <tr>
+      <td class="hz-one-fourth"><a class="xref" href="Hazelcast.Query.IPredicate.html">IPredicate</a></td>
+      <td><span class="parametername">predicate</span></td>
+      <td><p>A predicate to select entries.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="returns">Returns</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task-1">Task</a>&lt;<a class="xref" href="https://learn.microsoft.com/dotnet/api/system.collections.generic.idictionary-2">IDictionary</a>&lt;TKey, TResult&gt;&gt;</td>
+      <td><p>The result of the processing of selected entries.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 class="typeParameters">Type Parameters</h5>
+<table class="table table-bordered table-striped table-condensed">
+  <tbody>
+    <tr>
+      <td class="hz-one-third"><span class="parametername">TResult</span></td>
+      <td><p>The type of the results produced by the processor.</p>
+</td>
+    </tr>
+  </tbody>
+</table>
+<h5 id="Hazelcast_DistributedObjects_IHMap_2_ExecuteAsync__1_Hazelcast_DistributedObjects_IEntryProcessor___0__Hazelcast_Query_IPredicate__remarks">Remarks</h5>
+<div class="markdown level1 remarks"><p>The <code data-dev-comment-type="paramref" class="paramref">processor</code> must be serializable via Hazelcast serialization,
+and have a counterpart on the server.</p>
+</div>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

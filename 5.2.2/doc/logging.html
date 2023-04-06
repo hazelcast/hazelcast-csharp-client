@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--[if IE]><![endif]-->
+<html>
+
+  <head>
+    <meta charset="utf-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Logging | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Logging | Hazelcast .NET Documentation ">
+    
+      <link rel="shortcut icon" href="../../images/favicon.ico">
+      <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="../../styles/docfx.css">
+      <link rel="stylesheet" href="../../styles/main.css">
+      <link rel="stylesheet" href="../../styles/hz.css">
+      <meta property="docfx:navrel" content="../toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
+    
+    <meta property="docfx:rel" content="../../">
+    
+  </head>
+  <body data-spy="scroll" data-target="#affix" data-offset="120">
+    <div id="wrapper" class="">
+      <header>
+
+        <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
+          <div class="container">
+            <div class="navbar-header">
+              <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+              <a class="navbar-brand" href="../../index.html">
+                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+              </a>
+            </div>
+            <div class="collapse navbar-collapse" id="navbar">
+              <form class="navbar-form navbar-right" role="search" id="search">
+                <div class="form-group">
+                  <input type="text" class="form-control" id="search-query" placeholder="Search" autocomplete="off">
+                </div>
+              </form>
+            </div>
+          </div>
+        </nav>
+        
+        <div class="subnav navbar navbar-default">
+          <div class="container hide-when-search" id="breadcrumb">
+              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
+              <div id="breadhtml">
+                <ul class="breadcrumb">
+                  <li></li>
+                </ul>
+              </div>
+          </div>
+        </div>
+      </header>
+      <div class="container body-content">
+
+        <div id="search-results">
+          <div class="search-list">Search Results for <span></span></div>
+          <div class="sr-items">
+            <p><i class="glyphicon glyphicon-refresh index-loading"></i></p>
+          </div>
+          <ul id="pagination" data-first="First" data-prev="Previous" data-next="Next" data-last="Last"></ul>
+        </div>
+      </div>
+      <div role="main" class="container body-content hide-when-search">
+
+        <div class="sidenav hide-when-search">
+          <a class="btn toc-toggle collapse" data-toggle="collapse" href="#sidetoggle" aria-expanded="false" aria-controls="sidetoggle">Show / Hide Table of Contents</a>
+          <div class="sidetoggle collapse" id="sidetoggle">
+            <div id="sidetoc"></div>
+          </div>
+        </div>
+        <div class="article row grid-right">
+          <div class="col-md-10">
+            <article class="content wrap" id="_content" data-uid="">
+<h1 id="logging">Logging</h1>
+
+<p>The Hazelcast .NET client uses the logging abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> namespace.</p>
+<p>By default, the client supports the abstractions, but does not come with any actual implementation. This means that, by default, the client will not output any log information. To actually log, an implementation must be added to the project.</p>
+<p>Microsoft provides a range of providers to log to various destinations. In addition, a variety of third-party products such as <a href="https://serilog.net/">Serilog</a> support complex logging patterns and more destinations (to the filesystem, the Cloud, etc).</p>
+<h2 id="quick-start-logging-to-console">Quick start: logging to console</h2>
+<p>To enable logging to console, add a NuGet reference to the <a href="https://www.nuget.org/packages/microsoft.extensions.logging.console">Microsoft.Extensions.Logging.Console</a> NuGet package, and then configure the Hazelcast client to use that implementation:</p>
+<pre><code>var hazelcastOptions = new HazelcastOptionsBuilder()
+    .With(args)
+    .WithConsoleLogger(LogLevel.Information)
+    .Build();
+</code></pre>
+<p>Where the <code>WithConsoleLogger</code> is:</p>
+<pre><code>public static HazelcastOptionsBuilder WithConsoleLogger(this HazelcastOptionsBuilder builder, LogLevel hazelcastLogLevel = LogLevel.None)
+{
+    return builder
+        .With(&quot;Logging:LogLevel:Default&quot;, &quot;None&quot;)
+        .With(&quot;Logging:LogLevel:System&quot;, &quot;Information&quot;)
+        .With(&quot;Logging:LogLevel:Microsoft&quot;, &quot;Information&quot;)
+        .With(&quot;Logging:LogLevel:Hazelcast&quot;, hazelcastLogLevel.ToString())
+        .With((configuration, options) =&gt;
+        {
+            // configure logging factory and add the console provider
+            options.LoggerFactory.Creator = () =&gt; LoggerFactory.Create(loggingBuilder =&gt;
+                loggingBuilder
+                    .AddConfiguration(configuration.GetSection(&quot;logging&quot;))
+                    .AddConsole());
+        });
+}
+</code></pre>
+<p>Note that the in-memory option set with <code>.With(&quot;Logging:LogLevel:Hazelcast&quot;, hazelcastLogLevel.ToString())</code> statement takes precedence over everything else (command-line, environment variables...) and you may want to comment it out when experimenting with the code.</p>
+<p>You can find this example as <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/LoggingExample.cs">LoggingExample.cs</a> in our examples project. If you <a href="http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/contrib-build.html">build</a> and <a href="http://hazelcast.github.io/hazelcast-csharp-client/4.1.0/doc/examples.html">run</a> this example, it will produce the following output:</p>
+<pre><code>info: Hazelcast.Examples.LoggingExample.A[0]
+      This is an INFO message from Hazelcast.Examples.LoggingExamples.A
+warn: Hazelcast.Examples.LoggingExample.A[0]
+      This is a WARNING message from Hazelcast.Examples.LoggingExamples.A
+warn: Hazelcast.Examples.LoggingExample.B[0]
+      This is a WARNING message from Hazelcast.Examples.LoggingExamples.B
+</code></pre>
+<p>You can experiment changing the log levels in code, or via the command line, or via environment variables:</p>
+<pre><code>PS&gt; ./hz.ps1 run-example Logging --- --Logging:LogLevel:Hazelcast=Debug
+</code></pre>
+<p>Also note that options set with <code>With(&quot;Logging:LogLevel:Hazelcast&quot;, &quot;Debug&quot;)</code> method calls take precedence over command line options.</p>
+<h2 id="other-implementations">Other implementations</h2>
+<p>Using a different implementation consists in</p>
+<ul>
+<li>Adding a NuGet reference to a different NuGet package, such as <a href="https://www.nuget.org/packages/Microsoft.Extensions.Logging.AzureAppServices/">Microsoft.Extensions.Logging.AzureAppServices</a> in order to log to Azure App Services, or a Serilog package to log to a file</li>
+<li>Replacing the <code>AddConsole()</code> call above with the appropriate method, as defined by the implementation</li>
+</ul>
+<h2 id="configuration">Configuration</h2>
+<p>The example above defines <em>log levels</em>:</p>
+<ul>
+<li><code>None</code> by default</li>
+<li><code>Information</code> for loggers named <code>System.*</code> or <code>Microsoft.*</code></li>
+<li><code>Information</code> for loggers named <code>Hazelcast.*</code></li>
+</ul>
+<p>The various existing <a href="https://docs.microsoft.com/en-us/dotnet/api/microsoft.extensions.logging.loglevel">LogLevel</a> values allows for fine-tuning of what should, or should not, be logged. We recommend running Hazelcast with the <code>Information</code> log level by default, though running with the <code>Debug</code> log level may help troubleshooting issues (but should not be used in production environment).</p>
+<p>Logging is configured as per <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> conventions. In a configuration file, one would need a <em>logging</em> section distinct from the <em>hazelcast</em> section:</p>
+<pre><code>{
+    &quot;hazelcast&quot;: {
+        ...
+    },
+    &quot;logging&quot;: {
+        &quot;logLevel&quot;: {
+            &quot;Default&quot;: &quot;Debug&quot;,
+            &quot;System&quot;: &quot;Information&quot;,
+            &quot;Microsoft&quot;: &quot;Information&quot;,
+            &quot;Hazelcast.Examples.MyApp&quot;, &quot;Information&quot; 
+        }
+    }
+}
+</code></pre>
+<p>Refer to Microsoft's documentation for more details.</p>
+<p>Logging can also be configured programmatically with statements such as <code>.With(&quot;Logging:LogLevel:Hazelcast&quot;, LogLevel.Debug.ToString())</code> as per the example above.</p>
+<h2 id="re-using-the-logging-system">Re-using the logging system</h2>
+<p>The logging system is available for the user to log in their application, too. At the moment, the best way to access the logging system is:</p>
+<pre><code>var loggerFactory = hazelcastOptions.LoggerFactory.Service;
+var logger = loggerFactory.CreateLogger&lt;MyClass&gt;();
+logger.LogInformation(&quot;hello!&quot;):
+</code></pre>
+<p>NOTE: in the future, the logging system will be more directly exposed by the client, e.g. <code>hazelcastClient.LoggerFactory.CreateLogger&lt;MyClass&gt;()</code>.</p>
+<h2 id="dependency-injection-applications">Dependency injection applications</h2>
+<p>In a typical application relying on dependency injection, the logger factory and loggers are registered in a container and injected in code. The <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Client/ContainerExample.cs">ContainerExample</a> and <a href="https://github.com/hazelcast/hazelcast-csharp-client/blob/master/src/Hazelcast.Net.Examples/Client/HostedExample.cs">HostedExample</a> are good starting points to understand how to wire Hazelcast in such applications.</p>
+</article>
+          </div>
+
+          <div class="hidden-sm col-md-2" role="complementary">
+            <div class="sideaffix">
+              <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
+                <h5>In This Article</h5>
+                <div></div>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        <div class="grad-bottom"></div>
+        <div class="footer">
+          <div class="container">
+            <span class="pull-right">
+              <a href="#top">Back to top</a>
+            </span>
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
+          </div>
+        </div>
+      </footer>
+    </div>
+
+    <script type="text/javascript" src="../../styles/docfx.vendor.min.js"></script>
+    <script type="text/javascript" src="../../styles/docfx.js"></script>
+    <script type="text/javascript" src="../../styles/main.js"></script>
+  </body>
+</html>

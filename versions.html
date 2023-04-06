@@ -1,21 +1,21 @@
 <!DOCTYPE html>
 <!--[if IE]><![endif]-->
 <html>
-  
+
   <head>
     <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-    <title>Versions | Hazelcast .NET Documentation </title>
-    <meta name="viewport" content="width=device-width">
-    <meta name="title" content="Versions | Hazelcast .NET Documentation ">
-    <meta name="generator" content="docfx 2.59.4.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+      <title>Versions | Hazelcast .NET Documentation </title>
+      <meta name="viewport" content="width=device-width">
+      <meta name="title" content="Versions | Hazelcast .NET Documentation ">
     
-    <link rel="shortcut icon" href="images/favicon.ico">
-    <link rel="stylesheet" href="styles/docfx.vendor.css">
-    <link rel="stylesheet" href="styles/docfx.css">
-    <link rel="stylesheet" href="styles/main.css">
-    <meta property="docfx:navrel" content="toc.html">
-    <meta property="docfx:tocrel" content="toc.html">
+      <link rel="shortcut icon" href="images/favicon.ico">
+      <link rel="stylesheet" href="styles/docfx.vendor.min.css">
+      <link rel="stylesheet" href="styles/docfx.css">
+      <link rel="stylesheet" href="styles/main.css">
+      <link rel="stylesheet" href="styles/hz.css">
+      <meta property="docfx:navrel" content="toc.html">
+      <meta property="docfx:tocrel" content="toc.html">
     
     <meta property="docfx:rel" content="">
     
@@ -23,7 +23,7 @@
   <body data-spy="scroll" data-target="#affix" data-offset="120">
     <div id="wrapper" class="DEVWARN">
       <header>
-        
+
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
           <div class="container">
             <div class="navbar-header">
@@ -33,7 +33,7 @@
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
               </button>
-              
+
               <a class="navbar-brand" href="index.html">
                 <img id="logo" src="images/hazelcast-white.png" alt="">
               </a>
@@ -47,7 +47,7 @@
             </div>
           </div>
         </nav>
-        <!-- DEVWARN -->        
+        <!-- DEVWARN -->
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
               <div class="brandcrumb">.NET Client Documentation<br></div>
@@ -60,7 +60,7 @@
         </div>
       </header>
       <div class="container body-content">
-        
+
         <div id="search-results">
           <div class="search-list">Search Results for <span></span></div>
           <div class="sr-items">
@@ -77,74 +77,78 @@
 
 <p>Hazelcast .NET brings the full power of the <a href="https://hazelcast.com">Hazelcast</a> high-performance, in-memory computing platform to the Microsoft .NET ecosystem. The <a href="https://hazelcast.com/clients/dotnet/">Hazelcast .NET Client</a> allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.</p>
 <h2 id="net-support">.NET support</h2>
-<p>The following table defines the supported .NET versions for the various Hazelcast .NET Client versions.<br>Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET 5.0+ run on Windows, Linux and MacOS.</p>
+<p>The following table defines the supported .NET versions for the various Hazelcast .NET Client versions.<br>
+Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET 5.0+ run on Windows, Linux and MacOS.</p>
 <table>
 <thead>
 <tr>
 <th>Version</th>
-<th style="text-align:center">.NET Framework 4.5-4.6.1</th>
-<th style="text-align:center">.NET Framework 4.6.2-4.8</th>
-<th style="text-align:center">.NET Core 2.1</th>
-<th style="text-align:center">.NET Core 3.1 (LTS)</th>
-<th style="text-align:center">.NET 5.0</th>
-<th style="text-align:center">.NET 6.0 (LTS)</th>
-<th style="text-align:center">.NET 7.0</th>
+<th style="text-align: center;">.NET Framework<br>4.5-4.6.1</th>
+<th style="text-align: center;">.NET Framework<br>4.6.2-4.8</th>
+<th style="text-align: center;">.NET Core<br>2.1</th>
+<th style="text-align: center;">.NET Core<br>3.1 (LTS)</th>
+<th style="text-align: center;">.NET<br>5.0</th>
+<th style="text-align: center;">.NET<br>6.0 (LTS)</th>
+<th style="text-align: center;">.NET<br>7.0</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>5.2</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center"><strong>No</strong> (note)</td>
-<td style="text-align:center"><strong>No</strong> (note)</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;"><strong>No</strong> (note)</td>
+<td style="text-align: center;"><strong>No</strong> (note)</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><strong>Yes</strong></td>
 </tr>
 <tr>
 <td>5.1</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center"><strong>Yes</strong></td>
-<td style="text-align:center">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
 </tr>
 <tr>
 <td>5.0</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center"><strong>No</strong> (note)</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center"><strong>Yes</strong></td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><strong>No</strong> (note)</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;"><strong>Yes</strong></td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
 </tr>
 <tr>
 <td>4.x</td>
-<td style="text-align:center"><strong>No</strong> (note)</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
+<td style="text-align: center;"><strong>No</strong> (note)</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
 </tr>
 <tr>
 <td>3.x</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
-<td style="text-align:center">No</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">Yes</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">No</td>
 </tr>
 </tbody>
 </table>
-<div class="NOTE"><h5>Note</h5><p>As per Microsoft&#39;s <strong>.NET Framework</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework">Support Policy</a>, versions 4.5.2, 4.6, and 4.6.1 will reach end of support on April 26, 2022. We do <em>not</em> support these versions starting with Hazelcast 4. We recommend that all Hazelcast 3 users migrate to at least .NET Framework 4.6.2, and ideally to .NET Framework 4.8.<br>As per Microsoft&#39;s <strong>.NET and .NET Core</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-and-net-core">Support Policy</a> and <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">LifeCycle</a>, versions 2.1 to 5.0 are not supported anymore. We recommend that all users use versions of .NET supported by Microsoft.</p>
+<div class="NOTE">
+<h5>Note</h5>
+<p>As per Microsoft's <strong>.NET Framework</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework">Support Policy</a>, versions 4.5.2, 4.6, and 4.6.1 will reach end of support on April 26, 2022. We do <em>not</em> support these versions starting with Hazelcast 4. We recommend that all Hazelcast 3 users migrate to at least .NET Framework 4.6.2, and ideally to .NET Framework 4.8.<br>
+As per Microsoft's <strong>.NET and .NET Core</strong> <a href="https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-and-net-core">Support Policy</a> and <a href="https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core">LifeCycle</a>, versions 2.1 to 5.0 are not supported anymore. We recommend that all users use versions of .NET supported by Microsoft.</p>
 </div>
 <h2 id="hazelcast-net-client-versions">Hazelcast .NET Client versions</h2>
 <h3 id="current">Current</h3>
@@ -171,7 +175,7 @@
 </ul>
 </article>
           </div>
-          
+
           <div class="hidden-sm col-md-2" role="complementary">
             <div class="sideaffix">
               <nav class="bs-docs-sidebar hidden-print hidden-xs hidden-sm affix" id="affix">
@@ -182,7 +186,7 @@
           </div>
         </div>
       </div>
-      
+
       <footer>
         <div class="grad-bottom"></div>
         <div class="footer">
@@ -190,14 +194,14 @@
             <span class="pull-right">
               <a href="#top">Back to top</a>
             </span>
-            Copyright &copy; 2010-2022 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
-            
+      Copyright &copy; 2010-2023 Hazelcast, Inc. All rights reserved.<br>Generated by DocFX.
+      
           </div>
         </div>
       </footer>
     </div>
-    
-    <script type="text/javascript" src="styles/docfx.vendor.js"></script>
+
+    <script type="text/javascript" src="styles/docfx.vendor.min.js"></script>
     <script type="text/javascript" src="styles/docfx.js"></script>
     <script type="text/javascript" src="styles/main.js"></script>
   </body>
