@@ -18,6 +18,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.Metrics;
+using Hazelcast.Sql;
 
 namespace Hazelcast
 {
@@ -55,6 +56,7 @@ namespace Hazelcast
 
             ((IClusterOptions)this).ClientNamePrefix = ((IClusterOptions)other).ClientNamePrefix;
 
+            
             Core = other.Core.Clone();
             Heartbeat = other.Heartbeat.Clone();
             Networking = other.Networking.Clone();
@@ -64,6 +66,7 @@ namespace Hazelcast
             Messaging = other.Messaging.Clone();
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
+            Sql = other.Sql.Clone();
             
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
@@ -75,28 +78,34 @@ namespace Hazelcast
         internal override string SectionName => SectionNameConstant;
 
         /// <summary>
+        /// <summary>
         /// Gets the <see cref="CoreOptions"/>.
         /// </summary>
         /// <returns>The core options.</returns>
         [BinderIgnore(false)]
-        internal CoreOptions Core { get; } = new CoreOptions();
+        internal CoreOptions Core { get; } = new ();
 
+        /// </summary>
         /// <summary>
         /// Gets the <see cref="HazelcastFailoverOptions"/>.
         /// </summary>
         /// <returns>The failover options.</returns>
         [BinderIgnore(false)]
-        internal HazelcastFailoverOptions FailoverOptions { get; set; } = new HazelcastFailoverOptions();
+        internal HazelcastFailoverOptions FailoverOptions { get; set; } = new ();
 
-        /// <summary>
         /// Gets the metrics options.
         /// </summary>
-        public MetricsOptions Metrics { get; } = new MetricsOptions();
+        public MetricsOptions Metrics { get; } = new ();
 
+        /// <summary>
+        /// Gets the <see cref="SqlOptions"/>.
+        /// <summary>
+        public SqlOptions Sql { get; } = new ();      
+        
         /// <summary>
         /// Clones the options.
         /// </summary>
         /// <returns>A deep clone of the options.</returns>
-        internal HazelcastOptions Clone() => new HazelcastOptions(this);
+        internal HazelcastOptions Clone() => new (this);
     }
 }
