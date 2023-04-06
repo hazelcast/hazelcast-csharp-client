@@ -26,7 +26,7 @@ namespace Hazelcast.Models
         /// </summary>
         /// <param name="serviceName">The object service name.</param>
         /// <param name="name">The object name.</param>
-        public DistributedObjectInfo(string serviceName, string name)
+        internal DistributedObjectInfo(string serviceName, string name)
         {
             Name = name;
             ServiceName = serviceName;
