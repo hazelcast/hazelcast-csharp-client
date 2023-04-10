@@ -197,6 +197,7 @@ namespace Hazelcast.Networking
             // options.CertificateName *must* be set to the server certificate name.
             // + if no options.CertificateName is given, .Net 4.8 assigns random numbers which fails on Hazelcast at Java 17+.
             // We set the target host name to connecting address if nothing to have. See issue #800.
+            // TODO: We should obsolete options.CertificateName, and introduce ServerNameIndication instead.
 
             return _options.CertificateName ?? _ipAddress.ToString();
         }
