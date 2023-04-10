@@ -144,6 +144,10 @@ $params = @(
     },
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "confirms excution of sensitive actions"
+    },
+    @{
+        name="copy-files-source"; type = [string];  default = $null;
+        desc = "source folder to be copied"
     }
 )
 
@@ -275,6 +279,10 @@ $actions = @(
     @{ name = "getfwks-json";
        desc = "get frameworks";
        internal = $true; uniq = $true; outputs = $true
+    },
+    @{
+        name = "copy-files";
+        desc= "copies from given --copy-files-source to current solution folder by reflecting the folder structure.";        
     }
 )
 
@@ -346,6 +354,7 @@ if (-not [System.String]::IsNullOrWhiteSpace($options.version)) {
 # set versions and configure
 $serverVersion = $options.server # use specified value by default
 $isSnapshot = $options.server.Contains("SNAPSHOT") -or $options.server -eq "master"
+$isBeta = $options.server.Contains("BETA") 
 $hzRCVersion = "0.8-SNAPSHOT" # use appropriate version
 #$hzRCVersion = "0.5-SNAPSHOT" # for 3.12.x
 
@@ -548,6 +557,12 @@ function determine-server-version {
     # set the actual server version
     # this will be updated below if required
     $script:serverVersion = $version
+
+    # BETA versions should be build and places under temp/lib.
+    if($isBeta){
+        Write-Output "Server: version $version is BETA, using this version"
+        return       
+    }
 
     if (-not $isSnapshot) {
         Write-Output "Server: version $version is not a -SNAPSHOT, using this version"
@@ -812,6 +827,19 @@ function ensure-server-files {
             $found = $true
         }
 
+        # special beta case
+        if ($isBeta) {
+            $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/$v/hazelcast/src/main/resources/hazelcast-default.xml"
+            $dest = "$libDir/hazelcast-$serverVersion.xml"
+            $response = invoke-web-request $url $dest
+            if ($response.StatusCode -ne 200) {
+                if (test-path $dest) { rm $dest }
+                Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
+            }
+            Write-Output "Found hazelcast-default.xml from branch $v"
+            $found = $true
+        }   
+        
         if (-not $found) {
             # try tag eg 'v4.2.1' or 'v4.3'
             $url = "https://raw.githubusercontent.com/hazelcast/hazelcast/v$v/hazelcast/src/main/resources/hazelcast-default.xml"
@@ -985,18 +1013,6 @@ function require-dotnet ( $full ) {
     # frameworks for the test project, as determined by determine-target-frameworks.
 
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
-    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $full $allowPrerelease
-    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $full $allowPrerelease
-    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $full $allowPrerelease
-
-    if ($full -and $result.validSdk -and $frameworks.Contains("net5.0")) {
-        # we found 5.0 and 5.0 is required and ...
-        $v = $result.sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
-        if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
-            Write-Output "  ERR: this script requires a Microsoft .NET 5.0.200+ SDK."
-            $result.validSdks = $false
-        }
-    }
 
     require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
     require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
@@ -2402,7 +2418,7 @@ function hz-verify-version {
 # runs an example
 function hz-run-example {
 
-    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
+    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "net7.0" }
     $ext = ""
     if ($isWindows) { $ext = ".exe" }
     $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
@@ -2560,6 +2576,30 @@ function hz-getfwks-json {
     #else { Die "err: Invalid platform '$platform'" }
 
     ConvertTo-Json -InputObject $frameworks -Compress
+}
+
+## Copies files from given path to project folder with respect to source hierarhcy.
+function hz-copy-files (){
+
+    $source = $options.'copy-files-source'
+
+    if(-not (test-path -path $source)){
+        Die "$($source) is not exist."
+    }
+
+    $currentPath = $slnRoot
+    $count = 0
+    foreach ($file in get-childItem -path $source -recurse){
+
+        if(Test-Path -path $file -pathType Leaf){
+            $subPath = "$($file.Directory)".Replace($source,"")    
+            $dest = join-path $currentPath $subPath $file.name
+            Write-Output "-$($dest)"            
+            copy-item $file -destination $dest
+            if($?){$count += 1}
+        }
+    }
+    Write-Output "$($count) item(s) copied."
 }
 
 # ########
