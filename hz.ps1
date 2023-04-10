@@ -1013,18 +1013,6 @@ function require-dotnet ( $full ) {
     # frameworks for the test project, as determined by determine-target-frameworks.
 
     $result = @{ validSdks = $true; sdkInfos = "  SDKs:" }
-    require-dotnet-version $result $sdks "2.1" $frameworks "netcoreapp2.1" "Core 2.1.x" $full $allowPrerelease
-    require-dotnet-version $result $sdks "3.1" $frameworks "netcoreapp3.1" "Core 3.1.x" $full $allowPrerelease
-    require-dotnet-version $result $sdks "5.0" $frameworks "net5.0" "5.0.x" $full $allowPrerelease
-
-    if ($full -and $result.validSdk -and $frameworks.Contains("net5.0")) {
-        # we found 5.0 and 5.0 is required and ...
-        $v = $result.sdkInfo.Split(" ", [StringSplitOptions]::RemoveEmptyEntries)[0]
-        if ($v -lt "5.0.200") { # 5.0.200+ required for proper reproducible builds
-            Write-Output "  ERR: this script requires a Microsoft .NET 5.0.200+ SDK."
-            $result.validSdks = $false
-        }
-    }
 
     require-dotnet-version $result $sdks "6.0" $frameworks "net6.0" "6.0.x" $true $allowPrerelease
     require-dotnet-version $result $sdks "7.0" $frameworks "net7.0" "7.0.x" $true $allowPrerelease
@@ -2430,7 +2418,7 @@ function hz-verify-version {
 # runs an example
 function hz-run-example {
 
-    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "netcoreapp3.1" }
+    if ($options.framework -ne $null) { $f = $options.framework } else { $f = "net7.0" }
     $ext = ""
     if ($isWindows) { $ext = ".exe" }
     $hx = "$srcDir/Hazelcast.Net.Examples/bin/$($options.configuration)/$f/hx$ext"
