@@ -1,0 +1,197 @@
+= Querying IHMap
+
+The following sections describe how you can access Hazelcast map objects and perform queries on them.
+
+== Map Names
+
+The SQL service exposes `IHMap` objects as tables in the predefined partitioned schema using exact names. This schema is in the SQL service search path so that you can access the `IHMap` objects with or without the schema names.
+
+Schema and table names are case-sensitive; you can access the `employee` map, for example, as `employee` or `partitioned.employee`, but not as `Employee`:
+
+[source,sql]
+----
+SELECT * FROM employee
+SELECT * FROM partitioned.employee
+----
+
+== Field Names
+
+The SQL service resolves fields accessible from the SQL automatically. The service reads the first local entry pair of `IHMap` to construct the list of fields. If `IHMap` does not have local entries on the member where the query is started, then the list of fields cannot be resolved, and an exception is thrown.
+
+Field names are case-sensitive.
+
+=== Key and Value Objects
+
+An `IHMap` entry consists of a key and a value. These are accessible through the `__key` and `this` aliases. The following query returns the keys and values of all entries in a map named `employee`:
+
+[source,sql]
+----
+SELECT __key, this FROM employee
+----
+
+=== Key and Value Fields
+
+You may also access the nested fields of a key or value. The list of exposed fields depends on the serialization format, as described below:
+
+* For xref:serialization:ids.adoc[IdentifiedDataSerializable] objects, you can use public field name or getter names. See xref:hazelcast:sql:querying-maps-sql.adoc[here] for more information.
+* For xref:serialization:portable.adoc[Portable] objects, the fields written with `IPortableWriter` methods are exposed using their exact names.
+
+NOTE: You cannot query JSON fields in SQL. If you want to query JSON, see xref:using-hazelcast:queries.adoc#querying-with-json-strings[Querying with JSON Strings].
+
+For example, consider this portable class:
+
+[source,csharp]
+----
+public class Employee : IPortable
+{
+    int IPortable.ClassId => 123;
+    int IPortable.FactoryId => 345;
+
+    public int Age { get; set; }
+    public string Name { get; set; }
+
+    public void ReadPortable(IPortableReader reader)
+    {
+        Age = reader.ReadInt(nameof(Age));
+        Name = reader.ReadString(nameof(Name));
+    }
+
+    public void WritePortable(IPortableWriter writer)
+    {
+        writer.WriteInt(nameof(Age), Age);
+        writer.WriteString(nameof(Name), Name);
+    }
+}
+----
+
+The SQL service can access the following fields:
+
+* `name` whose SQL type is `VARCHAR`
+* `age` whose SQL type is `INTEGER`
+
+Together with the key and value objects, you may query the following fields from `IHMap<int, Employee>`:
+
+[source,sql]
+----
+SELECT __key, this, Name, Age FROM employee
+----
+
+If both the key and value have fields with the same name, then the field of the value is exposed.
+
+=== "SELECT *" Queries
+
+You may use the `SELECT * FROM <table>` syntax to get all the table fields.
+
+The `__key` and `this` fields are returned by the `SELECT *` queries if they do not have nested fields. For `IHMap<number, Employee>`, the following query does not return the `this` field, because the value has nested fields `Name` and `Age`:
+
+[source,sql]
+----
+-- Returns __key, Name, Age
+SELECT * FROM employee
+----
+
+== Special Characters in Names
+
+If map or field name contains non-alphanumeric characters or starts with a number, you will need to enclose it in double quotes:
+
+[source,csharp]
+----
+SELECT * FROM "my-map"
+SELECT * FROM "2map"
+----
+
+== Enumerating query result
+
+`ISqlService.ExecuteQuery` returns `Hazelcast.Sql.ISqlQueryResult` which provides methods to manage current query:
+
+[source,csharp]
+----
+await using var result = await client.Sql.ExecuteQueryAsync("SELECT Name, Age FROM employee");
+----
+
+It implements `IAsyncEnumerable<SqlRow>` as one-off stream of rows and can be enumerated via regular `foreach` cycle:
+
+[source,csharp]
+----
+await foreach (var row in result)
+    Console.WriteLine(row.GetColumn<string>("Name"));
+----
+
+Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing https://www.nuget.org/packages/System.Linq.Async[System.Linq.Async] package. See {examples}/Sql/SqlLinqEnumerationExample.cs[SqlLinqEnumerationExample] as an example.
+
+NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.
+
+WARNING: Pay attention that filtering and projection are done in local of client in the example. To use LINQ, which runs all query on server, see <<linq-provider, LINQ Provider>>.
+
+== Disposing query result
+
+`ISqlQueryResult` implements `IAsyncDisposable`. Its `DisposeAsync` implementation will make sure to cancel the query and free the used server resources.
+
+Because of this, it is recommended to wrap operations with query into `await using` statement. This will ensure to send the `Cancel` request in case if query is cancelled client-side or exception is thrown before it is completed or all rows are exhausted:
+
+[source,csharp]
+----
+await using (var result = await client.Sql.ExecuteQueryAsync("SELECT * FROM MyMap"))
+{
+    //...
+}
+----
+
+== Cancelling query enumeration
+
+You can cancel enumeration of `ISqlQueryResult`, via the https://docs.microsoft.com/en-us/dotnet/api/system.threading.tasks.taskasyncenumerableextensions.withcancellation[WithCancellation] extension method, see {examples}/Sql/SqlCancellationExample.cs[SqlCancellationExample].
+
+If you're using `System.Linq.Async` package, you can also pass `CancellationToken` to `ToListAsync`, `ToArrayAsync` and related methods.
+
+NOTE: At the moment cancellation doesn't work during server query itself. Cancellation will stop the enumeration before fetching next page or switching to the next row of the current page, but won't stop executing request. This will be fixed in the later versions.
+
+== LINQ Provider
+
+WARNING: LINQ support is currently in BETA stage. There may be breaking changes on further releases.
+
+You can use the programmatic LINQ functions instead of string SQL statements to query over your distributed map.
+To benefit from LINQ support, you should add the `Hazelcast.Net.Linq.Async` package as a dependency. The package is an
+extension of `Hazelcast.Net`; it depends on it. The provider uses Hazelcast .Net Client underneath. Both packages are in NuGet. 
+
+=== Supported LINQ Operations
+
+- Where
+- Select
+
+=== Remarks
+
+LINQ provider translates your expression to SQL statements, and send it to server via SQL Service of the Client. 
+It requires the same steps as SQL. The map should be mapped on the server side, and your property names should match 
+with configured column names on mapping. For primitive types `__key` and `this` keywords will be used. For complex types,
+property name will be used as it is. Also, note that properties should be publicly-settable. Otherwise, the result object cannot be
+reconstructed. To reach the provider, `AsAsyncQueryable()` should be invoked. You can async enumerate over the query object. `ToXXXAsync()`
+extensions are not supported at the moment.
+
+https://docs.hazelcast.com/hazelcast/latest/sql/mapping-to-maps[More details about mapping].
+
+=== Example
+
+[source,csharp]
+----
+var map2 = await client.GetMapAsync<int, string>("simpleMap");
+var query = map2.AsAsyncQueryable() // Access to LINQ provider of the map.
+                .Where(p => p.Key > 10); // Query entries by key is bigger than 10.
+await foreach (var entry in query)
+      Console.WriteLine($"Key: {entry.Key}, Value: {entry.Value}");
+      
+// The SQL statement that will be produced for the query above.      
+// SELECT m0.__key, m0.this FROM simpleMap m0 WHERE (m0.__key > ?)"
+----
+
+Here, `AsAsyncQueryable()` extension method comes with `Hazelcast.Net.Linq.Async`, and it returns the LINQ provider.
+You can add your queries over `query` object. You can execute and consume the query result with `await foreach`. 
+In this context, we did not project over the original type. So, the `entry` will be `HKeyValuePair` struct. 
+You can reach key and value of the entry. 
+
+Execution and data fetching will be invoked when enumeration is started. The provider generate the query and execute it 
+with client's configuration.
+
+NOTE: In the future, we are planning to have options that can configure LINQ provider, such as the cursor size of a SQL query or naming convention of properties.
+
+Visit for other examples to `Hazelcast.Net.Examples` on https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql[GitHub].
+

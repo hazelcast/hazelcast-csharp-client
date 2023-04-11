@@ -1,0 +1,178 @@
+= Quickstart
+:description: This tutorial introduces you to Hazelcast's .NET client. At the end of this tutorial, you'll know how to install the client and connect it a Hazelcast cluster, work with an in-memory storage such as a map, and perform queries using SQL.
+
+Hazelcast .NET client brings the full power of the Hazelcast high-performance, in-memory computing platform to the Microsoft .NET ecosystem.
+The client allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures
+such as distributed maps, queues, topics and more. All, with enterprise level security through SSL and mutual authentication.
+
+.NET client supports most of the Hazelcast features; see https://hazelcast.com/clients/dotnet/#client-features[here].
+
+{description}
+
+In this tutorial, you will complete the following steps:
+
+. Install Hazelcast .NET client
+. Start a Hazelcast cluster with single server
+. Connect the client to the cluster
+
+== Before You Begin
+
+To complete this tutorial, you need the following:
+
+[cols="1a,1a"]
+|===
+|Prerequisites|Useful resources
+
+|&#46;NET Framework and Core
+|Hazelcast .NET client is distributed as a NuGet package which targets .NET Standard versions 2.0 and 2.1.
+It can therefore be used in any application targeting .NET versions that support these .NET Standard versions:
+
+* https://dotnet.microsoft.com/en-us/download/dotnet-framework[.NET Framework] 4.6.2 or 4.8, on Windows
+* https://dotnet.microsoft.com/en-us/download/dotnet[7.0], on Windows, Linux and MacOS
+
+|Docker
+|https://docs.docker.com/get-docker/[Get Docker]
+|===
+
+== Step 1. Installation
+
+The .NET client is distributed via NuGet as a package named https://www.nuget.org/packages/Hazelcast.Net/[Hazelcast.NET].
+You can install it like any other NuGet package:
+
+[tabs] 
+==== 
+NuGet Package Manager:: 
++ 
+--
+[source,shell]
+----
+PM> Install-Package Hazelcast.NET
+----
+--
+
+.NET CLI::
++
+[source,shell]
+----
+dotnet add package Hazelcast.NET
+----
+
+Package Reference::
++
+[source,csharp,subs="attributes+"]
+----
+<PackageReference Include="Hazelcast.NET" Version="{client-full-version}" /> <1>
+----
+<1> Some binding redirects are currently required. Although we try hard to align all our dependencies,
+there are some inconsistencies even within Microsoft's own packages that it is not possible to avoid redirects entirely.
+You can enable `<AutoGenerateBindingRedirects>` in your project file, and Visual Studio should populate your
+application config files with the appropriate binding redirects. The following redirects should be sufficient at the moment:
++
+[source,xml]
+----
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Buffers" publicKeyToken="cc7b13ffcd2ddd51" culture="neutral" />
+    <bindingRedirect oldVersion="0.0.0.0-4.0.3.0" newVersion="4.0.3.0" />
+  </dependentAssembly>
+</assemblyBinding>
+<assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1">
+  <dependentAssembly>
+    <assemblyIdentity name="System.Runtime.CompilerServices.Unsafe" publicKeyToken="b03f5f7f11d50a3a" culture="neutral" />
+   <bindingRedirect oldVersion="0.0.0.0-5.0.0.0" newVersion="5.0.0.0" />
+  </dependentAssembly>
+</assemblyBinding>
+----
+====
+
+
+== Step 2. Start a Hazelcast Cluster
+
+Let's use Docker for this tutorial by executing the following command on a terminal:
+
+[source,shell,subs="attributes+"]
+----
+docker run -it --rm hazelcast/hazelcast:{server-full-version}
+----
+
+This command starts a single-server Hazelcast cluster with default settings on your local machine.
+You should see the server information in the terminal logs similar to the following (note the IP address and port to be used in a later step):
+
+[source,shell]
+----
+Members {size:1, ver:1} [
+	Member [172.17.0.2]:5701 - 603ec325-41ff-413a-8538-896972ba28c2 this
+]
+----
+
+[NOTE]
+====
+As an alternative to Docker, you can also start a Hazelcast cluster using either of the following ways:
+
+* xref:cloud:getting-started.adoc[Hazelcast Cloud]
+* xref:hazelcast:getting-started:quickstart.adoc[Hazelcast CLI]
+* xref:hazelcast:getting-started:get-started-binary.adoc[Binary distributions]
+
+If you want to use Hazelcast Cloud, follow xref:cloud:net-client.adoc[these instructions].
+
+Alternatively, the Hazelcast .NET client https://github.com/hazelcast/hazelcast-csharp-client[repository] on GitHub provides a
+https://docs.microsoft.com/en-us/powershell/scripting/install/installing-powershell?view=powershell-7.2[PowerShell script] which can be used to download and run a Hazelcast test server. For instance, the following downloads and starts a server version {server-full-version}:
+
+[source,shell,subs="attributes+"]
+----
+PS> ./hz.ps1 run-server -server {server-full-version}
+----
+====
+
+== Step 3. Connect to the Cluster
+
+Once the client is installed and a default cluster is started, you're ready to use the Hazelcast client in your .NET application.
+Connect your client to the cluster with this single line:
+
+[source,csharp]
+----
+await using var client = await HazelcastClientFactory.StartNewClientAsync();
+----
+
+This is enough to connect to the cluster you've created in Step 2 with default settings. When you run it, you will see the client is connected to the cluster:
+
+[source,shell,subs="attributes+"]
+----
+info: Hazelcast.Clustering.Heartbeat[0]
+      Heartbeat with 5000ms period and 60000ms timeout
+info: Hazelcast.Clustering.ClusterConnections[0]
+      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 9d158e6 from 127.0.0.1:54260 to member c347caf at 127.0.0.1:5701 of cluster 'dev' (9d4d52e) running version {server-full-version}.
+info: Hazelcast.Clustering.ClusterMembers[0]
+      Members [1] {
+          Id=c347caf Internal=10.5.0.2:5701* Public=<none> Adding
+      }
+info: Hazelcast.Clustering.ClusterConnections[0]
+      Authenticated client 'hz.client_3' (3121b61) running version 5.0.0+d5ffe4 on connection 7b73a18 from 10.5.0.2:54261 to member c347caf at 10.5.0.2:5701 of cluster 'dev' (9d4d52e) running version {server-full-version}.
+----
+
+You can also build the `HazelcastOptions` factory with options and start the client to connect to the cluster with the provided options.
+A simple example is as follows.
+
+[source,csharp]
+----
+var options = HazelcastOptions.Build();
+options.Networking.Addresses.Add("127.0.0.1"); <1>
+options.ClusterName = "dev"; <2>
+options.ClientName = "MyClient"; <3>
+
+await using var client = await HazelcastClientFactory.StartNewClientAsync(options); <4>
+----
+<1> IP addresses of one or more servers in the cluster. For this example, this is the localhost (127.0.0.1) from Step 2 since you've created a single-server cluster on your local machine.
+If you have multiple servers, you can provide their addresses separated by comma. The client uses the addresses provided here to find and connect
+to a running cluster member server. It is still enough to provide only one server's IP address; this initial member then sends the list of other members to the client.
+<2> Name of the Hazelcast cluster. You've started a cluster with default settings in Step 2, which assigns the default name `dev` to the cluster. So you don't need to explicitly provide it. However,
+if you created a cluster with a name different than the default one, you need to provide that cluster name here.
+<3> Name for your client, which is optional. This may be useful when you want to monitor your client on, for example, Hazelcast Management Center to easily spot the name of the client.
+
+See the xref:configuration:connections.adoc[configuration] for more options available for the .NET client.
+
+== Next Steps
+
+See xref:configuration:overview.adoc[here] on how to configure and fine-tune your client.
+
+See also the https://docs.hazelcast.com/tutorials/csharp-client-getting-started[.NET Client Getting Started Tutorial].

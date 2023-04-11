@@ -1,0 +1,98 @@
+= Configuring for Failover (Blue-Green Deployments)
+
+Failover is a cluster backup feature. In case a connected cluster is not reachable anymore, the client uses the
+reconnection strategy and tries to reconnect to the current one. If connection still cannot be established, the
+client tries to connect to the next configured cluster. When failover is successful, the client state changes from
+`Disconnected` to `ClusterChanged`, and then `Connected`. Also, a client might have been blacklisted from a cluster; this forces the
+client to failover to the next configured cluster.
+
+The following is an example initialization of a failover client configured for two clusters.
+
+[source,csharp]
+----
+var options = new HazelcastFailoverOptionsBuilder()
+                .With(fo =>
+                {
+                    fo.TryCount = 2; <1>
+                    
+                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => { <2>
+                        opt.ClusterName = "blue";
+                        opt.Networking.Addresses.Add("CLUSTER_ADDRESS");
+                        opt.Networking.SmartRouting = true;
+                    }).Build());
+                    
+                    fo.Clients.Add(new HazelcastOptionsBuilder().With(opt => { <3>
+                        opt.ClusterName = "green";
+                        opt.Networking.Addresses.Add("CLUSTER_ADDRESS");
+                    }).Build());
+                })
+                .With(args)
+                .Build();
+await using var client = await HazelcastClientFactory.StartNewFailoverClientAsync(options); <4>
+----
+<1> Number of times that the client tries to reconnect to EACH cluster before shutting down.
+In the above example, assuming both clusters are down, the client will try to reconnect four times (first to `blue`, then `green`, then again `blue` and `green`, in this order)
+<2>  Client configuration for the first cluster to be connected. Note that first `HazelcastOptionsBuilder`
+is able to configure to everything on the client, such as `HeartBeat` and `LoadBalancer`. This part is still `HazelcastOptions`. See xref:configuration:sys-props.adoc[Configuration Options Wrap-Up] for more options.
+<3> Client configuration for the alternative cluster. Alternative options are only for connection and authentication.
+Alternative client options cannot override other fields. General configuration should be done in the first client configuration.
+For example, you cannot change the `SmartRouting` in each  client configuration.
+<4> Initialization of the client with failover feature. **Failover client uses different options builder and a different factory method.**
+
+WARNING: The members in the provided clusters must have the **same partition count**. The client cannot failover to a cluster with a different partition count.
+
+As an alternative to the above programmatic approach, you can also configure the failover feature declaratively using `appsettings.json` as shown below.
+
+[source,json]
+----
+{      
+  "hazelcast-failover": { // `hazelcast-failover` is a different configuration block; please do not confuse it with the `hazelcast` block.
+      "tryCount": 2,
+      "clients":[
+          {
+            // name of the first cluster
+            "clusterName": "blue",
+            // networking options
+            "networking": {
+                // IP addresses or hostnames of servers in the cluster
+                "addresses": [
+                    "CLUSTER_ADDRESS"
+                ]
+            }
+          },
+          ///Alternative cluster options, only for connection and authentication options.
+          {
+            // name of the second cluster
+            "clusterName": "green",
+            // networking options
+            "networking": {
+                // alternative cluster, in this case it's cloud with SSL.
+                "cloud": {
+                    "enabled": true,
+                    "discoveryToken": "token"                    
+                }, 
+                "ssl": {
+                    "enabled": true,
+                    "validateCertificateChain": false,
+                    "validateCertificateName": true,
+                    "checkCertificateRevocation": true,
+                    "certificateName": "cert",
+                    "certificatePath": "path",
+                    "certificatePassword": "password",
+                    "protocol": "tls11"
+                },
+            }
+        }
+      ]  
+  }
+}
+----
+
+See xref:configuration:sys-props.adoc[Configuration Options Wrap-Up] for more options.
+
+See xref:hazelcast:clients:java.adoc#blue-green-deployment-and-disaster-recovery[Blue-Green Deployment] for more details about this feature.
+
+
+
+
+

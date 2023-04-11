@@ -1,0 +1,13 @@
+= CP Subsystem
+
+WARNING: The CP SubSystem operates in the unsafe mode by default without the strong consistency guarantee. See xref:cp-subsystem:cp-subsystem.adoc#unsafe-mode[CP Subsystem Unsafe Mode] for more information. You should set a positive number to the CP member count configuration to enable CP Subsystem and use it with the strong consistency guarantee. See xref:cp-subsystem:configuration.adoc[CP Subsystem Configuration] for details.
+
+NOTE: See the original Java client CP Subsystem xref:cp-subsystem:cp-subsystem.adoc[documentation] for more details.
+
+The CP SubSystem is a component of a Hazelcast cluster that builds a strongly consistent layer for a set of distributed data structures. Its APIs can be used for implementing distributed coordination use cases, such as leader election, distributed locking, synchronization, and metadata management. It is accessed via the `IHazelcastClient.CPSubSystem` property. Its data structures are CP with respect to the CAP principle, i.e., they always maintain linearizability and prefer consistency over availability during network partitions. Besides network partitions, the CP SubSystem withstands server and client failures.
+
+Currently, the .NET client CP SubSystem implements the following services:
+
+* xref:using-hazelcast:primitives.adoc#atomiclong[AtomicLong]
+* xref:using-hazelcast:primitives.adoc#atomicreference[AtomicRef]
+* xref:using-hazelcast:primitives.adoc#FencedLock[FencedLock]

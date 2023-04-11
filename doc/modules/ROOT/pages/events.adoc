@@ -1,0 +1,162 @@
+= Events
+
+Events in the Hazelcast .NET Client rely on a handler-based model close to the C# `event` model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. Indeed, the following code has limitations:
+
+[source,csharp]
+----
+thing.Updated += OnThingUpdated;
+thing.Deleted += OnThingDeleted;
+----
+
+Here,
+
+* the operations are distinct, whereas Hazelcast subscriptions can handle multiple events at once
+* the subscription is synchronous, whereas Hazelcast needs to notify the members of the subscription
+* the handlers, e.g., `OnThingUpdated` are synchronous.
+
+== Hazelcast Events
+
+To overcome these limitations, the Hazelcast .NET Client uses the following syntax:
+
+[source,csharp]
+----
+var id = await thing.SubscribeAsync(events => events
+    .Updated(OnThingUpdated)
+    .Deleted(OnThingDeleted));
+----
+
+Here, the handlers can be synchronous, for instance:
+
+[source,csharp]
+----
+private void OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{ 
+    ...
+}
+----
+
+But they can also be asynchronous, for instance:
+
+[source,csharp]
+----
+private async ValueTask OnThingUpdated(Thing sender, ThingUpdatedEventArgs args)
+{
+    await ...
+}
+----
+
+In the example, the two events are subscribed at once and that subscription is represented by the returned `id`, which is a `Guid`. The two events can only be unsubscribed at once too, by passing this `id` back to the `UnsubscribeAsync` method:
+
+[source,csharp]
+----
+await thing.UnsubscribeAsync(id);
+Subscribing involves exchanging messages with the server, and takes time. Where traditional C# happily does:
+
+thing.Updated += DoThis;
+thing.Updated += AlsoDoThis;
+----
+
+It would be much more efficient to group the two handlers:
+
+[source,csharp]
+----
+var id = await thing.SubscribeAsync(events => events
+    .Updated((sender, args) => 
+    {
+        DoThis(sender, args);
+        AlsoDoThis(sender, args);
+    }));
+----
+
+This is also the only way to guarantee the order of execution of the two handlers, as the order in which events trigger is not specified, and should not be relied upon.
+
+== Client Events
+
+The {apiDocBaseUrl}/Hazelcast.IHazelcastClient.html[IHazelcastClient] exposes the following events:
+
+* `StateChanged` triggers when the client state changes
+* `PartitionLost` triggers when a partition is lost
+* `PartitionsUpdated` triggers when the partitions table is updated
+* `MembersUpdated` triggers when the members list is updated
+* `ObjectCreated` triggers when a distributed object is created
+* `ObjectDestroyed` triggers when a distributed object is destroyed
+
+The {apiDocBaseUrl}/Hazelcast.IHazelcastClient.html[IHazelcastClient] directly supports subscribing to events. For instance:
+
+[source,csharp]
+----
+var id = await client.SubscribeAsync(events => events
+    .StateChanged((sender, args) => {
+        System.Console.WriteLine($"New client state: {args.State}");
+    }));
+----
+
+=== StateChanged
+
+This event triggers whenever the state of the client changes. Handles receive an instance of the {apiDocBaseUrl}/Hazelcast.StateChangedEventArgs.html[StateChangedEventArgs] class, which exposes the following property:
+
+* {apiDocBaseUrl}/Hazelcast.StateChangedEventArgs.State.html#Hazelcast_StateChangedEventArgs_State[State]: the new {apiDocBaseUrl}/Hazelcast.ClientState.html[ClientState]
+
+An {apiDocBaseUrl}/Hazelcast.IHazelcastClient.html[IHazelcastClient] instance goes through the following {apiDocBaseUrl}/Hazelcast.ClientState.html[ClientState] states:
+
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Starting[Starting]: the client is starting and has not started to connect to members yet (transition state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Started[Started]: the client has started, and is now trying to connect to a first member (transition state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected[Connected]: the client is connected to at least one member (operational state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Disconnected[Disconnected]: the client has disconnected, due to its last member leaving the cluster, or a network error. Depending on its configuration it will either try to connect again (and transition back to {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Connected[Connected] if successful) or fail and transition to {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown[Shutdown] (transition state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_ClusterChanged[ClusterChanged]: the client switched the cluster, and connected. `Connected` state will be still reached after `ClusterChanged`. It occurs only if failover happens.
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_ShuttingDown[ShuttingDown]: the client has been disposed, i.e., properly requested to shut down, and is shutting down (transition state)
+* {apiDocBaseUrl}/Hazelcast.ClientState.html#Hazelcast_ClientState_Shutdown[Shutdown]: the client has shut down (final state)
+
+=== PartitionLost
+
+This event triggers whenever the server notifies the client that a partition has been lost, usually because a member carrying that partition has left the cluster. Handlers receive an instance of the {apiDocBaseUrl}/Hazelcast.Events.PartitionLostEventArgs.html[PartitionLostEventArgs] class, which exposes the following properties:
+
+* {apiDocBaseUrl}/Hazelcast.Events.PartitionLostEventArgs.PartitionId.html#Hazelcast_Events_PartitionLostEventArgs_PartitionId[PartitionId]: the identifier of the lost partition
+* {apiDocBaseUrl}/Hazelcast.Events.PartitionLostEventArgs.LostBackupCount.html#Hazelcast_Events_PartitionLostEventArgs_LostBackupCount[LostBackupCount]: how many backups were lost
+* {apiDocBaseUrl}/Hazelcast.Events.PartitionLostEventArgs.IsAllReplicasInPartitionLost.html#Hazelcast_Events_PartitionLostEventArgs_IsAllReplicasInPartitionLost[IsAllReplicasInPartitionLost]: whether all replicas were lost
+* {apiDocBaseUrl}/Hazelcast.Events.PartitionLostEventArgs.Member.html#Hazelcast_Events_PartitionLostEventArgs_Member[Member]: the member that was lost
+
+=== PartitionsUpdated
+
+This event triggers whenever the server notifies the client of a new partitions list. This happens when the partitions list changes, but also periodically when the server wants to ensure that clients are aware of partitions. Handlers do not receive any event arguments.
+
+=== MembersUpdated
+
+This event triggers whenever the server notifies the client of a new members list. This happens when members are added or removed from the cluster, but also periodically when the server wants to ensure that clients know about members. Handlers receive an instance of the {apiDocBaseUrl}/Hazelcast.Events.MembersUpdatedEventArgs.html[MembersUpdatedEventArgs] class, which exposes the following properties:
+
+* {apiDocBaseUrl}/Hazelcast.Events.MembersUpdatedEventArgs.AddedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_AddedMembers[AddedMembers]: a collection of {apiDocBaseUrl}/Hazelcast.Models.MemberInfo.html[MemberInfo] representing the members that were added to the cluster
+* {apiDocBaseUrl}/Hazelcast.Events.MembersUpdatedEventArgs.RemovedMembers.html#Hazelcast_Events_MembersUpdatedEventArgs_RemovedMembers[RemovedMembers]: a collection of {apiDocBaseUrl}/Hazelcast.Models.MemberInfo.html[MemberInfo] representing the members that were removed from the cluster
+* {apiDocBaseUrl}/Hazelcast.Events.MembersUpdatedEventArgs.Members.html#Hazelcast_Events_MembersUpdatedEventArgs_Members[Members]: a collection of {apiDocBaseUrl}/Hazelcast.Models.MemberInfo.html[MemberInfo] representing all members in the cluster
+
+=== ObjectCreated
+
+This event triggers whenever the server notifies the client that a new distributed object has been created (for instance, when the server creates a new map named `my-map`). Handlers receive an instance of the {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectCreatedEventArgs.html[DistributedObjectCreatedEventArgs] class, which exposes the following properties:
+
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.ServiceName.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_ServiceName[ServiceName]: the internal Hazelcast service name (for instance, for maps, `hz:impl:mapService`)
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.Name.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_Name[Name]: the name of the created object (for instance, `my-map`)
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.SourceMemberId.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_SourceMemberId[SourceMemberId]: the identifier of the member which triggered the event
+
+=== ObjectDestroyed
+
+This event triggers whenever the server notifies the client that a distributed object has been destroyed (for instance, when the client requests that the server destroys a map named `my-map`). Handlers receive an instance of the {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectDestroyedEventArgs.html[DistributedObjectDestroyedEventArgs] class, which exposes the following properties:
+
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.ServiceName.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_ServiceName[ServiceName]: the internal Hazelcast service name (for instance, for maps, `hz:impl:mapService`)
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.Name.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_Name[Name]: the name of the destroyed object (for instance, `my-map`)
+* {apiDocBaseUrl}/Hazelcast.Events.DistributedObjectLifecycleEventArgs.SourceMemberId.html#Hazelcast_Events_DistributedObjectLifecycleEventArgs_SourceMemberId[SourceMemberId]: the identifier of the member which triggered the event
+
+== Distributed Objects Events
+
+Each type of distributed object exposes events specific to the type. For instance, {apiDocBaseUrl}/Hazelcast.DistributedObjects.IHList-1.html[IHList<T>] exposes the `ItemAdded` event:
+
+[source,csharp]
+----
+var list = await client.GetListAsync("my-list");
+var id = await list.SubscribeAsync(events => events
+    .ItemAdded(async (sender, args) => 
+    {
+        await DoSomethingWithItem(args.Item);
+        await DoSomethingElseWithItem(args.Item);
+    }))
+----
+
+Refer to each distributed object's documentation for details on events.

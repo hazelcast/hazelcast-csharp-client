@@ -1,0 +1,158 @@
+= Development and Contributing
+
+== Sources and Cloning
+
+The source code for Hazelcast .NET is published on GitHub at https://github.com/hazelcast/hazelcast-csharp-client[Hazelcast .NET]. Clone the repository to get the development branch:
+
+[source,bash]
+----
+git clone --recurse-submodules https://github.com/hazelcast/hazelcast-csharp-client.git 
+----
+
+Note that the repository relies on Git submodules, and therefore `--recurse-submodules` is required.
+
+=== Branches
+
+Development of new features takes place in the `master` branch. Maintenance of released versions take place in `X.Y.z` branches, e.g., version `4.1` is maintained in the `4.1.z` branch.
+
+== Building from Source
+
+For day to day development, the solution builds in Visual Studio or Rider. However, it is possible to build it entirely via our custom PowerShell script.
+
+The minimal requirements are:
+
+* PowerShell 6.2+
+* .NET 2.1, 3.1 and 5.0 SDKs
+* Java runtime, if you want to run tests
+
+Visual Studio 2019, or at least the Visual Studio Build Tools 2019, can be downloaded from the Visual Studio https://visualstudio.microsoft.com/[site]. .NET can be downloaded from the https://dotnet.microsoft.com/download[Download .NET] page. You can verify whether .NET Core is installed, and which versions are supported, by running `dotnet --info` in a command window.
+
+PowerShell can be installed on Windows through the https://www.microsoft.com/store/apps/9MZ1SNWT0N5D[Windows Store]; the PowerShell https://microsoft.com/powershell[documentation] describes other means of installation for Windows and the various flavors of Linux.
+
+The https://openjdk.java.net/[OpenJDK] provides open Java JDKs for Windows and Linux.
+
+=== On Windows
+
+For a complete build, start a PowerShell console and build using the `hz.ps1` script:
+
+[source,shell]
+----
+PS> ./hs.ps1 build
+----
+
+See <<build-script,build script>> below for details and arguments.
+
+=== On Linux
+
+For a complete build, from a shell console, use the `hz.sh` script:
+
+[source,shell]
+----
+$ ./hz.sh build
+----
+
+See <<build-script,build script>> below for details and arguments.
+
+Note that `hs.sh` is just a proxy to `hz.ps1`: the actual build actions are always performed by `hz.ps1`, which is common to Windows and Linux.
+
+It is not possible to build the .NET Framework version of the Hazelcast .NET client on Linux, as the .NET Framework is not supported on Linux. All other targets build on Linux. At the moment it is not possible to build the documentation on Linux, as DocFX does not run on .NET Core yet (see https://github.com/dotnet/docfx/issues/138[this issue] for details). The upcoming v3 of DocFX will run on .NET Core.
+
+=== Build Script
+
+The `hz.[hs|ps1]` script accepts options, commands, and command arguments.
+
+[source,shell]
+----
+PS> ./hz.[sh|ps1] [<options>] [<commands>] [<commargs>] [--- <rawargs>]
+----
+
+To list all options and command, run `./hz.[sh|ps1] help`.
+
+Examples of valid usages:
+
+[source,shell]
+----
+./hz.ps1 build                        # builds the code
+./hz.ps1 build,test                   # builds the code and run the tests
+./hz.ps1 -cover test                  # runs the tests with test coverage
+./hz.ps1 test -cover                  # same
+./hz.ps1 set-version -version 1.2.3   # updates the version
+./hz.ps1 run-remote-controller        # runs a remote controller for tests
+./hz.ps1 run-server -server 4.2       # runs version 4.2 of the server
+./hz.ps1 run-example ~Soak1 --- --hazelcast.   # runs an example
+----
+
+== SDK Selection
+
+The `global.json` file at the root of the project contains the following.
+
+[source,json]
+----
+{
+  "sdk": {
+    "allowPrerelease": false
+  }
+}
+----
+
+This ensures that any use of the `dotnet` command actually uses the latest stable release installed on the machine, and avoids any pre-release versions, as these may break the build. Should you want to experiment with pre-releases of the .NET SDK, change `false` to `true` (but do not commit the change!).
+
+For more details, see https://docs.microsoft.com/en-us/dotnet/core/versions/selection[Select the .NET Core version] to use and https://docs.microsoft.com/en-us/dotnet/core/tools/global-json[global.json overview] articles from Microsoft.
+
+== Tools
+
+The code uses C# https://docs.microsoft.com/en-us/dotnet/csharp/language-reference/configure-language-version[version] 8.0 (as per the `src/Directory.Build.props` file) though we plan to migrate to 9.0. The `Hazelcast.Net` package targets netstandard 2.0 and 2.1, and is supported on .NET Framework 4.6.2 and later, .NET Core 2.1 (LTS), .NET Core 3.1 (LTS).
+
+The solution can be opened with Microsoft https://visualstudio.microsoft.com/[Visual Studio 2019] or JetBrains https://www.jetbrains.com/rider/[Rider], but can also be fully built via our custom PowerShell script (see <<building-from-source, Building from Source>>.
+
+The main Hazelcast.Net project (which builds the library) is covered by Microsoft's https://docs.microsoft.com/en-us/visualstudio/code-quality/roslyn-analyzers-overview[Roslyn analyzers] (installed via the https://www.nuget.org/packages/Microsoft.CodeAnalysis.FxCopAnalyzers/[Microsoft.CodeAnalysis.FxCopAnalyzers] NuGet package) which can detect and warn about many code issues. The whole solution is also regularly analyzed with the https://www.ndepend.com/[NDepend] tool, which detects all sorts of anti-patterns (circular dependencies, naming inconsistencies, etc.).
+
+Tests rely on the https://nunit.org/[NUnit] solution. Test coverage is provided by https://www.jetbrains.com/dotcover/[JetBrains dotCover] and results are published http://hazelcast.github.io/hazelcast-csharp-client/latest/cover/index.html[here]. Benchmarks are powered by https://benchmarkdotnet.org/[BenchmarkDotNet].
+
+The client uses the http://github.com/hazelcast/hazelcast-client-protocol/[Hazelcast Open Binary Client Protocol]. The protocol repository is included in the client repository as a Git https://git-scm.com/book/en/v2/Git-Tools-Submodules[submodule] in order to keep track of which exact version of the protocol was
+used to build the codec files in the client.
+
+== FAQ
+
+. Could we drop the Async suffix from all asynchronous methods?
++
+No.
++
+See https://stackoverflow.com/questions/15951774/does-the-use-of-the-async-suffix-in-a-method-name-depend-on-whether-the-async[this] post on StackOverflow, or https://github.com/dotnet/runtime/issues/26908#issuecomment-407181532[this] issue on GitHub, or https://twitter.com/Nick_Craver/status/1296527511585726465[this] tweet by Nick Craver.
++
+We use the `Async` suffix whenever a function returns an async behavior, e.g., `Task` or `ValueTask`, like .NET itself does. The reason for this being that it removes ambiguity and helps stop subtle bugs. For example, say a PR changes this:
++
+[source,csharp]
+----
+public string MyFunc() { ... }
+----
++
+To this:
++
+[source,csharp]
+----
+public Task<string>MyFunc() { ... }
+----
++
+If, elsewhere, someone uses the function:
++
+[source,chsarp]
+----
+var result = MyFunc();
+Console.WriteLine(result);
+----
++
+This will still work. But instead of writing a `string`, it will write a `Task`. And it is hard to see it. Contrast that with changing to:
++
+[source,csharp]
+----
+public Task<string>MyFuncAsync() { ... }
+----
++
+Now, the name change forced a name change at the call site, so the impact will show in a code review. It is a safer, unambiguous version of the change.
+. Can we provide synchronous version of the asynchronous methods?
++
+No.
++
+Async-to-Sync such as `client.StartAsync().Wait()` can cause issues such as blocking, dead-locking, starving the ThreadPool etc. This is tricky, and there is no way we can provide a stable implementation of synchronous methods. We'd rather have them happen in user code.
+

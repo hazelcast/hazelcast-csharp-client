@@ -1,0 +1,188 @@
+= Securing Client Connections
+
+== TLS/SSL
+
+You can use TLS/SSL for connections between the .NET clients and members, and mutual authentication. These security features require Hazelcast IMDG Enterprise edition on the server side.
+
+With TLS/SSL protocol, you can establish an encrypted communication across your cluster with key stores and trust stores:
+
+* A Java `keyStore` is a file that includes a private key and a public certificate.
+* A Java `trustStore` is a file that includes a list of certificates trusted by your application which is named as "certificate authority".
+
+You should set `keyStore` and `trustStore` before starting the members; see xref:hazelcast:security:tls-ssl.adoc[here] for setting them on the server side.
+
+TLS/SSL for the Hazelcast .NET client can be configured using the `SslOptions` class. Let's first give an example of a sample configuration and then go over the configuration options one by one:
+
+[source,csharp]
+----
+    var hazelcastOptions = new HazelcastOptionsBuilder().Build();
+    var sslOptions = hazelcastOptions.Networking.Ssl;
+
+    sslOptions.Enabled = true; <1>
+    sslOptions.ValidateCertificateChain = true; <2>
+    sslOptions.ValidateCertificateName = false; <3>
+    sslOptions.CheckCertificateRevocation = false;
+    sslOptions.CertificateName = "CN or SAN of server certificate";
+    sslOptions.CertificatePath = "client pfx file path";
+    sslOptions.CertificatePassword = "client pfx password";
+    sslOptions.SslProtocol = SslProtocols.Tls12; <4>
+----
+<1> Specifies whether TLS/SSL for the Hazelcast .NET client is enabled/disabled. When this option is set to `true`, TLS/SSL will be configured with respect to the other `SslOptions` options. Setting this option to `false` will result in discarding other `SslOptions` properties. Its default value is `false` (disabled).
+<2> Specifies whether the remote SSL certificate chain validation is enabled/disabled. Its default value is `true` (enabled). If you need to bypass the certificate validation for some reason, you can disable it by setting the value to `false`. Validation is done by .NET and delegated to the operating system, and you need to make sure your server certificate is trusted by your operating system. Please refer to this https://blogs.msdn.microsoft.com/webdev/2017/11/29/configuring-https-in-asp-net-core-across-different-platforms/[blog] for information on how to configure your OS to trust your server certificates.
+<3> Server certificate CN or SAN field can be validated against a value you set into configuration. This option is disabled by default. You can enable by setting it to `true` and providing a name using the `SslOptions.CertificateName` options.
+<4> You can configure the TLS/SSL protocol using this option. Valid options are values of the `System.Security.Authentication.SslProtocols` enum. Depending on your .NET version, below values are valid:
+* `None` : Allows the operating system to choose the best protocol to use.
+* `Ssl2` : SSL 2.0 Protocol. RFC 6176 prohibits the usage of SSL 2.0.
+* `Ssl3` : SSL 3.0 Protocol. RFC 7568 prohibits the usage of SSL 3.0.
+* `Tls` : TLS 1.0 Protocol described in RFC 2246. deprecated.
+* `Tls11` : TLS 1.1 Protocol described in RFC 4346. deprecated.
+* `Tls12`: TLS 1.2 Protocol described in RFC 5246. recommended.
+
+
+Of course these can also be configured via command-line options or environment variables, or via the Hazelcast configuration file; see xref:configuration:overview.adoc[Configuration Overview] for details.
+
+== Mutual Authentication
+
+As explained above, Hazelcast members have key stores used to identify themselves (to other members) and Hazelcast clients have trust stores used to define which members they can trust.
+
+Using mutual authentication, the clients also have their key stores and members have their trust stores so that the members can know which clients they can trust.
+
+To enable mutual authentication, firstly, you need to set the following property on the server side in the `hazelcast.xml` file:
+
+[source,xml]
+----
+<network>
+    <ssl enabled="true">
+        <properties>
+            <property name="javax.net.ssl.mutualAuthentication">REQUIRED</property>
+        </properties>
+    </ssl>
+</network>
+----
+
+You can see the details of setting mutual authentication on the server side xref:hazelcast:security:tls-ssl#mutual-authentication.adoc[here].
+
+On the client side, you have to provide the client certificate and its password if there is one. Here is how you do it:
+
+[source,csharp]
+----
+sslOptions.CertificatePath = "client pfx file path";
+sslOptions.CertificatePassword = "client pfx password";
+----
+
+The provided certificate file should be a PFX file that has private and public keys. The file path should be set with `SslOptions.CertificatePath`. If you choose to set a password to it, you need to provide it to the configuration using the `SslOptions.CertificatePassword` option.
+
+== Kerberos
+
+The Hazelcast .NET client supports Kerberos as an authentication mechanism, on the Windows platform. Kerberos is not supported by the Hazelcast .NET Client on other platforms at the moment. The Hazelcast .NET Client must connect to a server that supports Kerberos authentication: Kerberos is supported by Hazelcast servers starting with version 4.1, as an Enterprise feature.
+
+Kerberos authentication allows Windows clients to transparently authenticate, with permissions being managed through server-level integration to LDAP-based authorization.
+
+=== Client Configuration
+
+Kerberos support for the Hazelcast .NET Client is provided in a separate https://www.nuget.org/packages/Hazelcast.Net.Win32/[Hazelcast.Net.Win32] NuGet package, which needs to be installed alongside the main https://www.nuget.org/packages/Hazelcast.Net/[Hazelcast.Net] package.
+
+Kerberos authentication can be activated via the configuration file declaratively, or programmatically. In both cases, you will need to know the Service Principal Name (SPN) corresponding to the Hazelcast cluster, which is `hz/cluster1234` in the below examples.
+
+[tabs]
+====
+Programmatic:: 
++ 
+-- 
+[source,csharp]
+----
+HazelcastOptions options;
+options.Authentication.ConfigureKerberosCredentials("hz/cluster1234");
+----
+--
+
+Declarative::
++
+[source,xml]
+----
+"hazelcast": {
+    "authentication": {
+        "kerberos": {
+            "spn": "hz/cluster1234"
+        }
+    }
+}
+----
+====
+
+In both cases, the Hazelcast .NET Client transparently negotiates authentication with the server.
+
+=== Server Configuration
+
+Server security configuration is documented in the xref:hazelcast:security:overview.adoc[Security] section of the Hazelcast Platform documentation, and Kerberos authentication is documented in the xref:hazelcast:security:security-realms.adoc[Security Realms] sub-section.
+
+The Kerberos support in Hazelcast has 2 configuration parts: identity and authentication. The identity part is responsible for retrieving the service ticket from Kerberos KDC (Key Distribution Center). The authentication part verifies the service tickets.
+
+The following XML fragment can be used as an example of a working server configuration. However, it is recommended to read the completed documentation in order to fully understand the security aspects of Kerberos.
+
+[source,xml]
+----
+<realm name="kerberosRealm">
+    <authentication>
+        <kerberos>
+            <security-realm>krb5Acceptor</security-realm>
+
+            <!-- relax flags check because .NET tokens have too many things -->
+            <relax-flags-check>true</relax-flags-check>
+
+            <!-- permissions via LDAP -->
+            <ldap>
+                <!-- LDAP server -->
+                <url>ldap://server19.hz.local/</url>
+
+                <!-- LDAP auth -->
+                <system-user-dn>CN=Administrateur,CN=Users,DC=hz,DC=local</system-user-dn>
+                <system-user-password>******</system-user-password>
+
+                <!-- no need to auth the user, it's been done already by Kerberos -->
+                <skip-authentication>true</skip-authentication>
+
+                <!-- find the user in AD (ensure UPN is set in AD!) -->
+                <user-context>CN=Users,DC=hz,DC=local</user-context>
+                <user-search-scope>subtree</user-search-scope>
+                <user-filter>(userPrincipalName={login})</user-filter>
+
+                <!-- map one attribute to a role -->
+                <!--
+                <role-mapping-mode>attribute</role-mapping-mode>
+                <role-mapping-attribute>cn</role-mapping-attribute>
+                -->
+
+                <!-- map roles via groups -->
+                <role-mapping-mode>reverse</role-mapping-mode>
+                <role-context>CN=Users,DC=hz,DC=local</role-context>
+                <role-search-scope>subtree</role-search-scope>
+                <role-filter>(member={memberDN})</role-filter>
+                <role-recursion-max-depth>4</role-recursion-max-depth>
+                <role-name-attribute>cn</role-name-attribute>
+            </ldap>
+        </kerberos>
+    </authentication>
+</realm>
+<realm name="krb5Acceptor">
+    <authentication>
+        <jaas>
+            <login-module class-name="com.sun.security.auth.module.Krb5LoginModule" usage="REQUIRED">
+                <properties>
+                    <property name="isInitiator">false</property>
+                    <property name="useTicketCache">false</property>
+                    <property name="doNotPrompt">true</property>
+                    <property name="useKeyTab">true</property>
+                    <property name="storeKey">true</property>
+
+                    <!-- the service principal -->
+                    <property name="principal">hz/cluster1234@HZ.LOCAL</property>
+
+                    <!-- on Windows, be sure to use the proper Windows paths with backslashes, not slashes! -->
+                    <property name="keyTab">path\to\hzcluster1234.keytab</property>
+                </properties>
+            </login-module>
+        </jaas>
+    </authentication>
+</realm>
+----

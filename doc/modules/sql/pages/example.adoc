@@ -1,0 +1,17 @@
+= Example Query using SQL
+
+This SQL query returns map entries whose keys are more than 2:
+
+[source,csharp]
+----
+await using var map = await client.GetMapAsync<int, string>("MyMap");
+await client.Sql.ExecuteCommandAsync($"CREATE OR REPLACE MAPPING {map.Name} TYPE IMap OPTIONS ('keyFormat'='int', 'valueFormat'='varchar')");
+await map.SetAllAsync(Enumerable.Range(1, 5).ToDictionary(v => v, v => $"val-{v}"));
+
+await using var result = await client.Sql.ExecuteQueryAsync($"SELECT __key, this FROM {map.Name} WHERE __key > 2");
+
+await foreach (var row in result)
+      Console.WriteLine($"{row.GetKey<int>()}: {row.GetValue<string>()}");
+----
+
+NOTE: The column value is deserialized but NOT cached. Each column is deserialized on demand. Avoid getting the value of a column multiple times. Cache it in a local variable.

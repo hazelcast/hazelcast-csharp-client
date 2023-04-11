@@ -1,0 +1,68 @@
+= Serialization Overview
+
+Serialization is the process of converting an object into a stream of bytes to store the object in memory, a file or database, or transmit it through network. Its main purpose is to save the state of an object in order to be able to recreate it when needed. The reverse process is called deserialization. Hazelcast offers you its own native serialization methods. You will see these methods throughout the section.
+
+== Default Types
+
+Hazelcast serializes all your objects before sending them to the server. The built-in primitive types are serialized natively and you cannot override this behavior. The following table is the conversion of types for Java server side.
+
+[%header,cols="2a,2a"]
+|===
+| &#46;NET
+| Java
+
+|`bool`
+|`Boolean`
+
+|`byte`
+|`Byte`
+
+|`char`
+|`Character`
+
+|`short`
+|`Short`
+
+|`int`
+|`Integer`
+
+|`long`
+|`Long`
+
+|`float`
+|`Float`
+
+|`double`
+|`Double`
+
+|`string`
+|`String`
+
+|`DateTime`
+|`java.util.Date`
+
+|`System.Numeric.BigInteger`
+|`java.math.BigInteger`
+
+|`Guid`
+|`java.util.UUID`
+|===
+
+Arrays of the above types can be serialized as `bool[]`, `byte[]`, `short[]`, `int[]`, `long[]`, `float[]`, `double[]`, `char[]`, and `string[]`.
+
+== Serialization Priority
+
+When Hazelcast .NET client serializes an object into `IData`:
+
+. It first checks whether the object is null.
+. If the above check fails, then Hazelcast checks if it is an instance of `Hazelcast.Serialization.IIdentifiedDataSerializable`.
+. If the above check fails, then Hazelcast checks if it is an instance of `Hazelcast.Serialization.IPortable`.
+. If the above check fails, then Hazelcast checks if it is an instance of one of the default types (see above default types).
+. If the above check fails, then Hazelcast looks for a user-specified Custom Serializer, i.e., an implementation of `IByteArraySerializer<T>` or `IStreamSerializer<T>`. Custom serializer is searched using the input object's class and its parent class up to `Object`. If parent class search fails, all interfaces implemented by the class are also checked (note that the order in which these interfaces are checked is not specified).
+. If the above check fails, then Hazelcast checks if it is `Serializable` ( `Type.IsSerializable` ) and a Global Serializer is not registered with CLR serialization Override feature.
+. If the above check fails, Hazelcast will use the registered Global Serializer if one exists.
+
+Note that, at the moment, there is no built-in automatic support for `IEnumerable<T>` or `T[]` beyond the default types documented above.
+
+
+

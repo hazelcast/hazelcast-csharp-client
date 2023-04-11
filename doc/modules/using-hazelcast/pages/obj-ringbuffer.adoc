@@ -1,0 +1,38 @@
+= HRingBuffer
+
+`HRingBuffer` is a distributed Ringbuffer corresponding to a server-side Ringbuffer. Content in a 
+Ringbuffer is stored in a ring-like structure. A Ringbuffer has a capacity so it won't grow beyond that capacity and endanger the stability of the system. If that capacity is exceeded, the oldest item in the Ringbuffer is overwritten.
+
+The Ringbuffer behavior can be configured on the server: see its xref:hazelcast:data-structures:ringbuffer.adoc[documentation] for the complete details.
+
+== Defining Ringbuffers
+
+Ringbuffers are fully identified by their type and unique name, regardless of the types specified for the buffered items. In other words, an `HRingBuffer<string>` and `HRingBuffer<int>` named with the same name are backed by the same cluster structure. Obviously, referring to a Ringbuffer with types other than the expected types can have unspecified consequences (probably, serialization errors) and is not recommended.
+
+The items type can be just about any valid .NET type, provided that it can be (de)serialized by the Hazelcast .NET Client (xref:serialization:overview.adoc[Serialization documentation]). It does not necessarily need to be (de)serializable by the cluster, as long as the cluster does not need to handle them as objects, and can treat them as plain binary blobs. As soon as the cluster needs to handle the objects themselves, the types must also be (de)serializable by the cluster.
+
+== Creating & Destroying Ringbuffers
+
+A Ringbuffer is obtained from the Hazelcast .NET Client, and is created on-demand: if a Ringbuffer with the specified name already exists on the cluster, it is returned, otherwise it is created on the cluster. For instance:
+
+[source,csharp]
+----
+var ringbuffer = await client.GetRingBufferAsync<string>("my-ring-buffer");
+----
+
+Ringbuffers should be disposed after usage, in order to release their resources. Note that this only releases client-side resources, but the actual data remain available on the cluster for further usage. In order to wipe the Ringbuffer and its data entirely from the cluster, it needs to be destroyed:
+
+[source,csharp]
+----
+await ringbuffer.DestroyAsync();
+----
+
+== Using Ringbuffers
+
+The `HRingBuffer` structure is completely documented in the associated {apiDocBaseUrl}/Hazelcast.DistributedObjects.IHRingBuffer-1.html[`IHRingBuffer<TItem>`] reference documentation. It provides methods to manipulate items, such as:
+
+* `AddAsync(item)` adds an item to the Ringbuffer
+* `GetCapacityAsync()` gets the total capacity of the Ringbuffer
+* `GetRemainingCapacityAsync()` gets the remaining capacity of the Ringbuffer
+* `ReadOneAsync()` reads one item from the Ringbuffer
+
