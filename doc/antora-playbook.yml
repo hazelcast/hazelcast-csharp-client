@@ -1,5 +1,3 @@
-
-   
 site:
   title: Documentation
   url: https://silly-valkyrie-e996d9.netlify.app/
@@ -11,9 +9,9 @@ site:
     docsearch_index: 'prod_hazelcast_docs'
 content:
   sources: 
-  - url: .
+  - url: ..
     branches: HEAD
-    start_path: doc
+    start_path: ./doc
 ui: 
   bundle:
     url: https://github.com/hazelcast/hazelcast-docs-ui/releases/latest/download/ui-bundle.zip
@@ -28,4 +26,4 @@ asciidoc:
     # Variables used in the docs
     page-survey: https://www.surveymonkey.co.uk/r/NYGJNF9
   extensions:
-    - doc/docs-tabs-library/tabs-block.js
+    - ./docs-tabs-library/tabs-block.js

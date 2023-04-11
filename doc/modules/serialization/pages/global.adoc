@@ -48,7 +48,7 @@ hazelcastOptions.Serialization.GlobalSerializer.Creator =
 
 Declarative::
 +
-[source,xml]
+[source,json]
 ----
 {
     "hazelcast": {

@@ -13,6 +13,7 @@
 
 * Serialization
 ** xref:serialization:overview.adoc[Overview]
+** xref:serialization:compact.adoc[Compact]
 ** xref:serialization:ids.adoc[IdentifiedDataSerializable]
 ** xref:serialization:portable.adoc[Portable]
 ** xref:serialization:custom.adoc[Custom]
@@ -39,6 +40,11 @@
 * SQL
 include::sql:partial$nav.adoc[]
 
+* Extensions
+** xref:extensions:overview.adoc[]
+** xref:extensions:dependency-injection.adoc[]
+** xref:extensions:caching.adoc[]
+
 * xref:canceling.adoc[]
 * xref:events.adoc[]
 * xref:examples.adoc[]
@@ -46,4 +52,6 @@ include::sql:partial$nav.adoc[]
 * xref:development.adoc[]
 
 * Release Notes
-** xref:release-notes.adoc[]
+** xref:release-notes:releases.adoc[Releases]
+*** xref:release-notes:5-2-1.adoc[5.2.1]
+*** xref:release-notes:5-2-0.adoc[5.2.0]

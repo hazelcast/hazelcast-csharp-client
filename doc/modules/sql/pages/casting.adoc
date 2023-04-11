@@ -23,7 +23,7 @@ In the example below, `Age` column is of type `INTEGER`. We pass parameters as s
 
 [source,csharp]
 ----
-await using var result = client.Sql.ExecuteQuery(
+await using var result = await client.Sql.ExecuteQueryAsync(
     $"SELECT Name FROM {map.Name} WHERE Age > ? AND Age < ?",
     (short)20, (short)30
 );
@@ -35,7 +35,7 @@ In the example below, `Age` column is of type `INTEGER`. We pass parameters as s
 
 [source,csharp]
 ----
-await using var result = client.Sql.ExecuteQuery(
+await using var result = await client.Sql.ExecuteQueryAsync(
     $"SELECT Name FROM {map.Name} WHERE Age > CAST(? AS INTEGER) AND Age < CAST(? AS INTEGER)",
     "20", "30"
 );

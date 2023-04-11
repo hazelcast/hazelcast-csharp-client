@@ -8,11 +8,11 @@ site:
     docsearch_api: 'ef7bd9485eafbd75d6e8425949eda1f5'
     docsearch_index: 'prod_hazelcast_docs'
 content:
-  sources: 
-  - url: .
+  sources:
+  - url: ..
     branches: HEAD
-    start_path: doc
-ui: 
+    start_path: ./doc
+ui:
   bundle:
     url: https://github.com/hazelcast/hazelcast-docs-ui/releases/latest/download/ui-bundle.zip
     snapshot: true
@@ -25,4 +25,4 @@ asciidoc:
     idseparator: '-'
     # Variables used in the docs
   extensions:
-    - doc/docs-tabs-library/tabs-block.js
+    - docs-tabs-library/tabs-block.js

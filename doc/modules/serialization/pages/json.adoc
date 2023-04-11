@@ -1,4 +1,4 @@
-= JSON Serialization
+= HazelcastJsonValue Serialization
 
 You can use the JSON formatted strings as objects in Hazelcast cluster. Creating JSON objects in the cluster does not require any server side coding and hence you can just send a JSON formatted string object to the cluster and query these objects by fields.
 
