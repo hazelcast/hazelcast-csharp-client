@@ -1,8 +1,8 @@
 # Migrating from v3
 
-Version 4 of the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the C# language. 
+Starting with version 4, the Hazelcast .NEt client has been massively refactored in order to benefit from the asynchronous features of the .NET platform and the C# language.
 
-For instance, the low-level networking stack relies on Microsoft's high-performance [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) which is used, for instance, to power the Kestrel web server. It is constantly improved, as it is the foundation of all high-performance networking in .NET Core 3.x and above.
+The low-level networking stack, for instance, now relies on Microsoft's high-performance [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) which powers the Kestrel web server. It is constantly improved, and is the foundation of all high-performance networking in modern .NET.
 
 Although the *concepts* have not changed much, the version 4 API is quite different from version 3. This page documents the most important differences.
 
