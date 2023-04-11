@@ -26,4 +26,4 @@ asciidoc:
     # Variables used in the docs
     page-survey: https://www.surveymonkey.co.uk/r/NYGJNF9
   extensions:
-    - doc/docs-tabs-library/tabs-block.js
+    - ./docs-tabs-library/tabs-block.js
