@@ -7,7 +7,7 @@ on:
   push:
     paths:
       - 'doc/**'
-    branches: [ main]
+    branches: [master]
 
 jobs:
   dispatch:

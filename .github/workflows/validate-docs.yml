@@ -6,7 +6,7 @@ on:
   pull_request:
     paths:
       - 'doc/**'
-    branches: [main, '*.z']
+    branches: [master, '*.z']
   workflow_dispatch:
 
 jobs:
