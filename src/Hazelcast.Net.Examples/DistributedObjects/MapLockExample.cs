@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 
 namespace Hazelcast.Examples.DistributedObjects
 {
@@ -54,9 +56,6 @@ namespace Hazelcast.Examples.DistributedObjects
             // add value
             await map.SetAsync("key", "value");
 
-            // TODO: enable this again once we figure out AsyncContext
-            /*
-
             // locking in the current context
             await map.LockAsync("key");
 
@@ -66,9 +65,10 @@ namespace Hazelcast.Examples.DistributedObjects
             // simply running the code here would break the example, as it would run
             // with the same context, i.e. the context that has the lock, so we need
             // to start it with a new context
-            //
-            var task = AsyncContext.RunWithNew(async () =>
+
+            var task = Task.Run(async () =>
             {
+                var _ = AsyncContext.New();
                 await map.SetAsync("key", "value1");
                 Console.WriteLine("Put new value");
             });
@@ -90,7 +90,6 @@ namespace Hazelcast.Examples.DistributedObjects
 
             // report
             Console.WriteLine("New value (should be 'value1'): " + await map.GetAsync("key")); // should be value1
-            */
 
             // destroy the map
             await client.DestroyAsync(map);

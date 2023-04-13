@@ -14,8 +14,12 @@
 
 using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Hazelcast.Serialization;
+using Newtonsoft.Json;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace Hazelcast.Examples.WebSite
 {
@@ -26,25 +30,16 @@ namespace Hazelcast.Examples.WebSite
         public void Dispose()
         { }
 
-        // TODO: this example should avoid using the obsolete BinaryFormatter
-
         public object Read(IObjectDataInput input)
         {
-#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
-            var formatter = new BinaryFormatter();
-            var stream = new MemoryStream(input.ReadByteArray());
-            return formatter.Deserialize(stream);
-#pragma warning restore SYSLIB0011
+            // You can use your own serialization method(Binary, json, xml etc.). Current example is Json.
+            return JsonSerializer.Deserialize<object>(input.ReadByteArray());
         }
 
         public void Write(IObjectDataOutput output, object obj)
         {
-#pragma warning disable SYSLIB0011 // BinaryFormatter is obsolete and should not be used
-            var formatter = new BinaryFormatter();
-            var stream = new MemoryStream();
-            formatter.Serialize(stream, obj);
-#pragma warning restore SYSLIB0011
-            output.WriteByteArray(stream.GetBuffer());
+            var jsonData = JsonSerializer.SerializeToUtf8Bytes(obj,new JsonSerializerOptions(){DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull});
+            output.WriteByteArray(jsonData);
         }
     }
 
