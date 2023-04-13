@@ -2,7 +2,9 @@
 
 On the server (member) side, Hazelcast uses a unique number to identify the owner of locks, and historically that number has always been the thread unique identifier. As a consequence, the locking model in previous versions of the Hazelcast client closely match the thread-based model that .NET provides with, for instance, the `lock` statement.
 
-Due to the systematic usage of `async`/`await` asynchronous patterns, the code for one operation can be executed by many different threads (basically, each time an operation is put on hold by an `await` statement, it can resume its execution on any other thread). Therefore, using the actual thread identifier as a "lock owner" identifier is not possible anymore.
+Due to the systematic usage of asynchronous patterns, the code for one operation can be executed by many different threads (basically, each time an operation is put on hold by an `await` statement, it can resume its execution on any other thread). Therefore, using the actual thread identifier as a "lock owner" identifier is not possible anymore.
+
+In the current versions of the client, the "lock owner" is represented by a `LockContext`, --- BUT THEN HOW DOES IT WORK ---
 
 In the current versions of the client, the "lock owner" is represented by an `AsyncContext`, a class which relies upon the .NET built-in `AsyncLocal<T>` type to maintain values that flow with the asynchronous operation, i.e. are transferred to the new thread when an operation resumes after awaiting. Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation. The `AsyncContext` uses a sequential number to ensure the uniqueness of the identifier.
 
