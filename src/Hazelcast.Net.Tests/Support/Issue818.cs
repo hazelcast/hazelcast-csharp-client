@@ -10,27 +10,36 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Networking;
+using Hazelcast.Testing;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Support;
 
 [TestFixture]
-public class Issue818
+public class Issue818 : SingleMemberClientRemoteTestBase
 {
     [Test]
     [Timeout(30_000)]
     public async Task Reproduce()
     {
         var options = new HazelcastOptionsBuilder()
-            .With((config, options) => options.Networking.Addresses.Add("127.0.0.1"))
-            .With((config, options) => options.Networking.ReconnectMode = ReconnectMode.ReconnectSync)
-            .With((config, options) => options.Networking.SmartRouting = true)
-            .With((config, options) => options.Networking.ShuffleAddresses = true)
-            .With((config, options) => options.Networking.RedoOperations = true)
+            //.With((config, options) => options.Networking.Addresses.Add("127.0.0.1"))
+            //.With((config, options) => options.Networking.ReconnectMode = ReconnectMode.ReconnectSync)
+            //.With((config, options) => options.Networking.SmartRouting = true)
+            //.With((config, options) => options.Networking.ShuffleAddresses = true)
+            //.With((config, options) => options.Networking.RedoOperations = true)
             .With(o =>
             {
-                o.LoggerFactory.Creator = () => LoggerFactory.Create(loggingBuilder =>
+                o.Networking.Addresses.Add("127.0.0.1");
+                o.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
+                o.Networking.SmartRouting = true;
+                o.Networking.ShuffleAddresses = true;
+                o.Networking.RedoOperations = true;
+
+                o.ClusterName = RcCluster.Id;
+
+                o.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(loggingBuilder =>
                     loggingBuilder
                         .SetMinimumLevel(LogLevel.Trace)
                         .AddConsole());
