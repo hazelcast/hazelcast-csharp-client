@@ -53,6 +53,11 @@ references:
   href: 5.1.0/doc/index.html
 - uid: api-index-5-1-0
   href: 5.1.0/api/index.html
+- uid: doc-index-5-1-1
+  name: 5.1.1
+  href: 5.1.1/doc/index.html
+- uid: api-index-5-1-1
+  href: 5.1.1/api/index.html
 - uid: doc-index-5-2-0
   name: 5.2.0
   href: 5.2.0/doc/index.html

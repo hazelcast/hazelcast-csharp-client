@@ -2294,7 +2294,7 @@ function hz-serve-docs {
 
     Write-Output "Documentation server is running..."
     Write-Output "Press ENTER to stop"
-    &docfx serve "$tmpDir/docfx.out"
+    &dotnet docfx serve "$tmpDir/docfx.out"
 }
 
 # packs a NuGet package
