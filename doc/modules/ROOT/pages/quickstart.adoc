@@ -1,5 +1,5 @@
 = Quickstart
-:description: This tutorial introduces you to Hazelcast's .NET client. At the end of this tutorial, you'll know how to install the client and connect it a Hazelcast cluster, work with an in-memory storage such as a map, and perform queries using SQL.
+:description: This tutorial introduces you to Hazelcast's .NET client. At the end of this tutorial, you'll know how to install the client, and connect it a Hazelcast cluster.
 
 Hazelcast .NET client brings the full power of the Hazelcast high-performance, in-memory computing platform to the Microsoft .NET ecosystem.
 The client allows you to elastically scale your .NET caches at high read speeds, to access all of Hazelcast data structures
@@ -158,14 +158,13 @@ A simple example is as follows.
 [source,csharp]
 ----
 var options = HazelcastOptions.Build();
-options.Networking.Addresses.Add("127.0.0.1"); <1>
+options.Networking.Addresses.Add("127.0.0.1:5701"); <1>
 options.ClusterName = "dev"; <2>
 options.ClientName = "MyClient"; <3>
 
 await using var client = await HazelcastClientFactory.StartNewClientAsync(options); <4>
 ----
-<1> IP addresses of one or more servers in the cluster. For this example, this is the localhost (127.0.0.1) from Step 2 since you've created a single-server cluster on your local machine.
-If you have multiple servers, you can provide their addresses separated by comma. The client uses the addresses provided here to find and connect
+<1> IP addresses of one or more servers in the cluster. For this example, this is the localhost (127.0.0.1:5701) from Step 2 since you've created a single-server cluster on your local machine. You can use the same method to provide different ports of the server, or different server addresses, e.g., `options.Networking.Addresses.Add("127.0.0.1:5702")` or `options.Networking.Addresses.Add("127.0.0.2:5701")`. The client uses the addresses provided here to find and connect
 to a running cluster member server. It is still enough to provide only one server's IP address; this initial member then sends the list of other members to the client.
 <2> Name of the Hazelcast cluster. You've started a cluster with default settings in Step 2, which assigns the default name `dev` to the cluster. So you don't need to explicitly provide it. However,
 if you created a cluster with a name different than the default one, you need to provide that cluster name here.

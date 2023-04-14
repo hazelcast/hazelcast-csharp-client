@@ -2,8 +2,6 @@
 
 The SQL service provided by Hazelcast .NET client allows you to query data stored in `IHMap` declaratively.
 
-WARNING: The SQL feature is currently in BETA. The compatibility between versions is not guaranteed. API might change between versions without notice. While in beta, the SQL feature is tested against the same version of Hazelcast Platform, i.e., {server-full-version}.
-
 == Expressions
 
 Hazelcast SQL supports logical predicates, `IS` predicates, comparison operators, mathematical functions and operators, string functions, and special functions. See xref:hazelcast:sql:functions-and-operators.adoc[Expressions, Functions and Operators] in Hazelcast Platform documentation for all possible operations.

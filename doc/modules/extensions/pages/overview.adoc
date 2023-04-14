@@ -4,3 +4,4 @@ In addition to the core Hazelcast .NET Client package, the following extensions 
 
 * xref:extensions:dependency-injection.adoc[Hazelcast.Net.DependencyInjection] provides utilities to simplify the usage of the Hazelcast .NET Client in applications which rely on dependency injection, following the standard Microsoft best practices for managing options.
 * xref:extensions:caching.adoc[Hazelcast.Net.Caching] provides an `IDistributedCache` implementation based upon the Hazelcast .NET Client.
+* xref:sql:querying-map.adoc#linq-provider[LINQ Provider] to process your statements into SQL statements.

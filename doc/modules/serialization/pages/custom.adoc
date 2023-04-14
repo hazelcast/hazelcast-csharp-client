@@ -48,7 +48,9 @@ Note that the serializer `TypeId` must be unique as Hazelcast will use it to loo
 ==== 
 Programmatic:: 
 + 
--- 
+--
+[source,csharp]
+----
 var hazelcastOptions = new HazelcastOptionsBuilder().Build();
 hazelcastOptions.Serialization.Serializers.Add(
     new SerializerOptions {

@@ -35,8 +35,7 @@ You may also access the nested fields of a key or value. The list of exposed fie
 
 * For xref:serialization:ids.adoc[IdentifiedDataSerializable] objects, you can use public field name or getter names. See xref:hazelcast:sql:querying-maps-sql.adoc[here] for more information.
 * For xref:serialization:portable.adoc[Portable] objects, the fields written with `IPortableWriter` methods are exposed using their exact names.
-
-NOTE: You cannot query JSON fields in SQL. If you want to query JSON, see xref:using-hazelcast:queries.adoc#querying-with-json-strings[Querying with JSON Strings].
+* For JSON objects, the fields can be accessed with `JSON_QUERY(..)` or `JSON_VALUE(..)`.
 
 For example, consider this portable class:
 
