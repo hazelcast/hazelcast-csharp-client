@@ -9,7 +9,7 @@ When a `CancellationToken` is passed to a method that triggers a server-side ope
 * If the token is cancelled before the request has been sent, the request is not sent
 * If the token is cancelled while retrying to send a request, the retry is aborted
 
-Otherwise, the request message is sent as a whole non-cancellable operation, and the client then waits for a response message from the server. It the token is cancelled during this wait, the wait is aborted and the response message will be ignored when it is received.
+Otherwise, the request message is sent as a whole non-cancellable operation, and the client then waits for a response message from the server. If the token is cancelled during this wait, the wait is aborted and the response message will be ignored when it is received.
 
 WARNING: Note however that, since the request message has been sent, the resulting server state is unspecified: the operation may have been executed and is not rolled back.
 
