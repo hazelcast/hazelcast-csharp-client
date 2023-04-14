@@ -89,10 +89,10 @@ namespace Hazelcast.Examples.Client
                 .WithConsoleLogger();
 
             var exampleOptions = new ExampleOptions();
-            optionsBuilder = optionsBuilder.Bind("hazelcast:example", exampleOptions);
-
-            // .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
-            // .WithDefault(o => { o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000; })
+            optionsBuilder = optionsBuilder.Bind("hazelcast:example", exampleOptions)
+                .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
+                .WithDefault(o => { o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000; });
+            
             if (args.All(x => x != "Logging:LogLevel:Hazelcast"))
                 optionsBuilder = optionsBuilder.With("Logging:LogLevel:Hazelcast", "Debug");
 
@@ -103,8 +103,6 @@ namespace Hazelcast.Examples.Client
 
             // the name of the map (needed for NearCache options)
             var mapName = "map_" + Guid.NewGuid().ToString("N").Substring(0, 7);
-
-            options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
 
             // enable NearCache for our map so that we send NearCache metrics
             options.NearCaches[mapName] = new NearCacheOptions
