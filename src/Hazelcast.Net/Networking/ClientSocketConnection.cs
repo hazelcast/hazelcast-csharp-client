@@ -93,7 +93,7 @@ namespace Hazelcast.Networking
 #pragma warning restore CA2000
             if (_sslOptions.Enabled)
             {
-                stream = await new SslLayer(_sslOptions, _loggerFactory).GetStreamAsync(stream).CfAwait();
+                stream = await new SslLayer(_sslOptions, _endpoint.Address ,_loggerFactory).GetStreamAsync(stream).CfAwait();
             }
 
             // wire the pipe

@@ -33,6 +33,7 @@ namespace Hazelcast.Networking
 
         private readonly SslOptions _options;
         private readonly ILogger _logger;
+        private readonly IPAddress _ipAddress;
 
         static SslLayer()
         {
@@ -51,9 +52,10 @@ namespace Hazelcast.Networking
             return p == null || !(bool)p.GetValue(null);
         }
 
-        public SslLayer(SslOptions options, ILoggerFactory loggerFactory)
+        public SslLayer(SslOptions options, IPAddress ipAddress, ILoggerFactory loggerFactory)
         {
             _options = options ?? throw new ArgumentNullException(nameof(options));
+            _ipAddress = ipAddress ?? throw new ArgumentNullException(nameof(ipAddress));
             _logger = loggerFactory?.CreateLogger<SslLayer>() ?? throw new ArgumentNullException(nameof(loggerFactory));
         }
 
@@ -67,11 +69,7 @@ namespace Hazelcast.Networking
 
             var clientCertificates = GetClientCertificatesOrDefault();
 
-            // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
-            // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
-            // options.CertificateName *must* be set to the server certificate name.
-
-            var targetHost = _options.CertificateName ?? "";
+            var targetHost = GetTargetHostNameOrDefault();
             _logger.LogDebug("TargetHost: {TargetHost}", targetHost);
 
             // _options.Protocol is 'None' by default
@@ -189,6 +187,19 @@ namespace Hazelcast.Networking
             }
 
             return validation;
+        }
+
+        // Methodized for testing. 
+        public string GetTargetHostNameOrDefault()
+        {
+            // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
+            // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
+            // options.CertificateName *must* be set to the server certificate name.
+            // + if no options.CertificateName is given, .Net 4.8 assigns random numbers which fails on Hazelcast at Java 17+.
+            // We set the target host name to connecting address if nothing to have. See issue #800.
+            // TODO: We should obsolete options.CertificateName, and introduce ServerNameIndication instead.
+
+            return _options.CertificateName ?? _ipAddress.ToString();
         }
     }
 }
