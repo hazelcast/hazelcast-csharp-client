@@ -131,7 +131,9 @@ Connect your client to the cluster with this single line:
 
 [source,csharp]
 ----
-await using var client = await HazelcastClientFactory.StartNewClientAsync();
+var options = new HazelcastOptions();
+options.Networking.Addresses.Add("127.0.0.1:5701");
+var client = await HazelcastClientFactory.StartNewClientAsync(options);
 ----
 
 This is enough to connect to the cluster you've created in Step 2 with default settings. When you run it, you will see the client is connected to the cluster:
