@@ -5,7 +5,7 @@
   "author": ".NET Team",
   "license": "ISC",
   "scripts": {
-    "build": "antora --to-dir docs --fetch antora-playbook.yml",
+    "build": "antora --to-dir doc --fetch antora-playbook.yml",
     "build-local": "antora --to-dir test --fetch antora-playbook-local.yml",
     "check-links-local": "antora --fetch --to-dir test --log-level=error --log-failure-level=error --extension=@jcahills/antora-link-checker check-links-playbook.yml",
     "serve": "serve test",
