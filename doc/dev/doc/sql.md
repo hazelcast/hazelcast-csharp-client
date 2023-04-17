@@ -175,7 +175,8 @@ await foreach (var row in result)
 Using LINQ over `IAsyncEnumerable<T>` is also possible but requires installing [System.Linq.Async](https://www.nuget.org/packages/System.Linq.Async) package. See [SqlLinqEnumerationExample](https://github.com/hazelcast/hazelcast-csharp-client/tree/master/src/Hazelcast.Net.Examples/Sql/SqlLinqEnumerationExample.cs) as an example.
 
 > **NOTE: Obtained result is not reusable as `IAsyncEnumerable<SqlRow>`. It will never restart enumeration but continue where previous one finished.**
-> [!Warning] - Give attention that filtering and projection is done in local of client in the example. To use LINQ which runs all query on server, please see [LINQ Provider](linq.md).
+> [!Warning] 
+> Give attention that filtering and projection is done in local of client in the example. To use LINQ which runs all query on server, please see [LINQ Provider](extensions/linq.md).
 
 ### Disposing query result
 
