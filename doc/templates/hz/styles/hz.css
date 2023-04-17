@@ -154,7 +154,9 @@ table.table-bordered.hz-welcome {
 }
 
 table.table-bordered.hz-welcome td {
+  width: 33%;
   padding: 4px 4px 16px 4px;
+  border: 16px solid white;
   border-bottom: 1px solid black;
 }
 
