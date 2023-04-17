@@ -5,7 +5,7 @@ content:
   sources: 
   - url: .
     branches: HEAD
-    start_path: ./doc/content
+    start_path: ./doc
   - url: https://github.com/hazelcast/management-center-docs
     branches: [main]
     start_path: docs
