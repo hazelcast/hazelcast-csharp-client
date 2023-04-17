@@ -7,12 +7,14 @@
   "scripts": {
     "build": "antora --to-dir doc --fetch antora-playbook.yml",
     "build-local": "antora --to-dir test --fetch antora-playbook-local.yml",
+    "check-links-local": "antora --fetch --to-dir test --log-level=error --log-failure-level=error --extension=@jcahills/antora-link-checker check-links-playbook.yml",
     "serve": "serve test",
     "expose": "ngrok http 5000"
   },
   "devDependencies": {
     "@antora/cli": "^3.1.1",
     "@antora/site-generator": "^3.1.1",
+    "@jcahills/antora-link-checker": "^1.0.1",
     "ngrok": "^3.3.0",
     "serve": "^11.3.2",
     "@asciidoctor/core": "^2.0.0",
