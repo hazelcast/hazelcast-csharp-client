@@ -4,7 +4,7 @@ Starting with version 4, the Hazelcast .NET client has been massively refactored
 
 For instance, the low-level networking stack now relies on Microsoft's high-performance [System.IO.Pipelines](https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines) which also powers the Kestrel web server. It is constantly improved, and is the foundation of all high-performance networking in modern .NET.
 
-Unfortunately, the move from synchronous to asynchronous coding patterns impacts the client API in large ways. Although the Hazelcast *concepts* have not changed, they are exposed in a quite different API. This document proposes to introduce you to the new API and serve as a companion on your migration path.
+Unfortunately, the move from synchronous to asynchronous coding patterns impacts the client API in large ways. Although the Hazelcast *concepts* have not changed, they are exposed in a quite different API. This document proposes to introduce you to the new API and serve as a companion on your migration path from version 3 to more recent versions (as of this writing, version 5).
 
 ## Configuring a client instance
 
@@ -155,27 +155,23 @@ The [logging](logging.md) page provides instructions on how to register Microsof
 
 ### Locking
 
-Previous versions of the Hazelcast .NET Client attached locks to threads, in a way similar to the thread-based model that .NET provides with, for instance, the `lock` statement. Due to the systematic usage of asynchronous patterns, this is not applicable anymore, and is replaced with a new model based upon a `LockContext` class. Every operation that involves locks require such a context, and the lock is *owned* by the context.
+Previous versions of the Hazelcast .NET Client attached locks to threads, in a way similar to the thread-based model that .NET provides with, for instance, the `lock` statement. Due to the systematic usage of asynchronous patterns, this is not applicable anymore. For locks that were available in version 3, i.e. map locks, the Hazelcast .NET client introduces an `AsyncContext` class, which represents the lock ownership, and flows with async operations. i.e. are transferred to the new thread when an operation resumes after awaiting. Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation. The `AsyncContext` uses a sequential number to ensure the uniqueness of the identifier.
 
+Starting a new task does *not* necessarily begin a new context. Contexts are created explicitly, with a `using (AsyncContext.New())` pattern. The whole block executes with a new context, which flows to any task started within the block. For instance:
 ```csharp
-// get a CP subsystem lock object
-var lockObject = await client.CPSubsystem.GetLockAsync("lock");
+// executes in the same, current context
+await DoSomethingAsync(...);
 
-// create a context
-var context = new LockContext();
-
-// lock the lock object, perform work, then unlock
-// attempts at locking the object for another context would fail
-await lockObject.LockAsync(context);
-// ...
-await lockObject.UnlockAsync(context);
+using (AsyncContext.New())
+{
+    // executes in a new context
+    await DoSomethingAsync(...);
+}
 ```
 
-Refer to the [Locking](locking.md) page for details.
+On the other hand, [fenced locks](distributed-objects/fencedlock.md), which are part of the [CP subsystem](cpsubsystem.md) and were introduced with version 4, use a different and explicit pattern. They are documented on the [Locking](locking.md) page which has more details on locking patterns.
 
-TODO: ?? map locks ??
-
-## Events
+### Events
 
 In previous versions, the Hazelcast .NET Client use *listeners* to handle events. The following code, from the version 3 documentation, shows how to register a listener that would receive notifications whenever an entry is added to a map:
 ```csharp
