@@ -7,6 +7,12 @@
       "commands": [
         "jb"
       ]
+    },
+    "docfx": {
+      "version": "2.64.0",
+      "commands": [
+        "docfx"
+      ]
     }
   }
 }
