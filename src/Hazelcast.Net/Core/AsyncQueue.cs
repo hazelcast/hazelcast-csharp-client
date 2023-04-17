@@ -143,7 +143,7 @@ namespace Hazelcast.Core
                     return new ValueTask<bool>(false);
 
                 // create the waiting task
-                _waiting = new TaskCompletionSource<bool>();
+                _waiting = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
                 _reg = cancellationToken.Register(() => _waiting.TrySetCanceled());
                 return new ValueTask<bool>(_waiting.Task);
             }
