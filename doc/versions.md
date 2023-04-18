@@ -7,7 +7,7 @@ Hazelcast .NET brings the full power of the [Hazelcast](https://hazelcast.com) h
 The following table defines the supported .NET versions for the various Hazelcast .NET Client versions.  
 Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET 5.0+ run on Windows, Linux and MacOS.
 
-|Version|.NET Framework 4.5-4.6.1|.NET Framework 4.6.2-4.8|.NET Core 2.1|.NET Core 3.1 (LTS)|.NET 5.0|.NET 6.0 (LTS)|.NET 7.0|
+|Version|.NET Framework<br/>4.5-4.6.1|.NET Framework<br/>4.6.2-4.8|.NET Core<br/>2.1|.NET Core<br/>3.1 (LTS)|.NET<br/>5.0|.NET<br/>6.0 (LTS)|.NET<br/>7.0|
 |-|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
 |5.2|No|Yes|No|**No** (note)|**No** (note)|Yes|**Yes**|
 |5.1|No|Yes|No|Yes|Yes|**Yes**|No|
@@ -31,7 +31,7 @@ Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET
 
 ### Previous
 
-<prevdoc/>
+<prevdoc></prevdoc>
 * 5.1.0 [general documentation](xref:doc-index-5-1-0) and [API reference](xref:api-index-5-1-0)
 * 5.0.1 [general documentation](xref:doc-index-5-0-1) and [API reference](xref:api-index-5-0-1)
 * 5.0.0 [general documentation](xref:doc-index-5-0-0) and [API reference](xref:api-index-5-0-0)

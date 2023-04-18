@@ -14,16 +14,15 @@
 
 using System.Collections.Generic;
 
-namespace Hazelcast.Net.DocAsCode
+namespace Hazelcast.DocAsCode.Build;
+
+public static class Extensions
 {
-    public static class Extensions
+    public static bool TryGetValue<T>(this Dictionary<string, object> dictionary, string key, out T value)
     {
-        public static bool TryGetValue<T>(this Dictionary<string, object> dictionary, string key, out T value)
-        {
-            value = default;
-            if (!dictionary.TryGetValue(key, out var obj) || !(obj is T v)) return false;
-            value = v;
-            return true;
-        }
+        value = default;
+        if (!dictionary.TryGetValue(key, out object obj) || obj is not T v) return false;
+        value = v;
+        return true;
     }
 }
