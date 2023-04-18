@@ -127,16 +127,16 @@
   </tbody>
 </table>
 <h5 id="Hazelcast_Serialization_IGenericRecordBuilder_SetGenericRecord_System_String_Hazelcast_Serialization_IGenericRecord__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>It is only legal to set a generic record object produced by the same
-type of builder. For instance, a compact generic record can only accept a
-compact generic record. Trying to set a different kind of generic record
-results in a exception.</p>
-<p>It is legal to set the field again only when the builder is created with
-<a class="xref" href="Hazelcast.Serialization.IGenericRecord.NewBuilderWithClone.html#Hazelcast_Serialization_IGenericRecord_NewBuilderWithClone">NewBuilderWithClone()</a>; it is otherwise illegal
-to set to the same field twice.</p>
-<p>This method allows nested structures; subclasses should also be
-created as <a class="xref" href="Hazelcast.Serialization.IGenericRecord.html">IGenericRecord</a> of the same nature of the nesting one.
-I.e. compact records can only nest compact records.
+<div class="markdown level1 remarks"> <p>It is only legal to set a generic record object produced by the same
+ type of builder. For instance, a compact generic record can only accept a
+ compact generic record. Trying to set a different kind of generic record
+ results in a exception.</p>
+ <p>It is legal to set the field again only when the builder is created with
+ <a class="xref" href="Hazelcast.Serialization.IGenericRecord.NewBuilderWithClone.html#Hazelcast_Serialization_IGenericRecord_NewBuilderWithClone">NewBuilderWithClone()</a>; it is otherwise illegal
+ to set to the same field twice.</p>
+ <p>This method allows nested structures; subclasses should also be
+ created as <a class="xref" href="Hazelcast.Serialization.IGenericRecord.html">IGenericRecord</a> of the same nature of the nesting one.
+ I.e. compact records can only nest compact records.
 </p>
 </div>
 <h5 class="exceptions">Exceptions</h5>
@@ -145,7 +145,7 @@ I.e. compact records can only nest compact records.
     <tr>
       <td class="hz-one-third"><a class="xref" href="Hazelcast.Serialization.SerializationException.html">SerializationException</a></td>
       <td><p>The build has been initialized with a
-schema, and <code data-dev-comment-type="paramref" class="paramref">fieldname</code> is not the name of field of that schema, or
+schema, and <code class="paramref">fieldname</code> is not the name of field of that schema, or
 the type of the field does not match the specified value, or the field value is set
 multiple times.</p>
 </td>

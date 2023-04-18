@@ -136,7 +136,7 @@ If the batch is empty, the call is ignored.
 When the collection is not empty, the content is copied into a different data-structure. This means that:</p>
 <ol>
 <li>after this call completes, the collection can be re-used.</li>
-<li>the collection doesn&apos;t need to be serializable</li>
+<li>the collection doesn't need to be serializable</li>
 </ol>
 If the collection is larger than the capacity of the ringbuffer, then the items that were written first will
 be overwritten. Therefor this call will not block.

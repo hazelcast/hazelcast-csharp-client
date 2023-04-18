@@ -143,7 +143,7 @@ is not available anymore and a
 <see cref="!:StaleSequenceException"></see>
 is thrown.
 A Ringbuffer currently is not a distributed data-structure. So all data is stored in a single partition; comparable to the
-IQueue implementation. But we&apos;ll provide an option to partition the data in the near future.
+IQueue implementation. But we'll provide an option to partition the data in the near future.
 A Ringbuffer can be used in a similar way as a queue, but one of the key differences is that a queue.take is destructive,
 meaning that only 1 thread is able to take an item. A ringbuffer.read is not destructive, so you can have multiple threads
 reading the same item multiple times.
@@ -206,7 +206,7 @@ the ttl</li>
 </ol>
 The reason that FAIL exist is to give the opportunity to obey the ttl. If blocking behavior is required,
 this can be implemented using retrying in combination with a exponential backoff. Example:
-<pre><code>int sleepMs = 100;
+<pre><code class="lang-csharp">int sleepMs = 100;
 for (; ; ) {
 long result = ringbuffer.AddAsync(item, OverflowPolicy.Fail).Result;
 if (result != -1) {

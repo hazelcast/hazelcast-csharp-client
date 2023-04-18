@@ -82,23 +82,110 @@
             <article class="content wrap" id="_content" data-uid="">
 <h1 id="migrating-from-v3">Migrating from v3</h1>
 
-<p>Version 4 of the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the C# language.</p>
-<p>For instance, the low-level networking stack relies on Microsoft's high-performance <a href="https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines">System.IO.Pipelines</a> which is used, for instance, to power the Kestrel web server. It is constantly improved, as it is the foundation of all high-performance networking in .NET Core 3.x and above.</p>
-<p>Although the <em>concepts</em> have not changed much, the version 4 API is quite different from version 3. This page documents the most important differences.</p>
-<h2 id="threading-async-and-tasks">Threading, Async and Tasks</h2>
-<p>Threading has been greatly simplified and now entirely relies on the async/await pattern. In the current version of the code, all tasks run on the default task scheduler, and there is no limit on, for instance, the amount of concurrent tasks. All tasks run on the default .NET ThreadPool and the default Task scheduler. Depending on feedback, we could consider using custom Task schedulers and/or thread pools.</p>
-<h2 id="configuration">Configuration</h2>
-<p>In previous versions, the Hazelcast .NET client used to rely on a custom configuration solution based upon an XML file.</p>
-<p>The Hazelcast .NET client now uses the configuration abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration">Microsoft.Extensions.Configuration</a> namespace. These abstractions provide built-in support for command-line arguments, environment variables, configuration files or in-memory configuration. For instance, they automatically support one configuration value being supplied via the configuration file, and/or a command-line argument, and/or an environment variable. They automatically parse configuration files into their strongly-typed (classes) counterpart.</p>
-<p>This also means that the same configuration mechanism can be used by the various libraries used in users' applications.</p>
-<p>The most important consequence for users is that the current XML configuration file is replaced with a very similar JSON file.</p>
-<p>Refer to the <a href="configuration.html">Configuration</a> page for details on configuration.</p>
-<h2 id="logging">Logging</h2>
-<p>In previous versions, the Hazelcast .NET client used to rely on a custom logging solution.</p>
+<p>Starting with version 4, the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the .NET platform and the C# language.</p>
+<p>For instance, the low-level networking stack now relies on Microsoft's high-performance <a href="https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines">System.IO.Pipelines</a> which also powers the Kestrel web server. It is constantly improved, and is the foundation of all high-performance networking in modern .NET.</p>
+<p>Unfortunately, the move from synchronous to asynchronous coding patterns impacts the client API in large ways. Although the Hazelcast <em>concepts</em> have not changed, they are exposed in a quite different API. This document proposes to introduce you to the new API and serve as a companion on your migration path from version 3 to more recent versions (as of this writing, version 5).</p>
+<h2 id="configuring-a-client-instance">Configuring a client instance</h2>
+<p>Up to version 3, the Hazelcast .NET client provided two ways of configuration. You could load a declarative configuration from an XML file:</p>
+<pre><code>var client = HazelcastClient.NewHazelcastClient(&quot;path/to/config.xml&quot;):
+</code></pre>
+<p>Alternatively, you could create a <code>ClientConfig</code> object and programmatically configure the client:</p>
+<pre><code>var config = new ClientConfig();
+config.GetNetworkConfig().AddAddress(&quot;127.0.0.1:5701);
+var client = HazelcastClient.NewHazelcastClient(config);
+</code></pre>
+<p>Starting with version 4, the Hazelcast .NET client relies on the configuration abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration">Microsoft.Extensions.Configuration</a> namespace. These abstractions provide built-in support for command-line arguments, environment variables, configuration files or in-memory configuration. They allow us to merge these various sources (see the <a href="configuration/sources.html">configuration sources</a> page for a complete reference).</p>
+<p>The v3 configuration XML file is replaced with a very similar JSON file, and this file is only one of the configuration <em>sources</em>. The <code>ClientConfig</code> object is replaced by a <code>HazelcastOptions</code> object, which is built by the <code>HazelcastOptionsBuilder</code> object. And, creating a new client instance always require options. Thus, the declarative and programmatic ways are merged into one:</p>
+<pre><code>var options = new HazelcastOptionsBuilder().Build();
+var client = await HazelcastClientFactory.StartNewClientAsync(options);
+</code></pre>
+<p>The <code>HazelcastOptionsBuilder</code> merges the various sources, including the default .NET <code>appsettings.json</code> file or the specific <code>hazelcast.json</code> file. It also provide ways to register command-line arguments, or programmatically alter the options. For instance, the following code passes the command-line <code>args</code> to the <code>HazelcastOptionsBuilder</code>, and provides a configuration delegate to add addresses to the networking configuration. The final, resulting <code>HazelcastOptions</code> will be the result of the merge of all the sources. This allows you to, for instance, use a default JSON file <em>but</em> override some values via an environment variable.</p>
+<pre><code>var hazelcastOptions = new HazelcastOptionsBuilder
+    .WithArgs(args)
+    .With(options =&gt; options.Networking.Addresses.Add(&quot;127.0.0.1:5701&quot;))
+    .Build();
+var client = await HazelcastClientFactory.StartNewClientAsync(hazelcastOptions);
+</code></pre>
+<p>The cluster name could be provided via the JSON file:</p>
+<pre><code class="lang-json">{
+    &quot;hazelcast&quot;: {
+        &quot;clusterName&quot;: &quot;dev&quot;
+    }
+}
+</code></pre>
+<p>Or, via a command-line option:</p>
+<pre><code class="lang-sh">program --hazelcast:clusterName=dev
+</code></pre>
+<p>Or, via an environment variable:</p>
+<pre><code class="lang-sh">set hazelcast__clusterName=dev
+</code></pre>
+<p>The <a href="configuration.html">configuration</a> sections has more details about configuration.</p>
+<h2 id="starting-a-client-instance">Starting a client instance</h2>
+<p>Once options have been gathered, one can start a client instance. In version 3 one would do:</p>
+<pre><code class="lang-csharp">var client = HazelcastClient.NewHazelcastClient(config);
+</code></pre>
+<p>The new syntax is quite similar:</p>
+<pre><code class="lang-csharp">var client = await HazelcastClientFactory.StartNewClientAsync(hazelcastOptions);
+</code></pre>
+<p>However, there is a <em>big</em> difference, introduced by the <code>await</code> keyword: the <code>StartNewClientAsync</code> is asynchronous. It does not return an <code>IHazelcastClient</code> instance, but a <code>Task&lt;IHazelcastClient&gt;</code> which represents the asynchronous creation of the client and its connection to the cluster, and will complete once the client is connected.</p>
+<p>The major benefit is that the current thread will not be blocked by the client network I/Os. The drawback, when migrating from v3, is that asynchronous code is viral. If you used to create a client in a normal method:</p>
+<pre><code class="lang-csharp">public void DoSomething()
+{
+    var config = ...;
+    var client = HazelcastClient.NewHazelcastClient(config);
+    // use the client
+}
+</code></pre>
+<p>You cannot simply replace your code with the new syntax, as the compiler will simply reject code such as:</p>
+<pre><code class="lang-csharp">public void DoSomething()
+{
+    var options = ...;
+    var client = await HazelcastClientFactory.StartNewClientAsync(hazelcastOptions);
+    // use the client
+}
+</code></pre>
+<p>Your own method has been infected by asynchronous code, and now needs to become asynchronous too:</p>
+<pre><code class="lang-csharp">public async Task DoSomething()
+{
+    var options = ...;
+    var client = await HazelcastClientFactory.StartNewClientAsync(hazelcastOptions);
+    // use the client
+}
+</code></pre>
+<p>And, of course, this will bubble up to every place in your application. If you are not familiar with asynchronous programming in .NET, you may want to read <a href="https://learn.microsoft.com/en-us/dotnet/csharp/asynchronous-programming/async-scenarios">these pages</a> from Microsoft.</p>
+<h3 id="the-asynchronous-impedance-mismatch">The (a)synchronous impedance mismatch</h3>
+<p>If you Google around, you will find patterns that try to solve the (a)synchronous impedance mismatch. In other words, to let you break the asynchronous chain at some point, so that you can use the new asynchronous client in a code base that is mostly synchronous. You will probably end up with code such as:</p>
+<pre><code class="lang-csharp">public void DoSomething()
+{
+    var options = ...;
+    var client = HazelcastClientFactory.StartNewClientAsync(hazelcastOptions).GetAwaiter().GetResult();
+    // use the client
+}
+</code></pre>
+<p>While this code <em>can</em> work, it keeps the current thread busy and can lead to deadlocks. We recommend you avoid using such patterns unless you fully understand the implications and the underlying mechanisms of .NET asynchronous code.</p>
+<h2 id="using-a-client-instance">Using a client instance</h2>
+<p>Once a client instance has been obtained, using it is not much different from version 3, except that everything is asynchronous. For instance, this code taken from the version 3 documentation would add a new value to a map and then read the value back:</p>
+<pre><code class="lang-csharp">var map = client.GetMap&lt;string, string&gt;(&quot;my-distributed-map&quot;);
+map.Put(&quot;key&quot;, &quot;value&quot;);
+var value = map.Get(&quot;key&quot;);
+</code></pre>
+<p>The new API counterpart is:</p>
+<pre><code class="lang-csharp">var map = await client.GetMapAsync&lt;string, string&gt;(&quot;my-distributed-map&quot;);
+await map.PutAsync(&quot;key&quot;, &quot;value&quot;);
+var value = await map.GetAsync(&quot;key&quot;);
+</code></pre>
+<p>As you can see, using the client is <em>generally</em> quite similar to version 3, apart from the asynchronous difference.</p>
+<p>The following sections describes the aspects that have changed and require more attention.</p>
+<h2 id="concepts">Concepts</h2>
+<h3 id="logging">Logging</h3>
+<p>In previous versions, the Hazelcast .NET client relied on a custom built-in logging solution.</p>
 <p>The Hazelcast .NET client now uses the logging abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/logging">Microsoft.Extensions.Logging</a> namespace. These abstractions come with a range of providers to log to the console, and other various destinations. In addition, a variety of third-party products (such as <a href="https://serilog.net/">Serilog</a>) support complex logging patterns and more destinations (to the filesystem, the Cloud, etc).</p>
 <p>This also means that the same logging mechanism can be used by the various libraries used in users' applications.</p>
-<h2 id="locking">Locking</h2>
-<p>Previous versions of the Hazelcast .NET Client attached locks to threads, in a way similar to the thread-based model that .NET provides with, for instance, the <code>lock</code> statement. Due to the systematic usage of <code>async</code>/<code>await</code> asynchronous patterns, this is not applicable anymore, and is replaced with a new model based upon an <code>AsyncContext</code> class. In order to execute work in a new context (which would correspond to executing work on a different thread for previous versions), one has to use a new context:</p>
+<p>Note that, by default, the Hazelcast .NET client does <em>not</em> provide an actual logging provider. This mean that, by default, you will <em>not</em> see any log output, neither to the console nor to any file. To actually <em>see</em> the log, which can contain some precious troubleshooting information, your application will need to register the logging provider of your choice, via the configuration options.</p>
+<p>The <a href="logging.html">logging</a> page provides instructions on how to register Microsoft's own console logging provider, which will allows you to see the Hazelcast .NET client's log in the output console. It also provides pointers to advanced providers that can write to files or Azure App Services.</p>
+<h3 id="locking">Locking</h3>
+<p>Previous versions of the Hazelcast .NET Client attached locks to threads, in a way similar to the thread-based model that .NET provides with, for instance, the <code>lock</code> statement. Due to the systematic usage of asynchronous patterns, this is not applicable anymore. For locks that were available in version 3, i.e. map locks, the Hazelcast .NET client introduces an <code>AsyncContext</code> class, which represents the lock ownership, and flows with async operations. i.e. are transferred to the new thread when an operation resumes after awaiting. Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation. The <code>AsyncContext</code> uses a sequential number to ensure the uniqueness of the identifier.</p>
+<p>Starting a new task does <em>not</em> necessarily begin a new context. Contexts are created explicitly, with a <code>using (AsyncContext.New())</code> pattern. The whole block executes with a new context, which flows to any task started within the block. For instance:</p>
 <pre><code class="lang-csharp">// executes in the same, current context
 await DoSomethingAsync(...);
 
@@ -108,25 +195,28 @@ using (AsyncContext.New())
     await DoSomethingAsync(...);
 }
 </code></pre>
-<p>Refer to the <a href="locking.html">Locking</a> page for details.</p>
-<h2 id="events">Events</h2>
-<p>In previous versions, the Hazelcast .NET Client use <em>listeners</em> to handle events. Current versions move to a handler-based model closer to the C# <code>event</code> model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. For instance:</p>
-<pre><code class="lang-csharp">// subscribe
-var id = await client.SubscribeAsync(events =&gt; events
-    .MembersUpdated((sender, args) =&gt; HandleMembersUpdated(sender, args)));
-
-// handle
-private void HandleMembersUpdated(IHazelcastClient client, MembersUpdatedEventArgs args)
+<p>On the other hand, <a href="distributed-objects/fencedlock.html">fenced locks</a>, which are part of the <a href="cpsubsystem.html">CP subsystem</a> and were introduced with version 4, use a different and explicit pattern. They are documented on the <a href="locking.html">Locking</a> page which has more details on locking patterns.</p>
+<h3 id="events">Events</h3>
+<p>In previous versions, the Hazelcast .NET Client use <em>listeners</em> to handle events. The following code, from the version 3 documentation, shows how to register a listener that would receive notifications whenever an entry is added to a map:</p>
+<pre><code class="lang-csharp">public class MyEntryAddedListener&lt;K, V&gt; : EntryAddedListener&lt;K, V&gt;
 {
-    ...
+    public void EntryAdded(EntryEvent&lt;K, V&gt; entryEvent)
+    {
+        Console.WriteLine(entryEvent);
+    }
 }
 
-// unsubscribe
-await client.UnsubscribeAsync(id);
+map.AddEntryListener(new MyEntryAddedListener&lt;string, string&gt;());
+</code></pre>
+<p>Current versions move to a handler-based model closer to the C# <code>event</code> model, though with a different syntax for adding and removing handlers, due to the asynchronous nature of these operations. The above code thus becomes:</p>
+<pre><code class="lang-csharp">private void OnEntryAdded(IHMap&lt;string, string&gt; map, MapEntryAddedEventArgs&lt;string, string&gt; args)
+{
+    // do things...
+}
+
+await map.SubscribeAsync(events =&gt; events.EntryAdded(OnEntryAdded));
 </code></pre>
 <p>Refer to the <a href="events.html">Events</a> page for details.</p>
-<h2 id="dependency-injection">Dependency Injection</h2>
-<p>Dependency injection is becoming more and more common in large .NET applications. The Hazelcast .NET client includes support (via a separate assembly and NuGet package) for the dependency injection abstractions proposed by the <a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection">Microsoft.Extensions.DependencyInjection</a> namespace. This allows users to register Hazelcast objects in a dependency injection container.</p>
 </article>
           </div>
 

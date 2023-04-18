@@ -112,7 +112,7 @@ Defaults to <code>4096</code>.</p>
 </table>
 <h5 id="Hazelcast_Sql_SqlStatementOptions_CursorBufferSize_remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>
-When a statement is submitted for execution, a <span class="xref">Hazelcast.Sql.SqlQueryResult</span> is returned as a result. When rows are ready to be
+When a statement is submitted for execution, a <a class="xref" href="Hazelcast.Sql.SqlQueryResult.html">SqlQueryResult</a> is returned as a result. When rows are ready to be
 consumed, they are put into an internal buffer of the cursor. This parameter defines the maximum number of rows in
 that buffer. When the threshold is reached, the backpressure mechanism will slow down the execution, possibly to a
 complete halt, to prevent out-of-memory.

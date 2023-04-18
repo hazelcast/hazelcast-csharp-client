@@ -128,7 +128,7 @@
 </table>
 <h5 id="Hazelcast_HazelcastClientFactory_StartNewFailoverClientAsync_System_Action_Hazelcast_HazelcastFailoverOptions__System_Threading_CancellationToken__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>Options are built via the <see cref="!:HazelcastFailoverOptionsBuilder.Build()"></see> method
-and passed to the <code data-dev-comment-type="paramref" class="paramref">configure</code> method,
+and passed to the <code class="paramref">configure</code> method,
 where they can be refined and adjusted, before being used to create the client.</p>
 <p>By default, the client connection timeout is 120 seconds. If this method cannot establish
 a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds

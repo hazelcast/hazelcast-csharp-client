@@ -83,8 +83,15 @@
 <h1 id="locking">Locking</h1>
 
 <p>On the server (member) side, Hazelcast uses a unique number to identify the owner of locks, and historically that number has always been the thread unique identifier. As a consequence, the locking model in previous versions of the Hazelcast client closely match the thread-based model that .NET provides with, for instance, the <code>lock</code> statement.</p>
-<p>Due to the systematic usage of <code>async</code>/<code>await</code> asynchronous patterns, the code for one operation can be executed by many different threads (basically, each time an operation is put on hold by an <code>await</code> statement, it can resume its execution on any other thread). Therefore, using the actual thread identifier as a &quot;lock owner&quot; identifier is not possible anymore.</p>
-<p>In the current versions of the client, the &quot;lock owner&quot; is represented by an <code>AsyncContext</code>, a class which relies upon the .NET built-in <code>AsyncLocal&lt;T&gt;</code> type to maintain values that flow with the asynchronous operation, i.e. are transferred to the new thread when an operation resumes after awaiting. Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation. The <code>AsyncContext</code> uses a sequential number to ensure the uniqueness of the identifier.</p>
+<p>Due to the systematic usage of asynchronous patterns, the code for one operation can be executed by many different threads (basically, each time an operation is put on hold by an <code>await</code> statement, it can resume its execution on any other thread). Therefore, using the actual thread identifier as a &quot;lock owner&quot; identifier is not possible anymore.</p>
+<p>The Hazelcast .NET client introduces different ways to manage the context of a lock in an asynchronous pattern.</p>
+<h2 id="implicit-context">Implicit Context</h2>
+<p>For things such as maps, that would implicitly rely on the thread identifier to identify their lock context, the Hazelcast .NET client implicitly manages a &quot;lock context&quot;.
+This allows the API to remain similar enough to the version 3 API.
+The lock context is represented by an <code>AsyncContext</code> instance.
+This is a class which relies upon the .NET built-in <code>AsyncLocal&lt;T&gt;</code> type to maintain values that flow with the asynchronous operation, i.e. are transferred to the new thread when an operation resumes after awaiting.
+Therefore, when an operation acquires a lock, it owns the lock until it releases it, no matter what thread executes the operation.
+The <code>AsyncContext</code> uses a sequential number to ensure the uniqueness of the identifier.</p>
 <p>In order to execute work in a new context (which would correspond to executing work on a different thread for previous versions), one has to use a new context:</p>
 <pre><code class="lang-csharp">// executes in the same, current context
 await DoSomethingAsync(...);
@@ -108,6 +115,16 @@ using (AsyncContext.New())
 await task;
 </code></pre>
 <p>Essentially, when the <code>using</code> block is exited, the previous <code>AsyncContext</code> is restored, but the new one that was created remains attached to the tasks that were started.</p>
+<h2 id="explicit-context">Explicit Context</h2>
+<p>On the other hand, <a href="distributed-objects/fencedlock.html">fenced locks</a>, which are part of the <a href="cpsubsystem.html">CP subsystem</a>, rely on an explicit object to represent the lock context. Every fenced lock operation requires a context, and operate on that context. Therefore, acquiring a lock is performed as:</p>
+<pre><code class="lang-csharp">var context = new LockContext();
+var lock = await client.CPSubSystem.GetLockAsync(lockName);
+await lock.LockAsync(context);
+// ...
+await lock.UnlockAsync(context);
+</code></pre>
+<p>The lock context is re-entrant: it is possible to lock several times <em>for the same context</em> as long as the lock is unlocked the same number of times. On the other hand, trying to lock for any other context object would block.</p>
+<p>It is up to the application code to manage the lock context appropriately.</p>
 </article>
           </div>
 

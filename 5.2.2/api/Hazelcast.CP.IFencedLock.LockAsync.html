@@ -92,7 +92,7 @@
 
 <a id="Hazelcast_CP_IFencedLock_LockAsync_" data-uid="Hazelcast.CP.IFencedLock.LockAsync*"></a>
 <h4 id="Hazelcast_CP_IFencedLock_LockAsync_Hazelcast_Core_LockContext_" data-uid="Hazelcast.CP.IFencedLock.LockAsync(Hazelcast.Core.LockContext)">LockAsync(LockContext)</h4>
-<div class="markdown level1 summary"><p>Acquires the lock for the specified <code data-dev-comment-type="paramref" class="paramref">lockContext</code> context.</p>
+<div class="markdown level1 summary"><p>Acquires the lock for the specified <code class="paramref">lockContext</code> context.</p>
 </div>
 <div class="markdown level1 conceptual"></div>
 <h5 class="declaration">Declaration</h5>
@@ -121,8 +121,8 @@
 </table>
 <h5 id="Hazelcast_CP_IFencedLock_LockAsync_Hazelcast_Core_LockContext__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>
-When the <code data-dev-comment-type="paramref" class="paramref">lockContext</code> already holds the lock and the current <a class="xref" href="Hazelcast.CP.IFencedLock.LockAsync.html#Hazelcast_CP_IFencedLock_LockAsync_Hazelcast_Core_LockContext_">LockAsync(LockContext)</a>
-call is reentrant, the call can throw <span class="xref">Hazelcast.Exceptions.LockAcquireLimitReachedException</span> if the lock
+When the <code class="paramref">lockContext</code> already holds the lock and the current <a class="xref" href="Hazelcast.CP.IFencedLock.LockAsync.html#Hazelcast_CP_IFencedLock_LockAsync_Hazelcast_Core_LockContext_">LockAsync(LockContext)</a>
+call is reentrant, the call can throw <a class="xref" href="Hazelcast.Exceptions.LockAcquireLimitReachedException.html">LockAcquireLimitReachedException</a> if the lock
 acquisition limit is already reached.</p>
 </div>
 </article>

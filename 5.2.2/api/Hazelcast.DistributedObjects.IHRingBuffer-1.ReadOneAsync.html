@@ -124,7 +124,7 @@
 <div class="markdown level1 remarks"><p>Reads one item from the Ringbuffer.
 If the sequence is one beyond the current tail, this call blocks until an item is added.
 This means that the ringbuffer can be processed using the following idiom:</p>
-<pre><code>Ringbuffer&lt;String> ringbuffer = hz.GetRingbuffer(&quot;rb&quot;);
+<pre><code class="lang-csharp">Ringbuffer&lt;String&gt; ringbuffer = hz.GetRingbuffer("rb");
 long seq = ringbuffer.HeadSequence();
 while(true){
 String item = ringbuffer.ReadOne(seq);
@@ -142,7 +142,7 @@ tryReadOne(long sequence, long timeout, TimeUnit unit).</p>
     <tr>
       <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.argumentexception">ArgumentException</a></td>
       <td><p>if sequence is smaller than 0 or larger than
-<see cref="!:IHRingBuffer&lt;TItem>.TailSequence()"></see>
+<see cref="!:IHRingBuffer&lt;TItem&gt;.TailSequence()"></see>
 +1.</p>
 </td>
     </tr>

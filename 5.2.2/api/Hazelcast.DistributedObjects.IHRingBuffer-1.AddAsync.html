@@ -133,7 +133,7 @@ This sequence will always be unique for this Ringbuffer instance so it can be us
 publishing items on this Ringbuffer. However you need to take care of correctly determining an initial id when any node
 uses the ringbuffer for the first time. The most reliable way to do that is to write a dummy item into the ringbuffer and
 use the returned sequence as initial id. On the reading side, this dummy item should be discard. Please keep in mind that
-this id is not the sequence of the item you are about to publish but from a previously published item. So it can&apos;t be used
+this id is not the sequence of the item you are about to publish but from a previously published item. So it can't be used
 to find that item.
 </div>
 <h5 class="exceptions">Exceptions</h5>
@@ -168,7 +168,7 @@ the ttl</li>
 </ol>
 The reason that FAIL exist is to give the opportunity to obey the ttl. If blocking behavior is required,
 this can be implemented using retrying in combination with a exponential backoff. Example:
-<pre><code>int sleepMs = 100;
+<pre><code class="lang-csharp">int sleepMs = 100;
 for (; ; ) {
 long result = ringbuffer.AddAsync(item, OverflowPolicy.Fail).Result;
 if (result != -1) {

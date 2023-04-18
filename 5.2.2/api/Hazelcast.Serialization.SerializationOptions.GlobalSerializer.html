@@ -110,14 +110,14 @@
 </table>
 <h5 id="Hazelcast_Serialization_SerializationOptions_GlobalSerializer_remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>When defined in a configuration file, it is defined as an injected type, for instance:
-<pre><code>&quot;globalSerializer&quot;:
+<pre><code class="lang-csharp">"globalSerializer":
 {
-  &quot;typeName&quot;: &quot;My.Serializer&quot;,
-  &quot;args&quot;:
+  "typeName": "My.Serializer",
+  "args":
   {
-    &quot;foo&quot;: 42
+    "foo": 42
   },
-  &quot;overrideClrSerialization&quot;: true
+  "overrideClrSerialization": true
 }</code></pre>
 with the additional <code>overrideClrSerialization</code> property.
 </div>

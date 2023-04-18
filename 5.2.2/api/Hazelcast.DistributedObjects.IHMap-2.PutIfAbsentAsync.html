@@ -183,7 +183,7 @@ already exists, or the new value if the no entry with the key already existed.</
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The value is automatically expired, evicted and removed after the
-<code data-dev-comment-type="paramref" class="paramref">timeToLive</code> has elapsed. If <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> is 0ms, the value
+<code class="paramref">timeToLive</code> has elapsed. If <code class="paramref">timeToLive</code> is 0ms, the value
 is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</p>
 <p>The value becomes idle after the server-configured idle time.</p>
 <p>This methods <strong>interacts with the server-side <code>MapStore</code></strong>.
@@ -244,9 +244,9 @@ already exists, or the new value if the no entry with the key already existed.</
 </table>
 <h5 id="Hazelcast_DistributedObjects_IHMap_2_PutIfAbsentAsync__0__1_System_TimeSpan_System_TimeSpan__remarks">Remarks</h5>
 <div class="markdown level1 remarks"><p>The value is automatically expired, evicted and removed after the
-<code data-dev-comment-type="paramref" class="paramref">timeToLive</code> has elapsed. If <code data-dev-comment-type="paramref" class="paramref">timeToLive</code> is 0ms, the value
+<code class="paramref">timeToLive</code> has elapsed. If <code class="paramref">timeToLive</code> is 0ms, the value
 is retained indefinitely. If it is -1ms, it lives for the duration of the server-configured time-to-live.</p>
-<p>The value is considered idle after the <code data-dev-comment-type="paramref" class="paramref">maxIdle</code> has elapsed. If it is
+<p>The value is considered idle after the <code class="paramref">maxIdle</code> has elapsed. If it is
 0ms, the value never becomes idle.</p>
 <p>This methods <strong>interacts with the server-side <code>MapStore</code></strong>.
 If no value for the specified key is found in memory, <code>MapLoader.load(...)</code> is invoked

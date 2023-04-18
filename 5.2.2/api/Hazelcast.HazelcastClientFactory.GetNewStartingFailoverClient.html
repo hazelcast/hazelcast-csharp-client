@@ -134,7 +134,7 @@ start <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.thread
 <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a> has actually completed before using the client.</p>
 <p>In any case, the start <a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a> must be awaited, as it may fail with an exception that must be observed.</p>
 <p>Options are built via the <see cref="!:HazelcastFailoverOptionsBuilder.Build()"></see> method and passed to
-the <code data-dev-comment-type="paramref" class="paramref">configure</code> method,
+the <code class="paramref">configure</code> method,
 where they can be refined and adjusted, before being used to create the client.</p>
 <p>By default, the client connection timeout is 120 seconds. If this method cannot establish
 a connection to a cluster at the configured addresses, it may do failover. You may want to configure a timeout via the options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds

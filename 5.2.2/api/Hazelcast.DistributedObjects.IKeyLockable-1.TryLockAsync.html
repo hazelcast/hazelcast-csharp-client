@@ -163,8 +163,8 @@ N times before another owner can lock it.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
-If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
+<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
+If <code class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
 <p>The lock is automatically released after the server-configured maximum lease time has elapsed.</p>
@@ -212,9 +212,9 @@ N times before another owner can lock it.</p>
   </tbody>
 </table>
 <h5 id="Hazelcast_DistributedObjects_IKeyLockable_1_TryLockAsync__0_System_TimeSpan_System_TimeSpan__remarks">Remarks</h5>
-<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
-If <code data-dev-comment-type="paramref" class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
-<p>The lock is automatically released after the specified <code data-dev-comment-type="paramref" class="paramref">leaseTime</code> has elapsed.</p>
+<div class="markdown level1 remarks"><p>If the entry cannot be locked after <code class="paramref">timeToWait</code> has elapsed, returns <code>false</code>.
+If <code class="paramref">timeToWait</code> is -1ms, waits forever. If it is 0ms, does not wait at all.</p>
+<p>The lock is automatically released after the specified <code class="paramref">leaseTime</code> has elapsed.</p>
 <p>Locks are re-entrant, but counted: if an entry is locked N times, then it should be unlocked
 N times before another owner can lock it.</p>
 </div>

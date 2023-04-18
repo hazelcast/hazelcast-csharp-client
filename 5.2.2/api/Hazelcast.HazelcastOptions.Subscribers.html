@@ -114,18 +114,18 @@
 method or any of its overloads. A subscriber is a class that implements <a class="xref" href="Hazelcast.IHazelcastClientEventSubscriber.html">IHazelcastClientEventSubscriber</a> and subscribes
 the client to events as soon as the client is connected.</p>
 <p>In a configuration file, they are defined as an array of injected types, for instance:
-<pre><code>&quot;subscribers&quot;: [
-  {
-    &quot;typeName&quot;: &quot;My.Subscriber, My.Dll&quot;
-  },
-  {
-    &quot;typeName&quot;: &quot;My.OtherSubscriber, My.dll&quot;,
-    &quot;args&quot;:
-    {
-      &quot;foo&quot;: 33
-    }
-  }
-]</code></pre>
+<pre><code class="lang-csharp">"subscribers": [
+      {
+        "typeName": "My.Subscriber, My.Dll"
+      },
+      {
+        "typeName": "My.OtherSubscriber, My.dll",
+        "args":
+        {
+          "foo": 33
+        }
+      }
+    ]</code></pre>
 where <code>typeName</code> is the name of the type, and <code>args</code> is an optional dictionary
 of arguments for the type constructor.
 </div>
