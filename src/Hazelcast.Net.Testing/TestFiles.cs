@@ -66,6 +66,46 @@ namespace Hazelcast.Testing
         }
 
         /// <summary>
+        /// Copies an assembly project text file to a destination.
+        /// </summary>
+        /// <typeparam name="T">A type contained by the assembly.</typeparam>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <param name="destinationPath">The destination path.</param>
+        public static void Copy<T>(string path, string destinationPath)
+            => Copy(typeof(T).Assembly, path, destinationPath);
+
+        /// <summary>
+        /// Copies an assembly project text file to a destination.
+        /// </summary>
+        /// <param name="o">An object of a type contained by the assembly.</param>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <param name="destinationPath">The destination path.</param>
+        public static void Copy(object o, string path, string destinationPath)
+            => Copy(o.GetType().Assembly, path, destinationPath);
+
+        /// <summary>
+        /// Copies an assembly project text file to a destination.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <param name="path">The path of the file relative to the project.</param>
+        /// <param name="destinationPath">The destination path.</param>
+        public static void Copy(Assembly assembly, string path, string destinationPath)
+        {
+            var sourcePath = GetFullPath(assembly, path);
+            if (!File.Exists(sourcePath))
+                throw new ArgumentException($"There is no resource corresponding to \"{path}\" at \"{sourcePath}\".", nameof(path));
+
+            try
+            {
+                File.Copy(sourcePath, destinationPath, true);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Failed to copy resource corresponding to \"{path}\" at \"{sourcePath}\" to \"{destinationPath}\".", nameof(path), e);
+            }
+        }
+
+        /// <summary>
         /// Gets the full path of an assembly project file.
         /// </summary>
         /// <typeparam name="T">A type contained by the assembly.</typeparam>
