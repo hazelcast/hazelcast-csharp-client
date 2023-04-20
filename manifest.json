@@ -43,6 +43,16 @@
     },
     {
       "type": "Conceptual",
+      "source_relative_path": "dev/doc/async-pitfalls.md",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/doc/async-pitfalls.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "Conceptual",
       "source_relative_path": "dev/doc/canceling.md",
       "output": {
         ".html": {
@@ -7795,6 +7805,36 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Member.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.IsConnected.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Equals.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.GetHashCode.html"
         }
       },
@@ -7826,36 +7866,6 @@
       "output": {
         ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Member.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.IsConnected.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Equals.html"
         }
       },
       "version": ""

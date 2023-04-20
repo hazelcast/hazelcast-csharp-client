@@ -85,9 +85,13 @@
 <p>Starting with version 4, the Hazelcast .NET client has been massively refactored in order to benefit from the asynchronous features of the .NET platform and the C# language.</p>
 <p>For instance, the low-level networking stack now relies on Microsoft's high-performance <a href="https://docs.microsoft.com/en-us/dotnet/standard/io/pipelines">System.IO.Pipelines</a> which also powers the Kestrel web server. It is constantly improved, and is the foundation of all high-performance networking in modern .NET.</p>
 <p>Unfortunately, the move from synchronous to asynchronous coding patterns impacts the client API in large ways. Although the Hazelcast <em>concepts</em> have not changed, they are exposed in a quite different API. This document proposes to introduce you to the new API and serve as a companion on your migration path from version 3 to more recent versions (as of this writing, version 5).</p>
+<div class="WARNING">
+<h5>Warning</h5>
+<p>Migrating existing code to an asynchronous programming model is not a trivial operation and requires some understanding of how asynchronous code functions in .NET, especially when running one .NET Framework platform. To help your transition, we gather a list of <a href="async-pitfalls.html">asynchronous pitfalls</a> and pointers to documentations.</p>
+</div>
 <h2 id="configuring-a-client-instance">Configuring a client instance</h2>
 <p>Up to version 3, the Hazelcast .NET client provided two ways of configuration. You could load a declarative configuration from an XML file:</p>
-<pre><code>var client = HazelcastClient.NewHazelcastClient(&quot;path/to/config.xml&quot;):
+<pre><code>var client = HazelcastClient.NewHazelcastClient(&quot;path/to/config.xml&quot;);
 </code></pre>
 <p>Alternatively, you could create a <code>ClientConfig</code> object and programmatically configure the client:</p>
 <pre><code>var config = new ClientConfig();
