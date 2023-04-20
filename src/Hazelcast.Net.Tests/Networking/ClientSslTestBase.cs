@@ -69,6 +69,7 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Hazelcast.Clustering;
@@ -313,7 +314,7 @@ namespace Hazelcast.Tests.Networking
                 if (clientCertificatePassword != null) sslOptions.CertificatePassword = clientCertificatePassword;
 
                 // validate that the certificate is OK
-                var sslLayer = new SslLayer(sslOptions, new NullLoggerFactory());
+                var sslLayer = new SslLayer(sslOptions, IPAddress.Any,  new NullLoggerFactory());
                 sslLayer.GetClientCertificatesOrDefault(); // this should not throw
             }
 

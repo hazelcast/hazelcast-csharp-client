@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Configuration.Binding;
 
 namespace Hazelcast.Sql;
@@ -27,11 +28,14 @@ public class SqlOptions
         PartitionArgumentIndexCacheThreshold = other.PartitionArgumentIndexCacheThreshold;
         ArgumentIndexCachingEnabled = other.ArgumentIndexCachingEnabled;
     }
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="SqlOptions"/> class.
     /// </summary>
-    public SqlOptions(){}
+    public SqlOptions()
+    {
+        PartitionArgumentIndexCacheThreshold = PartitionArgumentIndexCacheSize + Math.Min(PartitionArgumentIndexCacheSize / 10, 50);
+    }
     
     /// <summary>
     /// Defines cache size for partition aware SQL queries.
@@ -41,7 +45,7 @@ public class SqlOptions
     /// <summary>
     /// Defines threshold to cache for partition aware SQL queries. Eviction is triggered after threshold is exceeded. 
     /// </summary>
-    public int PartitionArgumentIndexCacheThreshold { get; set; } = 150;
+    internal int PartitionArgumentIndexCacheThreshold { get; set; }
 
     /// <summary>
     /// Enables the argument caching for sql queries.(only internal access) 

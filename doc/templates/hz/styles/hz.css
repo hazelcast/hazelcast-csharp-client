@@ -1,0 +1,277 @@
+
+/* docfx.css */
+
+.sidefilter{
+    top: 110px;
+    padding-right: 0;
+}
+
+.sidetoc{
+    top: 170px;
+}
+
+body .toc,
+.sidenav,
+.sidefilter,
+.sidetoc{
+    background: transparent;
+    border: none;
+}
+
+.toc .level1>li{
+    font-weight: normal;
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.toc-filter{
+    border: 1px solid #e3e3e3;
+    border-radius: 0;
+    margin: 0;
+}
+
+.article{
+    margin-top: 100px;
+}
+
+.article h1:first-child{
+    margin-top: 0;
+}
+
+pre{
+    border-radius: 0;
+    border: 1px solid #e3e3e3;
+}
+
+pre code.hljs {
+    padding: 0;
+}
+
+#fields, #properties, #methods, #events {
+    font-weight: inherit;
+    margin-top: 25px;
+}
+
+td.hz-one-third {
+    width: 42%;
+}
+
+td.hz-one-fourth {
+    width: 30%;
+}
+
+.table-bordered,.table-bordered>tbody>tr>td{
+    border-top: 1px solid #e3e3e3;
+    border-bottom: 1px solid #e3e3e3;
+    border-left: none;
+    border-right: none;
+    padding: 10px 5px;
+}
+
+.toc .nav > li > .expand-stub::before, .toc .nav > li.active > .expand-stub::before {
+    content: ">";
+}
+
+.toc .nav > li.active > .expand-stub::before, .toc .nav > li.in > .expand-stub::before, .toc .nav > li.in.active > .expand-stub::before, .toc .nav > li.filtered > .expand-stub::before {
+    content: "-";
+    margin-left: 2px;
+}
+
+.expand-stub, .expand-stub + a {
+    font-weight: normal;
+}
+
+.toc .level3{
+    margin-left: 15px;
+}
+
+.toc .level4{
+    margin-left: 15px;
+}
+
+div.hz-class-header{
+    margin-bottom: 40px;
+}
+
+article h5{
+    margin-top: 20px;
+}
+
+.inheritance .level0:before, .inheritance .level1:before, .inheritance .level2:before, .inheritance .level3:before, .inheritance .level4:before, .inheritance .level5:before{
+    content: '-';
+}
+
+.level0.summary{
+    margin-bottom: 1em;
+}
+
+.level0.conceptual{
+    margin-bottom: 2em;
+}
+
+.devwarn .article{
+  margin-top: 130px;
+}
+
+.devwarn .sidefilter{
+  top: 140px;
+}
+
+.devwarn .sidetoc{
+  top: 200px;
+}
+
+.footer {
+    border: none;
+    background: #000;
+    color: #fff;
+    font-size:80%;
+    padding:5px;
+}
+
+.breadcrumb {
+    font-size: 80%;
+    padding-top: 5px;
+}
+
+.brandcrumb {
+    padding-top: 5px;
+    font-weight: bold;
+    margin-right: 42px;
+    font-size: 80%;
+    float: left;
+    margin-left: 6px;
+    text-align: center;
+}
+
+#autocollapse { background: #000; }
+
+table.table-bordered.hz-welcome {
+  margin: 0 0 32px 0;
+  border-collapse: separate;
+  border-spacing: 10px;
+  border: none;
+}
+
+table.table-bordered.hz-welcome td {
+  width: 33%;
+  padding: 4px 4px 16px 4px;
+  border: 16px solid white;
+  border-bottom: 1px solid black;
+}
+
+.navbar {
+  font-size: 12px;
+}
+
+/* docfx.vendor.css */
+
+--border: #e3e3e3;
+
+header {
+    background: white;
+}
+
+header .navbar {
+    min-height: 54px;
+}
+
+#nav {
+    background: #000;
+}
+
+.navbar-inverse, .navbar-collapse{
+    background: #000;
+}
+
+.navbar-default {
+    background: white;
+    border: none;
+    margin-bottom: 20px;
+}
+
+.navbar-inverse{
+    background-color: white;
+    margin: 0;
+    border-color: #e3e3e3;
+}
+
+.navbar-inverse .navbar-brand:hover,
+.navbar-inverse .navbar-brand{
+    color: #fff;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.navbar-inverse .navbar-brand:hover{
+    color: #00e1e1;
+}
+
+#logo {
+    height: 32px;
+    margin-right: 30px;
+}
+
+#autocollapse .navbar-header{
+    margin-right: 20px;
+}
+
+#navbar .navbar-nav>li>a{
+    color: #fff;
+    font-weight: bold;
+    background: transparent;
+}
+
+#navbar .navbar-nav>li>a:hover{
+    color: #00e1e1;
+    font-weight: bold;
+    background: transparent;
+}
+
+.navbar-inverse .navbar-nav>.active>a,
+.navbar-inverse .navbar-nav>.active>a:hover{
+    color: #00e1e1;
+    font-weight: bold;
+    background: transparent;
+    font-weight: bold;
+}
+
+a.navbar-brand{
+    display: flex;
+    align-items: center;
+    margin-right: 20px;
+}
+
+#search input{
+    background: #000;
+    color: white;
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid white;
+}
+
+
+blockquote {
+    font-size: inherit;
+}
+
+.footer a{
+    color: white;
+}
+
+.footer a:hover {
+    color: #00e1e1;
+}
+
+#devwarn {
+    text-align: center;
+    background: beige;
+    border-bottom: 1px solid #e3e3e3;
+    padding: 4px 0;
+    min-height: 30px;
+}
+
+div.xoptions thead { display: none; }
+
+div.xoptions tr td:first-of-type { width: 30%; }
+div.xoptions pre { border: none; padding: 3px; margin: 3px 0; font-size: 80%; }

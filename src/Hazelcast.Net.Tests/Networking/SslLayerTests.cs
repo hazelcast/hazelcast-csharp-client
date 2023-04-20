@@ -14,6 +14,7 @@
 
 using System;
 using System.IO;
+using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -22,6 +23,7 @@ using Hazelcast.Exceptions;
 using Hazelcast.Networking;
 using Hazelcast.Testing;
 using Hazelcast.Testing.Logging;
+using Hazelcast.Tests.Serialization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
@@ -36,7 +38,7 @@ namespace Hazelcast.Tests.Networking
         public async Task GetStreamAsync()
         {
             var options = new SslOptions();
-            var ssl = new SslLayer(options, new NullLoggerFactory());
+            var ssl = new SslLayer(options, IPAddress.Any, new NullLoggerFactory());
 
             await AssertEx.ThrowsAsync<ArgumentNullException>(async () => await ssl.GetStreamAsync(null));
 
@@ -45,9 +47,25 @@ namespace Hazelcast.Tests.Networking
             Assert.That(sslStream, Is.SameAs(stream));
 
             options = new SslOptions { Enabled = true };
-            ssl = new SslLayer(options, new NullLoggerFactory());
+            ssl = new SslLayer(options, IPAddress.Any, new NullLoggerFactory());
 
             await AssertEx.ThrowsAsync<ConnectionException>(async () => sslStream = await ssl.GetStreamAsync(stream));
+        }
+
+        [Test]
+        public void TestGetTargetHostname()
+        {
+            var options = new SslOptions();
+            var ipAddress = IPAddress.Parse("127.0.0.1");
+            var ssl = new SslLayer(options, ipAddress, new NullLoggerFactory());
+            
+            Assert.AreEqual(ipAddress.ToString(), ssl.GetTargetHostNameOrDefault());
+
+            options.CertificateName = "foo.bar";
+            ssl = new SslLayer(options, ipAddress, new NullLoggerFactory());
+            Assert.AreEqual(options.CertificateName, ssl.GetTargetHostNameOrDefault());
+
+            Assert.Throws<ArgumentNullException>(() => new SslLayer(options, null, new NullLoggerFactory()));
         }
 
         [Test]
@@ -61,9 +79,9 @@ namespace Hazelcast.Tests.Networking
             var cert = new X509Certificate();
 
             var chain = new X509Chain();
-
+            
             var options = new SslOptions { ValidateCertificateChain = true };
-            var ssl = new SslLayer(options, loggerFactory);
+            var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             var policyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
             var valid = ssl.ValidateCertificate(sender, cert, chain, policyErrors);
 
@@ -72,8 +90,9 @@ namespace Hazelcast.Tests.Networking
             Assert.That(text.ToString(), Does.Contain("chain status:"));
             text.Clear();
 
+            
             options = new SslOptions { ValidateCertificateChain = false };
-            ssl = new SslLayer(options, loggerFactory);
+            ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             policyErrors = SslPolicyErrors.RemoteCertificateChainErrors;
             valid = ssl.ValidateCertificate(sender, cert, chain, policyErrors);
 
@@ -82,7 +101,7 @@ namespace Hazelcast.Tests.Networking
             text.Clear();
 
             options = new SslOptions { ValidateCertificateName = false };
-            ssl = new SslLayer(options, loggerFactory);
+            ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             policyErrors = SslPolicyErrors.RemoteCertificateNameMismatch;
             valid = ssl.ValidateCertificate(sender, cert, chain, policyErrors);
 
@@ -91,7 +110,7 @@ namespace Hazelcast.Tests.Networking
             text.Clear();
 
             options = new SslOptions { ValidateCertificateName = true };
-            ssl = new SslLayer(options, loggerFactory);
+            ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             policyErrors = SslPolicyErrors.RemoteCertificateNameMismatch;
             valid = ssl.ValidateCertificate(sender, cert, chain, policyErrors);
 
@@ -100,7 +119,7 @@ namespace Hazelcast.Tests.Networking
             text.Clear();
 
             options = new SslOptions();
-            ssl = new SslLayer(options, loggerFactory);
+            ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             policyErrors = SslPolicyErrors.RemoteCertificateNotAvailable;
             valid = ssl.ValidateCertificate(sender, cert, chain, policyErrors);
 
@@ -120,7 +139,7 @@ namespace Hazelcast.Tests.Networking
             {
                 CertificatePath = null
             };
-            var ssl = new SslLayer(options, loggerFactory);
+            var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             var certs = ssl.GetClientCertificatesOrDefault();
             Assert.That(certs, Is.Null);
         }
@@ -140,7 +159,7 @@ namespace Hazelcast.Tests.Networking
                 CertificatePath = path,
                 CertificatePassword = ClientSslTestBase.ClientCertificatePassword
             };
-            var ssl = new SslLayer(options, loggerFactory);
+            var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             var certs = ssl.GetClientCertificatesOrDefault();
             Assert.That(certs, Is.Not.Null);
             Assert.That(certs.Count, Is.EqualTo(1));
@@ -161,7 +180,7 @@ namespace Hazelcast.Tests.Networking
                 CertificatePath = path,
                 CertificatePassword = ClientSslTestBase.ClientCertificatePassword
             };
-            var ssl = new SslLayer(options, loggerFactory);
+            var ssl = new SslLayer(options, IPAddress.Any, loggerFactory);
             try
             {
                 ssl.GetClientCertificatesOrDefault();

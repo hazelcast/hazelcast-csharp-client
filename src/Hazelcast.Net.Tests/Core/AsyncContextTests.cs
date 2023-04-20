@@ -231,5 +231,51 @@ namespace Hazelcast.Tests.Core
                 return list;
             }
         }
+
+
+        [Test]
+        public async Task TaskRun()
+        {
+            // ensures a context, id should be 1
+            var id0 = AsyncContext.Current.Id;
+            Assert.That(id0, Is.EqualTo(1));
+
+            // now run a task run with a different context
+            // the 3 syntax are OK but the 1st one is preferred,
+            // as it is the less error-prone and avoids confusion
+
+            // syntax 1
+            long id1;
+            using (AsyncContext.New())
+            {
+                id1 = await Task.Run(async () =>
+                {
+                    await Task.Delay(100);
+                    return AsyncContext.Current.Id;
+                });
+            }
+
+            Assert.That(id1, Is.EqualTo(2));
+
+            // syntax 2
+            var id2 = await Task.Run(async () =>
+            {
+                using var _ = AsyncContext.New();
+                await Task.Delay(100);
+                return AsyncContext.Current.Id;
+            });
+
+            Assert.That(id2, Is.EqualTo(3));
+
+            // syntax 3
+            var id3 = await Task.Run(async () =>
+            {
+                AsyncContext.RequireNew();
+                await Task.Delay(100);
+                return AsyncContext.Current.Id;
+            });
+
+            Assert.That(id3, Is.EqualTo(4));
+        }
     }
 }
