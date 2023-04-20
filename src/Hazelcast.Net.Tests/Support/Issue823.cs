@@ -48,7 +48,7 @@ public class Issue823
     public void CanBindConfiguration()
     {
         // option files need to be in the current directory
-        var directory = Directory.GetCurrentDirectory();
+        var directory = AppContext.BaseDirectory;
         foreach (var file in Directory.GetFiles(directory, "*.json"))
             File.Delete(file);
         var appsettings = Path.Combine(directory, "appsettings.json");
@@ -81,7 +81,7 @@ public class Issue823
     public void Test()
     {
         // option files need to be in the current directory
-        var directory = Directory.GetCurrentDirectory();
+        var directory = AppContext.BaseDirectory;
         foreach (var file in Directory.GetFiles(directory, "*.json"))
             File.Delete(file);
         var appsettings = Path.Combine(directory, "appsettings.json");
