@@ -48,6 +48,7 @@ namespace Hazelcast.Examples.CP
             Console.WriteLine($"Value after add: {await along.GetAsync()}, previous: {previous}");
 
             previous = await along.GetAndSetAsync(100);
+            
             Console.WriteLine($"Value after get&set: {await along.GetAsync()}, previous: {previous}");
 
             // destroy the AtomicLong

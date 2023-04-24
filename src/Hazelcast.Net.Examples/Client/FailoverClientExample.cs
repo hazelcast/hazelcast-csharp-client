@@ -29,8 +29,10 @@ namespace Hazelcast.Examples.Client
                 {
                     var clusterBlue = new HazelcastOptions();
                     clusterBlue.ClusterName = "blue";
-                    clusterBlue.Networking.Addresses.Add("127.0.0.1");
-                    clusterBlue.Networking.ReconnectMode = Networking.ReconnectMode.ReconnectAsync;
+                    clusterBlue.Networking.Addresses.Add("127.0.0.1:5701");
+                    clusterBlue.Networking.ReconnectMode = Networking.ReconnectMode.ReconnectSync;
+                    // Connection time out from a whole cluster (not a member).
+                    clusterBlue.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 1_000;
                     //Subscribe to client state changes.
                     clusterBlue.AddSubscriber(s => s.StateChanged((sender, args) => Console.WriteLine($"Client state changed: {args.State}")));
                     //clusterBlue sets all options for the client.
@@ -38,8 +40,8 @@ namespace Hazelcast.Examples.Client
 
                     var clusterGreen = new HazelcastOptions();
                     clusterGreen.ClusterName = "green";
-                    clusterGreen.Networking.Addresses.Add("127.0.0.2");
-                    clusterGreen.Networking.ReconnectMode = Networking.ReconnectMode.ReconnectAsync;
+                    clusterGreen.Networking.Addresses.Add("127.0.0.2:5701");
+                    clusterGreen.Networking.ReconnectMode = Networking.ReconnectMode.ReconnectSync;
                     //clusterGreen can only change network and authentication options
                     //other options must be same with first cluster, such as heartbeat, loadBalancer etc.
                     p.Clients.Add(clusterGreen);
