@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System;
 using Hazelcast.Configuration;
 using Microsoft.Extensions.Hosting;
 
@@ -19,6 +20,9 @@ namespace Hazelcast.DependencyInjection
 {
     public static class HostBuilderExtensions
     {
+        public static IHostBuilder ConfigureHazelcast(this IHostBuilder hostBuilder)
+            => hostBuilder.ConfigureHazelcast(Array.Empty<string>());
+
         public static IHostBuilder ConfigureHazelcast(this IHostBuilder builder, string[] args)
         {
             return builder.ConfigureAppConfiguration((hostingContext, hostBuilder) =>
