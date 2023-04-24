@@ -1,0 +1,10 @@
+{
+  "hazelcast": {
+    "clusterName": "my-cluster-name",
+    "networking": {
+      "addresses": [
+        "myserver:myport"
+      ]
+    }
+  }
+}

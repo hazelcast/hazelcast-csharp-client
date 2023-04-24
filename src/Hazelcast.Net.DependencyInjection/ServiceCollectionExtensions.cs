@@ -62,8 +62,6 @@ namespace Hazelcast.DependencyInjection
         /// <returns>The <see cref="IServiceCollection"/> so that additional calls can be chained.</returns>
         public static IServiceCollection AddHazelcast(this IServiceCollection services, IConfiguration configuration)
         {
-            configuration = configuration.GetSection(HazelcastOptions.SectionNameConstant);
-
             // wire the Hazelcast-specific configuration
             services.AddOptions();
             services.AddHazelcastOptions(builder => builder.AddConfiguration(configuration));
@@ -91,8 +89,6 @@ namespace Hazelcast.DependencyInjection
         /// <returns>The service collection.</returns>
         public static IServiceCollection AddHazelcastFailover(this IServiceCollection services, IConfiguration configuration)
         {
-            configuration = configuration.GetSection(HazelcastOptions.SectionNameConstant);
-
             // wire the Hazelcast-specific configuration
             services.AddOptions();
             services.AddHazelcastFailoverOptions(builder => builder.AddConfiguration(configuration));
