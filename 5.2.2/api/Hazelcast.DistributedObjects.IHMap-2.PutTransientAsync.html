@@ -5,17 +5,16 @@
   <head>
     <meta charset="utf-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-      <title>PutTransientAsync Method
+      <title>Method PutTransientAsync
  | Hazelcast .NET Documentation </title>
       <meta name="viewport" content="width=device-width">
-      <meta name="title" content="PutTransientAsync Method
+      <meta name="title" content="Method PutTransientAsync
  | Hazelcast .NET Documentation ">
     
       <link rel="shortcut icon" href="../../images/favicon.ico">
       <link rel="stylesheet" href="../../styles/docfx.vendor.min.css">
       <link rel="stylesheet" href="../../styles/docfx.css">
       <link rel="stylesheet" href="../../styles/main.css">
-      <link rel="stylesheet" href="../../styles/hz.css">
       <meta property="docfx:navrel" content="../toc.html">
       <meta property="docfx:tocrel" content="toc.html">
     
@@ -23,7 +22,7 @@
     
   </head>
   <body data-spy="scroll" data-target="#affix" data-offset="120">
-    <div id="wrapper" class="">
+    <div id="wrapper">
       <header>
 
         <nav id="autocollapse" class="navbar navbar-inverse ng-scope" role="navigation">
@@ -37,7 +36,7 @@
               </button>
 
               <a class="navbar-brand" href="../../index.html">
-                <img id="logo" src="../../images/hazelcast-white.png" alt="">
+                <img id="logo" class="svg" src="../../logo.svg" alt="">
               </a>
             </div>
             <div class="collapse navbar-collapse" id="navbar">
@@ -49,15 +48,12 @@
             </div>
           </div>
         </nav>
-        
+
         <div class="subnav navbar navbar-default">
           <div class="container hide-when-search" id="breadcrumb">
-              <div class="brandcrumb">.NET Client Documentation<br>5.2.2</div>
-              <div id="breadhtml">
-                <ul class="breadcrumb">
-                  <li></li>
-                </ul>
-              </div>
+            <ul class="breadcrumb">
+              <li></li>
+            </ul>
           </div>
         </div>
       </header>
@@ -85,7 +81,7 @@
 
 
 
-<h1 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*">PutTransientAsync Method
+<h1 id="Hazelcast_DistributedObjects_IHMap_2_PutTransientAsync_" data-uid="Hazelcast.DistributedObjects.IHMap`2.PutTransientAsync*">Method PutTransientAsync
 </h1>
 <div class="markdown level0 summary"></div>
 <div class="markdown level0 conceptual"></div>
@@ -100,22 +96,29 @@
   <pre><code class="lang-csharp hljs">Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="xref">TKey</span></td>
       <td><span class="parametername">key</span></td>
       <td><p>A key.</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><span class="xref">TValue</span></td>
+      <td><span class="xref">TValue</span></td>
       <td><span class="parametername">value</span></td>
       <td><p>A value.</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">timeToLive</span></td>
       <td><p>A time to live (0ms to live forever; -1ms to use the server-configured value).</p>
 </td>
@@ -123,10 +126,16 @@
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
       <td></td>
     </tr>
   </tbody>
@@ -152,28 +161,35 @@ Time resolution for <param name="timeToLive"> is seconds. The given value is rou
   <pre><code class="lang-csharp hljs">Task PutTransientAsync(TKey key, TValue value, TimeSpan timeToLive, TimeSpan maxIdle)</code></pre>
 </div>
 <h5 class="parameters">Parameters</h5>
-<table class="table table-bordered table-striped table-condensed">
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td class="hz-one-fourth"><span class="xref">TKey</span></td>
+      <td><span class="xref">TKey</span></td>
       <td><span class="parametername">key</span></td>
       <td><p>A key.</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><span class="xref">TValue</span></td>
+      <td><span class="xref">TValue</span></td>
       <td><span class="parametername">value</span></td>
       <td><p>A value.</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">timeToLive</span></td>
       <td><p>A time to live (0ms to live forever; -1ms to use the server-configured value).</p>
 </td>
     </tr>
     <tr>
-      <td class="hz-one-fourth"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.timespan">TimeSpan</a></td>
       <td><span class="parametername">maxIdle</span></td>
       <td><p>A max-idle time (0ms to never become idle).</p>
 </td>
@@ -181,10 +197,16 @@ Time resolution for <param name="timeToLive"> is seconds. The given value is rou
   </tbody>
 </table>
 <h5 class="returns">Returns</h5>
-<table class="table table-bordered table-striped table-condensed">
+<table class="table table-bordered table-condensed">
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
   <tbody>
     <tr>
-      <td class="hz-one-third"><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
+      <td><a class="xref" href="https://learn.microsoft.com/dotnet/api/system.threading.tasks.task">Task</a></td>
       <td><p>The value for the key. This will be either the existing value for the key if the entry
 already exists, or the new value if the no entry with the key already existed.</p>
 </td>

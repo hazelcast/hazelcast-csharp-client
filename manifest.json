@@ -7655,46 +7655,6 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.-ctor.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.Id.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.Address.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
-      "output": {
-        ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.PublicAddress.html"
-        }
-      },
-      "version": ""
-    },
-    {
-      "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
-      "output": {
-        ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.HasPublicAddress.html"
         }
       },
@@ -7802,30 +7762,40 @@
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Member.html"
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.-ctor.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.IsConnected.html"
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.Id.html"
         }
       },
       "version": ""
     },
     {
       "type": "ManagedReference",
-      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
       "output": {
         ".html": {
-          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Equals.html"
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.Address.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfo.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfo.PublicAddress.html"
         }
       },
       "version": ""
@@ -7866,6 +7836,36 @@
       "output": {
         ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Member.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.IsConnected.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Models.MemberInfoState.yml",
+      "output": {
+        ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Models.MemberInfoState.Equals.html"
         }
       },
       "version": ""
