@@ -1044,14 +1044,11 @@ function ensure-dotnet-complete {
 # ensures that we have docfx and updates $script:docfx
 # note: ensure-packages-version must run before this function
 function ensure-docfx {
-
-    $dir = "$nugetPackages/docfx.console/$docfxVersion"
-    $docfx = "$dir/tools/docfx.exe"
-    Write-Output "Detected DocFX $docfxVersion at '$docfx'"
-    $script:docfx = $docfx
-
-    $dir = "$nugetPackages/memberpage/$memberpageVersion"
-    Write-Output "Detected DocFX MemberPage $memberpageVersion at $dir"
+  
+    # make sure we use the latest version of the DocFX tool
+    # note: this may update .config/dotnet-tools.json
+    &dotnet tool update --local docfx
+    &dotnet tool restore
 }
 
 # ensures we have the git command, and validate git submodules
@@ -1107,8 +1104,6 @@ function ensure-build-proj {
         $pversion = $p[1]
         if ($name -eq "nunit.consolerunner") { $script:nunitVersion = $pversion }
         if ($name -eq "jetbrains.dotcover.commandlinetools") { $script:dotcoverVersion = $pversion }
-        if ($name -eq "docfx.console") { $script:docfxVersion = $pversion }
-        if ($name -eq "memberpage") { $script:memberpageVersion = $pversion }
     }
 }
 
@@ -1523,12 +1518,6 @@ function hz-build {
 
         $k = $proj.FullName.SubString($srcDir.Length + 1).Replace("\", $sc).Replace("/", $sc)
 
-        # exclude
-        if ($proj.BaseName -eq "Hazelcast.Net.DocAsCode" -and !$isWindows) {
-            Write-Output "  $(get-project-name $k) -> (excluded) "
-            return  # continue
-        }
-
         $x = [xml] (Get-Content $proj);
         $n = $x.SelectNodes("//ProjectReference/@Include");
         if ($t[$k] -eq $null) { $t[$k] = @() }
@@ -1594,9 +1583,51 @@ function hz-build {
     }
 }
 
-# builds the documentation (on Windows)
-function hz-build-docs-on-windows {
+function patch-deps ($deps, $name, $target) {
+  
+  $remove = $deps.libraries.PSObject.Properties | where { $_.Name.StartsWith('Hazelcast') }
+  $remove | foreach-object { $deps.libraries.PSObject.Properties.remove($_.Name) }
 
+  $value = @"
+{
+    "type": "project",
+    "serviceable": false,
+    "sha512": ""
+}
+"@ | convertFrom-json
+  $deps.libraries | add-member -memberType NoteProperty -name $name -Value $value
+ 
+  $remove = $deps.targets.$target.PSObject.Properties | where { $_.Name.StartsWith('Hazelcast') }
+  $remove | foreach-object { $deps.targets.$target.PSObject.Properties.remove($_.Name) }
+
+  $value = @"
+{
+    "dependencies": {
+      "Microsoft.DocAsCode.Build.Common": "2.64.0",
+      "Microsoft.DocAsCode.Build.ConceptualDocuments": "2.64.0",
+      "Microsoft.DocAsCode.Build.ManagedReference": "2.64.0",
+      "Microsoft.DocAsCode.Common": "2.64.0",
+      "Microsoft.DocAsCode.DataContracts.Common": "2.64.0",
+      "Microsoft.DocAsCode.Plugins": "2.64.0",
+      "Microsoft.DocAsCode.YamlSerialization": "2.64.0",
+      "System.Composition": "7.0.0"
+    },
+    "runtime": {
+      "Hazelcast.DocAsCode.Build.dll": {}
+    }
+}
+"@ | convertFrom-json
+  $deps.targets.$target | add-member -memberType NoteProperty -name $name -Value $value  
+  
+  return $deps
+}
+
+# builds the documentation
+function hz-build-docs {
+  
+    # global dotnet tool package in ~/.dotnet/tools/.store/...
+    # local dotnet tool package in ~/.nuget/packages/docfx/2.64.0/tools/net7.0/any/
+  
     $r = "release"
     if ($isPreRelease) { $r = "pre-$r" }
     Write-Output "Build Documentation"
@@ -1614,59 +1645,34 @@ function hz-build-docs-on-windows {
         remove-item -recurse -force "$docDir/obj"
     }
 
-    # patch plugins
-    Write-Output ""
-    Write-Output "Docs: Patching plugins..."
-    # see https://github.com/dotnet/docfx/issues/8205 - this has to be temporary
-    $pluginsConfigFile = "$nugetPackages/memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
-    $pluginsConfig = [xml] (Get-Content $pluginsConfigFile)
-    $nsManager = new-object System.Xml.XmlNamespaceManager $pluginsConfig.NameTable
-    $ns = "urn:schemas-microsoft-com:asm.v1"
-    $nsManager.AddNamespace("asm", $ns)
-    $n = $pluginsConfig.SelectNodes("//asm:assemblyBinding/asm:dependentAssembly [asm:assemblyIdentity/@name = 'System.Memory']", $nsManager)
-    if ($n.Count -eq 0) {
-        $runtimeNode = $pluginsConfig.SelectSingleNode("//runtime")
-        $c0 = $pluginsConfig.CreateElement("assemblyBinding", $ns)
-        $c1 = $pluginsConfig.CreateElement("dependentAssembly", $ns)
-        $c2 = $pluginsConfig.CreateElement("assemblyIdentity", $ns)
-        $c2.SetAttribute("name", "System.Memory")
-        $c2.SetAttribute("publicKeyToken", "cc7b13ffcd2ddd51")
-        $c2.SetAttribute("culture", "neutral")
-        $c3 = $pluginsConfig.CreateElement("bindingRedirect", $ns)
-        $c3.SetAttribute("oldVersion", "0.0.0.0-4.0.1.2")
-        $c3.SetAttribute("newVersion", "4.0.1.2")
-        $c1.AppendChild($c2)
-        $c1.AppendChild($c3)
-        $c0.AppendChild($c1)
-        $runtimeNode.AppendChild($c0)
-        $pluginsConfig.Save($pluginsConfigFile)
-        Write-Output "  -> added System.Memory binding redirect to memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
-    }
-    else {
-        Write-Output "  -> found System.Memory binding redirect in memberpage/$memberpageVersion/content/plugins/docfx.plugins.config"
-    }
-
     # prepare templates
-    $template = "default,$nugetPackages/memberpage/$memberpageVersion/content,$docDir/templates/hz"
+    $template = "default,templates/hz"
 
-    # clear plugins
-    if (test-path "$docDir/templates/hz/Plugins") {
-        remove-item -recurse -force "$docDir/templates/hz/Plugins"
-    }
-    mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
-
-    # copy our plugin dll
-    $target = "net48" # must match DocAsCode project framework
-    $pluginDll = "$srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target/Hazelcast.Net.DocAsCode.dll"
+    # clear plugins then copy our dll
+    # NOTE: as of docfx 2.64 the plugin system is broken
+    $target = "net7.0" # must match DocAsCode project framework AND latest stable .NET
+    $pluginDll = "$srcDir/Hazelcast.DocAsCode.Build/bin/$($options.configuration)/$target/Hazelcast.DocAsCode.Build.dll"
+    #if (test-path "$docDir/templates/hz/Plugins") {
+    #    remove-item -recurse -force "$docDir/templates/hz/Plugins"
+    #}
+    #mkdir "$docDir/templates/hz/Plugins" >$null 2>&1
     if (-not (test-path $pluginDll)) {
-        Die "Could not find Hazelcast.Net.DocAsCode.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.Net.DocAsCode/bin/$($options.configuration)/$target"
+        Die "Could not find Hazelcast.DocAsCode.Build.dll, make sure to build the solution first.`nIn: $srcDir/Hazelcast.DocAsCode.Build/bin/$($options.configuration)/$target"
     }
-    # FIXME! what is this?
     #cp $pluginDll "$docDir/templates/hz/Plugins/"
-
-    # copy our plugin dll dependencies
-    # not *everything* needs to be copied, only ... some
-    #cp "$srcDir/Hazelcast.Net.DocAsCode/bin/$configuration/$target/System.*.dll" "$docDir/templates/hz/Plugins/"
+    
+    # so we have to do things differently
+    $v = &dotnet docfx --version # docfx 2.64.0+6a1e6d7eda3339dd5c7cd7a387f5637132122c2d
+    $v = $v.Substring($v.IndexOf(" ")+1)
+    $v = $v.Substring(0, $v.IndexOf("+"))
+    rm ~/.nuget/packages/docfx/$v/tools/$target/any/Hazelcast*
+    cp $pluginDll ~/.nuget/packages/docfx/$v/tools/$target/any
+    
+    # and patch the deps file, this really is not pretty - hardcoding the target path
+    $depsFile = "~/.nuget/packages/docfx/$v/tools/$target/any/docfx.deps.json"
+    $deps = get-content $depsFile | convertFrom-json
+    $deps = patch-deps $deps "Hazelcast.DocAsCode.Build/$($options.version)" ".NETCoreApp,Version=v7.0"
+    $deps | convertto-json -depth 32 | set-content $depsFile
 
     # prepare docfx.json
     get-content "$docDir/_docfx.json" |
@@ -1677,12 +1683,12 @@ function hz-build-docs-on-windows {
 
     # build
     Write-Output "Docs: Generate metadata..."
-    &$docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
+    &dotnet docfx metadata "$docDir/docfx.json" # --disableDefaultFilter
     if ($LASTEXITCODE) { Die "Error." }
     if (-not (test-path "$docDir/obj/dev/api/toc.yml")) { Die "Error: failed to generate metadata" }
 
     Write-Output "Docs: Build..."
-    &$docfx build "$docDir/docfx.json" --template $template
+    &dotnet docfx build "$docDir/docfx.json" --template $template #--logLevel Verbose
     if ($LASTEXITCODE) { Die "Error." }
 
     # post-process
@@ -1734,19 +1740,8 @@ function hz-build-docs-on-windows {
     set-content -path "$tmpDir/docfx.out/404.html" -value $text
 }
 
-# builds the documentation
-# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
-function hz-build-docs {
-    if ($isWindows) {
-        hz-build-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: building is not supported on non-Windows platforms"
-    }
-}
-
 # copy test coverage to doc
-function hz-cover-to-docs-on-windows {
+function hz-cover-to-docs {
 
     $docs = "$tmpDir/docfx.out"
     $versiondocs = "$docs/$docDstDir"
@@ -1780,30 +1775,8 @@ function hz-cover-to-docs-on-windows {
     set-content -path "$coverdocs/index.html" -value $index1
 }
 
-# copy test coverage to doc
-# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
-function hz-cover-to-docs {
-    if ($isWindows) {
-        hz-cover-to-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
-    }
-}
-
-# copy test coverage to doc
-# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
-function hz-cover-to-docs {
-    if ($isWindows) {
-        hz-cover-to-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: cover-to-docs is not supported on non-Windows platforms"
-    }
-}
-
-# gits the documentation (on Windows)
-function hz-git-docs-on-windows {
+# gits the documentation
+function hz-git-docs {
 
     Write-Output "Release Documentation"
     Write-Output "  Source         : $tmpdir/docfx.out"
@@ -1860,17 +1833,6 @@ function hz-git-docs-on-windows {
 
     Write-Output "Doc release is ready, but NOT pushed."
     Write-Output "Review $pages commit and push."
-}
-
-# gits the documentation
-# but only on Windows for now because docfx 3 (for .NET) is still prerelease and not complete
-function hz-git-docs {
-    if ($isWindows) {
-        hz-git-docs-on-windows
-    }
-    else {
-        Write-Output "Docs: gitting is not supported on non-Windows platforms"
-    }
 }
 
 # gets extra arguments for Java for Kerberos
@@ -2347,8 +2309,8 @@ function hz-serve-docs {
     }
 
     Write-Output "Documentation server is running..."
-    Write-Output "Press ENTER to stop"
-    &$docfx serve "$tmpDir/docfx.out"
+    Write-Output "Press ^C to stop"
+    &dotnet docfx serve "$tmpDir/docfx.out"
 }
 
 # packs a NuGet package
@@ -2530,8 +2492,8 @@ function hz-cleanup-code {
     # make sure we use the latest version of the JetBrains tool
     # note: this may update .config/dotnet-tools.json
     &dotnet tool update --local JetBrains.ReSharper.GlobalTools
-    # make sure we have the JetBrains tool
     &dotnet tool restore
+
     # run the JetBrains tool
     &dotnet jb cleanupcode Hazelcast.Net.sln --profile="Cleanup C# Header and Using"
 
