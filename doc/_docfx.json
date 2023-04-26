@@ -54,6 +54,14 @@
     "xref": [
       "xrefmap.yml"
     ],
-    "disableGitFeatures": true
+    "disableGitFeatures": true,
+    "markdownEngineName": "markdig",
+    "markdownEngineProperties": {
+      "markdigExtensions": [
+        "attributes",
+        "pipetables",
+        "gridtables"
+      ]
+    }
   }
 }

@@ -49,50 +49,59 @@ namespace Hazelcast.Core
         {
             if (socket == null) throw new ArgumentNullException(nameof(socket));
 
-            static void ConnectCallback(object sender, SocketAsyncEventArgs a)
+            static void Complete(SocketAsyncEventArgs sea, TaskCompletionSource<Socket> cs)
             {
-                var completionSource = (TaskCompletionSource<Socket>) a.UserToken;
-                if (a.SocketError == SocketError.Success)
-                    completionSource.TrySetResult(a.ConnectSocket);
+                if (sea.SocketError == SocketError.Success)
+                    cs.TrySetResult(sea.ConnectSocket);
                 else
-                    completionSource.TrySetException(new SocketException((int) a.SocketError));
+                    cs.TrySetException(new SocketException((int)sea.SocketError));
             }
 
-            var connected = new TaskCompletionSource<Socket>();
-            var e = new SocketAsyncEventArgs();
-            e.UserToken = connected;
-            e.RemoteEndPoint = endPoint;
-            e.Completed += ConnectCallback;
-            var pending = socket.ConnectAsync(e);
+            static void CompleteCallback(object sender, SocketAsyncEventArgs sea)
+                => Complete(sea, (TaskCompletionSource<Socket>) sea.UserToken);
 
-            Task task;
-            if (pending)
+            var connected = new TaskCompletionSource<Socket>(TaskCreationOptions.RunContinuationsAsynchronously);
+
+            using var sea = new SocketAsyncEventArgs
             {
-                var timeoutCancel = new CancellationTokenSource();
-                var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
-                var reg = cancellationToken.Register(() => timeoutCancel.Cancel());
+                UserToken = connected,
+                RemoteEndPoint = endPoint
+            };
 
-                task = await Task.WhenAny(connected.Task, timeoutTask).CfAwait();
-                await reg.DisposeAsync().CfAwait();
-                timeoutCancel.Cancel();
-                timeoutCancel.Dispose();
-                await timeoutTask.CfAwaitNoThrow();
-            }
-            else
+            sea.Completed += CompleteCallback;
+            var pending = socket.ConnectAsync(sea);
+
+            if (!pending)
             {
-                task = connected.Task;
-                ConnectCallback(null, e);
-            }
-
-            e.Dispose();
-
-            if (task == connected.Task)
-            {
-                await task.CfAwait(); // throw if there is anything to throw (failed to connect...)
+                // "The I/O operation completed synchronously. In this case, The Completed event on the
+                // sea parameter will not be raised and the sea object passed as a parameter may be
+                // examined immediately"
+                if (sea.SocketError != SocketError.Success)
+                    throw new SocketException((int) sea.SocketError);
                 return;
             }
 
-            // else, it was the timeout task
+            // "the I/O operation is pending. The Completed event on the sea parameter will be raised
+            // upon completion of the operation."
+            // but, we don't want to wait forever, and have to deal with timeout + cancellation.
+
+            using var timeoutCancel = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            var timeoutTask = Task.Delay(timeoutMilliseconds, timeoutCancel.Token);
+            var task = await Task.WhenAny(connected.Task, timeoutTask).CfAwait();
+
+            if (!timeoutTask.IsCompletedSuccessfully())
+            {
+                timeoutCancel.Cancel(); // don't leave the timeoutTask running
+                await timeoutTask.CfAwaitNoThrow(); // and make sure it does not leak unobserved exception
+            }
+
+            if (task != timeoutTask)
+            {
+                connected.Task.GetAwaiter().GetResult(); // we know the task has completed - throw if needed
+                return;
+            }
+
+            // we *have* timed out (or got canceled)
 
             // we *need* to await connected.Task even when it was not the task returned by WhenAny else
             // it may leak unobserved exceptions, as ConnectCallback may be invoked even when the socket
@@ -101,7 +110,7 @@ namespace Hazelcast.Core
             connected.TrySetResult(null);
             await connected.Task.CfAwaitNoThrow(); // don't leave exceptions unobserved
 
-            TryCloseAndDispose(socket);
+            TryDispose(socket);
 
             if (cancellationToken.IsCancellationRequested)
                 throw new OperationCanceledException("The socket connection operation has been canceled.");
@@ -110,12 +119,11 @@ namespace Hazelcast.Core
         }
 
         [ExcludeFromCodeCoverage] // catch statement is a pain to cover properly
-        private static void TryCloseAndDispose(Socket socket)
+        private static void TryDispose(IDisposable disposable)
         {
             try
             {
-                socket.Close();
-                socket.Dispose();
+                disposable.Dispose();
             }
             catch { /* may happen, don't care */ }
         }

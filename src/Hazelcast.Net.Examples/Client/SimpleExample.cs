@@ -22,51 +22,53 @@ namespace Hazelcast.Examples.Client
     // ReSharper disable once UnusedMember.Global
     public class SimpleExample
     {
-        //
-        // this is a complete example of a simple console application where
-        // every component is configured and created explicitly.
-        //
-        // configuration (https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration)
-        //
-        //   environment
-        //     optional Hazelcast.Build(...) 'environmentName' argument: Development, Staging, Production (default), ...
-        //     falls back to DOTNET_ENVIRONMENT + ASPNETCORE_ENVIRONMENT environment variables
-        //     determines <env>, default is Production
-        //
-        //   configuration file
-        //     appsettings.json
-        //     appsettings.<env>.json
-        //     hazelcast.json
-        //     hazelcast.<env>.json
-        //
-        //     {
-        //       "hazelcast": {
-        //         "networking": {
-        //           "addresses": [ "server:port" ]
-        //         }
-        //       }
-        //     }
-        //
-        //   environment variables
-        //     hazelcast__networking__addresses__0=server:port (standard .NET)
-        //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
-        //
-        //   command line
-        //     hazelcast:networking:addresses:0=server:port (standard .NET)
-        //     hazelcast.networking.addresses.0=server:port (hazelcast-specific)
-        //
-        // the simplest way to run this example is to build the code:
-        //  ./hz.ps1 build
-        //
-        // then to execute the example:
-        //  ./hz.ps1 run-example Client.SimpleExample --- --hazelcast.networking.addresses.0=server.port
-        //
-        // it is possible to run more than once with --hazelcast.example.runCount=2
-        // the pause between the runs can be configured to 10s with --hazelcast.example.pauseDuration=00:00:10
-        // you may want to enable re-connection with --hazelcast.networking.reconnectMode=reconnectAsync
-        // it is possible to change the Hazelcast logging level from Information to anything else,
-        // with --Logging:LogLevel:Hazelcast=Debug (note that for this non-Hazelcast property, the dot-separator
-        // is not supported and a true .NET supported separator must be used - here, a colon)
+        
+    /*
+    This is a complete example of a simple console application where
+    every component is configured and created explicitly.
+    
+    configuration (https://docs.microsoft.com/en-us/aspnet/core/fundamentals/configuration)
+    
+      environment
+        optional Hazelcast.Build(...) 'environmentName' argument: Development, Staging, Production (default), ...
+        falls back to DOTNET_ENVIRONMENT + ASPNETCORE_ENVIRONMENT environment variables
+        determines <env>, default is Production
+    
+      configuration file
+        appsettings.json
+        appsettings.<env>.json
+        hazelcast.json
+        hazelcast.<env>.json
+    
+        {
+          "hazelcast": {
+            "networking": {
+              "addresses": [ "server:port" ]
+            }
+          }
+        }
+    
+      environment variables
+        hazelcast__networking__addresses__0=server:port (standard .NET)
+        hazelcast.networking.addresses.0=server:port (hazelcast-specific)
+    
+      command line
+        hazelcast:networking:addresses:0=server:port (standard .NET)
+        hazelcast.networking.addresses.0=server:port (hazelcast-specific)
+    
+    the simplest way to run this example is to build the code:
+     ./hz.ps1 build
+    
+    then to execute the example:
+     ./hz.ps1 run-example Client.SimpleExample --- --hazelcast.networking.addresses.0=server.port
+    
+    it is possible to run more than once with --hazelcast.example.runCount=2
+    the pause between the runs can be configured to 10s with --hazelcast.example.pauseDuration=00:00:10
+    you may want to enable re-connection with --hazelcast.networking.reconnectMode=reconnectAsync
+    it is possible to change the Hazelcast logging level from Information to anything else,
+    with --Logging:LogLevel:Hazelcast=Debug (note that for this non-Hazelcast property, the dot-separator
+    is not supported and a true .NET supported separator must be used - here, a colon)
+    */
 
         public static async Task Main(string[] args)
         {

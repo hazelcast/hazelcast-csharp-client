@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.NearCaching;
@@ -24,34 +25,35 @@ using Hazelcast.Networking;
 
 namespace Hazelcast.Examples.Client
 {
-    // this example will run forever until stopped with ^C
-    // unless an iteration count or iteration duration is provided via options
-    //
-    // this is to test that a client simply pinging a cluster can stay connected
-    //
-    // go to https://cloud.hazelcast.com and start a (new) cluster, get its name and token from the
-    // UI, and update the code accordingly (see commented-out options) or pass these parameters
-    // to the example via the command line:
-    //
-    // hz run-example ~LongRunningCloudClient --- \
-    //   --hazelcast.clusterName="***" \
-    //   --hazelcast.networking.cloud.discoveryToken="***
-    //
-    // when SSL is enabled, additional parameters would be required:
-    //   --hazelcast.networking.ssl.enabled=true
-    //   --hazelcast.networking.ssl.validateCertificateChain=false
-    //   --hazelcast.networking.ssl.protocol=TLS12
-    //   --hazelcast.networking.ssl.certificatePath=path/to/client.pfx
-    //   --hazelcast.networking.ssl.certificatePassword=***
-    //
-    // then example behavior can be controlled with example options:
-    //   --hazelcast.example.iterationCount=10
-    //   --hazelcast.example.iterationDuration=00:10:00
-    //   --hazelcast.example.iterationPauseMilliseconds=50
-    //
-    // the example will run IterationCount times, for IterationDuration, whichever limit
-    // is reached first. if both are set to infinite, the example will run until interrupted
-    // via Ctrl-C. a pause of IterationPauseMilliseconds is observed between each iteration.
+    /*
+        This example will run forever until stopped with ^C
+        unless an iteration count or iteration duration is provided via options
+        
+        this is to test that a client simply pinging a cluster can stay connected
+        
+        go to https://viridian.hazelcast.com/ and start a (new) cluster, get its name, token and
+        ssl certificate from the UI, and update the code accordingly (see commented-out options) 
+        or pass these parameters to the example via the command line:
+        
+        hz run-example ~LongRunningCloudClient --- \
+          --hazelcast.clusterName="YOUR_CLUSTER_NAME" \
+          --hazelcast.networking.cloud.discoveryToken="YOUR_CLUSTER_DISCOVERY_TOKEN" \
+          --hazelcast.metrics.enabled=true \
+          --hazelcast.networking.ssl.enabled=true \
+          --hazelcast.networking.ssl.validateCertificateChain=false \
+          --hazelcast.networking.ssl.protocol=TLS12 \
+          --hazelcast.networking.ssl.certificatePath="path/to/client.pfx" \
+          --hazelcast.networking.ssl.certificatePassword="YOUR_SSL_PASSWORD"
+        
+        then example behavior can be controlled with example options:
+          --hazelcast.example.iterationCount=10
+          --hazelcast.example.iterationDuration=00:10:00
+          --hazelcast.example.iterationPauseMilliseconds=50
+        
+        the example will run IterationCount times, for IterationDuration, whichever limit
+        is reached first. if both are set to infinite, the example will run until interrupted
+        via Ctrl-C. a pause of IterationPauseMilliseconds is observed between each iteration.
+    */
 
     public static class LongRunningCloudClient
     {
@@ -69,14 +71,28 @@ namespace Hazelcast.Examples.Client
             Console.WriteLine("Build options...");
             var optionsBuilder = new HazelcastOptionsBuilder()
                 .With(args)
+                /*.With(config =>
+                {
+                    // Your Viridian cluster name.
+                    config.ClusterName = "YOUR_CLUSTER_NAME";
+                    // Your discovery token and url to connect Viridian cluster.
+                    config.Networking.Cloud.DiscoveryToken = "YOUR_CLUSTER_DISCOVERY_TOKEN";    
+                    // Enable metrics to see on Management Center.
+                    config.Metrics.Enabled = true;
+                    // Configure SSL.
+                    config.Networking.Ssl.Enabled = true;
+                    config.Networking.Ssl.ValidateCertificateChain = false;
+                    config.Networking.Ssl.Protocol = SslProtocols.Tls12;
+                    config.Networking.Ssl.CertificatePath = "client.pfx";
+                    config.Networking.Ssl.CertificatePassword = "YOUR_SSL_PASSWORD";
+                })*/
                 .WithConsoleLogger();
 
             var exampleOptions = new ExampleOptions();
-            optionsBuilder = optionsBuilder.Bind("hazelcast:example", exampleOptions);
-
-            // TODO: do better with pre-options
-            // .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
-            // .WithDefault(o => { o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000; })
+            optionsBuilder = optionsBuilder.Bind("hazelcast:example", exampleOptions)
+                .WithDefault("Logging:LogLevel:Hazelcast", "Debug")
+                .WithDefault(o => { o.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 4000; });
+            
             if (args.All(x => x != "Logging:LogLevel:Hazelcast"))
                 optionsBuilder = optionsBuilder.With("Logging:LogLevel:Hazelcast", "Debug");
 
@@ -87,21 +103,6 @@ namespace Hazelcast.Examples.Client
 
             // the name of the map (needed for NearCache options)
             var mapName = "map_" + Guid.NewGuid().ToString("N").Substring(0, 7);
-
-            // enable metrics
-            options.Metrics.Enabled = true;
-
-            // configure cloud (uncomment or use command-line args)
-            //options.ClusterName = "***";
-            //options.Networking.Cloud.DiscoveryToken = "***";
-            //options.Networking.Cloud.Url = new Uri("https://...");
-
-            // make sure we reconnect
-            //
-            // note: this can also be achieved with preview options
-            // options.Preview.EnableNewReconnectOptions = true;
-            //
-            options.Networking.ReconnectMode = ReconnectMode.ReconnectAsync;
 
             // enable NearCache for our map so that we send NearCache metrics
             options.NearCaches[mapName] = new NearCacheOptions

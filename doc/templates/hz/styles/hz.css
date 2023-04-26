@@ -106,7 +106,7 @@ article h5{
 }
 
 .level0.conceptual{
-    margin-bottom: 2em;    
+    margin-bottom: 2em;
 }
 
 .devwarn .article{
@@ -148,6 +148,9 @@ article h5{
 
 table.table-bordered.hz-welcome {
   margin: 0 0 32px 0;
+  border-collapse: separate;
+  border-spacing: 10px;
+  border: none;
 }
 
 table.table-bordered.hz-welcome td {
