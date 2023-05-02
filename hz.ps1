@@ -145,9 +145,11 @@ $params = @(
     @{ name = "yolo";            type = [switch]; default = $false;
        desc = "confirms excution of sensitive actions"
     },
-    @{
-        name="copy-files-source"; type = [string];  default = $null;
-        desc = "source folder to be copied"
+    @{ name="copy-files-source"; type = [string];  default = $null;
+       desc = "source folder to be copied"
+    },
+    @{ name="beta"; type = [switch]; default = $false;
+       desc = "whether to run beta features and tests"
     }
 )
 
@@ -2099,6 +2101,10 @@ function hz-test {
     if(!($options.enterprise)) {
         if (-not [System.String]::IsNullOrWhiteSpace($options.testFilter)) { $options.testFilter += " && " } else { $options.testFilter = "" }
         $options.testFilter += "cat != enterprise"
+    }
+    if(!($options.beta)) {
+        if (-not [System.String]::IsNullOrWhiteSpace($options.testFilter)) { $options.testFilter += " && " } else { $options.testFilter = "" }
+        $options.testFilter += "cat != beta"
     }
     if (-not [System.String]::IsNullOrWhiteSpace($options.test)) {
         if (-not [System.String]::IsNullOrWhiteSpace($options.testFilter)) { $options.testFilter += " && " } else { $options.testFilter = "" }

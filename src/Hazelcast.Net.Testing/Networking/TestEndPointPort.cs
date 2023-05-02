@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+using System.Linq;
+using System.Net.NetworkInformation;
 using System.Threading;
 
 namespace Hazelcast.Testing.Networking
@@ -30,7 +32,20 @@ namespace Hazelcast.Testing.Networking
         /// <returns>The next test endpoint port.</returns>
         public static int GetNext()
         {
-            return PortBase + Interlocked.Increment(ref _offset);
+            while (true)
+            {
+                var port = PortBase + Interlocked.Increment(ref _offset);
+                if (!IsListening(port)) return port;
+            }
+        }
+
+        private static bool IsListening(int port)
+        {
+            var ipProperties = IPGlobalProperties.GetIPGlobalProperties();
+
+            //var activeConnections = ipProperties.GetActiveTcpConnections();
+            var listeners = ipProperties.GetActiveTcpListeners();
+            return listeners.Any(x => x.Port == port);
         }
     }
 }
