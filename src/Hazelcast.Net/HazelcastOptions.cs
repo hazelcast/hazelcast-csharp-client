@@ -18,6 +18,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.Metrics;
+using Hazelcast.Models;
 using Hazelcast.Sql;
 
 namespace Hazelcast
@@ -67,6 +68,7 @@ namespace Hazelcast
             Events = other.Events.Clone();
             Metrics = other.Metrics.Clone();
             Sql = other.Sql.Clone();
+            ReliableTopics = other.ReliableTopics.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());
             
             NearCache = other.NearCache.Clone();
             NearCaches = other.NearCaches.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Clone());

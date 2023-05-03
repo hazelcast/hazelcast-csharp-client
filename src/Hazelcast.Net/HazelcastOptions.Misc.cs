@@ -17,6 +17,7 @@ using Hazelcast.Configuration.Binding;
 using Hazelcast.Core;
 using Hazelcast.DistributedObjects;
 using Hazelcast.Logging;
+using Hazelcast.Models;
 using Hazelcast.NearCaching;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
@@ -54,6 +55,11 @@ namespace Hazelcast
         /// </summary>
         /// <returns>The common Near Cache options.</returns>
         public CommonNearCacheOptions NearCache { get; } = new CommonNearCacheOptions();
+
+        /// <summary>
+        /// Gets the dictionary which contains <see cref="ReliableTopicOptions"/> for each reliable topic.
+        /// </summary>
+        public IDictionary<string, ReliableTopicOptions> ReliableTopics { get; } = new Dictionary<string, ReliableTopicOptions>();
 
         /// <summary>
         /// Gets or sets the configuration pattern matcher.

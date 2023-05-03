@@ -30,6 +30,11 @@ namespace Hazelcast.DistributedObjects
         public const string Topic = "hz:impl:topicService";
 
         /// <summary>
+        /// The name of the reliable topic service.
+        /// </summary>
+        public const string ReliableTopic = "hz:impl:reliableTopicService";
+        
+        /// <summary>
         /// The name of the list service.
         /// </summary>
         public const string List = "hz:impl:listService";

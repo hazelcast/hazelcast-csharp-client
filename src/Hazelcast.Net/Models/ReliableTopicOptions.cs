@@ -1,0 +1,61 @@
+﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
+// 
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+// 
+// http://www.apache.org/licenses/LICENSE-2.0
+// 
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+using Hazelcast.DistributedObjects;
+
+namespace Hazelcast.Models;
+
+/// <summary>
+/// Options for a Reliable Topic.
+/// </summary>
+public class ReliableTopicOptions
+{
+    /// <summary>
+    /// Initialize new Reliable Topic Options.
+    /// </summary>
+    public ReliableTopicOptions()
+    { }
+
+    internal ReliableTopicOptions(ReliableTopicOptions other)
+    {
+        Policy = other.Policy;
+        BatchSize = other.BatchSize;
+    }
+
+    /// <summary>
+    /// Initialize new Reliable Topic Options with arguments.
+    /// </summary>
+    /// <param name="policy">Overload policy.</param>
+    /// <param name="batchSize">Batch size of read.</param>
+    public ReliableTopicOptions(TopicOverloadPolicy policy, int batchSize)
+    {
+        Policy = policy;
+        BatchSize = batchSize;
+    }
+
+    /// <summary>
+    /// Gets or Sets overload policy of the ring buffer.
+    /// </summary>
+    public TopicOverloadPolicy Policy { get; set; } = TopicOverloadPolicy.Block;
+
+    /// <summary>
+    /// Gets or sets batch size of read.
+    /// </summary>
+    public int BatchSize { get; set; } = 10;
+    
+    /// <summary>
+    /// Clone the options.
+    /// </summary>
+    public ReliableTopicOptions Clone() => new ReliableTopicOptions(this);
+}

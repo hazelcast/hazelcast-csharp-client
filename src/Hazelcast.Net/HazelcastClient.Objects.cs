@@ -131,6 +131,24 @@ namespace Hazelcast
         /// <inheritdoc />
         public
 #if !HZ_OPTIMIZE_ASYNC
+            async
+#endif
+        Task<IHTopic<T>> GetReliableTopicAsync<T>(string name)
+        {
+            var task = _distributedOjects.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.ReliableTopic, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HTopic<T>(n, factory, cluster, serializationService, loggerFactory));
+
+#if HZ_OPTIMIZE_ASYNC
+            return task;
+#else
+            return await task.CfAwait();
+#endif
+        }
+
+        /// <inheritdoc />
+        public
+#if !HZ_OPTIMIZE_ASYNC
         async
 #endif
         Task<IHList<T>> GetListAsync<T>(string name)

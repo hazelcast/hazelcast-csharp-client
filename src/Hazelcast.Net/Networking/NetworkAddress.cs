@@ -19,13 +19,14 @@ using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
+using Hazelcast.Serialization;
 
 namespace Hazelcast.Networking
 {
     /// <summary>
     /// Represents a network address.
     /// </summary>
-    public class NetworkAddress : IEquatable<NetworkAddress>
+    public class NetworkAddress : IEquatable<NetworkAddress>, IIdentifiedDataSerializable
     {
         // NOTES
         //
@@ -142,7 +143,7 @@ namespace Hazelcast.Networking
         /// Gets the IP endpoint corresponding to this address.
         /// </summary>
         // ReSharper disable once InconsistentNaming
-        public IPEndPoint IPEndPoint { get; }
+        public IPEndPoint IPEndPoint { get; private set; }
 
         /// <summary>
         /// Whether the address is an IP v4 address.
@@ -379,5 +380,27 @@ namespace Hazelcast.Networking
         /// </summary>
         public static bool operator !=(NetworkAddress a1, NetworkAddress a2)
             => !(a1 == a2);
+
+        /// <inheritdoc />
+        public void ReadData(IObjectDataInput input)
+        {
+            var port = input.ReadInt();
+            var type = input.ReadByte();
+            var host = input.ReadString();
+            IPEndPoint = new IPEndPoint(GetIPAddressByName(host), port);
+        }
+
+        /// <inheritdoc />
+        public void WriteData(IObjectDataOutput output)
+        {
+            output.WriteInt(Port);
+            output.WriteByte((byte)(IsIpV4 ? 4 : 6));
+            output.WriteString(Host);
+        }
+
+        /// <inheritdoc />
+        public int FactoryId => 0;
+        /// <inheritdoc />
+        public int ClassId => 1;
     }
 }
