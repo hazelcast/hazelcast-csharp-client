@@ -33,7 +33,7 @@ internal class ClientObjectsTests : SingleMemberClientRemoteTestBase
         var list = await Client.GetListAsync<int>(CreateUniqueName());
         var objects = await Client.GetDistributedObjectsAsync();
 
-        var expectedCount = ServerVersion.GetVersion() >= new NuGetVersion(5, 2, 0)
+        var expectedCount = ServerVersion.GetVersion() >= new NuGetVersion(5, 1, 0)
             ? 2 // the map and the list
             : 3; // and also the internal sql catalog
 
