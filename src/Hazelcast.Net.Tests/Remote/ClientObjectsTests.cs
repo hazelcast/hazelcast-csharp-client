@@ -26,6 +26,7 @@ namespace Hazelcast.Tests.Remote;
 internal class ClientObjectsTests : SingleMemberClientRemoteTestBase 
 {
     [Test]
+    [ServerCondition("[5.0,)")] // 5.0 and above
     public async Task CanGetDistributedObjects()
     {
         var map = await Client.GetMapAsync<int, int>(CreateUniqueName());
