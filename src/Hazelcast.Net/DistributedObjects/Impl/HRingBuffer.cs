@@ -93,7 +93,7 @@ namespace Hazelcast.DistributedObjects.Impl
         }
 
         /// <inheritdoc />
-        public async Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount)
+        public async Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount)
         {
             if (startSequence < 0) throw new ArgumentOutOfRangeException(nameof(startSequence));
             if (minCount < 0) throw new ArgumentOutOfRangeException(nameof(minCount), "The value of minCount must be equal to, or greater than, zero.");
@@ -105,10 +105,16 @@ namespace Hazelcast.DistributedObjects.Impl
 
             var requestMessage = RingbufferReadManyCodec.EncodeRequest(Name, startSequence, minCount, maxCount, null);
             var responseMessage = await Cluster.Messaging.SendToPartitionOwnerAsync(requestMessage, PartitionId).CfAwait();
-            var response = RingbufferReadManyCodec.DecodeResponse(responseMessage).Items;
-            var result = new ReadOnlyLazyList<TItem>(SerializationService);
-            await result.AddAsync(response).CfAwait();
+            var response = RingbufferReadManyCodec.DecodeResponse(responseMessage);
+            var result = new RingBufferResultSet<TItem>(SerializationService, response.ItemSeqs, response.ReadCount, response.NextSeq);
+            await result.AddAsync(response.Items).CfAwait();
             return result;
+        }
+
+        /// <inheritdoc />
+        public async Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount)
+        {
+            return await ReadManyWithResultSetAsync(startSequence, minCount, maxCount).CfAwait();
         }
 
         /// <inheritdoc />

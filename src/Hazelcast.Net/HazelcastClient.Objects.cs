@@ -127,23 +127,26 @@ namespace Hazelcast
             return await task.CfAwait();
 #endif
         }
-
+        
+        // Reliable topic is heavily implemented on the client side unlike the other data structures. Since we do not 
+        // pass the client object around, it is better to create ring buffer at the high level. So, this method is excluded 
+        // from HZ_OPTIMIZE_ASYNC optimization.
         /// <inheritdoc />
-        public
-#if !HZ_OPTIMIZE_ASYNC
-            async
-#endif
-        Task<IHTopic<T>> GetReliableTopicAsync<T>(string name)
+        public async Task<IHReliableTopic<T>> GetReliableTopicAsync<T>(string name)
         {
-            var task = _distributedOjects.GetOrCreateAsync<IHTopic<T>, HTopic<T>>(ServiceNames.ReliableTopic, name, true,
-                (n, factory, cluster, serializationService, loggerFactory)
-                    => new HTopic<T>(n, factory, cluster, serializationService, loggerFactory));
+            // Prefix is to separate user and system data structures.
+            var ringBuffer = await GetRingBufferAsync<ReliableTopicMessage>("_hz_rb_" + name);
 
-#if HZ_OPTIMIZE_ASYNC
-            return task;
-#else
+            // Reliable topic can be configured with name.
+            // Todo: Think, provide an API that accepts options??
+            if (!_options.ReliableTopics.TryGetValue(name, out var rtOptions))
+                rtOptions = new ReliableTopicOptions();
+
+            var task = _distributedOjects.GetOrCreateAsync<IHReliableTopic<T>, HReliableTopic<T>>(ServiceNames.ReliableTopic, name, true,
+                (n, factory, cluster, serializationService, loggerFactory)
+                    => new HReliableTopic<T>(n, name, factory,  rtOptions,cluster,serializationService, ringBuffer, loggerFactory));
+
             return await task.CfAwait();
-#endif
         }
 
         /// <inheritdoc />

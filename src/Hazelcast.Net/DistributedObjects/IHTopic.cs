@@ -13,7 +13,6 @@
 // limitations under the License.
 
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Hazelcast.DistributedObjects
@@ -38,7 +37,7 @@ namespace Hazelcast.DistributedObjects
     {
         /// <summary>Subscribes to this topic.</summary>
         /// <param name="state">A state object.</param>
-        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> events, object state = null, CancellationToken cancellationToken = default);
+        Task<Guid> SubscribeAsync(Action<TopicEventHandlers<T>> events, object state = null);
 
         /// <summary>Stops receiving messages for the given message listener.</summary>
         /// <remarks>
@@ -56,11 +55,11 @@ namespace Hazelcast.DistributedObjects
         /// trigger anymore, the server may keep sending (ignored) event messages. It is therefore
         /// recommended to retry unsubscribing until it is successful.</para>
         /// </remarks>
-        ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default);
+        ValueTask<bool> UnsubscribeAsync(Guid subscriptionId);
 
         /// <summary>Publishes the message to all subscribers of this topic</summary>
         /// <param name="message"></param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        Task PublishAsync(T message, CancellationToken cancellationToken = default);
+        Task PublishAsync(T message);
     }
 }

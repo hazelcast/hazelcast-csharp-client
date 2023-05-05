@@ -18,7 +18,7 @@ using Hazelcast.Serialization;
 
 namespace Hazelcast.Models;
 
-public class ReliableTopicMessage : IIdentifiedDataSerializable
+internal class ReliableTopicMessage : IIdentifiedDataSerializable
 {
     internal ReliableTopicMessage(IData payload, NetworkAddress publisherAddress)
     {
@@ -40,9 +40,7 @@ public class ReliableTopicMessage : IIdentifiedDataSerializable
     /// <summary>
     /// Gets payload of the message.
     /// </summary>
-    public byte[] Data => Payload.ToByteArray();
-
-    internal IData Payload { get; private set; }
+    public IData Payload { get; private set; }
 
     /// <inheritdoc />
     public void ReadData(IObjectDataInput input)

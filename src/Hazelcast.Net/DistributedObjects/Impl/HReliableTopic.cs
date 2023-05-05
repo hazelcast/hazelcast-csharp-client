@@ -25,12 +25,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.DistributedObjects.Impl;
 
-/// <summary>
-/// Reliable Topic implementation of <see cref="IHTopic{TItem}"/>.
-/// The reliable Topic has its own <see cref="IHRingBuffer{TItem}"/> to store events,
-/// and has its own executor to process events.
-/// </summary>
-internal class HReliableTopic<TItem> : DistributedObjectBase, IHTopic<TItem>
+internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TItem>
 {
     private IHRingBuffer<ReliableTopicMessage> _ringBuffer;
     private int _backOffMax = 2000;
@@ -53,7 +48,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHTopic<TItem>
     }
 
     /// <inheritdoc />
-    public Task<Guid> SubscribeAsync(Action<TopicEventHandlers<TItem>> events, object state = null, CancellationToken cancellationToken = default)
+    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events, object state = null, CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
@@ -112,21 +107,30 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHTopic<TItem>
 
             if (result != -1) break;
 
+            _logger.IfDebug().LogDebug("Waiting to publish message with {Duration}ms back off", wait);
             await Task.Delay(wait, cancellationToken).CfAwait();
 
             wait *= 2;
 
             if (wait > _backOffMax) wait = _backOffMax;
         }
+
+        if (cancellationToken.IsCancellationRequested)
+            _logger.IfDebug().LogDebug("Publishing process is canceled. {Message}", rtMessage);
     }
 
     public ValueTask DisposeAsync()
     {
-        throw new NotImplementedException();
+        if (_disposed.InterlockedZeroToOne())
+        {
+            // todo dispose tasks.
+        }
+
+        return default;
     }
 
     public ValueTask DestroyAsync()
     {
-        throw new NotImplementedException();
+        return _ringBuffer.DestroyAsync();
     }
 }
