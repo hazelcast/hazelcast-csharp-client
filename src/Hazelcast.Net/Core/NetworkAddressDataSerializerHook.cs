@@ -1,25 +1,32 @@
 ﻿// Copyright (c) 2008-2023, Hazelcast, Inc. All Rights Reserved.
-//
+// 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
 // You may obtain a copy of the License at
-//
+// 
 // http://www.apache.org/licenses/LICENSE-2.0
-//
+// 
 // Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-namespace Hazelcast.Serialization
+using System;
+using Hazelcast.Networking;
+using Hazelcast.Serialization;
+
+namespace Hazelcast.Core;
+
+public class NetworkAddressDataSerializerHook : IDataSerializerHook
 {
-    internal static class FactoryIds
+    public IDataSerializableFactory CreateFactory()
     {
-        public const int PredicateFactoryId = -20;
-        public const int AggregatorDsFactoryId = -29;
-        public const int ProjectionDsFactoryId = -30;
-        public const int ReliableTopicMessageFactoryId = -9;
-        public const int NetworkAddressFactoryId = 0;
+        var constructors = new Func<IIdentifiedDataSerializable>[2];
+        constructors[1] = () => new NetworkAddress("0.0.0.0", 0);
+
+        return new ArrayDataSerializableFactory(constructors);
     }
+
+    public int FactoryId { get; } = FactoryIds.NetworkAddressFactoryId;
 }

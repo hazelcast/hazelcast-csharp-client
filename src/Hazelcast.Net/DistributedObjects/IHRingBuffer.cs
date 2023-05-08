@@ -172,7 +172,7 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
         Task<IReadOnlyList<TItem>> ReadManyAsync(long startSequence, int minCount, int maxCount);
-        
+
         /// <summary>
         /// Reads a batch of items from the Ringbuffer with sequence information.
         /// </summary>
@@ -192,7 +192,7 @@ namespace Hazelcast.DistributedObjects
         /// or if maxCount larger than the capacity of the ringbuffer
         /// or if maxCount larger than 1000 (to prevent overload)
         /// </exception>
-        Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount)
+        Task<IRingBufferResultSet<TItem>> ReadManyWithResultSetAsync(long startSequence, int minCount, int maxCount);
 
         /// <summary>Reads one item from the Ringbuffer.</summary>
         /// <remarks>

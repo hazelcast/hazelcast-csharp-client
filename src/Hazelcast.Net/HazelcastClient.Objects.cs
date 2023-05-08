@@ -132,7 +132,7 @@ namespace Hazelcast
         // pass the client object around, it is better to create ring buffer at the high level. So, this method is excluded 
         // from HZ_OPTIMIZE_ASYNC optimization.
         /// <inheritdoc />
-        public async Task<IHReliableTopic<T>> GetReliableTopicAsync<T>(string name)
+        public async Task<IHReliableTopic<T>> GetReliableTopicAsync<T>(string name, ReliableTopicOptions option = default)
         {
             // Prefix is to separate user and system data structures.
             var ringBuffer = await GetRingBufferAsync<ReliableTopicMessage>("_hz_rb_" + name);
@@ -144,7 +144,7 @@ namespace Hazelcast
 
             var task = _distributedOjects.GetOrCreateAsync<IHReliableTopic<T>, HReliableTopic<T>>(ServiceNames.ReliableTopic, name, true,
                 (n, factory, cluster, serializationService, loggerFactory)
-                    => new HReliableTopic<T>(n, name, factory,  rtOptions,cluster,serializationService, ringBuffer, loggerFactory));
+                    => new HReliableTopic<T>(ServiceNames.ReliableTopic, n, factory,  rtOptions,cluster,serializationService, ringBuffer, loggerFactory));
 
             return await task.CfAwait();
         }

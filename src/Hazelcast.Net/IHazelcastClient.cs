@@ -223,7 +223,7 @@ namespace Hazelcast
         /// <para>If an object with the specified <paramref name="name"/> does not
         /// exist already in the cluster, a new object is created.</para>
         /// </remarks>
-        Task<IHTopic<T>> GetReliableTopicAsync<T>([NotNull]string name, [MaybeNull]ReliableTopicOptions option = default);
+        Task<IHReliableTopic<T>> GetReliableTopicAsync<T>([NotNull]string name, [MaybeNull]ReliableTopicOptions option = default);
         
         /// <summary>
         /// Gets an <see cref="IHList{T}"/> distributed object.

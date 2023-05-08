@@ -25,6 +25,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Hazelcast.Core;
 
+/// <summary>
+/// The class fetches the messages from a underlying ring buffer of the reliable topic as batches, and
+/// invokes the registered events until disposed.
+/// </summary>
+/// <typeparam name="TItem"></typeparam>
 internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
 {
     private BackgroundTask _backgroundTask;
@@ -37,10 +42,11 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
     private int _disposed;
     private ILogger _logger;
     private int _batchSize;
-    private long _sequence = long.MinValue;
+    private long _sequence;
     private ReliableTopicEventHandlerOptions _options;
     private Cluster _cluster;
     private SerializationService _serializationService;
+    private Guid _id;
 
     private ReliableTopicMessageExecutor(IHRingBuffer<ReliableTopicMessage> ringBuffer,
         Action<ReliableTopicEventHandler<TItem>> events,
@@ -50,6 +56,7 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         int batchSize,
         Cluster cluster,
         SerializationService serializationService,
+        Guid id,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
@@ -61,9 +68,10 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _batchSize = batchSize;
         _cluster = cluster;
         _serializationService = serializationService;
-        _options = options;
+        _options = options ?? new ReliableTopicEventHandlerOptions();
         _handlers = new ReliableTopicEventHandler<TItem>();
         _stateObject = stateObject;
+        _id = id;
         _events(_handlers);
         _backgroundTask = BackgroundTask.Run(token => Execute(cancellationToken));
     }
@@ -76,73 +84,112 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         int batchSize,
         Cluster cluster,
         SerializationService serializationService,
+        Guid id,
         ILoggerFactory loggerFactory,
         CancellationToken cancellationToken)
     {
-        return new ReliableTopicMessageExecutor<TItem>(ringBuffer, action, stateObject, topic, options, batchSize, cluster, serializationService, loggerFactory, cancellationToken);
+        return new ReliableTopicMessageExecutor<TItem>(ringBuffer,
+            action,
+            stateObject,
+            topic,
+            options,
+            batchSize,
+            cluster,
+            serializationService,
+            id,
+            loggerFactory,
+            cancellationToken);
     }
 
     private async Task Execute(CancellationToken cancellationToken)
     {
         await SetInitialSequenceOnceAsync().CfAwait();
 
-        _logger.IfDebug().LogDebug("Reading messages from ring buffer");
-
-        var result = await _ringBuffer.ReadManyWithResultSetAsync(_sequence, 1, _batchSize).CfAwait();
-
-        long lostCount = result.NextSequence - result.Count - _sequence;
-
-        if (lostCount != 0 && !_options.IsLossTolerant)
+        while (true)
         {
-            //todo: cancel the thread
-            return;
-        }
+            _logger.IfDebug()?.LogDebug("Reading messages from ring buffer {Name}. ", _ringBuffer.Name);
 
-        for (var i = 0; i < result.Count; i++)
-        {
-            try
+            var result = await _ringBuffer.ReadManyWithResultSetAsync(_sequence, 1, _batchSize).CfAwait();
+
+            var lostCount = result.NextSequence - result.Count - _sequence;
+
+            if (lostCount != 0 && !_options.IsLossTolerant)
             {
-                var message = result[i];
-                var member = _cluster.Members.GetMembers().FirstOrDefault(m => m.ConnectAddress.Equals(message.PublisherAddress));
-                var payloadObject = await PayloadToObjectAsync(message.Payload).CfAwait();
-                var seq = result.GetSequence(i);
+                _logger.IfDebug()?.LogDebug("The reliable topic subscription is not loss tolerant. Disposing the process...");
+                await DisposeAsync().CfAwait();
+                return;
+            }
 
-                foreach (var handler in _handlers)
+            for (var i = 0; i < result.Count; i++)
+            {
+                if (await DisposeIfCanceled(cancellationToken).CfAwait()) return;
+
+                try
                 {
-                    await handler.HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, _stateObject).CfAwait();
+                    var message = result[i];
+                    var member = _cluster.Members
+                        .GetMembers()
+                        .FirstOrDefault(m => m.ConnectAddress.Equals(message.PublisherAddress));
+
+                    var payloadObject = await PayloadToObjectAsync(message.Payload).CfAwait();
+                    var seq = result.GetSequence(i);
+
+                    foreach (var handler in _handlers)
+                    {
+                        if (await DisposeIfCanceled(cancellationToken).CfAwait()) return;
+
+                        await handler
+                            .HandleAsync(_topic, member, message.PublishTime, payloadObject, seq, _stateObject)
+                            .CfAwait();
+                    }
+
+                    _sequence = result.NextSequence;
+                }
+                catch (Exception ex)
+                {
+                    _logger.IfDebug()?.LogError("Something went wrong while handling the event. ", ex);
+
+                    if (ex.GetType() == typeof(ClientOfflineException))
+                    {
+                        _logger.IfDebug()?.LogError(ex, "Operation is terminating since client is offline. ");
+                        await DisposeAsync().CfAwait();
+                        return;
+                    }
+
+                    if (ex.GetType() == typeof(ArgumentOutOfRangeException) && _options.IsLossTolerant)
+                    {
+                        var old = _sequence;
+                        _sequence = await _ringBuffer.GetTailSequenceAsync().CfAwait() + 1;
+
+                        _logger.IfDebug()?.LogDebug("The reliable topic subscription on topic {TopicName} requested a too large sequence {Old}"
+                                                    + ". Jumping from old {Old} sequence to head sequence {Head}.", _ringBuffer.Name, old, old, _sequence);
+                    }
+
+                    if (ex.GetType() == typeof(ArgumentOutOfRangeException) && !_options.IsLossTolerant)
+                    {
+                        // nothing to do, it's not loss tolerant.
+                        _logger.IfWarning().LogWarning("Terminating the reliable topic subscription {ID} on topic {Name} due to " +
+                                                       "underlying ring buffer data related to reliable topic is lost. ", _id, _topic.Name);
+                        await DisposeAsync().CfAwait();
+                        return;
+                    }
                 }
             }
-            catch (Exception ex)
-            {
-                _logger.IfDebug().LogDebug("Something went wrong while handling the event", ex);
-
-                if (ShouldDispose(ex))
-                    await DisposeAsync().CfAwait();
-
-                // todo: fetch next batch
-            }
         }
     }
 
-    private bool ShouldDispose(Exception exception)
+    private async Task<bool> DisposeIfCanceled(CancellationToken cancellationToken)
     {
-        if (exception.GetType() == typeof(ClientOfflineException))
+        if (cancellationToken.IsCancellationRequested)
         {
-            _logger.IfDebug().LogDebug("Operation is terminating since client is offline", exception);
+            _logger.IfDebug()?.LogDebug("Process canceled. Disposing the process... ");
+            await DisposeAsync().CfAwait();
             return true;
         }
-        else if (exception.GetType() == typeof(ArgumentOutOfRangeException) && _options.IsLossTolerant)
-        {
-            _logger.IfDebug().LogDebug("ReliableTopicMessageExecutor on topic {TopicName} requested a too large sequence: {Sequence} "
-                                       + ". Jumping from old sequence: {Sequence} to head sequence", _ringBuffer.Name, exception);
-            return false;
-        }
 
-        else if(exception.GetType() == typeof(ArgumentOutOfRangeException))
-        
-
-        return true;
+        return false;
     }
+
 
     private ValueTask<TItem> PayloadToObjectAsync(IData messagePayload)
     {
@@ -156,8 +203,6 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         // Constructor would be better place to determine the initial sequence
         // but we live in async world.
 
-        if (_sequence != long.MinValue) return;
-
         var seq = _options.InitialSequence;
 
         if (seq == -1)
@@ -168,9 +213,11 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
         _sequence = seq;
     }
 
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        // dispose task
-        return default;
+        if (_disposed.InterlockedZeroToOne())
+        {
+            await _backgroundTask.CompletedOrCancelAsync(true).CfAwait();
+        }
     }
 }

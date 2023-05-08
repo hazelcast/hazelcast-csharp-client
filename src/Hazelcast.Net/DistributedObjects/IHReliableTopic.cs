@@ -15,6 +15,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Models;
 
 namespace Hazelcast.DistributedObjects;
 
@@ -26,8 +27,11 @@ public interface IHReliableTopic<T> : IDistributedObject
 {
     /// <summary>Subscribes to this reliable topic.</summary>
     /// <remarks>Each subscription has its own thread to process messages.</remarks>
+    /// <param name="handlerOptions">Options for <see cref="ReliableTopicEventHandler{T}"/></param>
     /// <param name="state">A state object.</param>
-    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, object state = null, CancellationToken cancellationToken = default);
+    /// <param name="events">Set action to be executed on the received message.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<T>> events, ReliableTopicEventHandlerOptions handlerOptions = default, object state = null, CancellationToken cancellationToken = default);
 
     /// <summary>Stops receiving messages for the given message listener.</summary>
     /// <remarks>
@@ -35,6 +39,7 @@ public interface IHReliableTopic<T> : IDistributedObject
     ///     this method does nothing.
     /// </remarks>
     /// <param name="subscriptionId">Id of listener registration.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Whether the operation completed successfully.</returns>
     /// <remarks>
     /// <para>Once this method has been invoked, and whatever its result, the subscription is

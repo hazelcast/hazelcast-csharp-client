@@ -20,6 +20,7 @@ using Hazelcast.Clustering;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
+using Hazelcast.Protocol.Codecs;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
@@ -32,31 +33,66 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     private int _backOffInitial = 100;
     private SerializationService _serializationService;
     private ILogger _logger;
+    private ILoggerFactory _loggerFactory;
     private ReliableTopicOptions _options;
+    private Cluster _cluster;
     private string _name;
     private int _disposed;
-    private ConcurrentDictionary<Guid, Task> _executors = new();
+    private ConcurrentDictionary<Guid, ReliableTopicMessageExecutor<TItem>> _executors = new();
 
     public HReliableTopic(string serviceName, string name, DistributedObjectFactory factory, ReliableTopicOptions options, Cluster cluster, SerializationService serializationService, IHRingBuffer<ReliableTopicMessage> ringBuffer, ILoggerFactory loggerFactory)
         : base(serviceName, name, factory, cluster, serializationService, loggerFactory)
     {
         _options = options ?? throw new ArgumentNullException(nameof(options));
         _name = string.IsNullOrEmpty(name) ? throw new ArgumentNullException(nameof(name)) : name;
+        _loggerFactory = loggerFactory;
+        _cluster = cluster ?? throw new ArgumentNullException(nameof(cluster));
         _logger = loggerFactory.CreateLogger<HReliableTopic<TItem>>();
         _serializationService = SerializationService ?? throw new ArgumentNullException(nameof(serializationService));
         _ringBuffer = ringBuffer ?? throw new ArgumentNullException(nameof(ringBuffer));
     }
 
     /// <inheritdoc />
-    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events, object state = null, CancellationToken cancellationToken = default)
+    public Task<Guid> SubscribeAsync(Action<ReliableTopicEventHandler<TItem>> events, ReliableTopicEventHandlerOptions handlerOptions = default, object state = null, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        if (events == null) throw new ArgumentNullException(nameof(events));
+
+        var id = Guid.NewGuid();
+        
+        var executor = ReliableTopicMessageExecutor<TItem>
+            .New(_ringBuffer,
+                events,
+                state,
+                this,
+                handlerOptions,
+                _options.BatchSize,
+                _cluster,
+                _serializationService,
+                id,
+                _loggerFactory,
+                cancellationToken
+            );
+
+        _executors[id] = executor;
+
+        _logger.IfDebug()?.LogDebug("{Id} reliable topic listener subscribed. ", id);
+
+        return Task.FromResult(id);
     }
 
     /// <inheritdoc />
     public ValueTask<bool> UnsubscribeAsync(Guid subscriptionId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        if (_executors.TryRemove(subscriptionId, out var executor))
+        {
+            // Executor is local to client. No need to wait server, kill it.
+            executor.DisposeAsync().CfAwait();
+            return new ValueTask<bool>(true);
+        }
+
+        _logger.IfDebug()?.LogDebug("Subscription {Id} not exist or already removed. ", subscriptionId);
+
+        return new ValueTask<bool>(false);
     }
 
     /// <inheritdoc />
@@ -69,7 +105,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
             var data = _serializationService.ToData(message);
             var rtMessage = new ReliableTopicMessage(data, null);
 
-            _logger.IfDebug().LogDebug("Adding message with policy {OptionsPolicy}", _options.Policy);
+            _logger.IfDebug()?.LogDebug("Adding message with policy {OptionsPolicy}", _options.Policy);
 
             return _options.Policy switch
             {
@@ -77,12 +113,14 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
                 TopicOverloadPolicy.DiscardNewest => _ringBuffer.AddAsync(rtMessage, OverflowPolicy.Fail),
                 TopicOverloadPolicy.Block => AddAsBlockingAsync(rtMessage, cancellationToken),
                 TopicOverloadPolicy.Error => AddOrFail(rtMessage),
+#pragma warning disable CA2208 Instantiate argument exceptions correctly // The check depends on policy option. 
                 _ => throw new ArgumentOutOfRangeException(nameof(_options.Policy))
+#pragma warning restore CA2208
             };
         }
         catch (Exception e)
         {
-            _logger.IfDebug().LogError("Failed while publishing a message {Message} on topic {Name}", message, Name, e);
+            _logger.IfDebug()?.LogError(e, "Failed while publishing a message {Message} on topic {Name}. ", message, Name);
             throw;
         }
     }
@@ -91,7 +129,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
     {
         var result = await _ringBuffer.AddAsync(rtMessage, OverflowPolicy.Fail).CfAwait();
 
-        _logger.IfDebug().LogError("Failed to publish a message [{Message}] on topic [{Name}]", rtMessage, Name);
+        _logger.IfDebug()?.LogError("Failed to publish a message [{Message}] on topic [{Name}]", rtMessage, Name);
 
         if (result == -1)
             throw new TopicOverloadException($"Failed to publish a message [{rtMessage}] on topic [{Name}].");
@@ -107,7 +145,7 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
 
             if (result != -1) break;
 
-            _logger.IfDebug().LogDebug("Waiting to publish message with {Duration}ms back off", wait);
+            _logger.IfDebug()?.LogDebug("Waiting to publish message with {Duration}ms back off", wait);
             await Task.Delay(wait, cancellationToken).CfAwait();
 
             wait *= 2;
@@ -116,21 +154,27 @@ internal class HReliableTopic<TItem> : DistributedObjectBase, IHReliableTopic<TI
         }
 
         if (cancellationToken.IsCancellationRequested)
-            _logger.IfDebug().LogDebug("Publishing process is canceled. {Message}", rtMessage);
+            _logger.IfDebug()?.LogDebug("Publishing process is canceled. {Message}", rtMessage);
     }
 
     public ValueTask DisposeAsync()
     {
         if (_disposed.InterlockedZeroToOne())
         {
-            // todo dispose tasks.
+            foreach (var id in _executors.Keys)
+            {
+                UnsubscribeAsync(id).CfAwait();
+            }
         }
 
         return default;
     }
 
-    public ValueTask DestroyAsync()
+    public new async ValueTask DestroyAsync()
     {
-        return _ringBuffer.DestroyAsync();
+        // Can't destroy if disposed.
+        if (_disposed > 0) return;
+        await _ringBuffer.DestroyAsync().CfAwait();
+        await DestroyAsync().CfAwait();
     }
 }

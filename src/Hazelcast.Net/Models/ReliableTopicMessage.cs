@@ -20,12 +20,16 @@ namespace Hazelcast.Models;
 
 internal class ReliableTopicMessage : IIdentifiedDataSerializable
 {
-    internal ReliableTopicMessage(IData payload, NetworkAddress publisherAddress)
+    public ReliableTopicMessage(){}
+    
+    public ReliableTopicMessage(IData payload, NetworkAddress publisherAddress)
     {
         PublishTime = Clock.Milliseconds;
         PublisherAddress = publisherAddress;
         Payload = payload;
     }
+
+    public const int CLASS_ID = 2;
 
     /// <summary>
     /// Gets publish time of the message.
@@ -62,7 +66,7 @@ internal class ReliableTopicMessage : IIdentifiedDataSerializable
     public int FactoryId { get; } = -9;
 
     /// <inheritdoc />
-    public int ClassId { get; } = 2;
+    public int ClassId { get; } = CLASS_ID;
 
     /// <inheritdoc />
     public override string ToString()
