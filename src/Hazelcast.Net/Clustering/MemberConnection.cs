@@ -14,6 +14,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -175,6 +176,15 @@ namespace Hazelcast.Clustering
         /// Gets the date and time when bytes where last written by the client.
         /// </summary>
         public DateTime LastWriteTime => _socketConnection?.LastWriteTime ?? DateTime.MinValue;
+
+        /// <summary>
+        /// Gets all <see cref="ClientMessageConnection"/> owned by this connection.
+        /// </summary>
+        /// <returns>All <see cref="ClientMessageConnection"/> owned by this connection.</returns>
+        public IEnumerable<ClientMessageConnection> GetMessageConnections()
+        {
+            yield return _messageConnection;
+        }
 
         /// <summary>
         /// Connects the client to the server.
@@ -378,6 +388,31 @@ namespace Hazelcast.Clustering
         }
 
         /// <summary>
+        /// Sends a message over a specific <see cref="ClientMessageConnection"/>.
+        /// </summary>
+        /// <param name="message">The message.</param>
+        /// <param name="connection">The message connection.</param>
+        /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
+        /// <remarks>
+        /// <para>The operation must complete within the default operation timeout specified by the networking options.</para>
+        /// </remarks>
+        public async Task<ClientMessage> SendAsync(ClientMessage message, ClientMessageConnection connection)
+        {
+            if (message == null) throw new ArgumentNullException(nameof(message));
+
+            // assign a unique identifier to the message
+            // and send in one fragment, with proper flags
+            message.CorrelationId = _correlationIdSequence.GetNext();
+            message.Flags |= ClientMessageFlags.BeginFragment | ClientMessageFlags.EndFragment;
+
+            // create the invocation
+            var invocation = new Invocation(message, _messagingOptions, this);
+
+            // and send
+            return await SendAsyncInternal(invocation, connection, CancellationToken.None).CfAwait();
+        }
+
+        /// <summary>
         /// Sends an invocation message.
         /// </summary>
         /// <param name="invocation">The invocation.</param>
@@ -388,10 +423,10 @@ namespace Hazelcast.Clustering
         /// <returns>A task that will complete when the response has been received, and represents the response.</returns>
         public Task<ClientMessage> SendAsync(Invocation invocation, CancellationToken cancellationToken = default)
         {
-            return SendAsyncInternal(invocation, cancellationToken);
+            return SendAsyncInternal(invocation, null, cancellationToken);
         }
 
-        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, CancellationToken cancellationToken)
+        private async Task<ClientMessage> SendAsyncInternal(Invocation invocation, ClientMessageConnection connection, CancellationToken cancellationToken)
         {
             if (invocation == null) throw new ArgumentNullException(nameof(invocation));
 
@@ -408,6 +443,7 @@ namespace Hazelcast.Clustering
                 _invocations[invocation.CorrelationId] = invocation;
             }
 
+            var messageConnection = connection ?? _messageConnection;
             HConsole.WriteLine(this, $"Send message {Id.ToShortString()}:{invocation.CorrelationId} to {MemberId.ToShortString()} at {Address}" +
                                      HConsole.Lines(this, 1, invocation.RequestMessage.Dump(HConsole.Level(this))));
 
@@ -416,7 +452,7 @@ namespace Hazelcast.Clustering
             Exception captured = null;
             try
             {
-                success = await _messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
+                success = await messageConnection.SendAsync(invocation.RequestMessage, cancellationToken).CfAwait();
             }
             catch (Exception e)
             {
