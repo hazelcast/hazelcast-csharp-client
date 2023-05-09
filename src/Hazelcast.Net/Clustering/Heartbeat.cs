@@ -126,6 +126,8 @@ namespace Hazelcast.Clustering
             if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
                 return;
 
+            if (_cancel == null) return; // did not run at all
+
             HConsole.WriteLine(this, "Stopping...");
 
             _cancel.Cancel();
