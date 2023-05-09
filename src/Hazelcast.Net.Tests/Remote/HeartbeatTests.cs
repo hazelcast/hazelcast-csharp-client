@@ -30,15 +30,6 @@ namespace Hazelcast.Tests.Remote
     [Explicit("Takes time")]
     public class HeartbeatTests : SingleMemberRemoteTestBase
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
-
         protected override HazelcastOptions CreateHazelcastOptions()
         {
             var keyValues = new Dictionary<string, string>();
@@ -81,7 +72,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task Heartbeat()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             var options = CreateHazelcastOptions();
             options.Heartbeat.TimeoutMilliseconds = 4_000; // cannot be < period!
@@ -102,7 +93,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task DemoTest()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             await new MapSimpleExample().Run(CreateHazelcastOptions(), 1000);
         }

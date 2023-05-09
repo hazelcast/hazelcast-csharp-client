@@ -159,29 +159,13 @@ namespace Hazelcast.Tests.Networking
             return ErrorsServerCodec.EncodeResponse(errorHolders);
         }
 
-        private IDisposable HConsoleForTest(Action<HConsoleOptions> configure = null)
-        {
-            void Configure(HConsoleOptions options)
-            {
-                options
-                    .ClearAll()
-                    .Configure().SetMinLevel()
-                    .Configure<HConsoleLoggerProvider>().SetMaxLevel();
-
-                configure?.Invoke(options);
-            }
-
-            return HConsole.Capture(Configure);
-        }
-
-
         [Test]
         [Timeout(30_000)]
         public async Task CanCancel()
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            using var console = HConsoleForTest(x => x.Configure(this).SetIndent(0).SetMaxLevel().SetPrefix("TEST"));
+            HConsole.Configure(options => options.ConfigureDefaults(this));
             HConsole.WriteLine(this, "Begin");
 
             // gate the ping response
@@ -396,12 +380,7 @@ namespace Hazelcast.Tests.Networking
         {
             var address = NetworkAddress.Parse("127.0.0.1:11001");
 
-            using var _ = HConsole.Capture(consoleOptions => consoleOptions
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             HConsole.WriteLine(this, "Begin");
 

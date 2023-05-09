@@ -34,14 +34,6 @@ namespace Hazelcast.Tests.Networking
         private readonly ConcurrentDictionary<Guid, Member> _members = new ConcurrentDictionary<Guid, Member>();
         private Cluster _cluster;
 
-        private IDisposable HConsoleForTest()
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
-                .Configure().SetMinLevel().EnableTimeStamp(origin: DateTime.Now)
-                .Configure(this).SetMaxLevel().SetPrefix("TEST")
-            );
-
         protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
         {
             return base.CreateHazelcastOptionsBuilder().WithHConsoleLogger();
@@ -116,7 +108,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestClientConnectionBeforeServerReady(bool smartRouting, ReconnectMode reconnectMode)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             await StartCluster(Hazelcast.Testing.Remote.Resources.hazelcast);
 
@@ -158,7 +150,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, "127.0.0.1", "127.0.0.1")]
         public async Task TestConnectionCountAfterClientReconnect(bool smartRouting, string memberAddress, string clientAddress)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             await StartCluster(GetMemberConfigWithAddress(memberAddress));
             var member = await AddMember();
@@ -208,7 +200,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, "localhost", "localhost")]
         public async Task TestListenersAfterClientDisconnected(bool smartRouting, string memberAddress, string clientAddress)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             var countOfEvent = 0;
             await StartCluster(GetMemberConfigWithAddress(memberAddress));
@@ -254,7 +246,7 @@ namespace Hazelcast.Tests.Networking
         [TestCase(false, ReconnectMode.ReconnectSync)]
         public async Task TestOperationsContinueWhenClientDisconnected(bool smartRouting, ReconnectMode reconnectMode)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
             await StartCluster(Hazelcast.Testing.Remote.Resources.hazelcast);
             var member1 = await AddMember();
 

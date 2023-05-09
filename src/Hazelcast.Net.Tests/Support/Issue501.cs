@@ -45,11 +45,8 @@ namespace Hazelcast.Tests.Support
             var mapEventsCount = 0;
             var mapEventsData = new Dictionary<string, string>();
 
-            using var _ = HConsole.Capture(o => o
-                .ClearAll()
-                .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel()
-                .Configure().SetMinLevel()
-                .Configure(this).SetPrefix("TEST").SetMaxLevel()
+            HConsole.Configure(options => options
+                .ConfigureDefaults(this)
                 .Configure(typeof(HMap<,>)).SetMaxLevel().SetPrefix("MAP")
             );
 

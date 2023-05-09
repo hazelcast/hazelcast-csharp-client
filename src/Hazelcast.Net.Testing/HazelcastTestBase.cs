@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Diagnostics;
 using Hazelcast.Core;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
@@ -42,15 +43,13 @@ namespace Hazelcast.Testing
             HazelcastTestBaseOneTimeSetUp();
         }
 
+        //[OneTimeSetUp]
         public virtual void HazelcastTestBaseOneTimeSetUp()
         { }
 
-        [OneTimeTearDown]
+        //[OneTimeTearDown]
         public void HazelcastTestBaseOneTimeRootTearDown()
-        {
-            // write console output & clear
-            HConsole.WriteAndClear();
-        }
+        { }
 
         [SetUp]
         public void HazelcastTestBaseSetUp()
@@ -58,6 +57,9 @@ namespace Hazelcast.Testing
             // creating the client via an async method means we may not have a context - ensure here
             // (before each test)
             AsyncContext.RequireNew();
+
+            // reset the HConsole options
+            HConsole.Reset();
         }
 
         [TearDown]
@@ -66,9 +68,6 @@ namespace Hazelcast.Testing
             // in case it's been used by tests, reset the clock
             // (after each test)
             Clock.Reset();
-
-            // write console output & clear
-            HConsole.WriteAndClear();
         }
 
         protected override void ReportUnobservedException(string message, Exception exception)
