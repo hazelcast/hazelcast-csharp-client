@@ -14,6 +14,8 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using Hazelcast.Core;
 
 namespace Hazelcast.Networking
@@ -112,6 +114,9 @@ namespace Hazelcast.Networking
         /// still active will try to reconnect to the cluster. Set this to <c>false</c> if you
         /// want it to shut down and never reconnect.</para>
         /// </remarks>
+        [Obsolete("This option has no effect, use ReconnectMode instead.", false)]
+        [ExcludeFromCodeCoverage]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public bool Reconnect { get; set; } = true;
 
         /// <summary>

@@ -262,7 +262,6 @@ namespace Hazelcast.Tests.Configuration
             Assert.IsFalse(options.SmartRouting);
             Assert.IsFalse(options.RedoOperations);
             Assert.AreEqual(ReconnectMode.DoNotReconnect, options.ReconnectMode);
-            Assert.IsTrue(options.Reconnect);
             Assert.IsFalse(options.ShuffleAddresses);
 
             var sslOptions = options.Ssl;
