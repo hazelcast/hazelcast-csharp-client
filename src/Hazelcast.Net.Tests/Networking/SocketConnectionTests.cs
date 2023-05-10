@@ -34,20 +34,6 @@ namespace Hazelcast.Tests.Networking
     [TestFixture]
     public class SocketConnectionTests
     {
-        [SetUp]
-        public void SetUp()
-        {
-            HConsole.Reset();
-        }
-
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<SocketConnectionBase>().SetIndent(8).SetPrefix("SOCKET"));
-
         [Test]
         public async Task Exceptions()
         {
@@ -198,7 +184,7 @@ namespace Hazelcast.Tests.Networking
         [Test]
         public async Task MoreExceptions()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             // note: a MemoryStream does not block, so connection immediately closes
             // use a pipe stream instead

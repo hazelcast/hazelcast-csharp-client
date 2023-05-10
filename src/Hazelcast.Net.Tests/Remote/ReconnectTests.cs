@@ -30,15 +30,6 @@ namespace Hazelcast.Tests.Remote
     [TestFixture]
     public class ReconnectTests : ClusterRemoteTestBase
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMinLevel()
-                .Configure<HConsoleLoggerProvider>().SetMaxLevel()
-                .Configure<ReconnectTests>().SetPrefix("TEST").SetMaxLevel()
-            );
-
         private readonly List<Member> _members = new List<Member>();
 
         [TearDown]
@@ -53,7 +44,7 @@ namespace Hazelcast.Tests.Remote
         [Test]
         public async Task ReconnectAsync([Values] bool reconnectAsync)
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this));
 
             // add one member
 

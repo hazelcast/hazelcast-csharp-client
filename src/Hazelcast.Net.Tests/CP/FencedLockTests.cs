@@ -50,14 +50,6 @@ namespace Hazelcast.Tests.CP
     internal class FencedLockTests : MultiMembersRemoteTestBase
     {
         private IFencedLock _lock;
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .Configure().SetMinLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure(this).SetMaxLevel()
-                .Configure<FencedLock>().SetPrefix("TEST")
-                .Configure<FencedLock>().SetMaxLevel());
 
         protected override string RcClusterConfiguration => TestFiles.ReadAllText(this, "Cluster/cp.xml");
 

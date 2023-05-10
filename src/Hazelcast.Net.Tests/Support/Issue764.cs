@@ -45,7 +45,7 @@ public class Issue764 : SingleMemberClientRemoteTestBase
     [Test]
     public async Task ReproduceIssue()
     {
-        using var _ = HConsole.Capture(o => o.Configure<HConsoleLoggerProvider>().SetMaxLevel());
+        HConsole.Configure(options => options.ConfigureDefaults(this));
 
         var serverVersion = ServerVersion.GetVersion("5.0");
         Console.WriteLine($"Server Version: {serverVersion}{(ServerVersion.IsEnterprise() ? " enterprise" : "")}");

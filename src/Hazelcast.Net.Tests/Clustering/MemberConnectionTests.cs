@@ -41,19 +41,10 @@ namespace Hazelcast.Tests.Clustering
     [TestFixture]
     public class MemberConnectionTests
     {
-        private IDisposable HConsoleForTest()
-
-            => HConsole.Capture(options => options
-                .ClearAll()
-                .Configure().SetMaxLevel()
-                .Configure(this).SetPrefix("TEST")
-                .Configure<AsyncContext>().SetMinLevel()
-                .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
-
         [Test]
         public async Task Test()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder().Build();
             options.Messaging.RetryTimeoutSeconds = 1;
@@ -177,7 +168,7 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public void GetMemberForSql()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
                 .With(o => o.Networking.SmartRouting = false)
@@ -217,7 +208,7 @@ namespace Hazelcast.Tests.Clustering
         [Test]
         public async Task GetConnectionForSql_NoSmartRouting()
         {
-            using var _ = HConsoleForTest();
+            HConsole.Configure(options => options.ConfigureDefaults(this).Configure().SetMaxLevel());
 
             var options = new HazelcastOptionsBuilder()
                 .With(o => o.Networking.SmartRouting = false)
