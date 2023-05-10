@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Security.Authentication;
 using System.Threading.Tasks;
 
 namespace Hazelcast.Examples.Client
@@ -24,11 +25,25 @@ namespace Hazelcast.Examples.Client
         {
             var options = new HazelcastOptionsBuilder()
                 .With(args)
+                .With(config =>
+                {
+                    // Get Started: https://docs.hazelcast.com/cloud/get-started
+                    // Your Viridian cluster name.
+                    config.ClusterName = "YOUR_CLUSTER_NAME";
+                    // Your discovery token and url to connect Viridian cluster.
+                    config.Networking.Cloud.DiscoveryToken = "YOUR_CLUSTER_DISCOVERY_TOKEN";
+                    // Enable metrics to see on Management Center.
+                    config.Metrics.Enabled = true;
+                    // Configure SSL.
+                    config.Networking.Ssl.Enabled = true;
+                    config.Networking.Ssl.ValidateCertificateChain = false;
+                    config.Networking.Ssl.Protocol = SslProtocols.Tls12;
+                    config.Networking.Ssl.CertificatePath = "client.pfx";
+                    config.Networking.Ssl.CertificatePassword = "YOUR_SSL_PASSWORD";
+                })
                 .WithConsoleLogger()
                 .Build();
-
-            // create an Hazelcast client and connect to a Cloud server
-            options.Networking.Cloud.DiscoveryToken = "DISCOVERY_TOKEN_HASH"; // copied from Cloud console
+            
             await using var client = await HazelcastClientFactory.StartNewClientAsync(options);
 
             // use a map
