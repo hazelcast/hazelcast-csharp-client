@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Hazelcast.Models;
+using Hazelcast.Messaging;
 using Hazelcast.Protocol.Codecs;
 using Microsoft.Extensions.Logging;
 
@@ -28,26 +29,28 @@ namespace Hazelcast.Clustering
 {
     internal class Heartbeat : IAsyncDisposable
     {
-        private TimeSpan _period;
-        private TimeSpan _timeout;
+        private readonly TimeSpan _period;
+        private readonly TimeSpan _timeout;
+        private readonly int _parallelCount;
 
         private readonly TerminateConnections _terminateConnections;
-        private readonly ClusterState _clusterState;
-        private readonly ClusterMessaging _clusterMessaging;
         private readonly ILogger _logger;
 
-        private CancellationTokenSource _cancel;
-        private Task _heartbeating;
+        private readonly CancellationTokenSource _cancel;
+        private readonly Task _heartbeating;
 
-        private readonly HashSet<MemberConnection> _connections = new HashSet<MemberConnection>();
-        private readonly object _mutex = new object();
+        private readonly HashSet<MemberConnection> _connections = new();
+        private readonly object _mutex = new();
 
-        private int _active;
+        private int _disposed;
 
-        public Heartbeat(ClusterState clusterState, ClusterMessaging clusterMessaging, HeartbeatOptions options, TerminateConnections terminateConnections)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Heartbeat"/> class.
+        /// </summary>
+        public Heartbeat(ClusterState clusterState, HeartbeatOptions options, TerminateConnections terminateConnections)
         {
-            _clusterState = clusterState ?? throw new ArgumentNullException(nameof(clusterState));
-            _clusterMessaging = clusterMessaging ?? throw new ArgumentNullException(nameof(clusterMessaging));
+            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
+
             _terminateConnections = terminateConnections;
             if (options == null) throw new ArgumentNullException(nameof(options));
 
@@ -59,29 +62,7 @@ namespace Hazelcast.Clustering
                 return;
             }
 
-            HConsole.Configure(x => x.Configure<Heartbeat>().SetPrefix("HEARTBEAT"));
-
-            InitializeDuration(options);
-        }
-
-        private void InitializeDuration(HeartbeatOptions options)
-        {
-            HConsole.WriteLine(this, "Initialize durations...");
-
-            // stop heartbeat during exchanging.
-            if (_active == 1 && _heartbeating != null)
-            {
-                // _heartbeating won't throw and we cannot await in sync method
-                _cancel.Cancel();
-                _cancel.Dispose();
-            }
-
-            if (options.PeriodMilliseconds < 0)
-            {
-                _logger.LogInformation("Heartbeat is disabled (period < 0)");
-                _active = 0;
-                return;
-            }
+            _parallelCount = 4; // TODO: come from options?
 
             _period = TimeSpan.FromMilliseconds(options.PeriodMilliseconds);
             _timeout = TimeSpan.FromMilliseconds(options.TimeoutMilliseconds);
@@ -98,7 +79,6 @@ namespace Hazelcast.Clustering
 
             _cancel = new CancellationTokenSource();
             _heartbeating = BeatAsync(_cancel.Token);
-            _active = 1;
         }
 
         /// <summary>
@@ -119,12 +99,12 @@ namespace Hazelcast.Clustering
             lock (_mutex) _connections.Remove(connection);
         }
 
+        /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
             // note: DisposeAsync should not throw (CA1065)
 
-            if (Interlocked.CompareExchange(ref _active, 0, 1) == 0)
-                return;
+            if (!_disposed.InterlockedZeroToOne()) return;
 
             if (_cancel == null) return; // did not run at all
 
@@ -166,101 +146,82 @@ namespace Hazelcast.Clustering
             }
             catch (Exception)
             {
-                //Exception observed
+                // exception observed
             }
         }
 
-        // runs once on the whole cluster
         private async Task RunAsync(CancellationToken cancellationToken)
         {
             _logger.IfDebug()?.LogDebug("Run heartbeat");
 
             var now = DateTime.Now; // now, or utcNow, but *must* be same as what is used in socket connection base!
-            const int maxTasks = 4; // max 4 at a time TODO: consider making it an option?
 
-            // run for each member
-            var tasks = new List<Task>();
+            // capture connections
+            List<MemberConnection> memberConnections;
+            lock (_mutex) memberConnections = new List<MemberConnection>(_connections);
 
-            // capture and enumerate connections
-            List<MemberConnection> connections;
-            lock (_mutex) connections = new List<MemberConnection>(_connections);
-            using var connectionsEnumerator = connections.Where(x => x.Active).GetEnumerator();
+            var cold = GetColdConnections(memberConnections, now);
+            if (cold.Count == 0) return;
 
-            void StartCurrent()
-            {
-                var connection = connectionsEnumerator.Current;
-                if (connection != null && connection.Active)
-                    tasks.Add(RunAsync(connection, now, cancellationToken));
-            }
+            var tasks = cold
+                .TakeWhile(_ => !cancellationToken.IsCancellationRequested)
+                .Select(x => PingAsync(x.MemberConnection, x.MessageConnection));
 
-            // start maxTasks tasks
-            while (tasks.Count < maxTasks && connectionsEnumerator.MoveNext() && !cancellationToken.IsCancellationRequested) StartCurrent();
-
-            // each time a task completes, replace it with another task
-            while (tasks.Count > 0)
-            {
-                var task = await Task.WhenAny(tasks).CfAwait();
-                tasks.Remove(task);
-
-                if (connectionsEnumerator.MoveNext() && !cancellationToken.IsCancellationRequested) StartCurrent();
-            }
+            await ParallelRunner.Run(tasks, new ParallelRunner.Options { Count = _parallelCount });
         }
 
-        // runs once on a connection to a member
-        private async Task RunAsync(MemberConnection connection, DateTime now, CancellationToken cancellationToken)
+        private List<(MemberConnection MemberConnection, ClientMessageConnection MessageConnection)> GetColdConnections(IEnumerable<MemberConnection> memberConnections, DateTime now)
         {
-            var readElapsed = now - connection.LastReadTime;
-            var writeElapsed = now - connection.LastWriteTime;
+            var cold = new List<(MemberConnection MemberConnection, ClientMessageConnection MessageConnection)>();
+            var temp = new List<(MemberConnection MemberConnection, ClientMessageConnection MessageConnection)>();
 
-            HConsole.WriteLine(this, $"Heartbeat {_clusterState.ClientName} on {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {connection.Address}, " +
-                                     $"written {(int)writeElapsed.TotalSeconds}s ago, " +
-                                     $"read {(int)readElapsed.TotalSeconds}s ago");
-
-            // make sure we read from the client at least every 'timeout',
-            // which is greater than the interval, so we *should* have
-            // read from the last ping, if nothing else, so no read means
-            // that the client not responsive - terminate it
-
-            if (readElapsed > _timeout && writeElapsed < _period)
+            foreach (var memberConnection in memberConnections)
             {
-                _logger.IfWarning()?.LogWarning("Heartbeat timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
-                if (connection.Active) _terminateConnections.Add(connection);
-                return;
+                temp.Clear();
+                var state = ConnectionLifeState.Warm;
+                foreach (var messageConnection in memberConnection.GetMessageConnections())
+                {
+                    var s = messageConnection.GetLifeState(now, _period, _timeout);
+                    state = state.Worse(s);
+                    if (s == ConnectionLifeState.Dead) break;
+                    if (s == ConnectionLifeState.Cold) temp.Add((memberConnection, messageConnection));
+                }
+
+                if (state == ConnectionLifeState.Dead) _terminateConnections.Add(memberConnection);
+                else if (state == ConnectionLifeState.Cold) cold.AddRange(temp);
             }
 
-            // make sure we write to the client at least every 'period',
-            // this should trigger a read when we receive the response
-            if (writeElapsed > _period)
-            {
-                _logger.IfDebug()?.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", connection.Id.ToShortString(), connection.MemberId.ToShortString(), connection.Address);
+            return cold;
+        }
 
+        private async Task PingAsync(MemberConnection memberConnection, ClientMessageConnection messageConnection)
+        {
+            // TODO: better logging everywhere
+            _logger.IfDebug()?.LogDebug("Ping connection {ConnectionId} to {MemberId} at {MemberAddress}.", 
+                memberConnection.Id.ToShortString(), memberConnection.MemberId.ToShortString(), memberConnection.Address);
+
+            try
+            {
+                // ping should complete within the default invocation timeout
                 var requestMessage = ClientPingCodec.EncodeRequest();
                 requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // run even if client not 'connected'
-
-                try
-                {
-                    // ping should complete within the default invocation timeout
-                    var responseMessage = await _clusterMessaging
-                        .SendToMemberAsync(requestMessage, connection, cancellationToken)
-                        .CfAwait();
-
-                    // just to be sure everything is ok
-                    _ = ClientPingCodec.DecodeResponse(responseMessage);
-                }
-                catch (ClientOfflineException)
-                {
-                    // down
-                }
-                catch (TaskTimeoutException)
-                {
-                    _logger.IfWarning()?.LogWarning("Heartbeat ping timeout for connection {ConnectionId}, terminating.", connection.Id.ToShortString());
-                    if (connection.Active) _terminateConnections.Add(connection);
-                }
-                catch (Exception e)
-                {
-                    // unexpected
-                    _logger.IfWarning()?.LogWarning(e, "Heartbeat has thrown an exception, but will continue.");
-                }
+                var responseMessage = await memberConnection.SendAsync(requestMessage, messageConnection).CfAwait();
+                _ = ClientPingCodec.DecodeResponse(responseMessage); // just to be sure everything is ok
+            }
+            catch (ClientOfflineException)
+            {
+                // connection already down
+            }
+            catch (TaskTimeoutException)
+            {
+                // timeout, kill the connection
+                _logger.IfWarning()?.LogWarning("Heartbeat ping timeout for connection {ConnectionId}, terminating.", memberConnection.Id.ToShortString());
+                if (memberConnection.Active) _terminateConnections.Add(memberConnection);
+            }
+            catch (Exception e)
+            {
+                // unexpected, don't terminate the connection, we don't know what is going on
+                _logger.IfWarning()?.LogWarning(e, "Heartbeat has thrown an exception, but will continue.");
             }
         }
     }
