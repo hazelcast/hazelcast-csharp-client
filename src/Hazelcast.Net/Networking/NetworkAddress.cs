@@ -26,7 +26,7 @@ namespace Hazelcast.Networking
     /// <summary>
     /// Represents a network address.
     /// </summary>
-    public class NetworkAddress : IEquatable<NetworkAddress>, IIdentifiedDataSerializable
+    public class NetworkAddress : IEquatable<NetworkAddress>
     {
         // NOTES
         //
@@ -381,26 +381,6 @@ namespace Hazelcast.Networking
         public static bool operator !=(NetworkAddress a1, NetworkAddress a2)
             => !(a1 == a2);
 
-        /// <inheritdoc />
-        public void ReadData(IObjectDataInput input)
-        {
-            var port = input.ReadInt();
-            var type = input.ReadByte();
-            var host = input.ReadString();
-            IPEndPoint = new IPEndPoint(GetIPAddressByName(host), port);
-        }
 
-        /// <inheritdoc />
-        public void WriteData(IObjectDataOutput output)
-        {
-            output.WriteInt(Port);
-            output.WriteByte((byte)(IsIpV4 ? 4 : 6));
-            output.WriteString(Host);
-        }
-
-        /// <inheritdoc />
-        public int FactoryId => 0;
-        /// <inheritdoc />
-        public int ClassId => 1;
     }
 }

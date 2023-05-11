@@ -309,7 +309,7 @@ namespace Hazelcast
                 .AddHook<ProjectionDataSerializerHook>()
                 
                 .AddHook<ReliableTopicDataSeriazlierHook>()
-                .AddHook<NetworkAddressDataSerializerHook>()
+                .AddHook<PublisherAddressDataSerializerHook>()
 
                 // add a hook that constructs and provides the compact IIdentifiedDataSerialization factory
                 // because some basic compact functionality such as schema distribution don't use compact

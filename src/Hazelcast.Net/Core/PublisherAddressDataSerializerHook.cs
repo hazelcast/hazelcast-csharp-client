@@ -13,20 +13,21 @@
 // limitations under the License.
 
 using System;
+using Hazelcast.Models;
 using Hazelcast.Networking;
 using Hazelcast.Serialization;
 
 namespace Hazelcast.Core;
 
-public class NetworkAddressDataSerializerHook : IDataSerializerHook
+public class PublisherAddressDataSerializerHook : IDataSerializerHook
 {
     public IDataSerializableFactory CreateFactory()
     {
         var constructors = new Func<IIdentifiedDataSerializable>[2];
-        constructors[1] = () => new NetworkAddress("0.0.0.0", 0);
+        constructors[1] = () => new PublisherAddress();
 
         return new ArrayDataSerializableFactory(constructors);
     }
 
-    public int FactoryId { get; } = FactoryIds.NetworkAddressFactoryId;
+    public int FactoryId { get; } = FactoryIds.PublisherAddressFactoryId;
 }

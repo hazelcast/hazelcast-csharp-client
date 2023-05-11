@@ -173,6 +173,8 @@ internal class ReliableTopicMessageExecutor<TItem> : IAsyncDisposable
                         await DisposeAsync().CfAwait();
                         return;
                     }
+
+                    throw;
                 }
             }
         }

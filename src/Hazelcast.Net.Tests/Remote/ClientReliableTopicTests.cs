@@ -16,20 +16,26 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Core;
 using Hazelcast.Models;
 using Hazelcast.Testing;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
-using Microsoft.Extensions.Logging.Console;
 
 namespace Hazelcast.Tests.Remote;
 
 public class ClientReliableTopicTests : SingleMemberRemoteTestBase
 {
+    private IDisposable HConsoleForTest()
+        => HConsole.Capture(options => options
+            .Configure().SetMaxLevel()
+            .Configure(this).SetPrefix("TEST"));
+
     [Test]
-    [Timeout(30_000)]
+    [Timeout(10_000)]
     public async Task TestReliableTopic([Values] TopicOverloadPolicy policy)
     {
+        //HConsoleForTest();
         var topicName = "rtTestTopic1";
 
         var options = new HazelcastOptionsBuilder()
@@ -38,34 +44,45 @@ public class ClientReliableTopicTests : SingleMemberRemoteTestBase
             {
                 opt.ReliableTopics[topicName] = new ReliableTopicOptions(policy, 2);
                 opt.ClusterName = RcCluster.Id;
-                
+
                 opt.LoggerFactory.Creator = () => Microsoft.Extensions.Logging.LoggerFactory.Create(builder => builder.AddConsole());
             })
             .Build();
 
 
         var client = await HazelcastClientFactory.StartNewClientAsync(options);
-        var rt = await client.GetReliableTopicAsync<string>(topicName);
-        var msgCount = 5;
-        var sSlim = new SemaphoreSlim(msgCount);
+        var rt = await client.GetReliableTopicAsync<int>(topicName);
         
-        await rt.SubscribeAsync(events => events.Message((sender, args) =>
-        {
-            Assert.AreEqual("msg" + sSlim.CurrentCount, args.Payload);
-            Assert.AreEqual(sSlim.CurrentCount, args.Sequence);
-            Console.WriteLine("SEQ:"+args.Sequence);
-            sSlim.Release(1);
-        }));
+        var msgCount = 3;
 
-        
+        var mne = new ManualResetEvent(false);
+        var list = new int[msgCount + 1];
+
+        await rt.SubscribeAsync(events =>
+            events.Message((sender, args) =>
+            {
+                list[args.Payload] = args.Payload;
+                Console.WriteLine("SEQ:" + args.Sequence);
+                Console.WriteLine("Data:" + args.Payload);
+
+                if (args.Payload == msgCount)
+                    mne.Set();
+                
+            }));
+
 
         for (var i = 1; i <= msgCount; i++)
         {
-            await rt.PublishAsync("msg" + i);
-            await Task.Delay(10);
+            await rt.PublishAsync(i);
         }
 
-        await sSlim.WaitAsync();
-        Assert.AreEqual(0, sSlim.CurrentCount);
+        var result = await mne.WaitOneAsync();
+        Assert.True(result);
+
+        for (var i = 1; i <= msgCount; i++)
+        {
+            Assert.AreEqual(i, list[i]);
+        }
+        
     }
 }

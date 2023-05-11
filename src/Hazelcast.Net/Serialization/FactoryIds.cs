@@ -20,6 +20,6 @@ namespace Hazelcast.Serialization
         public const int AggregatorDsFactoryId = -29;
         public const int ProjectionDsFactoryId = -30;
         public const int ReliableTopicMessageFactoryId = -9;
-        public const int NetworkAddressFactoryId = 0;
+        public const int PublisherAddressFactoryId = 0;
     }
 }
