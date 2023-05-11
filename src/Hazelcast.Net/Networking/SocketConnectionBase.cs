@@ -20,6 +20,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Hazelcast.Clustering;
 using Hazelcast.Core;
 
 namespace Hazelcast.Networking
@@ -33,7 +34,7 @@ namespace Hazelcast.Networking
     internal abstract partial class SocketConnectionBase : IAsyncDisposable
     {
         private readonly CancellationTokenSource _streamReadCancellationTokenSource = new();
-        private readonly SemaphoreSlim _onShutdownMutex = new(1);
+        private readonly object _onShutdownMutex = new();
 
         private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
@@ -146,11 +147,15 @@ namespace Hazelcast.Networking
         {
             if (onShutdown == null) throw new ArgumentNullException(nameof(onShutdown));
 
-            await _onShutdownMutex.LockAsync(async () =>
+            var execute = false;
+
+            lock (_onShutdownMutex)
             {
-                if (_onShutdownExecuted) await onShutdown(this).CfAwaitNoThrow();
+                if (_onShutdownExecuted) execute = true;
                 else _onShutdown += onShutdown;
-            }).CfAwait();
+            }
+
+            if (execute) await _onShutdown(this).CfAwait();
         }
 
         /// <summary>
@@ -159,7 +164,7 @@ namespace Hazelcast.Networking
         /// <param name="onShutdown">A function that handles shutdowns.</param>
         public void RemoveOnShutdown(Func<SocketConnectionBase, ValueTask> onShutdown)
         {
-            _onShutdownMutex.Lock(() => _onShutdown -= onShutdown);
+            lock (_onShutdownMutex) _onShutdown -= onShutdown;
         }
 
         /// <summary>
@@ -170,7 +175,7 @@ namespace Hazelcast.Networking
         /// </remarks>
         public void ClearOnShutdown()
         {
-            _onShutdownMutex.Lock(() => _onShutdown = null);
+            lock (_onShutdownMutex) _onShutdown = null;
         }
 
         /// <summary>
@@ -281,12 +286,13 @@ namespace Hazelcast.Networking
             HConsole.WriteLine(this, "Connection is down");
 
             // notify
-            await _onShutdownMutex.LockAsync(async () =>
+            Func<SocketConnectionBase, ValueTask> f;
+            lock (_onShutdownMutex)
             {
-                
-                await _onShutdown.AwaitEach(this).CfAwaitNoThrow();
+                f = _onShutdown; // copy won't be modified
                 _onShutdownExecuted = true;
-            }).CfAwait();
+            }
+            await f.AwaitEach(this).CfAwait(); // may throw
         }
 
         /// <summary>
@@ -544,7 +550,6 @@ namespace Hazelcast.Networking
             try { _socket.Dispose(); } catch { /* ignore */ }
 
             _streamReadCancellationTokenSource.Dispose();
-            _onShutdownMutex.Dispose();
         }
     }
 }
