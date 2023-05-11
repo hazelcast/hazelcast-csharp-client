@@ -25,7 +25,7 @@ namespace Hazelcast.Networking
     internal class CloudAddressProviderSource : IAddressProviderSource
     {
         private readonly CloudDiscovery _cloudDiscovery;
-        private IDictionary<NetworkAddress, NetworkAddress> _map;
+        private CloudInfo _cloudInfo;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="CloudAddressProviderSource"/> class.
@@ -51,18 +51,18 @@ namespace Hazelcast.Networking
         /// <inheritdoc />
         public (IReadOnlyCollection<NetworkAddress> Primary, IReadOnlyCollection<NetworkAddress> Secondary) GetAddresses(bool forceRefresh)
         {
-            if (_map == null || forceRefresh)
-                _map = _cloudDiscovery.Scan() ?? throw new HazelcastException("Failed to obtain addresses.");
-            return ((IReadOnlyCollection<NetworkAddress>)_map.Values, Array.Empty<NetworkAddress>());
+            if (_cloudInfo == null || forceRefresh)
+                _cloudInfo = _cloudDiscovery.Scan() ?? throw new HazelcastException("Failed to obtain addresses.");
+            return (_cloudInfo.ClassicAddresses, Array.Empty<NetworkAddress>());
         }
 
         /// <inheritdoc />
         public bool TryMap(NetworkAddress address, bool forceRefreshMap, out NetworkAddress result, out bool freshMap)
         {
-            freshMap = _map == null || forceRefreshMap;
-            if (freshMap) _map = _cloudDiscovery.Scan();
-            if (_map == null) throw new HazelcastException("Failed to obtain addresses.");
-            return _map.TryGetValue(address, out result);
+            freshMap = _cloudInfo == null || forceRefreshMap;
+            if (freshMap) _cloudInfo = _cloudDiscovery.Scan();
+            if (_cloudInfo == null) throw new HazelcastException("Failed to obtain addresses.");
+            return _cloudInfo.PrivateToPublicAddresses.TryGetValue(address, out result);
         }
     }
 }

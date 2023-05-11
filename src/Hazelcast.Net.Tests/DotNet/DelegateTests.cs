@@ -113,5 +113,29 @@ namespace Hazelcast.Tests.DotNet
             var y = f?.Invoke("hello");
             Assert.That(y, Is.Null);
         }
+
+        [Test]
+        public void Copy()
+        {
+            Action a = null;
+            var i = 0;
+
+            a += () => i++;
+            a += () => i++;
+
+            a();
+            Assert.That(i, Is.EqualTo(2));
+
+            var b = a;
+            b += () => i++;
+
+            a();
+            Assert.That(i, Is.EqualTo(4));
+            Assert.That(a.GetInvocationList().Length, Is.EqualTo(2));
+
+            b();
+            Assert.That(i, Is.EqualTo(7));
+            Assert.That(b.GetInvocationList().Length, Is.EqualTo(3));
+        }
     }
 }

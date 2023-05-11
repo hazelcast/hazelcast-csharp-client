@@ -161,7 +161,7 @@ namespace Hazelcast.Tests.Networking
     { ""private-address"":""192.0.0.6:5788"", ""public-address"":""192.147.0.6"" },
     { ""private-address"":""192.0.0.7"", ""public-address"":""192.147.0.7"" },
     { ""private-address"":""192.0.0.8:5777"", ""public-address"":""192.147.0.8:5703"" },
-    { ""private-address"":""192.0.0.9"", ""public-address"":""192.147.0.9:5707"" },
+    { ""private-address"":""192.0.0.9"", ""public-address"":""192.147.0.9:5707"" }
 ]");
 
             static void AssertMap(AddressProvider ap, string priv, string pub)
@@ -175,6 +175,92 @@ namespace Hazelcast.Tests.Networking
 
                 AssertMap(addressProvider, "192.0.0.6:5788", "192.147.0.6:5701");
                 AssertMap(addressProvider, "192.0.0.7:5701", "192.147.0.7:5701");
+                AssertMap(addressProvider, "192.0.0.8:5777", "192.147.0.8:5703");
+                AssertMap(addressProvider, "192.0.0.9:5707", "192.147.0.9:5707");
+
+                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
+
+                var (primary, secondary) = addressProvider.GetAddresses();
+                Assert.That(secondary, Is.Empty);
+                Assert.That(primary, Is.EquivalentTo(new[]
+                {
+                    NetworkAddress.Parse("192.147.0.6:5701"),
+                    NetworkAddress.Parse("192.147.0.7:5701"),
+                    NetworkAddress.Parse("192.147.0.8:5703"),
+                    NetworkAddress.Parse("192.147.0.9:5707")
+                }));
+
+                addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
+                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
+                Assert.That(addressProvider.Map(new NetworkAddress("192.0.0.10")), Is.Null);
+            }
+            finally
+            {
+                CloudDiscovery.SetResponse(null);
+            }
+        }
+
+        [Test]
+        public void CloudWithTpc()
+        {
+            var options = new NetworkingOptions();
+            var loggerFactory = new NullLoggerFactory();
+
+            options.Addresses.Clear();
+
+            options.Cloud.DiscoveryToken = null;
+            Assert.That(options.Cloud.Enabled, Is.False);
+
+            options.Cloud.DiscoveryToken = "*****";
+            Assert.That(options.Cloud.Enabled, Is.True);
+
+            options.Cloud.Url = null;
+            Assert.Throws<ArgumentNullException>(() => _ = new CloudAddressProviderSource(options, loggerFactory));
+            options.Cloud.Url = new Uri("http://xxxxx");
+
+            options.Addresses.Add("192.0.0.1:5701");
+            Assert.Throws<ConfigurationException>(() => _ = AddressProvider.GetSource(options, loggerFactory));
+
+            options.Addresses.Clear();
+
+            CloudDiscovery.SetResponse(@"[
+    { 
+        ""private-address"":""192.0.0.6:5788"", ""public-address"":""192.147.0.6"",
+        ""tpc-ports"": [
+            { ""private-port"": 10000, ""public-port"": 5000 },
+            { ""private-port"": 10001, ""public-port"": 5001 },
+        ]
+    },
+    { 
+        ""private-address"":""192.0.0.7"", ""public-address"":""192.147.0.7"", 
+        ""tpc-ports"": [
+            { ""private-port"": 10000, ""public-port"": 5000 }
+        ]
+    },
+    { 
+        ""private-address"":""192.0.0.8:5777"", ""public-address"":""192.147.0.8:5703"", 
+        ""tpc-ports"": [
+        ]
+    },
+    { 
+        ""private-address"":""192.0.0.9"", ""public-address"":""192.147.0.9:5707""
+    }
+]");
+
+            static void AssertMap(AddressProvider ap, string priv, string pub)
+                => Assert.That(ap.Map(NetworkAddress.Parse(priv)), Is.EqualTo(NetworkAddress.Parse(pub)));
+
+            var addressProviderSource = new CloudAddressProviderSource(options, loggerFactory);
+
+            try
+            {
+                var addressProvider = new AddressProvider(addressProviderSource, loggerFactory);
+
+                AssertMap(addressProvider, "192.0.0.6:5788", "192.147.0.6:5701");
+                AssertMap(addressProvider, "192.0.0.6:10000", "192.147.0.6:5000");
+                AssertMap(addressProvider, "192.0.0.6:10001", "192.147.0.6:5001");
+                AssertMap(addressProvider, "192.0.0.7:5701", "192.147.0.7:5701");
+                AssertMap(addressProvider, "192.0.0.7:10000", "192.147.0.7:5000");
                 AssertMap(addressProvider, "192.0.0.8:5777", "192.147.0.8:5703");
                 AssertMap(addressProvider, "192.0.0.9:5707", "192.147.0.9:5707");
 

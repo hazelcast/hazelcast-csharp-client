@@ -94,6 +94,8 @@ namespace Hazelcast.Messaging
         /// <remarks>
         /// <para>Getting or setting this property requires that the message has the appropriate first frame.</para>
         /// <para>Message flags and Frame flags are carried by the same field.</para>
+        /// <para>Do *not* use this property in a constructor pattern such as <c>new ClientMessage() { Flags = ...]</c>
+        /// as the constructor sets some flags which would then be erased but the property setter.</para>
         /// </remarks>
         public ClientMessageFlags Flags
         {

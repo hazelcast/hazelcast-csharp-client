@@ -339,7 +339,7 @@ namespace Hazelcast
             }
             else
             {
-                var opt = (HazelcastFailoverOptions)hazelcastOptions;
+                var opt = (HazelcastFailoverOptions) hazelcastOptions;
 
                 if (!opt.Clients.Any())
                     throw new ConfigurationException("If Failover is enabled, then clusters should be provided.");
@@ -352,8 +352,11 @@ namespace Hazelcast
                 
                 opt.Enabled = true;
                 options = opt.Clients[0].Clone();
-                options.FailoverOptions = opt.Clone(); // safe,no cyclic clone
+                options.FailoverOptions = opt.Clone(); // safe, no cyclic clone
             }
+
+            // propagate the temp TPC options
+            options.Authentication.TpcEnabled = options.Networking.Tpc.Enabled;
 
             if (options.Networking.Cloud.Enabled)
             {

@@ -213,8 +213,7 @@ namespace Hazelcast.Clustering
             Task wait;
             lock (_mutex)
             {
-                if (ClientState == newState)
-                    return;
+                if (ClientState == newState) return;
 
                 ClientState = newState;
                 HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
@@ -237,8 +236,7 @@ namespace Hazelcast.Clustering
             Task wait;
             lock (_mutex)
             {
-                if (ClientState != expectedState)
-                    return false;
+                if (ClientState != expectedState) return false;
 
                 ClientState = newState;
                 HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
@@ -262,10 +260,10 @@ namespace Hazelcast.Clustering
             Task wait;
             lock (_mutex)
             {
-                if (!expectedStates.Contains(ClientState))
-                    return false;
+                if (!expectedStates.Contains(ClientState)) return false;
 
                 ClientState = newState;
+                HConsole.WriteLine(this, $"{ClientName} state -> {ClientState}");
                 wait = _stateChangeQueue.AddAndWait(newState);
             }
 
@@ -276,11 +274,14 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Waits until connected, or it becomes impossible to connect.
         /// </summary>
+        /// <param name="connection">The connection.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
         /// <returns><c>true</c> if connected; otherwise <c>false</c> meaning it has become impossible to connect.</returns>
-        public ValueTask<bool> WaitForConnectedAsync(CancellationToken cancellationToken)
+        public ValueTask<bool> WaitForConnectedAsync(MemberConnection connection, CancellationToken cancellationToken)
         {
-            lock (_mutex)
+            TaskCompletionSource<ClientState> wait;
+
+            lock (_mutex) // don't change the state now
             {
                 // already connected
                 if (ClientState == ClientState.Connected) return new ValueTask<bool>(true);
@@ -289,47 +290,50 @@ namespace Hazelcast.Clustering
                 if (ClientState != ClientState.Started &&
                     ClientState != ClientState.ClusterChanged &&
                     ClientState != ClientState.Disconnected) return new ValueTask<bool>(false);
+
+                // we are going to have to wait, register the StateChanged handler while state is locked
+                wait = new TaskCompletionSource<ClientState>();
+                _stateChangeQueue.StateChanged += OnStateChanged;
             }
 
-            return WaitForConnectedAsync2(cancellationToken);
+            return WaitForConnectedAsync2(connection, wait, cancellationToken);
+
+            ValueTask OnStateChanged(ClientState clientState)
+            {
+                // either connected, or never going to be connected
+                if (clientState != ClientState.Started &&
+                    clientState != ClientState.ClusterChanged &&
+                    clientState != ClientState.Disconnected)
+                {
+                    _stateChangeQueue.StateChanged -= OnStateChanged;
+                    wait.TrySetResult(clientState);
+                }
+
+                // keep waiting
+                return default;
+            }
         }
 
-        private async ValueTask<bool> WaitForConnectedAsync2(CancellationToken cancellationToken)
+        private async ValueTask<bool> WaitForConnectedAsync2(MemberConnection connection, TaskCompletionSource<ClientState> wait, CancellationToken cancellationToken)
         {
-            TaskCompletionSource<ClientState> wait;
-            CancellationTokenRegistration reg;
+            using var reg = cancellationToken.Register(() => wait.TrySetCanceled());
 
-            lock (_mutex)
-            {
-                // already connected
-                if (ClientState == ClientState.Connected) return true;
-
-                // never going to be connected
-                if (ClientState != ClientState.Started &&
-                    ClientState != ClientState.Disconnected) return false;
-
-                // must wait
-                wait = new TaskCompletionSource<ClientState>();
-                reg = cancellationToken.Register(() => wait.TrySetCanceled());
-                _stateChangeQueue.StateChanged += x =>
-                {
-                    // either connected, or never going to be connected
-                    if (x != ClientState.Started &&
-                        x != ClientState.ClusterChanged &&
-                        x != ClientState.Disconnected)
-                        wait.TrySetResult(x);
-
-                    // keep waiting
-                    return default;
-                };
-            }
+            await connection.AddClosed(OnConnectionClosed).CfAwait();
 
             ClientState state;
+            HConsole.WriteLine(this, "Waiting for state change...");
             try { state = await wait.Task.CfAwait(); } catch { state = 0; }
+            HConsole.WriteLine(this, $"State changed to {state}");
 
-            await reg.DisposeAsync().CfAwait();
-
+            connection.RemoveClosed(OnConnectionClosed);
             return state == ClientState.Connected;
+
+            ValueTask OnConnectionClosed(MemberConnection c)
+            {
+                // report a bogus state, just to break the wait
+                wait.TrySetResult(0);
+                return default;
+            }
         }
 
         /// <summary>

@@ -72,10 +72,11 @@ namespace Hazelcast.Tests.Clustering
 
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
-            var memberConnection = new MemberConnection(address, authenticator,
+            var memberConnection = new MemberConnection(address, address, authenticator,
                 options.Messaging, options.Networking, options.Networking.Ssl,
                 correlationIdSequence,
-                loggerFactory);
+                loggerFactory, Guid.NewGuid(), 
+                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>()));
 
             var memberConnectionHasClosed = false;
             memberConnection.Closed += connection =>
@@ -267,10 +268,11 @@ namespace Hazelcast.Tests.Clustering
 
             ISequence<long> correlationIdSequence = new Int64Sequence();
 
-            var memberConnection = new MemberConnection(address, authenticator,
+            var memberConnection = new MemberConnection(address, address, authenticator,
                 options.Messaging, options.Networking, options.Networking.Ssl,
                 correlationIdSequence,
-                loggerFactory);
+                loggerFactory, Guid.NewGuid(),
+                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>()));
 
             const string clusterName = "dev";
             const string clientName = "client";
@@ -383,9 +385,10 @@ namespace Hazelcast.Tests.Clustering
 
         private MemberConnection NewActiveMemberConnection(MemberInfo member, Authenticator authenticator, ILoggerFactory loggerFactory)
         {
-            var connection = new MemberConnection(member.Address,
+            var connection = new MemberConnection(member.Address, member.Address,
                 authenticator, new MessagingOptions(), new NetworkingOptions(),
-                new SslOptions(), new Int64Sequence(), loggerFactory
+                new SslOptions(), new Int64Sequence(), loggerFactory, Guid.NewGuid(),
+                new AddressProvider(Mock.Of<IAddressProviderSource>(), Mock.Of<ILoggerFactory>())
             );
 
             connection.Accessor().Connected = true;

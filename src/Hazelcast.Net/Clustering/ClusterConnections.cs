@@ -319,11 +319,13 @@ namespace Hazelcast.Clustering
             // triggers
             if (connectCompletion != null)
             {
+                HConsole.WriteLine(this, "Must wait for connect completion...");
                 await connectCompletion.Task.CfAwait();
                 _completions.TryRemove(connection, out _);
             }
 
             // proceed: raise 'closed'
+            HConsole.WriteLine(this, "Now raise connection 'closed'");
             await RaiseConnectionClosed(connection).CfAwait(); // does not throw
         }
 
@@ -364,17 +366,9 @@ namespace Hazelcast.Clustering
                     cancellationToken.ThrowIfCancellationRequested();
                     HConsole.WriteLine(this, $"{_clusterState.ClientName} connecting");
 
-                    // establishes the first connection, throws if it fails
-                    await ConnectFirstAsync(cancellationToken).CfAwait();
+                    var connected = await ConnectFirstAndWaitForConnectedAsync(cancellationToken).CfAwait();
 
-                    // once the first connection is established, we should use it to subscribe
-                    // to the cluster views event, and then we should receive a members view,
-                    // which in turn should change the state to Connected - unless something
-                    // goes wrong
-                    // TODO: consider *not* waiting for this and running directly on the member we're connected to?
-                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
-
-                    HConsole.WriteLine(this, $"{_clusterState.ClientName} connected");
+                    HConsole.WriteLine(this, $"{_clusterState.ClientName} {(connected?"connected":"failed to connect")}");
 
                     if (!connected)
                         throw new ConnectionException("Failed to connect.");
@@ -412,6 +406,23 @@ namespace Hazelcast.Clustering
             } while (tryNextCluster);
         }
 
+        private async Task<bool> ConnectFirstAndWaitForConnectedAsync(CancellationToken cancellationToken)
+        {
+            // establishes the first connection, throws if it fails
+            var connection = await ConnectFirstAsync(cancellationToken).CfAwait();
+
+            // TODO: consider *not* waiting for this and running directly on the member we're connected to?
+
+            // once the first connection is established, we should use it to subscribe
+            // to the cluster views event, and then we should receive a members view,
+            // which in turn should change the state to Connected - unless something
+            // goes wrong
+
+            var connected = await _clusterState.WaitForConnectedAsync(connection, cancellationToken).CfAwait();
+
+            return connected;
+        }
+
         /// <summary>
         /// Reconnects to the cluster.
         /// </summary>
@@ -425,14 +436,7 @@ namespace Hazelcast.Clustering
                 tryNextCluster = false;
                 try
                 {
-                    // establishes the first connection, throws if it fails
-                    await ConnectFirstAsync(cancellationToken).CfAwait();
-
-                    // once the first connection is established, we should use it to subscribe
-                    // to the cluster views event, and then we should receive a members view,
-                    // which in turn should change the state to Connected - unless something
-                    // goes wrong
-                    var connected = await _clusterState.WaitForConnectedAsync(cancellationToken).CfAwait();
+                    var connected = await ConnectFirstAndWaitForConnectedAsync(cancellationToken).CfAwait();
 
                     if (!connected)
                     {
@@ -529,7 +533,7 @@ namespace Hazelcast.Clustering
         /// according to the configured retry strategy, and if nothing works,
         /// end up throwing an exception.</para>
         /// </remarks>
-        private async Task ConnectFirstAsync(CancellationToken cancellationToken)
+        private async Task<MemberConnection> ConnectFirstAsync(CancellationToken cancellationToken)
         {
             var tried = new HashSet<NetworkAddress>();
             bool canRetry, isExceptionThrown = false;
@@ -558,7 +562,7 @@ namespace Hazelcast.Clustering
                         {
                             var connection = attempt.Value;
                             HConsole.WriteLine(this, $"Connected {_clusterState.ClientName} via {connection.Id.ToShortString()} to {connection.MemberId.ToShortString()} at {address}");
-                            return; // successful exit, a first connection has been opened
+                            return connection; // successful exit, a first connection has been opened
                         }
 
                         HConsole.WriteLine(this, $"Failed to connect to address {address}");
@@ -673,7 +677,7 @@ namespace Hazelcast.Clustering
                 // "The allocating method does not have dispose ownership; that is, the responsibility
                 // to dispose the object is transferred to another object or wrapper that's created
                 // in the method and returned to the caller." - here: the Attempt<>.
-                return await ConnectAsync(address, cancellationToken).CfAwait();
+                return await ConnectAsync(address, address, cancellationToken).CfAwait();
 #pragma warning restore CA2000
             }
             catch (Exception e)
@@ -726,7 +730,7 @@ namespace Hazelcast.Clustering
                 _logger.IfDebug()?.LogDebug("Client {ClientName} is not connected to member {MemberId} at {ConnectAddress}, connecting.", _clusterState.ClientName, member.Id.ToShortString(), member.ConnectAddress);
 
 #pragma warning disable CA2000 // Dispose objects before losing scope - CA2000 does not understand CfAwait :(
-                var memberConnection = await ConnectAsync(member.ConnectAddress, cancellationToken).CfAwait();
+                var memberConnection = await ConnectAsync(member.ConnectAddress, member.Address, cancellationToken).CfAwait();
 #pragma warning restore CA2000
                 if (memberConnection.MemberId != member.Id)
                 {
@@ -770,15 +774,22 @@ namespace Hazelcast.Clustering
         /// <summary>
         /// Opens a connection to an address.
         /// </summary>
-        /// <param name="address">The address.</param>
+        /// <param name="address">The address to connect to.</param>
+        /// <param name="privateAddress">The member private address.</param>
         /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the connection has been established, and represents the associated client.</returns>
-        private async Task<MemberConnection> ConnectAsync(NetworkAddress address, CancellationToken cancellationToken)
+        /// <returns>The connected member connection.</returns>
+        /// <remarks>
+        /// <para>The <paramref name="address"/> is the one we connect to, it can be the <paramref name="privateAddress"/>
+        /// in case that one is directly reachable, or a public address in case some address mapping takes place.</para>
+        /// </remarks>
+        private async Task<MemberConnection> ConnectAsync(NetworkAddress address, NetworkAddress privateAddress, CancellationToken cancellationToken)
         {
             // directly connect to the specified address (internal/public determination happened beforehand)
+            // we still need to pass the address provider in order to map the TPC ports
+            var addressProvider = _clusterState.AddressProvider;
 
             // create the connection to the member
-            var connection = new MemberConnection(address, _authenticator, _clusterState.Options.Messaging, _clusterState.CurrentClusterOptions.Networking, _clusterState.CurrentClusterOptions.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory)
+            var connection = new MemberConnection(address, privateAddress, _authenticator, _clusterState.Options.Messaging, _clusterState.CurrentClusterOptions.Networking, _clusterState.CurrentClusterOptions.Networking.Ssl, _clusterState.CorrelationIdSequence, _clusterState.LoggerFactory, _clusterState.ClientId, addressProvider)
             {
                 Closed = OnConnectionClosed
             };

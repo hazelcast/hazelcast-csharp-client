@@ -32,7 +32,8 @@ namespace Hazelcast.Networking
     /// </remarks>
     internal abstract partial class SocketConnectionBase : IAsyncDisposable
     {
-        private readonly CancellationTokenSource _streamReadCancellationTokenSource = new CancellationTokenSource();
+        private readonly CancellationTokenSource _streamReadCancellationTokenSource = new();
+        private readonly SemaphoreSlim _onShutdownMutex = new(1);
 
         private Func<SocketConnectionBase, IBufferReference<ReadOnlySequence<byte>>, bool> _onReceiveMessageBytes;
         private Func<SocketConnectionBase, ReadOnlySequence<byte>, ValueTask> _onReceivePrefixBytes;
@@ -44,6 +45,7 @@ namespace Hazelcast.Networking
         private int _isActive;
         private int _isShutdown;
         private int _prefixLength;
+        private bool _onShutdownExecuted;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SocketConnectionBase"/> class.
@@ -134,6 +136,44 @@ namespace Hazelcast.Networking
         }
 
         /// <summary>
+        /// Adds a function that handles shutdowns.
+        /// </summary>
+        /// <param name="onShutdown">A function that handles shutdowns.</param>
+        /// <remarks>
+        /// <para>If the socket connection has already shut down, the function is invoked immediately.</para>
+        /// </remarks>
+        public async ValueTask AddOnShutdown(Func<SocketConnectionBase, ValueTask> onShutdown)
+        {
+            if (onShutdown == null) throw new ArgumentNullException(nameof(onShutdown));
+
+            await _onShutdownMutex.LockAsync(async () =>
+            {
+                if (_onShutdownExecuted) await onShutdown(this).CfAwaitNoThrow();
+                else _onShutdown += onShutdown;
+            }).CfAwait();
+        }
+
+        /// <summary>
+        /// Removes a function that handles shutdowns.
+        /// </summary>
+        /// <param name="onShutdown">A function that handles shutdowns.</param>
+        public void RemoveOnShutdown(Func<SocketConnectionBase, ValueTask> onShutdown)
+        {
+            _onShutdownMutex.Lock(() => _onShutdown -= onShutdown);
+        }
+
+        /// <summary>
+        /// Clears functions that handles shutdowns.
+        /// </summary>
+        /// <remarks>
+        /// <para>Use this in order to shut the socket down without consequences.</para>
+        /// </remarks>
+        public void ClearOnShutdown()
+        {
+            _onShutdownMutex.Lock(() => _onShutdown = null);
+        }
+
+        /// <summary>
         /// Gets a value indicating whether the connection is active.
         /// </summary>
         public bool IsActive => _isActive == 1;
@@ -220,8 +260,7 @@ namespace Hazelcast.Networking
         private async ValueTask ShutdownInternal(Task task)
         {
             // only once
-            if (Interlocked.CompareExchange(ref _isShutdown, 1, 0) == 1)
-                return;
+            if (!_isShutdown.InterlockedZeroToOne()) return;
 
             HConsole.WriteLine(this, "Bringing connection down");
 
@@ -242,7 +281,12 @@ namespace Hazelcast.Networking
             HConsole.WriteLine(this, "Connection is down");
 
             // notify
-            await _onShutdown.AwaitEach(this).CfAwaitNoThrow();
+            await _onShutdownMutex.LockAsync(async () =>
+            {
+                
+                await _onShutdown.AwaitEach(this).CfAwaitNoThrow();
+                _onShutdownExecuted = true;
+            }).CfAwait();
         }
 
         /// <summary>
@@ -499,8 +543,8 @@ namespace Hazelcast.Networking
             try { _socket.Shutdown(SocketShutdown.Both); } catch { /* ignore */ }
             try { _socket.Dispose(); } catch { /* ignore */ }
 
-            // ok to dispose again
             _streamReadCancellationTokenSource.Dispose();
+            _onShutdownMutex.Dispose();
         }
     }
 }

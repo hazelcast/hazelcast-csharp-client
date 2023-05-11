@@ -37,6 +37,7 @@ namespace Hazelcast.Messaging
         private readonly IHSemaphore _writer;
         private readonly ILogger _logger;
 
+        private int _disposed;
         private Action<ClientMessageConnection, ClientMessage> _onReceiveMessage;
         private int _bytesLength = -1;
         private Frame _currentFrame;
@@ -429,8 +430,9 @@ namespace Hazelcast.Messaging
         /// <inheritdoc />
         public async ValueTask DisposeAsync()
         {
-            // note: DisposeAsync should not throw (CA1065)
+            if (!_disposed.InterlockedZeroToOne()) return;
 
+            // note: DisposeAsync should not throw (CA1065)
             await _connection.DisposeAsync().CfAwait(); // does not throw
             _writer.Dispose();
         }
