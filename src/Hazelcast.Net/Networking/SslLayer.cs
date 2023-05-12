@@ -18,6 +18,8 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Reflection;
+using System.Runtime.ConstrainedExecution;
+using System.Runtime.InteropServices;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -65,9 +67,41 @@ namespace Hazelcast.Networking
 
             if (!_options.Enabled) return stream;
 
-            var sslStream = new SslStream(stream, false, ValidateCertificate, null);
-
             var clientCertificates = GetClientCertificatesOrDefault();
+
+            LocalCertificateSelectionCallback? selectCertificate = null;
+            // note: OperatingSystem.IsWindows() is n/a in netstandard
+            if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && clientCertificates.Count > 1)
+            {
+                // on e.g. linux if the collection of certificates contains more than 1 certificate, then the SslStream
+                // is going to fail selecting the correct one + it's going to fail sending the chain to the server, so
+                // we have to do some housekeeping and workaround here
+
+                // assume there's only going to be 1 cert with a private key, and pick it
+                // should we work with more than 1 PK certs, we'd need a more complex logic
+                selectCertificate = (sender, host, certificates, certificate, issuers) 
+                    => certificates.Cast<X509Certificate2>().FirstOrDefault(x => x.HasPrivateKey);
+
+                // for the whole cert chain to be sent as part of the handshake we need to copy the
+                // certs that don't have a PK to the current user CA certificate store
+                var store = new X509Store(StoreName.CertificateAuthority, StoreLocation.CurrentUser);
+                try
+                {
+                    store.Open(OpenFlags.ReadWrite);
+                    foreach (var cert in clientCertificates)
+                    {
+                        _logger.IfDebug()?.LogDebug($"CertFix: {cert.Subject}   (issuer: {cert.Issuer})   {cert.Thumbprint}   [{(cert.HasPrivateKey ? "PK" : "ADD")}]");
+                        if (!cert.HasPrivateKey) store.Add(cert);
+                    }
+                }
+                finally
+                {
+                    store.Close();
+                    store.Dispose();
+                }
+            }
+
+            var sslStream = new SslStream(stream, false, ValidateCertificate, selectCertificate);
 
             var targetHost = GetTargetHostNameOrDefault();
             _logger.LogDebug("TargetHost: {TargetHost}", targetHost);
@@ -195,9 +229,9 @@ namespace Hazelcast.Networking
             // if targetHost does not match the server certificate name then a RemoteCertificateNameMismatch error will
             // be reported, which can be ignored with options.ValidateCertificateName being false. If it is true, then
             // options.CertificateName *must* be set to the server certificate name.
-            // + if no options.CertificateName is given, .Net 4.8 assigns random numbers which fails on Hazelcast at Java 17+.
-            // We set the target host name to connecting address if nothing to have. See issue #800.
-            // TODO: We should obsolete options.CertificateName, and introduce ServerNameIndication instead.
+            // + if no options.CertificateName is given, .Net 4.8 assigns random numbers which fails when the cluster runs
+            // Java 17+. which validates that the hostname is a value hostname. Going to use the certificate name for
+            // now (see issue #800) but really we should introduce a ServerNameIndication option instead.
 
             return _options.CertificateName ?? _ipAddress.ToString();
         }
