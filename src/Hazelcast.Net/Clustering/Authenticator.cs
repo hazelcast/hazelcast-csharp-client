@@ -21,139 +21,156 @@ using Hazelcast.Exceptions;
 using Hazelcast.Messaging;
 using Hazelcast.Models;
 using Hazelcast.Protocol.Codecs;
+using Hazelcast.Protocol.TempCodecs;
 using Hazelcast.Security;
 using Hazelcast.Serialization;
 using Microsoft.Extensions.Logging;
 
-namespace Hazelcast.Clustering
+namespace Hazelcast.Clustering;
+
+/// <summary>
+/// Authenticates client connections.
+/// </summary>
+internal class Authenticator
 {
+    private static string _clientVersion; // static cache (immutable value)
+    private readonly AuthenticationOptions _options;
+    private readonly SerializationService _serializationService;
+    private readonly ILogger _logger;
+
     /// <summary>
-    /// Authenticates client connections.
+    /// Initializes a new instance of the <see cref="Authenticator"/> class.
     /// </summary>
-    internal class Authenticator
+    public Authenticator(AuthenticationOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
     {
-        private static string _clientVersion; // static cache (immutable value)
-        private readonly AuthenticationOptions _options;
-        private readonly SerializationService _serializationService;
-        private readonly ILogger _logger;
+        _options = options ?? throw new ArgumentNullException(nameof(options));
+        _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
+        _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory))).CreateLogger<Authenticator>();
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="Authenticator"/> class.
-        /// </summary>
-        public Authenticator(AuthenticationOptions options, SerializationService serializationService, ILoggerFactory loggerFactory)
+        HConsole.Configure(x => x.Configure<Authenticator>().SetIndent(4).SetPrefix("AUTH"));
+    }
+
+    /// <summary>
+    /// Authenticates the client connection.
+    /// </summary>
+    /// <param name="client">The client to authenticate.</param>
+    /// <param name="clusterName">The cluster name, as assigned by the client.</param>
+    /// <param name="clusterClientId">The cluster unique identifier, as assigned by the client.</param>
+    /// <param name="clusterClientName">The cluster client name, as assigned by the client.</param>
+    /// <param name="labels">The client labels.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
+    /// <returns>A task that will complete when the client is authenticated.</returns>
+    public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, CancellationToken cancellationToken)
+    {
+        if (client == null) throw new ArgumentNullException(nameof(client));
+
+        // gets the credentials factory and don't dispose it
+        // if there is none, create the default one and dispose it
+        var credentialsFactory = _options.CredentialsFactory.Service;
+        using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
+        credentialsFactory ??= temp;
+
+        _logger.IfDebug()?.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
+
+        var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+        if (result != null) return result;
+
+        // result is null, credentials failed but we may want to retry
+        if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
         {
-            _options = options ?? throw new ArgumentNullException(nameof(options));
-            _serializationService = serializationService ?? throw new ArgumentNullException(nameof(serializationService));
-            _logger = (loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory))).CreateLogger<Authenticator>();
+            resettableCredentialsFactory.Reset();
 
-            HConsole.Configure(x => x.Configure<Authenticator>().SetIndent(4).SetPrefix("AUTH"));
-        }
-
-        /// <summary>
-        /// Authenticates the client connection.
-        /// </summary>
-        /// <param name="client">The client to authenticate.</param>
-        /// <param name="clusterName">The cluster name, as assigned by the client.</param>
-        /// <param name="clusterClientId">The cluster unique identifier, as assigned by the client.</param>
-        /// <param name="clusterClientName">The cluster client name, as assigned by the client.</param>
-        /// <param name="labels">The client labels.</param>
-        /// <param name="cancellationToken">A cancellation token.</param>
-        /// <returns>A task that will complete when the client is authenticated.</returns>
-        public async ValueTask<AuthenticationResult> AuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, CancellationToken cancellationToken)
-        {
-            if (client == null) throw new ArgumentNullException(nameof(client));
-
-            // gets the credentials factory and don't dispose it
-            // if there is none, create the default one and dispose it
-            var credentialsFactory = _options.CredentialsFactory.Service;
-            using var temp = credentialsFactory != null ? null : new DefaultCredentialsFactory();
-            credentialsFactory ??= temp;
-
-            _logger.IfDebug()?.LogDebug("Authenticate with {CredentialsFactoryType}", credentialsFactory.GetType().Name);
-
-            var result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
+            // try again
+            result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
             if (result != null) return result;
-
-            // result is null, credentials failed but we may want to retry
-            if (credentialsFactory is IResettableCredentialsFactory resettableCredentialsFactory)
-            {
-                resettableCredentialsFactory.Reset();
-
-                // try again
-                result = await TryAuthenticateAsync(client, clusterName, clusterClientId, clusterClientName, labels, credentialsFactory, cancellationToken).CfAwait();
-                if (result != null) return result;
-            }
-
-            // nah, no chance
-            throw new AuthenticationException("Invalid credentials.");
         }
 
-        private static string ClientVersion
+        // nah, no chance
+        throw new AuthenticationException("Invalid credentials.");
+    }
+
+    /// <summary>
+    /// Authenticates a TPC connection.
+    /// </summary>
+    public async ValueTask<bool> AuthenticateTpcAsync(MemberConnection client, ClientMessageConnection connection, Guid clientId, byte[] token, CancellationToken cancellationToken)
+    {
+        var message = TpcClientChannelAuthenticationCodec.EncodeRequest(clientId, token);
+        message.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected;
+        _ = await client.SendAsync(message, connection, cancellationToken).CfAwait();
+        return true; // response is empty
+    }
+
+    private static string ClientVersion
+    {
+        get
         {
-            get
-            {
-                if (_clientVersion != null) return _clientVersion;
-                var version = typeof(Authenticator).Assembly.GetName().Version;
-                _clientVersion = version.Major + "." + version.Minor;
-                if (version.Build > 0) _clientVersion += "." + version.Build;
-                return _clientVersion;
-            }
+            if (_clientVersion != null) return _clientVersion;
+            var version = typeof(Authenticator).Assembly.GetName().Version;
+            _clientVersion = version.Major + "." + version.Minor;
+            if (version.Build > 0) _clientVersion += "." + version.Build;
+            return _clientVersion;
         }
+    }
 
-        // tries to authenticate
-        // returns a result if successful
-        // returns null if failed due to credentials (may want to retry)
-        // throws if anything else went wrong
-        private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, CancellationToken cancellationToken)
+    // tries to authenticate
+    // returns a result if successful
+    // returns null if failed due to credentials (may want to retry)
+    // throws if anything else went wrong
+    private async ValueTask<AuthenticationResult> TryAuthenticateAsync(MemberConnection client, string clusterName, Guid clusterClientId, string clusterClientName, ISet<string> labels, ICredentialsFactory credentialsFactory, CancellationToken cancellationToken)
+    {
+        const string clientType = "CSP"; // CSharp
+
+        var serializationVersion = _serializationService.GetVersion();
+        var clientVersion = ClientVersion;
+        var credentials = credentialsFactory.NewCredentials();
+
+        ClientMessage requestMessage;
+        switch (credentials)
         {
-            const string clientType = "CSP"; // CSharp
+            case IPasswordCredentials passwordCredentials:
+                requestMessage = _options.TpcEnabled 
+                    ? TpcClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                break;
 
-            var serializationVersion = _serializationService.GetVersion();
-            var clientVersion = ClientVersion;
-            var credentials = credentialsFactory.NewCredentials();
+            case ITokenCredentials tokenCredentials:
+                requestMessage = _options.TpcEnabled
+                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                break;
 
-            ClientMessage requestMessage;
-            switch (credentials)
-            {
-                case IPasswordCredentials passwordCredentials:
-                    requestMessage = ClientAuthenticationCodec.EncodeRequest(clusterName, passwordCredentials.Name, passwordCredentials.Password, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
-                    break;
-
-                case ITokenCredentials tokenCredentials:
-                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, tokenCredentials.GetToken(), clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
-                    break;
-
-                default:
-                    var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
-                    requestMessage = ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
-                    break;
-            }
-
-            cancellationToken.ThrowIfCancellationRequested();
-
-            requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
-            HConsole.WriteLine(this, "Send auth request");
-            var responseMessage = await client.SendAsync(requestMessage).CfAwait();
-            HConsole.WriteLine(this, "Rcvd auth response");
-            var response = ClientAuthenticationCodec.DecodeResponse(responseMessage);
-            HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
-
-            return (AuthenticationStatus) response.Status switch
-            {
-                AuthenticationStatus.Authenticated
-                    => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name),
-
-                AuthenticationStatus.CredentialsFailed
-                    => null, // could want to retry
-
-                AuthenticationStatus.NotAllowedInCluster
-                    => throw new ClientNotAllowedInClusterException("Client is not allowed in cluster."),
-
-                AuthenticationStatus.SerializationVersionMismatch
-                    => throw new AuthenticationException("Serialization mismatch."),
-
-                _ => throw new AuthenticationException($"Received unsupported status code {response.Status}.")
-            };
+            default:
+                var bytes = _serializationService.ToData(credentials, withSchemas: true).ToByteArray();
+                requestMessage = _options.TpcEnabled
+                    ? TpcClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels)
+                    : ClientAuthenticationCustomCodec.EncodeRequest(clusterName, bytes, clusterClientId, clientType, serializationVersion, clientVersion, clusterClientName, labels);
+                break;
         }
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        requestMessage.InvocationFlags |= InvocationFlags.InvokeWhenNotConnected; // is part of the connection phase
+        HConsole.WriteLine(this, "Send auth request");
+        var responseMessage = await client.SendAsync(requestMessage).CfAwait();
+        HConsole.WriteLine(this, "Rcvd auth response");
+        var response = TpcClientAuthenticationCodec.DecodeResponse(responseMessage);
+        HConsole.WriteLine(this, "Auth response is: " + (AuthenticationStatus) response.Status);
+
+        return (AuthenticationStatus) response.Status switch
+        {
+            AuthenticationStatus.Authenticated
+                => new AuthenticationResult(response.ClusterId, response.MemberUuid, response.Address, response.ServerHazelcastVersion, response.FailoverSupported, response.PartitionCount, response.SerializationVersion, credentials.Name, response.TpcPorts, response.TpcToken),
+
+            AuthenticationStatus.CredentialsFailed
+                => null, // could want to retry
+
+            AuthenticationStatus.NotAllowedInCluster
+                => throw new ClientNotAllowedInClusterException("Client is not allowed in cluster."),
+
+            AuthenticationStatus.SerializationVersionMismatch
+                => throw new AuthenticationException("Serialization mismatch."),
+
+            _ => throw new AuthenticationException($"Received unsupported status code {response.Status}.")
+        };
     }
 }

@@ -13,12 +13,12 @@
 // limitations under the License.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
+using Hazelcast.Core;
 using Hazelcast.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -32,8 +32,6 @@ namespace Hazelcast.Networking
         // internal const string CloudUrlBase = "https://coordinator.hazelcast.cloud";
         private const string CloudUrlPath = "/cluster/discovery?token=";
         private const string RegexErrorStr = "(?<=message\":\").*?(?=\")";
-        private const string RegexPrivateStr = "(?<=private-address\":\").*?(?=\")";
-        private const string RegexPublicStr = "(?<=public-address\":\").*?(?=\")";
 
         private readonly ILogger _logger;
         private readonly Uri _endpointUrl;
@@ -62,7 +60,7 @@ namespace Hazelcast.Networking
 
 
         [ExcludeFromCodeCoverage] // not testing the web connection
-        public IDictionary<NetworkAddress, NetworkAddress> Scan()
+        public CloudInfo Scan()
         {
             if (!string.IsNullOrWhiteSpace(_response)) return ParseResponse(_response);
 
@@ -81,25 +79,8 @@ namespace Hazelcast.Networking
                 httpWebRequest.ReadWriteTimeout = _connectionTimeoutMilliseconds;
                 httpWebRequest.Headers.Set("Accept-Charset", "UTF-8");
                 var resp = ReadFromResponse(httpWebRequest.GetResponse());
-                var map = ParseResponse(resp);
-                if (_logger.IsEnabled(LogLevel.Debug))
-                {
-                    var msg = new StringBuilder();
-                    msg.Append("Cloud Members [");
-                    msg.Append(map.Count);
-                    msg.AppendLine("] {");
-                    foreach (var (privateAddress, publicAddress) in map)
-                    {
-                        msg.Append("    Private=");
-                        msg.Append(privateAddress);
-                        msg.Append(" Public=");
-                        msg.Append(publicAddress);
-                        msg.AppendLine();
-                    }
-                    msg.Append('}');
-                    _logger.LogDebug(msg.ToString());
-                }
-                return map;
+                _logger.IfDebug()?.LogDebug("CloudInfo: " + resp);
+                return ParseResponse(resp);
             }
             catch (WebException we)
             {
@@ -122,30 +103,59 @@ namespace Hazelcast.Networking
             return sr.ReadToEnd();
         }
 
-        private Dictionary<NetworkAddress, NetworkAddress> ParseResponse(string jsonResult)
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class CloudMemberInfo
         {
-            var regexPrivate = new Regex(RegexPrivateStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var regexPublic = new Regex(RegexPublicStr, RegexOptions.Compiled | RegexOptions.IgnoreCase);
-            var matchesPrivate = regexPrivate.Matches(jsonResult);
-            var matchesPublic = regexPublic.Matches(jsonResult);
+            [System.Text.Json.Serialization.JsonPropertyName("private-address")]
+            public string PrivateAddress { get; set; }
 
-            var privateToPublicAddresses = new Dictionary<NetworkAddress, NetworkAddress>();
-            for (var i = 0; i < matchesPrivate.Count; i++)
+            [System.Text.Json.Serialization.JsonPropertyName("public-address")]
+            public string PublicAddress { get; set; }
+
+            [System.Text.Json.Serialization.JsonPropertyName("tpc-ports")]
+            public CloudTpcInfo[] TpcPorts { get; set; }
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class CloudTpcInfo
+        {
+            [System.Text.Json.Serialization.JsonPropertyName("private-port")]
+            public int PrivatePort { get; set; }
+
+            [System.Text.Json.Serialization.JsonPropertyName("public-port")]
+            public int PublicPort { get; set; }
+        }
+
+        private CloudInfo ParseResponse(string jsonResult)
+        {
+            var options = new System.Text.Json.JsonSerializerOptions { AllowTrailingCommas = true };
+            var result = System.Text.Json.JsonSerializer.Deserialize<CloudMemberInfo[]>(jsonResult, options);
+
+            var cloudInfo = new CloudInfo();
+
+            foreach (var cloudMemberInfo in result)
             {
-                var privateAddressStr = matchesPrivate[i].Value;
-                var publicAddressStr = matchesPublic[i].Value;
+                var publicAddress = NetworkAddress.Parse(cloudMemberInfo.PublicAddress);
+                if (publicAddress.Port == 0) publicAddress = publicAddress.WithPort(_defaultPort);
 
-                var publicAddress = NetworkAddress.Parse(publicAddressStr);
-                if (publicAddress.Port == 0)
-                    publicAddress = publicAddress.WithPort(_defaultPort);
+                var privateAddress = NetworkAddress.Parse(cloudMemberInfo.PrivateAddress);
+                if (privateAddress.Port == 0) privateAddress = privateAddress.WithPort(publicAddress.Port);
 
-                var privateAddress = NetworkAddress.Parse(privateAddressStr);
-                if (privateAddress.Port == 0)
-                    privateAddress = privateAddress.WithPort(publicAddress.Port);
+                cloudInfo.PrivateToPublicAddresses[privateAddress] = publicAddress;
+                cloudInfo.ClassicAddresses.Add(publicAddress);
 
-                privateToPublicAddresses.Add(privateAddress, publicAddress);
+                if (cloudMemberInfo.TpcPorts != null)
+                {
+                    foreach (var tpcPortInfo in cloudMemberInfo.TpcPorts)
+                    {
+                        var privateTpcAddress = privateAddress.WithPort(tpcPortInfo.PrivatePort);
+                        var publicTpcAddress = publicAddress.WithPort(tpcPortInfo.PublicPort);
+                        cloudInfo.PrivateToPublicAddresses[privateTpcAddress] = publicTpcAddress;
+                    }
+                }
             }
-            return privateToPublicAddresses;
+
+            return cloudInfo;
         }
 
         [ExcludeFromCodeCoverage] // not testing the web connection

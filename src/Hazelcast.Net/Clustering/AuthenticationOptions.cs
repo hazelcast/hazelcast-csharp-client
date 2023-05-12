@@ -36,8 +36,13 @@ namespace Hazelcast.Clustering
         /// </summary>
         private AuthenticationOptions(AuthenticationOptions other)
         {
+            TpcEnabled = other.TpcEnabled;
             CredentialsFactory = other.CredentialsFactory.Clone();
         }
+
+        // internal option that carries Networking.Tpc.Enabled over for the time we have it
+        [BinderIgnore]
+        internal bool TpcEnabled { get; set; }
 
         /// <summary>
         /// Gets the <see cref="SingletonServiceFactory{TService}"/> for the <see cref="ICredentialsFactory"/>.

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Collections.Generic;
 using Hazelcast.Networking;
 
 namespace Hazelcast.Models
@@ -33,7 +34,9 @@ namespace Hazelcast.Models
         /// <param name="partitionCount">The partition count.</param>
         /// <param name="serializationVersion">The serialization version.</param>
         /// <param name="principal">The principal that was used to authenticate.</param>
-        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion, string principal)
+        /// <param name="tpcPorts">The list of TPC ports, or <c>null</c> if the server does not support TPC.</param>
+        /// <param name="tpcToken">The TPC token, or <c>null</c> if the server does not support TPC.</param>
+        public AuthenticationResult(Guid clusterId, Guid memberId, NetworkAddress memberAddress, string serverVersion, bool failoverSupported, int partitionCount, byte serializationVersion, string principal, IList<int> tpcPorts, byte[] tpcToken)
         {
             ClusterId = clusterId;
             MemberId = memberId;
@@ -43,6 +46,8 @@ namespace Hazelcast.Models
             PartitionCount = partitionCount;
             SerializationVersion = serializationVersion;
             Principal = principal;
+            TpcPorts = tpcPorts;
+            TpcToken = tpcToken;
         }
 
         /// <summary>
@@ -84,5 +89,20 @@ namespace Hazelcast.Models
         /// Gets the serialization version.
         /// </summary>
         public byte SerializationVersion { get; }
+
+        /// <summary>
+        /// Gets the list of TPC ports, or <c>null</c> if the member does not support TPC.
+        /// </summary>
+        public IList<int> TpcPorts { get; }
+
+        /// <summary>
+        /// Gets the TPC token, or <c>null</c> if the member does not support TPC.
+        /// </summary>
+        public byte[] TpcToken { get; }
+
+        /// <summary>
+        /// Whether the member supports TPC and provided TPC infos.
+        /// </summary>
+        public bool SupportsTpc => TpcPorts != null;
     }
 }
