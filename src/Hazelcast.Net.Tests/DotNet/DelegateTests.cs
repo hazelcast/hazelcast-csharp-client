@@ -115,7 +115,5 @@ namespace Hazelcast.Tests.DotNet
             var y = f?.Invoke("hello");
             Assert.That(y, Is.Null);
         }
-
-       
     }
 }
