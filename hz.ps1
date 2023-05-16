@@ -805,7 +805,7 @@ function ensure-server-files {
             $dest = "$libDir/hazelcast-$serverVersion.xml"
             $response = invoke-web-request $url $dest
             if ($response.StatusCode -ne 200) {
-                if (test-path $dest) { rm $dest }
+                if (test-path $dest) { remove-item $dest }
                 Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
             }
             Write-Output "Found hazelcast-default.xml from branch master"
@@ -820,7 +820,7 @@ function ensure-server-files {
 
             if ($response.StatusCode -ne 200) {
                 Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from tag v$v"
-                if (test-path $dest) { rm $dest }
+                if (test-path $dest) { remove-item $dest }
             }
             else {
                 Write-Output "Found hazelcast-default.xml from tag v$v"
@@ -841,7 +841,7 @@ function ensure-server-files {
 
             if ($response.StatusCode -ne 200) {
                 Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v.z"
-                if (test-path $dest) { rm $dest }
+                if (test-path $dest) { remove-item $dest }
             }
             else {
                 Write-Output "Found hazelcast-default.xml from branch $v.z"
@@ -856,7 +856,7 @@ function ensure-server-files {
 
             if ($response.StatusCode -ne 200) {
                 Write-Output "Failed to download hazelcast-default.xml ($($response.StatusCode)) from branch $v"
-                if (test-path $dest) { rm $dest }
+                if (test-path $dest) { remove-item $dest }
             }
             else {
                 Write-Output "Found hazelcast-default.xml from branch $v"
@@ -874,7 +874,7 @@ function ensure-server-files {
                 $dest = "$libDir/hazelcast-$serverVersion.xml"
                 $response = invoke-web-request $url $dest
                 if ($response.StatusCode -ne 200) {
-                    if (test-path $dest) { rm $dest }
+                    if (test-path $dest) { remove-item $dest }
                     Die "Error: failed to download hazelcast-default.xml ($($response.StatusCode)) from branch master"
                 }
                 Write-Output "Found hazelcast-default.xml from branch master"
@@ -1133,9 +1133,9 @@ function hz-generate-certs {
     if ([string]::IsNullOrWhiteSpace($token)) {
         # no token provided, maybe the dev has auth to access the private repo?
         Write-Output "Download test certificates (using GitHub clone)"
-        if (test-path "$tmpDir/certx") { rm -recurse -force "$tmpDir/certx" }
+        if (test-path "$tmpDir/certx") { remove-item -recurse -force "$tmpDir/certx" }
         mkdir "$tmpDir/certx" >$null 2>&1
-        rm -recurse -force "$tmpDir/certx/*"
+        remove-item -recurse -force "$tmpDir/certx/*"
         git init "$tmpDir/certx"
         git -C "$tmpDir/certx" config core.sparseCheckout true
         $repo = "https://github.com/hazelcast/private-test-artifacts.git"
@@ -1144,9 +1144,9 @@ function hz-generate-certs {
         echo "certs.zip" >> "$tmpDir/certx/.git/info/sparse-checkout"
         git -C "$tmpDir/certx" pull --depth=1 --no-tags origin data
         if ($LASTEXITCODE -ne 0) { Die "Failed to access the private-test-artifacts repository." }
-        rm "$tmpDir/certs.zip" >$null 2>&1
+        remove-item "$tmpDir/certs.zip" >$null 2>&1
         mv "$tmpDir/certx/certs.zip" "$tmpDir"
-        rm -recurse -force "$tmpDir/certx"
+        remove-item -recurse -force "$tmpDir/certx"
     }
     else {
         # a token was provided, use it
@@ -1164,9 +1164,9 @@ function hz-generate-certs {
     }
 
     mkdir "$tmpDir/certs" >$null 2>&1
-    rm -recurse -force "$tmpDir/certs/*"
+    remove-item -recurse -force "$tmpDir/certs/*"
     Expand-Archive "$tmpDir/certs.zip" -DestinationPath "$tmpDir/certs"
-    rm "$tmpDir/certs.zip"
+    remove-item "$tmpDir/certs.zip"
     Write-Output ""
 }
 
@@ -1423,8 +1423,8 @@ function hz-generate-codecs {
 
     # wipe existing codecs from the C# and protocol repositories
     Write-Output "Clear codecs"
-    rm -force $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs
-    rm -force $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs
+    remove-item -force $srcDir/Hazelcast.Net/Protocol/Codecs/*.cs
+    remove-item -force $srcDir/Hazelcast.Net/Protocol/CustomCodecs/*.cs
 
     Write-Output "Generate codecs"
     python $slnRoot/protocol/generator.py -l cs --no-binary -r $slnRoot
@@ -1649,7 +1649,7 @@ function hz-build-docs {
     $v = &dotnet docfx --version # docfx 2.64.0+6a1e6d7eda3339dd5c7cd7a387f5637132122c2d
     $v = $v.Substring($v.IndexOf(" ")+1)
     $v = $v.Substring(0, $v.IndexOf("+"))
-    rm ~/.nuget/packages/docfx/$v/tools/$target/any/Hazelcast*
+    remove-item ~/.nuget/packages/docfx/$v/tools/$target/any/Hazelcast*
     cp $pluginDll ~/.nuget/packages/docfx/$v/tools/$target/any
     
     # and patch the deps file, this really is not pretty - hardcoding the target path
@@ -1937,8 +1937,8 @@ function stop-remote-controller() {
     if ($script:remoteController -and $script:remoteController.Id -and -not $script:remoteController.HasExited) {
         Write-Output "Stopping remote controller (pid=$($script:remoteController.Id))..."
         $script:remoteController.Kill($true) # entire tree
-        rm "$tmpDir/rc/pid"
-        rm "$tmpDir/rc/version"
+        remove-item "$tmpDir/rc/pid"
+        remove-item "$tmpDir/rc/version"
 	}
     else {
         Write-Output "Remote controller is not running."
@@ -1961,8 +1961,8 @@ function kill-remote-controller() {
     else {
         $rcpid = get-content "$tmpDir/rc/pid"
         kill-tree $rcpid
-        rm "$tmpDir/rc/pid"
-        rm "$tmpDir/rc/version"
+        remove-item "$tmpDir/rc/pid"
+        remove-item "$tmpDir/rc/version"
         Write-Output "Remote controller process $pid has been killed"
     }
 }
@@ -2063,7 +2063,7 @@ function run-tests ( $f ) {
         move-item -force "$tmpDir/tests/results/Hazelcast.Net.Tests.xml" "$tmpDir/tests/results/results-$f.xml"
     }
     elseif (test-path "$tmpDir/tests/results/results-$f.xml") {
-        rm "$tmpDir/tests/results/results-$f.xml"
+        remove-item "$tmpDir/tests/results/results-$f.xml"
     }
 
     $script:testResults += "$tmpDir/tests/results/results-$f.xml"
@@ -2113,7 +2113,7 @@ function hz-test {
     # run tests
     $script:testResults = @()
 
-    rm "$tmpDir/tests/results/results-*" >$null 2>&1
+    remove-item "$tmpDir/tests/results/results-*" >$null 2>&1
 
     $ownsrc = $false
     try {

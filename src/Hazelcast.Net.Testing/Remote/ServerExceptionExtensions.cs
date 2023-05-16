@@ -23,7 +23,6 @@ namespace Hazelcast.Testing.Remote
     /// </summary>
     public static class ServerExceptionExtensions
     {
-        private static FieldInfo _thriftMessage;
         private static FieldInfo _exceptionMessage;
         
         // NOTE
@@ -38,10 +37,13 @@ namespace Hazelcast.Testing.Remote
         /// <param name="thriftException">A <see cref="TException"/> instance.</param>
         public static void FixMessage(this TException thriftException)
         {
-            _thriftMessage = thriftException.GetType().GetField("_message", BindingFlags.Instance | BindingFlags.NonPublic);
+            var thriftMessage = thriftException.GetType().GetField("_message", BindingFlags.Instance | BindingFlags.NonPublic);
+            var message = (string) thriftMessage?.GetValue(thriftException);
+
+            message ??= "Exception of type 'Hazelcast.Testing.Remote.CloudException' was thrown, no message.";
+
             _exceptionMessage ??= typeof(Exception).GetField("_message", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (_thriftMessage == null || _exceptionMessage == null) return; // bah
-            _exceptionMessage.SetValue(thriftException, _thriftMessage.GetValue(thriftException));
+            _exceptionMessage?.SetValue(thriftException, message);
         }
     }
 }
