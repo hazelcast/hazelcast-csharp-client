@@ -41,9 +41,8 @@ public class CloudTestBase : RemoteTestBase
     /// </summary>
     protected List<CloudCluster> RcCloudClusters { get; } = new();
 
-
     [OneTimeSetUp]
-    public async Task ClusterOneTimeSetUp()
+    public async Task CloudOneTimeSetUp()
     {
         // validate that we have some environment variables
         if (string.IsNullOrWhiteSpace(_baseUrl = Environment.GetEnvironmentVariable("BASE_URL")))
@@ -114,19 +113,19 @@ public class CloudTestBase : RemoteTestBase
         });
     }
     
-    [OneTimeTearDown]
-    public async Task ClusterOneTimeTearDown()
+    [TearDown]
+    public async Task CloudTearDown()
     {
-        // terminate all clusters,
-        // terminate the remote controller client
-        if (RcClient != null)
-        {
-            foreach (var cluster in RcCloudClusters)
-            {
-                await RcClient.DeleteCloudClusterAsync(cluster.Id).CfAwaitNoThrow();
-            }
+        // terminate all clusters
+        foreach (var cluster in RcCloudClusters)
+            await RcClient.DeleteCloudClusterAsync(cluster.Id).CfAwaitNoThrow();
+        RcCloudClusters.Clear();
+    }
 
-            await RcClient.ExitAsync().CfAwaitNoThrow();
-        }
+    [OneTimeTearDown]
+    public async Task CloudOneTimeTearDown()
+    {
+        // terminate the client
+        if (RcClient != null) await RcClient.ExitAsync().CfAwaitNoThrow();
     }
 }
