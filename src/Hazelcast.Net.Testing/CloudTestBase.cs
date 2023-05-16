@@ -75,11 +75,21 @@ public class CloudTestBase : RemoteTestBase
     /// <returns>The cloud cluster.</returns>
     public async Task<CloudCluster> CreateCloudCluster(string version, bool tlsEnabled, CancellationToken token = default)
     {
-        var cluster = await RcClient.CreateCloudClusterAsync(version, tlsEnabled, token) 
-                      ?? throw new Exception("Failed to create a cloud cluster.");
+        try
+        {
+            var cluster = await RcClient.CreateCloudClusterAsync(version, tlsEnabled, token)
+                          ?? throw new Exception("Failed to create a cloud cluster.");
 
-        RcCloudClusters.Add(cluster);
-        return cluster;
+            RcCloudClusters.Add(cluster);
+            return cluster;
+        }
+        catch (TException e)
+        {
+            // ServerException, CloudException...
+            // Thrift exceptions are weird and need to be "fixed"
+            e.FixMessage();
+            throw;
+        }
     }
 
     protected ValueTask<IHazelcastClient> CreateAndStartClientAsync(CloudCluster cluster, Action<HazelcastOptions> configure)

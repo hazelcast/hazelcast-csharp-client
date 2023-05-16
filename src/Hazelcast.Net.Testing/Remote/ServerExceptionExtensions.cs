@@ -40,7 +40,8 @@ namespace Hazelcast.Testing.Remote
             var thriftMessage = thriftException.GetType().GetField("_message", BindingFlags.Instance | BindingFlags.NonPublic);
             var message = (string) thriftMessage?.GetValue(thriftException);
 
-            message ??= "Exception of type 'Hazelcast.Testing.Remote.CloudException' was thrown, no message.";
+            if (string.IsNullOrWhiteSpace(message))
+                message = "Exception of type 'Hazelcast.Testing.Remote.CloudException' was thrown (no message).";
 
             _exceptionMessage ??= typeof(Exception).GetField("_message", BindingFlags.Instance | BindingFlags.NonPublic);
             _exceptionMessage?.SetValue(thriftException, message);
