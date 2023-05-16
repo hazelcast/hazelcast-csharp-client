@@ -100,7 +100,7 @@ Hazelcast.Core.SingletonServiceFactory<TService>.Dispose() -> void
 Hazelcast.Core.SingletonServiceFactory<TService>.IsConfigured.get -> bool
 Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.get -> bool
 Hazelcast.Core.SingletonServiceFactory<TService>.OwnsService.set -> void
-~Hazelcast.Core.SingletonServiceFactory<TService>.Service.get -> TService
+~virtual Hazelcast.Core.SingletonServiceFactory<TService>.Service.get -> TService
 ~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.get -> System.IServiceProvider
 ~Hazelcast.Core.SingletonServiceFactory<TService>.ServiceProvider.set -> void
 Hazelcast.Core.SingletonServiceFactory<TService>.SingletonServiceFactory() -> void
@@ -650,7 +650,7 @@ Hazelcast.IHazelcastClientEventSubscriber
 Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
-Hazelcast.Messaging.MessagingOptions
+~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactoryHazelcast.Messaging.MessagingOptions
 ~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
