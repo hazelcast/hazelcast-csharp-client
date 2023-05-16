@@ -86,8 +86,7 @@ public class CloudTestBase : RemoteTestBase
     {
         return base.CreateAndStartClientAsync(options =>
         {
-            // FIXME why is CloudCluster not reporting the correct ID?
-            options.ClusterName = "de-" + cluster.Id;
+            options.ClusterName = cluster.ReleaseName;
             options.Networking.Cloud.Url = new Uri(_baseUrl);
             options.Networking.Cloud.DiscoveryToken = cluster.Token;
             options.Networking.Addresses.Clear();

@@ -650,7 +650,7 @@ Hazelcast.IHazelcastClientEventSubscriber
 Hazelcast.Logging.SingletonLoggerFactoryServiceFactory
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.AddProvider(Microsoft.Extensions.Logging.ILoggerProvider provider) -> void
 ~Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger(string categoryName) -> Microsoft.Extensions.Logging.ILogger
-~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactoryHazelcast.Messaging.MessagingOptions
+Hazelcast.Messaging.MessagingOptions
 ~Hazelcast.Messaging.MessagingOptions.MessagingOptions(Hazelcast.PreviewOptions preview = null) -> void
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.get -> int
 Hazelcast.Messaging.MessagingOptions.MinRetryDelayMilliseconds.set -> void
@@ -1883,3 +1883,4 @@ override Hazelcast.Models.DistributedObjectInfo.GetHashCode() -> int
 ~override Hazelcast.Models.DistributedObjectInfo.ToString() -> string
 ~static Hazelcast.Models.DistributedObjectInfo.operator !=(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
 ~static Hazelcast.Models.DistributedObjectInfo.operator ==(Hazelcast.Models.DistributedObjectInfo left, Hazelcast.Models.DistributedObjectInfo right) -> bool
+~override Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.get -> Microsoft.Extensions.Logging.ILoggerFactory
