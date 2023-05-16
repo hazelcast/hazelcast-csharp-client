@@ -15,13 +15,13 @@
 using System;
 using System.Threading.Tasks;
 using Hazelcast.Testing;
-using Hazelcast.Testing.Remote;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud;
 
-[Explicit("Requires Hazelcast Viridian Setup.")]
-public class ServerlessCloudTests : ServerlessRemoteTestBase
+// NOTE: do NOT rename that class, as the name is explicitly used in workflow
+// [Explicit("Requires Hazelcast Viridian Setup.")]
+public class ServerlessCloudTests : CloudTestBase
 {
     private string _hzVersion;
 
@@ -30,23 +30,37 @@ public class ServerlessCloudTests : ServerlessRemoteTestBase
     {
         _hzVersion = Environment.GetEnvironmentVariable("HZ_VERSION");
 
-        if (string.IsNullOrEmpty(_hzVersion))
-            throw new ArgumentNullException("HZ_VERSION", "HZ_VERSION must be set.");
+        if (string.IsNullOrWhiteSpace(_hzVersion))
+            throw new ArgumentNullException("HZ_VERSION", "The cloud HZ_VERSION environment variable is not set.");
     }
 
+    /*
     [Test]
-    public async Task TestCloud([Values] bool tlsEnabled, [Values] bool smartMode)
+    [Timeout(5 * 60 * 1_000)]
+    public async Task TestCloud()
+    {
+        var cluster = await CreateCloudCluster(_hzVersion, false);
+        var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = true; });
+        var map = await client.GetMapAsync<int, int>("myCloudMap");
+        await map.PutAsync(1, 1);
+        Assert.AreEqual(1, await map.GetAsync(1));
+    }
+    */
+
+    [Test]
+    [Timeout(20 * 60 * 1_000)]
+    public async Task TestCloudWithResume([Values] bool tlsEnabled, [Values] bool smartMode)
     {
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
 
-        var client = await CreateClientAsync(cluster, (options) => { options.Networking.SmartRouting = smartMode; });
+        var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
 
         var map = await client.GetMapAsync<int, int>("myCloudMap");
 
         await map.PutAsync(1, 1);
         Assert.AreEqual(1, await map.GetAsync(1));
 
-        await RcClient.StopCloudCluster(cluster.Id);
+        await RcClient.StopCloudClusterAsync(cluster.Id);
 
         await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Disconnected, client.State), 10_000, 500);
 

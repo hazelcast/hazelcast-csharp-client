@@ -181,11 +181,11 @@ namespace Hazelcast.Testing.Remote
             => WithLock(token => executeOnController(clusterId, script, lang, token), cancellationToken);
 
         /// <inheritdoc />
-        public Task LoginCloudAsync(string baseUrl, string apiKey, string apiSecret, CancellationToken cancellationToken = default)
+        public Task LoginToCloudAsync(string baseUrl, string apiKey, string apiSecret, CancellationToken cancellationToken = default)
             => WithLock(token => loginToCloud(baseUrl, apiKey, apiSecret, token), cancellationToken);
 
         /// <inheritdoc />
-        public Task LoginCloudWithEnvironment(CancellationToken cancellationToken = default)
+        public Task LoginToCloudAsync(CancellationToken cancellationToken = default)
             => WithLock(loginToCloudUsingEnvironment, cancellationToken);
 
         /// <inheritdoc />
@@ -197,7 +197,7 @@ namespace Hazelcast.Testing.Remote
             => WithLock(token => getCloudCluster(cloudClusterId, token), cancellationToken);
 
         /// <inheritdoc />
-        public Task<CloudCluster> StopCloudCluster(string cloudClusterId, CancellationToken cancellationToken = default)
+        public Task<CloudCluster> StopCloudClusterAsync(string cloudClusterId, CancellationToken cancellationToken = default)
             => WithLock(token => stopCloudCluster(cloudClusterId, token), cancellationToken);
 
         /// <inheritdoc />
