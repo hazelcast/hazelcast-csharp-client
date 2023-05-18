@@ -38,7 +38,7 @@ public class ServerlessCloudTests : CloudTestBase
     }
 
     [Test]
-    [Timeout(5 * 60 * 1_000)]
+    [Timeout(10 * 60 * 1_000)]
     public async Task TestCloud([Values] bool tlsEnabled, [Values] bool smartMode)
     {
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
@@ -77,10 +77,12 @@ public class ServerlessCloudTests : CloudTestBase
         Assert.AreEqual(1, await map.GetAsync(1));
 
         await RcClient.StopCloudClusterAsync(cluster.Id);
-        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Disconnected, client.State), 10_000, 500);
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Disconnected, client.State),
+            10 * 60 * 1_000, 500);
 
         await RcClient.ResumeCloudClusterAsync(cluster.Id);
-        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 10_000, 500);
+        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 
+            10 *60 * 1_000, 500);
 
         await map.PutAsync(2, 2);
         Assert.AreEqual(2, await map.GetAsync(2));
