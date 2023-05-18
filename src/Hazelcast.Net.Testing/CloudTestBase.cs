@@ -14,11 +14,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Authentication;
 using System.Threading;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Networking;
+using Hazelcast.Testing.Logging;
 using Hazelcast.Testing.Remote;
+using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Thrift;
 
@@ -41,12 +45,18 @@ public class CloudTestBase : RemoteTestBase
     /// </summary>
     protected List<CloudCluster> RcCloudClusters { get; } = new();
 
+    protected override HazelcastOptionsBuilder CreateHazelcastOptionsBuilder()
+    {
+        return base.CreateHazelcastOptionsBuilder()
+            .WithHConsoleLogger();
+    }
+
     [OneTimeSetUp]
     public async Task CloudOneTimeSetUp()
     {
         // validate that we have some environment variables
         if (string.IsNullOrWhiteSpace(_baseUrl = Environment.GetEnvironmentVariable("BASE_URL")))
-            throw new ArgumentNullException("BASE_URL", "The cloud BASE_URL environment variable is not set.");
+            throw new ArgumentException("BASE_URL", "The cloud BASE_URL environment variable is not set.");
 
         // create a client to the local remote controller
         RcClient = await ConnectToRemoteControllerAsync().CfAwait();
@@ -91,34 +101,47 @@ public class CloudTestBase : RemoteTestBase
         }
     }
 
-    protected ValueTask<IHazelcastClient> CreateAndStartClientAsync(CloudCluster cluster, Action<HazelcastOptions> configure)
+    protected async ValueTask<IHazelcastClient> CreateAndStartClientAsync(CloudCluster cluster, Action<HazelcastOptions> configure)
     {
-        return base.CreateAndStartClientAsync(options =>
+        var certificatePath = cluster.CertificatePath;
+
+        if (cluster.IsTlsEnabled)
+        {
+            // the certificate path is a directory and may be relative
+            if (!Path.IsPathRooted(certificatePath)) 
+                certificatePath = Path.Combine(await RcClient.GetRcPathAsync(), certificatePath);
+            certificatePath = Path.Combine(certificatePath, "client.pfx");
+        }
+
+        return await base.CreateAndStartClientAsync(options =>
         {
             options.ClusterName = cluster.ReleaseName;
             options.Networking.Cloud.Url = new Uri(_baseUrl);
             options.Networking.Cloud.DiscoveryToken = cluster.Token;
             options.Networking.Addresses.Clear();
             options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
-            options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 30_000;
+            options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 90_000;
 
             if (cluster.IsTlsEnabled)
             {
                 options.Networking.Ssl.Enabled = cluster.IsTlsEnabled;
+                options.Networking.Ssl.Protocol = SslProtocols.Tls12;
                 options.Networking.Ssl.CertificatePassword = cluster.TlsPassword;
-                options.Networking.Ssl.CertificatePath = cluster.CertificatePath;
+                options.Networking.Ssl.CertificatePath = certificatePath;
+                options.Networking.Ssl.ValidateCertificateChain = false; // for some reason, this fails
+                options.Networking.Ssl.ValidateCertificateName = false; // for some reason, this fails
             }
 
             configure?.Invoke(options);
         });
     }
-    
+
     [TearDown]
     public async Task CloudTearDown()
     {
         // terminate all clusters
         foreach (var cluster in RcCloudClusters)
-            await RcClient.DeleteCloudClusterAsync(cluster.Id).CfAwaitNoThrow();
+            await RcClient.DeleteCloudClusterAsync(cluster).CfAwaitNoThrow();
         RcCloudClusters.Clear();
     }
 

@@ -14,7 +14,10 @@
 
 using System;
 using System.Threading.Tasks;
+using Hazelcast.Core;
+using Hazelcast.Networking;
 using Hazelcast.Testing;
+using Hazelcast.Testing.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud;
@@ -31,41 +34,52 @@ public class ServerlessCloudTests : CloudTestBase
         _hzVersion = Environment.GetEnvironmentVariable("HZ_VERSION");
 
         if (string.IsNullOrWhiteSpace(_hzVersion))
-            throw new ArgumentNullException("HZ_VERSION", "The cloud HZ_VERSION environment variable is not set.");
+            throw new ArgumentException("HZ_VERSION", "The cloud HZ_VERSION environment variable is not set.");
     }
 
-    /*
     [Test]
     [Timeout(5 * 60 * 1_000)]
-    public async Task TestCloud()
+    public async Task TestCloud([Values] bool tlsEnabled, [Values] bool smartMode)
     {
-        var cluster = await CreateCloudCluster(_hzVersion, false);
-        var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = true; });
+        var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
+        var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
+
         var map = await client.GetMapAsync<int, int>("myCloudMap");
         await map.PutAsync(1, 1);
         Assert.AreEqual(1, await map.GetAsync(1));
     }
-    */
+
+    [Test]
+    public async Task RcPathTest()
+    {
+        // verifies that we can get the current filesystem path of the RC process
+        // (we need it in order to figure out where the RC saves the cloud certificates)
+        var path = await RcClient.GetRcPathAsync();
+        Assert.That(path, Is.Not.Null);
+    }
 
     [Test]
     [Timeout(20 * 60 * 1_000)]
     public async Task TestCloudWithResume([Values] bool tlsEnabled, [Values] bool smartMode)
     {
-        var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
+        using var _ = HConsole.Capture(x => x
+            .Configure().SetLevel(0).EnableTimeStamp(origin: DateTime.Now) // default level
+            .Configure<HConsoleLoggerProvider>().SetPrefix("LOG").SetMaxLevel() // always write the log output
+            .Configure(this).SetMaxLevel().SetPrefix("TEST") // always write the test output
+            .Configure<AsyncContext>().SetMinLevel() // do *not* write the AsyncContext verbose output
+            .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
+        var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
         var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
 
         var map = await client.GetMapAsync<int, int>("myCloudMap");
-
         await map.PutAsync(1, 1);
         Assert.AreEqual(1, await map.GetAsync(1));
 
         await RcClient.StopCloudClusterAsync(cluster.Id);
-
         await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Disconnected, client.State), 10_000, 500);
 
         await RcClient.ResumeCloudClusterAsync(cluster.Id);
-
         await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 10_000, 500);
 
         await map.PutAsync(2, 2);
