@@ -25,6 +25,7 @@ using Hazelcast.Testing.Remote;
 using Microsoft.Extensions.Logging;
 using NUnit.Framework;
 using Thrift;
+using static System.Net.WebRequestMethods;
 
 namespace Hazelcast.Testing;
 
@@ -56,7 +57,10 @@ public class CloudTestBase : RemoteTestBase
     {
         // validate that we have some environment variables
         if (string.IsNullOrWhiteSpace(_baseUrl = Environment.GetEnvironmentVariable("BASE_URL")))
-            throw new ArgumentException("BASE_URL", "The cloud BASE_URL environment variable is not set.");
+        {
+            Console.WriteLine("The cloud BASE_URL environment variable is not set, using default.");
+            _baseUrl = "https://api.dev.viridian.hazelcast.cloud";
+        }
 
         // create a client to the local remote controller
         RcClient = await ConnectToRemoteControllerAsync().CfAwait();

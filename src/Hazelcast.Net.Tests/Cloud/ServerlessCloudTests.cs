@@ -13,6 +13,7 @@
 // limitations under the License.
 
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Hazelcast.Core;
 using Hazelcast.Networking;
@@ -21,6 +22,13 @@ using Hazelcast.Testing.Logging;
 using NUnit.Framework;
 
 namespace Hazelcast.Tests.Cloud;
+
+// these tests require:
+// that the RC runs with the following environment variables:
+// - BASE_URL for instance https://api.dev.viridian.hazelcast.cloud
+// - HZ_VERSION for instance 5.2.3
+// - API_KEY ...
+// - API_SECRET ...
 
 // NOTE: do NOT rename that class, as the name is explicitly used in workflow
 // [Explicit("Requires Hazelcast Viridian Setup.")]
@@ -34,7 +42,10 @@ public class ServerlessCloudTests : CloudTestBase
         _hzVersion = Environment.GetEnvironmentVariable("HZ_VERSION");
 
         if (string.IsNullOrWhiteSpace(_hzVersion))
-            throw new ArgumentException("HZ_VERSION", "The cloud HZ_VERSION environment variable is not set.");
+        {
+            Console.WriteLine("The cloud HZ_VERSION environment variable is not set, using default.");
+            _hzVersion = "5.2.3"; // TODO: how can we figure out the latest stable?
+        }
     }
 
     [Test]
@@ -58,8 +69,13 @@ public class ServerlessCloudTests : CloudTestBase
         Assert.That(path, Is.Not.Null);
     }
 
+    private const int TestTimeout = 30 * 60 * 1_000; // 30 minutes
+    private const int ClientTimeout = 10 * 60 * 1_000; // 10 minutes
+    private const int MembersCount = 3; // clusters have 3 members
+    private const int Polling = 500;
+
     [Test]
-    [Timeout(20 * 60 * 1_000)]
+    [Timeout(TestTimeout)]
     public async Task TestCloudWithResume([Values] bool tlsEnabled, [Values] bool smartMode)
     {
         using var _ = HConsole.Capture(x => x
@@ -69,22 +85,40 @@ public class ServerlessCloudTests : CloudTestBase
             .Configure<AsyncContext>().SetMinLevel() // do *not* write the AsyncContext verbose output
             .Configure<SocketConnectionBase>().SetIndent(1).SetLevel(0).SetPrefix("SOCKET"));
 
+        HConsole.WriteLine(this, "Create cloud cluster");
         var cluster = await CreateCloudCluster(_hzVersion, tlsEnabled);
+        HConsole.WriteLine(this, $"Create client (smart={(smartMode ? "true" : "false")}");
         var client = await CreateAndStartClientAsync(cluster, options => { options.Networking.SmartRouting = smartMode; });
 
+        if (smartMode)
+        {
+            HConsole.WriteLine(this, "Wait for client to connect to all members");
+            await AssertEx.SucceedsEventually(
+                () => Assert.That(client.Members.Count(x => x.IsConnected), Is.EqualTo(MembersCount)),
+            ClientTimeout, Polling);
+        }
+
+        HConsole.WriteLine(this, "Use client");
         var map = await client.GetMapAsync<int, int>("myCloudMap");
         await map.PutAsync(1, 1);
         Assert.AreEqual(1, await map.GetAsync(1));
 
+        HConsole.WriteLine(this, "Stop cluster");
         await RcClient.StopCloudClusterAsync(cluster.Id);
-        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Disconnected, client.State),
-            10 * 60 * 1_000, 500);
+        await AssertEx.SucceedsEventually(
+            () => Assert.That(client.State, Is.EqualTo(ClientState.Disconnected)),
+            ClientTimeout, Polling);
 
+        HConsole.WriteLine(this, "Resume cluster");
         await RcClient.ResumeCloudClusterAsync(cluster.Id);
-        await AssertEx.SucceedsEventually(() => Assert.AreEqual(ClientState.Connected, client.State), 
-            10 *60 * 1_000, 500);
+        await AssertEx.SucceedsEventually(
+            () => Assert.That(client.State, Is.EqualTo(ClientState.Connected)),
+            ClientTimeout, Polling);
 
+        HConsole.WriteLine(this, "Use client");
         await map.PutAsync(2, 2);
         Assert.AreEqual(2, await map.GetAsync(2));
+
+        HConsole.WriteLine(this, "End");
     }
 }
