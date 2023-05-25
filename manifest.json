@@ -6125,6 +6125,16 @@
       "source_relative_path": "obj/dev/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.yml",
       "output": {
         ".html": {
+          "relative_path": "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.html"
+        }
+      },
+      "version": ""
+    },
+    {
+      "type": "ManagedReference",
+      "source_relative_path": "obj/dev/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.yml",
+      "output": {
+        ".html": {
           "relative_path": "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger.html"
         }
       },

@@ -557,7 +557,7 @@
   "5.2.2/api/Hazelcast.Core.SingletonServiceFactory-1.Service.html": {
     "href": "5.2.2/api/Hazelcast.Core.SingletonServiceFactory-1.Service.html",
     "title": "Property Service | Hazelcast .NET Documentation",
-    "keywords": "Property Service Service Gets the singleton instance of the service. Declaration public TService Service { get; } Property Value Type Description TService The singleton instance of the service, or null if this service factory has not been configured."
+    "keywords": "Property Service Service Gets the singleton instance of the service. Declaration public virtual TService Service { get; } Property Value Type Description TService The singleton instance of the service, or null if this service factory has not been configured."
   },
   "5.2.2/api/Hazelcast.Core.SingletonServiceFactory-1.ServiceProvider.html": {
     "href": "5.2.2/api/Hazelcast.Core.SingletonServiceFactory-1.ServiceProvider.html",
@@ -2757,7 +2757,12 @@
   "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.html": {
     "href": "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.html",
     "title": "Class SingletonLoggerFactoryServiceFactory | Hazelcast .NET Documentation",
-    "keywords": "Class SingletonLoggerFactoryServiceFactory Represents a singleton ILoggerFactory service factory. Inheritance object SingletonServiceFactory<ILoggerFactory> SingletonLoggerFactoryServiceFactory Implements ILoggerFactory IDisposable Inherited Members SingletonServiceFactory<ILoggerFactory>.Creator SingletonServiceFactory<ILoggerFactory>.IsConfigured SingletonServiceFactory<ILoggerFactory>.ServiceProvider SingletonServiceFactory<ILoggerFactory>.OwnsService SingletonServiceFactory<ILoggerFactory>.Service SingletonServiceFactory<ILoggerFactory>.Dispose() SingletonServiceFactory<ILoggerFactory>.Dispose(bool) object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: Hazelcast.Logging Assembly: Hazelcast.Net.dll Syntax public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory<ILoggerFactory>, ILoggerFactory, IDisposable Methods Name Description AddProvider(ILoggerProvider) CreateLogger(string)"
+    "keywords": "Class SingletonLoggerFactoryServiceFactory Represents a singleton ILoggerFactory service factory. Inheritance object SingletonServiceFactory<ILoggerFactory> SingletonLoggerFactoryServiceFactory Implements ILoggerFactory IDisposable Inherited Members SingletonServiceFactory<ILoggerFactory>.Creator SingletonServiceFactory<ILoggerFactory>.IsConfigured SingletonServiceFactory<ILoggerFactory>.ServiceProvider SingletonServiceFactory<ILoggerFactory>.OwnsService SingletonServiceFactory<ILoggerFactory>.Dispose() SingletonServiceFactory<ILoggerFactory>.Dispose(bool) object.Equals(object) object.Equals(object, object) object.GetHashCode() object.GetType() object.MemberwiseClone() object.ReferenceEquals(object, object) object.ToString() Namespace: Hazelcast.Logging Assembly: Hazelcast.Net.dll Syntax public class SingletonLoggerFactoryServiceFactory : SingletonServiceFactory<ILoggerFactory>, ILoggerFactory, IDisposable Properties Name Description Service Gets the singleton instance of the service. Methods Name Description AddProvider(ILoggerProvider) CreateLogger(string)"
+  },
+  "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.html": {
+    "href": "5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.html",
+    "title": "Property Service | Hazelcast .NET Documentation",
+    "keywords": "Property Service Service Gets the singleton instance of the service. Declaration public override ILoggerFactory Service { get; } Property Value Type Description ILoggerFactory The singleton instance of the service, or null if this service factory has not been configured. Overrides SingletonServiceFactory<ILoggerFactory>.Service"
   },
   "5.2.2/api/Hazelcast.Messaging.html": {
     "href": "5.2.2/api/Hazelcast.Messaging.html",

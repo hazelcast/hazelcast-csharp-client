@@ -8585,6 +8585,18 @@ references:
   commentId: Overload:Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger
   fullName: Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.CreateLogger
   nameWithType: SingletonLoggerFactoryServiceFactory.CreateLogger
+- uid: Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service
+  name: Service
+  href: 5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.html#Hazelcast_Logging_SingletonLoggerFactoryServiceFactory_Service
+  commentId: P:Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service
+  fullName: Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service
+  nameWithType: SingletonLoggerFactoryServiceFactory.Service
+- uid: Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service*
+  name: Service
+  href: 5.2.2/api/Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service.html
+  commentId: Overload:Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service
+  fullName: Hazelcast.Logging.SingletonLoggerFactoryServiceFactory.Service
+  nameWithType: SingletonLoggerFactoryServiceFactory.Service
 - uid: Hazelcast.Messaging
   name: Hazelcast.Messaging
   href: 5.2.2/api/Hazelcast.Messaging.html
