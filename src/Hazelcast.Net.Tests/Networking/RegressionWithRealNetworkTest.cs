@@ -79,16 +79,7 @@ namespace Hazelcast.Tests.Networking
 
         protected async Task StartCluster(string configuration)
         {
-            try
-            {
-                _cluster = await _rcClient.CreateClusterAsync(configuration).CfAwait();
-            }
-            catch (ServerException e)
-            {
-                // Thrift exceptions are weird and need to be "fixed"
-                e.FixMessage();
-                throw;
-            }
+            _cluster = await _rcClient.CreateClusterAsync(configuration).CfAwait();
         }
 
         protected async Task<Member> AddMember()

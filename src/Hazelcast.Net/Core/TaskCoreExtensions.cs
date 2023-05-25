@@ -296,6 +296,13 @@ namespace Hazelcast.Core
             }
         }
 
+        public static async Task WaitAsync(this Task task, CancellationToken cancellationToken)
+        {
+            var tcs = new TaskCompletionSource<bool>();
+            using var reg = cancellationToken.Register(() => tcs.TrySetCanceled());
+            await Task.WhenAny(task, tcs.Task).ConfigureAwait(false);
+        }
+
         private static async Task<TResult> WaitAsync<TResult>(this Task<TResult> task, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<TResult>();

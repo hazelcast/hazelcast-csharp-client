@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 using Hazelcast.Clustering;
 using Hazelcast.Partitioning;
 using Hazelcast.Serialization;
+using Hazelcast.Testing;
 using Microsoft.Extensions.Logging.Abstractions;
 using NUnit.Framework;
 
@@ -42,8 +43,14 @@ public class ClientConnectionsTests
         var connectMembersField = typeof (ClusterConnections).GetField("_connectMembers", BindingFlags.Instance | BindingFlags.NonPublic);
         Assert.That(connectMembersField, Is.Not.Null);
         var connectMembers = (Task) connectMembersField.GetValue(clusterConnections);
+        Assert.That(connectMembers, Is.Not.Null);
 
-        // and now, the ConnectMembers background task should be running
+        // task will start and then wait for the queue (which is empty)
+        await AssertEx.SucceedsEventually(() =>
+        {
+            Assert.That(connectMembers.Status, Is.EqualTo(TaskStatus.WaitingForActivation));
+        }, 2_000, 200);
+
         // now, we want to stop it without throwing - just nicely exiting its foreach loop
         // this means closing the MemberConnectionQueue, which is owned by ClusterMembers
 

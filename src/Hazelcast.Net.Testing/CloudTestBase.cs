@@ -66,17 +66,7 @@ public class CloudTestBase : RemoteTestBase
         RcClient = await ConnectToRemoteControllerAsync().CfAwait();
 
         // connect the local remote controller to cloud, using environment variables for parameters
-        try
-        {
-            await RcClient.LoginToCloudAsync();
-        }
-        catch (TException e)
-        {
-            // ServerException, CloudException...
-            // Thrift exceptions are weird and need to be "fixed"
-            e.FixMessage();
-            throw;
-        }
+        await RcClient.LoginToCloudAsync();
     }
 
     /// <summary>
@@ -88,21 +78,11 @@ public class CloudTestBase : RemoteTestBase
     /// <returns>The cloud cluster.</returns>
     public async Task<CloudCluster> CreateCloudCluster(string version, bool tlsEnabled, CancellationToken token = default)
     {
-        try
-        {
-            var cluster = await RcClient.CreateCloudClusterAsync(version, tlsEnabled, token)
-                          ?? throw new Exception("Failed to create a cloud cluster.");
+        var cluster = await RcClient.CreateCloudClusterAsync(version, tlsEnabled, token)
+                      ?? throw new Exception("Failed to create a cloud cluster.");
 
-            RcCloudClusters.Add(cluster);
-            return cluster;
-        }
-        catch (TException e)
-        {
-            // ServerException, CloudException...
-            // Thrift exceptions are weird and need to be "fixed"
-            e.FixMessage();
-            throw;
-        }
+        RcCloudClusters.Add(cluster);
+        return cluster;
     }
 
     protected async ValueTask<IHazelcastClient> CreateAndStartClientAsync(CloudCluster cluster, Action<HazelcastOptions> configure)
@@ -124,7 +104,7 @@ public class CloudTestBase : RemoteTestBase
             options.Networking.Cloud.DiscoveryToken = cluster.Token;
             options.Networking.Addresses.Clear();
             options.Networking.ReconnectMode = ReconnectMode.ReconnectSync;
-            options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 90_000;
+            options.Networking.ConnectionRetry.ClusterConnectionTimeoutMilliseconds = 120_000;
 
             if (cluster.IsTlsEnabled)
             {

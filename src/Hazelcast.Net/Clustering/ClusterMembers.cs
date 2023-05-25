@@ -75,16 +75,10 @@ namespace Hazelcast.Clustering
             if (clusterState.IsSmartRouting)
             {
                 // initialize the queue of members to connect
-                // and the handler to re-queue members that have failed, *if* they are still members
-                _memberConnectionQueue = new MemberConnectionQueue(clusterState.LoggerFactory);
-                _memberConnectionQueue.ConnectionFailed += (_, request) =>
+                _memberConnectionQueue = new MemberConnectionQueue(x =>
                 {
-                    lock (_mutex)
-                    {
-                        if (_members.ContainsMember(request.Member.Id))
-                            _memberConnectionQueue.AddAgain(request);
-                    }
-                };
+                    lock (_mutex) return _members.ContainsMember(x);
+                }, _clusterState.LoggerFactory);
             }
         }
 
@@ -294,7 +288,11 @@ namespace Hazelcast.Clustering
             // we *need* a stable state in order to figure out whether we are disconnecting or not,
             // and if we are, we *need* to drain the queue (stop connecting more members) - and
             // the only way to achieve this is to suspend the queue
-            if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
+            if (_memberConnectionQueue != null)
+            {
+                await _memberConnectionQueue.SuspendAsync().CfAwait();
+                _logger.IfDebug()?.LogDebug("Members connection queue is suspended.");
+            }
 
             // note: multiple connections can close an once = multiple calls can reach this point
 
@@ -516,7 +514,11 @@ namespace Hazelcast.Clustering
                 return new MembersUpdatedEventArgs(added, removed, members.ToList());
 
             // else, suspend the queue - we need stable connections before we can make a decision
-            if (_memberConnectionQueue != null) await _memberConnectionQueue.SuspendAsync().CfAwait();
+            if (_memberConnectionQueue != null)
+            {
+                await _memberConnectionQueue.SuspendAsync().CfAwait();
+                _logger.IfDebug()?.LogDebug("Members connection queue is suspended.");
+            }
 
             var disconnected = false;
             try
