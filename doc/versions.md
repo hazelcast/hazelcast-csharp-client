@@ -6,7 +6,7 @@ Versions lifecycle and support period follows the Hazelcast [Version Support Win
 
 ### Current Version
 
-* <curdoc>5.2.1 [general documentation](xref:doc-index-5-2-1) and [API reference](xref:api-index-5-2-1)</curdoc>
+* <curdoc>5.2.2 [general documentation](xref:doc-index-5-2-2) and [API reference](xref:api-index-5-2-2)</curdoc>
 
 ### Preview
 
@@ -49,4 +49,3 @@ Note that .NET Framework runs on Windows exclusively, whereas .NET Core and .NET
 > As per Microsoft's **.NET Framework** [Support Policy](https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-framework), versions 4.5.2, 4.6, and 4.6.1 will reach end of support on April 26, 2022. We do *not* support these versions starting with Hazelcast 4. We recommend that all Hazelcast 3 users migrate to at least .NET Framework 4.6.2, and ideally to .NET Framework 4.8.
 >
 > As per Microsoft's **.NET and .NET Core** [Support Policy](https://docs.microsoft.com/en-us/lifecycle/products/microsoft-net-and-net-core) and [LifeCycle](https://dotnet.microsoft.com/en-us/platform/support/policy/dotnet-core), versions 2.1 to 5.0 are not supported anymore. We recommend that all users use versions of .NET supported by Microsoft.
-
